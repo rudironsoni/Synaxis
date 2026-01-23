@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+option csharp_namespace = "ContextSavvy.Contracts.Grpc";
+
+package llm;
+
+service LlmService {
+  rpc ChatCompletion (ChatRequest) returns (stream ChatResponse);
+}
+
+message ChatRequest {
+  string model = 1;
+  repeated ChatMessage messages = 2;
+  double temperature = 3;
+}
+
+message ChatMessage {
+  string role = 1;
+  string content = 2;
+}
+
+message ChatResponse {
+  string content = 1;
+  bool is_finished = 2;
+}

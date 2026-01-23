@@ -1,0 +1,21 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/LlmProviders/">
+    <Project Path="src/LlmProviders/ContextSavvy.LlmProviders.API/ContextSavvy.LlmProviders.API.csproj" />
+    <Project Path="src/LlmProviders/ContextSavvy.LlmProviders.Application/ContextSavvy.LlmProviders.Application.csproj" />
+    <Project Path="src/LlmProviders/ContextSavvy.LlmProviders.Domain/ContextSavvy.LlmProviders.Domain.csproj" />
+    <Project Path="src/LlmProviders/ContextSavvy.LlmProviders.Infrastructure/ContextSavvy.LlmProviders.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Shared/">
+    <Project Path="src/Shared/ContextSavvy.Contracts/ContextSavvy.Contracts.csproj" />
+    <Project Path="src/Shared/ContextSavvy.Core/ContextSavvy.Core.csproj" />
+    <Project Path="src/Shared/ContextSavvy.EventBus/ContextSavvy.EventBus.csproj" />
+    <Project Path="src/Shared/ContextSavvy.ServiceDefaults/ContextSavvy.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ContextSavvy.LlmProviders.Api.Tests/ContextSavvy.LlmProviders.Api.Tests.csproj" />
+    <Project Path="tests/ContextSavvy.LlmProviders.Application.Tests/ContextSavvy.LlmProviders.Application.Tests.csproj" />
+    <Project Path="tests/ContextSavvy.LlmProviders.Domain.Tests/ContextSavvy.LlmProviders.Domain.Tests.csproj" />
+  </Folder>
+  <Project Path="../Ghostwright/src/Ghostwright.Core/Ghostwright.Core.csproj" />
+</Solution>
