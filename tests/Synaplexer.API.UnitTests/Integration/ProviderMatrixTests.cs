@@ -72,6 +72,7 @@ namespace Synaplexer.API.UnitTests.Integration
         [MemberData(nameof(GetProviderModelMatrix))]
         public async Task Verify_Provider_Model_Health(string providerName, string modelId)
         {
+            await Task.Delay(2000); // Wait 2s to avoid 429 Too Many Requests
             // Arrange
             _ = providerName; // Suppress xUnit1026
             var client = _factory.CreateClient();
