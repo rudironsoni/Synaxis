@@ -1,10 +1,14 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\ContextSavvy.LlmProviders.Application\ContextSavvy.LlmProviders.Application.csproj" />
     <ProjectReference Include="..\ContextSavvy.LlmProviders.Domain\ContextSavvy.LlmProviders.Domain.csproj" />
     <ProjectReference Include="../../Shared/ContextSavvy.Core/ContextSavvy.Core.csproj" />
-    <ProjectReference Include="../../../../***REMOVED***/src/***REMOVED***.Infrastructure/***REMOVED***.Infrastructure.csproj" />
+    <ProjectReference Include="../../../../***REMOVED***/src/***REMOVED***/***REMOVED***.csproj" />
+    <ProjectReference Include="../../../../***REMOVED***/src/Extensions/Inference/***REMOVED***.Extensions.Inference.Abstractions/***REMOVED***.Extensions.Inference.Abstractions.csproj" />
+    <ProjectReference Include="../../../../***REMOVED***/src/Extensions/Inference/***REMOVED***.Extensions.Inference.Google/***REMOVED***.Extensions.Inference.Google.csproj" />
+    <ProjectReference Include="../../../../***REMOVED***/src/Extensions/Inference/***REMOVED***.Extensions.Inference.ChatGPT/***REMOVED***.Extensions.Inference.ChatGPT.csproj" />
+    <ProjectReference Include="../../../../***REMOVED***/src/Extensions/Inference/***REMOVED***.Extensions.Inference.Claude/***REMOVED***.Extensions.Inference.Claude.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

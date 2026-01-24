@@ -2,9 +2,6 @@ using ContextSavvy.LlmProviders.API.Configuration;
 using ContextSavvy.LlmProviders.API.Endpoints;
 using ContextSavvy.LlmProviders.API.GrpcServices;
 using ContextSavvy.LlmProviders.Application.DependencyInjection;
-using ***REMOVED***.Infrastructure;
-using ***REMOVED***.Infrastructure.Providers;
-using ***REMOVED***.Infrastructure.Selectors;
 using ContextSavvy.LlmProviders.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,9 +23,6 @@ builder.Services.AddLlmProvidersApplication();
 
 // Infrastructure Services (Providers)
 builder.Services.AddLlmProvidersInfrastructure(builder.Configuration);
-
-// Ghost Infrastructure Services (Core Driver)
-builder.Services.Add***REMOVED***(builder.Configuration);
 
 var app = builder.Build();
 
