@@ -5,8 +5,9 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Synaplexer.Domain.Interfaces;
 using Synaplexer.Domain.ValueObjects;
-using Microsoft.Extensions.Configuration;
+using Synaplexer.Infrastructure.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Synaplexer.Infrastructure.Providers
 {
@@ -14,17 +15,29 @@ namespace Synaplexer.Infrastructure.Providers
     {
         private static readonly HashSet<string> AvailableModels = new(StringComparer.OrdinalIgnoreCase)
         {
-            "llama-3.3-70b-versatile", "llama-3.3-70b-instruct", "llama3-8b-8192",
-            "llama-3.1-8b-instruct", "llama-3.1-70b-versatile", "mixtral-8x7b-32768",
-            "gemma-7b-it"
+            "llama-3.1-8b-instant",
+            "llama-3.3-70b-versatile",
+            "meta-llama/llama-guard-4-12b",
+            "openai/gpt-oss-120b",
+            "openai/gpt-oss-20b",
+            "groq/compound",
+            "groq/compound-mini",
+            "meta-llama/llama-4-maverick-17b-128e-instruct",
+            "meta-llama/llama-4-scout-17b-16e-instruct",
+            "meta-llama/llama-prompt-guard-2-22m",
+            "meta-llama/llama-prompt-guard-2-86m",
+            "moonshotai/kimi-k2-instruct-0905",
+            "openai/gpt-oss-safeguard-20b",
+            "qwen/qwen3-32b",
+            "allam-2-7b"
         };
 
         public override string Id => "groq";
         public override string Name => "Groq";
         public override ProviderTier Tier => ProviderTier.Tier1_FreeFast;
 
-        public GroqProvider(HttpClient httpClient, ILogger<GroqProvider> logger, IConfiguration config)
-            : base(httpClient, logger, config, "Groq")
+        public GroqProvider(HttpClient httpClient, ILogger<GroqProvider> logger, IOptionsSnapshot<ProvidersOptions> options)
+            : base(httpClient, logger, options, "Groq")
         {
         }
 

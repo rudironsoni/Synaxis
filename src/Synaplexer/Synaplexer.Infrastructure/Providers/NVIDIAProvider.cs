@@ -5,8 +5,9 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Synaplexer.Domain.Interfaces;
 using Synaplexer.Domain.ValueObjects;
-using Microsoft.Extensions.Configuration;
+using Synaplexer.Infrastructure.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Synaplexer.Infrastructure.Providers
 {
@@ -20,18 +21,16 @@ namespace Synaplexer.Infrastructure.Providers
 
         public HashSet<string> SupportedModels { get; } = new(StringComparer.OrdinalIgnoreCase)
         {
-            "meta/llama-3.3-70b-instruct", "meta/llama-3.1-405b-instruct", "meta/llama-3.1-70b-instruct", "meta/llama-3.1-8b-instruct",
-            "mistralai/mixtral-8x7b-instruct-v0.1", "mistralai/mixtral-8x22b-instruct-v0.1", "mistralai/mistral-large-latest",
-            "nvidia/nemotron-4-340b-instruct", "microsoft/phi-3-mini-128k-instruct", "microsoft/phi-3-medium-128k-instruct",
-            "meta/codellama-70b-instruct", "deepseek-ai/deepseek-coder-33b-instruct",
-            "llama-3.3-70b", "llama-3.1-405b", "llama-3.1-70b", "nemotron-70b", "phi-3", "codellama"
+            "meta/llama-3.1-405b-instruct",
+            "meta/llama-3.1-70b-instruct",
+            "meta/llama-3.1-8b-instruct"
         };
 
         public NVIDIAProvider(
             HttpClient http,
             ILogger<NVIDIAProvider> logger,
-            IConfiguration config)
-            : base(http, logger, config, "NVIDIA")
+            IOptionsSnapshot<ProvidersOptions> options)
+            : base(http, logger, options, "NVIDIA")
         {
         }
 
@@ -94,7 +93,6 @@ namespace Synaplexer.Infrastructure.Providers
                 "mixtral-8x7b" => "mistralai/mixtral-8x7b-instruct-v0.1",
                 "mixtral-8x22b" => "mistralai/mixtral-8x22b-instruct-v0.1",
                 "mistral-large" => "mistralai/mistral-large-latest",
-                "nemotron-70b" => "nvidia/nemotron-4-340b-instruct",
                 "phi-3" or "phi-3-mini" => "microsoft/phi-3-mini-128k-instruct",
                 "phi-3-medium" => "microsoft/phi-3-medium-128k-instruct",
                 "codellama" or "codellama-70b" => "meta/codellama-70b-instruct",
