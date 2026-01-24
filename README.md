@@ -1,6 +1,6 @@
 # LlmProviders
 
-LlmProviders is a tiered LLM provider service that implements a sophisticated routing strategy to manage multiple AI model providers. It acts as an orchestration layer, providing a unified API for chat completions while intelligently delegating requests to various backends, including browser-based automation via ***REMOVED***.
+LlmProviders is a tiered LLM provider service that implements a sophisticated routing strategy to manage multiple AI model providers. It acts as an orchestration layer, providing a unified API for chat completions while intelligently delegating requests to various backends.
 
 ## Features
 
@@ -8,7 +8,7 @@ LlmProviders is a tiered LLM provider service that implements a sophisticated ro
 - **Unified Chat API**: Provides a consistent interface for chat completions, shielding consumers from the complexities of individual provider implementations.
 - **gRPC Integration**: Built-in support for high-performance gRPC services, making it suitable for microservices architectures.
 - **Provider Orchestration**: Manages provider pools, accounts, and sessions to ensure high availability and efficient resource utilization.
-- *****REMOVED*** Integration**: Seamlessly integrates with the ***REMOVED*** library to utilize browser-based LLM automation as a fallback or primary provider source.
+- **Ultra-Miser Mode**: Prioritizes free/fast Tier 1 providers.
 
 ## Project Structure
 
@@ -22,9 +22,7 @@ The service follows a Clean Architecture approach:
 
 ## Dependencies
 
-- **[***REMOVED***](https://github.com/rudironsoni/***REMOVED***)**: Required for browser-based provider automation.
 - **.NET 10**: The project targets the latest .NET runtime for performance and feature benefits.
-- **Playwright**: Indirectly required through ***REMOVED*** for browser automation.
 
 ## Getting Started
 
@@ -38,7 +36,7 @@ dotnet build
 
 ### Configuration
 
-Ensure that your `appsettings.json` or environment variables are configured with the necessary provider credentials and that the ***REMOVED*** dependencies are correctly set up.
+Ensure that your `appsettings.json` or environment variables are configured with the necessary provider credentials.
 
 ### Running the Service
 
@@ -51,6 +49,10 @@ dotnet run --project src/LlmProviders/ContextSavvy.LlmProviders.API/ContextSavvy
 ## Architecture Overview
 
 LlmProviders uses a "Provider Pool" concept. When a request comes in, the service evaluates the requested model and tier, selects an appropriate `ProviderAccount` from the pool, and initiates a `ProviderSession` to handle the interaction. This allows for seamless rotation of accounts and load balancing across different LLM backends.
+
+The service follows a strict tiering strategy:
+- **Tier 1 (Free/Fast)**: Gemini Flash, Groq, OpenRouter (Free), HuggingFace, Pollinations, Cloudflare.
+- **Tier 2 (Standard/Paid)**: Paid APIs like Cohere, DeepInfra, Perplexity, TogetherAI, etc.
 
 ## License
 

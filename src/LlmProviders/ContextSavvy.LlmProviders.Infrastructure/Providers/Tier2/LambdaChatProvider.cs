@@ -8,7 +8,7 @@ using ContextSavvy.LlmProviders.Domain.ValueObjects;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace ContextSavvy.LlmProviders.Infrastructure.Providers.Tier1
+namespace ContextSavvy.LlmProviders.Infrastructure.Providers.Tier2
 {
     public class LambdaChatProvider : ILlmProvider
     {
@@ -19,7 +19,7 @@ namespace ContextSavvy.LlmProviders.Infrastructure.Providers.Tier1
 
         public string Id => "lambdachat";
         public string Name => "LambdaChat";
-        public ProviderTier Tier => ProviderTier.Tier1_FreeFast;
+        public ProviderTier Tier => ProviderTier.Tier2_Standard;
 
         public HashSet<string> SupportedModels { get; } = new(StringComparer.OrdinalIgnoreCase)
         {
