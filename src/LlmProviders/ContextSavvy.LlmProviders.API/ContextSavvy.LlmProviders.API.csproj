@@ -12,13 +12,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Shared\ContextSavvy.ServiceDefaults\ContextSavvy.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\..\Shared\ContextSavvy.Contracts\ContextSavvy.Contracts.csproj" />
-    <ProjectReference Include="../../../../***REMOVED***/src/***REMOVED***.Infrastructure/***REMOVED***.Infrastructure.csproj" />
     <ProjectReference Include="..\ContextSavvy.LlmProviders.Application\ContextSavvy.LlmProviders.Application.csproj" />
     <ProjectReference Include="..\ContextSavvy.LlmProviders.Domain\ContextSavvy.LlmProviders.Domain.csproj" />
-    <ProjectReference Include="..\..\Shared\ContextSavvy.EventBus\ContextSavvy.EventBus.csproj" />
     <ProjectReference Include="..\ContextSavvy.LlmProviders.Infrastructure\ContextSavvy.LlmProviders.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Shared\ContextSavvy.Contracts\ContextSavvy.Contracts.csproj" />
+    <ProjectReference Include="..\..\Shared\ContextSavvy.EventBus\ContextSavvy.EventBus.csproj" />
+    <ProjectReference Include="..\..\Shared\ContextSavvy.ServiceDefaults\ContextSavvy.ServiceDefaults.csproj" />
+    <ProjectReference Include="../../../../***REMOVED***/src/***REMOVED***/***REMOVED***.csproj" />
   </ItemGroup>
 
 </Project>
