@@ -5,8 +5,9 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Synaplexer.Domain.Interfaces;
 using Synaplexer.Domain.ValueObjects;
-using Microsoft.Extensions.Configuration;
+using Synaplexer.Infrastructure.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Synaplexer.Infrastructure.Providers
 {
@@ -14,17 +15,15 @@ namespace Synaplexer.Infrastructure.Providers
     {
         private static readonly HashSet<string> AvailableModels = new(StringComparer.OrdinalIgnoreCase)
         {
-            "llama-3.3-70b-instruct:free", "llama-3.2-3b-instruct:free", "llama-3.2-1b-instruct:free",
-            "qwen-3:free", "deepseek-r1:free", "mistral-small-3.1-24b:free",
-            "gemma-3-27b-instruct:free", "phi-4:free"
+            "liquid/lfm-2.5-1.2b-instruct:free"
         };
 
         public override string Id => "openrouter";
         public override string Name => "OpenRouter";
         public override ProviderTier Tier => ProviderTier.Tier1_FreeFast;
 
-        public OpenRouterProvider(HttpClient httpClient, ILogger<OpenRouterProvider> logger, IConfiguration config)
-            : base(httpClient, logger, config, "OpenRouter")
+        public OpenRouterProvider(HttpClient httpClient, ILogger<OpenRouterProvider> logger, IOptionsSnapshot<ProvidersOptions> options)
+            : base(httpClient, logger, options, "OpenRouter")
         {
         }
 
@@ -33,7 +32,7 @@ namespace Synaplexer.Infrastructure.Providers
         public override async Task<ChatCompletionResult> ChatAsync(ChatRequest request, CancellationToken ct = default)
         {
             var apiKey = GetApiKey();
-            var model = string.IsNullOrEmpty(request.Model) ? "llama-3.3-70b-instruct:free" : request.Model;
+            var model = string.IsNullOrEmpty(request.Model) ? "liquid/lfm-2.5-1.2b-instruct:free" : request.Model;
 
             var payload = new
             {

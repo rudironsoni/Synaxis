@@ -3,8 +3,9 @@ using System.Text;
 using System.Web;
 using Synaplexer.Domain.Interfaces;
 using Synaplexer.Domain.ValueObjects;
-using Microsoft.Extensions.Configuration;
+using Synaplexer.Infrastructure.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Synaplexer.Infrastructure.Providers
 {
@@ -19,8 +20,8 @@ namespace Synaplexer.Infrastructure.Providers
         public override string Name => "Pollinations";
         public override ProviderTier Tier => ProviderTier.Tier1_FreeFast;
 
-        public PollinationsProvider(HttpClient httpClient, ILogger<PollinationsProvider> logger, IConfiguration config)
-            : base(httpClient, logger, config, "Pollinations")
+        public PollinationsProvider(HttpClient httpClient, ILogger<PollinationsProvider> logger, IOptionsSnapshot<ProvidersOptions> options)
+            : base(httpClient, logger, options, "Pollinations")
         {
         }
 

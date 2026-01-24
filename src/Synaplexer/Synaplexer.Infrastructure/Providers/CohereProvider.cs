@@ -5,8 +5,9 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Synaplexer.Domain.Interfaces;
 using Synaplexer.Domain.ValueObjects;
-using Microsoft.Extensions.Configuration;
+using Synaplexer.Infrastructure.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Synaplexer.Infrastructure.Providers
 {
@@ -20,15 +21,14 @@ namespace Synaplexer.Infrastructure.Providers
 
         public HashSet<string> SupportedModels { get; } = new(StringComparer.OrdinalIgnoreCase)
         {
-            "command-r-plus-08-2024", "command-r-08-2024", "command-r-plus", "command-r", "command", "command-light",
-            "cohere/command-r", "cohere/command-r-plus"
+            "command-r-plus-08-2024", "command-r-08-2024", "command-r-plus", "command-r"
         };
 
         public CohereProvider(
             HttpClient http,
             ILogger<CohereProvider> logger,
-            IConfiguration config)
-            : base(http, logger, config, "Cohere")
+            IOptionsSnapshot<ProvidersOptions> options)
+            : base(http, logger, options, "Cohere")
         {
         }
 

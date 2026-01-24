@@ -17,7 +17,7 @@ public class LlmApiFactory : WebApplicationFactory<Program>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Production");
-        
+
         builder.ConfigureAppConfiguration((context, config) =>
         {
             config.AddInMemoryCollection(new Dictionary<string, string?>
@@ -29,7 +29,7 @@ public class LlmApiFactory : WebApplicationFactory<Program>
         builder.ConfigureTestServices(services =>
         {
             services.AddSingleton(Mediator);
-            
+
             // Mock Options
             var options = Substitute.For<IOptions<SynaplexerOptions>>();
             options.Value.Returns(new SynaplexerOptions());

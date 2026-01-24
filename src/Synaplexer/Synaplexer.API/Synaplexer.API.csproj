@@ -9,6 +9,8 @@
   <ItemGroup>
     <PackageReference Include="Grpc.AspNetCore" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Enrichers.Sensitive" />
   </ItemGroup>
 
   <ItemGroup>

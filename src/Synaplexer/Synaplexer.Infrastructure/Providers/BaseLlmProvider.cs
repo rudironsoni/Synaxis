@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Synaplexer.Domain.Interfaces;
 using Synaplexer.Domain.ValueObjects;
 using Synaplexer.Infrastructure.Configuration;
@@ -17,12 +17,14 @@ public abstract class BaseLlmProvider : ILlmProvider
     protected readonly ILogger Logger;
     protected readonly ProviderConfiguration Configuration;
 
-    protected BaseLlmProvider(HttpClient http, ILogger logger, IConfiguration config, string providerName)
+    protected BaseLlmProvider(HttpClient http, ILogger logger, IOptionsSnapshot<ProvidersOptions> options, string providerName)
     {
         Http = http;
+        Http.Timeout = TimeSpan.FromSeconds(120);
         Logger = logger;
-        Configuration = new ProviderConfiguration();
-        config.GetSection($"Providers:{providerName}").Bind(Configuration);
+        Configuration = options.Value.TryGetValue(providerName, out var config)
+            ? config
+            : new ProviderConfiguration();
     }
 
     public abstract string Id { get; }
