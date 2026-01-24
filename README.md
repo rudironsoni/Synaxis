@@ -26,13 +26,13 @@
     ```
 
 2.  **Configure Providers:**
-    *   Open `src/Synaxis.Api/appsettings.json`.
+    *   Open `src/Synaxis.WebApi/appsettings.json`.
     *   Add your API keys for the providers you wish to use.
     *   See [Configuration Guide](docs/CONFIGURATION.md) for details.
 
 3.  **Run Locally:**
     ```bash
-    dotnet run --project src/Synaxis.Api/Synaxis.Api.csproj
+    dotnet run --project src/Synaxis.WebApi/Synaxis.WebApi.csproj
     ```
 
     The API will start (default is typically `http://localhost:5000` or `https://localhost:5001`).
