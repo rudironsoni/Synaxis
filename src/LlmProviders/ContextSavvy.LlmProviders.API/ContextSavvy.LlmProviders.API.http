@@ -1,6 +1,0 @@
-@ContextSavvy.LlmProviders.API_HostAddress = http://localhost:5216
-
-GET {{ContextSavvy.LlmProviders.API_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
