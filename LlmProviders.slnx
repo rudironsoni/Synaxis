@@ -17,5 +17,5 @@
     <Project Path="tests/ContextSavvy.LlmProviders.Application.Tests/ContextSavvy.LlmProviders.Application.Tests.csproj" />
     <Project Path="tests/ContextSavvy.LlmProviders.Domain.Tests/ContextSavvy.LlmProviders.Domain.Tests.csproj" />
   </Folder>
-  <Project Path="../***REMOVED***/src/***REMOVED***.Core/***REMOVED***.Core.csproj" />
+  <Project Path="../***REMOVED***/src/***REMOVED***/***REMOVED***.csproj" />
 </Solution>

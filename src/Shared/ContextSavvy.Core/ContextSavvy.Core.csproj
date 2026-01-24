@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\***REMOVED***\src\***REMOVED***.Core\***REMOVED***.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\***REMOVED***\src\***REMOVED***\***REMOVED***.csproj" />
   </ItemGroup>
 
 </Project>
