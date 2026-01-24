@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <coverage line-rate="0.7222" branch-rate="0.5161" version="1.9" timestamp="1769266666" lines-covered="104" lines-valid="144" branches-covered="32" branches-valid="62">
   <sources>
-    <source>/home/rrj/src/github/rudironsoni/LlmProviders/src/Synaplexer.Connectors/</source>
+    <source>/home/rrj/src/github/rudironsoni/LlmProviders/src/Synaxis.Connectors/</source>
   </sources>
   <packages>
-    <package name="Synaplexer.Connectors" line-rate="0.7222" branch-rate="0.5161" complexity="83">
+    <package name="Synaxis.Connectors" line-rate="0.7222" branch-rate="0.5161" complexity="83">
       <classes>
-        <class name="Synaplexer.Connectors.GroqChatClient" filename="GroqChatClient.cs" line-rate="0.8571" branch-rate="0.5" complexity="47">
+        <class name="Synaxis.Connectors.GroqChatClient" filename="GroqChatClient.cs" line-rate="0.8571" branch-rate="0.5" complexity="47">
           <methods>
             <method name="get_Metadata" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
@@ -79,7 +79,7 @@
                 <line number="101" hits="2" branch="False" />
               </lines>
             </method>
-            <method name="MapToChatResponse" signature="(Synaplexer.Connectors.GroqChatClient/GroqResponse)" line-rate="0.8332999999999999" branch-rate="0.5" complexity="6">
+            <method name="MapToChatResponse" signature="(Synaxis.Connectors.GroqChatClient/GroqResponse)" line-rate="0.8332999999999999" branch-rate="0.5" complexity="6">
               <lines>
                 <line number="104" hits="1" branch="False" />
                 <line number="105" hits="1" branch="True" condition-coverage="50% (3/6)">
@@ -101,7 +101,7 @@
                 <line number="117" hits="1" branch="False" />
               </lines>
             </method>
-            <method name="MapToStreamingUpdate" signature="(Synaplexer.Connectors.GroqChatClient/GroqStreamingUpdate)" line-rate="1" branch-rate="0.6" complexity="10">
+            <method name="MapToStreamingUpdate" signature="(Synaxis.Connectors.GroqChatClient/GroqStreamingUpdate)" line-rate="1" branch-rate="0.6" complexity="10">
               <lines>
                 <line number="120" hits="2" branch="False" />
                 <line number="121" hits="2" branch="True" condition-coverage="50% (1/2)">
@@ -314,7 +314,7 @@
             <line number="18" hits="1" branch="False" />
           </lines>
         </class>
-        <class name="Synaplexer.Connectors.GroqChatClient/GroqResponse" filename="GroqChatClient.cs" line-rate="1" branch-rate="1" complexity="3">
+        <class name="Synaxis.Connectors.GroqChatClient/GroqResponse" filename="GroqChatClient.cs" line-rate="1" branch-rate="1" complexity="3">
           <methods>
             <method name="get_Id" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
@@ -338,7 +338,7 @@
             <line number="151" hits="5" branch="False" />
           </lines>
         </class>
-        <class name="Synaplexer.Connectors.GroqChatClient/GroqChoice" filename="GroqChatClient.cs" line-rate="1" branch-rate="1" complexity="2">
+        <class name="Synaxis.Connectors.GroqChatClient/GroqChoice" filename="GroqChatClient.cs" line-rate="1" branch-rate="1" complexity="2">
           <methods>
             <method name="get_Message" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
@@ -356,7 +356,7 @@
             <line number="157" hits="2" branch="False" />
           </lines>
         </class>
-        <class name="Synaplexer.Connectors.GroqChatClient/GroqMessage" filename="GroqChatClient.cs" line-rate="1" branch-rate="1" complexity="1">
+        <class name="Synaxis.Connectors.GroqChatClient/GroqMessage" filename="GroqChatClient.cs" line-rate="1" branch-rate="1" complexity="1">
           <methods>
             <method name="get_Content" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
@@ -368,7 +368,7 @@
             <line number="162" hits="4" branch="False" />
           </lines>
         </class>
-        <class name="Synaplexer.Connectors.GroqChatClient/GroqStreamingUpdate" filename="GroqChatClient.cs" line-rate="1" branch-rate="1" complexity="3">
+        <class name="Synaxis.Connectors.GroqChatClient/GroqStreamingUpdate" filename="GroqChatClient.cs" line-rate="1" branch-rate="1" complexity="3">
           <methods>
             <method name="get_Id" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
@@ -392,7 +392,7 @@
             <line number="169" hits="6" branch="False" />
           </lines>
         </class>
-        <class name="Synaplexer.Connectors.GroqChatClient/GroqStreamingChoice" filename="GroqChatClient.cs" line-rate="1" branch-rate="1" complexity="2">
+        <class name="Synaxis.Connectors.GroqChatClient/GroqStreamingChoice" filename="GroqChatClient.cs" line-rate="1" branch-rate="1" complexity="2">
           <methods>
             <method name="get_Delta" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
@@ -410,7 +410,7 @@
             <line number="175" hits="3" branch="False" />
           </lines>
         </class>
-        <class name="Synaplexer.Connectors.GroqChatClient/GroqDelta" filename="GroqChatClient.cs" line-rate="1" branch-rate="1" complexity="1">
+        <class name="Synaxis.Connectors.GroqChatClient/GroqDelta" filename="GroqChatClient.cs" line-rate="1" branch-rate="1" complexity="1">
           <methods>
             <method name="get_Content" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
@@ -422,7 +422,7 @@
             <line number="180" hits="6" branch="False" />
           </lines>
         </class>
-        <class name="Synaplexer.Connectors.GroqChatClient/&lt;GetResponseAsync&gt;d__6" filename="GroqChatClient.cs" line-rate="1" branch-rate="1" complexity="1">
+        <class name="Synaxis.Connectors.GroqChatClient/&lt;GetResponseAsync&gt;d__6" filename="GroqChatClient.cs" line-rate="1" branch-rate="1" complexity="1">
           <methods>
             <method name="MoveNext" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
@@ -452,7 +452,7 @@
             <line number="41" hits="1" branch="False" />
           </lines>
         </class>
-        <class name="Synaplexer.Connectors.GroqChatClient/&lt;GetStreamingResponseAsync&gt;d__7" filename="GroqChatClient.cs" line-rate="1" branch-rate="1" complexity="10">
+        <class name="Synaxis.Connectors.GroqChatClient/&lt;GetStreamingResponseAsync&gt;d__7" filename="GroqChatClient.cs" line-rate="1" branch-rate="1" complexity="10">
           <methods>
             <method name="MoveNext" signature="()" line-rate="1" branch-rate="1" complexity="10">
               <lines>
@@ -540,7 +540,7 @@
             <line number="70" hits="1" branch="False" />
           </lines>
         </class>
-        <class name="Synaplexer.Connectors.GroqClient" filename="GroqClient.cs" line-rate="0" branch-rate="0" complexity="10">
+        <class name="Synaxis.Connectors.GroqClient" filename="GroqClient.cs" line-rate="0" branch-rate="0" complexity="10">
           <methods>
             <method name="get_ApiKey" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
@@ -620,7 +620,7 @@
             <line number="24" hits="0" branch="False" />
           </lines>
         </class>
-        <class name="Synaplexer.Connectors.Extensions.GeminiExtensions" filename="Extensions/GeminiExtensions.cs" line-rate="0" branch-rate="1" complexity="1">
+        <class name="Synaxis.Connectors.Extensions.GeminiExtensions" filename="Extensions/GeminiExtensions.cs" line-rate="0" branch-rate="1" complexity="1">
           <methods>
             <method name="AddGeminiClient" signature="(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.String,System.String)" line-rate="0" branch-rate="1" complexity="1">
               <lines>
@@ -642,9 +642,9 @@
             <line number="16" hits="0" branch="False" />
           </lines>
         </class>
-        <class name="Synaplexer.Connectors.Extensions.GroqExtensions" filename="Extensions/GroqExtensions.cs" line-rate="0" branch-rate="1" complexity="2">
+        <class name="Synaxis.Connectors.Extensions.GroqExtensions" filename="Extensions/GroqExtensions.cs" line-rate="0" branch-rate="1" complexity="2">
           <methods>
-            <method name="AsIChatClient" signature="(Synaplexer.Connectors.GroqClient,System.String)" line-rate="0" branch-rate="1" complexity="1">
+            <method name="AsIChatClient" signature="(Synaxis.Connectors.GroqClient,System.String)" line-rate="0" branch-rate="1" complexity="1">
               <lines>
                 <line number="9" hits="0" branch="False" />
                 <line number="10" hits="0" branch="False" />

@@ -39,3 +39,4 @@ external/
 *.nupkg
 **/[Pp]ackages/*
 !**/[Pp]ackages/build/
+**/TestResults/
