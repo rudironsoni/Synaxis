@@ -1,33 +1,31 @@
-using Ghostwright;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using ContextSavvy.LlmProviders.Domain.Interfaces;
 using ContextSavvy.LlmProviders.Domain.ValueObjects;
-using Microsoft.Extensions.Logging;
-using Ghostwright.Extensions.Inference.Google;
-using Ghostwright.Extensions.Inference.Text;
-using System.Runtime.CompilerServices;
+using Ghostwright.Extensions.Inference.Claude;
 
 namespace ContextSavvy.LlmProviders.Infrastructure.Providers.Tier4
 {
-    public class GeminiBrowserProvider : ILlmProvider
+    public class ClaudeBrowserProvider : ILlmProvider
     {
-        private readonly Ghostwright.Extensions.Inference.Google.GeminiProvider _extensionProvider;
-        private readonly ILogger<GeminiBrowserProvider> _logger;
+        private readonly ClaudeProvider _innerProvider;
 
         private static readonly HashSet<string> AvailableModels = new(StringComparer.OrdinalIgnoreCase)
         {
-            "gemini-2.0-flash", "gemini-2.0-flash-thinking"
+            "claude-3-opus", "claude-3-sonnet"
         };
 
-        public string Id => "gemini-browser";
-        public string Name => "Gemini Browser";
+        public string Id => "claude-browser";
+        public string Name => "Claude Browser";
         public ProviderTier Tier => ProviderTier.Tier4_Experimental;
 
-        public GeminiBrowserProvider(
-            Ghostwright.Extensions.Inference.Google.GeminiProvider extensionProvider,
-            ILogger<GeminiBrowserProvider> logger)
+        public ClaudeBrowserProvider(ClaudeProvider innerProvider)
         {
-            _extensionProvider = extensionProvider;
-            _logger = logger;
+            _innerProvider = innerProvider;
         }
 
         public bool SupportsModel(string modelId) => AvailableModels.Contains(modelId);
@@ -35,14 +33,13 @@ namespace ContextSavvy.LlmProviders.Infrastructure.Providers.Tier4
         public async Task<ChatCompletionResult> ChatAsync(ChatRequest request, CancellationToken ct = default)
         {
             var prompt = string.Join("\n", request.Messages.Select(m => $"{m.Role}: {m.Content}"));
-            var options = new InferenceOptions((float)request.Temperature, request.MaxTokens);
-            var response = await _extensionProvider.GenerateAsync(prompt, options, ct);
+            var response = await _innerProvider.GenerateAsync(prompt, null, ct);
 
             var promptTokens = EstimateTokens(prompt.Length);
             var completionTokens = EstimateTokens(response.Length);
 
             return new ChatCompletionResult(
-                $"geminibrowser-{Guid.NewGuid():N}",
+                $"claudebrowser-{Guid.NewGuid():N}",
                 response,
                 "stop",
                 new Usage(promptTokens, completionTokens, promptTokens + completionTokens)
@@ -52,15 +49,14 @@ namespace ContextSavvy.LlmProviders.Infrastructure.Providers.Tier4
         public async IAsyncEnumerable<ChatCompletionChunk> StreamChatAsync(ChatRequest request, [EnumeratorCancellation] CancellationToken ct = default)
         {
             var prompt = string.Join("\n", request.Messages.Select(m => $"{m.Role}: {m.Content}"));
-            var options = new InferenceOptions((float)request.Temperature, request.MaxTokens);
-            await foreach (var chunk in _extensionProvider.StreamGenerateAsync(prompt, options, ct))
+            var id = $"claudebrowser-{Guid.NewGuid():N}";
+
+            await foreach (var chunk in _innerProvider.StreamGenerateAsync(prompt, null, ct))
             {
-                yield return new ChatCompletionChunk(
-                    $"geminibrowser-{Guid.NewGuid():N}",
-                    chunk,
-                    ""
-                );
+                yield return new ChatCompletionChunk(id, chunk, string.Empty);
             }
+
+            yield return new ChatCompletionChunk(id, string.Empty, "stop");
         }
 
         private static int EstimateTokens(int charCount) => Math.Max(1, charCount / 4);

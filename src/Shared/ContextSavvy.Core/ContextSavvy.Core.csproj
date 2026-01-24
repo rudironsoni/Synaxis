@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\Ghostwright\src\Ghostwright.Core\Ghostwright.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\Ghostwright\src\Ghostwright\Ghostwright.csproj" />
   </ItemGroup>
 
 </Project>

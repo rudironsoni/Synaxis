@@ -1,10 +1,14 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\ContextSavvy.LlmProviders.Application\ContextSavvy.LlmProviders.Application.csproj" />
     <ProjectReference Include="..\ContextSavvy.LlmProviders.Domain\ContextSavvy.LlmProviders.Domain.csproj" />
     <ProjectReference Include="../../Shared/ContextSavvy.Core/ContextSavvy.Core.csproj" />
-    <ProjectReference Include="../../../../Ghostwright/src/Ghostwright.Infrastructure/Ghostwright.Infrastructure.csproj" />
+    <ProjectReference Include="../../../../Ghostwright/src/Ghostwright/Ghostwright.csproj" />
+    <ProjectReference Include="../../../../Ghostwright/src/Extensions/Inference/Ghostwright.Extensions.Inference.Abstractions/Ghostwright.Extensions.Inference.Abstractions.csproj" />
+    <ProjectReference Include="../../../../Ghostwright/src/Extensions/Inference/Ghostwright.Extensions.Inference.Google/Ghostwright.Extensions.Inference.Google.csproj" />
+    <ProjectReference Include="../../../../Ghostwright/src/Extensions/Inference/Ghostwright.Extensions.Inference.ChatGPT/Ghostwright.Extensions.Inference.ChatGPT.csproj" />
+    <ProjectReference Include="../../../../Ghostwright/src/Extensions/Inference/Ghostwright.Extensions.Inference.Claude/Ghostwright.Extensions.Inference.Claude.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

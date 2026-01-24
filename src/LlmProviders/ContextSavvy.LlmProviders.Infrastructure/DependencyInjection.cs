@@ -3,8 +3,15 @@ using ContextSavvy.LlmProviders.Infrastructure.Providers.Tier1;
 using ContextSavvy.LlmProviders.Infrastructure.Providers.Tier2;
 using ContextSavvy.LlmProviders.Infrastructure.Providers.Tier3;
 using ContextSavvy.LlmProviders.Infrastructure.Providers.Tier4;
+using Ghostwright;
+using Ghostwright.Providers;
+using Ghostwright.Extensions.Inference.ChatGPT;
+using Ghostwright.Extensions.Inference.Claude;
+using Ghostwright.Selectors;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using GhostGoogle = Ghostwright.Extensions.Inference.Google;
 
 namespace ContextSavvy.LlmProviders.Infrastructure;
 
@@ -12,6 +19,19 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddLlmProvidersInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        // Ghostwright Core
+        var ghostSettings = new GhostSettings();
+        configuration.GetSection("Ghostwright").Bind(ghostSettings);
+        services.AddSingleton(ghostSettings);
+        services.AddSingleton<IGhostDriver, GhostDriver>();
+        services.AddSingleton<ISelectorProvider, SelectorProvider>();
+        services.AddSingleton<ITotpService, TotpService>();
+
+        // Ghostwright Extensions (Inference Providers)
+        services.AddTransient<GhostGoogle.GeminiProvider>();
+        services.AddTransient<ChatGptProvider>();
+        services.AddTransient<ClaudeProvider>();
+
         // Tier 1 (Free/Fast)
         services.AddScoped<ILlmProvider, CloudflareProvider>();
         services.AddScoped<ILlmProvider, CohereProvider>();
@@ -45,6 +65,8 @@ public static class DependencyInjection
         services.AddScoped<CookieManager>(); // Helper for Tier 3
 
         // Tier 4 (Experimental/Ghost Driver)
+        services.AddScoped<ILlmProvider, ChatGPTBrowserProvider>();
+        services.AddScoped<ILlmProvider, ClaudeBrowserProvider>();
         services.AddScoped<ILlmProvider, GeminiBrowserProvider>();
         services.AddScoped<ILlmProvider, GrokProvider>();
 
