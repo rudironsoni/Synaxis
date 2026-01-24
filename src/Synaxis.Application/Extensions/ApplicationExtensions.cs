@@ -22,10 +22,10 @@ public static class ApplicationExtensions
         services.AddSingleton<IProviderRegistry, ProviderRegistry>();
 
         // 3. Register Providers as Keyed Services
-        var synaplexerConfig = configuration.GetSection("Synaxis").Get<SynaxisConfiguration>();
-        if (synaplexerConfig != null)
+        var synaxisConfig = configuration.GetSection("Synaxis").Get<SynaxisConfiguration>();
+        if (synaxisConfig != null)
         {
-            foreach (var provider in synaplexerConfig.Providers)
+            foreach (var provider in synaxisConfig.Providers)
             {
                 var name = provider.Key;
                 var config = provider.Value;
