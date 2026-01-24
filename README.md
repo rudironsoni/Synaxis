@@ -1,45 +1,65 @@
-# Synaplexer: The Intelligent LLM Gateway
+# Synaxis (formerly Synaplexer)
 
-A unified interface for managing multiple LLM providers with smart routing.
+A lightweight, configuration-driven AI Gateway that unifies multiple LLM providers under a single OpenAI-compatible API.
 
 ## Key Features
-- **Multi-Key Load Balancing**: Distribute requests across multiple API keys per provider.
-- **Priority-Based Routing**: Tiered routing to optimize for cost and reliability.
-- **Automatic Failover**: Seamlessly switches to the next available provider on failure.
 
-## Supported Providers
-1. **Cohere**
-2. **Groq**
-3. **Gemini**
-4. **Cloudflare**
-5. **NVIDIA**
-6. **HuggingFace**
-7. **Pollinations**
-8. **OpenRouter**
-9. **DeepInfra**
+- **Unified API**: Drop-in replacement for OpenAI clients (`/v1/chat/completions`).
+- **Smart Routing**: Tiered failover (e.g., try Free Tier first, then Paid).
+- **Config-Driven**: No database required. Defined entirely in `appsettings.json`.
+- **Broad Support**: Groq, Cohere, Gemini, Cloudflare, Pollinations, OpenRouter.
 
 ## Configuration
-Configure your providers in `appsettings.json`:
+
+Synaxis is configured via `appsettings.json`. Below is an example configuration:
 
 ```json
-"Providers": {
-  "Cohere": { "Priority": 1, "ApiKeys": ["YOUR_KEY_HERE"] },
-  "Groq": { "Priority": 1, "ApiKeys": ["YOUR_KEY_HERE"] }
-}
-```
-
-## Usage
-
-### HTTP API
-The service exposes an OpenAI-compatible endpoint:
-
-```bash
-POST /v1/chat/completions
 {
-  "model": "llama-3",
-  "messages": [{"role": "user", "content": "Hello!"}]
+  "Synaxis": {
+    "Providers": {
+      "Groq": {
+        "Type": "Groq",
+        "Key": "YOUR_GROQ_API_KEY",
+        "Tier": 1,
+        "Models": [
+          "llama-3.3-70b-versatile",
+          "llama-3.1-8b-instant"
+        ]
+      },
+      "Gemini": {
+        "Type": "Gemini",
+        "Key": "YOUR_GEMINI_API_KEY",
+        "Tier": 1,
+        "Models": [
+          "gemini-1.5-flash",
+          "gemini-1.5-pro"
+        ]
+      },
+      "OpenRouter": {
+        "Type": "OpenRouter",
+        "Key": "YOUR_OPENROUTER_API_KEY",
+        "Tier": 2,
+        "Models": [
+          "mistralai/mistral-7b-instruct:free"
+        ]
+      }
+    }
+  }
 }
 ```
 
-### gRPC
-High-performance gRPC endpoints are available for internal service communication.
+## Running
+
+### Local
+To run the API locally:
+```bash
+dotnet run --project src/Synaxis.Api
+```
+
+### Docker
+To run using Docker:
+```bash
+docker-compose up --build
+```
+
+The gateway will be available at `http://localhost:8080`.
