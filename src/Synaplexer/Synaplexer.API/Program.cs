@@ -1,3 +1,5 @@
+using Serilog;
+using Serilog.Enrichers.Sensitive;
 using Synaplexer.API.Configuration;
 using Synaplexer.API.Endpoints;
 using Synaplexer.API.GrpcServices;
@@ -5,6 +7,19 @@ using Synaplexer.Application.DependencyInjection;
 using Synaplexer.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Logging.ClearProviders();
+builder.Host.UseSerilog((ctx, lc) => lc
+    .WriteTo.Console()
+    .Enrich.WithSensitiveDataMasking(options =>
+    {
+        options.Mode = MaskingMode.Globally;
+        options.MaskProperties.Add(new MaskProperty { Name = "*Key" });
+        options.MaskProperties.Add(new MaskProperty { Name = "*Token" });
+        options.MaskProperties.Add(new MaskProperty { Name = "Authorization" });
+        options.MaskProperties.Add(new MaskProperty { Name = "Password" });
+        options.MaskProperties.Add(new MaskProperty { Name = "Secret" });
+    }));
 
 // Add service defaults & Aspire components.
 builder.AddServiceDefaults();

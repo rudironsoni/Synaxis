@@ -4,8 +4,9 @@ using System.Text;
 using System.Text.Json;
 using Synaplexer.Domain.Interfaces;
 using Synaplexer.Domain.ValueObjects;
-using Microsoft.Extensions.Configuration;
+using Synaplexer.Infrastructure.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Synaplexer.Infrastructure.Providers
 {
@@ -13,7 +14,10 @@ namespace Synaplexer.Infrastructure.Providers
     {
         private static readonly HashSet<string> AvailableModels = new(StringComparer.OrdinalIgnoreCase)
         {
-            "gemini-2.5-flash", "gemini-2.5-pro", "gemini-1.5-pro", "gemini-1.5-flash"
+            "gemini-2.0-flash",
+            "gemini-2.0-flash-lite",
+            "gemini-2.5-flash",
+            "gemini-flash-latest"
         };
 
         public override string Id => "gemini";
@@ -23,8 +27,8 @@ namespace Synaplexer.Infrastructure.Providers
         public GeminiProvider(
             HttpClient httpClient,
             ILogger<GeminiProvider> logger,
-            IConfiguration config)
-            : base(httpClient, logger, config, "Gemini")
+            IOptionsSnapshot<ProvidersOptions> options)
+            : base(httpClient, logger, options, "Gemini")
         {
         }
 
@@ -38,7 +42,7 @@ namespace Synaplexer.Infrastructure.Providers
                 throw new InvalidOperationException("Gemini API Key is missing.");
             }
 
-            var model = string.IsNullOrEmpty(request.Model) ? "gemini-2.5-flash" : request.Model;
+            var model = string.IsNullOrEmpty(request.Model) ? "gemini-2.0-flash" : request.Model;
             var apiModel = model.Replace("gemini/", "");
 
             var contents = request.Messages.Select(m => new
