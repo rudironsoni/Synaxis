@@ -1,0 +1,6 @@
+@Synaplexer.API_HostAddress = http://localhost:5216
+
+GET {{Synaplexer.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
