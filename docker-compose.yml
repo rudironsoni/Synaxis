@@ -1,0 +1,14 @@
+services:
+  synaxis:
+    build:
+      context: .
+      dockerfile: src/Synaxis.Api/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      # - Synaxis__Providers__Groq__Key=your_key_here
+      # - Synaxis__Providers__Cohere__Key=your_key_here
+      # - Synaxis__Providers__Gemini__Key=your_key_here
+      # - Synaxis__Providers__Cloudflare__Key=your_key_here
+      # - Synaxis__Providers__OpenRouter__Key=your_key_here
