@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Synaxis.Infrastructure", "s
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Synaxis.Application", "src\Synaxis.Application\Synaxis.Application.csproj", "{1F59AAF7-1912-4F82-ADAD-56A24C560CFC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Synaxis.Api", "src\Synaxis.Api\Synaxis.Api.csproj", "{6AB932C2-24A2-4C29-8B33-5887E94ACF7A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Synaxis.WebApi", "src\Synaxis.WebApi\Synaxis.WebApi.csproj", "{6AB932C2-24A2-4C29-8B33-5887E94ACF7A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
 EndProject

@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Synaxis.Api\Synaxis.Api.csproj" />
+    <ProjectReference Include="..\..\src\Synaxis.WebApi\Synaxis.WebApi.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -6,7 +6,7 @@ Synaxis follows the **Clean Architecture** principles to ensure separation of co
 
 The solution is divided into three main layers:
 
-### 1. `Synaxis.Api` (Presentation)
+### 1. `Synaxis.WebApi` (Presentation)
 *   **Role:** The entry point of the application.
 *   **Responsibilities:**
     *   Hosting the ASP.NET Core Web API.
@@ -37,7 +37,7 @@ The solution is divided into three main layers:
 
 ## Request Flow
 
-1.  **Client Request:** A client sends a standard OpenAI format request (e.g., POST `/chat/completions`) to the `Synaxis.Api`.
+1.  **Client Request:** A client sends a standard OpenAI format request (e.g., POST `/chat/completions`) to the `Synaxis.WebApi`.
 2.  **Controller:** The API controller receives the request and delegates it to the `IChatClient`.
 3.  **Pipeline Execution:**
     *   **Usage Tracking:** Logs request metrics.
