@@ -1,6 +1,6 @@
 # Configuration Guide
 
-Synaxis is configured primarily through `src/Synaxis.Api/appsettings.json`. This file defines which LLM providers are active, their API keys, and their routing priority (Tiers).
+Synaxis is configured primarily through `src/Synaxis.WebApi/appsettings.json`. This file defines which LLM providers are active, their API keys, and their routing priority (Tiers).
 
 ## Structure
 

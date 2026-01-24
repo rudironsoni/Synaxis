@@ -5,7 +5,7 @@ WORKDIR /src
 # Copy solution and project files for restore
 COPY ["Synaxis.sln", "./"]
 COPY ["Directory.Packages.props", "./"]
-COPY ["src/Synaxis.Api/Synaxis.Api.csproj", "src/Synaxis.Api/"]
+COPY ["src/Synaxis.WebApi/Synaxis.WebApi.csproj", "src/Synaxis.WebApi/"]
 COPY ["src/Synaxis.Application/Synaxis.Application.csproj", "src/Synaxis.Application/"]
 COPY ["src/Synaxis.Infrastructure/Synaxis.Infrastructure.csproj", "src/Synaxis.Infrastructure/"]
 COPY ["tests/Synaxis.Infrastructure.Tests/Synaxis.Infrastructure.Tests.csproj", "tests/Synaxis.Infrastructure.Tests/"]
@@ -17,12 +17,12 @@ RUN dotnet restore
 
 # Copy everything else and build
 COPY . .
-WORKDIR "/src/src/Synaxis.Api"
-RUN dotnet publish "Synaxis.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+WORKDIR "/src/src/Synaxis.WebApi"
+RUN dotnet publish "Synaxis.WebApi.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime Stage
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
 WORKDIR /app
 EXPOSE 8080
 COPY --from=build /app/publish .
-ENTRYPOINT ["dotnet", "Synaxis.Api.dll"]
+ENTRYPOINT ["dotnet", "Synaxis.WebApi.dll"]
