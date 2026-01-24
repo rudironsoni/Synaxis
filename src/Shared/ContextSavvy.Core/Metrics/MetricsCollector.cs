@@ -1,7 +1,5 @@
 using System.Collections.Concurrent;
 
-using Ghostwright.Priority;
-
 namespace ContextSavvy.Core.Metrics;
 
 /// <summary>

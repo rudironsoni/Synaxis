@@ -7,7 +7,7 @@ using ContextSavvy.LlmProviders.Domain.Interfaces;
 using ContextSavvy.LlmProviders.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 
-namespace ContextSavvy.LlmProviders.Infrastructure.Providers.Tier1
+namespace ContextSavvy.LlmProviders.Infrastructure.Providers.Tier2
 {
     public class CohereProvider : ILlmProvider
     {
@@ -21,7 +21,7 @@ namespace ContextSavvy.LlmProviders.Infrastructure.Providers.Tier1
 
         public string Id => "cohere";
         public string Name => "Cohere";
-        public ProviderTier Tier => ProviderTier.Tier1_FreeFast;
+        public ProviderTier Tier => ProviderTier.Tier2_Standard;
 
         public CohereProvider(HttpClient httpClient, ILogger<CohereProvider> logger)
         {

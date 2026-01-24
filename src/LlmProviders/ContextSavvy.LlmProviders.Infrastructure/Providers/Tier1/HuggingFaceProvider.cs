@@ -8,34 +8,36 @@ using ContextSavvy.LlmProviders.Domain.ValueObjects;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace ContextSavvy.LlmProviders.Infrastructure.Providers.Tier2
+namespace ContextSavvy.LlmProviders.Infrastructure.Providers.Tier1
 {
-    public class GroqProvider : ILlmProvider
+    public class HuggingFaceProvider : ILlmProvider
     {
         private readonly HttpClient _httpClient;
-        private readonly ILogger<GroqProvider> _logger;
-        private readonly string? _apiKey;
+        private readonly ILogger<HuggingFaceProvider> _logger;
+        private readonly string? _token;
 
         private static readonly HashSet<string> AvailableModels = new(StringComparer.OrdinalIgnoreCase)
         {
-            "llama-3.3-70b-versatile", "llama-3.3-70b-instruct", "llama3-8b-8192",
-            "llama-3.1-8b-instruct", "llama-3.1-70b-versatile", "mixtral-8x7b-32768",
-            "gemma-7b-it"
+            "meta-llama/Llama-3.3-70B-Instruct", "Qwen/Qwen-2.5-72B-Instruct",
+            "deepseek-ai/DeepSeek-R1", "mistralai/Mixtral-8x7B-Instruct-v0.1",
+            "meta-llama/Llama-3.1-8B-Instruct", "google/gemma-2-27b-it"
         };
 
-        public string Id => "groq";
-        public string Name => "Groq";
-        public ProviderTier Tier => ProviderTier.Tier2_Standard;
+        public string Id => "huggingface";
+        public string Name => "HuggingFace";
+        public ProviderTier Tier => ProviderTier.Tier1_FreeFast;
 
-        public GroqProvider(HttpClient httpClient, ILogger<GroqProvider> logger, IConfiguration config)
+        public HuggingFaceProvider(HttpClient httpClient, ILogger<HuggingFaceProvider> logger, IConfiguration config)
         {
             _httpClient = httpClient;
             _logger = logger;
-            _apiKey = config["Groq:ApiKey"] ?? Environment.GetEnvironmentVariable("GROQ_API_KEY");
-            _httpClient.BaseAddress = new Uri("https://api.groq.com");
-            if (!string.IsNullOrEmpty(_apiKey))
+            _token = config["HuggingFace:ApiKey"] ?? Environment.GetEnvironmentVariable("HUGGINGFACE_TOKEN");
+            _httpClient.BaseAddress = new Uri("https://router.huggingface.co");
+            _httpClient.Timeout = TimeSpan.FromMinutes(5);
+
+            if (!string.IsNullOrEmpty(_token))
             {
-                _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_apiKey}");
+                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _token);
             }
         }
 
@@ -43,33 +45,33 @@ namespace ContextSavvy.LlmProviders.Infrastructure.Providers.Tier2
 
         public async Task<ChatCompletionResult> ChatAsync(ChatRequest request, CancellationToken ct = default)
         {
-            var model = string.IsNullOrEmpty(request.Model) ? "llama-3.3-70b-versatile" : request.Model;
+            var model = string.IsNullOrEmpty(request.Model) ? "meta-llama/Llama-3.3-70B-Instruct" : request.Model;
 
             var payload = new
             {
                 model = model,
                 messages = request.Messages.Select(m => new { role = m.Role, content = m.Content }).ToList(),
                 temperature = request.Temperature,
-                max_tokens = request.MaxTokens,
+                max_completion_tokens = request.MaxTokens,
                 stream = false
             };
 
             var json = JsonSerializer.Serialize(payload);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            var response = await _httpClient.PostAsync("/openai/v1/chat/completions", content, ct);
+            var response = await _httpClient.PostAsync($"/{model}", content, ct);
             response.EnsureSuccessStatusCode();
 
-            var result = await response.Content.ReadFromJsonAsync<GroqResponse>(cancellationToken: ct);
+            var result = await response.Content.ReadFromJsonAsync<HFResponse>(cancellationToken: ct);
             var text = result?.Choices?.FirstOrDefault()?.Message?.Content ?? "";
 
             if (string.IsNullOrEmpty(text))
             {
-                throw new Exception("Invalid Groq response");
+                throw new Exception("Invalid HuggingFace response");
             }
 
             return new ChatCompletionResult(
-                result?.Id ?? $"groq-{Guid.NewGuid():N}",
+                result?.Id ?? $"hf-{Guid.NewGuid():N}",
                 text,
                 result?.Choices?.FirstOrDefault()?.FinishReason ?? "stop",
                 new Usage(result?.Usage?.PromptTokens ?? 0, result?.Usage?.CompletionTokens ?? 0, result?.Usage?.TotalTokens ?? 0)
@@ -82,9 +84,9 @@ namespace ContextSavvy.LlmProviders.Infrastructure.Providers.Tier2
             yield return new ChatCompletionChunk(result.Id, result.Content, result.FinishReason);
         }
 
-        private class GroqResponse
+        private class HFResponse
         {
-            public string Id { get; set; } = "";
+            public string? Id { get; set; }
             public List<ChoiceInfo>? Choices { get; set; }
             public UsageInfo? Usage { get; set; }
 

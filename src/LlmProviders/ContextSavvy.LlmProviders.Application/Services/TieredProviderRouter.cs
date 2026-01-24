@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using ContextSavvy.Core.Metrics;
-using Ghostwright.Priority;
 using ContextSavvy.LlmProviders.Application.Commands;
 using AppChatCompletionResult = ContextSavvy.LlmProviders.Application.Dtos.ChatCompletionResult;
 using DomainChatCompletionResult = ContextSavvy.LlmProviders.Domain.ValueObjects.ChatCompletionResult;
@@ -144,11 +143,7 @@ public class TieredProviderRouter : ITieredProviderRouter, IProviderService
 
     private static AccessMethodType MapToAccessMethod(ProviderTier tier)
     {
-        return tier switch
-        {
-            ProviderTier.Tier3_Ghost => AccessMethodType.BrowserCookieAuth,
-            _ => AccessMethodType.ApiDirect
-        };
+        return AccessMethodType.ApiDirect;
     }
 }
 

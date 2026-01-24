@@ -4,7 +4,7 @@ using ContextSavvy.LlmProviders.Domain.Interfaces;
 using ContextSavvy.LlmProviders.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 
-namespace ContextSavvy.LlmProviders.Infrastructure.Providers.Tier1
+namespace ContextSavvy.LlmProviders.Infrastructure.Providers.Tier2
 {
     public class OpenAIFMProvider : ILlmProvider
     {
@@ -20,7 +20,7 @@ namespace ContextSavvy.LlmProviders.Infrastructure.Providers.Tier1
 
         public string Id => "openaifm";
         public string Name => "openAIFM";
-        public ProviderTier Tier => ProviderTier.Tier1_FreeFast;
+        public ProviderTier Tier => ProviderTier.Tier2_Standard;
 
         public OpenAIFMProvider(HttpClient httpClient, ILogger<OpenAIFMProvider> logger)
         {
@@ -34,7 +34,7 @@ namespace ContextSavvy.LlmProviders.Infrastructure.Providers.Tier1
         {
             var model = string.IsNullOrEmpty(request.Model) ? "nova" : request.Model;
             var url = $"https://api.openai.fm/v1/{model}";
-            
+
             var payload = new
             {
                 model = model,

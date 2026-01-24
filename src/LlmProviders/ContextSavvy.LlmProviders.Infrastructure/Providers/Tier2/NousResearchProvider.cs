@@ -15,10 +15,8 @@ namespace ContextSavvy.LlmProviders.Infrastructure.Providers.Tier2
         private readonly HttpClient _http;
         private readonly ILogger<NousResearchProvider> _logger;
         private readonly string? _nousApiKey;
-        private readonly string? _openRouterApiKey;
 
         private const string NousBaseUrl = "https://api.nousresearch.com/v1";
-        private const string OpenRouterBaseUrl = "https://openrouter.ai/api/v1";
 
         public string Id => "nousresearch";
         public string Name => "NousResearch";
@@ -40,7 +38,6 @@ namespace ContextSavvy.LlmProviders.Infrastructure.Providers.Tier2
             _http = http;
             _logger = logger;
             _nousApiKey = config["NousResearch:ApiKey"] ?? Environment.GetEnvironmentVariable("NOUSRESEARCH_API_KEY");
-            _openRouterApiKey = config["OpenRouter:ApiKey"] ?? Environment.GetEnvironmentVariable("OPENROUTER_API_KEY");
         }
 
         public bool SupportsModel(string modelId) => SupportedModels.Contains(modelId);
@@ -49,7 +46,7 @@ namespace ContextSavvy.LlmProviders.Infrastructure.Providers.Tier2
         {
             var modelId = ResolveModel(request.Model);
             var (endpoint, apiKey) = GetApiEndpoint();
-            
+
             var payload = new
             {
                 model = modelId,
@@ -101,7 +98,6 @@ namespace ContextSavvy.LlmProviders.Infrastructure.Providers.Tier2
         private (string endpoint, string apiKey) GetApiEndpoint()
         {
             if (!string.IsNullOrEmpty(_nousApiKey)) return (NousBaseUrl, _nousApiKey);
-            if (!string.IsNullOrEmpty(_openRouterApiKey)) return (OpenRouterBaseUrl, _openRouterApiKey);
             throw new InvalidOperationException("No API key configured for Nous Research");
         }
 

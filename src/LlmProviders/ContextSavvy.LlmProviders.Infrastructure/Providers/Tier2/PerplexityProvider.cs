@@ -7,7 +7,7 @@ using ContextSavvy.LlmProviders.Domain.Interfaces;
 using ContextSavvy.LlmProviders.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 
-namespace ContextSavvy.LlmProviders.Infrastructure.Providers.Tier1
+namespace ContextSavvy.LlmProviders.Infrastructure.Providers.Tier2
 {
     public class PerplexityProvider : ILlmProvider
     {
@@ -21,7 +21,7 @@ namespace ContextSavvy.LlmProviders.Infrastructure.Providers.Tier1
 
         public string Id => "perplexity";
         public string Name => "Perplexity";
-        public ProviderTier Tier => ProviderTier.Tier1_FreeFast;
+        public ProviderTier Tier => ProviderTier.Tier2_Standard;
 
         public PerplexityProvider(HttpClient httpClient, ILogger<PerplexityProvider> logger)
         {

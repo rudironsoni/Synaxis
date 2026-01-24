@@ -8,7 +8,7 @@ using ContextSavvy.LlmProviders.Domain.ValueObjects;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace ContextSavvy.LlmProviders.Infrastructure.Providers.Tier1
+namespace ContextSavvy.LlmProviders.Infrastructure.Providers.Tier2
 {
     public class DeepInfraProvider : ILlmProvider
     {
@@ -20,7 +20,7 @@ namespace ContextSavvy.LlmProviders.Infrastructure.Providers.Tier1
 
         public string Id => "deepinfra";
         public string Name => "DeepInfra";
-        public ProviderTier Tier => ProviderTier.Tier1_FreeFast;
+        public ProviderTier Tier => ProviderTier.Tier2_Standard;
 
         public HashSet<string> SupportedModels { get; } = new(StringComparer.OrdinalIgnoreCase)
         {

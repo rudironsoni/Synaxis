@@ -40,9 +40,7 @@ public class ValueObjectTests
         Enum.GetNames<ProviderTier>().Should().Contain(new[]
         {
             "Tier1_FreeFast",
-            "Tier2_Standard",
-            "Tier3_Ghost",
-            "Tier4_Experimental"
+            "Tier2_Standard"
         });
     }
 }

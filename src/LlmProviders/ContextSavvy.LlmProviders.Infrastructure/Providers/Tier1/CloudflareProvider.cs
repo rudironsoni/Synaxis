@@ -37,7 +37,7 @@ namespace ContextSavvy.LlmProviders.Infrastructure.Providers.Tier1
             "@cf/mistral/mistral-7b-instruct-v0.1",
             "@cf/qwen/qwen1.5-14b-chat-awq",
             "@cf/deepseek-ai/deepseek-math-7b-instruct",
-            
+
             // Aliases
             "llama-3-8b",
             "llama-3-70b",
