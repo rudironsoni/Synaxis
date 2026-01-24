@@ -1,65 +1,60 @@
-# Synaxis (formerly Synaplexer)
+# Synaxis
 
-A lightweight, configuration-driven AI Gateway that unifies multiple LLM providers under a single OpenAI-compatible API.
+**Synaxis** is a robust, clean-architecture AI Gateway built on .NET 9. It serves as a unified interface for multiple LLM providers (OpenAI, Groq, Cohere, Cloudflare, etc.), offering intelligent routing, failover protection, and load balancing.
 
 ## Key Features
 
-- **Unified API**: Drop-in replacement for OpenAI clients (`/v1/chat/completions`).
-- **Smart Routing**: Tiered failover (e.g., try Free Tier first, then Paid).
-- **Config-Driven**: No database required. Defined entirely in `appsettings.json`.
-- **Broad Support**: Groq, Cohere, Gemini, Cloudflare, Pollinations, OpenRouter.
+*   **Unified API:** Access multiple LLM providers through a single, OpenAI-compatible interface.
+*   **Intelligent Routing ("The Brain"):** Requests are routed based on the requested model ID.
+*   **Tiered Failover:** Configure providers in tiers. If a Tier 1 provider fails, Synaxis automatically fails over to Tier 2, and so on.
+*   **Load Balancing:** Requests within the same tier are shuffled to distribute load across available providers.
+*   **Clean Architecture:** Structured for maintainability and testability (`Api`, `Application`, `Infrastructure`).
+*   **Extensible:** Easily add new providers via the `IProviderRegistry` and `IChatClient` interface.
 
-## Configuration
+## Quick Start
 
-Synaxis is configured via `appsettings.json`. Below is an example configuration:
+### Prerequisites
 
-```json
-{
-  "Synaxis": {
-    "Providers": {
-      "Groq": {
-        "Type": "Groq",
-        "Key": "YOUR_GROQ_API_KEY",
-        "Tier": 1,
-        "Models": [
-          "llama-3.3-70b-versatile",
-          "llama-3.1-8b-instant"
-        ]
-      },
-      "Gemini": {
-        "Type": "Gemini",
-        "Key": "YOUR_GEMINI_API_KEY",
-        "Tier": 1,
-        "Models": [
-          "gemini-1.5-flash",
-          "gemini-1.5-pro"
-        ]
-      },
-      "OpenRouter": {
-        "Type": "OpenRouter",
-        "Key": "YOUR_OPENROUTER_API_KEY",
-        "Tier": 2,
-        "Models": [
-          "mistralai/mistral-7b-instruct:free"
-        ]
-      }
-    }
-  }
-}
-```
+*   [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
 
-## Running
+### Installation
 
-### Local
-To run the API locally:
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/rudironsoni/Synaxis.git
+    cd Synaxis
+    ```
+
+2.  **Configure Providers:**
+    *   Open `src/Synaxis.Api/appsettings.json`.
+    *   Add your API keys for the providers you wish to use.
+    *   See [Configuration Guide](docs/CONFIGURATION.md) for details.
+
+3.  **Run Locally:**
+    ```bash
+    dotnet run --project src/Synaxis.Api/Synaxis.Api.csproj
+    ```
+
+    The API will start (default is typically `http://localhost:5000` or `https://localhost:5001`).
+
+## Usage
+
+Send an OpenAI-compatible request to the gateway. For example, using `curl`:
+
 ```bash
-dotnet run --project src/Synaxis.Api
+curl http://localhost:5000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "llama-3.3-70b-versatile",
+    "messages": [
+      { "role": "user", "content": "Hello, world!" }
+    ]
+  }'
 ```
 
-### Docker
-To run using Docker:
-```bash
-docker-compose up --build
-```
+Synaxis will inspect the `model` parameter, find the configured provider (e.g., Groq), and route the request accordingly.
 
-The gateway will be available at `http://localhost:8080`.
+## Documentation
+
+*   [Architecture Overview](docs/ARCHITECTURE.md)
+*   [Configuration Guide](docs/CONFIGURATION.md)
