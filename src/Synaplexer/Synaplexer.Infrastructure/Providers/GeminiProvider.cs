@@ -16,8 +16,7 @@ namespace Synaplexer.Infrastructure.Providers
         {
             "gemini-2.0-flash",
             "gemini-2.0-flash-lite",
-            "gemini-2.5-flash",
-            "gemini-flash-latest"
+            "gemini-1.5-flash"
         };
 
         public override string Id => "gemini";
