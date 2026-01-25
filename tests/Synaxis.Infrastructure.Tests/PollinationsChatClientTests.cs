@@ -23,7 +23,7 @@ public class PollinationsChatClientTests
             .Setup<Task<HttpResponseMessage>>(
                 "SendAsync",
                 ItExpr.Is<HttpRequestMessage>(req =>
-                    req.Method == HttpMethod.Get &&
+                    req.Method == HttpMethod.Post &&
                     req.RequestUri != null && req.RequestUri.ToString().Contains("text.pollinations.ai")
                     // Removed strict check for encoded string to avoid mismatch
                 ),

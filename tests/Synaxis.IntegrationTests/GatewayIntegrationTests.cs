@@ -27,20 +27,20 @@ public class GatewayIntegrationTests : IClassFixture<SynaxisWebApplicationFactor
             {
                 config.AddInMemoryCollection(new Dictionary<string, string?>
                 {
-                    ["Synaxis:CanonicalModels:0:Id"] = "test/model",
+                    ["Synaxis:CanonicalModels:0:Id"] = "test-provider/model",
                     ["Synaxis:CanonicalModels:0:Provider"] = "test-provider",
                     ["Synaxis:CanonicalModels:0:Streaming"] = "true",
-                    ["Synaxis:Aliases:test-alias:Target"] = "test/model",
-                    ["Synaxis:Aliases:default:Target"] = "test/model",
+                    ["Synaxis:Aliases:test-alias:Target"] = "test-provider/model",
+                    ["Synaxis:Aliases:default:Target"] = "test-provider/model",
 
-                    ["Synaxis:CanonicalModels:1:Id"] = "test/no-stream",
+                    ["Synaxis:CanonicalModels:1:Id"] = "test-provider/no-stream",
                     ["Synaxis:CanonicalModels:1:Provider"] = "test-provider",
                     ["Synaxis:CanonicalModels:1:Streaming"] = "false",
                     
                     ["Synaxis:Providers:test-provider:Type"] = "mock",
                     ["Synaxis:Providers:test-provider:Tier"] = "1",
-                    ["Synaxis:Providers:test-provider:Models:0"] = "test/model",
-                    ["Synaxis:Providers:test-provider:Models:1"] = "test/no-stream",
+                    ["Synaxis:Providers:test-provider:Models:0"] = "test-provider/model",
+                    ["Synaxis:Providers:test-provider:Models:1"] = "test-provider/no-stream",
                 });
             });
 
@@ -62,9 +62,9 @@ public class GatewayIntegrationTests : IClassFixture<SynaxisWebApplicationFactor
         var data = content.GetProperty("data");
 
         var ids = data.EnumerateArray().Select(x => x.GetProperty("id").GetString()).ToList();
-        Assert.Contains("test/model", ids);
+        Assert.Contains("test-provider/model", ids);
         Assert.Contains("test-alias", ids);
-        Assert.Contains("test/no-stream", ids);
+        Assert.Contains("test-provider/no-stream", ids);
     }
 
     [Fact]
@@ -196,14 +196,14 @@ public class GatewayIntegrationTests : IClassFixture<SynaxisWebApplicationFactor
             {
                 config.AddInMemoryCollection(new Dictionary<string, string?>
                 {
-                    ["Synaxis:Aliases:default:Target"] = "test/no-stream",
+                    ["Synaxis:Aliases:default:Target"] = "test-provider/no-stream",
                 });
             });
         }).CreateClient();
 
         var request = new
         {
-            model = "test/no-stream",
+            model = "test-provider/no-stream",
             messages = new[]
             {
                 new { role = "user", content = "Hello" }
@@ -269,7 +269,7 @@ public class MockProviderRegistry : IProviderRegistry
 {
     public IEnumerable<(string ServiceKey, int Tier)> GetCandidates(string modelId)
     {
-        if (modelId == "test/model" || modelId == "test/no-stream")
+        if (modelId == "model" || modelId == "no-stream")
         {
             yield return ("test-provider", 1);
         }
