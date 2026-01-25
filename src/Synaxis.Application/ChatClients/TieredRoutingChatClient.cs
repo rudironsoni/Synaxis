@@ -7,19 +7,20 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Synaxis.Application.Routing;
 
 namespace Synaxis.Application.ChatClients;
 
 public class TieredRoutingChatClient : IChatClient
 {
-    private readonly IProviderRegistry _registry;
+    private readonly IModelResolver _resolver;
     private readonly IServiceProvider _services;
     private readonly ILogger<TieredRoutingChatClient> _logger;
     private readonly ChatClientMetadata _metadata;
 
-    public TieredRoutingChatClient(IProviderRegistry registry, IServiceProvider services, ILogger<TieredRoutingChatClient> logger)
+    public TieredRoutingChatClient(IModelResolver resolver, IServiceProvider services, ILogger<TieredRoutingChatClient> logger)
     {
-        _registry = registry;
+        _resolver = resolver;
         _services = services;
         _logger = logger;
         _metadata = new ChatClientMetadata("TieredRouter", new Uri("internal://router"));
@@ -30,8 +31,11 @@ public class TieredRoutingChatClient : IChatClient
     public async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
     {
         var modelId = options?.ModelId ?? throw new ArgumentException("ModelId is required", nameof(options));
-        var candidates = _registry.GetCandidates(modelId);
-        var tiered = candidates.GroupBy(x => x.Tier).OrderBy(g => g.Key);
+        
+        var required = new RequiredCapabilities(); // Could be derived from options in future
+        var resolution = _resolver.Resolve(modelId, required);
+        
+        var tiered = resolution.Candidates.GroupBy(x => x.Tier).OrderBy(g => g.Key);
 
         var exceptions = new List<Exception>();
 
@@ -42,13 +46,13 @@ public class TieredRoutingChatClient : IChatClient
             {
                 try
                 {
-                    var client = _services.GetRequiredKeyedService<IChatClient>(provider.ServiceKey);
-                    _logger.LogInformation("Routing {Model} to {Provider} (Tier {Tier})", modelId, provider.ServiceKey, provider.Tier);
+                    var client = _services.GetRequiredKeyedService<IChatClient>(provider.Key);
+                    _logger.LogInformation("Routing {Model} to {Provider} (Tier {Tier})", modelId, provider.Key, provider.Tier);
                     return await client.GetResponseAsync(chatMessages, options, cancellationToken);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Provider {Provider} failed for model {Model}", provider.ServiceKey, modelId);
+                    _logger.LogWarning(ex, "Provider {Provider} failed for model {Model}", provider.Key, modelId);
                     exceptions.Add(ex);
                 }
             }
@@ -61,8 +65,11 @@ public class TieredRoutingChatClient : IChatClient
     public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var modelId = options?.ModelId ?? throw new ArgumentException("ModelId is required", nameof(options));
-        var candidates = _registry.GetCandidates(modelId);
-        var tiered = candidates.GroupBy(x => x.Tier).OrderBy(g => g.Key);
+        
+        var required = new RequiredCapabilities { Streaming = true };
+        var resolution = _resolver.Resolve(modelId, required);
+        
+        var tiered = resolution.Candidates.GroupBy(x => x.Tier).OrderBy(g => g.Key);
 
         var exceptions = new List<Exception>();
         
@@ -74,8 +81,8 @@ public class TieredRoutingChatClient : IChatClient
                 IAsyncEnumerator<ChatResponseUpdate>? enumerator = null;
                 try
                 {
-                    var client = _services.GetRequiredKeyedService<IChatClient>(provider.ServiceKey);
-                    _logger.LogInformation("Routing {Model} to {Provider} (Tier {Tier})", modelId, provider.ServiceKey, provider.Tier);
+                    var client = _services.GetRequiredKeyedService<IChatClient>(provider.Key);
+                    _logger.LogInformation("Routing {Model} to {Provider} (Tier {Tier})", modelId, provider.Key, provider.Tier);
                     
                     var stream = client.GetStreamingResponseAsync(chatMessages, options, cancellationToken);
                     enumerator = stream.GetAsyncEnumerator(cancellationToken);
@@ -88,7 +95,7 @@ public class TieredRoutingChatClient : IChatClient
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Provider {Provider} failed to start for model {Model}", provider.ServiceKey, modelId);
+                    _logger.LogWarning(ex, "Provider {Provider} failed to start for model {Model}", provider.Key, modelId);
                     exceptions.Add(ex);
                     if (enumerator != null) await enumerator.DisposeAsync();
                     continue;
