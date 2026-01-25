@@ -49,7 +49,7 @@ public class ModelResolver : IModelResolver
         }
 
         // 3. Get candidates from registry
-        var candidatePairs = _registry.GetCandidates(targetModelId).ToList();
+        var candidatePairs = _registry.GetCandidates(canonicalId.ModelPath).ToList();
         
         var candidates = candidatePairs
             .Select(p => {
@@ -63,6 +63,19 @@ public class ModelResolver : IModelResolver
             .Where(p => p != null)
             .Cast<ProviderConfig>()
             .ToList();
+
+        // Filter by provider if specified in canonical ID
+        if (canonicalId.Provider != "unknown")
+        {
+            candidates = candidates
+                .Where(c => c.Key.Equals(canonicalId.Provider, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+
+        if (canonicalId.Provider == "unknown" && candidates.Count > 0)
+        {
+            canonicalId = new CanonicalModelId(candidates[0].Key, canonicalId.ModelPath);
+        }
 
         return new ResolutionResult(modelId, canonicalId, candidates);
     }

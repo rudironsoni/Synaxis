@@ -111,6 +111,7 @@ public class RoutingAgent : AIAgent
         try
         {
             context.Request.EnableBuffering();
+            context.Request.Body.Position = 0;
             using var reader = new StreamReader(context.Request.Body, leaveOpen: true);
             var body = await reader.ReadToEndAsync(cancellationToken);
             context.Request.Body.Position = 0;

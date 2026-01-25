@@ -6,6 +6,12 @@ public record CanonicalModelId(string Provider, string ModelPath)
 
     public static CanonicalModelId Parse(string input)
     {
+        // Special handling for models starting with @ (e.g. Cloudflare @cf/...)
+        if (input.StartsWith("@"))
+        {
+            return new CanonicalModelId("unknown", input);
+        }
+
         var parts = input.Split('/', 2);
         return parts.Length == 2 ? new CanonicalModelId(parts[0], parts[1]) : new CanonicalModelId("unknown", input);
     }
