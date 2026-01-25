@@ -21,7 +21,7 @@ public class LiveProviderValidationTests : IClassFixture<SynaxisWebApplicationFa
     public async Task Validate_Groq_Connectivity()
     {
         var config = _factory.Services.GetRequiredService<IConfiguration>();
-        var apiKey = config["Synaxis:Providers:Groq:Key"];
+        var apiKey = config["Synaxis:InferenceGateway:Providers:Groq:Key"];
 
         Assert.False(string.IsNullOrEmpty(apiKey), "API Key for Groq is missing in Configuration (appsettings.json or Env Var)");
 
@@ -32,7 +32,7 @@ public class LiveProviderValidationTests : IClassFixture<SynaxisWebApplicationFa
     public async Task Validate_Cohere_Connectivity()
     {
         var config = _factory.Services.GetRequiredService<IConfiguration>();
-        var apiKey = config["Synaxis:Providers:Cohere:Key"];
+        var apiKey = config["Synaxis:InferenceGateway:Providers:Cohere:Key"];
 
         Assert.False(string.IsNullOrEmpty(apiKey), "API Key for Cohere is missing in Configuration (appsettings.json or Env Var)");
 
@@ -50,8 +50,8 @@ public class LiveProviderValidationTests : IClassFixture<SynaxisWebApplicationFa
     public async Task Validate_Cloudflare_Connectivity()
     {
         var config = _factory.Services.GetRequiredService<IConfiguration>();
-        var apiKey = config["Synaxis:Providers:Cloudflare:Key"];
-        var accountId = config["Synaxis:Providers:Cloudflare:AccountId"];
+        var apiKey = config["Synaxis:InferenceGateway:Providers:Cloudflare:Key"];
+        var accountId = config["Synaxis:InferenceGateway:Providers:Cloudflare:AccountId"];
 
         Assert.False(string.IsNullOrEmpty(apiKey), "API Key for Cloudflare is missing in Configuration (appsettings.json or Env Var)");
         Assert.False(string.IsNullOrEmpty(accountId), "Account ID for Cloudflare is missing in Configuration (appsettings.json or Env Var)");

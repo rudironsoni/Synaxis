@@ -27,22 +27,22 @@ public class GatewayIntegrationTests : IClassFixture<SynaxisWebApplicationFactor
             {
                 config.AddInMemoryCollection(new Dictionary<string, string?>
                 {
-                    ["Synaxis:CanonicalModels:0:Id"] = "test-provider/model",
-                    ["Synaxis:CanonicalModels:0:Provider"] = "test-provider",
-                    ["Synaxis:CanonicalModels:0:ModelPath"] = "model",
-                    ["Synaxis:CanonicalModels:0:Streaming"] = "true",
-                    ["Synaxis:Aliases:test-alias:Candidates:0"] = "test-provider/model",
-                    ["Synaxis:Aliases:default:Candidates:0"] = "test-provider/model",
+                    ["Synaxis:InferenceGateway:CanonicalModels:0:Id"] = "test-provider/model",
+                    ["Synaxis:InferenceGateway:CanonicalModels:0:Provider"] = "test-provider",
+                    ["Synaxis:InferenceGateway:CanonicalModels:0:ModelPath"] = "model",
+                    ["Synaxis:InferenceGateway:CanonicalModels:0:Streaming"] = "true",
+                    ["Synaxis:InferenceGateway:Aliases:test-alias:Candidates:0"] = "test-provider/model",
+                    ["Synaxis:InferenceGateway:Aliases:default:Candidates:0"] = "test-provider/model",
 
-                    ["Synaxis:CanonicalModels:1:Id"] = "test-provider/no-stream",
-                    ["Synaxis:CanonicalModels:1:Provider"] = "test-provider",
-                    ["Synaxis:CanonicalModels:1:ModelPath"] = "no-stream",
-                    ["Synaxis:CanonicalModels:1:Streaming"] = "false",
+                    ["Synaxis:InferenceGateway:CanonicalModels:1:Id"] = "test-provider/no-stream",
+                    ["Synaxis:InferenceGateway:CanonicalModels:1:Provider"] = "test-provider",
+                    ["Synaxis:InferenceGateway:CanonicalModels:1:ModelPath"] = "no-stream",
+                    ["Synaxis:InferenceGateway:CanonicalModels:1:Streaming"] = "false",
                     
-                    ["Synaxis:Providers:test-provider:Type"] = "mock",
-                    ["Synaxis:Providers:test-provider:Tier"] = "1",
-                    ["Synaxis:Providers:test-provider:Models:0"] = "test-provider/model",
-                    ["Synaxis:Providers:test-provider:Models:1"] = "test-provider/no-stream",
+                    ["Synaxis:InferenceGateway:Providers:test-provider:Type"] = "mock",
+                    ["Synaxis:InferenceGateway:Providers:test-provider:Tier"] = "1",
+                    ["Synaxis:InferenceGateway:Providers:test-provider:Models:0"] = "test-provider/model",
+                    ["Synaxis:InferenceGateway:Providers:test-provider:Models:1"] = "test-provider/no-stream",
                 });
             });
 
@@ -198,7 +198,7 @@ public class GatewayIntegrationTests : IClassFixture<SynaxisWebApplicationFactor
             {
                 config.AddInMemoryCollection(new Dictionary<string, string?>
                 {
-                    ["Synaxis:Aliases:default:Candidates:0"] = "test-provider/no-stream",
+                    ["Synaxis:InferenceGateway:Aliases:default:Candidates:0"] = "test-provider/no-stream",
                 });
             });
         }).CreateClient();
