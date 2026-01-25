@@ -10,8 +10,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  # Image name: owner/synaxis (as requested)
-  IMAGE_NAME: ${{ github.repository_owner }}/synaxis
+  # Image name: owner/synaxis-inferencegateway (as requested)
+  IMAGE_NAME: ${{ github.repository_owner }}/synaxis-inferencegateway
 
 jobs:
   build:
