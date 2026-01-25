@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
+using System.Net.Http;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Synaxis.InferenceGateway.Infrastructure.Auth;
@@ -36,8 +39,11 @@ public class AntigravityAuthManagerTests : IDisposable
             new() { Email = "user2@test.com", Token = new() { AccessToken = "token2", ExpiresInSeconds = 3600, IssuedUtc = DateTime.UtcNow } }
         };
         await File.WriteAllTextAsync(_tempAuthPath, System.Text.Json.JsonSerializer.Serialize(accounts));
-
-        var manager = new AntigravityAuthManager("proj", _tempAuthPath, _loggerMock.Object);
+        var httpClientFactory = CreateHttpClientFactory(() => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent("{}")
+        });
+        var manager = new AntigravityAuthManager("proj", _tempAuthPath, _loggerMock.Object, httpClientFactory);
 
         // Act
         // Force load by calling GetTokenAsync. 
@@ -62,7 +68,11 @@ public class AntigravityAuthManagerTests : IDisposable
         {
             // Empty file
             await File.WriteAllTextAsync(_tempAuthPath, "[]");
-            var manager = new AntigravityAuthManager("proj", _tempAuthPath, _loggerMock.Object);
+            var httpClientFactory = CreateHttpClientFactory(() => new HttpResponseMessage(HttpStatusCode.BadRequest)
+            {
+                Content = new StringContent("{\"error\":\"invalid_grant\"}")
+            });
+            var manager = new AntigravityAuthManager("proj", _tempAuthPath, _loggerMock.Object, httpClientFactory);
 
             // Act
             // GetTokenAsync will detect env var, inject it.
@@ -79,6 +89,30 @@ public class AntigravityAuthManagerTests : IDisposable
         finally
         {
             Environment.SetEnvironmentVariable("ANTIGRAVITY_REFRESH_TOKEN", null);
+        }
+    }
+
+    private static IHttpClientFactory CreateHttpClientFactory(Func<HttpResponseMessage> responseFactory)
+    {
+        var handler = new StubHttpMessageHandler(responseFactory);
+        var client = new HttpClient(handler);
+        var factoryMock = new Mock<IHttpClientFactory>();
+        factoryMock.Setup(x => x.CreateClient(It.IsAny<string>())).Returns(client);
+        return factoryMock.Object;
+    }
+
+    private sealed class StubHttpMessageHandler : HttpMessageHandler
+    {
+        private readonly Func<HttpResponseMessage> _responseFactory;
+
+        public StubHttpMessageHandler(Func<HttpResponseMessage> responseFactory)
+        {
+            _responseFactory = responseFactory;
+        }
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, System.Threading.CancellationToken cancellationToken)
+        {
+            return Task.FromResult(_responseFactory());
         }
     }
 }
