@@ -18,8 +18,8 @@ public class CohereChatClientTests
     {
         // Arrange
         var handlerMock = new Mock<HttpMessageHandler>();
-        var responseJson = "{\"message\": {\"content\": [{\"text\": \"Hello from Cohere\"}]}}";
-        
+        var responseJson = "{\"message\": {\"content\": [{\"type\": \"text\", \"text\": \"Hello from Cohere\"}]}}";
+
         handlerMock.Protected()
             .Setup<Task<HttpResponseMessage>>(
                 "SendAsync",

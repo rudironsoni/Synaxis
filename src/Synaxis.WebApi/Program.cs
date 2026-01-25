@@ -32,6 +32,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.Use(async (context, next) =>
+{
+    context.Request.EnableBuffering();
+    await next();
+});
+
 app.UseMiddleware<OpenAIErrorHandlerMiddleware>();
 app.UseMiddleware<OpenAIMetadataMiddleware>();
 

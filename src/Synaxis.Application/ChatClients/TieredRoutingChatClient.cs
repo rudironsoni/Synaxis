@@ -48,7 +48,32 @@ public class TieredRoutingChatClient : IChatClient
                 {
                     var client = _services.GetRequiredKeyedService<IChatClient>(provider.Key);
                     _logger.LogInformation("Routing {Model} to {Provider} (Tier {Tier})", modelId, provider.Key, provider.Tier);
-                    return await client.GetResponseAsync(chatMessages, options, cancellationToken);
+                    
+                    // Strip provider prefix if present to ensure provider receives raw model ID
+                    var targetModelId = modelId;
+                    if (targetModelId.StartsWith(provider.Key + "/", StringComparison.OrdinalIgnoreCase))
+                    {
+                        targetModelId = targetModelId.Substring(provider.Key.Length + 1);
+                    }
+
+                    var providerOptions = new ChatOptions
+                    {
+                        ModelId = targetModelId,
+                        FrequencyPenalty = options?.FrequencyPenalty,
+                        MaxOutputTokens = options?.MaxOutputTokens,
+                        PresencePenalty = options?.PresencePenalty,
+                        Seed = options?.Seed,
+                        StopSequences = options?.StopSequences,
+                        Temperature = options?.Temperature,
+                        TopK = options?.TopK,
+                        TopP = options?.TopP,
+                        AdditionalProperties = options?.AdditionalProperties,
+                        Tools = options?.Tools,
+                        ToolMode = options?.ToolMode,
+                        ResponseFormat = options?.ResponseFormat
+                    };
+
+                    return await client.GetResponseAsync(chatMessages, providerOptions, cancellationToken);
                 }
                 catch (Exception ex)
                 {
@@ -84,7 +109,31 @@ public class TieredRoutingChatClient : IChatClient
                     var client = _services.GetRequiredKeyedService<IChatClient>(provider.Key);
                     _logger.LogInformation("Routing {Model} to {Provider} (Tier {Tier})", modelId, provider.Key, provider.Tier);
                     
-                    var stream = client.GetStreamingResponseAsync(chatMessages, options, cancellationToken);
+                    // Strip provider prefix if present
+                    var targetModelId = modelId;
+                    if (targetModelId.StartsWith(provider.Key + "/", StringComparison.OrdinalIgnoreCase))
+                    {
+                        targetModelId = targetModelId.Substring(provider.Key.Length + 1);
+                    }
+
+                    var providerOptions = new ChatOptions
+                    {
+                        ModelId = targetModelId,
+                        FrequencyPenalty = options?.FrequencyPenalty,
+                        MaxOutputTokens = options?.MaxOutputTokens,
+                        PresencePenalty = options?.PresencePenalty,
+                        Seed = options?.Seed,
+                        StopSequences = options?.StopSequences,
+                        Temperature = options?.Temperature,
+                        TopK = options?.TopK,
+                        TopP = options?.TopP,
+                        AdditionalProperties = options?.AdditionalProperties,
+                        Tools = options?.Tools,
+                        ToolMode = options?.ToolMode,
+                        ResponseFormat = options?.ResponseFormat
+                    };
+                    
+                    var stream = client.GetStreamingResponseAsync(chatMessages, providerOptions, cancellationToken);
                     enumerator = stream.GetAsyncEnumerator(cancellationToken);
                     
                     if (!await enumerator.MoveNextAsync())
