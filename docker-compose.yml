@@ -1,8 +1,9 @@
 services:
-  synaxis:
+  inference-gateway:
+    image: synaxis/synaxis-inferencegateway:latest
     build:
       context: .
-      dockerfile: src/Synaxis.WebApi/Dockerfile
+      dockerfile: src/InferenceGateway/WebApi/Dockerfile
     ports:
       - "8080:8080"
     environment:
