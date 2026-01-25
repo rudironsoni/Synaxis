@@ -8,6 +8,7 @@ using Microsoft.Agents.AI.Hosting.OpenAI;
 using Microsoft.AspNetCore.OpenApi;
 using Synaxis.InferenceGateway.WebApi.Agents;
 using Synaxis.InferenceGateway.WebApi.Middleware;
+using Synaxis.InferenceGateway.WebApi.Endpoints.Antigravity;
 using Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI;
 
 using Scalar.AspNetCore;
@@ -46,6 +47,7 @@ app.UseMiddleware<OpenAIMetadataMiddleware>();
 var agent = app.Services.GetRequiredService<RoutingAgent>();
 
 app.MapOpenAIEndpoints(agent);
+app.MapAntigravityEndpoints();
 
 app.Run();
 
