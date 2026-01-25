@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.OpenApi;
 using Synaxis.Application.Routing;
 using Synaxis.WebApi.DTOs;
 using Synaxis.WebApi.Middleware;
@@ -81,6 +82,14 @@ public static class LegacyCompletionsEndpoint
                     usage = new { prompt_tokens = response.Usage?.InputTokenCount ?? 0, completion_tokens = response.Usage?.OutputTokenCount ?? 0, total_tokens = (response.Usage?.InputTokenCount ?? 0) + (response.Usage?.OutputTokenCount ?? 0) }
                 });
             }
+        })
+        .WithTags("Completions")
+        .WithSummary("Legacy text completion")
+        .WithName("CreateCompletion")
+        .AddOpenApiOperationTransformer((operation, context, ct) =>
+        {
+            operation.Deprecated = true;
+            return Task.CompletedTask;
         });
     }
 }
