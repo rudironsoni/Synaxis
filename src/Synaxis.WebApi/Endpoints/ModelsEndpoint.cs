@@ -28,7 +28,10 @@ public static class ModelsEndpoint
             }
 
             return Results.Ok(new { @object = "list", data = models });
-        });
+        })
+        .WithTags("Models")
+        .WithSummary("List models")
+        .WithName("ListModels");
 
         app.MapGet("/v1/models/{id}", (string id, IOptions<SynaxisConfiguration> config) =>
         {
@@ -38,6 +41,9 @@ public static class ModelsEndpoint
             if (config.Value.Aliases.ContainsKey(id)) return Results.Ok(new { id = id, @object = "model", created = DateTimeOffset.UtcNow.ToUnixTimeSeconds(), owned_by = "synaxis" });
 
             return Results.NotFound(new { error = new { message = $"The model '{id}' does not exist", type = "invalid_request_error", param = "model", code = "model_not_found" } });
-        });
+        })
+        .WithTags("Models")
+        .WithSummary("Retrieve model")
+        .WithName("RetrieveModel");
     }
 }
