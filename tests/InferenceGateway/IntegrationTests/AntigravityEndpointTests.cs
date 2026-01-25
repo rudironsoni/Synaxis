@@ -34,7 +34,7 @@ public class AntigravityEndpointTests : IClassFixture<SynaxisWebApplicationFacto
                     new AccountInfo("test@example.com", true) 
                 });
                 mockAuth.Setup(x => x.StartAuthFlow(It.IsAny<string>())).Returns("https://accounts.google.com/o/oauth2/auth?mock=true");
-                mockAuth.Setup(x => x.CompleteAuthFlowAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.CompletedTask);
+                mockAuth.Setup(x => x.CompleteAuthFlowAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>())).Returns(Task.CompletedTask);
 
                 services.AddSingleton<IAntigravityAuthManager>(mockAuth.Object);
             });
@@ -67,7 +67,7 @@ public class AntigravityEndpointTests : IClassFixture<SynaxisWebApplicationFacto
     [Fact]
     public async Task Post_CompleteAuth_ReturnsSuccess()
     {
-        var request = new { Code = "123", RedirectUrl = "http://localhost/cb" };
+        var request = new { Code = "123", State = "state-abc", RedirectUrl = "http://localhost/cb" };
         var response = await _client.PostAsJsonAsync("/antigravity/auth/complete", request);
         response.EnsureSuccessStatusCode();
         
