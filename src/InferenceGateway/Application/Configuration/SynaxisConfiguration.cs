@@ -13,6 +13,8 @@ public class ProviderConfig
 {
     public string? Key { get; set; }
     public string? AccountId { get; set; } // For Cloudflare
+    public string? ProjectId { get; set; } // For Antigravity
+    public string? AuthStoragePath { get; set; } // For Antigravity (optional)
     public int Tier { get; set; }
     public List<string> Models { get; set; } = new();
     public string Type { get; set; } = string.Empty; // "OpenAI", "Groq", "Cohere", "Cloudflare", etc.
