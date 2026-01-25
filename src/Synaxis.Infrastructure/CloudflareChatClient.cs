@@ -34,12 +34,12 @@ public class CloudflareChatClient : IChatClient
     {
         var request = CreateRequest(chatMessages, options, stream: false);
         var url = $"https://api.cloudflare.com/client/v4/accounts/{_accountId}/ai/run/{_modelId}";
-        
+
         var response = await _httpClient.PostAsJsonAsync(url, request, cancellationToken);
         response.EnsureSuccessStatusCode();
 
         var cloudflareResponse = await response.Content.ReadFromJsonAsync<CloudflareResponse>(cancellationToken: cancellationToken);
-        
+
         var text = cloudflareResponse?.Result?.Response ?? "";
         var chatResponse = new ChatResponse(new ChatMessage(ChatRole.Assistant, text));
         chatResponse.ModelId = _modelId;
@@ -50,7 +50,7 @@ public class CloudflareChatClient : IChatClient
     {
         var request = CreateRequest(chatMessages, options, stream: true);
         var url = $"https://api.cloudflare.com/client/v4/accounts/{_accountId}/ai/run/{_modelId}";
-        
+
         var httpRequest = new HttpRequestMessage(HttpMethod.Post, url)
         {
             Content = JsonContent.Create(request)
@@ -62,9 +62,9 @@ public class CloudflareChatClient : IChatClient
         using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
         using var reader = new System.IO.StreamReader(stream);
 
-        while (!reader.EndOfStream)
+        string? line;
+        while ((line = await reader.ReadLineAsync()) is not null)
         {
-            var line = await reader.ReadLineAsync(cancellationToken);
             if (string.IsNullOrWhiteSpace(line)) continue;
             if (!line.StartsWith("data: ")) continue;
 
@@ -72,7 +72,7 @@ public class CloudflareChatClient : IChatClient
             if (json == "[DONE]") break;
 
             CloudflareStreamResponse? streamEvent = null;
-            try 
+            try
             {
                 streamEvent = JsonSerializer.Deserialize<CloudflareStreamResponse>(json);
             }
@@ -96,10 +96,10 @@ public class CloudflareChatClient : IChatClient
         var messages = new List<object>();
         foreach (var msg in chatMessages)
         {
-            messages.Add(new 
-            { 
+            messages.Add(new
+            {
                 role = msg.Role.Value,
-                content = msg.Text 
+                content = msg.Text
             });
         }
 
@@ -113,14 +113,14 @@ public class CloudflareChatClient : IChatClient
     public void Dispose() => _httpClient.Dispose();
     public object? GetService(Type serviceType, object? serviceKey = null) => null;
 
-    private class CloudflareResponse 
-    { 
-        [JsonPropertyName("result")] public CloudflareResult? Result { get; set; } 
+    private class CloudflareResponse
+    {
+        [JsonPropertyName("result")] public CloudflareResult? Result { get; set; }
     }
-    
-    private class CloudflareResult 
-    { 
-        [JsonPropertyName("response")] public string? Response { get; set; } 
+
+    private class CloudflareResult
+    {
+        [JsonPropertyName("response")] public string? Response { get; set; }
     }
 
     private class CloudflareStreamResponse

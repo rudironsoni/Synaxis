@@ -18,13 +18,13 @@ public class PollinationsChatClientTests
     {
         // Arrange
         var handlerMock = new Mock<HttpMessageHandler>();
-        
+
         handlerMock.Protected()
             .Setup<Task<HttpResponseMessage>>(
                 "SendAsync",
-                ItExpr.Is<HttpRequestMessage>(req => 
-                    req.Method == HttpMethod.Get && 
-                    req.RequestUri.ToString().Contains("text.pollinations.ai")
+                ItExpr.Is<HttpRequestMessage>(req =>
+                    req.Method == HttpMethod.Get &&
+                    req.RequestUri != null && req.RequestUri.ToString().Contains("text.pollinations.ai")
                     // Removed strict check for encoded string to avoid mismatch
                 ),
                 ItExpr.IsAny<CancellationToken>()

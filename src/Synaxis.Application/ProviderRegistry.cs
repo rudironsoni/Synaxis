@@ -8,6 +8,7 @@ namespace Synaxis.Application;
 public interface IProviderRegistry
 {
     IEnumerable<(string ServiceKey, int Tier)> GetCandidates(string modelId);
+    ProviderConfig? GetProvider(string serviceKey);
 }
 
 public class ProviderRegistry : IProviderRegistry
@@ -24,5 +25,15 @@ public class ProviderRegistry : IProviderRegistry
         return _config.Providers
             .Where(p => p.Value.Models.Contains(modelId, StringComparer.OrdinalIgnoreCase) || p.Value.Models.Contains("*"))
             .Select(p => (p.Key, p.Value.Tier));
+    }
+
+    public ProviderConfig? GetProvider(string serviceKey)
+    {
+        if (_config.Providers.TryGetValue(serviceKey, out var provider))
+        {
+            provider.Key = serviceKey;
+            return provider;
+        }
+        return null;
     }
 }

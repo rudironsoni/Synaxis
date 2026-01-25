@@ -10,7 +10,6 @@ COPY ["src/Synaxis.Application/Synaxis.Application.csproj", "src/Synaxis.Applica
 COPY ["src/Synaxis.Infrastructure/Synaxis.Infrastructure.csproj", "src/Synaxis.Infrastructure/"]
 COPY ["tests/Synaxis.Infrastructure.Tests/Synaxis.Infrastructure.Tests.csproj", "tests/Synaxis.Infrastructure.Tests/"]
 COPY ["tests/Synaxis.Application.Tests/Synaxis.Application.Tests.csproj", "tests/Synaxis.Application.Tests/"]
-COPY ["tests/Synaxis.TestCommon/Synaxis.TestCommon.csproj", "tests/Synaxis.TestCommon/"]
 COPY ["tests/Synaxis.IntegrationTests/Synaxis.IntegrationTests.csproj", "tests/Synaxis.IntegrationTests/"]
 
 RUN dotnet restore

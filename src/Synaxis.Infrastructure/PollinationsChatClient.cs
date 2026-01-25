@@ -34,7 +34,7 @@ public class PollinationsChatClient : IChatClient
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync(cancellationToken);
-        
+
         var chatResponse = new ChatResponse(new ChatMessage(ChatRole.Assistant, content));
         chatResponse.ModelId = _modelId;
         return chatResponse;
@@ -43,7 +43,7 @@ public class PollinationsChatClient : IChatClient
     public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var request = CreateRequest(chatMessages, options, stream: true);
-        
+
         var httpRequest = new HttpRequestMessage(HttpMethod.Post, "https://text.pollinations.ai/")
         {
             Content = JsonContent.Create(request)
@@ -55,13 +55,14 @@ public class PollinationsChatClient : IChatClient
         using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
         using var reader = new System.IO.StreamReader(stream);
 
-        // Pollinations streaming is just raw text updates if I recall correctly, 
+        // Pollinations streaming is just raw text updates if I recall correctly,
         // but if we use the POST endpoint it might be different.
-        // Actually, Pollinations POST endpoint with stream: true returns SSE if requested, 
+        // Actually, Pollinations POST endpoint with stream: true returns SSE if requested,
         // but often it just returns chunks of text.
-        
+
         char[] buffer = new char[1024];
-        while (!reader.EndOfStream)
+        string? line;
+        while ((line = await reader.ReadLineAsync()) is not null)
         {
             int read = await reader.ReadAsync(buffer, 0, buffer.Length);
             if (read > 0)
@@ -83,10 +84,10 @@ public class PollinationsChatClient : IChatClient
         var messages = new List<object>();
         foreach (var msg in chatMessages)
         {
-            messages.Add(new 
-            { 
+            messages.Add(new
+            {
                 role = msg.Role.Value,
-                content = msg.Text 
+                content = msg.Text
             });
         }
 
