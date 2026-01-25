@@ -22,7 +22,7 @@ public class LiveProviderValidationTests : IClassFixture<SynaxisWebApplicationFa
     {
         var config = _factory.Services.GetRequiredService<IConfiguration>();
         var apiKey = config["Synaxis:Providers:Groq:Key"];
-        
+
         Assert.False(string.IsNullOrEmpty(apiKey), "API Key for Groq is missing in Configuration (appsettings.json or Env Var)");
 
         await ExecuteTest("llama-3.1-8b-instant");
@@ -33,7 +33,7 @@ public class LiveProviderValidationTests : IClassFixture<SynaxisWebApplicationFa
     {
         var config = _factory.Services.GetRequiredService<IConfiguration>();
         var apiKey = config["Synaxis:Providers:Cohere:Key"];
-        
+
         Assert.False(string.IsNullOrEmpty(apiKey), "API Key for Cohere is missing in Configuration (appsettings.json or Env Var)");
 
         await ExecuteTest("command-r-08-2024");
@@ -62,7 +62,7 @@ public class LiveProviderValidationTests : IClassFixture<SynaxisWebApplicationFa
     private async Task ExecuteTest(string modelId)
     {
         var client = _factory.CreateClient();
-        
+
         var request = new
         {
             model = modelId,
@@ -74,7 +74,7 @@ public class LiveProviderValidationTests : IClassFixture<SynaxisWebApplicationFa
         };
 
         var response = await client.PostAsJsonAsync("/v1/chat/completions", request);
-        
+
         if (!response.IsSuccessStatusCode)
         {
             var error = await response.Content.ReadAsStringAsync();
@@ -82,7 +82,7 @@ public class LiveProviderValidationTests : IClassFixture<SynaxisWebApplicationFa
         }
 
         response.EnsureSuccessStatusCode();
-        
+
         var result = await response.Content.ReadFromJsonAsync<ChatCompletionResponse>();
         Assert.NotNull(result);
         Assert.NotEmpty(result.Choices);

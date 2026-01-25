@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Synaxis.Application.ChatClients;
 using Synaxis.Application.Configuration;
+using Synaxis.Application.Routing;
 using Synaxis.Infrastructure;
 using Synaxis.Infrastructure.Extensions;
 using System.Linq;
@@ -20,6 +21,7 @@ public static class ApplicationExtensions
 
         // 2. Register Registry
         services.AddSingleton<IProviderRegistry, ProviderRegistry>();
+        services.AddSingleton<IModelResolver, ModelResolver>();
 
         // 3. Register Providers as Keyed Services
         var synaxisConfig = configuration.GetSection("Synaxis").Get<SynaxisConfiguration>();
