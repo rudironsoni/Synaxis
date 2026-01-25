@@ -42,7 +42,8 @@ public static class ApplicationExtensions
             var defaultPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".synaxis", "antigravity-auth.json");
             var authPath = providerConfig?.AuthStoragePath ?? defaultPath;
 
-            return new AntigravityAuthManager(projectId, authPath, logger);
+            var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
+            return new AntigravityAuthManager(projectId, authPath, logger, httpClientFactory);
         });
         services.AddSingleton<ITokenProvider>(sp => sp.GetRequiredService<IAntigravityAuthManager>());
 

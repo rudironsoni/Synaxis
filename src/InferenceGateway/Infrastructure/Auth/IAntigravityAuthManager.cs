@@ -9,5 +9,5 @@ public interface IAntigravityAuthManager : ITokenProvider
 {
     IEnumerable<AccountInfo> ListAccounts();
     string StartAuthFlow(string redirectUrl);
-    Task CompleteAuthFlowAsync(string code, string redirectUrl);
+    Task CompleteAuthFlowAsync(string code, string redirectUrl, string? state = null);
 }
