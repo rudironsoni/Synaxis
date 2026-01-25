@@ -8,7 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Google.Apis.Auth" />
+    <PackageReference Include="Google.Apis.Oauth2.v2" />
     <PackageReference Include="Google.GenAI" />
+    <PackageReference Include="Microsoft.Extensions.Http.Polly" />
     <PackageReference Include="OpenAI" />
     <PackageReference Include="Microsoft.Extensions.AI" />
     <PackageReference Include="Microsoft.Extensions.AI.OpenAI" />
