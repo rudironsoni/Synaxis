@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Synaxis.WebApi.Endpoints;
+namespace Synaxis.WebApi.Endpoints.OpenAI;
 
 public static class ModelsEndpoint
 {

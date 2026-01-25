@@ -12,7 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 
-namespace Synaxis.WebApi.Endpoints;
+namespace Synaxis.WebApi.Endpoints.OpenAI;
 
 public static class LegacyCompletionsEndpoint
 {
