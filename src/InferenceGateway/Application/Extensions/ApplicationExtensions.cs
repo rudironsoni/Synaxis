@@ -16,6 +16,7 @@ public static class ApplicationExtensions
         // 2. Register Registry
         services.AddSingleton<IProviderRegistry, ProviderRegistry>();
         services.AddScoped<IModelResolver, ModelResolver>();
+        services.AddScoped<ISmartRouter, SmartRouter>();
 
         services.AddSingleton<ITranslationPipeline, TranslationPipeline>();
         services.AddSingleton<IToolNormalizer, OpenAIToolNormalizer>();

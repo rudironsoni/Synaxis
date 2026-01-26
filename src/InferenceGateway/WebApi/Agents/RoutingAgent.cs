@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Synaxis.InferenceGateway.Application.Routing;
 using Synaxis.InferenceGateway.Application.Translation;
+using Synaxis.InferenceGateway.WebApi.Helpers;
 using Synaxis.InferenceGateway.WebApi.Middleware;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -41,45 +41,36 @@ public class RoutingAgent : AIAgent
         var translator = scope.ServiceProvider.GetRequiredService<ITranslationPipeline>();
         var httpContext = _httpContextAccessor.HttpContext;
 
-        var openAIRequest = await Helpers.OpenAIRequestParser.ParseAsync(httpContext, cancellationToken);
-        var modelId = !string.IsNullOrWhiteSpace(openAIRequest?.Model) ? openAIRequest.Model : "default";
+        // 1. Parse Input
+        var openAIRequest = await OpenAIRequestParser.ParseAsync(httpContext, cancellationToken);
+        if (openAIRequest == null)
+        {
+             // Fallback if no body (e.g. GET request or empty) -> treat as default chat
+             openAIRequest = new OpenAIRequest { Model = "default" };
+        }
 
-        var canonicalRequest = new CanonicalRequest(
-            EndpointKind.ChatCompletions,
-            modelId,
-            messages.ToList(),
-            Tools: MapTools(openAIRequest?.Tools),
-            ToolChoice: openAIRequest?.ToolChoice,
-            ResponseFormat: openAIRequest?.ResponseFormat,
-            AdditionalOptions: new ChatOptions
-            {
-                Temperature = (float?)openAIRequest?.Temperature,
-                TopP = (float?)openAIRequest?.TopP,
-                MaxOutputTokens = openAIRequest?.MaxTokens,
-                StopSequences = MapStopSequences(openAIRequest?.Stop)
-            });
+        // 2. Map to Canonical
+        var canonicalRequest = OpenAIRequestMapper.ToCanonicalRequest(openAIRequest, messages);
 
+        // 3. Translate Request
         var translatedRequest = translator.TranslateRequest(canonicalRequest);
 
-        // Pass the model ID to the client; SmartRoutingChatClient will handle resolution
+        // 4. Prepare Options
         var chatOptions = new ChatOptions { ModelId = translatedRequest.Model };
 
+        // 5. Execute
         var response = await chatClient.GetResponseAsync(translatedRequest.Messages, chatOptions, cancellationToken);
+        
+        // 6. Translate Response
         var message = response.Messages.FirstOrDefault() ?? new ChatMessage(ChatRole.Assistant, "");
         var toolCalls = message.Contents.OfType<FunctionCallContent>().ToList();
         var canonicalResponse = new CanonicalResponse(message.Text, toolCalls);
         var translatedResponse = translator.TranslateResponse(canonicalResponse);
 
-        // Attempt to log RoutingContext if metadata is available
-        if (httpContext != null && response.AdditionalProperties != null)
-        {
-             if (response.AdditionalProperties.TryGetValue("model_id", out var resolvedModel) &&
-                 response.AdditionalProperties.TryGetValue("provider_name", out var provider))
-             {
-                 httpContext.Items["RoutingContext"] = new RoutingContext(modelId, resolvedModel?.ToString() ?? "", provider?.ToString() ?? "");
-             }
-        }
+        // 7. Log Routing Context
+        LogRoutingContext(httpContext, openAIRequest.Model, response.AdditionalProperties);
 
+        // 8. Build Agent Response
         var agentMessage = new ChatMessage(ChatRole.Assistant, translatedResponse.Content);
         if (translatedResponse.ToolCalls != null)
         {
@@ -103,31 +94,15 @@ public class RoutingAgent : AIAgent
         var translator = scope.ServiceProvider.GetRequiredService<ITranslationPipeline>();
         var httpContext = _httpContextAccessor.HttpContext;
 
-        var openAIRequest = await Helpers.OpenAIRequestParser.ParseAsync(httpContext, cancellationToken);
-        var modelId = !string.IsNullOrWhiteSpace(openAIRequest?.Model) ? openAIRequest.Model : "default";
+        var openAIRequest = await OpenAIRequestParser.ParseAsync(httpContext, cancellationToken) 
+                            ?? new OpenAIRequest { Model = "default" };
 
-        var canonicalRequest = new CanonicalRequest(
-            EndpointKind.ChatCompletions,
-            modelId,
-            messages.ToList(),
-            Tools: MapTools(openAIRequest?.Tools),
-            ToolChoice: openAIRequest?.ToolChoice,
-            ResponseFormat: openAIRequest?.ResponseFormat,
-            AdditionalOptions: new ChatOptions
-            {
-                Temperature = (float?)openAIRequest?.Temperature,
-                TopP = (float?)openAIRequest?.TopP,
-                MaxOutputTokens = openAIRequest?.MaxTokens,
-                StopSequences = MapStopSequences(openAIRequest?.Stop)
-            });
-
+        var canonicalRequest = OpenAIRequestMapper.ToCanonicalRequest(openAIRequest, messages);
         var translatedRequest = translator.TranslateRequest(canonicalRequest);
-
         var chatOptions = new ChatOptions { ModelId = translatedRequest.Model };
 
-        // We can't easily capture the resolved model for RoutingContext in streaming before yielding,
-        // unless the client yields a metadata update first.
-        // For now, we rely on SmartRoutingChatClient logging.
+        // We can't easily capture the resolved model for RoutingContext in streaming before yielding
+        // relies on client logging or future enhancement to yield metadata first.
 
         await foreach (var update in chatClient.GetStreamingResponseAsync(translatedRequest.Messages, chatOptions, cancellationToken))
         {
@@ -142,52 +117,18 @@ public class RoutingAgent : AIAgent
     public override ValueTask<AgentThread> DeserializeThreadAsync(JsonElement serializedThread, JsonSerializerOptions? jsonSerializerOptions = null, CancellationToken cancellationToken = default)
         => new ValueTask<AgentThread>(new RoutingAgentThread());
 
-
-
-
-
-    private IList<AITool>? MapTools(List<OpenAITool>? tools)
+    private void LogRoutingContext(HttpContext? httpContext, string? requestedModel, AdditionalPropertiesDictionary? properties)
     {
-        if (tools == null) return null;
-        var result = new List<AITool>();
-        foreach (var tool in tools)
+        if (httpContext != null && properties != null)
         {
-            if (tool.Type == "function" && tool.Function != null)
-            {
-                var function = AIFunctionFactory.Create(
-                    (string args) => Task.CompletedTask, // Dummy delegate, we just need the metadata
-                    tool.Function.Name,
-                    tool.Function.Description);
-                // Note: AIFunctionFactory is tricky for just metadata.
-                // Better to use a custom AITool implementation or just pass the raw object if supported.
-                // For now, we'll skip complex mapping as Microsoft.Extensions.AI handles tools differently.
-                // We might need to pass the raw tools in AdditionalOptions if the ChatClient supports it.
-            }
+             if (properties.TryGetValue("model_id", out var resolvedModel) &&
+                 properties.TryGetValue("provider_name", out var provider))
+             {
+                 httpContext.Items["RoutingContext"] = new RoutingContext(
+                     requestedModel ?? "default", 
+                     resolvedModel?.ToString() ?? "", 
+                     provider?.ToString() ?? "");
+             }
         }
-        return null; // Placeholder
-    }
-
-    private IList<string>? MapStopSequences(object? stop)
-    {
-        if (stop is JsonElement element)
-        {
-            if (element.ValueKind == JsonValueKind.String)
-            {
-                return new List<string> { element.GetString()! };
-            }
-            else if (element.ValueKind == JsonValueKind.Array)
-            {
-                var list = new List<string>();
-                foreach (var item in element.EnumerateArray())
-                {
-                    if (item.ValueKind == JsonValueKind.String)
-                    {
-                        list.Add(item.GetString()!);
-                    }
-                }
-                return list;
-            }
-        }
-        return null;
     }
 }

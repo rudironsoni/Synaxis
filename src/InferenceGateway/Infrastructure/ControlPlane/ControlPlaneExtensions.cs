@@ -9,19 +9,21 @@ public static class ControlPlaneExtensions
 {
     public static IServiceCollection AddControlPlane(this IServiceCollection services, IConfiguration configuration)
     {
-        var options = new ControlPlaneOptions();
-        configuration.GetSection("Synaxis:ControlPlane").Bind(options);
+        services.AddDbContext<ControlPlaneDbContext>((sp, builder) =>
+        {
+            var config = sp.GetRequiredService<IConfiguration>();
+            var options = new ControlPlaneOptions();
+            config.GetSection("Synaxis:ControlPlane").Bind(options);
 
-        if (options.UseInMemory || string.IsNullOrWhiteSpace(options.ConnectionString))
-        {
-            services.AddDbContext<ControlPlaneDbContext>(builder =>
-                builder.UseInMemoryDatabase("SynaxisControlPlane"));
-        }
-        else
-        {
-            services.AddDbContext<ControlPlaneDbContext>(builder =>
-                builder.UseNpgsql(options.ConnectionString));
-        }
+            if (options.UseInMemory || string.IsNullOrWhiteSpace(options.ConnectionString))
+            {
+                builder.UseInMemoryDatabase("SynaxisControlPlane");
+            }
+            else
+            {
+                builder.UseNpgsql(options.ConnectionString);
+            }
+        });
 
         services.AddScoped<IDeviationRegistry, DeviationRegistry>();
 

@@ -1,20 +1,19 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Synaxis.InferenceGateway.Application.Configuration;
 using Synaxis.InferenceGateway.Application.Routing;
-using System.Runtime.CompilerServices;
+using Synaxis.InferenceGateway.Application.Configuration;
 using System.Diagnostics;
 using Polly;
 using Polly.Registry;
+using System.Runtime.CompilerServices;
 
 namespace Synaxis.InferenceGateway.Application.ChatClients;
 
 public class SmartRoutingChatClient : IChatClient
 {
     private readonly IServiceProvider _serviceProvider;
-    private readonly IModelResolver _modelResolver;
-    private readonly ICostService _costService;
+    private readonly ISmartRouter _smartRouter;
     private readonly IHealthStore _healthStore;
     private readonly IQuotaTracker _quotaTracker;
     private readonly ResiliencePipelineProvider<string> _pipelineProvider;
@@ -25,8 +24,7 @@ public class SmartRoutingChatClient : IChatClient
 
     public SmartRoutingChatClient(
         IServiceProvider serviceProvider,
-        IModelResolver modelResolver,
-        ICostService costService,
+        ISmartRouter smartRouter,
         IHealthStore healthStore,
         IQuotaTracker quotaTracker,
         ResiliencePipelineProvider<string> pipelineProvider,
@@ -34,8 +32,7 @@ public class SmartRoutingChatClient : IChatClient
         ILogger<SmartRoutingChatClient> logger)
     {
         _serviceProvider = serviceProvider;
-        _modelResolver = modelResolver;
-        _costService = costService;
+        _smartRouter = smartRouter;
         _healthStore = healthStore;
         _quotaTracker = quotaTracker;
         _pipelineProvider = pipelineProvider;
@@ -52,7 +49,7 @@ public class SmartRoutingChatClient : IChatClient
         var modelId = options?.ModelId ?? "default";
         activity?.SetTag("model.id", modelId);
 
-        var candidates = await GetCandidatesAsync(modelId, false, cancellationToken);
+        var candidates = await _smartRouter.GetCandidatesAsync(modelId, false, cancellationToken);
         var exceptions = new List<Exception>();
 
         foreach (var candidate in candidates)
@@ -86,7 +83,7 @@ public class SmartRoutingChatClient : IChatClient
         var modelId = options?.ModelId ?? "default";
         activity?.SetTag("model.id", modelId);
 
-        var candidates = await GetCandidatesAsync(modelId, true, cancellationToken);
+        var candidates = await _smartRouter.GetCandidatesAsync(modelId, true, cancellationToken);
         var exceptions = new List<Exception>();
 
         IAsyncEnumerable<ChatResponseUpdate>? successfulStream = null;
@@ -172,7 +169,6 @@ public class SmartRoutingChatClient : IChatClient
 
         try
         {
-            // Use synchronous delegate for returning the stream, wrapped in ValueTask
             return await pipeline.ExecuteAsync(ct =>
             {
                 var stream = client.GetStreamingResponseAsync(chatMessages.ToList(), routedOptions, ct);
@@ -184,33 +180,6 @@ public class SmartRoutingChatClient : IChatClient
             await RecordFailureAsync(candidate.Key, ex, cancellationToken);
             throw;
         }
-    }
-
-    private async Task<List<EnrichedCandidate>> GetCandidatesAsync(string modelId, bool streaming, CancellationToken cancellationToken)
-    {
-        var caps = new RequiredCapabilities { Streaming = streaming };
-        var resolution = await _modelResolver.ResolveAsync(modelId, EndpointKind.ChatCompletions, caps);
-
-        if (resolution.Candidates.Count == 0)
-        {
-             throw new InvalidOperationException($"No providers found for model '{modelId}'.");
-        }
-
-        var enriched = new List<EnrichedCandidate>();
-        foreach (var candidate in resolution.Candidates)
-        {
-             if (!await _healthStore.IsHealthyAsync(candidate.Key!, cancellationToken)) continue;
-             if (!await _quotaTracker.CheckQuotaAsync(candidate.Key!, cancellationToken)) continue;
-
-             var cost = await _costService.GetCostAsync(candidate.Key!, "default", cancellationToken);
-             enriched.Add(new EnrichedCandidate(candidate, cost, resolution.CanonicalId.ModelPath));
-        }
-
-        return enriched
-            .OrderByDescending(c => c.IsFree)
-            .ThenBy(c => c.CostPerToken)
-            .ThenBy(c => c.Config.Tier)
-            .ToList();
     }
 
     private async Task RecordMetricsAsync(string providerKey, long inputTokens, long outputTokens, CancellationToken cancellationToken)
@@ -242,11 +211,4 @@ public class SmartRoutingChatClient : IChatClient
     public object? GetService(Type serviceType, object? serviceKey = null) => _serviceProvider.GetKeyedService(serviceType, serviceKey);
 
     public void Dispose() { }
-
-    private record EnrichedCandidate(ProviderConfig Config, Application.ControlPlane.Entities.ModelCost? Cost, string CanonicalModelPath)
-    {
-        public string Key => Config.Key!;
-        public bool IsFree => Cost?.FreeTier ?? false;
-        public decimal CostPerToken => Cost?.CostPerToken ?? decimal.MaxValue;
-    }
 }
