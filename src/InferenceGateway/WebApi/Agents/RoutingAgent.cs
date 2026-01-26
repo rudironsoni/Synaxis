@@ -44,16 +44,16 @@ public class RoutingAgent : AIAgent
 
         var modelId = await GetModelIdAsync(httpContext, cancellationToken) ?? "default";
         var openAIRequest = await ParseOpenAIRequestAsync(httpContext, cancellationToken);
-        
+
         var canonicalRequest = new CanonicalRequest(
-            EndpointKind.ChatCompletions, 
-            modelId, 
+            EndpointKind.ChatCompletions,
+            modelId,
             messages.ToList(),
             Tools: MapTools(openAIRequest?.Tools),
             ToolChoice: openAIRequest?.ToolChoice,
             ResponseFormat: openAIRequest?.ResponseFormat,
-            AdditionalOptions: new ChatOptions 
-            { 
+            AdditionalOptions: new ChatOptions
+            {
                 Temperature = (float?)openAIRequest?.Temperature,
                 TopP = (float?)openAIRequest?.TopP,
                 MaxOutputTokens = openAIRequest?.MaxTokens,
@@ -70,7 +70,7 @@ public class RoutingAgent : AIAgent
         }
 
         var resolution = await resolver.ResolveAsync(translatedRequest.Model, EndpointKind.ChatCompletions, caps, tenantId);
-        
+
         if (resolution.Candidates.Count == 0)
         {
             throw new ArgumentException($"No providers available for model '{modelId}' with requested capabilities.");
@@ -117,16 +117,16 @@ public class RoutingAgent : AIAgent
 
         var modelId = await GetModelIdAsync(httpContext, cancellationToken) ?? "default";
         var openAIRequest = await ParseOpenAIRequestAsync(httpContext, cancellationToken);
-        
+
         var canonicalRequest = new CanonicalRequest(
-            EndpointKind.ChatCompletions, 
-            modelId, 
+            EndpointKind.ChatCompletions,
+            modelId,
             messages.ToList(),
             Tools: MapTools(openAIRequest?.Tools),
             ToolChoice: openAIRequest?.ToolChoice,
             ResponseFormat: openAIRequest?.ResponseFormat,
-            AdditionalOptions: new ChatOptions 
-            { 
+            AdditionalOptions: new ChatOptions
+            {
                 Temperature = (float?)openAIRequest?.Temperature,
                 TopP = (float?)openAIRequest?.TopP,
                 MaxOutputTokens = openAIRequest?.MaxTokens,
@@ -143,7 +143,7 @@ public class RoutingAgent : AIAgent
         }
 
         var resolution = await resolver.ResolveAsync(translatedRequest.Model, EndpointKind.ChatCompletions, caps, tenantId);
-        
+
         if (resolution.Candidates.Count == 0)
         {
             throw new ArgumentException($"No providers available for model '{modelId}' with requested capabilities.");
@@ -231,7 +231,7 @@ public class RoutingAgent : AIAgent
                     (string args) => Task.CompletedTask, // Dummy delegate, we just need the metadata
                     tool.Function.Name,
                     tool.Function.Description);
-                // Note: AIFunctionFactory is tricky for just metadata. 
+                // Note: AIFunctionFactory is tricky for just metadata.
                 // Better to use a custom AITool implementation or just pass the raw object if supported.
                 // For now, we'll skip complex mapping as Microsoft.Extensions.AI handles tools differently.
                 // We might need to pass the raw tools in AdditionalOptions if the ChatClient supports it.

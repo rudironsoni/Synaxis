@@ -44,8 +44,8 @@ public class SmartRoutingChatClient : IChatClient
     }
 
     public async Task<ChatResponse> GetResponseAsync(
-        IEnumerable<ChatMessage> chatMessages, 
-        ChatOptions? options = null, 
+        IEnumerable<ChatMessage> chatMessages,
+        ChatOptions? options = null,
         CancellationToken cancellationToken = default)
     {
         using var activity = _activitySource.StartActivity("ChatRequest");
@@ -75,13 +75,13 @@ public class SmartRoutingChatClient : IChatClient
                     continue;
                 }
 
-                _logger.LogInformation("Routing request to provider '{ProviderKey}' (Cost: {Cost}, Free: {IsFree})", 
+                _logger.LogInformation("Routing request to provider '{ProviderKey}' (Cost: {Cost}, Free: {IsFree})",
                     candidate.Key, candidate.CostPerToken, candidate.IsFree);
 
                 var pipeline = _pipelineProvider.GetPipeline("provider-retry");
-                var response = await pipeline.ExecuteAsync(async ct => 
+                var response = await pipeline.ExecuteAsync(async ct =>
                     await client.GetResponseAsync(chatMessages.ToList(), options, ct), cancellationToken);
-                
+
                 try
                 {
                     await _healthStore.MarkSuccessAsync(candidate.Key, cancellationToken);
@@ -108,8 +108,8 @@ public class SmartRoutingChatClient : IChatClient
     }
 
     public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
-        IEnumerable<ChatMessage> chatMessages, 
-        ChatOptions? options = null, 
+        IEnumerable<ChatMessage> chatMessages,
+        ChatOptions? options = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         using var activity = _activitySource.StartActivity("ChatRequest.Streaming");
@@ -137,9 +137,9 @@ public class SmartRoutingChatClient : IChatClient
                 if (client == null) continue;
 
                 _logger.LogInformation("Routing streaming request to provider '{ProviderKey}'", candidate.Key);
-                
+
                 var pipeline = _pipelineProvider.GetPipeline("provider-retry");
-                stream = await pipeline.ExecuteAsync(async ct => 
+                stream = await pipeline.ExecuteAsync(async ct =>
                     client.GetStreamingResponseAsync(chatMessages.ToList(), options, ct), cancellationToken);
 
                 try
@@ -266,7 +266,7 @@ public class SmartRoutingChatClient : IChatClient
         public string Key => Config.Key!;
         public bool IsFree => Cost?.FreeTier ?? false;
         public decimal CostPerToken => Cost?.CostPerToken ?? decimal.MaxValue;
-        
+
         // Suppress unused parameter warning for Config if it occurs in some compiler versions
         // though it is used in the Key property above.
     }

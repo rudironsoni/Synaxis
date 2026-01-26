@@ -18,7 +18,6 @@ external/
 
 # Visual Studio cache/options directory
 .vs/
-.vscode/
 
 # User-specific files
 *.user

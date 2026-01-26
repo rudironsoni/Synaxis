@@ -1,8 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
-  <ItemGroup>
-  </ItemGroup>
-
+  <ItemGroup />
   <ItemGroup>
     <PackageReference Include="Microsoft.Agents.Core" />
     <PackageReference Include="Microsoft.Extensions.AI" />
@@ -14,12 +11,10 @@
     <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
   </ItemGroup>
-
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
-
 </Project>

@@ -27,14 +27,28 @@ using OpenTelemetry.Trace;
 using OpenTelemetry.Resources;
 using System.Diagnostics;
 
-var builder = WebApplication.CreateBuilder(args);
 
-// 0. Configure Logging
+
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .CreateLogger();
 
-builder.Host.UseSerilog();
+try
+{
+    Log.Information("Starting web host");
+
+    var builder = WebApplication.CreateBuilder(args);
+
+    builder.Host.UseSerilog();
+
+    // Configure faster shutdown for development
+    builder.Services.Configure<HostOptions>(options =>
+    {
+        if (builder.Environment.IsDevelopment())
+        {
+            options.ShutdownTimeout = TimeSpan.FromSeconds(3);
+        }
+    });
 
 // 1. Add Services
 builder.Services.AddHttpClient();
@@ -131,6 +145,15 @@ app.MapHealthChecks("/health/readiness", new HealthCheckOptions
     Predicate = r => r.Tags.Contains("readiness")
 });
 
-app.Run();
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Host terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
 
 public partial class Program { }

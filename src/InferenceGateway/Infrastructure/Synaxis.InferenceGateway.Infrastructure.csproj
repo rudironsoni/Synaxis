@@ -1,12 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Google.Apis.Auth" />
     <PackageReference Include="Google.Apis.Oauth2.v2" />
@@ -26,9 +24,7 @@
     <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\Application\Synaxis.InferenceGateway.Application.csproj" />
   </ItemGroup>
-
 </Project>

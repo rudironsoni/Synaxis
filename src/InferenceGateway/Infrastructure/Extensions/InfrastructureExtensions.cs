@@ -43,17 +43,17 @@ public static class InfrastructureExtensions
         });
 
         // 0.2 Register Redis
-        services.AddSingleton<IConnectionMultiplexer>(sp => 
+        services.AddSingleton<IConnectionMultiplexer>(sp =>
         {
             var config = sp.GetRequiredService<IConfiguration>();
             var connectionString = config.GetConnectionString("Redis") ?? "localhost";
-            
+
             // Ensure we don't crash if Redis is down (fail-open)
             if (!connectionString.Contains("abortConnect=", StringComparison.OrdinalIgnoreCase))
             {
                 connectionString += ",abortConnect=false";
             }
-            
+
             return ConnectionMultiplexer.Connect(connectionString);
         });
 
@@ -61,15 +61,15 @@ public static class InfrastructureExtensions
         services.AddSingleton<IQuotaTracker, RedisQuotaTracker>();
 
         // 1. Register Auth Manager (Singleton) with Factory
-        services.AddSingleton<IAntigravityAuthManager>(sp => 
+        services.AddSingleton<IAntigravityAuthManager>(sp =>
         {
             var config = sp.GetRequiredService<IOptions<SynaxisConfiguration>>().Value;
             var logger = sp.GetRequiredService<ILogger<AntigravityAuthManager>>();
-            
+
             // Find Antigravity config
             var providerConfig = config.Providers.Values.FirstOrDefault(p => p.Type?.ToLowerInvariant() == "antigravity");
             var projectId = providerConfig?.ProjectId ?? string.Empty;
-            
+
             // Determine storage path
             var defaultPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".synaxis", "antigravity-auth.json");
             var authPath = providerConfig?.AuthStoragePath ?? defaultPath;
@@ -84,7 +84,7 @@ public static class InfrastructureExtensions
         services.AddSingleton<IApiKeyService, ApiKeyService>();
         services.AddScoped<IAuditService, AuditService>();
         services.AddSingleton<IJwtService, JwtService>();
-        
+
         // 1.6 Register Routing Services
         services.AddScoped<ICostService, CostService>();
         services.AddScoped<IControlPlaneStore, ControlPlaneStore>();
@@ -168,16 +168,16 @@ public static class InfrastructureExtensions
             .AddPolicyHandler(GetRetryPolicy());
 
         // 4. Register the Smart Router as the primary IChatClient (Scoped)
-        // We manually build the pipeline to ensure it is registered as Scoped, 
+        // We manually build the pipeline to ensure it is registered as Scoped,
         // because SmartRoutingChatClient depends on Scoped services (IModelResolver, ICostService).
-        services.AddScoped<IChatClient>(sp => 
+        services.AddScoped<IChatClient>(sp =>
         {
             var innerClient = ActivatorUtilities.CreateInstance<SmartRoutingChatClient>(sp);
-            
+
             var builder = new ChatClientBuilder(innerClient);
             builder.UseFunctionInvocation();
             builder.Use((inner, services) => new UsageTrackingChatClient(inner, services.GetRequiredService<ILogger<UsageTrackingChatClient>>()));
-            
+
             return builder.Build(sp);
         });
 
