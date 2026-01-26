@@ -38,11 +38,10 @@ public class RoutingAgent : AIAgent
     {
         using var scope = _scopeFactory.CreateScope();
         var chatClient = scope.ServiceProvider.GetRequiredService<IChatClient>();
-        var resolver = scope.ServiceProvider.GetRequiredService<IModelResolver>();
         var translator = scope.ServiceProvider.GetRequiredService<ITranslationPipeline>();
         var httpContext = _httpContextAccessor.HttpContext;
 
-        var openAIRequest = await ParseOpenAIRequestAsync(httpContext, cancellationToken);
+        var openAIRequest = await Helpers.OpenAIRequestParser.ParseAsync(httpContext, cancellationToken);
         var modelId = !string.IsNullOrWhiteSpace(openAIRequest?.Model) ? openAIRequest.Model : "default";
 
         var canonicalRequest = new CanonicalRequest(
@@ -61,35 +60,25 @@ public class RoutingAgent : AIAgent
             });
 
         var translatedRequest = translator.TranslateRequest(canonicalRequest);
-        var caps = new RequiredCapabilities { Streaming = false }; // Add other caps extraction logic if possible
 
-        Guid? tenantId = null;
-        if (httpContext?.User?.FindFirst("tenantId")?.Value is string tenantIdStr && Guid.TryParse(tenantIdStr, out var tid))
-        {
-            tenantId = tid;
-        }
-
-        var resolution = await resolver.ResolveAsync(translatedRequest.Model, EndpointKind.ChatCompletions, caps, tenantId);
-
-        if (resolution.Candidates.Count == 0)
-        {
-            throw new ArgumentException($"No providers available for model '{modelId}' with requested capabilities.");
-        }
-
-        if (httpContext != null)
-        {
-            httpContext.Items["RoutingContext"] = new RoutingContext(modelId, resolution.CanonicalId.ToString(), resolution.CanonicalId.Provider);
-        }
-
-        // Update options with resolved model if needed, or pass to chatClient via ChatOptions
-        var chatOptions = new ChatOptions { ModelId = resolution.CanonicalId.ToString() };
-        // Map other options...
+        // Pass the model ID to the client; SmartRoutingChatClient will handle resolution
+        var chatOptions = new ChatOptions { ModelId = translatedRequest.Model };
 
         var response = await chatClient.GetResponseAsync(translatedRequest.Messages, chatOptions, cancellationToken);
         var message = response.Messages.FirstOrDefault() ?? new ChatMessage(ChatRole.Assistant, "");
         var toolCalls = message.Contents.OfType<FunctionCallContent>().ToList();
         var canonicalResponse = new CanonicalResponse(message.Text, toolCalls);
         var translatedResponse = translator.TranslateResponse(canonicalResponse);
+
+        // Attempt to log RoutingContext if metadata is available
+        if (httpContext != null && response.AdditionalProperties != null)
+        {
+             if (response.AdditionalProperties.TryGetValue("model_id", out var resolvedModel) &&
+                 response.AdditionalProperties.TryGetValue("provider_name", out var provider))
+             {
+                 httpContext.Items["RoutingContext"] = new RoutingContext(modelId, resolvedModel?.ToString() ?? "", provider?.ToString() ?? "");
+             }
+        }
 
         var agentMessage = new ChatMessage(ChatRole.Assistant, translatedResponse.Content);
         if (translatedResponse.ToolCalls != null)
@@ -111,11 +100,10 @@ public class RoutingAgent : AIAgent
     {
         using var scope = _scopeFactory.CreateScope();
         var chatClient = scope.ServiceProvider.GetRequiredService<IChatClient>();
-        var resolver = scope.ServiceProvider.GetRequiredService<IModelResolver>();
         var translator = scope.ServiceProvider.GetRequiredService<ITranslationPipeline>();
         var httpContext = _httpContextAccessor.HttpContext;
 
-        var openAIRequest = await ParseOpenAIRequestAsync(httpContext, cancellationToken);
+        var openAIRequest = await Helpers.OpenAIRequestParser.ParseAsync(httpContext, cancellationToken);
         var modelId = !string.IsNullOrWhiteSpace(openAIRequest?.Model) ? openAIRequest.Model : "default";
 
         var canonicalRequest = new CanonicalRequest(
@@ -134,27 +122,12 @@ public class RoutingAgent : AIAgent
             });
 
         var translatedRequest = translator.TranslateRequest(canonicalRequest);
-        var caps = new RequiredCapabilities { Streaming = true };
 
-        Guid? tenantId = null;
-        if (httpContext?.User?.FindFirst("tenantId")?.Value is string tenantIdStr && Guid.TryParse(tenantIdStr, out var tid))
-        {
-            tenantId = tid;
-        }
+        var chatOptions = new ChatOptions { ModelId = translatedRequest.Model };
 
-        var resolution = await resolver.ResolveAsync(translatedRequest.Model, EndpointKind.ChatCompletions, caps, tenantId);
-
-        if (resolution.Candidates.Count == 0)
-        {
-            throw new ArgumentException($"No providers available for model '{modelId}' with requested capabilities.");
-        }
-
-        var chatOptions = new ChatOptions { ModelId = resolution.CanonicalId.ToString() };
-
-        if (httpContext != null)
-        {
-            httpContext.Items["RoutingContext"] = new RoutingContext(modelId, resolution.CanonicalId.ToString(), resolution.CanonicalId.Provider);
-        }
+        // We can't easily capture the resolved model for RoutingContext in streaming before yielding,
+        // unless the client yields a metadata update first.
+        // For now, we rely on SmartRoutingChatClient logging.
 
         await foreach (var update in chatClient.GetStreamingResponseAsync(translatedRequest.Messages, chatOptions, cancellationToken))
         {
@@ -171,27 +144,7 @@ public class RoutingAgent : AIAgent
 
 
 
-    private async Task<OpenAIRequest?> ParseOpenAIRequestAsync(HttpContext? context, CancellationToken cancellationToken)
-    {
-        if (context == null) return null;
 
-        try
-        {
-            context.Request.EnableBuffering();
-            context.Request.Body.Position = 0;
-            using var reader = new StreamReader(context.Request.Body, leaveOpen: true);
-            var body = await reader.ReadToEndAsync(cancellationToken);
-            context.Request.Body.Position = 0;
-
-            if (string.IsNullOrWhiteSpace(body)) return null;
-
-            return JsonSerializer.Deserialize<OpenAIRequest>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-        }
-        catch
-        {
-            return null;
-        }
-    }
 
     private IList<AITool>? MapTools(List<OpenAITool>? tools)
     {

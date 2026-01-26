@@ -52,62 +52,29 @@ public class SmartRoutingChatClient : IChatClient
         var modelId = options?.ModelId ?? "default";
         activity?.SetTag("model.id", modelId);
 
-        var resolution = await ResolveModelAsync(modelId, false, cancellationToken);
-
-        if (resolution.Candidates.Count == 0)
-        {
-            throw new InvalidOperationException($"No providers found for model '{modelId}'.");
-        }
-
-        var sortedCandidates = await SortCandidatesAsync(resolution.Candidates, cancellationToken);
-
+        var candidates = await GetCandidatesAsync(modelId, false, cancellationToken);
         var exceptions = new List<Exception>();
 
-        foreach (var candidate in sortedCandidates)
+        foreach (var candidate in candidates)
         {
             try
             {
-                activity?.SetTag("provider.selected", candidate.Key);
-                var client = _serviceProvider.GetKeyedService<IChatClient>(candidate.Key);
-                if (client == null)
-                {
-                    _logger.LogWarning("Provider '{ProviderKey}' resolved but not registered.", candidate.Key);
-                    continue;
-                }
+                var response = await ExecuteCandidateAsync(candidate, chatMessages, options, cancellationToken);
 
-                _logger.LogInformation("Routing request to provider '{ProviderKey}' (Cost: {Cost}, Free: {IsFree})",
-                    candidate.Key, candidate.CostPerToken, candidate.IsFree);
-
-                var routedOptions = options?.Clone() ?? new ChatOptions();
-                routedOptions.ModelId = resolution.CanonicalId.ModelPath;
-
-                var pipeline = _pipelineProvider.GetPipeline("provider-retry");
-                var response = await pipeline.ExecuteAsync(async ct =>
-                    await client.GetResponseAsync(chatMessages.ToList(), routedOptions, ct), cancellationToken);
-
-                try
-                {
-                    await _healthStore.MarkSuccessAsync(candidate.Key, cancellationToken);
-                    await _quotaTracker.RecordUsageAsync(candidate.Key, response.Usage?.InputTokenCount ?? 0, response.Usage?.OutputTokenCount ?? 0, cancellationToken);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Failed to record success/usage metrics for provider '{ProviderKey}'. Ignoring.", candidate.Key);
-                }
+                // Add Metadata
+                if (response.AdditionalProperties == null) response.AdditionalProperties = new AdditionalPropertiesDictionary();
+                response.AdditionalProperties["provider_name"] = candidate.Key;
+                response.AdditionalProperties["model_id"] = candidate.CanonicalModelPath;
 
                 return response;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Provider '{ProviderKey}' failed.", candidate.Key);
-                // Try to mark failure, but don't crash if health store fails
-                try { await _healthStore.MarkFailureAsync(candidate.Key, TimeSpan.FromSeconds(30), cancellationToken); } catch { }
                 exceptions.Add(ex);
             }
         }
 
-        var errorMsg = string.Join("; ", exceptions.Select(e => $"{e.GetType().Name}: {e.Message}"));
-        throw new AggregateException($"All providers failed for model '{modelId}'. Errors: {errorMsg}", exceptions);
+        throw new AggregateException($"All providers failed for model '{modelId}'.", exceptions);
     }
 
     public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
@@ -119,161 +86,167 @@ public class SmartRoutingChatClient : IChatClient
         var modelId = options?.ModelId ?? "default";
         activity?.SetTag("model.id", modelId);
 
-        var resolution = await ResolveModelAsync(modelId, true, cancellationToken);
-
-        if (resolution.Candidates.Count == 0)
-        {
-            throw new InvalidOperationException($"No providers found for model '{modelId}'.");
-        }
-
-        var sortedCandidates = await SortCandidatesAsync(resolution.Candidates, cancellationToken);
+        var candidates = await GetCandidatesAsync(modelId, true, cancellationToken);
         var exceptions = new List<Exception>();
-        bool successfulStream = false;
 
-        foreach (var candidate in sortedCandidates)
+        IAsyncEnumerable<ChatResponseUpdate>? successfulStream = null;
+        EnrichedCandidate? successfulCandidate = null;
+
+        foreach (var candidate in candidates)
         {
-            activity?.SetTag("provider.selected", candidate.Key);
-            IAsyncEnumerable<ChatResponseUpdate>? stream = null;
             try
             {
-                var client = _serviceProvider.GetKeyedService<IChatClient>(candidate.Key);
-                if (client == null) continue;
-
-                _logger.LogInformation("Routing streaming request to provider '{ProviderKey}'", candidate.Key);
-
-                var routedOptions = options?.Clone() ?? new ChatOptions();
-                routedOptions.ModelId = resolution.CanonicalId.ModelPath;
-
-                var pipeline = _pipelineProvider.GetPipeline("provider-retry");
-                stream = await pipeline.ExecuteAsync(async ct =>
-                    client.GetStreamingResponseAsync(chatMessages.ToList(), routedOptions, ct), cancellationToken);
-
-                try
-                {
-                    await _healthStore.MarkSuccessAsync(candidate.Key, cancellationToken);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Failed to record stream success for provider '{ProviderKey}'. Ignoring.", candidate.Key);
-                }
+                successfulStream = await ExecuteCandidateStreamingAsync(candidate, chatMessages, options, cancellationToken);
+                successfulCandidate = candidate;
+                break;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to initiate stream for provider '{ProviderKey}'", candidate.Key);
-                await _healthStore.MarkFailureAsync(candidate.Key, TimeSpan.FromSeconds(30), cancellationToken);
                 exceptions.Add(ex);
-                continue;
-            }
-
-            if (stream != null)
-            {
-                successfulStream = true;
-                // We must await inside the loop to ensure the stream is processed.
-                // If an exception occurs DURING iteration, we throw and abort (fail-fast once committed).
-                await foreach (var update in stream.WithCancellation(cancellationToken))
-                {
-                    yield return update;
-                }
-                yield break; // Success
             }
         }
 
-        if (!successfulStream)
+        if (successfulStream == null)
         {
-            var errorMsg = string.Join("; ", exceptions.Select(e => $"{e.GetType().Name}: {e.Message}"));
-            throw new AggregateException($"All providers failed to initiate stream for model '{modelId}'. Errors: {errorMsg}", exceptions);
+            throw new AggregateException($"All providers failed to initiate stream for model '{modelId}'.", exceptions);
+        }
+
+        await foreach (var update in successfulStream.WithCancellation(cancellationToken))
+        {
+             if (successfulCandidate != null)
+             {
+                 if (update.AdditionalProperties == null) update.AdditionalProperties = new AdditionalPropertiesDictionary();
+                 update.AdditionalProperties["provider_name"] = successfulCandidate.Key;
+                 update.AdditionalProperties["model_id"] = successfulCandidate.CanonicalModelPath;
+             }
+             yield return update;
         }
     }
 
-    public object? GetService(Type serviceType, object? serviceKey = null)
+    private async Task<ChatResponse> ExecuteCandidateAsync(
+        EnrichedCandidate candidate,
+        IEnumerable<ChatMessage> chatMessages,
+        ChatOptions? originalOptions,
+        CancellationToken cancellationToken)
     {
-        return _serviceProvider.GetKeyedService(serviceType, serviceKey);
-    }
+        var client = _serviceProvider.GetKeyedService<IChatClient>(candidate.Key)
+                     ?? throw new InvalidOperationException($"Provider '{candidate.Key}' not registered.");
 
-    public void Dispose()
-    {
-        // Nothing to dispose
-    }
+        _logger.LogInformation("Routing request to provider '{ProviderKey}'", candidate.Key);
 
-    private async Task<ResolutionResult> ResolveModelAsync(string modelId, bool streaming, CancellationToken cancellationToken)
-    {
-        var caps = new RequiredCapabilities { Streaming = streaming };
-        return await _modelResolver.ResolveAsync(modelId, EndpointKind.ChatCompletions, caps);
-    }
+        var routedOptions = originalOptions?.Clone() ?? new ChatOptions();
+        routedOptions.ModelId = candidate.CanonicalModelPath;
 
-    private async Task<List<EnrichedCandidate>> SortCandidatesAsync(IEnumerable<ProviderConfig> candidates, CancellationToken cancellationToken)
-    {
-        using var activity = _activitySource.StartActivity("SortCandidates");
-        var enriched = new List<EnrichedCandidate>();
+        var pipeline = _pipelineProvider.GetPipeline("provider-retry");
 
         try
         {
-            foreach (var candidate in candidates)
-            {
-                // Pre-routing checks: Health and Quota
-                try
-                {
-                    if (!await _healthStore.IsHealthyAsync(candidate.Key!, cancellationToken))
-                    {
-                        _logger.LogDebug("Skipping unhealthy provider '{ProviderKey}'", candidate.Key);
-                        continue;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Error checking health for provider '{ProviderKey}'. Treating as HEALTHY (Fail Open).", candidate.Key);
-                    // Fail Open: Proceed despite error
-                }
+            var response = await pipeline.ExecuteAsync(async ct =>
+                await client.GetResponseAsync(chatMessages.ToList(), routedOptions, ct), cancellationToken);
 
-                try
-                {
-                    if (!await _quotaTracker.CheckQuotaAsync(candidate.Key!, cancellationToken))
-                    {
-                        _logger.LogDebug("Skipping provider '{ProviderKey}' due to quota limits", candidate.Key);
-                        continue;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Error checking quota for provider '{ProviderKey}'. Treating as ALLOWED (Fail Open).", candidate.Key);
-                    // Fail Open: Proceed despite error
-                }
-
-                Application.ControlPlane.Entities.ModelCost? cost = null;
-                try
-                {
-                    cost = await _costService.GetCostAsync(candidate.Key!, "default", cancellationToken);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Error getting cost for provider '{ProviderKey}'. Treating as unknown cost.", candidate.Key);
-                    // Fail Open: Proceed with null cost
-                }
-
-                enriched.Add(new EnrichedCandidate(candidate, cost));
-            }
-
-            return enriched
-                .OrderByDescending(c => c.IsFree)
-                .ThenBy(c => c.CostPerToken)
-                .ThenBy(c => c.Config.Tier)
-                .ThenBy(_ => Guid.NewGuid())
-                .ToList();
+            await RecordMetricsAsync(candidate.Key, response.Usage?.InputTokenCount ?? 0, response.Usage?.OutputTokenCount ?? 0, cancellationToken);
+            return response;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error during candidate sorting.");
+            await RecordFailureAsync(candidate.Key, ex, cancellationToken);
             throw;
         }
     }
 
-    private record EnrichedCandidate(ProviderConfig Config, Application.ControlPlane.Entities.ModelCost? Cost)
+    private async Task<IAsyncEnumerable<ChatResponseUpdate>> ExecuteCandidateStreamingAsync(
+        EnrichedCandidate candidate,
+        IEnumerable<ChatMessage> chatMessages,
+        ChatOptions? originalOptions,
+        CancellationToken cancellationToken)
+    {
+         var client = _serviceProvider.GetKeyedService<IChatClient>(candidate.Key)
+                     ?? throw new InvalidOperationException($"Provider '{candidate.Key}' not registered.");
+
+        _logger.LogInformation("Routing streaming request to provider '{ProviderKey}'", candidate.Key);
+
+        var routedOptions = originalOptions?.Clone() ?? new ChatOptions();
+        routedOptions.ModelId = candidate.CanonicalModelPath;
+
+        var pipeline = _pipelineProvider.GetPipeline("provider-retry");
+
+        try
+        {
+            // Use synchronous delegate for returning the stream, wrapped in ValueTask
+            return await pipeline.ExecuteAsync(ct =>
+            {
+                var stream = client.GetStreamingResponseAsync(chatMessages.ToList(), routedOptions, ct);
+                return new ValueTask<IAsyncEnumerable<ChatResponseUpdate>>(stream);
+            }, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            await RecordFailureAsync(candidate.Key, ex, cancellationToken);
+            throw;
+        }
+    }
+
+    private async Task<List<EnrichedCandidate>> GetCandidatesAsync(string modelId, bool streaming, CancellationToken cancellationToken)
+    {
+        var caps = new RequiredCapabilities { Streaming = streaming };
+        var resolution = await _modelResolver.ResolveAsync(modelId, EndpointKind.ChatCompletions, caps);
+
+        if (resolution.Candidates.Count == 0)
+        {
+             throw new InvalidOperationException($"No providers found for model '{modelId}'.");
+        }
+
+        var enriched = new List<EnrichedCandidate>();
+        foreach (var candidate in resolution.Candidates)
+        {
+             if (!await _healthStore.IsHealthyAsync(candidate.Key!, cancellationToken)) continue;
+             if (!await _quotaTracker.CheckQuotaAsync(candidate.Key!, cancellationToken)) continue;
+
+             var cost = await _costService.GetCostAsync(candidate.Key!, "default", cancellationToken);
+             enriched.Add(new EnrichedCandidate(candidate, cost, resolution.CanonicalId.ModelPath));
+        }
+
+        return enriched
+            .OrderByDescending(c => c.IsFree)
+            .ThenBy(c => c.CostPerToken)
+            .ThenBy(c => c.Config.Tier)
+            .ToList();
+    }
+
+    private async Task RecordMetricsAsync(string providerKey, long inputTokens, long outputTokens, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _healthStore.MarkSuccessAsync(providerKey, cancellationToken);
+            if (inputTokens > 0 || outputTokens > 0)
+            {
+                await _quotaTracker.RecordUsageAsync(providerKey, inputTokens, outputTokens, cancellationToken);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to record metrics for provider '{ProviderKey}'.", providerKey);
+        }
+    }
+
+    private async Task RecordFailureAsync(string providerKey, Exception ex, CancellationToken cancellationToken)
+    {
+        _logger.LogError(ex, "Provider '{ProviderKey}' failed.", providerKey);
+        try
+        {
+            await _healthStore.MarkFailureAsync(providerKey, TimeSpan.FromSeconds(30), cancellationToken);
+        }
+        catch { }
+    }
+
+    public object? GetService(Type serviceType, object? serviceKey = null) => _serviceProvider.GetKeyedService(serviceType, serviceKey);
+
+    public void Dispose() { }
+
+    private record EnrichedCandidate(ProviderConfig Config, Application.ControlPlane.Entities.ModelCost? Cost, string CanonicalModelPath)
     {
         public string Key => Config.Key!;
         public bool IsFree => Cost?.FreeTier ?? false;
         public decimal CostPerToken => Cost?.CostPerToken ?? decimal.MaxValue;
-
-        // Suppress unused parameter warning for Config if it occurs in some compiler versions
-        // though it is used in the Key property above.
     }
 }
