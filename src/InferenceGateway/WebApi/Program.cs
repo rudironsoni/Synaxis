@@ -115,6 +115,11 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference();
 }
 
+if (!app.Environment.IsEnvironment("Test"))
+{
+    await app.InitializeDatabaseAsync();
+}
+
 app.UseHttpsRedirection();
 
 app.UseAuthentication();

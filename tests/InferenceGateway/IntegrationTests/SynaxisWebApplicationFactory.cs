@@ -39,10 +39,10 @@ public class SynaxisWebApplicationFactory : WebApplicationFactory<Program>, IAsy
         optionsBuilder.UseNpgsql(_postgres.GetConnectionString());
 
         using var dbContext = new ControlPlaneDbContext(optionsBuilder.Options);
-        
+
         // Use execution strategy to handle potential transient failures during startup
         var strategy = dbContext.Database.CreateExecutionStrategy();
-        await strategy.ExecuteAsync(async () => 
+        await strategy.ExecuteAsync(async () =>
         {
             await dbContext.Database.EnsureCreatedAsync();
         });

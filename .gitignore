@@ -40,3 +40,7 @@ external/
 !**/[Pp]ackages/build/
 **/TestResults/
 .env
+
+
+**/bin/**
+**/obj/**

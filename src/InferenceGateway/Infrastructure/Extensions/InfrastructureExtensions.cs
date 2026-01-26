@@ -19,6 +19,7 @@ using Synaxis.InferenceGateway.Application.Routing;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 using Synaxis.InferenceGateway.Application.ControlPlane;
 using StackExchange.Redis;
+using Microsoft.EntityFrameworkCore;
 
 namespace Synaxis.InferenceGateway.Infrastructure.Extensions;
 
@@ -39,7 +40,7 @@ public static class InfrastructureExtensions
                 UseJitter = true,
                 Delay = TimeSpan.FromSeconds(1)
             });
-            builder.AddTimeout(TimeSpan.FromSeconds(10));
+            builder.AddTimeout(TimeSpan.FromMinutes(2));
         });
 
         // 0.2 Register Redis
@@ -190,5 +191,23 @@ public static class InfrastructureExtensions
             .HandleTransientHttpError()
             .OrResult(msg => msg.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
             .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));
+    }
+
+    public static async Task InitializeDatabaseAsync(this Microsoft.Extensions.Hosting.IHost host)
+    {
+        using var scope = host.Services.CreateScope();
+        var services = scope.ServiceProvider;
+
+        try
+        {
+            var context = services.GetRequiredService<ControlPlaneDbContext>();
+            await context.Database.MigrateAsync();
+        }
+        catch (Exception ex)
+        {
+            var logger = services.GetRequiredService<ILogger<ControlPlaneDbContext>>();
+            logger.LogError(ex, "An error occurred while migrating the database.");
+            throw;
+        }
     }
 }
