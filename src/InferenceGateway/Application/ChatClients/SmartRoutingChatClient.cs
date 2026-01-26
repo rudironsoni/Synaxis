@@ -78,9 +78,12 @@ public class SmartRoutingChatClient : IChatClient
                 _logger.LogInformation("Routing request to provider '{ProviderKey}' (Cost: {Cost}, Free: {IsFree})",
                     candidate.Key, candidate.CostPerToken, candidate.IsFree);
 
+                var routedOptions = options?.Clone() ?? new ChatOptions();
+                routedOptions.ModelId = resolution.CanonicalId.ModelPath;
+
                 var pipeline = _pipelineProvider.GetPipeline("provider-retry");
                 var response = await pipeline.ExecuteAsync(async ct =>
-                    await client.GetResponseAsync(chatMessages.ToList(), options, ct), cancellationToken);
+                    await client.GetResponseAsync(chatMessages.ToList(), routedOptions, ct), cancellationToken);
 
                 try
                 {
@@ -138,9 +141,12 @@ public class SmartRoutingChatClient : IChatClient
 
                 _logger.LogInformation("Routing streaming request to provider '{ProviderKey}'", candidate.Key);
 
+                var routedOptions = options?.Clone() ?? new ChatOptions();
+                routedOptions.ModelId = resolution.CanonicalId.ModelPath;
+
                 var pipeline = _pipelineProvider.GetPipeline("provider-retry");
                 stream = await pipeline.ExecuteAsync(async ct =>
-                    client.GetStreamingResponseAsync(chatMessages.ToList(), options, ct), cancellationToken);
+                    client.GetStreamingResponseAsync(chatMessages.ToList(), routedOptions, ct), cancellationToken);
 
                 try
                 {
