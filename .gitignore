@@ -40,3 +40,4 @@ external/
 **/[Pp]ackages/*
 !**/[Pp]ackages/build/
 **/TestResults/
+.env
