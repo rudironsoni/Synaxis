@@ -15,7 +15,14 @@ public static class OpenAIEndpointsExtensions
     {
         var group = endpoints.MapGroup("/openai");
         var apiPrefix = typeof(OpenAIEndpointsExtensions).Assembly.GetName().Name!.Split('.')[0];
+        MapOpenAIRoutes(group, agent, apiPrefix);
+        return group;
+    }
 
+
+
+    private static void MapOpenAIRoutes(IEndpointRouteBuilder group, RoutingAgent agent, string apiPrefix)
+    {
         // Chat Completions
         group.MapOpenAIChatCompletions(agent, path: "/v1/chat/completions")
             .WithTags("Chat")
@@ -142,6 +149,5 @@ public static class OpenAIEndpointsExtensions
         group.MapLegacyCompletions();
         group.MapModels();
 
-        return group;
     }
 }

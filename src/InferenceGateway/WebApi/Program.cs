@@ -132,6 +132,7 @@ app.UseMiddleware<OpenAIMetadataMiddleware>();
 var agent = app.Services.GetRequiredService<RoutingAgent>();
 app.MapOpenAIEndpoints(agent);
 
+
 app.MapAntigravityEndpoints();
 app.MapControllers();
 

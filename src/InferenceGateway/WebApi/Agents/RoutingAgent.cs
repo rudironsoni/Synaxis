@@ -42,8 +42,8 @@ public class RoutingAgent : AIAgent
         var translator = scope.ServiceProvider.GetRequiredService<ITranslationPipeline>();
         var httpContext = _httpContextAccessor.HttpContext;
 
-        var modelId = await GetModelIdAsync(httpContext, cancellationToken) ?? "default";
         var openAIRequest = await ParseOpenAIRequestAsync(httpContext, cancellationToken);
+        var modelId = !string.IsNullOrWhiteSpace(openAIRequest?.Model) ? openAIRequest.Model : "default";
 
         var canonicalRequest = new CanonicalRequest(
             EndpointKind.ChatCompletions,
@@ -115,8 +115,8 @@ public class RoutingAgent : AIAgent
         var translator = scope.ServiceProvider.GetRequiredService<ITranslationPipeline>();
         var httpContext = _httpContextAccessor.HttpContext;
 
-        var modelId = await GetModelIdAsync(httpContext, cancellationToken) ?? "default";
         var openAIRequest = await ParseOpenAIRequestAsync(httpContext, cancellationToken);
+        var modelId = !string.IsNullOrWhiteSpace(openAIRequest?.Model) ? openAIRequest.Model : "default";
 
         var canonicalRequest = new CanonicalRequest(
             EndpointKind.ChatCompletions,
@@ -169,33 +169,7 @@ public class RoutingAgent : AIAgent
     public override ValueTask<AgentThread> DeserializeThreadAsync(JsonElement serializedThread, JsonSerializerOptions? jsonSerializerOptions = null, CancellationToken cancellationToken = default)
         => new ValueTask<AgentThread>(new RoutingAgentThread());
 
-    private async Task<string?> GetModelIdAsync(HttpContext? context, CancellationToken cancellationToken)
-    {
-        if (context == null) return null;
 
-        try
-        {
-            context.Request.EnableBuffering();
-            context.Request.Body.Position = 0;
-            using var reader = new StreamReader(context.Request.Body, leaveOpen: true);
-            var body = await reader.ReadToEndAsync(cancellationToken);
-            context.Request.Body.Position = 0;
-
-            if (string.IsNullOrWhiteSpace(body)) return null;
-
-            using var doc = JsonDocument.Parse(body);
-            if (doc.RootElement.TryGetProperty("model", out var modelElement))
-            {
-                return modelElement.GetString();
-            }
-        }
-        catch
-        {
-            // Ignore parsing errors
-        }
-
-        return null;
-    }
 
     private async Task<OpenAIRequest?> ParseOpenAIRequestAsync(HttpContext? context, CancellationToken cancellationToken)
     {
@@ -211,7 +185,7 @@ public class RoutingAgent : AIAgent
 
             if (string.IsNullOrWhiteSpace(body)) return null;
 
-            return JsonSerializer.Deserialize<OpenAIRequest>(body);
+            return JsonSerializer.Deserialize<OpenAIRequest>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         }
         catch
         {

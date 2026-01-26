@@ -58,13 +58,14 @@ public class ModelsAndHealthEndpointTests
             ["Synaxis:InferenceGateway:CanonicalModels:0:Id"] = "test-model",
             ["Synaxis:InferenceGateway:CanonicalModels:0:Provider"] = "TestProvider",
             ["Synaxis:InferenceGateway:CanonicalModels:0:ModelPath"] = "test-model",
-            ["Synaxis:InferenceGateway:Aliases:fast:Candidates:0"] = "test-model"
+            ["Synaxis:InferenceGateway:Aliases:fast:Candidates:0"] = "test-model",
+            ["Synaxis:InferenceGateway:Aliases:default:Candidates:0"] = "test-model"
         };
 
         await using var factory = CreateFactory(settings);
         using var client = factory.CreateClient();
 
-        var response = await client.GetAsync("/v1/models");
+        var response = await client.GetAsync("/openai/v1/models");
 
         response.EnsureSuccessStatusCode();
         var payload = await response.Content.ReadFromJsonAsync<ModelListResponse>();
