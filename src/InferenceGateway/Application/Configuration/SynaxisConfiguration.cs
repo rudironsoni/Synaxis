@@ -7,10 +7,15 @@ public class SynaxisConfiguration
     public Dictionary<string, ProviderConfig> Providers { get; set; } = new();
     public List<CanonicalModelConfig> CanonicalModels { get; set; } = new();
     public Dictionary<string, AliasConfig> Aliases { get; set; } = new();
+    public string? MasterKey { get; set; }
+    public string? JwtSecret { get; set; }
+    public string? JwtIssuer { get; set; }
+    public string? JwtAudience { get; set; }
 }
 
 public class ProviderConfig
 {
+    public bool Enabled { get; set; } = true;
     public string? Key { get; set; }
     public string? AccountId { get; set; } // For Cloudflare
     public string? ProjectId { get; set; } // For Antigravity
@@ -19,6 +24,7 @@ public class ProviderConfig
     public List<string> Models { get; set; } = new();
     public string Type { get; set; } = string.Empty; // "OpenAI", "Groq", "Cohere", "Cloudflare", etc.
     public string? Endpoint { get; set; } // Optional override
+    public string? FallbackEndpoint { get; set; } // Optional fallback
 }
 
 public class CanonicalModelConfig

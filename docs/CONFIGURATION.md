@@ -1,20 +1,35 @@
 # Configuration Guide
 
-Synaxis is configured primarily through `src/Synaxis.WebApi/appsettings.json`. This file defines which LLM providers are active, their API keys, and their routing priority (Tiers).
+Synaxis is configured primarily through `src/InferenceGateway/WebApi/appsettings.json` (and `appsettings.Development.json` for dev overrides). This file defines which providers are active, their API keys, and the model routing configuration.
 
 ## Structure
 
-The configuration is nested under the `Synaxis` object.
+The configuration is nested under `Synaxis:InferenceGateway`.
 
 ```json
 {
   "Synaxis": {
-    "Providers": {
-      "ProviderName": {
-        "Type": "ProviderType",
-        "Key": "API_KEY",
-        "Tier": 1,
-        "Models": [ "model-id-1", "model-id-2" ]
+    "InferenceGateway": {
+      "Providers": {
+        "ProviderName": {
+          "Enabled": true,
+          "Type": "ProviderType",
+          "Key": "API_KEY",
+          "Tier": 1,
+          "Models": [ "model-id-1", "model-id-2" ]
+        }
+      },
+      "CanonicalModels": [
+        {
+          "Id": "provider/model",
+          "Provider": "ProviderName",
+          "ModelPath": "model-id-1"
+        }
+      ],
+      "Aliases": {
+        "default": {
+          "Candidates": [ "provider/model" ]
+        }
       }
     }
   }
@@ -27,16 +42,18 @@ The configuration is nested under the `Synaxis` object.
 | :--- | :--- | :--- |
 | `Type` | The type of the provider. See [Supported Providers](#supported-providers). | Yes |
 | `Key` | The API Key for the provider. | Yes (except Pollinations) |
+| `Enabled` | Whether this provider is active. | Yes |
 | `Tier` | Routing priority. Lower numbers are tried first (e.g., Tier 1 before Tier 2). | Yes |
 | `Models` | An array of model IDs that this provider handles. Incoming requests matching these IDs will be routed here. Use `*` for catch-all. | Yes |
 | `AccountId` | The Account ID (Specific to Cloudflare). | Only for Cloudflare |
+| `ProjectId` | Project ID (Specific to Antigravity). | Only for Antigravity |
 | `Endpoint` | Override the default API endpoint URL. | No |
 
 ---
 
 ## Supported Providers
 
-Based on the codebase (`ApplicationExtensions.cs`), the following types are supported:
+Based on the codebase (`InfrastructureExtensions.cs`), the following types are supported:
 
 *   `OpenAI` (Generic/Official)
 *   `Groq`
@@ -47,6 +64,7 @@ Based on the codebase (`ApplicationExtensions.cs`), the following types are supp
 *   `Nvidia`
 *   `HuggingFace`
 *   `Pollinations` (Free, no key required)
+*   `Antigravity`
 
 ---
 

@@ -82,7 +82,7 @@ public class GatewayIntegrationTests : IClassFixture<SynaxisWebApplicationFactor
         };
 
         var response = await _client.PostAsJsonAsync("/openai/v1/chat/completions", request);
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessAsync(response);
 
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
         Assert.Equal("chat.completion", content.GetProperty("object").GetString());
@@ -104,7 +104,7 @@ public class GatewayIntegrationTests : IClassFixture<SynaxisWebApplicationFactor
         };
 
         var response = await _client.PostAsJsonAsync("/openai/v1/chat/completions", request);
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessAsync(response);
 
         using var reader = new StreamReader(await response.Content.ReadAsStreamAsync());
         bool foundDone = false;
@@ -131,7 +131,7 @@ public class GatewayIntegrationTests : IClassFixture<SynaxisWebApplicationFactor
         };
 
         var response = await _client.PostAsJsonAsync("/openai/v1/completions", request);
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessAsync(response);
 
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
         Assert.Equal("text_completion", content.GetProperty("object").GetString());
@@ -150,7 +150,7 @@ public class GatewayIntegrationTests : IClassFixture<SynaxisWebApplicationFactor
         };
 
         var response = await _client.PostAsJsonAsync("/openai/v1/completions", request);
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessAsync(response);
 
         using var reader = new StreamReader(await response.Content.ReadAsStreamAsync());
         bool foundDone = false;
@@ -235,11 +235,22 @@ public class GatewayIntegrationTests : IClassFixture<SynaxisWebApplicationFactor
         };
 
         var response = await _client.PostAsJsonAsync("/openai/v1/chat/completions", request);
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessAsync(response);
 
         Assert.True(response.Headers.Contains("x-gateway-model-requested"));
         Assert.True(response.Headers.Contains("x-gateway-model-resolved"));
         Assert.True(response.Headers.Contains("x-gateway-provider"));
+    }
+
+    private async Task EnsureSuccessAsync(HttpResponseMessage response)
+    {
+        if (!response.IsSuccessStatusCode)
+        {
+            var error = await response.Content.ReadAsStringAsync();
+            _factory.OutputHelper?.WriteLine($"Status: {(int)response.StatusCode} Body: {error}");
+        }
+
+        response.EnsureSuccessStatusCode();
     }
 }
 
