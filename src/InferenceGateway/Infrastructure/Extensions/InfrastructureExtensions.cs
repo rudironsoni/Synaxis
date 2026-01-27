@@ -19,6 +19,8 @@ using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 using Synaxis.InferenceGateway.Application.ControlPlane;
 using Synaxis.InferenceGateway.Application.ChatClients;
 using Synaxis.InferenceGateway.Infrastructure.ChatClients;
+using Synaxis.InferenceGateway.Infrastructure.ChatClients.Strategies;
+using Synaxis.InferenceGateway.Application.ChatClients.Strategies;
 using StackExchange.Redis;
 using Microsoft.EntityFrameworkCore;
 
@@ -193,6 +195,8 @@ public static class InfrastructureExtensions
     private static IServiceCollection AddInfrastructureHelpers(this IServiceCollection services)
     {
         services.AddSingleton<IChatClientFactory, ChatClientFactory>();
+        services.AddSingleton<IChatClientStrategy, OpenAiGenericStrategy>();
+        services.AddSingleton<IChatClientStrategy, CloudflareStrategy>();
         return services;
     }
 
