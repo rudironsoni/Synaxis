@@ -2,7 +2,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Synaxis.InferenceGateway.Application.ChatClients;
 using Synaxis.InferenceGateway.Application.Configuration;
 using Synaxis.InferenceGateway.Infrastructure.Auth;
 using Synaxis.InferenceGateway.Infrastructure.Security;
@@ -18,6 +17,8 @@ using Synaxis.InferenceGateway.Infrastructure.Routing;
 using Synaxis.InferenceGateway.Application.Routing;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 using Synaxis.InferenceGateway.Application.ControlPlane;
+using Synaxis.InferenceGateway.Application.ChatClients;
+using Synaxis.InferenceGateway.Infrastructure.ChatClients;
 using StackExchange.Redis;
 using Microsoft.EntityFrameworkCore;
 
@@ -168,6 +169,9 @@ public static class InfrastructureExtensions
         services.AddHttpClient("Antigravity")
             .AddPolicyHandler(GetRetryPolicy());
 
+        // Register infrastructure helpers
+        services.AddInfrastructureHelpers();
+
         // 4. Register the Smart Router as the primary IChatClient (Scoped)
         // We manually build the pipeline to ensure it is registered as Scoped,
         // because SmartRoutingChatClient depends on Scoped services (IModelResolver, ICostService).
@@ -182,6 +186,13 @@ public static class InfrastructureExtensions
             return builder.Build(sp);
         });
 
+        return services;
+    }
+
+    // Register infrastructure-level helpers
+    private static IServiceCollection AddInfrastructureHelpers(this IServiceCollection services)
+    {
+        services.AddSingleton<IChatClientFactory, ChatClientFactory>();
         return services;
     }
 

@@ -77,7 +77,9 @@ builder.Services.AddHealthChecks()
     .AddCheck<ConfigHealthCheck>("config", tags: new[] { "readiness" })
     .AddCheck<ProviderConnectivityHealthCheck>("providers", tags: new[] { "readiness" });
 
-builder.Services.AddSingleton<RoutingAgent>();
+builder.Services.AddScoped<RoutingService>();
+builder.Services.AddScoped<RoutingAgent>();
+builder.Services.AddMediator(options => options.ServiceLifetime = ServiceLifetime.Scoped);
 builder.AddOpenAIChatCompletions();
 builder.AddOpenAIResponses();
 builder.AddOpenAIConversations();
@@ -134,8 +136,7 @@ app.Use(async (context, next) =>
 app.UseMiddleware<OpenAIErrorHandlerMiddleware>();
 app.UseMiddleware<OpenAIMetadataMiddleware>();
 
-var agent = app.Services.GetRequiredService<RoutingAgent>();
-app.MapOpenAIEndpoints(agent);
+app.MapOpenAIEndpoints();
 
 
 app.MapAntigravityEndpoints();

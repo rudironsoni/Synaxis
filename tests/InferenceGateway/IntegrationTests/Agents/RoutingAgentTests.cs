@@ -16,9 +16,6 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Agents;
 
 public class RoutingAgentTests
 {
-    private readonly Mock<IServiceScopeFactory> _scopeFactoryMock;
-    private readonly Mock<IServiceScope> _scopeMock;
-    private readonly Mock<IServiceProvider> _serviceProviderMock;
     private readonly Mock<IChatClient> _chatClientMock;
     private readonly Mock<ITranslationPipeline> _translatorMock;
     private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock;
@@ -27,21 +24,16 @@ public class RoutingAgentTests
 
     public RoutingAgentTests()
     {
-        _scopeFactoryMock = new Mock<IServiceScopeFactory>();
-        _scopeMock = new Mock<IServiceScope>();
-        _serviceProviderMock = new Mock<IServiceProvider>();
         _chatClientMock = new Mock<IChatClient>();
         _translatorMock = new Mock<ITranslationPipeline>();
         _httpContextAccessorMock = new Mock<IHttpContextAccessor>();
         _loggerMock = new Mock<ILogger<RoutingAgent>>();
 
-        _scopeFactoryMock.Setup(x => x.CreateScope()).Returns(_scopeMock.Object);
-        _scopeMock.Setup(x => x.ServiceProvider).Returns(_serviceProviderMock.Object);
-
-        _serviceProviderMock.Setup(x => x.GetService(typeof(IChatClient))).Returns(_chatClientMock.Object);
-        _serviceProviderMock.Setup(x => x.GetService(typeof(ITranslationPipeline))).Returns(_translatorMock.Object);
-
-        _agent = new RoutingAgent(_scopeFactoryMock.Object, _loggerMock.Object, _httpContextAccessorMock.Object);
+        _agent = new RoutingAgent(
+            _chatClientMock.Object,
+            _translatorMock.Object,
+            _httpContextAccessorMock.Object,
+            _loggerMock.Object);
     }
 
     [Fact]
@@ -81,9 +73,6 @@ public class RoutingAgentTests
             .ReturnsAsync(expectedResponse);
 
         // Act
-        // We need to use reflection or expose RunCoreAsync since it's protected.
-        // Or assume public entry point 'RunAsync' calls it. Agents usually have public RunAsync.
-        // Let's call RunAsync.
         var result = await _agent.RunAsync(messages);
 
         // Assert

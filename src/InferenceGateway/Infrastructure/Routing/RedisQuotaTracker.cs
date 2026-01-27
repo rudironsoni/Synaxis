@@ -25,6 +25,12 @@ public class RedisQuotaTracker : IQuotaTracker
         return Task.FromResult(true);
     }
 
+    public Task<bool> IsHealthyAsync(string providerKey, CancellationToken cancellationToken = default)
+    {
+        // For now, IsHealthy is same as CheckQuota
+        return CheckQuotaAsync(providerKey, cancellationToken);
+    }
+
     public async Task RecordUsageAsync(string providerKey, long inputTokens, long outputTokens, CancellationToken cancellationToken = default)
     {
         try

@@ -1,5 +1,4 @@
 using Microsoft.Extensions.AI;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Polly;
@@ -14,7 +13,7 @@ namespace Synaxis.InferenceGateway.Application.Tests.ChatClients;
 
 public class SmartRoutingChatClientTests
 {
-    private readonly Mock<IKeyedServiceProvider> _serviceProviderMock;
+    private readonly Mock<IChatClientFactory> _chatClientFactoryMock;
     private readonly Mock<ISmartRouter> _smartRouterMock;
     private readonly Mock<IHealthStore> _healthStoreMock;
     private readonly Mock<IQuotaTracker> _quotaTrackerMock;
@@ -25,7 +24,7 @@ public class SmartRoutingChatClientTests
 
     public SmartRoutingChatClientTests()
     {
-        _serviceProviderMock = new Mock<IKeyedServiceProvider>();
+        _chatClientFactoryMock = new Mock<IChatClientFactory>();
         _smartRouterMock = new Mock<ISmartRouter>();
         _healthStoreMock = new Mock<IHealthStore>();
         _quotaTrackerMock = new Mock<IQuotaTracker>();
@@ -38,7 +37,7 @@ public class SmartRoutingChatClientTests
         _activitySource = new ActivitySource("Test");
 
         _client = new SmartRoutingChatClient(
-            _serviceProviderMock.Object,
+            _chatClientFactoryMock.Object,
             _smartRouterMock.Object,
             _healthStoreMock.Object,
             _quotaTrackerMock.Object,
@@ -62,12 +61,15 @@ public class SmartRoutingChatClientTests
         _smartRouterMock.Setup(x => x.GetCandidatesAsync(modelId, false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<EnrichedCandidate> { candidate });
 
+        _quotaTrackerMock.Setup(x => x.IsHealthyAsync(providerKey, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
         var innerClientMock = new Mock<IChatClient>();
         var expectedResponse = new ChatResponse(new ChatMessage(ChatRole.Assistant, "response"));
         innerClientMock.Setup(x => x.GetResponseAsync(It.IsAny<IEnumerable<ChatMessage>>(), It.IsAny<ChatOptions>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResponse);
 
-        _serviceProviderMock.Setup(x => x.GetKeyedService(typeof(IChatClient), providerKey)).Returns(innerClientMock.Object);
+        _chatClientFactoryMock.Setup(x => x.GetClient(providerKey)).Returns(innerClientMock.Object);
 
         // Act
         var response = await _client.GetResponseAsync(messages, chatOptions);

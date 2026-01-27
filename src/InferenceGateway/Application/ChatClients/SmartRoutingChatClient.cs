@@ -1,18 +1,22 @@
 using Microsoft.Extensions.AI;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Synaxis.InferenceGateway.Application.Routing;
 using Synaxis.InferenceGateway.Application.Configuration;
+using Synaxis.InferenceGateway.Application.Routing;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using Polly;
 using Polly.Registry;
-using System.Runtime.CompilerServices;
 
 namespace Synaxis.InferenceGateway.Application.ChatClients;
 
 public class SmartRoutingChatClient : IChatClient
 {
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IChatClientFactory _chatClientFactory;
     private readonly ISmartRouter _smartRouter;
     private readonly IHealthStore _healthStore;
     private readonly IQuotaTracker _quotaTracker;
@@ -23,7 +27,7 @@ public class SmartRoutingChatClient : IChatClient
     public ChatClientMetadata Metadata { get; } = new("SmartRoutingChatClient");
 
     public SmartRoutingChatClient(
-        IServiceProvider serviceProvider,
+        IChatClientFactory chatClientFactory,
         ISmartRouter smartRouter,
         IHealthStore healthStore,
         IQuotaTracker quotaTracker,
@@ -31,7 +35,7 @@ public class SmartRoutingChatClient : IChatClient
         ActivitySource activitySource,
         ILogger<SmartRoutingChatClient> logger)
     {
-        _serviceProvider = serviceProvider;
+        _chatClientFactory = chatClientFactory;
         _smartRouter = smartRouter;
         _healthStore = healthStore;
         _quotaTracker = quotaTracker;
@@ -49,25 +53,29 @@ public class SmartRoutingChatClient : IChatClient
         var modelId = options?.ModelId ?? "default";
         activity?.SetTag("model.id", modelId);
 
+        // 1. Get Candidates from Router (Policy Layer)
         var candidates = await _smartRouter.GetCandidatesAsync(modelId, false, cancellationToken);
         var exceptions = new List<Exception>();
 
+        // 2. Rotation Loop (Resilience Layer)
         foreach (var candidate in candidates)
         {
+            // Fast check: Is this provider explicitly blocked or quota-out?
+            if (!await _quotaTracker.IsHealthyAsync(candidate.Key, cancellationToken)) 
+            {
+                _logger.LogDebug("Skipping provider '{ProviderKey}' due to quota/health check.", candidate.Key);
+                continue;
+            }
+
             try
             {
-                var response = await ExecuteCandidateAsync(candidate, chatMessages, options, cancellationToken);
-
-                // Add Metadata
-                if (response.AdditionalProperties == null) response.AdditionalProperties = new AdditionalPropertiesDictionary();
-                response.AdditionalProperties["provider_name"] = candidate.Key;
-                response.AdditionalProperties["model_id"] = candidate.CanonicalModelPath;
-
-                return response;
+                return await ExecuteCandidateAsync(candidate, chatMessages, options, cancellationToken);
             }
             catch (Exception ex)
             {
+                _logger.LogWarning(ex, "Provider '{ProviderKey}' failed. Rotating to next candidate.", candidate.Key);
                 exceptions.Add(ex);
+                // Continue loop to next candidate
             }
         }
 
@@ -89,16 +97,20 @@ public class SmartRoutingChatClient : IChatClient
         IAsyncEnumerable<ChatResponseUpdate>? successfulStream = null;
         EnrichedCandidate? successfulCandidate = null;
 
+        // Rotation Loop for Streaming
         foreach (var candidate in candidates)
         {
+            if (!await _quotaTracker.IsHealthyAsync(candidate.Key, cancellationToken)) continue;
+
             try
             {
                 successfulStream = await ExecuteCandidateStreamingAsync(candidate, chatMessages, options, cancellationToken);
                 successfulCandidate = candidate;
-                break;
+                break; // Stream initiated successfully
             }
             catch (Exception ex)
             {
+                _logger.LogWarning(ex, "Provider '{ProviderKey}' failed to initiate stream. Rotating...", candidate.Key);
                 exceptions.Add(ex);
             }
         }
@@ -126,7 +138,7 @@ public class SmartRoutingChatClient : IChatClient
         ChatOptions? originalOptions,
         CancellationToken cancellationToken)
     {
-        var client = _serviceProvider.GetKeyedService<IChatClient>(candidate.Key)
+        var client = _chatClientFactory.GetClient(candidate.Key)
                      ?? throw new InvalidOperationException($"Provider '{candidate.Key}' not registered.");
 
         _logger.LogInformation("Routing request to provider '{ProviderKey}'", candidate.Key);
@@ -140,6 +152,11 @@ public class SmartRoutingChatClient : IChatClient
         {
             var response = await pipeline.ExecuteAsync(async ct =>
                 await client.GetResponseAsync(chatMessages.ToList(), routedOptions, ct), cancellationToken);
+
+            // Add Routing Metadata
+            if (response.AdditionalProperties == null) response.AdditionalProperties = new AdditionalPropertiesDictionary();
+            response.AdditionalProperties["provider_name"] = candidate.Key;
+            response.AdditionalProperties["model_id"] = candidate.CanonicalModelPath;
 
             await RecordMetricsAsync(candidate.Key, response.Usage?.InputTokenCount ?? 0, response.Usage?.OutputTokenCount ?? 0, cancellationToken);
             return response;
@@ -157,7 +174,7 @@ public class SmartRoutingChatClient : IChatClient
         ChatOptions? originalOptions,
         CancellationToken cancellationToken)
     {
-         var client = _serviceProvider.GetKeyedService<IChatClient>(candidate.Key)
+         var client = _chatClientFactory.GetClient(candidate.Key)
                      ?? throw new InvalidOperationException($"Provider '{candidate.Key}' not registered.");
 
         _logger.LogInformation("Routing streaming request to provider '{ProviderKey}'", candidate.Key);
@@ -169,6 +186,8 @@ public class SmartRoutingChatClient : IChatClient
 
         try
         {
+            // We await the *creation* of the stream inside the resilience pipeline
+            // If connection fails, pipeline retries. If stream starts, we return it.
             return await pipeline.ExecuteAsync(ct =>
             {
                 var stream = client.GetStreamingResponseAsync(chatMessages.ToList(), routedOptions, ct);
@@ -200,7 +219,6 @@ public class SmartRoutingChatClient : IChatClient
 
     private async Task RecordFailureAsync(string providerKey, Exception ex, CancellationToken cancellationToken)
     {
-        _logger.LogError(ex, "Provider '{ProviderKey}' failed.", providerKey);
         try
         {
             await _healthStore.MarkFailureAsync(providerKey, TimeSpan.FromSeconds(30), cancellationToken);
@@ -208,7 +226,7 @@ public class SmartRoutingChatClient : IChatClient
         catch { }
     }
 
-    public object? GetService(Type serviceType, object? serviceKey = null) => _serviceProvider.GetKeyedService(serviceType, serviceKey);
+    public object? GetService(Type serviceType, object? serviceKey = null) => _chatClientFactory.GetService(serviceType, serviceKey);
 
     public void Dispose() { }
 }

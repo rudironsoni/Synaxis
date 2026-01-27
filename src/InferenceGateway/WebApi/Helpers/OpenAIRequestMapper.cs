@@ -28,6 +28,64 @@ public static class OpenAIRequestMapper
             });
     }
 
+    public static IEnumerable<ChatMessage> ToChatMessages(OpenAIRequest request)
+    {
+        if (request.Messages == null) return Enumerable.Empty<ChatMessage>();
+
+        var messages = new List<ChatMessage>();
+        foreach (var msg in request.Messages)
+        {
+            var role = msg.Role switch
+            {
+                "system" => ChatRole.System,
+                "user" => ChatRole.User,
+                "assistant" => ChatRole.Assistant,
+                "tool" => ChatRole.Tool,
+                _ => new ChatRole(msg.Role)
+            };
+
+            var content = msg.Content?.ToString() ?? "";
+            // Note: This is a simplification. Real OpenAI messages can have array content (multimodal).
+            // Assuming string for now as per current project usage patterns or we'd need deeper parsing.
+            
+            var chatMessage = new ChatMessage(role, content);
+            if (!string.IsNullOrEmpty(msg.Name))
+            {
+                chatMessage.AuthorName = msg.Name;
+            }
+            
+            // Map tool calls if present
+            if (msg.ToolCalls != null)
+            {
+                foreach (var toolCall in msg.ToolCalls)
+                {
+                    if (toolCall.Function != null)
+                    {
+                        chatMessage.Contents.Add(new FunctionCallContent(
+                            toolCall.Id,
+                            toolCall.Function.Name,
+                            string.IsNullOrEmpty(toolCall.Function.Arguments) ? null : JsonSerializer.Deserialize<IDictionary<string, object?>>(toolCall.Function.Arguments)
+                        ));
+                    }
+                }
+            }
+
+            // Map tool response (tool_call_id)
+            if (role == ChatRole.Tool && !string.IsNullOrEmpty(msg.ToolCallId))
+            {
+                // In Microsoft.Extensions.AI, tool responses are often handled by matching ID.
+                // We might need to store ToolCallId in metadata or as a property if ChatMessage supports it.
+                // ChatMessage doesn't have ToolCallId directly, but FunctionResultContent does.
+                // If role is Tool, content is usually the result.
+                chatMessage.Contents.Clear();
+                chatMessage.Contents.Add(new FunctionResultContent(msg.ToolCallId, content));
+            }
+
+            messages.Add(chatMessage);
+        }
+        return messages;
+    }
+
     private static IList<AITool>? MapTools(List<OpenAITool>? tools)
     {
         if (tools == null) return null;

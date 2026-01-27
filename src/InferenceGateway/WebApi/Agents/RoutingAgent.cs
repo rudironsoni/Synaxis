@@ -1,14 +1,15 @@
 using Microsoft.Agents.AI;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.AI;
 using Synaxis.InferenceGateway.Application.Translation;
+using Synaxis.InferenceGateway.Application.Routing;
 using Synaxis.InferenceGateway.WebApi.Helpers;
 using Synaxis.InferenceGateway.WebApi.Middleware;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using System.Text.Json;
+using System.Runtime.CompilerServices;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,15 +20,22 @@ public class RoutingAgentThread : AgentThread { }
 public class RoutingAgent : AIAgent
 {
     public override string Name => "Synaxis";
-    private readonly IServiceScopeFactory _scopeFactory;
-    private readonly ILogger<RoutingAgent> _logger;
-    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public RoutingAgent(IServiceScopeFactory scopeFactory, ILogger<RoutingAgent> logger, IHttpContextAccessor httpContextAccessor)
+    private readonly IChatClient _chatClient;
+    private readonly ITranslationPipeline _translator;
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ILogger<RoutingAgent> _logger;
+
+    public RoutingAgent(
+        IChatClient chatClient,
+        ITranslationPipeline translator,
+        IHttpContextAccessor httpContextAccessor,
+        ILogger<RoutingAgent> logger)
     {
-        _scopeFactory = scopeFactory;
-        _logger = logger;
+        _chatClient = chatClient;
+        _translator = translator;
         _httpContextAccessor = httpContextAccessor;
+        _logger = logger;
     }
 
     protected override async Task<AgentResponse> RunCoreAsync(
@@ -36,39 +44,42 @@ public class RoutingAgent : AIAgent
         AgentRunOptions? options = null,
         CancellationToken cancellationToken = default)
     {
-        using var scope = _scopeFactory.CreateScope();
-        var chatClient = scope.ServiceProvider.GetRequiredService<IChatClient>();
-        var translator = scope.ServiceProvider.GetRequiredService<ITranslationPipeline>();
-        var httpContext = _httpContextAccessor.HttpContext;
+        var httpContext = _httpContextAccessor?.HttpContext;
 
         // 1. Parse Input
-        var openAIRequest = await OpenAIRequestParser.ParseAsync(httpContext, cancellationToken);
-        if (openAIRequest == null)
-        {
-             // Fallback if no body (e.g. GET request or empty) -> treat as default chat
-             openAIRequest = new OpenAIRequest { Model = "default" };
-        }
+        var openReq = await OpenAIRequestParser.ParseAsync(httpContext, cancellationToken)
+                      ?? new OpenAIRequest { Model = "default" };
 
         // 2. Map to Canonical
-        var canonicalRequest = OpenAIRequestMapper.ToCanonicalRequest(openAIRequest, messages);
+        var canonicalRequest = OpenAIRequestMapper.ToCanonicalRequest(openReq, messages);
 
         // 3. Translate Request
-        var translatedRequest = translator.TranslateRequest(canonicalRequest);
+        var translatedRequest = _translator.TranslateRequest(canonicalRequest);
 
         // 4. Prepare Options
         var chatOptions = new ChatOptions { ModelId = translatedRequest.Model };
 
         // 5. Execute
-        var response = await chatClient.GetResponseAsync(translatedRequest.Messages, chatOptions, cancellationToken);
-        
+        var response = await _chatClient.GetResponseAsync(translatedRequest.Messages, chatOptions, cancellationToken);
+
         // 6. Translate Response
         var message = response.Messages.FirstOrDefault() ?? new ChatMessage(ChatRole.Assistant, "");
         var toolCalls = message.Contents.OfType<FunctionCallContent>().ToList();
         var canonicalResponse = new CanonicalResponse(message.Text, toolCalls);
-        var translatedResponse = translator.TranslateResponse(canonicalResponse);
+        var translatedResponse = _translator.TranslateResponse(canonicalResponse);
 
         // 7. Log Routing Context
-        LogRoutingContext(httpContext, openAIRequest.Model, response.AdditionalProperties);
+        if (httpContext != null && response.AdditionalProperties != null)
+        {
+            if (response.AdditionalProperties.TryGetValue("model_id", out var resolvedModel) &&
+                response.AdditionalProperties.TryGetValue("provider_name", out var provider))
+            {
+                httpContext.Items["RoutingContext"] = new RoutingContext(
+                    openReq.Model ?? "default",
+                    resolvedModel?.ToString() ?? string.Empty,
+                    provider?.ToString() ?? string.Empty);
+            }
+        }
 
         // 8. Build Agent Response
         var agentMessage = new ChatMessage(ChatRole.Assistant, translatedResponse.Content);
@@ -89,25 +100,48 @@ public class RoutingAgent : AIAgent
         AgentRunOptions? options = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        using var scope = _scopeFactory.CreateScope();
-        var chatClient = scope.ServiceProvider.GetRequiredService<IChatClient>();
-        var translator = scope.ServiceProvider.GetRequiredService<ITranslationPipeline>();
-        var httpContext = _httpContextAccessor.HttpContext;
+        var httpContext = _httpContextAccessor?.HttpContext;
 
-        var openAIRequest = await OpenAIRequestParser.ParseAsync(httpContext, cancellationToken) 
-                            ?? new OpenAIRequest { Model = "default" };
+        // 1. Parse Input
+        var openReq = await OpenAIRequestParser.ParseAsync(httpContext, cancellationToken)
+                      ?? new OpenAIRequest { Model = "default" };
 
-        var canonicalRequest = OpenAIRequestMapper.ToCanonicalRequest(openAIRequest, messages);
-        var translatedRequest = translator.TranslateRequest(canonicalRequest);
+        // 2. Map to Canonical
+        var canonicalRequest = OpenAIRequestMapper.ToCanonicalRequest(openReq, messages);
+
+        // 3. Translate Request
+        var translatedRequest = _translator.TranslateRequest(canonicalRequest);
+
+        // 4. Prepare Options
         var chatOptions = new ChatOptions { ModelId = translatedRequest.Model };
 
-        // We can't easily capture the resolved model for RoutingContext in streaming before yielding
-        // relies on client logging or future enhancement to yield metadata first.
+        // 5. Execute Streaming
+        var updates = _chatClient.GetStreamingResponseAsync(translatedRequest.Messages, chatOptions, cancellationToken);
 
-        await foreach (var update in chatClient.GetStreamingResponseAsync(translatedRequest.Messages, chatOptions, cancellationToken))
+        // 6. Translate and Yield Updates
+        await foreach (var update in updates.WithCancellation(cancellationToken))
         {
-            var translatedUpdate = translator.TranslateUpdate(update);
-            yield return new AgentResponseUpdate(translatedUpdate);
+            var translatedUpdate = _translator.TranslateUpdate(update);
+
+            // 7. Log Routing Context (on first update if available)
+            if (httpContext != null && translatedUpdate.AdditionalProperties != null && !httpContext.Items.ContainsKey("RoutingContext"))
+            {
+                if (translatedUpdate.AdditionalProperties.TryGetValue("model_id", out var resolvedModel) &&
+                    translatedUpdate.AdditionalProperties.TryGetValue("provider_name", out var provider))
+                {
+                    httpContext.Items["RoutingContext"] = new RoutingContext(
+                        openReq.Model ?? "default",
+                        resolvedModel?.ToString() ?? string.Empty,
+                        provider?.ToString() ?? string.Empty);
+                }
+            }
+
+            yield return new AgentResponseUpdate
+            {
+                Role = translatedUpdate.Role,
+                Contents = translatedUpdate.Contents,
+                AdditionalProperties = translatedUpdate.AdditionalProperties
+            };
         }
     }
 
@@ -116,19 +150,4 @@ public class RoutingAgent : AIAgent
 
     public override ValueTask<AgentThread> DeserializeThreadAsync(JsonElement serializedThread, JsonSerializerOptions? jsonSerializerOptions = null, CancellationToken cancellationToken = default)
         => new ValueTask<AgentThread>(new RoutingAgentThread());
-
-    private void LogRoutingContext(HttpContext? httpContext, string? requestedModel, AdditionalPropertiesDictionary? properties)
-    {
-        if (httpContext != null && properties != null)
-        {
-             if (properties.TryGetValue("model_id", out var resolvedModel) &&
-                 properties.TryGetValue("provider_name", out var provider))
-             {
-                 httpContext.Items["RoutingContext"] = new RoutingContext(
-                     requestedModel ?? "default", 
-                     resolvedModel?.ToString() ?? "", 
-                     provider?.ToString() ?? "");
-             }
-        }
-    }
 }
