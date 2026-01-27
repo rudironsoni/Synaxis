@@ -4,6 +4,7 @@ using Moq;
 using Polly;
 using Polly.Registry;
 using Synaxis.InferenceGateway.Application.ChatClients;
+using Synaxis.InferenceGateway.Application.ChatClients.Strategies;
 using Synaxis.InferenceGateway.Application.Configuration;
 using Synaxis.InferenceGateway.Application.Routing;
 using System.Diagnostics;
@@ -18,6 +19,7 @@ public class SmartRoutingChatClientTests
     private readonly Mock<IHealthStore> _healthStoreMock;
     private readonly Mock<IQuotaTracker> _quotaTrackerMock;
     private readonly ResiliencePipelineProvider<string> _pipelineProvider;
+    private readonly Mock<IChatClientStrategy> _strategyMock;
     private readonly ActivitySource _activitySource;
     private readonly Mock<ILogger<SmartRoutingChatClient>> _loggerMock;
     private readonly SmartRoutingChatClient _client;
@@ -29,6 +31,7 @@ public class SmartRoutingChatClientTests
         _healthStoreMock = new Mock<IHealthStore>();
         _quotaTrackerMock = new Mock<IQuotaTracker>();
         _loggerMock = new Mock<ILogger<SmartRoutingChatClient>>();
+        _strategyMock = new Mock<IChatClientStrategy>();
 
         var pipelineRegistry = new ResiliencePipelineRegistry<string>();
         pipelineRegistry.TryAddBuilder("provider-retry", (builder, context) => { });
@@ -42,6 +45,7 @@ public class SmartRoutingChatClientTests
             _healthStoreMock.Object,
             _quotaTrackerMock.Object,
             _pipelineProvider,
+            new[] { _strategyMock.Object },
             _activitySource,
             _loggerMock.Object);
     }
@@ -66,7 +70,9 @@ public class SmartRoutingChatClientTests
 
         var innerClientMock = new Mock<IChatClient>();
         var expectedResponse = new ChatResponse(new ChatMessage(ChatRole.Assistant, "response"));
-        innerClientMock.Setup(x => x.GetResponseAsync(It.IsAny<IEnumerable<ChatMessage>>(), It.IsAny<ChatOptions>(), It.IsAny<CancellationToken>()))
+        
+        _strategyMock.Setup(x => x.CanHandle(It.IsAny<string>())).Returns(true);
+        _strategyMock.Setup(x => x.ExecuteAsync(innerClientMock.Object, It.IsAny<IEnumerable<ChatMessage>>(), It.IsAny<ChatOptions>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResponse);
 
         _chatClientFactoryMock.Setup(x => x.GetClient(providerKey)).Returns(innerClientMock.Object);
