@@ -17,15 +17,12 @@ MODELS=(
     # Groq
     "groq/llama-3.3-70b"
     "groq/llama-3.1-8b"
-    "groq/mixtral-8x7b"
-    "groq/gemma2-9b"
-    "groq/deepseek-r1-distill"
+    
 
     # Cohere
-    "cohere/command-r"
-    "cohere/command-light"
-    "cohere/aya-expanse-32b"
-    "cohere/aya-expanse-8b"
+    
+    "cohere/c4ai-aya-expanse-32b"
+    "cohere/c4ai-aya-expanse-8b"
 
     # Gemini
     "gemini/flash-2.0-exp"
@@ -49,9 +46,9 @@ MODELS=(
     "nvidia/nemotron-nano"
 
     # HuggingFace
-    "hf/llama-3.3-70b"
-    "hf/mistral-7b-v0.3"
-    "hf/phi-3-mini"
+    "hf/phi-3.5-mini"
+    "hf/smollm2-1.7b"
+    "hf/qwen-2.5-7b"
     "hf/gemma-2-9b"
 
     # OpenRouter
@@ -65,8 +62,6 @@ MODELS=(
     # Pollinations
     "pollinations/openai"
     "pollinations/mistral"
-    "pollinations/llama"
-    "pollinations/search"
 )
 
 echo "Starting Enhanced Model Verification Test..."
