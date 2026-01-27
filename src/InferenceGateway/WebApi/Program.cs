@@ -136,11 +136,13 @@ app.Use(async (context, next) =>
 app.UseMiddleware<OpenAIErrorHandlerMiddleware>();
 app.UseMiddleware<OpenAIMetadataMiddleware>();
 
-app.MapOpenAIEndpoints();
+    app.MapOpenAIEndpoints();
 
 
-app.MapAntigravityEndpoints();
-app.MapControllers();
+    app.MapAntigravityEndpoints();
+    app.MapControllers();
+
+// NOTE: Removed temporary debug endpoint that created AggregateException for testing.
 
 app.MapHealthChecks("/health/liveness", new HealthCheckOptions
 {
