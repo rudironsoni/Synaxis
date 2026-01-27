@@ -67,41 +67,58 @@ dotnet build
 
 ## **2. Configuring Your Miser Empire (The Only Section You’ll Actually Read):**
 
-Open `src/Synaxis.WebApi/appsettings.json`.
-Add your API keys for the providers you wish to use.
+Update `src/InferenceGateway/WebApi/appsettings.json` (and optionally `src/InferenceGateway/WebApi/appsettings.Development.json`) with your provider keys.
+For Docker, copy `.env.example` to `.env` and fill in the placeholders.
 See [Configuration Guide](docs/CONFIGURATION.md) for details.
 
 Quick info:
 
 ```json
 {
-  "Providers": [
-    {
-      "Name": "Groq",
-      "BaseUrl": "https://api.groq.com/openai/v1",
-      "ApiKey": "gsk_...(the precious few remaining requests)",
-      "Models": ["llama-3.1-70b-versatile", "mixtral-8x7b-32768", "whatever-is-fast-and-free-today"],
-      "MaxRequestsPerMinute": 999999,  // optimism
-      "Priority": 1                    // dies first, heroically
+  "Synaxis": {
+    "InferenceGateway": {
+      "JwtSecret": "REPLACE_WITH_JWT_SECRET",
+      "Providers": {
+        "Groq": {
+          "Enabled": true,
+          "Type": "groq",
+          "Key": "GROQ_API_KEY",
+          "Tier": 0,
+          "Models": ["llama-3.1-70b-versatile"]
+        },
+        "DeepSeek": {
+          "Enabled": true,
+          "Type": "openai",
+          "Endpoint": "https://api.deepseek.com/v1",
+          "Key": "DEEPSEEK_API_KEY",
+          "Tier": 1,
+          "Models": ["deepseek-chat"]
+        }
+      },
+      "CanonicalModels": [
+        {
+          "Id": "deepseek-chat",
+          "Provider": "DeepSeek",
+          "ModelPath": "deepseek-chat",
+          "Streaming": true,
+          "Tools": true,
+          "Vision": false,
+          "StructuredOutput": false,
+          "LogProbs": false
+        }
+      ],
+      "Aliases": {
+        "default": {
+          "Candidates": ["deepseek-chat"]
+        }
+      }
     },
-    {
-      "Name": "Cloudflare",
-      "BaseUrl": "https://api.cloudflare.com/client/v4/accounts/.../ai/v1",
-      "ApiKey": "...",
-      "Models": ["@cf/meta/llama-3-8b-instruct"],
-      "Priority": 2                    // backup dancer
-    },
-    {
-      "Name": "The-Next-Free-Tier-Victim",
-      "Priority": 10                   // lives longest, suffers most
+    "ControlPlane": {
+      "ConnectionString": "Host=localhost;Database=synaxis;Username=postgres;Password=postgres"
     }
-  ],
-  "UltraMiserMode": {
-    "Enabled": true,
-    "RotateOnRateLimit": true,
-    "RotateOn429": true,
-    "RotateOn403": true,               // "please stop loving us so much"
-    "RotateOn existential-dread": true
+  },
+  "ConnectionStrings": {
+    "Redis": "localhost:6379,abortConnect=false"
   }
 }
 ```
@@ -109,10 +126,10 @@ Quick info:
 ## **3. Running the Beast (While Mentally Thanking Providers for Their Charity):**
 ```bash
 # Normal person way
-dotnet run --project Synaxis.Api
+dotnet run --project src/InferenceGateway/WebApi
 
 # Miser-optimized (skip build if you're feeling extra cheap)
-dotnet run --project Synaxis.Api --configuration Release
+dotnet run --project src/InferenceGateway/WebApi --configuration Release
 ```
 
 Then slam this into any OpenAI client:
@@ -139,6 +156,29 @@ curl http://localhost:5000/v1/chat/completions \
 ```
 
 Synaxis will inspect the `model` parameter, find the configured provider (e.g., Groq), and route the request accordingly.
+
+## Docker Compose (Dev)
+
+```bash
+# Create your env file
+cp .env.example .env
+
+# Start dependencies + API (pgAdmin is in the dev profile)
+docker compose --profile dev up --build
+```
+
+Default ports:
+- API: http://localhost:8080
+- Postgres: localhost:5432
+- Redis: localhost:6379
+- pgAdmin: http://localhost:5050
+
+## Health Checks
+
+- Liveness: `GET /health/liveness`
+- Readiness: `GET /health/readiness`
+
+Readiness fails if Redis or the Control Plane DB is unavailable, or if any enabled provider fails connectivity checks.
 
 ## License
 
