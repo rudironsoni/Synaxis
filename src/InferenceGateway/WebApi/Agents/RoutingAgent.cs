@@ -1,13 +1,15 @@
 using Microsoft.Agents.AI;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.AI;
+using Synaxis.InferenceGateway.Application.Translation;
 using Synaxis.InferenceGateway.Application.Routing;
+using Synaxis.InferenceGateway.WebApi.Helpers;
 using Synaxis.InferenceGateway.WebApi.Middleware;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using System.Text.Json;
+using System.Runtime.CompilerServices;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,15 +20,22 @@ public class RoutingAgentThread : AgentThread { }
 public class RoutingAgent : AIAgent
 {
     public override string Name => "Synaxis";
-    private readonly IServiceScopeFactory _scopeFactory;
-    private readonly ILogger<RoutingAgent> _logger;
-    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public RoutingAgent(IServiceScopeFactory scopeFactory, ILogger<RoutingAgent> logger, IHttpContextAccessor httpContextAccessor)
+    private readonly IChatClient _chatClient;
+    private readonly ITranslationPipeline _translator;
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ILogger<RoutingAgent> _logger;
+
+    public RoutingAgent(
+        IChatClient chatClient,
+        ITranslationPipeline translator,
+        IHttpContextAccessor httpContextAccessor,
+        ILogger<RoutingAgent> logger)
     {
-        _scopeFactory = scopeFactory;
-        _logger = logger;
+        _chatClient = chatClient;
+        _translator = translator;
         _httpContextAccessor = httpContextAccessor;
+        _logger = logger;
     }
 
     protected override async Task<AgentResponse> RunCoreAsync(
@@ -35,33 +44,54 @@ public class RoutingAgent : AIAgent
         AgentRunOptions? options = null,
         CancellationToken cancellationToken = default)
     {
-        using var scope = _scopeFactory.CreateScope();
-        var chatClient = scope.ServiceProvider.GetRequiredService<IChatClient>();
-        var resolver = scope.ServiceProvider.GetRequiredService<IModelResolver>();
-        var httpContext = _httpContextAccessor.HttpContext;
+        var httpContext = _httpContextAccessor?.HttpContext;
 
-        var modelId = await GetModelIdAsync(httpContext, cancellationToken) ?? "default";
-        var caps = new RequiredCapabilities { Streaming = false }; // Add other caps extraction logic if possible
+        // 1. Parse Input
+        var openReq = await OpenAIRequestParser.ParseAsync(httpContext, cancellationToken)
+                      ?? new OpenAIRequest { Model = "default" };
 
-        var resolution = await resolver.ResolveAsync(modelId, EndpointKind.ChatCompletions, caps);
-        
-        if (resolution.Candidates.Count == 0)
+        // 2. Map to Canonical
+        var canonicalRequest = OpenAIRequestMapper.ToCanonicalRequest(openReq, messages);
+
+        // 3. Translate Request
+        var translatedRequest = _translator.TranslateRequest(canonicalRequest);
+
+        // 4. Prepare Options
+        var chatOptions = new ChatOptions { ModelId = translatedRequest.Model };
+
+        // 5. Execute
+        var response = await _chatClient.GetResponseAsync(translatedRequest.Messages, chatOptions, cancellationToken);
+
+        // 6. Translate Response
+        var message = response.Messages.FirstOrDefault() ?? new ChatMessage(ChatRole.Assistant, "");
+        var toolCalls = message.Contents.OfType<FunctionCallContent>().ToList();
+        var canonicalResponse = new CanonicalResponse(message.Text, toolCalls);
+        var translatedResponse = _translator.TranslateResponse(canonicalResponse);
+
+        // 7. Log Routing Context
+        if (httpContext != null && response.AdditionalProperties != null)
         {
-            throw new ArgumentException($"No providers available for model '{modelId}' with requested capabilities.");
+            if (response.AdditionalProperties.TryGetValue("model_id", out var resolvedModel) &&
+                response.AdditionalProperties.TryGetValue("provider_name", out var provider))
+            {
+                httpContext.Items["RoutingContext"] = new RoutingContext(
+                    openReq.Model ?? "default",
+                    resolvedModel?.ToString() ?? string.Empty,
+                    provider?.ToString() ?? string.Empty);
+            }
         }
 
-        if (httpContext != null)
+        // 8. Build Agent Response
+        var agentMessage = new ChatMessage(ChatRole.Assistant, translatedResponse.Content);
+        if (translatedResponse.ToolCalls != null)
         {
-            httpContext.Items["RoutingContext"] = new RoutingContext(modelId, resolution.CanonicalId.ToString(), resolution.CanonicalId.Provider);
+            foreach (var toolCall in translatedResponse.ToolCalls)
+            {
+                agentMessage.Contents.Add(toolCall);
+            }
         }
 
-        // Update options with resolved model if needed, or pass to chatClient via ChatOptions
-        var chatOptions = new ChatOptions { ModelId = resolution.CanonicalId.ToString() };
-        // Map other options...
-
-        var response = await chatClient.GetResponseAsync(messages, chatOptions, cancellationToken);
-
-        return new AgentResponse(new ChatMessage(ChatRole.Assistant, response.Text));
+        return new AgentResponse(agentMessage);
     }
 
     protected override async IAsyncEnumerable<AgentResponseUpdate> RunCoreStreamingAsync(
@@ -70,31 +100,48 @@ public class RoutingAgent : AIAgent
         AgentRunOptions? options = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        using var scope = _scopeFactory.CreateScope();
-        var chatClient = scope.ServiceProvider.GetRequiredService<IChatClient>();
-        var resolver = scope.ServiceProvider.GetRequiredService<IModelResolver>();
-        var httpContext = _httpContextAccessor.HttpContext;
+        var httpContext = _httpContextAccessor?.HttpContext;
 
-        var modelId = await GetModelIdAsync(httpContext, cancellationToken) ?? "default";
-        var caps = new RequiredCapabilities { Streaming = true };
+        // 1. Parse Input
+        var openReq = await OpenAIRequestParser.ParseAsync(httpContext, cancellationToken)
+                      ?? new OpenAIRequest { Model = "default" };
 
-        var resolution = await resolver.ResolveAsync(modelId, EndpointKind.ChatCompletions, caps);
-        
-        if (resolution.Candidates.Count == 0)
+        // 2. Map to Canonical
+        var canonicalRequest = OpenAIRequestMapper.ToCanonicalRequest(openReq, messages);
+
+        // 3. Translate Request
+        var translatedRequest = _translator.TranslateRequest(canonicalRequest);
+
+        // 4. Prepare Options
+        var chatOptions = new ChatOptions { ModelId = translatedRequest.Model };
+
+        // 5. Execute Streaming
+        var updates = _chatClient.GetStreamingResponseAsync(translatedRequest.Messages, chatOptions, cancellationToken);
+
+        // 6. Translate and Yield Updates
+        await foreach (var update in updates.WithCancellation(cancellationToken))
         {
-            throw new ArgumentException($"No providers available for model '{modelId}' with requested capabilities.");
-        }
+            var translatedUpdate = _translator.TranslateUpdate(update);
 
-        var chatOptions = new ChatOptions { ModelId = resolution.CanonicalId.ToString() };
+            // 7. Log Routing Context (on first update if available)
+            if (httpContext != null && translatedUpdate.AdditionalProperties != null && !httpContext.Items.ContainsKey("RoutingContext"))
+            {
+                if (translatedUpdate.AdditionalProperties.TryGetValue("model_id", out var resolvedModel) &&
+                    translatedUpdate.AdditionalProperties.TryGetValue("provider_name", out var provider))
+                {
+                    httpContext.Items["RoutingContext"] = new RoutingContext(
+                        openReq.Model ?? "default",
+                        resolvedModel?.ToString() ?? string.Empty,
+                        provider?.ToString() ?? string.Empty);
+                }
+            }
 
-        if (httpContext != null)
-        {
-            httpContext.Items["RoutingContext"] = new RoutingContext(modelId, resolution.CanonicalId.ToString(), resolution.CanonicalId.Provider);
-        }
-
-        await foreach (var update in chatClient.GetStreamingResponseAsync(messages, chatOptions, cancellationToken))
-        {
-            yield return new AgentResponseUpdate(update);
+            yield return new AgentResponseUpdate
+            {
+                Role = translatedUpdate.Role,
+                Contents = translatedUpdate.Contents,
+                AdditionalProperties = translatedUpdate.AdditionalProperties
+            };
         }
     }
 
@@ -103,32 +150,4 @@ public class RoutingAgent : AIAgent
 
     public override ValueTask<AgentThread> DeserializeThreadAsync(JsonElement serializedThread, JsonSerializerOptions? jsonSerializerOptions = null, CancellationToken cancellationToken = default)
         => new ValueTask<AgentThread>(new RoutingAgentThread());
-
-    private async Task<string?> GetModelIdAsync(HttpContext? context, CancellationToken cancellationToken)
-    {
-        if (context == null) return null;
-
-        try
-        {
-            context.Request.EnableBuffering();
-            context.Request.Body.Position = 0;
-            using var reader = new StreamReader(context.Request.Body, leaveOpen: true);
-            var body = await reader.ReadToEndAsync(cancellationToken);
-            context.Request.Body.Position = 0;
-
-            if (string.IsNullOrWhiteSpace(body)) return null;
-
-            using var doc = JsonDocument.Parse(body);
-            if (doc.RootElement.TryGetProperty("model", out var modelElement))
-            {
-                return modelElement.GetString();
-            }
-        }
-        catch
-        {
-            // Ignore parsing errors
-        }
-
-        return null;
-    }
 }
