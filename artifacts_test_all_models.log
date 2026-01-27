@@ -1,0 +1,72 @@
+Starting Enhanced Model Verification Test...
+Target: http://localhost:8080/openai/v1/chat/completions
+--------------------------------------------------------
+Testing groq/llama-3.3-70b...               [[0;32mPASS[0m] (200 OK)
+Testing groq/llama-3.1-8b...                [[0;32mPASS[0m] (200 OK)
+Testing cohere/aya-expanse-32b...           [[0;31mFAIL[0m] (502)
+  -> [0;33m☁️ Upstream Provider Failure[0m
+  -> Details: "Routing failed. Details: [Synaxis.InferenceGateway.Infrastructure: 500 - Cohere API Error NotFound: {"id":"d61d06a6-9e67-47ad-951d-1d3340231858","message":"model 'aya-exp...]"
+Testing cohere/aya-expanse-8b...            [[0;31mFAIL[0m] (500)
+  -> [0;31m💥 Unknown Error[0m
+  -> Details: "Routing failed. Details: "
+Testing gemini/flash-2.0-exp...             [[0;31mFAIL[0m] (502)
+  -> [0;33m☁️ Upstream Provider Failure[0m
+  -> Details: "Routing failed. Details: [Google.GenAI: 429 - You exceeded your current quota, please check your plan and billing details. For more information...]"
+Testing gemini/pro-1.5...                   [[0;31mFAIL[0m] (500)
+  -> [0;31m💥 Unknown Error[0m
+  -> Details: "Routing failed. Details: "
+Testing gemini/flash-1.5...                 [[0;31mFAIL[0m] (500)
+  -> [0;31m💥 Unknown Error[0m
+  -> Details: "Routing failed. Details: "
+Testing gemini/flash-1.5-8b...              [[0;31mFAIL[0m] (500)
+  -> [0;31m💥 Unknown Error[0m
+  -> Details: "Routing failed. Details: "
+Testing gemini/pro-1.0...                   [[0;31mFAIL[0m] (500)
+  -> [0;31m💥 Unknown Error[0m
+  -> Details: "Routing failed. Details: "
+Testing cloudflare/llama-3.1-8b...          [[0;32mPASS[0m] (200 OK)
+Testing cloudflare/llama-3.2-3b...          [[0;32mPASS[0m] (200 OK)
+Testing cloudflare/mistral-7b...            [[0;32mPASS[0m] (200 OK)
+Testing cloudflare/phi-2...                 [[0;32mPASS[0m] (200 OK)
+Testing cloudflare/qwen-1.5-7b...           [[0;32mPASS[0m] (200 OK)
+Testing nvidia/llama-3.3-70b...             [[0;31mFAIL[0m] (502)
+  -> [0;33m☁️ Upstream Provider Failure[0m
+  -> Details: "Routing failed. Details: [OpenAI: 500 - Service request failed. Status: 401 (Unauthorized) ]"
+Testing nvidia/nemotron-70b...              [[0;31mFAIL[0m] (500)
+  -> [0;31m💥 Unknown Error[0m
+  -> Details: "Routing failed. Details: "
+Testing nvidia/mixtral-8x7b...              [[0;31mFAIL[0m] (500)
+  -> [0;31m💥 Unknown Error[0m
+  -> Details: "Routing failed. Details: "
+Testing nvidia/deepseek-v3...               [[0;31mFAIL[0m] (500)
+  -> [0;31m💥 Unknown Error[0m
+  -> Details: "Routing failed. Details: "
+Testing nvidia/nemotron-nano...             [[0;31mFAIL[0m] (500)
+  -> [0;31m💥 Unknown Error[0m
+  -> Details: "Routing failed. Details: "
+Testing openrouter/gemini-2.0-free...       [[0;31mFAIL[0m] (502)
+  -> [0;33m☁️ Upstream Provider Failure[0m
+  -> Details: "Routing failed. Details: [OpenAI: 500 - Service request failed. Status: 429 (Too Many Requests) ]"
+Testing openrouter/llama-3.3-free...        [[0;31mFAIL[0m] (500)
+  -> [0;31m💥 Unknown Error[0m
+  -> Details: "Routing failed. Details: "
+Testing openrouter/mistral-7b-free...       [[0;31mFAIL[0m] (500)
+  -> [0;31m💥 Unknown Error[0m
+  -> Details: "Routing failed. Details: "
+Testing openrouter/phi-3-free...            [[0;31mFAIL[0m] (500)
+  -> [0;31m💥 Unknown Error[0m
+  -> Details: "Routing failed. Details: "
+Testing openrouter/zephyr-free...           [[0;31mFAIL[0m] (500)
+  -> [0;31m💥 Unknown Error[0m
+  -> Details: "Routing failed. Details: "
+Testing openrouter/openchat-free...         [[0;31mFAIL[0m] (500)
+  -> [0;31m💥 Unknown Error[0m
+  -> Details: "Routing failed. Details: "
+Testing pollinations/openai...              [[0;32mPASS[0m] (200 OK)
+Testing pollinations/mistral...             [[0;31mFAIL[0m] (000)
+  -> [0;31m💥 Unknown Error[0m
+  -> Body: 
+--------------------------------------------------------
+Test Complete.
+Passed: [0;32m8[0m
+Failed: [0;31m19[0m
