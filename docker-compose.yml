@@ -7,9 +7,28 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      # - Synaxis__Providers__Groq__Key=your_key_here
-      # - Synaxis__Providers__Cohere__Key=your_key_here
-      # - Synaxis__Providers__Gemini__Key=your_key_here
-      # - Synaxis__Providers__Cloudflare__Key=your_key_here
-      # - Synaxis__Providers__OpenRouter__Key=your_key_here
+      ASPNETCORE_ENVIRONMENT: Development
+      Synaxis__ControlPlane__ConnectionString: Host=postgres;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      ConnectionStrings__Redis: redis:6379,password=${REDIS_PASSWORD},abortConnect=false
+      Synaxis__InferenceGateway__Providers__Groq__Key: ${GROQ_API_KEY}
+      Synaxis__InferenceGateway__Providers__Cohere__Key: ${COHERE_API_KEY}
+      Synaxis__InferenceGateway__Providers__Cloudflare__Key: ${CLOUDFLARE_API_KEY}
+      Synaxis__InferenceGateway__Providers__Cloudflare__AccountId: ${CLOUDFLARE_ACCOUNT_ID}
+      Synaxis__InferenceGateway__Providers__Gemini__Key: ${GEMINI_API_KEY}
+      Synaxis__InferenceGateway__Providers__OpenRouter__Key: ${OPENROUTER_API_KEY}
+      Synaxis__InferenceGateway__Providers__DeepSeek__Key: ${DEEPSEEK_API_KEY}
+      Synaxis__InferenceGateway__Providers__DeepSeek__Type: OpenAI
+      Synaxis__InferenceGateway__Providers__DeepSeek__Endpoint: ${DEEPSEEK_API_ENDPOINT}
+      Synaxis__InferenceGateway__Providers__OpenAI__Key: ${OPENAI_API_KEY}
+      Synaxis__InferenceGateway__Providers__OpenAI__Type: OpenAI
+      Synaxis__InferenceGateway__Providers__OpenAI__Endpoint: ${OPENAI_API_ENDPOINT}
+      Synaxis__InferenceGateway__Providers__Antigravity__ProjectId: ${ANTIGRAVITY_PROJECT_ID}
+      Synaxis__InferenceGateway__Providers__Antigravity__Endpoint: ${ANTIGRAVITY_API_ENDPOINT}
+      Synaxis__InferenceGateway__Providers__Antigravity__FallbackEndpoint: ${ANTIGRAVITY_API_ENDPOINT_FALLBACK}
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+      OTEL_SERVICE_NAME: synaxis-gateway
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
