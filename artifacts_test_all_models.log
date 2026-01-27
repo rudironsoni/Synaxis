@@ -1,0 +1,100 @@
+Starting Enhanced Model Verification Test...
+Target: http://localhost:8080/openai/v1/chat/completions
+--------------------------------------------------------
+Testing groq/llama-3.3-70b...               [[0;31mFAIL[0m] (000)
+  -> [0;31m💥 Unknown Error[0m
+  -> Body: 
+Testing groq/llama-3.1-8b...                [[0;31mFAIL[0m] (000)
+  -> [0;31m💥 Unknown Error[0m
+  -> Body: 
+Testing cohere/c4ai-aya-expanse-32b...      [[0;31mFAIL[0m] (000)
+  -> [0;31m💥 Unknown Error[0m
+  -> Body: 
+Testing cohere/c4ai-aya-expanse-8b...       [[0;31mFAIL[0m] (000)
+  -> [0;31m💥 Unknown Error[0m
+  -> Body: 
+Testing gemini/flash-2.0-exp...             [[0;31mFAIL[0m] (000)
+  -> [0;31m💥 Unknown Error[0m
+  -> Body: 
+Testing gemini/pro-1.5...                   [[0;31mFAIL[0m] (000)
+  -> [0;31m💥 Unknown Error[0m
+  -> Body: 
+Testing gemini/flash-1.5...                 [[0;31mFAIL[0m] (000)
+  -> [0;31m💥 Unknown Error[0m
+  -> Body: 
+Testing gemini/flash-1.5-8b...              [[0;31mFAIL[0m] (000)
+  -> [0;31m💥 Unknown Error[0m
+  -> Body: 
+Testing gemini/pro-1.0...                   [[0;31mFAIL[0m] (000)
+  -> [0;31m💥 Unknown Error[0m
+  -> Body: 
+Testing cloudflare/llama-3.1-8b...          [[0;31mFAIL[0m] (000)
+  -> [0;31m💥 Unknown Error[0m
+  -> Body: 
+Testing cloudflare/llama-3.2-3b...          [[0;31mFAIL[0m] (000)
+  -> [0;31m💥 Unknown Error[0m
+  -> Body: 
+Testing cloudflare/mistral-7b...            [[0;31mFAIL[0m] (000)
+  -> [0;31m💥 Unknown Error[0m
+  -> Body: 
+Testing cloudflare/phi-2...                 [[0;31mFAIL[0m] (000)
+  -> [0;31m💥 Unknown Error[0m
+  -> Body: 
+Testing cloudflare/qwen-1.5-7b...           [[0;31mFAIL[0m] (000)
+  -> [0;31m💥 Unknown Error[0m
+  -> Body: 
+Testing nvidia/llama-3.3-70b...             [[0;31mFAIL[0m] (000)
+  -> [0;31m💥 Unknown Error[0m
+  -> Body: 
+Testing nvidia/nemotron-70b...              [[0;31mFAIL[0m] (000)
+  -> [0;31m💥 Unknown Error[0m
+  -> Body: 
+Testing nvidia/mixtral-8x7b...              [[0;31mFAIL[0m] (000)
+  -> [0;31m💥 Unknown Error[0m
+  -> Body: 
+Testing nvidia/deepseek-v3...               [[0;31mFAIL[0m] (000)
+  -> [0;31m💥 Unknown Error[0m
+  -> Body: 
+Testing nvidia/nemotron-nano...             [[0;31mFAIL[0m] (000)
+  -> [0;31m💥 Unknown Error[0m
+  -> Body: 
+Testing hf/phi-3.5-mini...                  [[0;31mFAIL[0m] (000)
+  -> [0;31m💥 Unknown Error[0m
+  -> Body: 
+Testing hf/smollm2-1.7b...                  [[0;31mFAIL[0m] (000)
+  -> [0;31m💥 Unknown Error[0m
+  -> Body: 
+Testing hf/qwen-2.5-7b...                   [[0;31mFAIL[0m] (000)
+  -> [0;31m💥 Unknown Error[0m
+  -> Body: 
+Testing hf/gemma-2-9b...                    [[0;31mFAIL[0m] (000)
+  -> [0;31m💥 Unknown Error[0m
+  -> Body: 
+Testing openrouter/gemini-2.0-free...       [[0;31mFAIL[0m] (000)
+  -> [0;31m💥 Unknown Error[0m
+  -> Body: 
+Testing openrouter/llama-3.3-free...        [[0;31mFAIL[0m] (000)
+  -> [0;31m💥 Unknown Error[0m
+  -> Body: 
+Testing openrouter/mistral-7b-free...       [[0;31mFAIL[0m] (000)
+  -> [0;31m💥 Unknown Error[0m
+  -> Body: 
+Testing openrouter/phi-3-free...            [[0;31mFAIL[0m] (000)
+  -> [0;31m💥 Unknown Error[0m
+  -> Body: 
+Testing openrouter/zephyr-free...           [[0;31mFAIL[0m] (000)
+  -> [0;31m💥 Unknown Error[0m
+  -> Body: 
+Testing openrouter/openchat-free...         [[0;31mFAIL[0m] (000)
+  -> [0;31m💥 Unknown Error[0m
+  -> Body: 
+Testing pollinations/openai...              [[0;31mFAIL[0m] (000)
+  -> [0;31m💥 Unknown Error[0m
+  -> Body: 
+Testing pollinations/mistral...             [[0;31mFAIL[0m] (000)
+  -> [0;31m💥 Unknown Error[0m
+  -> Body: 
+--------------------------------------------------------
+Test Complete.
+Passed: [0;32m0[0m
+Failed: [0;31m31[0m
