@@ -1,26 +1,27 @@
 #!/bin/bash
 
 # Configuration
-BASE_URL="http://localhost:5042/v1/chat/completions"
+# Default to port 8080 (Docker Compose default)
+BASE_URL="${BASE_URL:-http://localhost:8080/openai/v1/chat/completions}"
 TIMEOUT=30
 
 # Colors
 GREEN='\033[0;32m'
 RED='\033[0;31m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# List of models to test (Canonical IDs)
+# List of models to test (Sync with appsettings.json)
 MODELS=(
     # Groq
     "groq/llama-3.3-70b"
-    "groq/llama-3.1-70b"
     "groq/llama-3.1-8b"
     "groq/mixtral-8x7b"
     "groq/gemma2-9b"
     "groq/deepseek-r1-distill"
 
     # Cohere
-    "cohere/command-r-plus"
     "cohere/command-r"
     "cohere/command-light"
     "cohere/aya-expanse-32b"
@@ -68,17 +69,19 @@ MODELS=(
     "pollinations/search"
 )
 
-echo "Starting Model Verification Test..."
+echo "Starting Enhanced Model Verification Test..."
 echo "Target: $BASE_URL"
-echo "----------------------------------------"
+echo "--------------------------------------------------------"
 
 PASSED=0
 FAILED=0
 
 for model in "${MODELS[@]}"; do
-    echo -n "Testing $model... "
+    printf "Testing %-35s " "$model..."
     
-    response=$(curl -s -X POST "$BASE_URL" \
+    # Capture HTTP Code and Body separately
+    # -w %{http_code} prints status at the end
+    response=$(curl -s -w "\n%{http_code}" -X POST "$BASE_URL" \
         -H "Content-Type: application/json" \
         -d "{
             \"model\": \"$model\",
@@ -87,21 +90,56 @@ for model in "${MODELS[@]}"; do
         }" \
         --max-time $TIMEOUT)
 
-    # Check if response contains "choices" (success) or "error"
-    if echo "$response" | grep -q "\"choices\""; then
-        echo -e "${GREEN}PASS${NC}"
+    # Extract Body and Code
+    http_code=$(echo "$response" | tail -n1)
+    body=$(echo "$response" | sed '$d')
+
+    if [ "$http_code" -eq 200 ]; then
+        echo -e "[${GREEN}PASS${NC}] (200 OK)"
         ((PASSED++))
     else
-        echo -e "${RED}FAIL${NC}"
-        echo "Response: $response"
+        echo -e "[${RED}FAIL${NC}] ($http_code)"
         ((FAILED++))
+        
+        # Error Analysis
+        case $http_code in
+            401)
+                echo -e "  -> ${RED}❌ Invalid API Key / Auth Failure${NC}"
+                ;;
+            429)
+                echo -e "  -> ${YELLOW}⚠️ Quota Exceeded / Rate Limit${NC}"
+                ;;
+            400|404)
+                echo -e "  -> ${BLUE}🚫 Model Config Error / Decommissioned${NC}"
+                ;;
+            502)
+                echo -e "  -> ${YELLOW}☁️ Upstream Provider Failure${NC}"
+                ;;
+            *)
+                echo -e "  -> ${RED}💥 Unknown Error${NC}"
+                ;;
+        esac
+
+        # Extract 'message' using jq if available, otherwise raw body
+        if command -v jq &> /dev/null; then
+            # Try to parse our structured error format
+            error_msg=$(echo "$body" | jq -r '.error.message // empty')
+            if [ -n "$error_msg" ]; then
+                echo -e "  -> Details: \"$error_msg\""
+            else
+                # Fallback for non-JSON or weird responses
+                echo "  -> Body: $body"
+            fi
+        else
+            echo "  -> Body: $body"
+        fi
     fi
     
     # Small delay to respect rate limits
-    sleep 1
+    sleep 0.5
 done
 
-echo "----------------------------------------"
+echo "--------------------------------------------------------"
 echo "Test Complete."
 echo -e "Passed: ${GREEN}$PASSED${NC}"
 echo -e "Failed: ${RED}$FAILED${NC}"
