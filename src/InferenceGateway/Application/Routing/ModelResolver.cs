@@ -2,6 +2,8 @@ using Microsoft.Extensions.Options;
 using Synaxis.InferenceGateway.Application.Configuration;
 using System.Collections.Generic;
 using System.Linq;
+using Synaxis.InferenceGateway.Application.ControlPlane;
+using System.Text.Json;
 
 namespace Synaxis.InferenceGateway.Application.Routing;
 
@@ -9,16 +11,74 @@ public class ModelResolver : IModelResolver
 {
     private readonly SynaxisConfiguration _config;
     private readonly IProviderRegistry _registry;
+    private readonly IControlPlaneStore _store;
 
-    public ModelResolver(IOptions<SynaxisConfiguration> config, IProviderRegistry registry)
+    public ModelResolver(IOptions<SynaxisConfiguration> config, IProviderRegistry registry, IControlPlaneStore store)
     {
         _config = config.Value;
         _registry = registry;
+        _store = store;
     }
 
     public ResolutionResult Resolve(string modelId, RequiredCapabilities? required = null)
     {
-        // 1. Get candidates to try
+        // Fallback to config-based for sync callers
+        return ResolveConfigOnly(modelId, required);
+    }
+
+    public async Task<ResolutionResult> ResolveAsync(string modelId, EndpointKind kind, RequiredCapabilities? required = null, Guid? tenantId = null)
+    {
+        var candidatesToTry = new List<string>();
+        bool foundInDb = false;
+
+        if (tenantId.HasValue)
+        {
+            // 1. Check Model Aliases
+            var alias = await _store.GetAliasAsync(tenantId.Value, modelId);
+            string targetModel = alias?.TargetModel ?? modelId;
+
+            // 2. Check Model Combos
+            var combo = await _store.GetComboAsync(tenantId.Value, targetModel);
+
+            if (combo != null)
+            {
+                try 
+                {
+                    var models = JsonSerializer.Deserialize<List<string>>(combo.OrderedModelsJson);
+                    if (models != null)
+                    {
+                        candidatesToTry.AddRange(models);
+                        foundInDb = true;
+                    }
+                }
+                catch { /* Ignore invalid JSON */ }
+            }
+            
+            if (!foundInDb && alias != null)
+            {
+                candidatesToTry.Add(targetModel);
+                foundInDb = true;
+            }
+        }
+
+        if (!foundInDb)
+        {
+            // Fallback to Config
+            if (_config.Aliases.TryGetValue(modelId, out var configAlias))
+            {
+                candidatesToTry.AddRange(configAlias.Candidates);
+            }
+            else
+            {
+                candidatesToTry.Add(modelId);
+            }
+        }
+
+        return ResolveCandidates(modelId, candidatesToTry, required);
+    }
+
+    private ResolutionResult ResolveConfigOnly(string modelId, RequiredCapabilities? required)
+    {
         var candidatesToTry = new List<string>();
         if (_config.Aliases.TryGetValue(modelId, out var alias))
         {
@@ -28,10 +88,14 @@ public class ModelResolver : IModelResolver
         {
             candidatesToTry.Add(modelId);
         }
+        return ResolveCandidates(modelId, candidatesToTry, required);
+    }
 
+    private ResolutionResult ResolveCandidates(string originalModelId, List<string> candidates, RequiredCapabilities? required)
+    {
         CanonicalModelId? firstCanonicalId = null;
 
-        foreach (var candidateId in candidatesToTry)
+        foreach (var candidateId in candidates)
         {
             // Step A: Canonical Lookup
             var modelConfig = _config.CanonicalModels
@@ -90,18 +154,12 @@ public class ModelResolver : IModelResolver
                 {
                     canonicalId = new CanonicalModelId(providers[0].Key!, canonicalId.ModelPath);
                 }
-                return new ResolutionResult(modelId, canonicalId, providers);
+                return new ResolutionResult(originalModelId, canonicalId, providers);
             }
         }
 
         // No match found
-        var finalCanonicalId = firstCanonicalId ?? CanonicalModelId.Parse(modelId);
-        return new ResolutionResult(modelId, finalCanonicalId, new List<ProviderConfig>());
-    }
-
-    public Task<ResolutionResult> ResolveAsync(string modelId, EndpointKind kind, RequiredCapabilities? required = null)
-    {
-        // For now, synchronous resolution wrapped in Task
-        return Task.FromResult(Resolve(modelId, required));
+        var finalCanonicalId = firstCanonicalId ?? CanonicalModelId.Parse(originalModelId);
+        return new ResolutionResult(originalModelId, finalCanonicalId, new List<ProviderConfig>());
     }
 }
