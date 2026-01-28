@@ -117,9 +117,17 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference();
 }
 
-if (!app.Environment.IsEnvironment("Test"))
+// Initialize the database on startup. Wrap in try/catch so the
+// application can still start in environments where the database
+// is not available (CI/local test runs). Migration failures are
+// logged but do not crash the host.
+try
 {
     await app.InitializeDatabaseAsync();
+}
+catch (Exception ex)
+{
+    Log.Warning(ex, "Database initialization failed, continuing without migrations. Some features may be unavailable.");
 }
 
 app.UseHttpsRedirection();

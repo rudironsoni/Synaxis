@@ -29,7 +29,7 @@ public class AntigravityAccount
 public class AntigravityAuthManager : IAntigravityAuthManager
 {
     private readonly ILogger<AntigravityAuthManager> _logger;
-    private readonly string _authStoragePath;
+    private readonly ITokenStore _tokenStore;
     private readonly string _projectId;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly AntigravitySettings _settings;
@@ -63,23 +63,35 @@ public class AntigravityAuthManager : IAntigravityAuthManager
     private readonly SemaphoreSlim _authLock = new(1, 1);
     private int _requestCount = 0;
 
+    // New constructor that accepts a token store
+    public AntigravityAuthManager(
+        string projectId,
+        AntigravitySettings settings,
+        ILogger<AntigravityAuthManager> logger,
+        IHttpClientFactory httpClientFactory,
+        ITokenStore tokenStore)
+    {
+        _projectId = projectId;
+        _settings = settings;
+        _logger = logger;
+        _httpClientFactory = httpClientFactory;
+        _tokenStore = tokenStore ?? throw new ArgumentNullException(nameof(tokenStore));
+
+        if (string.IsNullOrWhiteSpace(_settings.ClientId) || string.IsNullOrWhiteSpace(_settings.ClientSecret))
+        {
+            throw new InvalidOperationException("Antigravity ClientId and ClientSecret must be configured.");
+        }
+    }
+
+    // Backwards-compatible constructor that accepts a storage path and creates a FileTokenStore
     public AntigravityAuthManager(
         string projectId,
         string authStoragePath,
         AntigravitySettings settings,
         ILogger<AntigravityAuthManager> logger,
         IHttpClientFactory httpClientFactory)
+        : this(projectId, settings, logger, httpClientFactory, new FileTokenStore(authStoragePath, Microsoft.Extensions.Logging.Abstractions.NullLogger<FileTokenStore>.Instance))
     {
-        _projectId = projectId;
-        _authStoragePath = authStoragePath;
-        _settings = settings;
-        _logger = logger;
-        _httpClientFactory = httpClientFactory;
-
-        if (string.IsNullOrWhiteSpace(_settings.ClientId) || string.IsNullOrWhiteSpace(_settings.ClientSecret))
-        {
-            throw new InvalidOperationException("Antigravity ClientId and ClientSecret must be configured.");
-        }
     }
 
     public async Task<string> GetTokenAsync(CancellationToken cancellationToken = default)
@@ -89,7 +101,11 @@ public class AntigravityAuthManager : IAntigravityAuthManager
         {
             if (_accounts.Count == 0)
             {
-                await LoadAccountsAsync();
+                var loaded = await _tokenStore.LoadAsync();
+                if (loaded?.Count > 0)
+                {
+                    _accounts = loaded;
+                }
             }
 
             // Check for Env Var Refresh Token (Transient Account)
@@ -210,7 +226,7 @@ public class AntigravityAuthManager : IAntigravityAuthManager
                 _logger.LogInformation("Added new account: {Email}", email);
             }
 
-            await SaveAccountsAsync();
+                await _tokenStore.SaveAsync(_accounts);
         }
         finally
         {
@@ -234,42 +250,7 @@ public class AntigravityAuthManager : IAntigravityAuthManager
         account.Token = newToken;
         // We don't necessarily need to save on every refresh (performance), but it's safer to do so
         // to persist the new access token/expiry.
-        await SaveAccountsAsync();
-    }
-
-    private async Task LoadAccountsAsync()
-    {
-        if (!File.Exists(_authStoragePath)) return;
-
-        try
-        {
-            var json = await File.ReadAllTextAsync(_authStoragePath);
-            var accounts = JsonSerializer.Deserialize<List<AntigravityAccount>>(json);
-            if (accounts != null)
-            {
-                _accounts = accounts;
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to load accounts from {Path}", _authStoragePath);
-        }
-    }
-
-    private async Task SaveAccountsAsync()
-    {
-        try
-        {
-            var dir = Path.GetDirectoryName(_authStoragePath);
-            if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
-
-            var json = JsonSerializer.Serialize(_accounts);
-            await File.WriteAllTextAsync(_authStoragePath, json);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to save accounts.");
-        }
+        await _tokenStore.SaveAsync(_accounts);
     }
 
     // Legacy Interactive Login (kept for CLI convenience)
