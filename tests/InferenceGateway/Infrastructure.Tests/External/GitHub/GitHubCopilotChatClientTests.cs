@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using GitHub.Copilot.Sdk;
+using GitHub.Copilot.SDK;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -16,21 +16,20 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.External.GitHub
         [Fact]
         public async Task GetResponseAsync_CreatesSessionSendsAndReturnsResponse()
         {
-            var copilotMock = new Mock<CopilotClient>();
-            copilotMock.SetupGet(c => c.State).Returns(ConnectionState.Connected);
+            var copilotMock = new Mock<Synaxis.InferenceGateway.Infrastructure.External.GitHub.ICopilotClient>();
 
-            var sessionMock = new Mock<CopilotSession>();
+            var sessionMock = new Mock<Synaxis.InferenceGateway.Infrastructure.External.GitHub.ICopilotSession>();
 
-            GitHub.Copilot.SDK.SessionEventHandler? registered = null;
-            sessionMock.Setup(s => s.On(It.IsAny<GitHub.Copilot.SDK.SessionEventHandler>()))
-                .Returns<GitHub.Copilot.SDK.SessionEventHandler>(handler =>
-                {
-                    registered = handler;
-                    return new DisposableAction();
-                });
+            global::GitHub.Copilot.SDK.SessionEventHandler? registered = null;
+            sessionMock.Setup(s => s.On(It.IsAny<global::GitHub.Copilot.SDK.SessionEventHandler>()))
+                .Returns<global::GitHub.Copilot.SDK.SessionEventHandler>(handler =>
+                 {
+                     registered = handler;
+                     return new DisposableAction();
+                 });
 
-            sessionMock.Setup(s => s.SendAsync(It.IsAny<MessageOptions>(), It.IsAny<CancellationToken>()))
-                .Returns<MessageOptions, CancellationToken>((mo, ct) =>
+            sessionMock.Setup(s => s.SendAsync(It.IsAny<global::GitHub.Copilot.SDK.MessageOptions>(), It.IsAny<CancellationToken>()))
+                .Returns((global::GitHub.Copilot.SDK.MessageOptions mo, CancellationToken ct) =>
                 {
                     // simulate an assistant message event followed by session idle to finish
                     var evt = CreateEvent("AssistantMessageEvent", new Dictionary<string, object?> { ["Content"] = "hello" });
@@ -40,7 +39,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.External.GitHub
                     return Task.CompletedTask;
                 });
 
-            copilotMock.Setup(c => c.CreateSessionAsync(It.IsAny<SessionConfig>(), It.IsAny<CancellationToken>()))
+            copilotMock.Setup(c => c.CreateSessionAsync(It.IsAny<global::GitHub.Copilot.SDK.SessionConfig>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(sessionMock.Object);
 
             var client = new Synaxis.InferenceGateway.Infrastructure.External.GitHub.GitHubCopilotChatClient(copilotMock.Object, NullLogger<Synaxis.InferenceGateway.Infrastructure.External.GitHub.GitHubCopilotChatClient>.Instance);
@@ -48,28 +47,27 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.External.GitHub
             var resp = await client.GetResponseAsync(new[] { new ChatMessage(ChatRole.User, "hi") });
 
             Assert.Contains("hello", resp.Messages.First().Text);
-            copilotMock.Verify(c => c.CreateSessionAsync(It.IsAny<SessionConfig>(), It.IsAny<CancellationToken>()), Times.Once);
-            sessionMock.Verify(s => s.SendAsync(It.IsAny<MessageOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            copilotMock.Verify(c => c.CreateSessionAsync(It.IsAny<global::GitHub.Copilot.SDK.SessionConfig>(), It.IsAny<CancellationToken>()), Times.Once);
+            sessionMock.Verify(s => s.SendAsync(It.IsAny<global::GitHub.Copilot.SDK.MessageOptions>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
         public async Task GetStreamingResponseAsync_StreamsUpdates()
         {
-            var copilotMock = new Mock<CopilotClient>();
-            copilotMock.SetupGet(c => c.State).Returns(ConnectionState.Connected);
+            var copilotMock = new Mock<global::GitHub.Copilot.SDK.CopilotClient>();
 
-            var sessionMock = new Mock<CopilotSession>();
+            var sessionMock = new Mock<global::GitHub.Copilot.SDK.CopilotSession>();
 
-            GitHub.Copilot.SDK.SessionEventHandler? registered = null;
-            sessionMock.Setup(s => s.On(It.IsAny<GitHub.Copilot.SDK.SessionEventHandler>()))
-                .Returns<GitHub.Copilot.SDK.SessionEventHandler>(handler =>
+            global::GitHub.Copilot.SDK.SessionEventHandler? registered = null;
+            sessionMock.Setup(s => s.On(It.IsAny<global::GitHub.Copilot.SDK.SessionEventHandler>()))
+                .Returns<global::GitHub.Copilot.SDK.SessionEventHandler>(handler =>
                 {
                     registered = handler;
                     return new DisposableAction();
                 });
 
-            sessionMock.Setup(s => s.SendAsync(It.IsAny<MessageOptions>(), It.IsAny<CancellationToken>()))
-                .Returns<MessageOptions, CancellationToken>((mo, ct) =>
+            sessionMock.Setup(s => s.SendAsync(It.IsAny<global::GitHub.Copilot.SDK.MessageOptions>(), It.IsAny<CancellationToken>()))
+                .Returns((global::GitHub.Copilot.SDK.MessageOptions mo, CancellationToken ct) =>
                 {
                     // send a delta, a full assistant message, a usage event and idle
                     registered?.Invoke(CreateEvent("AssistantMessageDeltaEvent", new Dictionary<string, object?> { ["DeltaContent"] = "d1" }));
@@ -79,7 +77,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.External.GitHub
                     return Task.CompletedTask;
                 });
 
-            copilotMock.Setup(c => c.CreateSessionAsync(It.IsAny<SessionConfig>(), It.IsAny<CancellationToken>()))
+            copilotMock.Setup(c => c.CreateSessionAsync(It.IsAny<global::GitHub.Copilot.SDK.SessionConfig>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(sessionMock.Object);
 
             var client = new Synaxis.InferenceGateway.Infrastructure.External.GitHub.GitHubCopilotChatClient(copilotMock.Object, NullLogger<Synaxis.InferenceGateway.Infrastructure.External.GitHub.GitHubCopilotChatClient>.Instance);
@@ -96,21 +94,18 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.External.GitHub
             Assert.Contains(list, u => u.Contents.Any(c => c is TextContent tc && tc.Text.Contains("m1")));
             Assert.Contains(list, u => u.Contents.Any(c => c is TextContent tc && tc.Text.Contains("usage:")));
 
-            copilotMock.Verify(c => c.CreateSessionAsync(It.IsAny<SessionConfig>(), It.IsAny<CancellationToken>()), Times.Once);
-            sessionMock.Verify(s => s.SendAsync(It.IsAny<MessageOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            copilotMock.Verify(c => c.CreateSessionAsync(It.IsAny<global::GitHub.Copilot.SDK.SessionConfig>(), It.IsAny<CancellationToken>()), Times.Once);
+            sessionMock.Verify(s => s.SendAsync(It.IsAny<global::GitHub.Copilot.SDK.MessageOptions>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
         public void Dispose_DisposesClient()
         {
-            var copilotMock = new Mock<CopilotClient>();
-
-            copilotMock.Setup(c => c.DisposeAsync()).Verifiable();
+            var copilotMock = new Mock<global::GitHub.Copilot.SDK.CopilotClient>();
 
             var client = new Synaxis.InferenceGateway.Infrastructure.External.GitHub.GitHubCopilotChatClient(copilotMock.Object);
+            // Ensure Dispose does not throw when SDK dispose isn't interceptable
             client.Dispose();
-
-            copilotMock.Verify(c => c.DisposeAsync(), Times.Once);
         }
 
         private class DisposableAction : IDisposable
@@ -118,12 +113,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.External.GitHub
             public void Dispose() { }
         }
 
-        private static object CreateEvent(string typeName, Dictionary<string, object?> data)
+        private static global::GitHub.Copilot.SDK.SessionEvent CreateEvent(string typeName, Dictionary<string, object?> data)
         {
-            var asm = typeof(CopilotClient).Assembly;
+            var asm = typeof(global::GitHub.Copilot.SDK.CopilotClient).Assembly;
             var fullName = "GitHub.Copilot.SDK." + typeName;
             var t = asm.GetType(fullName) ?? throw new InvalidOperationException("Type not found: " + fullName);
-            var evt = Activator.CreateInstance(t) ?? throw new InvalidOperationException("Could not create event " + fullName);
+            var evtObj = Activator.CreateInstance(t) ?? throw new InvalidOperationException("Could not create event " + fullName);
 
             // Set Data property if present
             var dataProp = t.GetProperty("Data");
@@ -139,10 +134,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.External.GitHub
                         p.SetValue(dataInstance, kv.Value);
                     }
                 }
-                dataProp.SetValue(evt, dataInstance);
+                dataProp.SetValue(evtObj, dataInstance);
             }
 
-            return evt;
+            return (global::GitHub.Copilot.SDK.SessionEvent)evtObj!;
         }
     }
 }

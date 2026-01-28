@@ -12,12 +12,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub;
 
 public class GitHubCopilotChatClient : IChatClient, IDisposable
 {
-    private readonly CopilotClient _copilotClient;
+    private readonly ICopilotClient _copilotClient;
     private readonly ILogger<GitHubCopilotChatClient>? _logger;
     private readonly ChatClientMetadata _metadata = new ChatClientMetadata("GitHubCopilot", new Uri("https://copilot.github.com/"), "copilot");
     private readonly string _modelId = "copilot";
 
-    public GitHubCopilotChatClient(CopilotClient copilotClient, ILogger<GitHubCopilotChatClient>? logger = null)
+    public GitHubCopilotChatClient(ICopilotClient copilotClient, ILogger<GitHubCopilotChatClient>? logger = null)
     {
         _copilotClient = copilotClient ?? throw new ArgumentNullException(nameof(copilotClient));
         _logger = logger;
@@ -66,7 +66,7 @@ public class GitHubCopilotChatClient : IChatClient, IDisposable
 
         // Always create a fresh streaming session for each call
         var sessionConfig = new SessionConfig { Streaming = true };
-        CopilotSession copilotSession = await _copilotClient.CreateSessionAsync(sessionConfig, cancellationToken).ConfigureAwait(false);
+        ICopilotSession copilotSession = await _copilotClient.CreateSessionAsync(sessionConfig, cancellationToken).ConfigureAwait(false);
 
         var channel = Channel.CreateUnbounded<ChatResponseUpdate>();
 
@@ -136,7 +136,7 @@ public class GitHubCopilotChatClient : IChatClient, IDisposable
 
     public object? GetService(Type serviceType, object? serviceKey = null)
     {
-        if (serviceType == typeof(CopilotClient)) return _copilotClient;
+        if (serviceType == typeof(ICopilotClient)) return _copilotClient;
         return null;
     }
 
