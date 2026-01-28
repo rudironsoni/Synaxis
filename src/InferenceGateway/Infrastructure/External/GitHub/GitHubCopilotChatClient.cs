@@ -136,7 +136,7 @@ public class GitHubCopilotChatClient : IChatClient, IDisposable
 
     public object? GetService(Type serviceType, object? serviceKey = null)
     {
-        if (serviceType == typeof(CopilotClient) || serviceType == typeof(CopilotClient?)) return _copilotClient;
+        if (serviceType == typeof(CopilotClient)) return _copilotClient;
         return null;
     }
 
