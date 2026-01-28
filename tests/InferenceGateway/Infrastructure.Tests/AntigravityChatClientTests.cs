@@ -70,7 +70,10 @@ public class AntigravityChatClientTests
                 Content = new StringContent(responseJson)
             });
 
-        var httpClient = new HttpClient(_handlerMock.Object);
+        var httpClient = new HttpClient(_handlerMock.Object)
+        {
+            BaseAddress = new Uri("https://cloudcode-pa.googleapis.com")
+        };
         var client = new AntigravityChatClient(httpClient, _modelId, _projectId, _tokenProviderMock.Object);
         var messages = new List<ChatMessage> 
         { 
@@ -89,7 +92,7 @@ public class AntigravityChatClientTests
 
         // Verify Request
         Assert.NotNull(capturedRequest);
-        Assert.Equal("https://cloudcode-pa.googleapis.com/v1internal:generateContent", capturedRequest!.RequestUri?.ToString());
+        Assert.Equal("https://cloudcode-pa.googleapis.com/v1/chat/completions", capturedRequest!.RequestUri?.ToString());
         Assert.Equal("Bearer", capturedRequest.Headers.Authorization?.Scheme);
         Assert.Equal(_fakeToken, capturedRequest.Headers.Authorization?.Parameter);
         Assert.Contains("antigravity/1.11.5", capturedRequest.Headers.UserAgent.ToString());
@@ -129,7 +132,10 @@ data: [DONE]
                 Content = new StringContent(streamContent)
             });
 
-        var httpClient = new HttpClient(_handlerMock.Object);
+        var httpClient = new HttpClient(_handlerMock.Object)
+        {
+            BaseAddress = new Uri("https://cloudcode-pa.googleapis.com")
+        };
         var client = new AntigravityChatClient(httpClient, _modelId, _projectId, _tokenProviderMock.Object);
 
         // Act
