@@ -31,7 +31,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
         [Fact]
         public async Task SaveAsync_CallsProtectAndWritesFile()
         {
-            var provider = Microsoft.AspNetCore.DataProtection.DataProtectionProvider.Create("Synaxis.Tests");
+            var provider = new FakeDataProtectionProvider();
             var store = new EncryptedFileTokenStore(provider, _tmpPath);
 
             var accounts = new List<IdentityAccount>
@@ -52,7 +52,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
         [Fact]
         public async Task LoadAsync_CallsUnprotectAndReturnsAccounts()
         {
-            var provider = Microsoft.AspNetCore.DataProtection.DataProtectionProvider.Create("Synaxis.Tests");
+            var provider = new FakeDataProtectionProvider();
 
             var sample = System.Text.Json.JsonSerializer.Serialize(new List<IdentityAccount>
             {
