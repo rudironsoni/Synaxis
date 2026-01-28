@@ -2,9 +2,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.AI;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using Synaxis.InferenceGateway.Infrastructure.External.GitHub;
 using GitHub.Copilot.SDK;
-using Synaxis.InferenceGateway.Infrastructure.External.MicrosoftAgents.GithubCopilot;
+using Synaxis.InferenceGateway.Infrastructure.External.GitHub;
 using Microsoft.Extensions.Logging;
 
 namespace Synaxis.InferenceGateway.Infrastructure.Extensions;
@@ -43,24 +42,22 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions;
 
     public static IServiceCollection AddGitHubCopilotSdk(this IServiceCollection services, string name = "GitHubCopilot")
     {
-        // Register the adapter as a singleton - the underlying SDK client may be stateful
+        // Register underlying CopilotClient via adapter reflection as singleton
         services.AddSingleton<ICopilotSdkAdapter, CopilotSdkAdapter>();
 
-        // Register the GithubCopilotAgent as transient. If the underlying CopilotClient
-        // isn't available the agent factory will throw when resolved.
-        services.AddTransient<GithubCopilotAgent>(sp =>
+        services.AddSingleton(sp =>
         {
             var adapter = sp.GetRequiredService<ICopilotSdkAdapter>();
             var client = adapter.GetService(Type.GetType("GitHub.Copilot.Sdk.CopilotClient, GitHub.Copilot.Sdk") ?? typeof(object)) as CopilotClient;
-            return new GithubCopilotAgent(client ?? throw new InvalidOperationException("CopilotClient not available"), sessionConfig: null, ownsClient: false);
+            return client ?? throw new InvalidOperationException("CopilotClient not available");
         });
 
-        // Register the GithubCopilotAgentClient as a keyed IChatClient
-        services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>
+        // Register GitHubCopilotChatClient as keyed scoped IChatClient
+        services.AddKeyedScoped<IChatClient>(name, (sp, k) =>
         {
-            var agent = sp.GetRequiredService<GithubCopilotAgent>();
-            var logger = sp.GetService<ILogger<GithubCopilotAgentClient>>();
-            return new GithubCopilotAgentClient(agent, logger);
+            var client = sp.GetRequiredService<CopilotClient>();
+            var logger = sp.GetService<ILogger<GitHubCopilotChatClient>>();
+            return new GitHubCopilotChatClient(client, logger);
         });
 
         return services;
