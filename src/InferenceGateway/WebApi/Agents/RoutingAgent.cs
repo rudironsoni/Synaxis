@@ -1,4 +1,4 @@
-using Microsoft.Agents;
+using Microsoft.Agents.AI;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -17,7 +17,7 @@ namespace Synaxis.InferenceGateway.WebApi.Agents;
 
 public class RoutingAgentThread : AgentThread { }
 
-public class RoutingAgent : AIAgent
+public class RoutingAgent : Microsoft.Agents.AI.AIAgent
 {
     public override string Name => "Synaxis";
 
@@ -38,10 +38,10 @@ public class RoutingAgent : AIAgent
         _logger = logger;
     }
 
-    protected override async Task<AgentResponse> RunCoreAsync(
+    protected override async Task<Microsoft.Agents.AI.AgentResponse> RunCoreAsync(
         IEnumerable<ChatMessage> messages,
-        AgentThread? thread = null,
-        AgentRunOptions? options = null,
+        Microsoft.Agents.AI.AgentThread? thread = null,
+        Microsoft.Agents.AI.AgentRunOptions? options = null,
         CancellationToken cancellationToken = default)
     {
         var httpContext = _httpContextAccessor?.HttpContext;
@@ -91,13 +91,13 @@ public class RoutingAgent : AIAgent
             }
         }
 
-        return new AgentResponse(agentMessage);
+        return new Microsoft.Agents.AI.AgentResponse(agentMessage);
     }
 
-    protected override async IAsyncEnumerable<AgentResponseUpdate> RunCoreStreamingAsync(
+    protected override async IAsyncEnumerable<Microsoft.Agents.AI.AgentResponseUpdate> RunCoreStreamingAsync(
         IEnumerable<ChatMessage> messages,
-        AgentThread? thread = null,
-        AgentRunOptions? options = null,
+        Microsoft.Agents.AI.AgentThread? thread = null,
+        Microsoft.Agents.AI.AgentRunOptions? options = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var httpContext = _httpContextAccessor?.HttpContext;
@@ -136,7 +136,7 @@ public class RoutingAgent : AIAgent
                 }
             }
 
-            yield return new AgentResponseUpdate
+            yield return new Microsoft.Agents.AI.AgentResponseUpdate
             {
                 Role = translatedUpdate.Role,
                 Contents = translatedUpdate.Contents,
