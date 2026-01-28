@@ -54,9 +54,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.External.GitHub
         [Fact]
         public async Task GetStreamingResponseAsync_StreamsUpdates()
         {
-            var copilotMock = new Mock<global::GitHub.Copilot.SDK.CopilotClient>();
+            var copilotMock = new Mock<Synaxis.InferenceGateway.Infrastructure.External.GitHub.ICopilotClient>();
 
-            var sessionMock = new Mock<global::GitHub.Copilot.SDK.CopilotSession>();
+            var sessionMock = new Mock<Synaxis.InferenceGateway.Infrastructure.External.GitHub.ICopilotSession>();
 
             global::GitHub.Copilot.SDK.SessionEventHandler? registered = null;
             sessionMock.Setup(s => s.On(It.IsAny<global::GitHub.Copilot.SDK.SessionEventHandler>()))
@@ -101,7 +101,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.External.GitHub
         [Fact]
         public void Dispose_DisposesClient()
         {
-            var copilotMock = new Mock<global::GitHub.Copilot.SDK.CopilotClient>();
+            var copilotMock = new Mock<Synaxis.InferenceGateway.Infrastructure.External.GitHub.ICopilotClient>();
 
             var client = new Synaxis.InferenceGateway.Infrastructure.External.GitHub.GitHubCopilotChatClient(copilotMock.Object);
             // Ensure Dispose does not throw when SDK dispose isn't interceptable
