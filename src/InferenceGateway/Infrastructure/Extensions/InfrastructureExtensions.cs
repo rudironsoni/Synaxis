@@ -64,7 +64,17 @@ public static class InfrastructureExtensions
         services.AddSingleton<IHealthStore, RedisHealthStore>();
         services.AddSingleton<IQuotaTracker, RedisQuotaTracker>();
 
-        // 1. Register Auth Manager (Singleton) with Factory
+        // 1. Register TokenStore and Auth Manager (Singleton) with Factory
+        services.AddSingleton<ITokenStore>(sp =>
+        {
+            var config = sp.GetRequiredService<IOptions<SynaxisConfiguration>>().Value;
+            var providerConfig = config.Providers.Values.FirstOrDefault(p => p.Type?.ToLowerInvariant() == "antigravity");
+            var defaultPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".synaxis", "antigravity-auth.json");
+            var authPath = providerConfig?.AuthStoragePath ?? defaultPath;
+            var logger = sp.GetRequiredService<ILogger<FileTokenStore>>();
+            return new FileTokenStore(authPath, logger);
+        });
+
         services.AddSingleton<IAntigravityAuthManager>(sp =>
         {
             var config = sp.GetRequiredService<IOptions<SynaxisConfiguration>>().Value;
@@ -73,14 +83,11 @@ public static class InfrastructureExtensions
             // Find Antigravity config
             var providerConfig = config.Providers.Values.FirstOrDefault(p => p.Type?.ToLowerInvariant() == "antigravity");
             var projectId = providerConfig?.ProjectId ?? string.Empty;
-
-            // Determine storage path
-            var defaultPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".synaxis", "antigravity-auth.json");
-            var authPath = providerConfig?.AuthStoragePath ?? defaultPath;
             var settings = config.Antigravity ?? new AntigravitySettings();
 
             var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
-            return new AntigravityAuthManager(projectId, authPath, settings, logger, httpClientFactory);
+            var store = sp.GetRequiredService<ITokenStore>();
+            return new AntigravityAuthManager(projectId, settings, logger, httpClientFactory, store);
         });
         services.AddSingleton<ITokenProvider>(sp => sp.GetRequiredService<IAntigravityAuthManager>());
 
