@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
-using Microsoft.Agents;
+using Microsoft.Agents.AI;
 
 namespace Synaxis.InferenceGateway.Infrastructure.External.MicrosoftAgents.GithubCopilot;
 

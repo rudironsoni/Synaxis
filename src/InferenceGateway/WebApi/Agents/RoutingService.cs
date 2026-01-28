@@ -1,4 +1,5 @@
-using Microsoft.Agents;
+using Microsoft.Agents.AI;
+using AgentsAI = Microsoft.Agents.AI;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
@@ -29,7 +30,7 @@ namespace Synaxis.InferenceGateway.WebApi.Agents
             _logger = logger;
         }
 
-        public async Task<AgentResponse> HandleAsync(OpenAIRequest openAIRequest, IEnumerable<ChatMessage> messages, AgentThread? thread = null, AgentRunOptions? options = null, CancellationToken cancellationToken = default)
+        public async Task<AgentsAI.AgentResponse> HandleAsync(OpenAIRequest openAIRequest, IEnumerable<ChatMessage> messages, AgentsAI.AgentThread? thread = null, AgentsAI.AgentRunOptions? options = null, CancellationToken cancellationToken = default)
         {
             var httpContext = _httpContextAccessor.HttpContext;
 
@@ -66,10 +67,10 @@ namespace Synaxis.InferenceGateway.WebApi.Agents
                 }
             }
 
-            return new AgentResponse(agentMessage);
+            return new AgentsAI.AgentResponse(agentMessage);
         }
 
-        public async IAsyncEnumerable<AgentResponseUpdate> HandleStreamingAsync(OpenAIRequest openAIRequest, IEnumerable<ChatMessage> messages, AgentThread? thread = null, AgentRunOptions? options = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<AgentsAI.AgentResponseUpdate> HandleStreamingAsync(OpenAIRequest openAIRequest, IEnumerable<ChatMessage> messages, AgentsAI.AgentThread? thread = null, AgentsAI.AgentRunOptions? options = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             var httpContext = _httpContextAccessor.HttpContext;
 
@@ -80,7 +81,7 @@ namespace Synaxis.InferenceGateway.WebApi.Agents
             await foreach (var update in _chatClient.GetStreamingResponseAsync(translatedRequest.Messages, chatOptions, cancellationToken))
             {
                 var translatedUpdate = _translator.TranslateUpdate(update);
-                yield return new AgentResponseUpdate(translatedUpdate);
+                yield return new AgentsAI.AgentResponseUpdate(translatedUpdate);
             }
         }
 
