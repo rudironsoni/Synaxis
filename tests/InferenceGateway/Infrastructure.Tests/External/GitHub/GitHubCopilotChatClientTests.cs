@@ -131,7 +131,28 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.External.GitHub
                     var p = dataType.GetProperty(kv.Key);
                     if (p != null && p.CanWrite)
                     {
-                        p.SetValue(dataInstance, kv.Value);
+                        var targetType = p.PropertyType;
+                        object? valueToSet = null;
+                        if (kv.Value == null)
+                        {
+                            valueToSet = null;
+                        }
+                        else
+                        {
+                            var underlying = Nullable.GetUnderlyingType(targetType) ?? targetType;
+                            try
+                            {
+                                // Convert.ChangeType will handle numeric conversions (e.g., int -> double)
+                                valueToSet = Convert.ChangeType(kv.Value, underlying);
+                            }
+                            catch
+                            {
+                                // Fallback to original value if conversion fails
+                                valueToSet = kv.Value;
+                            }
+                        }
+
+                        p.SetValue(dataInstance, valueToSet);
                     }
                 }
                 dataProp.SetValue(evtObj, dataInstance);
