@@ -11,7 +11,6 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using GitHub.Copilot.SDK;
 using Microsoft.Extensions.AI;
-using Microsoft.Shared.Diagnostics;
 using Microsoft.Agents.AI;
 
 namespace Synaxis.InferenceGateway.Infrastructure.External.MicrosoftAgents.GithubCopilot;
@@ -39,8 +38,7 @@ public sealed class GithubCopilotAgent : AIAgent, IAsyncDisposable
         string? name = null,
         string? description = null)
     {
-        _ = Throw.IfNull(copilotClient);
-
+        if (copilotClient is null) throw new ArgumentNullException(nameof(copilotClient));
         this._copilotClient = copilotClient;
         this._sessionConfig = sessionConfig;
         this._ownsClient = ownsClient;
@@ -92,7 +90,7 @@ public sealed class GithubCopilotAgent : AIAgent, IAsyncDisposable
         AgentRunOptions? options = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        _ = Throw.IfNull(messages);
+        if (messages is null) throw new ArgumentNullException(nameof(messages));
 
         session ??= await this.GetNewSessionAsync(cancellationToken).ConfigureAwait(false);
         if (session is not GithubCopilotAgentSession typedSession)
@@ -167,20 +165,10 @@ public sealed class GithubCopilotAgent : AIAgent, IAsyncDisposable
                 }
             });
 
-            List<string> tempFiles = [];
             try
             {
                 string prompt = string.Join("\n", messages.Select(m => m.Text));
-                List<UserMessageDataAttachmentsItem>? attachments = await ProcessDataContentAttachmentsAsync(
-                    messages,
-                    tempFiles,
-                    cancellationToken).ConfigureAwait(false);
-
                 MessageOptions messageOptions = new() { Prompt = prompt };
-                if (attachments is not null)
-                {
-                    messageOptions.Attachments = [.. attachments];
-                }
 
                 await copilotSession.SendAsync(messageOptions, cancellationToken).ConfigureAwait(false);
                 await foreach (AgentResponseUpdate update in channel.Reader.ReadAllAsync(cancellationToken).ConfigureAwait(false))
@@ -190,7 +178,6 @@ public sealed class GithubCopilotAgent : AIAgent, IAsyncDisposable
             }
             finally
             {
-                CleanupTempFiles(tempFiles);
             }
         }
         finally
