@@ -16,7 +16,12 @@ public class CloudflareStrategy : IChatClientStrategy
         ChatOptions options, 
         CancellationToken ct)
     {
-        // Placeholder for Cloudflare-specific logic (e.g. max_tokens adjustments)
+        // Standard pass-through: Cloudflare-specific behavior (URL, auth,
+        // request formatting, streaming framing, default headers) is implemented
+        // in CloudflareChatClient. Keep this strategy lightweight so the client
+        // handles protocol details. This strategy exists to allow future
+        // provider-specific adjustments (e.g. token limits or option remapping)
+        // without changing callers.
         return await client.GetResponseAsync(messages, options, ct);
     }
 
@@ -26,6 +31,8 @@ public class CloudflareStrategy : IChatClientStrategy
         ChatOptions options, 
         CancellationToken ct)
     {
+        // Streaming is handled by the CloudflareChatClient which knows the
+        // server-side streaming framing. This is a direct pass-through.
         return client.GetStreamingResponseAsync(messages, options, ct);
     }
 }
