@@ -45,17 +45,20 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions;
         // Register underlying CopilotClient via adapter reflection as singleton
         services.AddSingleton<ICopilotSdkAdapter, CopilotSdkAdapter>();
 
-        services.AddSingleton(sp =>
+        // Register ICopilotClient by wrapping the concrete CopilotClient from the adapter (if available)
+        services.AddSingleton<ICopilotClient>(sp =>
         {
             var adapter = sp.GetRequiredService<ICopilotSdkAdapter>();
-            var client = adapter.GetService(Type.GetType("GitHub.Copilot.Sdk.CopilotClient, GitHub.Copilot.Sdk") ?? typeof(object)) as CopilotClient;
-            return client ?? throw new InvalidOperationException("CopilotClient not available");
+            var clientObj = adapter.GetService(Type.GetType("GitHub.Copilot.Sdk.CopilotClient, GitHub.Copilot.Sdk") ?? typeof(object));
+            var concrete = clientObj as global::GitHub.Copilot.SDK.CopilotClient;
+            if (concrete == null) throw new InvalidOperationException("CopilotClient not available");
+            return new CopilotClientAdapter(concrete);
         });
 
         // Register GitHubCopilotChatClient as keyed scoped IChatClient
         services.AddKeyedScoped<IChatClient>(name, (sp, k) =>
         {
-            var client = sp.GetRequiredService<CopilotClient>();
+            var client = sp.GetRequiredService<ICopilotClient>();
             var logger = sp.GetService<ILogger<GitHubCopilotChatClient>>();
             return new GitHubCopilotChatClient(client, logger);
         });
