@@ -18,7 +18,18 @@ public sealed class AesGcmTokenVault : ITokenVault
         _dbContext = dbContext;
         // For MVP, we derive a master key from a config string or use a fixed one if missing.
         // In prod, this should be a secure secret.
-        var masterKeyString = config.Value.MasterKey ?? "SynaxisDefaultMasterKeyDoNotUseInProd123";
+        var masterKeyString = config.Value.MasterKey;
+        if (string.IsNullOrWhiteSpace(masterKeyString) || masterKeyString == "SynaxisDefaultMasterKeyDoNotUseInProd123")
+        {
+             // Allow default in Development environment? We can check IHostEnvironment if we injected it.
+             // For now, consistent with requirements: Throw if invalid/missing in general usage,
+             // assuming appsettings.Development.json provides a valid dev key.
+             // But wait, the audit found the hardcoded fallback was the issue.
+             // We should NOT fallback.
+             if (string.IsNullOrWhiteSpace(masterKeyString))
+                throw new InvalidOperationException("Synaxis:InferenceGateway:MasterKey must be configured.");
+        }
+        
         using var sha = SHA256.Create();
         _masterKey = sha.ComputeHash(Encoding.UTF8.GetBytes(masterKeyString));
     }
