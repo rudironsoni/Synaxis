@@ -117,10 +117,8 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference();
 }
 
-if (!app.Environment.IsEnvironment("Test"))
-{
-    await app.InitializeDatabaseAsync();
-}
+// Initialize the database on startup
+await app.InitializeDatabaseAsync();
 
 app.UseHttpsRedirection();
 

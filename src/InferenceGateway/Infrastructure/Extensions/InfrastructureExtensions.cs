@@ -168,9 +168,12 @@ public static class InfrastructureExtensions
             }
         }
 
-        // 3. Configure HttpClient for Antigravity with Polly
-        services.AddHttpClient("Antigravity")
-            .AddPolicyHandler(GetRetryPolicy());
+        // 3. Configure HttpClient for Antigravity with Polly and correct BaseAddress
+        services.AddHttpClient("Antigravity", client =>
+        {
+            client.BaseAddress = new Uri("https://cloudcode-pa.googleapis.com");
+        })
+        .AddPolicyHandler(GetRetryPolicy());
 
         // Register infrastructure helpers
         services.AddInfrastructureHelpers();
