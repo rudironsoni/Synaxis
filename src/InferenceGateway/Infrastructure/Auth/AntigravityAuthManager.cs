@@ -12,6 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Google.Apis.Auth.OAuth2.Responses;
 using Microsoft.Extensions.Logging;
+using Synaxis.InferenceGateway.Application.Configuration;
 
 namespace Synaxis.InferenceGateway.Infrastructure.Auth;
 
@@ -31,10 +32,8 @@ public class AntigravityAuthManager : IAntigravityAuthManager
     private readonly string _authStoragePath;
     private readonly string _projectId;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly AntigravitySettings _settings;
 
-    // Antigravity Plugin Client ID (from opencode-antigravity-auth reference)
-    private const string ClientId = "1071006060591-tmhssin2h21lcre235vtolojh4g403ep.apps.googleusercontent.com";
-    private const string ClientSecret = "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";
     private const string AuthorizationEndpoint = "https://accounts.google.com/o/oauth2/v2/auth";
     private const string TokenEndpoint = "https://oauth2.googleapis.com/token";
     private const string UserInfoEndpoint = "https://www.googleapis.com/oauth2/v1/userinfo?alt=json";
@@ -67,13 +66,20 @@ public class AntigravityAuthManager : IAntigravityAuthManager
     public AntigravityAuthManager(
         string projectId,
         string authStoragePath,
+        AntigravitySettings settings,
         ILogger<AntigravityAuthManager> logger,
         IHttpClientFactory httpClientFactory)
     {
         _projectId = projectId;
         _authStoragePath = authStoragePath;
+        _settings = settings;
         _logger = logger;
         _httpClientFactory = httpClientFactory;
+
+        if (string.IsNullOrWhiteSpace(_settings.ClientId) || string.IsNullOrWhiteSpace(_settings.ClientSecret))
+        {
+            throw new InvalidOperationException("Antigravity ClientId and ClientSecret must be configured.");
+        }
     }
 
     public async Task<string> GetTokenAsync(CancellationToken cancellationToken = default)
@@ -299,11 +305,11 @@ public class AntigravityAuthManager : IAntigravityAuthManager
         await CompleteAuthFlowAsync(code, redirectUri, state);
     }
 
-    private static string BuildAuthorizationUrl(string redirectUrl, string codeChallenge, string state)
+    private string BuildAuthorizationUrl(string redirectUrl, string codeChallenge, string state)
     {
         var parameters = new Dictionary<string, string>
         {
-            ["client_id"] = ClientId,
+            ["client_id"] = _settings.ClientId,
             ["response_type"] = "code",
             ["redirect_uri"] = redirectUrl,
             ["scope"] = string.Join(" ", Scopes),
@@ -379,8 +385,8 @@ public class AntigravityAuthManager : IAntigravityAuthManager
         using var httpClient = CreateHttpClient();
         using var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
-            ["client_id"] = ClientId,
-            ["client_secret"] = ClientSecret,
+            ["client_id"] = _settings.ClientId,
+            ["client_secret"] = _settings.ClientSecret,
             ["code"] = code,
             ["grant_type"] = "authorization_code",
             ["redirect_uri"] = redirectUrl,
@@ -419,8 +425,8 @@ public class AntigravityAuthManager : IAntigravityAuthManager
         using var httpClient = CreateHttpClient();
         using var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
-            ["client_id"] = ClientId,
-            ["client_secret"] = ClientSecret,
+            ["client_id"] = _settings.ClientId,
+            ["client_secret"] = _settings.ClientSecret,
             ["refresh_token"] = refreshToken,
             ["grant_type"] = "refresh_token"
         });

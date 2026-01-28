@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Synaxis.InferenceGateway.Application.Configuration;
 using Synaxis.InferenceGateway.Infrastructure.Auth;
 using Xunit;
 
@@ -39,11 +40,12 @@ public class AntigravityAuthManagerTests : IDisposable
             new() { Email = "user2@test.com", Token = new() { AccessToken = "token2", ExpiresInSeconds = 3600, IssuedUtc = DateTime.UtcNow } }
         };
         await File.WriteAllTextAsync(_tempAuthPath, System.Text.Json.JsonSerializer.Serialize(accounts));
-        var httpClientFactory = CreateHttpClientFactory(() => new HttpResponseMessage(HttpStatusCode.OK)
-        {
-            Content = new StringContent("{}")
-        });
-        var manager = new AntigravityAuthManager("proj", _tempAuthPath, _loggerMock.Object, httpClientFactory);
+            var httpClientFactory = CreateHttpClientFactory(() => new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("{}")
+            });
+            var settings = new AntigravitySettings { ClientId = "test-client", ClientSecret = "test-secret" };
+            var manager = new AntigravityAuthManager("proj", _tempAuthPath, settings, _loggerMock.Object, httpClientFactory);
 
         // Act
         // Force load by calling GetTokenAsync. 
@@ -72,7 +74,8 @@ public class AntigravityAuthManagerTests : IDisposable
             {
                 Content = new StringContent("{\"error\":\"invalid_grant\"}")
             });
-            var manager = new AntigravityAuthManager("proj", _tempAuthPath, _loggerMock.Object, httpClientFactory);
+            var settings = new AntigravitySettings { ClientId = "test-client", ClientSecret = "test-secret" };
+            var manager = new AntigravityAuthManager("proj", _tempAuthPath, settings, _loggerMock.Object, httpClientFactory);
 
             // Act
             // GetTokenAsync will detect env var, inject it.

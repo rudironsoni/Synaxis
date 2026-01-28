@@ -11,6 +11,7 @@ public class SynaxisConfiguration
     public string? JwtSecret { get; set; }
     public string? JwtIssuer { get; set; }
     public string? JwtAudience { get; set; }
+    public AntigravitySettings? Antigravity { get; set; }
 }
 
 public class ProviderConfig

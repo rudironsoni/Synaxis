@@ -21,7 +21,14 @@ public sealed class JwtService : IJwtService
     public string GenerateToken(User user)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.ASCII.GetBytes(_config.JwtSecret ?? "SynaxisDefaultSecretKeyDoNotUseInProd1234567890");
+        var secret = _config.JwtSecret;
+        if (string.IsNullOrWhiteSpace(secret) || secret == "SynaxisDefaultSecretKeyDoNotUseInProd1234567890")
+        {
+             if (string.IsNullOrWhiteSpace(secret))
+                throw new InvalidOperationException("Synaxis:InferenceGateway:JwtSecret must be configured.");
+        }
+
+        var key = Encoding.ASCII.GetBytes(secret);
         
         var claims = new List<Claim>
         {

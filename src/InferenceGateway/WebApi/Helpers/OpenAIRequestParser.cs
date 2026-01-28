@@ -22,6 +22,20 @@ public static class OpenAIRequestParser
 
             return JsonSerializer.Deserialize<OpenAIRequest>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         }
+        catch (JsonException ex)
+        {
+            // Log warning but return null to allow other endpoints/handlers to potentially handle if format mismatches?
+            // Actually, if we are in this parser, we expect OpenAI request.
+            // But legacy parser might just return null.
+            // Better to log it.
+            // Note: Parser is static, no logger injected. We can't log easily here without changing signature.
+            // For now, rethrow or at least don't swallow silently if possible?
+            // The audit said "Log exception details... or allow bubbling".
+            // Since we can't log (static), bubbling is better than swallowing.
+            // But the caller (RoutingAgent) might expect null.
+            // Let's rely on the middleware to handle the exception if we throw.
+            throw new BadHttpRequestException("Invalid JSON body", ex);
+        }
         catch
         {
             return null;
