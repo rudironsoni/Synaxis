@@ -10,7 +10,7 @@
     <PackageReference Include="Google.Apis.Auth" />
     <PackageReference Include="Google.Apis.Oauth2.v2" />
     <PackageReference Include="Google.GenAI" />
-    <PackageReference Include="Microsoft.Agents.AI.Abstractions" />
+    <!-- Microsoft.Agents.AI.Abstractions removed: not required after refactor to IChatClient -->
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
@@ -29,4 +29,5 @@
   <ItemGroup>
     <ProjectReference Include="..\Application\Synaxis.InferenceGateway.Application.csproj" />
   </ItemGroup>
+  <!-- Alias is set via PackageReference Aliases above -->
 </Project>
