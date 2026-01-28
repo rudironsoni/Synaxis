@@ -228,12 +228,12 @@ public sealed class GithubCopilotAgent : AIAgent, IAsyncDisposable
             RawRepresentation = deltaEvent
         };
 
-        return new AgentResponseUpdate(ChatRole.Assistant, [textContent])
-        {
-            AgentId = this.Id,
-            MessageId = deltaEvent.Data?.MessageId,
-            CreatedAt = deltaEvent.Timestamp
-        };
+        var update = new AgentResponseUpdate { Role = ChatRole.Assistant };
+        update.Contents.Add(textContent);
+        update.AgentId = this.Id;
+        update.MessageId = deltaEvent.Data?.MessageId;
+        update.CreatedAt = deltaEvent.Timestamp;
+        return update;
     }
 
     private AgentResponseUpdate ConvertToAgentResponseUpdate(AssistantMessageEvent assistantMessage)
@@ -243,13 +243,13 @@ public sealed class GithubCopilotAgent : AIAgent, IAsyncDisposable
             RawRepresentation = assistantMessage
         };
 
-        return new AgentResponseUpdate(ChatRole.Assistant, [textContent])
-        {
-            AgentId = this.Id,
-            ResponseId = assistantMessage.Data?.MessageId,
-            MessageId = assistantMessage.Data?.MessageId,
-            CreatedAt = assistantMessage.Timestamp
-        };
+        var update = new AgentResponseUpdate { Role = ChatRole.Assistant };
+        update.Contents.Add(textContent);
+        update.AgentId = this.Id;
+        update.ResponseId = assistantMessage.Data?.MessageId;
+        update.MessageId = assistantMessage.Data?.MessageId;
+        update.CreatedAt = assistantMessage.Timestamp;
+        return update;
     }
 
     private AgentResponseUpdate ConvertToAgentResponseUpdate(AssistantUsageEvent usageEvent)
@@ -268,11 +268,11 @@ public sealed class GithubCopilotAgent : AIAgent, IAsyncDisposable
             RawRepresentation = usageEvent
         };
 
-        return new AgentResponseUpdate(ChatRole.Assistant, [usageContent])
-        {
-            AgentId = this.Id,
-            CreatedAt = usageEvent.Timestamp
-        };
+        var update = new AgentResponseUpdate { Role = ChatRole.Assistant };
+        update.Contents.Add(usageContent);
+        update.AgentId = this.Id;
+        update.CreatedAt = usageEvent.Timestamp;
+        return update;
     }
 
     private static AdditionalPropertiesDictionary<long>? GetAdditionalCounts(AssistantUsageEvent usageEvent)
@@ -300,11 +300,11 @@ public sealed class GithubCopilotAgent : AIAgent, IAsyncDisposable
     private AgentResponseUpdate ConvertToAgentResponseUpdate(SessionEvent sessionEvent)
     {
         AIContent content = new() { RawRepresentation = sessionEvent };
-        return new AgentResponseUpdate(ChatRole.Assistant, [content])
-        {
-            AgentId = this.Id,
-            CreatedAt = sessionEvent.Timestamp
-        };
+        var update = new AgentResponseUpdate { Role = ChatRole.Assistant };
+        update.Contents.Add(content);
+        update.AgentId = this.Id;
+        update.CreatedAt = sessionEvent.Timestamp;
+        return update;
     }
 
     private static SessionConfig? GetSessionConfig(IList<AITool>? tools, string? instructions)
