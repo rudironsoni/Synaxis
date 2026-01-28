@@ -30,10 +30,9 @@ public static class LegacyCompletionsEndpoint
 
             ctx.Items["RoutingContext"] = new RoutingContext(request.Model, resolution.CanonicalId.ToString(), resolution.CanonicalId.Provider);
 
-            var promptText = request.Prompt?.ToString() ?? "";
-            if (request.Prompt is JsonElement je && je.ValueKind == JsonValueKind.Array)
+            if (!TryParsePrompt(request.Prompt, out var promptText, out var parseError))
             {
-                promptText = string.Join("\n", je.EnumerateArray().Select(x => x.ToString()));
+                return Results.BadRequest(new { error = new { message = parseError, type = "invalid_request_error", param = "prompt", code = "invalid_value" } });
             }
 
             var messages = new List<ChatMessage> { new ChatMessage(ChatRole.User, promptText) };
@@ -91,5 +90,102 @@ public static class LegacyCompletionsEndpoint
             operation.Deprecated = true;
             return Task.CompletedTask;
         });
+    }
+
+    private static bool TryParsePrompt(object? promptObj, out string promptText, out string? errorMessage)
+    {
+        promptText = string.Empty;
+        errorMessage = null;
+
+        if (promptObj == null)
+        {
+            // treat null as empty prompt
+            return true;
+        }
+
+        // Straight string
+        if (promptObj is string s)
+        {
+            promptText = s;
+            return true;
+        }
+
+        // JsonElement from System.Text.Json (common when model binding raw JSON)
+        if (promptObj is JsonElement je)
+        {
+            try
+            {
+                switch (je.ValueKind)
+                {
+                    case JsonValueKind.String:
+                        promptText = je.GetString() ?? string.Empty;
+                        return true;
+                    case JsonValueKind.Array:
+                        var parts = new List<string>();
+                        foreach (var el in je.EnumerateArray())
+                        {
+                            if (el.ValueKind == JsonValueKind.String)
+                            {
+                                parts.Add(el.GetString() ?? string.Empty);
+                            }
+                            else
+                            {
+                                errorMessage = "Prompt array must contain only strings.";
+                                return false;
+                            }
+                        }
+                        promptText = string.Join("\n", parts);
+                        return true;
+                    case JsonValueKind.Null:
+                        promptText = string.Empty;
+                        return true;
+                    default:
+                        errorMessage = "Prompt must be a string or an array of strings.";
+                        return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                errorMessage = "Malformed prompt." + (ex.Message.Length > 0 ? " " + ex.Message : string.Empty);
+                return false;
+            }
+        }
+
+        // Enumerable types (e.g., string[] bound by some serializers)
+        if (promptObj is System.Collections.IEnumerable ie)
+        {
+            var parts = new List<string>();
+            foreach (var item in ie)
+            {
+                if (item == null)
+                {
+                    parts.Add(string.Empty);
+                    continue;
+                }
+
+                if (item is string si)
+                {
+                    parts.Add(si);
+                    continue;
+                }
+
+                // If items are JsonElement strings
+                if (item is JsonElement jel && jel.ValueKind == JsonValueKind.String)
+                {
+                    parts.Add(jel.GetString() ?? string.Empty);
+                    continue;
+                }
+
+                errorMessage = "Prompt array must contain only strings.";
+                return false;
+            }
+
+            promptText = string.Join("\n", parts);
+            return true;
+        }
+
+        // Fallback: unsupported type
+        errorMessage = "Prompt must be a string or an array of strings.";
+        return false;
     }
 }

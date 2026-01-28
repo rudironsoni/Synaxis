@@ -27,8 +27,9 @@ public class AntigravityChatClient : IChatClient
     private readonly ITokenProvider _tokenProvider;
     private readonly ChatClientMetadata _metadata;
 
-    private const string EndpointUrl = "https://cloudcode-pa.googleapis.com/v1internal:generateContent";
-    private const string StreamEndpointUrl = "https://cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse";
+    // Endpoints are now relative to the configured HttpClient.BaseAddress
+    private const string EndpointRelative = "/v1/chat/completions";
+    private const string StreamEndpointRelative = "/v1/chat/completions?alt=sse";
 
     public AntigravityChatClient(
         HttpClient httpClient,
@@ -40,7 +41,8 @@ public class AntigravityChatClient : IChatClient
         _modelId = modelId;
         _projectId = projectId;
         _tokenProvider = tokenProvider;
-        _metadata = new ChatClientMetadata("Antigravity", new Uri("https://cloudcode-pa.googleapis.com"), modelId);
+        // Prefer the configured BaseAddress on the provided HttpClient when available
+        _metadata = new ChatClientMetadata("Antigravity", _httpClient.BaseAddress ?? new Uri("https://cloudcode-pa.googleapis.com"), modelId);
     }
 
     public ChatClientMetadata Metadata => _metadata;
@@ -51,7 +53,7 @@ public class AntigravityChatClient : IChatClient
         var request = BuildRequest(messagesList, options);
         var json = JsonSerializer.Serialize(request, AntigravityJsonContext.Default.AntigravityRequest);
         
-        using var httpRequest = new HttpRequestMessage(HttpMethod.Post, EndpointUrl);
+        using var httpRequest = new HttpRequestMessage(HttpMethod.Post, EndpointRelative);
         httpRequest.Content = new StringContent(json, Encoding.UTF8, "application/json");
         
         await PrepareRequestAsync(httpRequest, cancellationToken);
@@ -74,7 +76,7 @@ public class AntigravityChatClient : IChatClient
         var request = BuildRequest(messagesList, options);
         var json = JsonSerializer.Serialize(request, AntigravityJsonContext.Default.AntigravityRequest);
 
-        using var httpRequest = new HttpRequestMessage(HttpMethod.Post, StreamEndpointUrl);
+        using var httpRequest = new HttpRequestMessage(HttpMethod.Post, StreamEndpointRelative);
         httpRequest.Content = new StringContent(json, Encoding.UTF8, "application/json");
         httpRequest.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
 
@@ -226,7 +228,8 @@ public class AntigravityChatClient : IChatClient
         };
     }
 
-    public void Dispose() => _httpClient.Dispose();
+    // Do not dispose HttpClient instances provided by IHttpClientFactory - let the factory manage lifetime.
+    public void Dispose() { }
     public object? GetService(Type serviceType, object? serviceKey = null) => 
         serviceType == typeof(IChatClient) ? this : null;
 }
