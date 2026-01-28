@@ -25,7 +25,7 @@ public static class CopilotClientExtensions
         string? name = null,
         string? description = null)
     {
-        Throw.IfNull(client);
+        if (client is null) throw new ArgumentNullException(nameof(client));
 
         return new GithubCopilotAgent(client, sessionConfig, ownsClient, id, name, description);
     }
@@ -42,7 +42,7 @@ public static class CopilotClientExtensions
         IList<AITool>? tools = null,
         string? instructions = null)
     {
-        Throw.IfNull(client);
+        if (client is null) throw new ArgumentNullException(nameof(client));
 
         return new GithubCopilotAgent(client, ownsClient, id, name, description, tools, instructions);
     }
