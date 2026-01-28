@@ -7,6 +7,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="GitHub.Copilot.SDK" />
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection" />
     <PackageReference Include="Google.Apis.Auth" />
     <PackageReference Include="Google.Apis.Oauth2.v2" />
     <PackageReference Include="Google.GenAI" />
