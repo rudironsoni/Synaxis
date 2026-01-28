@@ -25,7 +25,7 @@ MODELS=(
     "cohere/c4ai-aya-expanse-8b"
 
     # Gemini
-    "gemini/flash-2.0-exp"
+    "gemini/flash-2.0"
     "gemini/pro-1.5"
     "gemini/flash-1.5"
     "gemini/flash-1.5-8b"
