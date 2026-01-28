@@ -3,6 +3,9 @@ using Microsoft.Extensions.AI;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using Synaxis.InferenceGateway.Infrastructure.External.GitHub;
+using GitHub.Copilot.SDK;
+using Synaxis.InferenceGateway.Infrastructure.External.MicrosoftAgents.GithubCopilot;
+using Microsoft.Extensions.Logging;
 
 namespace Synaxis.InferenceGateway.Infrastructure.Extensions;
 
@@ -43,11 +46,21 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions;
         // Register the adapter as a singleton - the underlying SDK client may be stateful
         services.AddSingleton<ICopilotSdkAdapter, CopilotSdkAdapter>();
 
-        // Register the CopilotSdkClient as a keyed IChatClient
-        services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>
+        // Register the GithubCopilotAgent as transient. If the underlying CopilotClient
+        // isn't available the agent factory will throw when resolved.
+        services.AddTransient<GithubCopilotAgent>(sp =>
         {
             var adapter = sp.GetRequiredService<ICopilotSdkAdapter>();
-            return new CopilotSdkClient(adapter);
+            var client = adapter.GetService(Type.GetType("GitHub.Copilot.Sdk.CopilotClient, GitHub.Copilot.Sdk") ?? typeof(object)) as CopilotClient;
+            return new GithubCopilotAgent(client ?? throw new InvalidOperationException("CopilotClient not available"), sessionConfig: null, ownsClient: false);
+        });
+
+        // Register the GithubCopilotAgentClient as a keyed IChatClient
+        services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>
+        {
+            var agent = sp.GetRequiredService<GithubCopilotAgent>();
+            var logger = sp.GetService<ILogger<GithubCopilotAgentClient>>();
+            return new GithubCopilotAgentClient(agent, logger);
         });
 
         return services;
