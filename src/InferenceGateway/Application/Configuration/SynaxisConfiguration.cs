@@ -12,6 +12,9 @@ public class SynaxisConfiguration
     public string? JwtIssuer { get; set; }
     public string? JwtAudience { get; set; }
     public AntigravitySettings? Antigravity { get; set; }
+    // Maximum allowed request body size (bytes) for parsing incoming OpenAI-compatible requests.
+    // Default set to 30 MB (31457280 bytes).
+    public long MaxRequestBodySize { get; set; } = 31457280;
 }
 
 public class ProviderConfig
