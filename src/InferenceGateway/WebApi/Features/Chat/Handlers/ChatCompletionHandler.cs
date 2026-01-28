@@ -1,5 +1,5 @@
 using Mediator;
-using Microsoft.Agents.AI;
+using Microsoft.Agents;
 using Synaxis.InferenceGateway.WebApi.Agents;
 using Synaxis.InferenceGateway.WebApi.Features.Chat.Commands;
 using System.Collections.Generic;
