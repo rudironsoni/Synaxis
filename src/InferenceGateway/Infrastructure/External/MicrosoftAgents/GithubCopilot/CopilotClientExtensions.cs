@@ -1,11 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
 
 using System.Collections.Generic;
-using Microsoft.Agents.AI;
+using Microsoft.Agents;
 using Synaxis.InferenceGateway.Infrastructure.External.MicrosoftAgents.GithubCopilot;
 using Microsoft.Extensions.AI;
-using Microsoft.Shared.Diagnostics;
-
 namespace GitHub.Copilot.SDK;
 
 /// <summary>
