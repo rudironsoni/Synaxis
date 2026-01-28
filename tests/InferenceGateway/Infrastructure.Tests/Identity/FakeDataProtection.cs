@@ -14,6 +14,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
 
     internal class FakeDataProtector : IDataProtector
     {
+        public IDataProtector CreateProtector(string purpose)
+        {
+            // For tests a fake can return itself regardless of purpose
+            return this;
+        }
+
         public byte[] Protect(byte[] userData)
         {
             var s = Encoding.UTF8.GetString(userData);
