@@ -11,7 +11,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using GitHub.Copilot.SDK;
 using Microsoft.Extensions.AI;
-using Microsoft.Agents.AI;
+using Microsoft.Agents.AI.Abstractions;
 
 namespace Synaxis.InferenceGateway.Infrastructure.External.MicrosoftAgents.GithubCopilot;
 
