@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 
 using System.Collections.Generic;
-using Microsoft.Agents.AI.Abstractions;
+using Microsoft.Agents.AI;
 using Synaxis.InferenceGateway.Infrastructure.External.MicrosoftAgents.GithubCopilot;
 using Microsoft.Extensions.AI;
 namespace GitHub.Copilot.SDK;
@@ -15,7 +15,7 @@ public static class CopilotClientExtensions
     /// <summary>
     /// Retrieves an instance of <see cref="AIAgent"/> for a GitHub Copilot client.
     /// </summary>
-    public static AIAgent AsAIAgent(
+    public static Microsoft.Agents.AI.AIAgent AsAIAgent(
         this CopilotClient client,
         SessionConfig? sessionConfig = null,
         bool ownsClient = false,
@@ -31,7 +31,7 @@ public static class CopilotClientExtensions
     /// <summary>
     /// Retrieves an instance of <see cref="AIAgent"/> for a GitHub Copilot client.
     /// </summary>
-    public static AIAgent AsAIAgent(
+    public static Microsoft.Agents.AI.AIAgent AsAIAgent(
         this CopilotClient client,
         bool ownsClient = false,
         string? id = null,

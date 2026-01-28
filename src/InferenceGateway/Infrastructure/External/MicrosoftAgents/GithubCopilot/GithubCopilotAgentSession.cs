@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft. All rights reserved.
 
 using System.Text.Json;
-using Microsoft.Agents;
+using Microsoft.Agents.AI;
 
 namespace Synaxis.InferenceGateway.Infrastructure.External.MicrosoftAgents.GithubCopilot;
 
 /// <summary>
 /// Represents a session for a GitHub Copilot agent conversation.
 /// </summary>
-public sealed class GithubCopilotAgentSession : AgentSession
+public sealed class GithubCopilotAgentSession : Microsoft.Agents.AI.AgentSession
 {
     public string? SessionId { get; internal set; }
 

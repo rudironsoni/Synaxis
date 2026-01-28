@@ -1,5 +1,5 @@
 using Mediator;
-using Microsoft.Agents;
+using Microsoft.Agents.AI;
 using Synaxis.InferenceGateway.WebApi.Agents;
 using Synaxis.InferenceGateway.WebApi.Features.Chat.Commands;
 using System.Collections.Generic;
@@ -9,8 +9,8 @@ using System.Threading.Tasks;
 namespace Synaxis.InferenceGateway.WebApi.Features.Chat.Handlers;
 
 public class ChatCompletionHandler : 
-    IRequestHandler<ChatCommand, AgentResponse>,
-    IStreamRequestHandler<ChatStreamCommand, AgentResponseUpdate>
+    IRequestHandler<ChatCommand, Microsoft.Agents.AI.AgentResponse>,
+    IStreamRequestHandler<ChatStreamCommand, Microsoft.Agents.AI.AgentResponseUpdate>
 {
     private readonly RoutingAgent _agent;
 
