@@ -14,6 +14,7 @@ using System.Diagnostics;
 using Polly.Registry;
 
 using Synaxis.InferenceGateway.Infrastructure.Routing;
+using Synaxis.InferenceGateway.Infrastructure.External.GitHub;
 using Synaxis.InferenceGateway.Application.Routing;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 using Synaxis.InferenceGateway.Application.ControlPlane;
@@ -163,6 +164,31 @@ public static class InfrastructureExtensions
                         {
                             var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
                             return new PollinationsChatClient(httpClient, defaultModel);
+                        });
+                        break;
+                    case "githubcopilot":
+                        services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>
+                        {
+                            // Ensure the adapter is registered as a singleton and return the CopilotSdkClient
+                            var adapter = sp.GetService<ICopilotSdkAdapter>();
+                            if (adapter != null) return new CopilotSdkClient(adapter);
+                            // If adapter isn't registered (older deployments), fall back to a no-op client
+                            var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
+                            return new Synaxis.InferenceGateway.Infrastructure.External.DuckDuckGo.DuckDuckGoChatClient(httpClient, defaultModel);
+                        });
+                        break;
+                    case "duckduckgo":
+                        services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>
+                        {
+                            var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
+                            return new Synaxis.InferenceGateway.Infrastructure.External.DuckDuckGo.DuckDuckGoChatClient(httpClient, defaultModel);
+                        });
+                        break;
+                    case "aihorde":
+                        services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>
+                        {
+                            var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
+                            return new Synaxis.InferenceGateway.Infrastructure.External.AiHorde.AiHordeChatClient(httpClient, config.Key ?? "0000000000");
                         });
                         break;
                     default:
