@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 
 using System.Text.Json;
-using Microsoft.Agents.AI;
+using Microsoft.Agents;
 
 namespace Synaxis.InferenceGateway.Infrastructure.External.MicrosoftAgents.GithubCopilot;
 
