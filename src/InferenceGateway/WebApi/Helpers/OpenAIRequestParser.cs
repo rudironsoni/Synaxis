@@ -11,7 +11,20 @@ public static class OpenAIRequestParser
     {
         if (context == null) return null;
 
-        const long MaxBodySize = 10L * 1024 * 1024; // 10 MB
+        // Resolve configured max request body size from DI. Fall back to 10 MB if not available.
+        long MaxBodySize = 10L * 1024 * 1024; // 10 MB default
+        try
+        {
+            var opts = context.RequestServices.GetService(typeof(Microsoft.Extensions.Options.IOptions<Synaxis.InferenceGateway.Application.Configuration.SynaxisConfiguration>)) as Microsoft.Extensions.Options.IOptions<Synaxis.InferenceGateway.Application.Configuration.SynaxisConfiguration>;
+            if (opts?.Value != null)
+            {
+                MaxBodySize = opts.Value.MaxRequestBodySize;
+            }
+        }
+        catch
+        {
+            // swallow - use default
+        }
 
         // If the client provided a Content-Length header, enforce it immediately.
         var contentLength = context.Request.ContentLength;
