@@ -1,0 +1,318 @@
+using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
+using Synaxis.InferenceGateway.Application.Configuration;
+
+namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
+{
+    public class GoogleAuthStrategy : IAuthStrategy
+    {
+        private readonly AntigravitySettings _settings;
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly ILogger<GoogleAuthStrategy> _logger;
+
+        private const string AuthorizationEndpoint = "https://accounts.google.com/o/oauth2/v2/auth";
+        private const string TokenEndpoint = "https://oauth2.googleapis.com/token";
+        private const string UserInfoEndpoint = "https://www.googleapis.com/oauth2/v1/userinfo?alt=json";
+
+        private static readonly string[] LoadEndpoints =
+        {
+            "https://cloudcode-pa.googleapis.com",
+            "https://daily-cloudcode-pa.sandbox.googleapis.com",
+            "https://autopush-cloudcode-pa.sandbox.googleapis.com"
+        };
+
+        private static readonly string[] FallbackEndpoints =
+        {
+            "https://daily-cloudcode-pa.sandbox.googleapis.com",
+            "https://autopush-cloudcode-pa.sandbox.googleapis.com",
+            "https://cloudcode-pa.googleapis.com"
+        };
+
+        private static readonly string[] Scopes = new[]
+        {
+            "https://www.googleapis.com/auth/cloud-platform",
+            "https://www.googleapis.com/auth/userinfo.email",
+            "https://www.googleapis.com/auth/userinfo.profile",
+        };
+
+        public GoogleAuthStrategy(AntigravitySettings settings, IHttpClientFactory httpClientFactory, ILogger<GoogleAuthStrategy> logger)
+        {
+            _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+            _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
+
+        public Task<AuthResult> InitiateFlowAsync(CancellationToken ct)
+        {
+            try
+            {
+                var verifier = GenerateCodeVerifier();
+                var challenge = GenerateCodeChallenge(verifier);
+                var state = EncodeState(new PkceState { Verifier = verifier, ProjectId = string.Empty });
+
+                var parameters = new Dictionary<string, string>
+                {
+                    ["client_id"] = _settings.ClientId,
+                    ["response_type"] = "code",
+                    ["redirect_uri"] = "urn:ietf:wg:oauth:2.0:oob", // out-of-band
+                    ["scope"] = string.Join(" ", Scopes),
+                    ["code_challenge"] = challenge,
+                    ["code_challenge_method"] = "S256",
+                    ["state"] = state,
+                    ["access_type"] = "offline",
+                    ["prompt"] = "consent"
+                };
+
+                var url = AuthorizationEndpoint + "?" + BuildQueryString(parameters);
+                return Task.FromResult(new AuthResult { Status = "Pending", VerificationUri = url });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to initiate Google auth flow");
+                return Task.FromResult(new AuthResult { Status = "Error", Message = ex.Message });
+            }
+        }
+
+        public async Task<AuthResult> CompleteFlowAsync(string code, string state, CancellationToken ct)
+        {
+            try
+            {
+                var pkce = DecodeState(state);
+
+                var token = await ExchangeCodeForTokenAsync(code, pkce.Verifier, ct).ConfigureAwait(false);
+                var email = await FetchUserEmailAsync(token.AccessToken, ct).ConfigureAwait(false);
+
+                // Resolve project id by probing cloudcode endpoints
+                var projectId = await FetchProjectIdAsync(token.AccessToken, ct).ConfigureAwait(false);
+
+                var result = new AuthResult
+                {
+                    Status = "Completed",
+                    TokenResponse = token,
+                    VerificationUri = null,
+                    UserCode = null
+                };
+
+                if (!string.IsNullOrWhiteSpace(email)) result.Message = email;
+                if (!string.IsNullOrWhiteSpace(projectId)) result.UserCode = projectId; // reuse UserCode field to carry project id metadata
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to complete Google auth flow");
+                return new AuthResult { Status = "Error", Message = ex.Message };
+            }
+        }
+
+        public async Task<TokenResponse> RefreshTokenAsync(IdentityAccount account, CancellationToken ct)
+        {
+            if (string.IsNullOrWhiteSpace(account.RefreshToken)) throw new InvalidOperationException("Missing refresh token");
+
+            using var http = _httpClientFactory.CreateClient();
+            using var content = new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["client_id"] = _settings.ClientId,
+                ["client_secret"] = _settings.ClientSecret,
+                ["refresh_token"] = account.RefreshToken,
+                ["grant_type"] = "refresh_token"
+            });
+
+            using var resp = await http.PostAsync(TokenEndpoint, content, ct).ConfigureAwait(false);
+            var payload = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+            if (!resp.IsSuccessStatusCode)
+            {
+                throw new InvalidOperationException($"Token refresh failed: {payload}");
+            }
+
+            var tp = JsonSerializer.Deserialize<TokenPayload>(payload);
+            if (tp == null || string.IsNullOrWhiteSpace(tp.AccessToken)) throw new InvalidOperationException("Token refresh failed: missing access token");
+
+            return new TokenResponse
+            {
+                AccessToken = tp.AccessToken,
+                RefreshToken = tp.RefreshToken ?? account.RefreshToken,
+                ExpiresInSeconds = tp.ExpiresIn,
+            };
+        }
+
+        private async Task<TokenResponse> ExchangeCodeForTokenAsync(string code, string verifier, CancellationToken ct)
+        {
+            using var http = _httpClientFactory.CreateClient();
+            using var content = new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["client_id"] = _settings.ClientId,
+                ["client_secret"] = _settings.ClientSecret,
+                ["code"] = code,
+                ["grant_type"] = "authorization_code",
+                ["redirect_uri"] = "urn:ietf:wg:oauth:2.0:oob",
+                ["code_verifier"] = verifier
+            });
+
+            using var resp = await http.PostAsync(TokenEndpoint, content, ct).ConfigureAwait(false);
+            var payload = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+            if (!resp.IsSuccessStatusCode) throw new InvalidOperationException($"Token exchange failed: {payload}");
+
+            var tp = JsonSerializer.Deserialize<TokenPayload>(payload);
+            if (tp == null || string.IsNullOrWhiteSpace(tp.AccessToken) || string.IsNullOrWhiteSpace(tp.RefreshToken))
+                throw new InvalidOperationException("Token exchange failed: missing tokens");
+
+            return new TokenResponse
+            {
+                AccessToken = tp.AccessToken,
+                RefreshToken = tp.RefreshToken,
+                ExpiresInSeconds = tp.ExpiresIn
+            };
+        }
+
+        private async Task<string> FetchUserEmailAsync(string accessToken, CancellationToken ct)
+        {
+            using var http = _httpClientFactory.CreateClient();
+            using var req = new HttpRequestMessage(HttpMethod.Get, UserInfoEndpoint);
+            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            using var resp = await http.SendAsync(req, ct).ConfigureAwait(false);
+            if (!resp.IsSuccessStatusCode) return string.Empty;
+            var payload = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+            var ui = JsonSerializer.Deserialize<UserInfoPayload>(payload);
+            return ui?.Email ?? string.Empty;
+        }
+
+        private async Task<string> FetchProjectIdAsync(string accessToken, CancellationToken ct)
+        {
+            var loadHeaders = new Dictionary<string, string>
+            {
+                ["Authorization"] = $"Bearer {accessToken}",
+                ["Content-Type"] = "application/json",
+                ["User-Agent"] = "google-api-nodejs-client/9.15.1",
+                ["X-Goog-Api-Client"] = "google-cloud-sdk vscode_cloudshelleditor/0.1",
+                ["Client-Metadata"] = "{\"ideType\":\"IDE_UNSPECIFIED\",\"platform\":\"PLATFORM_UNSPECIFIED\",\"pluginType\":\"GEMINI\"}"
+            };
+
+            var endpoints = new List<string>(LoadEndpoints);
+            endpoints.AddRange(FallbackEndpoints);
+            foreach (var endpoint in endpoints)
+            {
+                var url = $"{endpoint}/v1internal:loadCodeAssist";
+                try
+                {
+                    using var http = _httpClientFactory.CreateClient();
+                    using var request = new HttpRequestMessage(HttpMethod.Post, url);
+                    foreach (var header in loadHeaders)
+                    {
+                        if (header.Key == "Authorization")
+                        {
+                            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                        }
+                        else
+                        {
+                            request.Headers.TryAddWithoutValidation(header.Key, header.Value);
+                        }
+                    }
+
+                    request.Content = new StringContent("{\"metadata\":{\"ideType\":\"IDE_UNSPECIFIED\",\"platform\":\"PLATFORM_UNSPECIFIED\",\"pluginType\":\"GEMINI\"}}", Encoding.UTF8, "application/json");
+                    using var resp = await http.SendAsync(request, ct).ConfigureAwait(false);
+                    if (!resp.IsSuccessStatusCode) continue;
+                    var payload = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+                    var projectId = ExtractProjectId(payload);
+                    if (!string.IsNullOrWhiteSpace(projectId)) return projectId;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogDebug(ex, "Failed to probe endpoint {Endpoint}", endpoint);
+                }
+            }
+
+            return string.Empty;
+        }
+
+        private static string BuildQueryString(IDictionary<string, string> parameters)
+        {
+            return string.Join("&", System.Linq.Enumerable.Select(parameters, kvp => $"{Uri.EscapeDataString(kvp.Key)}={Uri.EscapeDataString(kvp.Value)}"));
+        }
+
+        private static string GenerateCodeVerifier()
+        {
+            var bytes = new byte[32];
+            RandomNumberGenerator.Fill(bytes);
+            return Base64UrlEncode(bytes);
+        }
+
+        private static string GenerateCodeChallenge(string verifier)
+        {
+            var bytes = Encoding.ASCII.GetBytes(verifier);
+            var hash = SHA256.HashData(bytes);
+            return Base64UrlEncode(hash);
+        }
+
+        private static string Base64UrlEncode(byte[] bytes)
+        {
+            return Convert.ToBase64String(bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_');
+        }
+
+        private static string EncodeState(PkceState state)
+        {
+            var json = JsonSerializer.Serialize(state);
+            return Base64UrlEncode(Encoding.UTF8.GetBytes(json));
+        }
+
+        private static PkceState DecodeState(string state)
+        {
+            var json = Encoding.UTF8.GetString(Base64UrlDecode(state));
+            var parsed = JsonSerializer.Deserialize<PkceState>(json);
+            if (parsed == null || string.IsNullOrWhiteSpace(parsed.Verifier)) throw new InvalidOperationException("Missing PKCE verifier in state.");
+            parsed.ProjectId ??= string.Empty;
+            return parsed;
+        }
+
+        private static byte[] Base64UrlDecode(string input)
+        {
+            var normalized = input.Replace('-', '+').Replace('_', '/');
+            var padded = normalized.PadRight(normalized.Length + (4 - normalized.Length % 4) % 4, '=');
+            return Convert.FromBase64String(padded);
+        }
+
+        private static string ExtractProjectId(string payload)
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(payload);
+                if (doc.RootElement.TryGetProperty("cloudaicompanionProject", out var projectElement))
+                {
+                    if (projectElement.ValueKind == JsonValueKind.String) return projectElement.GetString() ?? string.Empty;
+                    if (projectElement.ValueKind == JsonValueKind.Object && projectElement.TryGetProperty("id", out var idElement)) return idElement.GetString() ?? string.Empty;
+                }
+            }
+            catch (JsonException) { }
+
+            return string.Empty;
+        }
+
+        private sealed class PkceState
+        {
+            [JsonPropertyName("verifier")] public string Verifier { get; set; } = string.Empty;
+            [JsonPropertyName("projectId")] public string? ProjectId { get; set; }
+        }
+
+        private sealed class TokenPayload
+        {
+            [JsonPropertyName("access_token")] public string AccessToken { get; set; } = string.Empty;
+            [JsonPropertyName("expires_in")] public int ExpiresIn { get; set; }
+            [JsonPropertyName("refresh_token")] public string? RefreshToken { get; set; }
+        }
+
+        private sealed class UserInfoPayload
+        {
+            [JsonPropertyName("email")] public string? Email { get; set; }
+        }
+    }
+}

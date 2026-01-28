@@ -11,6 +11,7 @@ using Synaxis.InferenceGateway.WebApi.Agents;
 using Synaxis.InferenceGateway.WebApi.Middleware;
 using Synaxis.InferenceGateway.WebApi.Endpoints.Antigravity;
 using Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI;
+using Synaxis.InferenceGateway.WebApi.Endpoints.Identity;
 
 using Scalar.AspNetCore;
 
@@ -148,6 +149,7 @@ app.UseMiddleware<OpenAIMetadataMiddleware>();
 
 
     app.MapAntigravityEndpoints();
+    app.MapIdentityEndpoints();
     app.MapControllers();
 
 // NOTE: Removed temporary debug endpoint that created AggregateException for testing.

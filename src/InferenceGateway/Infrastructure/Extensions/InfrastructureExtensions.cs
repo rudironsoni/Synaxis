@@ -14,6 +14,11 @@ using System.Diagnostics;
 using Polly.Registry;
 
 using Synaxis.InferenceGateway.Infrastructure.Routing;
+using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
+using Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub;
+using Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.Hosting;
 using Synaxis.InferenceGateway.Infrastructure.External.GitHub;
 using Synaxis.InferenceGateway.Application.Routing;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
@@ -76,21 +81,37 @@ public static class InfrastructureExtensions
             return new FileTokenStore(authPath, logger);
         });
 
-        services.AddSingleton<IAntigravityAuthManager>(sp =>
+        // Register identity-related services
+        services.AddSingleton<ISecureTokenStore>(sp =>
         {
+            var provider = sp.GetRequiredService<IDataProtectionProvider>();
             var config = sp.GetRequiredService<IOptions<SynaxisConfiguration>>().Value;
-            var logger = sp.GetRequiredService<ILogger<AntigravityAuthManager>>();
-
-            // Find Antigravity config
             var providerConfig = config.Providers.Values.FirstOrDefault(p => p.Type?.ToLowerInvariant() == "antigravity");
-            var projectId = providerConfig?.ProjectId ?? string.Empty;
-            var settings = config.Antigravity ?? new AntigravitySettings();
-
-            var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
-            var store = sp.GetRequiredService<ITokenStore>();
-            return new AntigravityAuthManager(projectId, settings, logger, httpClientFactory, store);
+            var defaultPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".synaxis", "identity-auth.json");
+            var authPath = providerConfig?.AuthStoragePath ?? defaultPath;
+            return new EncryptedFileTokenStore(provider, authPath);
         });
-        services.AddSingleton<ITokenProvider>(sp => sp.GetRequiredService<IAntigravityAuthManager>());
+
+        services.AddSingleton<IdentityManager>();
+        services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<IdentityManager>());
+
+        // Auth strategies
+        services.AddSingleton<IAuthStrategy, GitHubAuthStrategy>();
+        services.AddSingleton<IAuthStrategy, GoogleAuthStrategy>();
+        services.AddSingleton<DeviceFlowService>();
+
+        // Antigravity adapter implements IAntigravityAuthManager
+        services.AddSingleton<IAntigravityAuthManager, AntigravityAuthAdapter>();
+
+        // Identity-backed token provider (defaults to Google)
+        services.AddSingleton<ITokenProvider, Synaxis.InferenceGateway.Infrastructure.Identity.IdentityTokenProvider>();
+
+        // Named HttpClients for strategies and adapters
+        services.AddHttpClient("GitHub");
+        services.AddHttpClient("Google");
+        services.AddHttpClient("Antigravity");
+
+        // Note: legacy AntigravityAuthManager registration removed in favor of identity-backed adapter
 
         // 1.5 Register Security Services
         services.AddScoped<ITokenVault, AesGcmTokenVault>();
