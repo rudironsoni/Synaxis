@@ -11,7 +11,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using GitHub.Copilot.SDK;
 using Microsoft.Extensions.AI;
-using Microsoft.Agents.AI.Abstractions;
+using Microsoft.Agents.AI;
 
 namespace Synaxis.InferenceGateway.Infrastructure.External.MicrosoftAgents.GithubCopilot;
 
@@ -165,19 +165,14 @@ public sealed class GithubCopilotAgent : AIAgent, IAsyncDisposable
                 }
             });
 
-            try
-            {
-                string prompt = string.Join("\n", messages.Select(m => m.Text));
-                MessageOptions messageOptions = new() { Prompt = prompt };
+            // Clean text-only prompt creation
+            string prompt = string.Join("\n", messages.Select(m => m.Text));
+            MessageOptions messageOptions = new() { Prompt = prompt };
 
-                await copilotSession.SendAsync(messageOptions, cancellationToken).ConfigureAwait(false);
-                await foreach (AgentResponseUpdate update in channel.Reader.ReadAllAsync(cancellationToken).ConfigureAwait(false))
-                {
-                    yield return update;
-                }
-            }
-            finally
+            await copilotSession.SendAsync(messageOptions, cancellationToken).ConfigureAwait(false);
+            await foreach (AgentResponseUpdate update in channel.Reader.ReadAllAsync(cancellationToken).ConfigureAwait(false))
             {
+                yield return update;
             }
         }
         finally
@@ -228,12 +223,12 @@ public sealed class GithubCopilotAgent : AIAgent, IAsyncDisposable
             RawRepresentation = deltaEvent
         };
 
-        var update = new AgentResponseUpdate { Role = ChatRole.Assistant };
-        update.Contents.Add(textContent);
-        update.AgentId = this.Id;
-        update.MessageId = deltaEvent.Data?.MessageId;
-        update.CreatedAt = deltaEvent.Timestamp;
-        return update;
+        return new AgentResponseUpdate(ChatRole.Assistant, [textContent])
+        {
+            AgentId = this.Id,
+            MessageId = deltaEvent.Data?.MessageId,
+            CreatedAt = deltaEvent.Timestamp
+        };
     }
 
     private AgentResponseUpdate ConvertToAgentResponseUpdate(AssistantMessageEvent assistantMessage)
@@ -243,13 +238,13 @@ public sealed class GithubCopilotAgent : AIAgent, IAsyncDisposable
             RawRepresentation = assistantMessage
         };
 
-        var update = new AgentResponseUpdate { Role = ChatRole.Assistant };
-        update.Contents.Add(textContent);
-        update.AgentId = this.Id;
-        update.ResponseId = assistantMessage.Data?.MessageId;
-        update.MessageId = assistantMessage.Data?.MessageId;
-        update.CreatedAt = assistantMessage.Timestamp;
-        return update;
+        return new AgentResponseUpdate(ChatRole.Assistant, [textContent])
+        {
+            AgentId = this.Id,
+            ResponseId = assistantMessage.Data?.MessageId,
+            MessageId = assistantMessage.Data?.MessageId,
+            CreatedAt = assistantMessage.Timestamp
+        };
     }
 
     private AgentResponseUpdate ConvertToAgentResponseUpdate(AssistantUsageEvent usageEvent)
@@ -268,11 +263,11 @@ public sealed class GithubCopilotAgent : AIAgent, IAsyncDisposable
             RawRepresentation = usageEvent
         };
 
-        var update = new AgentResponseUpdate { Role = ChatRole.Assistant };
-        update.Contents.Add(usageContent);
-        update.AgentId = this.Id;
-        update.CreatedAt = usageEvent.Timestamp;
-        return update;
+        return new AgentResponseUpdate(ChatRole.Assistant, [usageContent])
+        {
+            AgentId = this.Id,
+            CreatedAt = usageEvent.Timestamp
+        };
     }
 
     private static AdditionalPropertiesDictionary<long>? GetAdditionalCounts(AssistantUsageEvent usageEvent)
@@ -300,11 +295,11 @@ public sealed class GithubCopilotAgent : AIAgent, IAsyncDisposable
     private AgentResponseUpdate ConvertToAgentResponseUpdate(SessionEvent sessionEvent)
     {
         AIContent content = new() { RawRepresentation = sessionEvent };
-        var update = new AgentResponseUpdate { Role = ChatRole.Assistant };
-        update.Contents.Add(content);
-        update.AgentId = this.Id;
-        update.CreatedAt = sessionEvent.Timestamp;
-        return update;
+        return new AgentResponseUpdate(ChatRole.Assistant, [content])
+        {
+            AgentId = this.Id,
+            CreatedAt = sessionEvent.Timestamp
+        };
     }
 
     private static SessionConfig? GetSessionConfig(IList<AITool>? tools, string? instructions)
@@ -315,6 +310,4 @@ public sealed class GithubCopilotAgent : AIAgent, IAsyncDisposable
         if (mappedTools is null && systemMessage is null) return null;
         return new SessionConfig { Tools = mappedTools, SystemMessage = systemMessage };
     }
-
-    // Attachment handling is currently unsupported. Only text prompts are supported.
 }
