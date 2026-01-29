@@ -1,12 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.IO;
+using System.Linq;
 using MartinCostello.Logging.XUnit;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using DotNetEnv;
+using Tests.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure;
 using Microsoft.Extensions.Logging;
 using Synaxis.InferenceGateway.Application.ControlPlane;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
@@ -45,7 +48,53 @@ public class SynaxisWebApplicationFactory : WebApplicationFactory<Program>, IAsy
         var strategy = dbContext.Database.CreateExecutionStrategy();
         await strategy.ExecuteAsync(async () =>
         {
-            await dbContext.Database.EnsureCreatedAsync();
+            // Apply EF Core migrations so the schema matches migrations rather than EnsureCreated
+            await dbContext.Database.MigrateAsync();
+
+            // Build temporary configuration to seed test data. Reuse logic from SmokeTestDataGenerator.
+            var builder = new ConfigurationBuilder();
+
+            // Find project root to locate appsettings
+            string? projectRoot = null;
+            var dir = new DirectoryInfo(AppContext.BaseDirectory ?? Directory.GetCurrentDirectory());
+            while (dir != null)
+            {
+                if (dir.GetFiles("*.sln").Any())
+                {
+                    projectRoot = dir.FullName;
+                    break;
+                }
+
+                var src = Path.Combine(dir.FullName, "src");
+                if (Directory.Exists(src))
+                {
+                    projectRoot = dir.FullName;
+                    break;
+                }
+
+                dir = dir.Parent;
+            }
+
+            if (!string.IsNullOrEmpty(projectRoot))
+            {
+                var webApiPath = Path.Combine(projectRoot, "src", "InferenceGateway", "WebApi");
+                if (Directory.Exists(webApiPath))
+                {
+                    var appsettings = Path.Combine(webApiPath, "appsettings.json");
+                    var appsettingsDev = Path.Combine(webApiPath, "appsettings.Development.json");
+                    if (File.Exists(appsettings)) builder.AddJsonFile(appsettings, optional: true, reloadOnChange: false);
+                    if (File.Exists(appsettingsDev)) builder.AddJsonFile(appsettingsDev, optional: true, reloadOnChange: false);
+                }
+            }
+
+            // Load .env files (if present) so that AddEnvironmentVariables picks them up
+            Env.TraversePath().Load();
+
+            builder.AddEnvironmentVariables();
+            var config = builder.Build();
+
+            // Seed the database
+            await TestDatabaseSeeder.SeedAsync(dbContext, config);
         });
     }
 
@@ -74,6 +123,7 @@ public class SynaxisWebApplicationFactory : WebApplicationFactory<Program>, IAsy
             {
                 ["Synaxis:ControlPlane:ConnectionString"] = _postgres.GetConnectionString(),
                 ["Synaxis:ControlPlane:UseInMemory"] = "false",
+                ["Synaxis:ControlPlane:RunMigrations"] = "false",
                 ["ConnectionStrings:Redis"] = $"{_redis.GetConnectionString()},abortConnect=false"
             };
             // Map a standard list of provider environment variables to configuration keys.
