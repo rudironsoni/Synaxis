@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { act } from 'react-dom/test-utils'
+import { act } from 'react'
 import useSettingsStore from './settings'
 
 describe('settings store', () => {
