@@ -25,6 +25,9 @@ public sealed class ControlPlaneDbContext : DbContext
     public DbSet<QuotaSnapshot> QuotaSnapshots => Set<QuotaSnapshot>();
     public DbSet<DeviationEntry> Deviations => Set<DeviationEntry>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<GlobalModel> GlobalModels => Set<GlobalModel>();
+    public DbSet<ProviderModel> ProviderModels => Set<ProviderModel>();
+    public DbSet<TenantModelLimit> TenantModelLimits => Set<TenantModelLimit>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -152,6 +155,35 @@ public sealed class ControlPlaneDbContext : DbContext
             entity.HasKey(a => a.Id);
             entity.Property(a => a.Action).HasMaxLength(200).IsRequired();
             entity.Property(a => a.PayloadJson).HasColumnType("jsonb");
+        });
+
+        modelBuilder.Entity<GlobalModel>(entity =>
+        {
+            entity.HasKey(g => g.Id);
+            entity.Property(g => g.Name).HasMaxLength(200).IsRequired();
+            entity.Property(g => g.Family).HasMaxLength(200).IsRequired();
+            entity.Property(g => g.Description).HasMaxLength(1000);
+            // Prices: high precision for small token prices
+            entity.Property(g => g.InputPrice).HasPrecision(18, 9);
+            entity.Property(g => g.OutputPrice).HasPrecision(18, 9);
+        });
+
+        modelBuilder.Entity<ProviderModel>(entity =>
+        {
+            entity.HasKey(p => p.Id);
+            entity.Property(p => p.ProviderId).HasMaxLength(100).IsRequired();
+            entity.Property(p => p.ProviderSpecificId).HasMaxLength(200).IsRequired();
+            entity.HasOne(p => p.GlobalModel).WithMany(g => g.ProviderModels).HasForeignKey(p => p.GlobalModelId).OnDelete(DeleteBehavior.Cascade);
+            entity.Property(p => p.OverrideInputPrice).HasPrecision(18, 9);
+            entity.Property(p => p.OverrideOutputPrice).HasPrecision(18, 9);
+        });
+
+        modelBuilder.Entity<TenantModelLimit>(entity =>
+        {
+            entity.HasKey(t => t.Id);
+            entity.Property(t => t.TenantId).HasMaxLength(200).IsRequired();
+            entity.HasOne(t => t.GlobalModel).WithMany().HasForeignKey(t => t.GlobalModelId).OnDelete(DeleteBehavior.Cascade);
+            entity.Property(t => t.MonthlyBudget).HasPrecision(18, 9);
         });
     }
 }
