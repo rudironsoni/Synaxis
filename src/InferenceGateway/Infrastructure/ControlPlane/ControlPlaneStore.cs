@@ -26,4 +26,12 @@ public sealed class ControlPlaneStore : IControlPlaneStore
             .AsNoTracking()
             .FirstOrDefaultAsync(c => c.TenantId == tenantId && c.Name == name, cancellationToken);
     }
+
+    public async Task<GlobalModel?> GetGlobalModelAsync(string id, CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.GlobalModels
+            .AsNoTracking()
+            .Include(g => g.ProviderModels)
+            .FirstOrDefaultAsync(g => g.Id == id, cancellationToken);
+    }
 }
