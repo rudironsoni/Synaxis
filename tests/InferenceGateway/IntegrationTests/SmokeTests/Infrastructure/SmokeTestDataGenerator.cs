@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
+using DotNetEnv;
 using Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Models;
 
 namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
@@ -58,6 +59,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                     if (File.Exists(appsettingsDev)) builder.AddJsonFile(appsettingsDev, optional: true, reloadOnChange: false);
                 }
             }
+
+            // Load .env files (if present) so that AddEnvironmentVariables picks them up
+            Env.TraversePath().Load();
 
             builder.AddEnvironmentVariables();
             return builder.Build();
