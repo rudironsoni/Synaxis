@@ -22,6 +22,13 @@ public class ModelsDevSyncJob : IJob
         _logger = logger;
     }
 
+    private string Truncate(string? value, int maxLength)
+    {
+        if (value == null) return string.Empty;
+        if (value.Length <= maxLength) return value;
+        return value.Substring(0, maxLength);
+    }
+
     public async Task Execute(IJobExecutionContext context)
     {
         using var scope = _provider.CreateScope();
@@ -44,8 +51,8 @@ public class ModelsDevSyncJob : IJob
                 db.GlobalModels.Add(existing);
             }
 
-            existing.Name = m.name ?? existing.Name;
-            existing.Family = m.family ?? existing.Family;
+            existing.Name = Truncate(m.name ?? m.id, 200);
+            existing.Family = Truncate(m.family ?? "unknown", 200);
 
             existing.ContextWindow = m.limit?.context ?? existing.ContextWindow;
             existing.MaxOutputTokens = m.limit?.output ?? existing.MaxOutputTokens;
@@ -64,14 +71,23 @@ public class ModelsDevSyncJob : IJob
             existing.SupportsVision = inputs.Contains("image", StringComparer.OrdinalIgnoreCase);
             existing.SupportsAudio = inputs.Contains("audio", StringComparer.OrdinalIgnoreCase);
 
-            // Release date parsing
+            // Release date parsing - ensure stored DateTime is UTC so PostgreSQL 'timestamptz' accepts it
             if (!string.IsNullOrEmpty(m.release_date))
             {
-                if (DateTime.TryParse(m.release_date, out var dt)) existing.ReleaseDate = dt;
+                if (DateTime.TryParse(m.release_date, out var dt))
+                    existing.ReleaseDate = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
             }
         }
 
-        await db.SaveChangesAsync(ct).ConfigureAwait(false);
-        _logger.LogInformation("ModelsDevSyncJob: synced {Count} models", models.Count);
+        try
+        {
+            await db.SaveChangesAsync(ct).ConfigureAwait(false);
+            _logger.LogInformation("ModelsDevSyncJob: synced {Count} models", models.Count);
+            _logger.LogInformation("ModelsDevSyncJob: Successfully upserted {Count} global models", models.Count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "ModelsDevSyncJob: failed to save changes: {Message}", ex.InnerException?.Message ?? ex.Message);
+        }
     }
 }
