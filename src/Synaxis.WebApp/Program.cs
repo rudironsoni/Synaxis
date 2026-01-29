@@ -1,5 +1,8 @@
 var builder = WebApplication.CreateBuilder(args);
 
+// Read gateway URL from configuration with fallback
+var gatewayUrl = builder.Configuration["GatewayUrl"] ?? "http://localhost:5000";
+
 // Configure YARP reverse proxy
 builder.Services.AddReverseProxy()
     .LoadFromMemory(new[] {
@@ -12,7 +15,7 @@ builder.Services.AddReverseProxy()
         new Yarp.ReverseProxy.Configuration.ClusterConfig {
             ClusterId = "inference_cluster",
             Destinations = new System.Collections.Generic.Dictionary<string, Yarp.ReverseProxy.Configuration.DestinationConfig> {
-                { "dest1", new Yarp.ReverseProxy.Configuration.DestinationConfig { Address = "http://localhost:5000" } }
+                { "dest1", new Yarp.ReverseProxy.Configuration.DestinationConfig { Address = gatewayUrl } }
             }
         }
     });

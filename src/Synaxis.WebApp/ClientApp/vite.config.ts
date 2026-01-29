@@ -20,6 +20,10 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    outDir: '../wwwroot',
+    emptyOutDir: true,
+  },
     test: {
       globals: true,
       environment: 'jsdom',
