@@ -319,6 +319,16 @@ public static class InfrastructureExtensions
 
         try
         {
+            var configuration = services.GetRequiredService<IConfiguration>();
+            // Default to true when the configuration key is missing
+            var runMigrations = configuration.GetValue<bool>("Synaxis:ControlPlane:RunMigrations", true);
+            if (!runMigrations)
+            {
+                var logger = services.GetRequiredService<ILogger<ControlPlaneDbContext>>();
+                logger.LogWarning("Skipping database migration per configuration.");
+                return;
+            }
+
             var context = services.GetRequiredService<ControlPlaneDbContext>();
             await context.Database.MigrateAsync();
         }
