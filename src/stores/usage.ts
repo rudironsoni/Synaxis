@@ -1,4 +1,4 @@
-import create from 'zustand'
+import { create } from 'zustand'
 import db from '@/db/db'
 
 type UsageState = {
@@ -6,9 +6,9 @@ type UsageState = {
   addUsage: (tokens: number) => void
 }
 
-export const useUsageStore = create<UsageState>((set) => ({
+export const useUsageStore = create<UsageState>((set: any) => ({
   totalTokens: 0,
-  addUsage: (tokens: number) => set((s) => ({ totalTokens: s.totalTokens + tokens })),
+  addUsage: (tokens: number) => set((s: any) => ({ totalTokens: s.totalTokens + tokens })),
 }))
 
 ;(async function init(){

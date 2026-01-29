@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import { Plus, Trash } from 'lucide-react'
 import { useSessionsStore } from '@/stores/sessions'
 
