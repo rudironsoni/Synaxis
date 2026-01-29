@@ -28,10 +28,8 @@ public class CloudflareChatClient : IChatClient
             _modelId = modelId;
             _logger = logger;
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
-            // The Cloudflare model id may contain characters ("@" and "/") that must be URL-encoded when used
-            // inside a path segment. Encode the model id to avoid accidental path splitting which causes 404s.
-            var encodedModel = Uri.EscapeDataString(modelId);
-            _metadata = new ChatClientMetadata("Cloudflare", new Uri($"https://api.cloudflare.com/client/v4/accounts/{accountId}/ai/run/{encodedModel}"), modelId);
+            // Store the raw model id; Cloudflare expects path-like model ids (e.g. @cf/meta/...) as raw segments.
+            _metadata = new ChatClientMetadata("Cloudflare", new Uri($"https://api.cloudflare.com/client/v4/accounts/{accountId}/ai/run/{modelId}"), modelId);
         }
 
     public ChatClientMetadata Metadata => _metadata;
@@ -39,8 +37,7 @@ public class CloudflareChatClient : IChatClient
         public async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
         {
             var request = CreateRequest(chatMessages, options, stream: false);
-            var encodedModel = Uri.EscapeDataString(_modelId);
-            var url = $"https://api.cloudflare.com/client/v4/accounts/{_accountId}/ai/run/{encodedModel}";
+            var url = $"https://api.cloudflare.com/client/v4/accounts/{_accountId}/ai/run/{_modelId}";
 
             // Debug: print the full request URL and model id to help diagnose 404s
             var requestUrl = url;
@@ -67,8 +64,7 @@ public class CloudflareChatClient : IChatClient
         public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             var request = CreateRequest(chatMessages, options, stream: true);
-        var encodedModel = Uri.EscapeDataString(_modelId);
-        var url = $"https://api.cloudflare.com/client/v4/accounts/{_accountId}/ai/run/{encodedModel}";
+        var url = $"https://api.cloudflare.com/client/v4/accounts/{_accountId}/ai/run/{_modelId}";
 
         var httpRequest = new HttpRequestMessage(HttpMethod.Post, url)
         {
