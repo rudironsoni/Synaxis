@@ -16,6 +16,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
 {
     public class GoogleAuthStrategy : IAuthStrategy
     {
+        public event EventHandler<IdentityAccount>? AccountAuthenticated;
         private readonly AntigravitySettings _settings;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<GoogleAuthStrategy> _logger;
@@ -105,6 +106,21 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
 
                 if (!string.IsNullOrWhiteSpace(email)) result.Message = email;
                 if (!string.IsNullOrWhiteSpace(projectId)) result.UserCode = projectId; // reuse UserCode field to carry project id metadata
+
+                // Create and notify account
+                var account = new IdentityAccount
+                {
+                    Provider = "google",
+                    Id = email,
+                    Email = email,
+                    AccessToken = token.AccessToken,
+                    RefreshToken = token.RefreshToken,
+                    Properties = new Dictionary<string, string> { ["ProjectId"] = projectId }
+                };
+                if (token.ExpiresInSeconds.HasValue)
+                    account.ExpiresAt = DateTimeOffset.UtcNow.AddSeconds(token.ExpiresInSeconds.Value);
+                
+                AccountAuthenticated?.Invoke(this, account);
 
                 return result;
             }
