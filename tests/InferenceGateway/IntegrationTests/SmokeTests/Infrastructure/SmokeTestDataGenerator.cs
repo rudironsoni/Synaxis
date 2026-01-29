@@ -28,6 +28,18 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                 if (!providerSection.GetValue<bool>("Enabled")) continue;
 
                 var providerName = providerSection.Key;
+                
+                // Skip providers with placeholder API keys
+                var apiKey = providerSection.GetValue<string>("Key");
+                if (string.IsNullOrEmpty(apiKey) || 
+                    apiKey.Contains("REPLACE_WITH", StringComparison.OrdinalIgnoreCase) || 
+                    apiKey.Contains("INSERT", StringComparison.OrdinalIgnoreCase) || 
+                    apiKey.Contains("CHANGE", StringComparison.OrdinalIgnoreCase) ||
+                    apiKey == "0000000000")
+                {
+                    continue;
+                }
+                
                 var modelsSection = providerSection.GetSection("Models");
                 foreach (var modelItem in modelsSection.GetChildren())
                 {
@@ -64,6 +76,27 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
             Env.TraversePath().Load();
 
             builder.AddEnvironmentVariables();
+            
+            // Map environment variables to configuration keys (same as WebApi Program.cs)
+            var envMapping = new Dictionary<string, string?>
+            {
+                { "Synaxis:InferenceGateway:Providers:Groq:Key", Environment.GetEnvironmentVariable("GROQ_API_KEY") },
+                { "Synaxis:InferenceGateway:Providers:Cohere:Key", Environment.GetEnvironmentVariable("COHERE_API_KEY") },
+                { "Synaxis:InferenceGateway:Providers:Cloudflare:Key", Environment.GetEnvironmentVariable("CLOUDFLARE_API_KEY") },
+                { "Synaxis:InferenceGateway:Providers:Cloudflare:AccountId", Environment.GetEnvironmentVariable("CLOUDFLARE_ACCOUNT_ID") },
+                { "Synaxis:InferenceGateway:Providers:Gemini:Key", Environment.GetEnvironmentVariable("GEMINI_API_KEY") },
+                { "Synaxis:InferenceGateway:Providers:OpenRouter:Key", Environment.GetEnvironmentVariable("OPENROUTER_API_KEY") },
+                { "Synaxis:InferenceGateway:Providers:NVIDIA:Key", Environment.GetEnvironmentVariable("NVIDIA_API_KEY") },
+                { "Synaxis:InferenceGateway:Providers:HuggingFace:Key", Environment.GetEnvironmentVariable("HUGGINGFACE_API_KEY") },
+                { "Synaxis:InferenceGateway:Providers:KiloCode:Key", Environment.GetEnvironmentVariable("KILOCODE_API_KEY") }
+            };
+
+            // Filter out null or empty values so we don't overwrite other config values with nulls
+            var filteredMapping = envMapping.Where(kv => !string.IsNullOrEmpty(kv.Value))
+                                        .ToDictionary(kv => kv.Key, kv => kv.Value);
+
+            builder.AddInMemoryCollection(filteredMapping);
+
             return builder.Build();
         }
 
