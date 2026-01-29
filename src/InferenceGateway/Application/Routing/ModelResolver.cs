@@ -3,6 +3,7 @@ using Synaxis.InferenceGateway.Application.Configuration;
 using System.Collections.Generic;
 using System.Linq;
 using Synaxis.InferenceGateway.Application.ControlPlane;
+using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
 using System.Text.Json;
 
 namespace Synaxis.InferenceGateway.Application.Routing;
@@ -28,6 +29,50 @@ public class ModelResolver : IModelResolver
 
     public async Task<ResolutionResult> ResolveAsync(string modelId, EndpointKind kind, RequiredCapabilities? required = null, Guid? tenantId = null)
     {
+        // Database-first: try to resolve a GlobalModel and its ProviderModels from the control plane DB
+        var global = await _store.GetGlobalModelAsync(modelId);
+
+        if (global != null)
+        {
+            var canonicalId = CanonicalModelId.Parse(global.Id);
+
+            var providers = new List<ProviderConfig>();
+            foreach (var pm in global.ProviderModels)
+            {
+                if (!_config.Providers.TryGetValue(pm.ProviderId, out var provCfg))
+                {
+                    // provider config missing in static config -> skip
+                    continue;
+                }
+
+                if (!provCfg.Enabled)
+                {
+                    // provider disabled -> skip
+                    continue;
+                }
+
+                // Create a shallow copy so we don't mutate the configured instance accidentally
+                var prov = new ProviderConfig
+                {
+                    Enabled = provCfg.Enabled,
+                    Key = pm.ProviderId,
+                    AccountId = provCfg.AccountId,
+                    ProjectId = provCfg.ProjectId,
+                    AuthStoragePath = provCfg.AuthStoragePath,
+                    Tier = provCfg.Tier,
+                    Models = new List<string> { pm.ProviderSpecificId },
+                    Type = provCfg.Type,
+                    Endpoint = provCfg.Endpoint,
+                    FallbackEndpoint = provCfg.FallbackEndpoint,
+                };
+
+                providers.Add(prov);
+            }
+
+            return new ResolutionResult(modelId, canonicalId, providers);
+        }
+
+        // If no GlobalModel found in DB, fall back to tenant-level aliases/combos and then to static config
         var candidatesToTry = new List<string>();
         bool foundInDb = false;
 
@@ -42,7 +87,7 @@ public class ModelResolver : IModelResolver
 
             if (combo != null)
             {
-                try 
+                try
                 {
                     var models = JsonSerializer.Deserialize<List<string>>(combo.OrderedModelsJson);
                     if (models != null)
@@ -53,7 +98,7 @@ public class ModelResolver : IModelResolver
                 }
                 catch { /* Ignore invalid JSON */ }
             }
-            
+
             if (!foundInDb && alias != null)
             {
                 candidatesToTry.Add(targetModel);
