@@ -57,7 +57,7 @@ public class SynaxisWebApplicationFactory : WebApplicationFactory<Program>, IAsy
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        builder.UseEnvironment("Test");
+        builder.UseEnvironment("Development"); // Use Development to load appsettings.Development.json
 
         builder.ConfigureLogging(logging =>
         {
