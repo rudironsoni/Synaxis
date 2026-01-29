@@ -20,16 +20,15 @@ export default defineConfig({
       },
     },
   },
-  test: {
-    globals: true,
-    environment: 'jsdom',
-    setupFiles: './src/test/setup.ts',
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'lcov'],
-      all: false,
-      // include all source files so test coverage can be measured project-wide
-      include: ['src/**/*.{ts,tsx}'],
+    test: {
+      globals: true,
+      environment: 'jsdom',
+      setupFiles: './src/test/setup.ts',
+      coverage: {
+        provider: 'v8',
+        reporter: ['text', 'lcov'],
+        // include all source files so test coverage can be measured project-wide
+        include: ['src/**/*.{ts,tsx}'],
+      } as any,
     },
-  },
 })
