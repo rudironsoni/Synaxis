@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using DotNetEnv;
 using Microsoft.Extensions.Logging;
 using Synaxis.InferenceGateway.Application.ControlPlane;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
@@ -66,40 +67,59 @@ public class SynaxisWebApplicationFactory : WebApplicationFactory<Program>, IAsy
 
         builder.ConfigureAppConfiguration((context, config) =>
         {
+            // Load .env files if present so environment variables are available for tests
+            DotNetEnv.Env.TraversePath().Load();
+
             var settings = new Dictionary<string, string?>
             {
                 ["Synaxis:ControlPlane:ConnectionString"] = _postgres.GetConnectionString(),
                 ["Synaxis:ControlPlane:UseInMemory"] = "false",
                 ["ConnectionStrings:Redis"] = $"{_redis.GetConnectionString()},abortConnect=false"
             };
-
-            // Pass through environment variables for secrets if present
-            var groqKey = Environment.GetEnvironmentVariable("SYNAPLEXER_GROQ_KEY");
-            if (!string.IsNullOrEmpty(groqKey)) settings["Synaxis:InferenceGateway:Providers:Groq:Key"] = groqKey;
-
-            var cohereKey = Environment.GetEnvironmentVariable("SYNAPLEXER_COHERE_KEY");
-            if (!string.IsNullOrEmpty(cohereKey)) settings["Synaxis:InferenceGateway:Providers:Cohere:Key"] = cohereKey;
-
-            var cfKey = Environment.GetEnvironmentVariable("SYNAPLEXER_CLOUDFLARE_KEY");
-            if (!string.IsNullOrEmpty(cfKey)) settings["Synaxis:InferenceGateway:Providers:Cloudflare:Key"] = cfKey;
-
-            var cfAccount = Environment.GetEnvironmentVariable("SYNAPLEXER_CLOUDFLARE_ACCOUNT_ID");
-            if (!string.IsNullOrEmpty(cfAccount)) settings["Synaxis:InferenceGateway:Providers:Cloudflare:AccountId"] = cfAccount;
-
-            // Add environment mappings for common providers so tests can use SYNAPLEXER_{PROVIDER}_KEY
-            void TryAddProviderKey(string provider, string envVar)
+            // Map a standard list of provider environment variables to configuration keys.
+            // Support both modern names like GROQ_API_KEY and legacy SYNAPLEXER_* variants by trying
+            // multiple candidate env var names for each provider.
+            var providerMappings = new Dictionary<string, string>
             {
-                var val = Environment.GetEnvironmentVariable(envVar);
-                if (!string.IsNullOrEmpty(val)) settings[$"Synaxis:InferenceGateway:Providers:{provider}:Key"] = val;
-            }
+                ["GROQ_API_KEY"] = "Synaxis:InferenceGateway:Providers:Groq:Key",
+                ["COHERE_API_KEY"] = "Synaxis:InferenceGateway:Providers:Cohere:Key",
+                ["CLOUDFLARE_API_KEY"] = "Synaxis:InferenceGateway:Providers:Cloudflare:Key",
+                ["CLOUDFLARE_ACCOUNT_ID"] = "Synaxis:InferenceGateway:Providers:Cloudflare:AccountId",
+                ["GEMINI_API_KEY"] = "Synaxis:InferenceGateway:Providers:Gemini:Key",
+                ["OPENROUTER_API_KEY"] = "Synaxis:InferenceGateway:Providers:OpenRouter:Key",
+                ["DEEPSEEK_API_KEY"] = "Synaxis:InferenceGateway:Providers:DeepSeek:Key",
+                ["OPENAI_API_KEY"] = "Synaxis:InferenceGateway:Providers:OpenAI:Key",
+                ["ANTIGRAVITY_API_KEY"] = "Synaxis:InferenceGateway:Providers:Antigravity:Key",
+                ["KILOCODE_API_KEY"] = "Synaxis:InferenceGateway:Providers:KiloCode:Key",
+                ["NVIDIA_API_KEY"] = "Synaxis:InferenceGateway:Providers:NVIDIA:Key",
+                ["HUGGINGFACE_API_KEY"] = "Synaxis:InferenceGateway:Providers:HuggingFace:Key",
+            };
 
-            TryAddProviderKey("KiloCode", "SYNAPLEXER_KILOCODE_KEY");
-            TryAddProviderKey("NVIDIA", "SYNAPLEXER_NVIDIA_KEY");
-            TryAddProviderKey("Gemini", "SYNAPLEXER_GEMINI_KEY");
-            TryAddProviderKey("OpenRouter", "SYNAPLEXER_OPENROUTER_KEY");
-            TryAddProviderKey("HuggingFace", "SYNAPLEXER_HUGGINGFACE_KEY");
-            TryAddProviderKey("OpenAI", "SYNAPLEXER_OPENAI_KEY");
-            TryAddProviderKey("Pollinations", "SYNAPLEXER_POLLINATIONS_KEY");
+            foreach (var kv in providerMappings)
+            {
+                var envKey = kv.Key;
+                var configKey = kv.Value;
+
+                // Try multiple candidate environment variable names to be robust
+                var candidates = new[]
+                {
+                    envKey,
+                    $"SYNAPLEXER_{envKey}",
+                    // Some legacy names used _KEY instead of _API_KEY, support those too
+                    envKey.Replace("_API_KEY", "_KEY"),
+                    $"SYNAPLEXER_{envKey.Replace("_API_KEY", "_KEY")}"
+                };
+
+                string? val = null;
+                foreach (var candidate in candidates)
+                {
+                    if (string.IsNullOrEmpty(candidate)) continue;
+                    val = Environment.GetEnvironmentVariable(candidate);
+                    if (!string.IsNullOrEmpty(val)) break;
+                }
+
+                if (!string.IsNullOrEmpty(val)) settings[configKey] = val;
+            }
 
             config.AddInMemoryCollection(settings);
         });
