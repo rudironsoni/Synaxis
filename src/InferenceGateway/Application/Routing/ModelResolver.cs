@@ -93,7 +93,6 @@ public class ModelResolver : IModelResolver
 
     private ResolutionResult ResolveCandidates(string originalModelId, List<string> candidates, RequiredCapabilities? required)
     {
-        Console.WriteLine($"[DEBUG] Resolving: {originalModelId}. Candidates count: {candidates.Count}");
         CanonicalModelId? firstCanonicalId = null;
 
         foreach (var candidateId in candidates)
@@ -101,42 +100,54 @@ public class ModelResolver : IModelResolver
             // Step A: Canonical Lookup
             var modelConfig = _config.CanonicalModels
                 .FirstOrDefault(m => string.Equals(m.Id, candidateId, StringComparison.OrdinalIgnoreCase));
-            
-            Console.WriteLine($"[DEBUG] Candidate: {candidateId}. Config found: {modelConfig != null}");
 
             var canonicalId = modelConfig != null
                 ? new CanonicalModelId(modelConfig.Provider, modelConfig.ModelPath)
                 : CanonicalModelId.Parse(candidateId);
-            
-            Console.WriteLine($"[DEBUG] CanonicalId: {canonicalId.Provider}/{canonicalId.ModelPath}");
 
             firstCanonicalId ??= canonicalId;
 
-            // Step B: Capability check
+            // Step B: Capability check (only possible when we have a canonical model config)
             if (required != null && modelConfig != null)
             {
-                bool meetsRequirements = 
+                bool meetsRequirements =
                     (!required.Streaming || modelConfig.Streaming) &&
                     (!required.Tools || modelConfig.Tools) &&
                     (!required.Vision || modelConfig.Vision) &&
                     (!required.StructuredOutput || modelConfig.StructuredOutput) &&
                     (!required.LogProbs || modelConfig.LogProbs);
-                    
+
                 if (!meetsRequirements)
                 {
-                    Console.WriteLine($"[DEBUG] Capabilities mismatch for {candidateId}");
                     continue;
                 }
             }
 
             // Step C: Registry lookup
             var candidatePairs = _registry.GetCandidates(canonicalId.ModelPath).ToList();
-            Console.WriteLine($"[DEBUG] Registry returned {candidatePairs.Count} candidates for path '{canonicalId.ModelPath}'");
-            
+            Console.WriteLine($"[DEBUG] Registry returned {candidatePairs.Count} candidates for '{canonicalId.ModelPath}'");
+
+            // Fallback: sometimes Parse() will split provider/model incorrectly (e.g. when model id contains '/').
+            // If nothing was found and we didn't have an explicit canonical config, try the raw candidate string.
+            if (candidatePairs.Count == 0 && modelConfig == null)
+            {
+                var fallbackMatches = _registry.GetCandidates(candidateId).ToList();
+                Console.WriteLine($"[DEBUG] Fallback: Registry lookup with '{candidateId}' returned {fallbackMatches.Count} candidates");
+                if (fallbackMatches.Count > 0)
+                {
+                    candidatePairs = fallbackMatches;
+                    // Reset provider portion since the original parse was likely wrong
+                    canonicalId = new CanonicalModelId("unknown", candidateId);
+                }
+            }
+
+            // Step D: Provider resolution
             var providers = candidatePairs
-                .Select(p => {
+                .Select(p =>
+                {
                     if (_config.Providers.TryGetValue(p.ServiceKey, out var prov))
                     {
+                        // ensure the ProviderConfig knows its key
                         prov.Key = p.ServiceKey;
                         return prov;
                     }
@@ -146,22 +157,23 @@ public class ModelResolver : IModelResolver
                 .Cast<ProviderConfig>()
                 .ToList();
 
-            // Step D: Provider filtering
-            if (canonicalId.Provider != "unknown")
+            // Step E: Provider filtering by canonical provider if present
+            if (!string.Equals(canonicalId.Provider, "unknown", StringComparison.OrdinalIgnoreCase))
             {
                 providers = providers
                     .Where(c => string.Equals(c.Key, canonicalId.Provider, StringComparison.OrdinalIgnoreCase))
                     .ToList();
-                Console.WriteLine($"[DEBUG] After filtering for provider '{canonicalId.Provider}': {providers.Count} providers");
             }
 
-            // Step E: Success check
+            // Step F: Success check
             if (providers.Count > 0)
             {
-                if (canonicalId.Provider == "unknown")
+                if (string.Equals(canonicalId.Provider, "unknown", StringComparison.OrdinalIgnoreCase))
                 {
+                    // Use the first provider as the canonical provider if unknown
                     canonicalId = new CanonicalModelId(providers[0].Key!, canonicalId.ModelPath);
                 }
+
                 return new ResolutionResult(originalModelId, canonicalId, providers);
             }
         }
