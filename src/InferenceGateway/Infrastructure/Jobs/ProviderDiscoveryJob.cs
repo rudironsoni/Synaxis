@@ -24,6 +24,60 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
             _logger = logger;
         }
 
+        private static string GetEffectiveBaseUrl(ProviderConfig config, string providerKey)
+        {
+            if (config == null) return string.Empty;
+
+            // Prefer explicit endpoint if provided
+            var url = config.Endpoint;
+
+            // If no explicit endpoint, allow fallback endpoint before using type defaults
+            if (string.IsNullOrWhiteSpace(url) && !string.IsNullOrWhiteSpace(config.FallbackEndpoint))
+            {
+                url = config.FallbackEndpoint;
+            }
+
+            // If still empty, choose defaults based on provider type
+            if (string.IsNullOrWhiteSpace(url))
+            {
+                var type = config.Type ?? string.Empty;
+                switch (type.Trim().ToLowerInvariant())
+                {
+                    case "nvidia":
+                        url = "https://integrate.api.nvidia.com";
+                        break;
+                    case "huggingface":
+                        url = "https://router.huggingface.co";
+                        break;
+                    case "groq":
+                        url = "https://api.groq.com/openai";
+                        break;
+                    case "openrouter":
+                        url = "https://openrouter.ai/api";
+                        break;
+                    case "deepseek":
+                        url = "https://api.deepseek.com";
+                        break;
+                    case "openai":
+                        url = "https://api.openai.com";
+                        break;
+                    default:
+                        // Unknown type and no endpoint provided
+                        return string.Empty;
+                }
+            }
+
+            // Clean up trailing /v1 if present. Many discovery clients append /v1/models.
+            url = url.Trim();
+            url = url.TrimEnd('/');
+            if (url.EndsWith("/v1", StringComparison.OrdinalIgnoreCase))
+            {
+                url = url.Substring(0, url.Length - "/v1".Length);
+            }
+
+            return url;
+        }
+
         public async Task Execute(IJobExecutionContext context)
         {
             using var scope = _provider.CreateScope();
@@ -41,13 +95,18 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                 // Skip antigravity for now
                 if (string.Equals(providerCfg.Type, "antigravity", StringComparison.OrdinalIgnoreCase)) continue;
 
-                var endpoint = providerCfg.Endpoint ?? providerCfg.FallbackEndpoint ?? providerCfg.Key ?? string.Empty;
                 var apiKey = providerCfg.Key ?? string.Empty;
 
                 try
                 {
                     var ct = CancellationToken.None;
-                    var baseUrl = providerCfg.Endpoint ?? providerCfg.FallbackEndpoint ?? providerCfg.Endpoint ?? string.Empty;
+                    var baseUrl = GetEffectiveBaseUrl(providerCfg, providerKey);
+                    if (string.IsNullOrWhiteSpace(baseUrl))
+                    {
+                        _logger.LogWarning("No effective base URL could be determined for provider {Provider}", providerKey);
+                        continue;
+                    }
+
                     var models = await discovery.GetModelsAsync(baseUrl, apiKey, ct).ConfigureAwait(false);
 
                     foreach (var found in models)
