@@ -11,18 +11,18 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
 {
     public class GitHubAuthStrategy : IAuthStrategy
     {
+        public event EventHandler<IdentityAccount>? AccountAuthenticated;
         public const string ClientId = "178c6fc778ccc68e1d6a";
 
         private readonly HttpClient _http;
         private readonly DeviceFlowService _deviceFlowService;
-        private readonly IdentityManager _identityManager;
+        // IdentityManager removed to avoid circular dependency. Will raise event when account authenticated.
         private readonly ILogger<GitHubAuthStrategy> _logger;
 
-        public GitHubAuthStrategy(HttpClient http, DeviceFlowService deviceFlowService, IdentityManager identityManager, ILogger<GitHubAuthStrategy> logger)
+        public GitHubAuthStrategy(HttpClient http, DeviceFlowService deviceFlowService, ILogger<GitHubAuthStrategy> logger)
         {
             _http = http ?? throw new ArgumentNullException(nameof(http));
             _deviceFlowService = deviceFlowService ?? throw new ArgumentNullException(nameof(deviceFlowService));
-            _identityManager = identityManager ?? throw new ArgumentNullException(nameof(identityManager));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -122,7 +122,15 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
                 if (token.ExpiresInSeconds.HasValue)
                     acc.ExpiresAt = DateTimeOffset.UtcNow.AddSeconds(token.ExpiresInSeconds.Value);
 
-                await _identityManager.AddOrUpdateAccountAsync(acc).ConfigureAwait(false);
+                // Notify subscribers that an account was authenticated
+                try
+                {
+                    AccountAuthenticated?.Invoke(this, acc);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error invoking AccountAuthenticated event");
+                }
 
                 // Write to gh config
                 await GhConfigWriter.WriteTokenAsync(token.AccessToken).ConfigureAwait(false);

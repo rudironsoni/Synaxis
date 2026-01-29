@@ -71,6 +71,12 @@ public static class InfrastructureExtensions
         services.AddSingleton<IQuotaTracker, RedisQuotaTracker>();
 
         // 1. Register TokenStore and Auth Manager (Singleton) with Factory
+        services.AddSingleton<AntigravitySettings>(sp =>
+        {
+            var config = sp.GetRequiredService<IOptions<SynaxisConfiguration>>().Value;
+            return config.Antigravity ?? new AntigravitySettings();
+        });
+
         services.AddSingleton<ITokenStore>(sp =>
         {
             var config = sp.GetRequiredService<IOptions<SynaxisConfiguration>>().Value;
@@ -100,8 +106,30 @@ public static class InfrastructureExtensions
         services.AddSingleton<IAuthStrategy, GoogleAuthStrategy>();
         services.AddSingleton<DeviceFlowService>();
 
-        // Antigravity adapter implements IAntigravityAuthManager
-        services.AddSingleton<IAntigravityAuthManager, AntigravityAuthAdapter>();
+        // Antigravity Auth Manager (Singleton)
+        services.AddSingleton<IAntigravityAuthManager>(sp =>
+        {
+            var config = sp.GetRequiredService<IOptions<SynaxisConfiguration>>().Value;
+            var providerConfig = config.Providers.Values.FirstOrDefault(p => p.Type?.ToLowerInvariant() == "antigravity");
+            
+            var projectId = providerConfig?.ProjectId ?? "rising-fact-p41fc";
+            var settings = config.Antigravity ?? new AntigravitySettings();
+
+            // Ensure settings are valid, or provide defaults/throw if strict
+            if (string.IsNullOrEmpty(settings.ClientId))
+            {
+                 // Fallback or log warning? 
+                 // For now, let's assume they are provided or we might fail at runtime.
+            }
+
+            return new AntigravityAuthManager(
+                projectId,
+                settings,
+                sp.GetRequiredService<ILogger<AntigravityAuthManager>>(),
+                sp.GetRequiredService<IHttpClientFactory>(),
+                sp.GetRequiredService<ITokenStore>()
+            );
+        });
 
         // Identity-backed token provider (defaults to Google)
         services.AddSingleton<ITokenProvider, Synaxis.InferenceGateway.Infrastructure.Identity.IdentityTokenProvider>();
@@ -167,8 +195,9 @@ public static class InfrastructureExtensions
                         services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>
                         {
                             var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient("Antigravity");
-                            var tokenProvider = sp.GetRequiredService<ITokenProvider>();
-                            return new AntigravityChatClient(httpClient, defaultModel, config.ProjectId ?? "", tokenProvider);
+                            // Use the specialized AntigravityAuthManager
+                            var authManager = sp.GetRequiredService<IAntigravityAuthManager>();
+                            return new AntigravityChatClient(httpClient, defaultModel, config.ProjectId ?? "", authManager);
                         });
                         break;
                     case "openrouter":

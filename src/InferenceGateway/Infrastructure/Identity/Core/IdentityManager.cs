@@ -23,6 +23,29 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
             _store = store ?? throw new ArgumentNullException(nameof(store));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
+            // Subscribe to account authenticated events from strategies
+            try
+            {
+                foreach (var s in _strategies)
+                {
+                    s.AccountAuthenticated += async (sender, account) =>
+                    {
+                        try
+                        {
+                            await AddOrUpdateAccountAsync(account!).ConfigureAwait(false);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Error adding/updating account from strategy event");
+                        }
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to subscribe to auth strategy events");
+            }
+
             // Load existing accounts from store synchronously at startup
             Task.Run(async () =>
             {

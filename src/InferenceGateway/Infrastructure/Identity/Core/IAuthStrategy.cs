@@ -22,6 +22,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
 
     public interface IAuthStrategy
     {
+        event EventHandler<IdentityAccount>? AccountAuthenticated;
         Task<AuthResult> InitiateFlowAsync(CancellationToken ct);
         Task<AuthResult> CompleteFlowAsync(string code, string state, CancellationToken ct);
         Task<TokenResponse> RefreshTokenAsync(IdentityAccount account, CancellationToken ct);
