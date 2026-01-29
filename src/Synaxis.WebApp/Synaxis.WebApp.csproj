@@ -6,4 +6,31 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Yarp.ReverseProxy" />
+    <!-- Needed for running npm in build targets if not already present on build agents -->
+    <!-- Do not add Microsoft.Build.Utilities.Core due to Central Package Management rules -->
+  </ItemGroup>
+
+  <Target Name="NpmInstall" BeforeTargets="Build">
+    <Message Importance="high" Text="Running npm install in ClientApp..." />
+    <Exec WorkingDirectory="$(ProjectDir)ClientApp" Command="npm install" />
+  </Target>
+
+  <Target Name="NpmBuild" BeforeTargets="Build">
+    <Message Importance="high" Text="Running npm run build in ClientApp..." />
+    <Exec WorkingDirectory="$(ProjectDir)ClientApp" Command="npm run build" />
+  </Target>
+
+  <!-- Copy built files to wwwroot during publish -->
+  <ItemGroup>
+    <ClientDist Include="$(ProjectDir)ClientApp/dist/**" />
+  </ItemGroup>
+
+  <Target Name="CopyClientAppToWwwRoot" AfterTargets="Publish">
+    <Message Importance="high" Text="Copying ClientApp/dist to wwwroot" />
+    <MakeDir Directories="$(PublishDir)wwwroot" />
+    <Copy SourceFiles="@(ClientDist)" DestinationFolder="$(PublishDir)wwwroot\%(RecursiveDir)" SkipUnchangedFiles="true" />
+  </Target>
+
 </Project>
