@@ -108,8 +108,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                     }
 
                     var models = await discovery.GetModelsAsync(baseUrl, apiKey, ct).ConfigureAwait(false);
+                    var discoveredModels = models?.ToList() ?? new System.Collections.Generic.List<string>();
 
-                    foreach (var found in models)
+                    foreach (var found in discoveredModels)
                     {
                         if (string.IsNullOrEmpty(found)) continue;
 
@@ -143,6 +144,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                     }
 
                     await db.SaveChangesAsync().ConfigureAwait(false);
+
+                    _logger.LogInformation("ProviderDiscoveryJob: Successfully upserted {Count} models for provider {Provider}", discoveredModels.Count, providerKey);
                 }
                 catch (Exception ex)
                 {
