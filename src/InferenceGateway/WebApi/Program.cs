@@ -15,6 +15,8 @@ using Synaxis.InferenceGateway.WebApi.Middleware;
 using Synaxis.InferenceGateway.WebApi.Endpoints.Antigravity;
 using Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI;
 using Synaxis.InferenceGateway.WebApi.Endpoints.Identity;
+using Quartz;
+using Synaxis.InferenceGateway.Infrastructure.Jobs;
 
 using Scalar.AspNetCore;
 
@@ -91,6 +93,39 @@ builder.Services.AddControlPlane(builder.Configuration);
 builder.Services.AddSynaxisInfrastructure(builder.Configuration);
 builder.Services.AddSynaxisApplication(builder.Configuration);
 builder.Services.AddOpenApi();
+
+// Quartz.NET - schedule periodic jobs
+builder.Services.AddQuartz(q =>
+{
+    // Create a job key for ModelsDevSyncJob
+    var modelsDevSyncJobKey = new JobKey("ModelsDevSyncJob");
+
+    // Register the job with the scheduler
+    q.AddJob<ModelsDevSyncJob>(opts => opts.WithIdentity(modelsDevSyncJobKey));
+
+    // Trigger: start now, repeat every 24 hours
+    q.AddTrigger(opts => opts
+        .ForJob(modelsDevSyncJobKey)
+        .StartNow()
+        .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromHours(24)).RepeatForever())
+    );
+
+    // Create a job key for ProviderDiscoveryJob
+    var providerDiscoveryJobKey = new JobKey("ProviderDiscoveryJob");
+
+    // Register the ProviderDiscoveryJob with the scheduler
+    q.AddJob<ProviderDiscoveryJob>(opts => opts.WithIdentity(providerDiscoveryJobKey));
+
+    // Trigger: start now, repeat every 1 hour
+    q.AddTrigger(opts => opts
+        .ForJob(providerDiscoveryJobKey)
+        .StartNow()
+        .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromHours(1)).RepeatForever())
+    );
+});
+
+// Add hosted service to run Quartz and wait for jobs to complete on shutdown
+builder.Services.AddQuartzHostedService(opt => opt.WaitForJobsToComplete = true);
 
 // OpenTelemetry
 builder.Services.AddOpenTelemetry()

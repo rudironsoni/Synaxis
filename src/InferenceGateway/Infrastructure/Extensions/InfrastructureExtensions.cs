@@ -17,11 +17,13 @@ using Synaxis.InferenceGateway.Infrastructure.Routing;
 using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
 using Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub;
 using Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google;
+using Synaxis.InferenceGateway.Infrastructure.External.OpenAi;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Hosting;
 using Synaxis.InferenceGateway.Infrastructure.External.GitHub;
 using Synaxis.InferenceGateway.Application.Routing;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
+using Synaxis.InferenceGateway.Infrastructure.External.ModelsDev;
 using Synaxis.InferenceGateway.Application.ControlPlane;
 using Synaxis.InferenceGateway.Application.ChatClients;
 using Synaxis.InferenceGateway.Infrastructure.ChatClients;
@@ -291,6 +293,14 @@ public static class InfrastructureExtensions
         services.AddSingleton<IChatClientFactory, ChatClientFactory>();
         services.AddSingleton<IChatClientStrategy, OpenAiGenericStrategy>();
         services.AddSingleton<IChatClientStrategy, CloudflareStrategy>();
+        
+        // Register Models.dev client
+        services.AddHttpClient<IModelsDevClient, ModelsDevClient>(client =>
+        {
+            client.BaseAddress = new Uri("https://models.dev");
+        });
+        // Register OpenAI model discovery client
+        services.AddHttpClient<IOpenAiModelDiscoveryClient, OpenAiModelDiscoveryClient>();
         return services;
     }
 
