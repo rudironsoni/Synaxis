@@ -82,9 +82,14 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
 
                 if (testCase.Endpoint == EndpointType.ChatCompletions)
                 {
+                    // Use the provider-specific model path (CanonicalId may be provider/model; Smoke tests expect
+                    // provider-specific ModelPath when the configuration provides a mapping. Use the CanonicalId
+                    // parameter (which may already be the provider-specific path) when available.
+                    var modelToSend = string.IsNullOrEmpty(testCase.CanonicalId) ? testCase.Model : testCase.CanonicalId;
+
                     payload = new
                     {
-                        model = testCase.Model,
+                        model = modelToSend,
                         messages = new[] { new { role = "user", content = "Reply with exactly one word: OK" } },
                         max_tokens = 5
                     };
@@ -93,9 +98,11 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                 }
                 else
                 {
+                    var modelToSend2 = string.IsNullOrEmpty(testCase.CanonicalId) ? testCase.Model : testCase.CanonicalId;
+
                     payload = new
                     {
-                        model = testCase.Model,
+                        model = modelToSend2,
                         prompt = "Reply with exactly one word: OK",
                         max_tokens = 5
                     };
