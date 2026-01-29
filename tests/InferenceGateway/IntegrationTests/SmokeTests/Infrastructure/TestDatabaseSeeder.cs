@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace Tests.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure;
 
@@ -20,7 +21,11 @@ public static class TestDatabaseSeeder
         if (!providersSection.Exists())
             return;
 
-        foreach (var providerSection in providersSection.GetChildren())
+        var providerSections = providersSection.GetChildren().ToList();
+
+        // First loop: ensure all GlobalModels exist/are updated
+        var processedGlobalIds = new HashSet<string>();
+        foreach (var providerSection in providerSections)
         {
             var providerKey = providerSection.Key;
             var enabled = providerSection.GetValue<bool>("Enabled");
@@ -44,6 +49,9 @@ public static class TestDatabaseSeeder
                             canonicalId = mapped;
                     }
                 }
+
+                if (processedGlobalIds.Contains(canonicalId))
+                    continue;
 
                 // Upsert GlobalModel
                 var global = await context.GlobalModels.FindAsync(canonicalId);
@@ -69,9 +77,42 @@ public static class TestDatabaseSeeder
                     context.GlobalModels.Update(global);
                 }
 
+                processedGlobalIds.Add(canonicalId);
+            }
+        }
+
+        // Persist GlobalModels so FK references are valid in next phase
+        await context.SaveChangesAsync();
+
+        // Second loop: upsert ProviderModels now that GlobalModels exist
+        foreach (var providerSection in providerSections)
+        {
+            var providerKey = providerSection.Key;
+            var enabled = providerSection.GetValue<bool>("Enabled");
+            if (!enabled)
+                continue;
+
+            var models = providerSection.GetSection("Models").Get<string[]>() ?? new string[0];
+
+            foreach (var modelName in models)
+            {
+                // determine canonical id
+                var canonicalMapping = config.GetSection("Synaxis:InferenceGateway:CanonicalModels");
+                string canonicalId = modelName;
+                if (canonicalMapping.Exists())
+                {
+                    var providerMap = canonicalMapping.GetSection(providerKey);
+                    if (providerMap.Exists())
+                    {
+                        var mapped = providerMap.GetValue<string>(modelName);
+                        if (!string.IsNullOrEmpty(mapped))
+                            canonicalId = mapped;
+                    }
+                }
+
                 // Upsert ProviderModel
                 var providerModel = await context.ProviderModels
-                    .FirstOrDefaultAsync(pm => pm.ProviderId == providerKey && pm.GlobalModelId == canonicalId && pm.ProviderSpecificId == modelName);
+                    .FirstOrDefaultAsync(pm => pm.ProviderId == providerKey && pm.ProviderSpecificId == modelName);
 
                 if (providerModel == null)
                 {
@@ -87,6 +128,7 @@ public static class TestDatabaseSeeder
                 else
                 {
                     providerModel.IsAvailable = true;
+                    providerModel.GlobalModelId = canonicalId;
                     context.ProviderModels.Update(providerModel);
                 }
             }
