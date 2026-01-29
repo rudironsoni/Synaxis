@@ -11,7 +11,7 @@ export default function SessionList(){
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold">Chats</h3>
-        <button onClick={async ()=>{ await createSession('New Chat') }} title="New chat" className="p-1">
+        <button aria-label="New chat" onClick={async ()=>{ await createSession('New Chat') }} title="New chat" className="p-1">
           <Plus className="w-4 h-4" />
         </button>
       </div>
