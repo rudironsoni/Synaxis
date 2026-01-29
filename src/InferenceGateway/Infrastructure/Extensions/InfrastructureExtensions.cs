@@ -290,7 +290,7 @@ public static class InfrastructureExtensions
     // Register infrastructure-level helpers
     private static IServiceCollection AddInfrastructureHelpers(this IServiceCollection services)
     {
-        services.AddSingleton<IChatClientFactory, ChatClientFactory>();
+        services.AddScoped<IChatClientFactory, ChatClientFactory>();
         services.AddSingleton<IChatClientStrategy, OpenAiGenericStrategy>();
         services.AddSingleton<IChatClientStrategy, CloudflareStrategy>();
         
