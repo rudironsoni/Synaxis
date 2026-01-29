@@ -241,6 +241,13 @@ public static class InfrastructureExtensions
                             return new Synaxis.InferenceGateway.Infrastructure.External.AiHorde.AiHordeChatClient(httpClient, config.Key ?? "0000000000");
                         });
                         break;
+                    case "kilocode":
+                        services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>
+                        {
+                            var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
+                            return new Synaxis.InferenceGateway.Infrastructure.External.KiloCode.KiloCodeChatClient(config.Key ?? "", defaultModel, httpClient);
+                        });
+                        break;
                     default:
                         if (!string.IsNullOrEmpty(config.Endpoint))
                         {
