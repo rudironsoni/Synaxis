@@ -185,8 +185,11 @@ public static class InfrastructureExtensions
                         });
                         break;
                     case "gemini":
-                        // Switch to OpenAI-compatible endpoint
-                        services.AddOpenAiCompatibleClient(name, "https://generativelanguage.googleapis.com/v1beta/openai", config.Key ?? "", defaultModel);
+                        services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>
+                        {
+                            var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient("Google");
+                            return new Synaxis.InferenceGateway.Infrastructure.External.Google.GoogleChatClient(config.Key ?? "", defaultModel, httpClient);
+                        });
                         break;
                     case "antigravity":
                         services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>

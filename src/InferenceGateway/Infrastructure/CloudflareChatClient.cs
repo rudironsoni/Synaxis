@@ -9,6 +9,7 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging;
 
 namespace Synaxis.InferenceGateway.Infrastructure;
 
@@ -18,12 +19,14 @@ public class CloudflareChatClient : IChatClient
     private readonly string _accountId;
     private readonly string _modelId;
     private readonly ChatClientMetadata _metadata;
+    private readonly ILogger<CloudflareChatClient>? _logger;
 
-        public CloudflareChatClient(HttpClient httpClient, string accountId, string modelId, string apiKey)
+        public CloudflareChatClient(HttpClient httpClient, string accountId, string modelId, string apiKey, ILogger<CloudflareChatClient>? logger = null)
         {
             _httpClient = httpClient;
             _accountId = accountId;
             _modelId = modelId;
+            _logger = logger;
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
             // The Cloudflare model id may contain characters ("@" and "/") that must be URL-encoded when used
             // inside a path segment. Encode the model id to avoid accidental path splitting which causes 404s.
@@ -38,6 +41,17 @@ public class CloudflareChatClient : IChatClient
             var request = CreateRequest(chatMessages, options, stream: false);
             var encodedModel = Uri.EscapeDataString(_modelId);
             var url = $"https://api.cloudflare.com/client/v4/accounts/{_accountId}/ai/run/{encodedModel}";
+
+            // Debug: print the full request URL and model id to help diagnose 404s
+            var requestUrl = url;
+            if (_logger != null)
+            {
+                _logger.LogInformation("CloudflareChatClient sending request. Url: {Url} ModelId: {ModelId}", requestUrl, _modelId);
+            }
+            else
+            {
+                Console.WriteLine($"CloudflareChatClient sending request. Url: {requestUrl} ModelId: {_modelId}");
+            }
 
             var response = await _httpClient.PostAsJsonAsync(url, request, cancellationToken);
             response.EnsureSuccessStatusCode();
