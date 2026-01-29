@@ -6,4 +6,5 @@ public interface IControlPlaneStore
 {
     Task<ModelAlias?> GetAliasAsync(Guid tenantId, string alias, CancellationToken cancellationToken = default);
     Task<ModelCombo?> GetComboAsync(Guid tenantId, string name, CancellationToken cancellationToken = default);
+    Task<GlobalModel?> GetGlobalModelAsync(string id, CancellationToken cancellationToken = default);
 }
