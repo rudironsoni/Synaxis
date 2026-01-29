@@ -3,6 +3,7 @@ import useUsageStore from './usage'
 
 describe('usage store', () => {
   beforeEach(() => {
+    // ensure starting fresh
     useUsageStore.setState({ totalTokens: 0 })
   })
 
