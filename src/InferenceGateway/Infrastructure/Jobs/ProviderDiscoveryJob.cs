@@ -61,6 +61,36 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                     case "openai":
                         url = "https://api.openai.com";
                         break;
+                    case "cohere":
+                        url = "https://api.cohere.com/v2";
+                        break;
+                    case "duckduckgo":
+                        url = "https://duckduckgo.com/duckchat/v1";
+                        break;
+                    case "aihorde":
+                        url = "https://stablehorde.net/api/v2";
+                        break;
+                    case "siliconflow":
+                        url = "https://api.siliconflow.cn/v1";
+                        break;
+                    case "sambanova":
+                        url = "https://api.sambanova.ai/v1";
+                        break;
+                    case "zai":
+                        url = "https://open.bigmodel.cn/api/paas/v4";
+                        break;
+                    case "hyperbolic":
+                        url = "https://api.hyperbolic.xyz/v1";
+                        break;
+                    case "githubmodels":
+                        url = "https://models.inference.ai.azure.com";
+                        break;
+                    case "pollinations":
+                        url = "https://text.pollinations.ai";
+                        break;
+                    case "kilocode":
+                        url = "https://api.kilocode.ai";
+                        break;
                     default:
                         // Unknown type and no endpoint provided
                         return string.Empty;
@@ -121,29 +151,63 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                             // Create minimal global model
                             global = new GlobalModel { Id = found, Name = found, Family = "unknown" };
                             db.GlobalModels.Add(global);
+                            try
+                            {
+                                await db.SaveChangesAsync().ConfigureAwait(false);
+                            }
+                            catch (Npgsql.PostgresException ex) when (ex.SqlState == "23505")
+                            {
+                                db.ChangeTracker.Clear();
+                                var reloadedGlobal = db.GlobalModels.FirstOrDefault(g => g.Id == found);
+                                if (reloadedGlobal != null)
+                                {
+                                    global = reloadedGlobal;
+                                }
+                            }
                         }
 
                         // Upsert ProviderModel
                         var existing = db.ProviderModels.FirstOrDefault(p => p.ProviderId == providerKey && p.ProviderSpecificId == found);
                         if (existing == null)
                         {
-                            existing = new ProviderModel
+                            try
                             {
-                                ProviderId = providerKey,
-                                ProviderSpecificId = found,
-                                GlobalModelId = global.Id,
-                                IsAvailable = true
-                            };
-                            db.ProviderModels.Add(existing);
+                                existing = new ProviderModel
+                                {
+                                    ProviderId = providerKey,
+                                    ProviderSpecificId = found,
+                                    GlobalModelId = global.Id,
+                                    IsAvailable = true
+                                };
+                                db.ProviderModels.Add(existing);
+                                await db.SaveChangesAsync().ConfigureAwait(false);
+                            }
+                            catch (Npgsql.PostgresException ex) when (ex.SqlState == "23505")
+                            {
+                                db.ChangeTracker.Clear();
+                                var reloadedExisting = db.ProviderModels.FirstOrDefault(p => p.ProviderId == providerKey && p.ProviderSpecificId == found);
+                                if (reloadedExisting != null)
+                                {
+                                    reloadedExisting.IsAvailable = true;
+                                    reloadedExisting.GlobalModelId = global.Id;
+                                    await db.SaveChangesAsync().ConfigureAwait(false);
+                                }
+                            }
                         }
                         else
                         {
                             existing.IsAvailable = true;
                             existing.GlobalModelId = global.Id;
+                            try
+                            {
+                                await db.SaveChangesAsync().ConfigureAwait(false);
+                            }
+                            catch (Npgsql.PostgresException ex) when (ex.SqlState == "23505")
+                            {
+                                db.ChangeTracker.Clear();
+                            }
                         }
                     }
-
-                    await db.SaveChangesAsync().ConfigureAwait(false);
 
                     _logger.LogInformation("ProviderDiscoveryJob: Successfully upserted {Count} models for provider {Provider}", discoveredModels.Count, providerKey);
                 }
