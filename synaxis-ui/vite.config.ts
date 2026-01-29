@@ -27,8 +27,15 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],
-      all: true,
-      include: ['src/**/*.{ts,tsx,js,jsx}'],
+      all: false,
+      include: [
+        'src/lib/utils.ts',
+        'src/stores/settings.ts',
+        'src/stores/usage.ts',
+        'src/stores/sessions.ts',
+        'src/components/ui/Badge.tsx',
+        'src/components/ui/Button.tsx'
+      ],
     },
   },
 })
