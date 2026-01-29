@@ -9,7 +9,7 @@ public static class HuggingFaceExtensions
     {
         services.AddKeyedSingleton<IChatClient>(serviceKey, (_, _) => new GenericOpenAiChatClient(
             apiKey,
-            new Uri("https://api-inference.huggingface.co/v1/"),
+            new Uri("https://router.huggingface.co/v1/"),
             modelId));
 
         return services;
