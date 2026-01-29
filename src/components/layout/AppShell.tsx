@@ -4,11 +4,14 @@ import Badge from '@/components/ui/Badge'
 import SettingsDialog from '@/features/settings/SettingsDialog'
 import SessionList from '@/features/sessions/SessionList'
 import useSettingsStore from '@/stores/settings'
+import useUsageStore from '@/stores/usage'
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const costRate = useSettingsStore((s) => s.costRate)
+  const totalTokens = useUsageStore((s) => s.totalTokens)
+  const saved = (totalTokens / 1000) * (costRate || 0)
 
   useEffect(()=>{
     // hide sidebar on small screens
@@ -32,7 +35,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <h2 className="text-xl font-semibold">Synaxis</h2>
           </div>
           <div className="flex items-center gap-3">
-            <Badge>Miser: ${costRate.toFixed(2)}</Badge>
+            <Badge>Saved: ${saved.toFixed(4)}</Badge>
             <button onClick={()=>setOpen(true)} title="Settings" className="p-2 rounded hover:bg-[rgba(255,255,255,0.02)]">
               <Settings className="w-5 h-5" />
             </button>
