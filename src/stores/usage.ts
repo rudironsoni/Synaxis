@@ -1,23 +1,16 @@
 import create from 'zustand'
 import db from '@/db/db'
-import useSettingsStore from './settings'
 
 type UsageState = {
   totalTokens: number
-  addUsage: (tokens:number)=>void
-  totalSaved: number
+  addUsage: (tokens: number) => void
 }
 
-export const useUsageStore = create<UsageState>((set,get)=>({
+export const useUsageStore = create<UsageState>((set) => ({
   totalTokens: 0,
-  addUsage: (tokens:number)=> set((s)=>({ totalTokens: s.totalTokens + tokens })),
-  get totalSaved(){
-    const cost = useSettingsStore.getState().costRate || 0
-    return (get().totalTokens/1000)*cost
-  } as unknown as number,
+  addUsage: (tokens: number) => set((s) => ({ totalTokens: s.totalTokens + tokens })),
 }))
 
-// initialize from DB: sum tokenUsage.total across messages
 ;(async function init(){
   try{
     const list = await db.messages.toArray()
