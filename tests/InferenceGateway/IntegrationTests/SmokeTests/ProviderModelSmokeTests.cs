@@ -33,7 +33,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
             var client = _factory.CreateClient();
             var executor = new SmokeTestExecutor(client, new SmokeTestOptions(), _output);
 
-            var result = await executor.ExecuteAsync(testCase).ConfigureAwait(false);
+            var result = await executor.ExecuteAsync(testCase);
 
             _output.WriteLine($"Provider={testCase.Provider} Model={testCase.Model} Success={result.Success} TimeMs={result.ResponseTime.TotalMilliseconds} Attempts={result.AttemptCount}");
             if (!string.IsNullOrEmpty(result.Error)) _output.WriteLine($"Error: {result.Error}");
@@ -52,7 +52,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
             var client = _factory.CreateClient();
             var executor = new SmokeTestExecutor(client, new SmokeTestOptions(), _output);
 
-            var result = await executor.ExecuteAsync(testCase).ConfigureAwait(false);
+            var result = await executor.ExecuteAsync(testCase);
 
             _output.WriteLine($"Provider={testCase.Provider} Model={testCase.Model} Success={result.Success} TimeMs={result.ResponseTime.TotalMilliseconds} Attempts={result.AttemptCount}");
             if (!string.IsNullOrEmpty(result.Error)) _output.WriteLine($"Error: {result.Error}");
