@@ -93,6 +93,7 @@ public class ModelResolver : IModelResolver
 
     private ResolutionResult ResolveCandidates(string originalModelId, List<string> candidates, RequiredCapabilities? required)
     {
+        Console.WriteLine($"[DEBUG] Resolving: {originalModelId}. Candidates count: {candidates.Count}");
         CanonicalModelId? firstCanonicalId = null;
 
         foreach (var candidateId in candidates)
@@ -100,10 +101,14 @@ public class ModelResolver : IModelResolver
             // Step A: Canonical Lookup
             var modelConfig = _config.CanonicalModels
                 .FirstOrDefault(m => string.Equals(m.Id, candidateId, StringComparison.OrdinalIgnoreCase));
+            
+            Console.WriteLine($"[DEBUG] Candidate: {candidateId}. Config found: {modelConfig != null}");
 
             var canonicalId = modelConfig != null
                 ? new CanonicalModelId(modelConfig.Provider, modelConfig.ModelPath)
                 : CanonicalModelId.Parse(candidateId);
+            
+            Console.WriteLine($"[DEBUG] CanonicalId: {canonicalId.Provider}/{canonicalId.ModelPath}");
 
             firstCanonicalId ??= canonicalId;
 
@@ -119,12 +124,14 @@ public class ModelResolver : IModelResolver
                     
                 if (!meetsRequirements)
                 {
+                    Console.WriteLine($"[DEBUG] Capabilities mismatch for {candidateId}");
                     continue;
                 }
             }
 
             // Step C: Registry lookup
             var candidatePairs = _registry.GetCandidates(canonicalId.ModelPath).ToList();
+            Console.WriteLine($"[DEBUG] Registry returned {candidatePairs.Count} candidates for path '{canonicalId.ModelPath}'");
             
             var providers = candidatePairs
                 .Select(p => {
@@ -145,6 +152,7 @@ public class ModelResolver : IModelResolver
                 providers = providers
                     .Where(c => string.Equals(c.Key, canonicalId.Provider, StringComparison.OrdinalIgnoreCase))
                     .ToList();
+                Console.WriteLine($"[DEBUG] After filtering for provider '{canonicalId.Provider}': {providers.Count} providers");
             }
 
             // Step E: Success check
