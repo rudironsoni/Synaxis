@@ -22,15 +22,9 @@
     <Exec WorkingDirectory="$(ProjectDir)ClientApp" Command="npm run build" />
   </Target>
 
-  <!-- Copy built files to wwwroot during publish -->
-  <ItemGroup>
-    <ClientDist Include="$(ProjectDir)ClientApp/dist/**" />
-  </ItemGroup>
+  <!-- The ClientApp Vite build now outputs directly to wwwroot. Keep npm targets and run build before Build. -->
+  <!-- Ensure wwwroot files are picked up by the build/publish pipeline (no explicit copy target needed) -->
 
-  <Target Name="CopyClientAppToWwwRoot" AfterTargets="Publish">
-    <Message Importance="high" Text="Copying ClientApp/dist to wwwroot" />
-    <MakeDir Directories="$(PublishDir)wwwroot" />
-    <Copy SourceFiles="@(ClientDist)" DestinationFolder="$(PublishDir)wwwroot\%(RecursiveDir)" SkipUnchangedFiles="true" />
-  </Target>
+  <!-- Make sure npm build is executed before Build -->
 
 </Project>
