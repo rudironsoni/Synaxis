@@ -32,7 +32,7 @@ export default function ChatInput({ onSend }:{ onSend:(txt:string)=>void }){
           className="flex-1 resize-none rounded-md p-3 bg-[var(--input)] text-[var(--foreground)] border border-[var(--border)]"
           rows={1}
         />
-        <button onClick={submit} className="bg-[var(--primary)] text-[var(--primary-foreground)] px-3 py-2 rounded">
+        <button aria-label="Send" onClick={submit} className="bg-[var(--primary)] text-[var(--primary-foreground)] px-3 py-2 rounded">
           <Send className="w-4 h-4" />
         </button>
       </div>
