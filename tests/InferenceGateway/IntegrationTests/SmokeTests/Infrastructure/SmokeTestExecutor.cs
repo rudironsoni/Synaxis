@@ -84,6 +84,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                 {
                     payload = new
                     {
+                        model = testCase.Model,
                         messages = new[] { new { role = "user", content = "Reply with exactly one word: OK" } },
                         max_tokens = 5
                     };
@@ -94,6 +95,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                 {
                     payload = new
                     {
+                        model = testCase.Model,
                         prompt = "Reply with exactly one word: OK",
                         max_tokens = 5
                     };

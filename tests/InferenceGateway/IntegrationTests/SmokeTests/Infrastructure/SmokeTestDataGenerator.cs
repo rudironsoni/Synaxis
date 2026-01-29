@@ -3,53 +3,39 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
+using Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Models;
 
 namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
 {
     public static class SmokeTestDataGenerator
     {
         public static IEnumerable<object[]> GenerateChatCompletionCases()
-        {
-            return GenerateTestCases(Models.EndpointType.ChatCompletions);
-        }
+            => GenerateTestCases(EndpointType.ChatCompletions);
 
         public static IEnumerable<object[]> GenerateLegacyCompletionCases()
-        {
-            return GenerateTestCases(Models.EndpointType.LegacyCompletions);
-        }
+            => GenerateTestCases(EndpointType.LegacyCompletions);
 
-        private static IEnumerable<object[]> GenerateTestCases(Models.EndpointType endpoint)
+        private static IEnumerable<object[]> GenerateTestCases(EndpointType endpoint)
         {
             var configuration = BuildConfiguration();
 
-            // Expect configuration structure like: SmokeTests:Providers:{provider}:Enabled and Models
-            var section = configuration.GetSection("SmokeTests:Providers");
-            if (!section.Exists()) yield break;
+            var providersSection = configuration.GetSection("Synaxis:InferenceGateway:Providers");
+            if (!providersSection.Exists()) yield break;
 
-            foreach (var provider in section.GetChildren())
+            foreach (var providerSection in providersSection.GetChildren())
             {
-                var enabled = provider.GetValue<bool>("Enabled");
-                if (!enabled) continue;
+                if (!providerSection.GetValue<bool>("Enabled")) continue;
 
-                var providerName = provider.Key;
-                var modelsSection = provider.GetSection("Models");
-                foreach (var model in modelsSection.GetChildren())
+                var providerName = providerSection.Key;
+                var modelsSection = providerSection.GetSection("Models");
+                foreach (var modelItem in modelsSection.GetChildren())
                 {
-                    var modelName = model.Key;
-                    var canonicalId = model.GetValue<string>("CanonicalId") ?? model.GetValue<string>("Id") ?? modelName;
-                    var modelEndpoint = model.GetValue<string>("Endpoint");
-                    // If model specifies endpoint, skip mismatched
-                    if (!string.IsNullOrEmpty(modelEndpoint))
-                    {
-                        if (!Enum.TryParse<Models.EndpointType>(modelEndpoint, ignoreCase: true, out var parsed))
-                        {
-                            // ignore unknown
-                            continue;
-                        }
-                        if (parsed != endpoint) continue;
-                    }
+                    var modelName = modelItem.Value;
+                    if (string.IsNullOrEmpty(modelName)) continue;
 
-                    yield return new object[] { new Models.SmokeTestCase(providerName, modelName, canonicalId, endpoint) };
+                    var canonicalId = FindCanonicalId(configuration, providerName, modelName) ?? modelName;
+
+                    yield return new object[] { providerName, modelName, canonicalId, endpoint };
                 }
             }
         }
@@ -62,7 +48,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
             var projectRoot = FindProjectRoot();
             if (!string.IsNullOrEmpty(projectRoot))
             {
-                var webApiPath = Path.Combine(projectRoot, "src", "Synaxis.WebApi");
+                // Correct path: src/InferenceGateway/WebApi
+                var webApiPath = Path.Combine(projectRoot, "src", "InferenceGateway", "WebApi");
                 if (Directory.Exists(webApiPath))
                 {
                     var appsettings = Path.Combine(webApiPath, "appsettings.json");
@@ -74,6 +61,25 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
 
             builder.AddEnvironmentVariables();
             return builder.Build();
+        }
+
+        private static string? FindCanonicalId(IConfigurationRoot config, string provider, string modelPath)
+        {
+            var canonicals = config.GetSection("Synaxis:InferenceGateway:CanonicalModels");
+            if (!canonicals.Exists()) return null;
+
+            foreach (var item in canonicals.GetChildren())
+            {
+                var itemProvider = item.GetValue<string>("Provider");
+                var itemModelPath = item.GetValue<string>("ModelPath");
+                if (string.Equals(itemProvider, provider, StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(itemModelPath, modelPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    return item.GetValue<string>("Id");
+                }
+            }
+
+            return null;
         }
 
         private static string? FindProjectRoot()

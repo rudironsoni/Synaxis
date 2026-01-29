@@ -26,8 +26,10 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
         [Theory]
         [MemberData(nameof(SmokeTestDataGenerator.GenerateChatCompletionCases), MemberType = typeof(SmokeTestDataGenerator))]
         [Trait("Endpoint", "ChatCompletions")]
-        public async Task ChatCompletions_SmokeTest(SmokeTestCase testCase)
+        public async Task ChatCompletions_SmokeTest(string provider, string model, string canonicalId, EndpointType endpoint)
         {
+            var testCase = new SmokeTestCase(provider, model, canonicalId, endpoint);
+
             ValidateProviderConfigured(testCase.Provider);
 
             var client = _factory.CreateClient();
@@ -45,8 +47,10 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
         [Theory]
         [MemberData(nameof(SmokeTestDataGenerator.GenerateLegacyCompletionCases), MemberType = typeof(SmokeTestDataGenerator))]
         [Trait("Endpoint", "LegacyCompletions")]
-        public async Task LegacyCompletions_SmokeTest(SmokeTestCase testCase)
+        public async Task LegacyCompletions_SmokeTest(string provider, string model, string canonicalId, EndpointType endpoint)
         {
+            var testCase = new SmokeTestCase(provider, model, canonicalId, endpoint);
+
             ValidateProviderConfigured(testCase.Provider);
 
             var client = _factory.CreateClient();
