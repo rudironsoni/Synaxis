@@ -1,4 +1,4 @@
-import React from 'react'
+// lightweight component, no React import needed
 
 type Props = { role: 'user'|'assistant'|'system'; content: string; usage?: { prompt:number; completion:number; total:number } }
 

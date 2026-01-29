@@ -1,4 +1,4 @@
-import React from 'react'
+import type React from 'react'
 
 type Props = { role: 'user'|'assistant'|'system'; content: string; usage?: { prompt:number; completion:number; total:number } }
 

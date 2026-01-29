@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import { Plus, Trash } from 'lucide-react'
 import { useSessionsStore } from '@/stores/sessions'
 
@@ -17,11 +17,11 @@ export default function SessionList(){
       </div>
 
       <div className="flex flex-col gap-2 overflow-auto max-h-[70vh]">
-        {sessions.map(s=> (
+        {sessions.map((s) => (
           <div key={s.id} className="flex items-center justify-between p-2 rounded hover:bg-[rgba(255,255,255,0.02)]">
             <div className="text-sm">{s.title}</div>
             <div className="opacity-0 hover:opacity-100">
-              <button onClick={()=>deleteSession(s.id!)} title="Delete" className="p-1 text-red-400">
+              <button onClick={() => deleteSession(s.id!)} title="Delete" className="p-1 text-red-400">
                 <Trash className="w-4 h-4" />
               </button>
             </div>

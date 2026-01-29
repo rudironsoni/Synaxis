@@ -9,7 +9,7 @@ import useUsageStore from '@/stores/usage'
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  const costRate = useSettingsStore((s) => s.costRate)
+  const costRate = useSettingsStore((s: any) => s.costRate)
   const totalTokens = useUsageStore((s) => s.totalTokens)
   const saved = (totalTokens / 1000) * (costRate || 0)
 

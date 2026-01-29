@@ -1,4 +1,4 @@
-import React from 'react'
+import type React from 'react'
 
 export default function Modal({ open, onClose, title, children }:{ open:boolean; onClose:()=>void; title?:string; children?:React.ReactNode }){
   if(!open) return null
