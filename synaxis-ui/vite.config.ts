@@ -28,14 +28,8 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'lcov'],
       all: false,
-      include: [
-        'src/lib/utils.ts',
-        'src/stores/settings.ts',
-        'src/stores/usage.ts',
-        'src/stores/sessions.ts',
-        'src/components/ui/Badge.tsx',
-        'src/components/ui/Button.tsx'
-      ],
+      // include all source files so test coverage can be measured project-wide
+      include: ['src/**/*.{ts,tsx}'],
     },
   },
 })
