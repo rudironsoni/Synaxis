@@ -86,6 +86,21 @@ public class SynaxisWebApplicationFactory : WebApplicationFactory<Program>, IAsy
             var cfAccount = Environment.GetEnvironmentVariable("SYNAPLEXER_CLOUDFLARE_ACCOUNT_ID");
             if (!string.IsNullOrEmpty(cfAccount)) settings["Synaxis:InferenceGateway:Providers:Cloudflare:AccountId"] = cfAccount;
 
+            // Add environment mappings for common providers so tests can use SYNAPLEXER_{PROVIDER}_KEY
+            void TryAddProviderKey(string provider, string envVar)
+            {
+                var val = Environment.GetEnvironmentVariable(envVar);
+                if (!string.IsNullOrEmpty(val)) settings[$"Synaxis:InferenceGateway:Providers:{provider}:Key"] = val;
+            }
+
+            TryAddProviderKey("KiloCode", "SYNAPLEXER_KILOCODE_KEY");
+            TryAddProviderKey("NVIDIA", "SYNAPLEXER_NVIDIA_KEY");
+            TryAddProviderKey("Gemini", "SYNAPLEXER_GEMINI_KEY");
+            TryAddProviderKey("OpenRouter", "SYNAPLEXER_OPENROUTER_KEY");
+            TryAddProviderKey("HuggingFace", "SYNAPLEXER_HUGGINGFACE_KEY");
+            TryAddProviderKey("OpenAI", "SYNAPLEXER_OPENAI_KEY");
+            TryAddProviderKey("Pollinations", "SYNAPLEXER_POLLINATIONS_KEY");
+
             config.AddInMemoryCollection(settings);
         });
     }
