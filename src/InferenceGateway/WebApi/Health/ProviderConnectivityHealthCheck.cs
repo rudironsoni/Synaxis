@@ -133,7 +133,7 @@ public class ProviderConnectivityHealthCheck : IHealthCheck
         "antigravity" => "https://cloudcode-pa.googleapis.com",
         "openrouter" => "https://openrouter.ai/api/v1",
         "nvidia" => "https://integrate.api.nvidia.com/v1",
-        "huggingface" => "https://api-inference.huggingface.co",
+        "huggingface" => "https://router.huggingface.co",
         "pollinations" => "https://pollinations.ai",
         _ => null
     };

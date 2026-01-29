@@ -16,7 +16,9 @@ services:
       Synaxis__InferenceGateway__Providers__Cloudflare__Key: ${CLOUDFLARE_API_KEY}
       Synaxis__InferenceGateway__Providers__Cloudflare__AccountId: ${CLOUDFLARE_ACCOUNT_ID}
       Synaxis__InferenceGateway__Providers__Gemini__Key: ${GEMINI_API_KEY}
+      Synaxis__InferenceGateway__Providers__HuggingFace__Key: ${HUGGINGFACE_API_KEY}
       Synaxis__InferenceGateway__Providers__OpenRouter__Key: ${OPENROUTER_API_KEY}
+      Synaxis__InferenceGateway__Providers__NVIDIA__Key: ${NVIDIA_API_KEY}
       Synaxis__InferenceGateway__Providers__DeepSeek__Key: ${DEEPSEEK_API_KEY}
       Synaxis__InferenceGateway__Providers__DeepSeek__Type: OpenAI
       Synaxis__InferenceGateway__Providers__DeepSeek__Endpoint: ${DEEPSEEK_API_ENDPOINT}
