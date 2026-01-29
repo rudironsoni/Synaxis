@@ -19,24 +19,28 @@ public class CloudflareChatClient : IChatClient
     private readonly string _modelId;
     private readonly ChatClientMetadata _metadata;
 
-    public CloudflareChatClient(HttpClient httpClient, string accountId, string modelId, string apiKey)
-    {
-        _httpClient = httpClient;
-        _accountId = accountId;
-        _modelId = modelId;
-        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
-        _metadata = new ChatClientMetadata("Cloudflare", new Uri($"https://api.cloudflare.com/client/v4/accounts/{accountId}/ai/run/{modelId}"), modelId);
-    }
+        public CloudflareChatClient(HttpClient httpClient, string accountId, string modelId, string apiKey)
+        {
+            _httpClient = httpClient;
+            _accountId = accountId;
+            _modelId = modelId;
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+            // The Cloudflare model id may contain characters ("@" and "/") that must be URL-encoded when used
+            // inside a path segment. Encode the model id to avoid accidental path splitting which causes 404s.
+            var encodedModel = Uri.EscapeDataString(modelId);
+            _metadata = new ChatClientMetadata("Cloudflare", new Uri($"https://api.cloudflare.com/client/v4/accounts/{accountId}/ai/run/{encodedModel}"), modelId);
+        }
 
     public ChatClientMetadata Metadata => _metadata;
 
-    public async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
-    {
-        var request = CreateRequest(chatMessages, options, stream: false);
-        var url = $"https://api.cloudflare.com/client/v4/accounts/{_accountId}/ai/run/{_modelId}";
+        public async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
+        {
+            var request = CreateRequest(chatMessages, options, stream: false);
+            var encodedModel = Uri.EscapeDataString(_modelId);
+            var url = $"https://api.cloudflare.com/client/v4/accounts/{_accountId}/ai/run/{encodedModel}";
 
-        var response = await _httpClient.PostAsJsonAsync(url, request, cancellationToken);
-        response.EnsureSuccessStatusCode();
+            var response = await _httpClient.PostAsJsonAsync(url, request, cancellationToken);
+            response.EnsureSuccessStatusCode();
 
         var cloudflareResponse = await response.Content.ReadFromJsonAsync<CloudflareResponse>(cancellationToken: cancellationToken);
 
@@ -46,10 +50,11 @@ public class CloudflareChatClient : IChatClient
         return chatResponse;
     }
 
-    public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
-    {
-        var request = CreateRequest(chatMessages, options, stream: true);
-        var url = $"https://api.cloudflare.com/client/v4/accounts/{_accountId}/ai/run/{_modelId}";
+        public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            var request = CreateRequest(chatMessages, options, stream: true);
+        var encodedModel = Uri.EscapeDataString(_modelId);
+        var url = $"https://api.cloudflare.com/client/v4/accounts/{_accountId}/ai/run/{encodedModel}";
 
         var httpRequest = new HttpRequestMessage(HttpMethod.Post, url)
         {
