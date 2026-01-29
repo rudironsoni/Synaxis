@@ -185,8 +185,8 @@ public static class InfrastructureExtensions
                         });
                         break;
                     case "gemini":
-                        // Switch to OpenAI-compatible endpoint for better reliability/compatibility
-                        services.AddOpenAiCompatibleClient(name, "https://generativelanguage.googleapis.com/v1beta/openai", config.Key ?? "", defaultModel);
+                        // Switch to OpenAI-compatible endpoint
+                        services.AddOpenAiCompatibleClient(name, "https://generativelanguage.googleapis.com/v1beta/openai/", config.Key ?? "", defaultModel);
                         break;
                     case "antigravity":
                         services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>
