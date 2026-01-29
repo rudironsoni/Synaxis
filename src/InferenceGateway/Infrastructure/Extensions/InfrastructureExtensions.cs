@@ -185,11 +185,8 @@ public static class InfrastructureExtensions
                         });
                         break;
                     case "gemini":
-                        services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>
-                        {
-                            var client = new Google.GenAI.Client(vertexAI: false, apiKey: config.Key ?? "");
-                            return client.AsIChatClient(defaultModel);
-                        });
+                        // Switch to OpenAI-compatible endpoint for better reliability/compatibility
+                        services.AddOpenAiCompatibleClient(name, "https://generativelanguage.googleapis.com/v1beta/openai", config.Key ?? "", defaultModel);
                         break;
                     case "antigravity":
                         services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>
