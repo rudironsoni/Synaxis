@@ -49,8 +49,18 @@ public class GoogleChatClient : IChatClient
         // Debug: print request URI and model field payload for diagnosing 404s and model formatting
         try
         {
-            var payloadModel = (requestObj as dynamic)?.model ?? _modelId;
             var requestJson = JsonSerializer.Serialize(requestObj, _jsonOptions);
+            string payloadModel = _modelId;
+            try
+            {
+                using var doc = JsonDocument.Parse(requestJson);
+                if (doc.RootElement.TryGetProperty("model", out var modelProp))
+                {
+                    payloadModel = modelProp.ValueKind == JsonValueKind.String ? modelProp.GetString() ?? _modelId : _modelId;
+                }
+            }
+            catch { /* ignore parse errors and fall back to _modelId */ }
+
             if (_logger != null)
             {
                 _logger.LogInformation("GoogleChatClient sending request. Endpoint: {Endpoint} Model: {Model} Payload: {Payload}", Endpoint, payloadModel, requestJson);
