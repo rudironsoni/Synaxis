@@ -1,8 +1,11 @@
-// lightweight component, no React import needed
+type Props = {
+  role: 'user'|'assistant'|'system'
+  content: string
+  usage?: { prompt:number; completion:number; total:number }
+  isStreaming?: boolean
+}
 
-type Props = { role: 'user'|'assistant'|'system'; content: string; usage?: { prompt:number; completion:number; total:number } }
-
-export default function MessageBubble({ role, content, usage }: Props){
+export default function MessageBubble({ role, content, usage, isStreaming }: Props){
   const isUser = role === 'user'
   const base = 'max-w-[70%] p-3 rounded-md my-2 text-sm'
   const userCls = 'ml-auto bg-[var(--primary)] text-[var(--primary-foreground)]'
@@ -10,8 +13,11 @@ export default function MessageBubble({ role, content, usage }: Props){
 
   return (
     <div className={isUser ? `flex justify-end` : `flex justify-start`}>
-      <div className={`${base} ${isUser ? userCls : assistantCls}`}> 
+      <div className={`${base} ${isUser ? userCls : assistantCls}`}>
         <div className="whitespace-pre-wrap">{content}</div>
+        {isStreaming && (
+          <div className="mt-2 text-xs text-[var(--muted-foreground)] animate-pulse">● streaming...</div>
+        )}
         {usage && (
           <div className="mt-2 text-xs text-[var(--muted-foreground)]">Tokens: {usage.total} (p:{usage.prompt} c:{usage.completion})</div>
         )}

@@ -214,21 +214,17 @@ describe('GatewayClient', () => {
     });
 
     it('should update baseURL and replace existing token', () => {
-      // First set a token
       client.updateConfig('http://api.com', 'old-token');
       expect(mockAxiosInstance.defaults.headers.common['Authorization']).toBe('Bearer old-token');
 
-      // Now update with new token
       client.updateConfig('http://new-api.com', 'new-token');
       expect(mockAxiosInstance.defaults.headers.common['Authorization']).toBe('Bearer new-token');
     });
 
     it('should remove token when updating without token parameter', () => {
-      // First set a token
       client.updateConfig('http://api.com', 'existing-token');
       expect(mockAxiosInstance.defaults.headers.common['Authorization']).toBe('Bearer existing-token');
 
-      // Now update without token - should remove it
       client.updateConfig('http://new-api.com');
       expect(mockAxiosInstance.defaults.headers.common['Authorization']).toBeUndefined();
     });
@@ -236,6 +232,264 @@ describe('GatewayClient', () => {
     it('should handle empty string token', () => {
       client.updateConfig('http://api.com', '');
       expect(mockAxiosInstance.defaults.headers.common['Authorization']).toBeUndefined();
+    });
+  });
+
+  describe('sendMessageStream', () => {
+    let mockFetch: ReturnType<typeof vi.fn>;
+    let mockReader: {
+      read: ReturnType<typeof vi.fn>;
+      releaseLock: ReturnType<typeof vi.fn>;
+    };
+    let mockBody: {
+      getReader: ReturnType<typeof vi.fn>;
+    };
+
+    beforeEach(() => {
+      mockFetch = vi.fn();
+      global.fetch = mockFetch;
+
+      mockReader = {
+        read: vi.fn(),
+        releaseLock: vi.fn(),
+      };
+
+      mockBody = {
+        getReader: vi.fn().mockReturnValue(mockReader),
+      };
+    });
+
+    it('should yield chunks from stream', async () => {
+      const chunk1 = {
+        id: 'chatcmpl-123',
+        object: 'chat.completion.chunk' as const,
+        created: 1234567890,
+        model: 'default',
+        choices: [{ index: 0, delta: { content: 'Hello' }, finish_reason: null }],
+      };
+      const chunk2 = {
+        id: 'chatcmpl-123',
+        object: 'chat.completion.chunk' as const,
+        created: 1234567890,
+        model: 'default',
+        choices: [{ index: 0, delta: { content: ' world' }, finish_reason: null }],
+      };
+      const doneChunk = {
+        id: 'chatcmpl-123',
+        object: 'chat.completion.chunk' as const,
+        created: 1234567890,
+        model: 'default',
+        choices: [{ index: 0, delta: {}, finish_reason: 'stop' }],
+      };
+
+      const encoder = new TextEncoder();
+      const streamData = `data: ${JSON.stringify(chunk1)}\n\ndata: ${JSON.stringify(chunk2)}\n\ndata: ${JSON.stringify(doneChunk)}\n\ndata: [DONE]\n\n`;
+
+      mockReader.read
+        .mockResolvedValueOnce({ done: false, value: encoder.encode(streamData) })
+        .mockResolvedValueOnce({ done: true });
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        body: mockBody,
+      });
+
+      const messages = [{ role: 'user' as const, content: 'Hi' }];
+      const chunks: Array<{ id: string; choices: Array<{ delta: { content?: string } }> }> = [];
+
+      for await (const chunk of client.sendMessageStream(messages)) {
+        chunks.push(chunk);
+      }
+
+      expect(chunks).toHaveLength(3);
+      expect(chunks[0].choices[0].delta.content).toBe('Hello');
+      expect(chunks[1].choices[0].delta.content).toBe(' world');
+      expect(chunks[2].choices[0].finish_reason).toBe('stop');
+      expect(mockReader.releaseLock).toHaveBeenCalled();
+    });
+
+    it('should handle chunked data across multiple reads', async () => {
+      const chunk = {
+        id: 'chatcmpl-456',
+        object: 'chat.completion.chunk' as const,
+        created: 1234567890,
+        model: 'gpt-4',
+        choices: [{ index: 0, delta: { content: 'Complete response' }, finish_reason: null }],
+      };
+
+      const encoder = new TextEncoder();
+      const data = `data: ${JSON.stringify(chunk)}\n\ndata: [DONE]\n\n`;
+      const half = Math.floor(data.length / 2);
+
+      mockReader.read
+        .mockResolvedValueOnce({ done: false, value: encoder.encode(data.slice(0, half)) })
+        .mockResolvedValueOnce({ done: false, value: encoder.encode(data.slice(half)) })
+        .mockResolvedValueOnce({ done: true });
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        body: mockBody,
+      });
+
+      const chunks: Array<{ id: string }> = [];
+      for await (const chunk of client.sendMessageStream([{ role: 'user', content: 'Hi' }])) {
+        chunks.push(chunk);
+      }
+
+      expect(chunks).toHaveLength(1);
+      expect(chunks[0].id).toBe('chatcmpl-456');
+    });
+
+    it('should include authorization header when token is set', async () => {
+      client.updateConfig('http://api.com', 'my-token');
+
+      mockReader.read.mockResolvedValue({ done: true });
+      mockFetch.mockResolvedValue({
+        ok: true,
+        body: mockBody,
+      });
+
+      for await (const _ of client.sendMessageStream([{ role: 'user', content: 'Hi' }])) {
+      }
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        'http://api.com/chat/completions',
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            'Authorization': 'Bearer my-token',
+          }),
+        })
+      );
+    });
+
+    it('should throw error on HTTP error response', async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 401,
+        statusText: 'Unauthorized',
+        text: async () => 'Invalid token',
+      });
+
+      const messages = [{ role: 'user' as const, content: 'Hi' }];
+
+      await expect(async () => {
+        for await (const _ of client.sendMessageStream(messages)) {
+        }
+      }).rejects.toThrow('HTTP 401: Invalid token');
+    });
+
+    it('should throw error when response body is null', async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        body: null,
+      });
+
+      const messages = [{ role: 'user' as const, content: 'Hi' }];
+
+      await expect(async () => {
+        for await (const _ of client.sendMessageStream(messages)) {
+        }
+      }).rejects.toThrow('Response body is null');
+    });
+
+    it('should use default model when not specified', async () => {
+      mockReader.read.mockResolvedValue({ done: true });
+      mockFetch.mockResolvedValue({
+        ok: true,
+        body: mockBody,
+      });
+
+      for await (const _ of client.sendMessageStream([{ role: 'user', content: 'Hi' }])) {
+      }
+
+      const [, init] = mockFetch.mock.calls[0];
+      const body = JSON.parse(init.body);
+      expect(body.model).toBe('default');
+    });
+
+    it('should use custom model when specified', async () => {
+      mockReader.read.mockResolvedValue({ done: true });
+      mockFetch.mockResolvedValue({
+        ok: true,
+        body: mockBody,
+      });
+
+      for await (const _ of client.sendMessageStream([{ role: 'user', content: 'Hi' }], 'gpt-4')) {
+      }
+
+      const [, init] = mockFetch.mock.calls[0];
+      const body = JSON.parse(init.body);
+      expect(body.model).toBe('gpt-4');
+    });
+
+    it('should set stream flag to true', async () => {
+      mockReader.read.mockResolvedValue({ done: true });
+      mockFetch.mockResolvedValue({
+        ok: true,
+        body: mockBody,
+      });
+
+      for await (const _ of client.sendMessageStream([{ role: 'user', content: 'Hi' }])) {
+      }
+
+      const [, init] = mockFetch.mock.calls[0];
+      const body = JSON.parse(init.body);
+      expect(body.stream).toBe(true);
+    });
+
+    it('should handle invalid JSON gracefully', async () => {
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      const encoder = new TextEncoder();
+      const streamData = `data: invalid json here\n\ndata: [DONE]\n\n`;
+
+      mockReader.read
+        .mockResolvedValueOnce({ done: false, value: encoder.encode(streamData) })
+        .mockResolvedValueOnce({ done: true });
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        body: mockBody,
+      });
+
+      const chunks: Array<unknown> = [];
+      for await (const chunk of client.sendMessageStream([{ role: 'user', content: 'Hi' }])) {
+        chunks.push(chunk);
+      }
+
+      expect(chunks).toHaveLength(0);
+      expect(consoleSpy).toHaveBeenCalled();
+      consoleSpy.mockRestore();
+    });
+
+    it('should handle malformed SSE format', async () => {
+      const chunk = {
+        id: 'chatcmpl-789',
+        object: 'chat.completion.chunk' as const,
+        created: 1234567890,
+        model: 'default',
+        choices: [{ index: 0, delta: { content: 'Data' }, finish_reason: null }],
+      };
+
+      const encoder = new TextEncoder();
+      const streamData = `event: message\ndata: ${JSON.stringify(chunk)}\n\ndata: [DONE]\n\n`;
+
+      mockReader.read
+        .mockResolvedValueOnce({ done: false, value: encoder.encode(streamData) })
+        .mockResolvedValueOnce({ done: true });
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        body: mockBody,
+      });
+
+      const chunks: Array<{ id: string }> = [];
+      for await (const chunk of client.sendMessageStream([{ role: 'user', content: 'Hi' }])) {
+        chunks.push(chunk);
+      }
+
+      expect(chunks).toHaveLength(1);
+      expect(chunks[0].id).toBe('chatcmpl-789');
     });
   });
 });

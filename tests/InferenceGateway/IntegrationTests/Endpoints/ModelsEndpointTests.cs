@@ -1,0 +1,231 @@
+using System.Net;
+using System.Net.Http.Json;
+using System.Text.Json;
+using Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure;
+using Xunit;
+
+namespace Synaxis.InferenceGateway.IntegrationTests.Endpoints;
+
+public class ModelsEndpointTests : IClassFixture<SynaxisWebApplicationFactory>
+{
+    private readonly SynaxisWebApplicationFactory _factory;
+    private readonly HttpClient _client;
+
+    public ModelsEndpointTests(SynaxisWebApplicationFactory factory)
+    {
+        _factory = factory;
+        _client = factory.CreateClient();
+    }
+
+    [Fact]
+    public async Task GetModels_ReturnsList()
+    {
+        var response = await _client.GetAsync("/openai/v1/models");
+
+        response.EnsureSuccessStatusCode();
+        var content = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(JsonValueKind.Object, content.ValueKind);
+        Assert.True(content.TryGetProperty("object", out var obj));
+        Assert.Equal("list", obj.GetString());
+        Assert.True(content.TryGetProperty("data", out var data));
+        Assert.Equal(JsonValueKind.Array, data.ValueKind);
+    }
+
+    [Fact]
+    public async Task GetModels_ContainsCanonicalModels()
+    {
+        var response = await _client.GetAsync("/openai/v1/models");
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var models = content.GetProperty("data");
+
+        Assert.True(models.GetArrayLength() > 0);
+    }
+
+    [Fact]
+    public async Task GetModels_ModelsHaveRequiredFields()
+    {
+        var response = await _client.GetAsync("/openai/v1/models");
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var models = content.GetProperty("data").EnumerateArray();
+
+        var firstModel = models.First();
+        Assert.True(firstModel.TryGetProperty("id", out _));
+        Assert.True(firstModel.TryGetProperty("object", out _));
+        Assert.True(firstModel.TryGetProperty("created", out _));
+        Assert.True(firstModel.TryGetProperty("owned_by", out _));
+        Assert.True(firstModel.TryGetProperty("provider", out _));
+        Assert.True(firstModel.TryGetProperty("model_path", out _));
+    }
+
+    [Fact]
+    public async Task GetModels_ModelsHaveCapabilities()
+    {
+        var response = await _client.GetAsync("/openai/v1/models");
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var models = content.GetProperty("data").EnumerateArray();
+
+        var firstModel = models.First();
+        Assert.True(firstModel.TryGetProperty("capabilities", out var capabilities));
+        Assert.Equal(JsonValueKind.Object, capabilities.ValueKind);
+        Assert.True(capabilities.TryGetProperty("streaming", out _));
+        Assert.True(capabilities.TryGetProperty("tools", out _));
+        Assert.True(capabilities.TryGetProperty("vision", out _));
+        Assert.True(capabilities.TryGetProperty("structured_output", out _));
+        Assert.True(capabilities.TryGetProperty("log_probs", out _));
+    }
+
+    [Fact]
+    public async Task GetModels_ContainsProviders()
+    {
+        var response = await _client.GetAsync("/openai/v1/models");
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.True(content.TryGetProperty("providers", out var providers));
+        Assert.Equal(JsonValueKind.Array, providers.ValueKind);
+    }
+
+    [Fact]
+    public async Task GetModels_ProvidersHaveRequiredFields()
+    {
+        var response = await _client.GetAsync("/openai/v1/models");
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var providers = content.GetProperty("providers").EnumerateArray();
+
+        if (providers.Any())
+        {
+            var firstProvider = providers.First();
+            Assert.True(firstProvider.TryGetProperty("id", out _));
+            Assert.True(firstProvider.TryGetProperty("type", out _));
+            Assert.True(firstProvider.TryGetProperty("enabled", out _));
+            Assert.True(firstProvider.TryGetProperty("tier", out _));
+        }
+    }
+
+    [Fact]
+    public async Task GetModelById_ReturnsModel()
+    {
+        var listResponse = await _client.GetAsync("/openai/v1/models");
+        listResponse.EnsureSuccessStatusCode();
+        var listContent = await listResponse.Content.ReadFromJsonAsync<JsonElement>();
+        var firstModelId = listContent.GetProperty("data").EnumerateArray().First().GetProperty("id").GetString();
+        var encodedModelId = Uri.EscapeDataString(firstModelId!);
+        
+        var response = await _client.GetAsync($"/openai/v1/models/{encodedModelId}");
+        
+        response.EnsureSuccessStatusCode();
+        var content = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.True(content.TryGetProperty("id", out _));
+        Assert.Equal(firstModelId, content.GetProperty("id").GetString());
+    }
+
+    [Fact]
+    public async Task GetModelById_ReturnsCapabilities()
+    {
+        var listResponse = await _client.GetAsync("/openai/v1/models");
+        listResponse.EnsureSuccessStatusCode();
+        var listContent = await listResponse.Content.ReadFromJsonAsync<JsonElement>();
+        var firstModelId = listContent.GetProperty("data").EnumerateArray().First().GetProperty("id").GetString();
+        var encodedModelId = Uri.EscapeDataString(firstModelId!);
+        
+        var response = await _client.GetAsync($"/openai/v1/models/{encodedModelId}");
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.True(content.TryGetProperty("capabilities", out var capabilities));
+        Assert.Equal(JsonValueKind.Object, capabilities.ValueKind);
+    }
+
+    [Fact]
+    public async Task GetModelById_InvalidModel_ReturnsNotFound()
+    {
+        var response = await _client.GetAsync("/openai/v1/models/nonexistent-model-12345");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetModelById_ReturnsModelPath()
+    {
+        var listResponse = await _client.GetAsync("/openai/v1/models");
+        listResponse.EnsureSuccessStatusCode();
+        var listContent = await listResponse.Content.ReadFromJsonAsync<JsonElement>();
+        var firstModel = listContent.GetProperty("data").EnumerateArray().First();
+        var firstModelId = firstModel.GetProperty("id").GetString();
+        var encodedModelId = Uri.EscapeDataString(firstModelId!);
+        
+        var response = await _client.GetAsync($"/openai/v1/models/{encodedModelId}");
+        response.EnsureSuccessStatusCode();
+        
+        var content = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.True(content.TryGetProperty("model_path", out var modelPath));
+        Assert.False(string.IsNullOrEmpty(modelPath.GetString()));
+    }
+
+    [Fact]
+    public async Task GetModelById_ReturnsProvider()
+    {
+        var listResponse = await _client.GetAsync("/openai/v1/models");
+        listResponse.EnsureSuccessStatusCode();
+        var listContent = await listResponse.Content.ReadFromJsonAsync<JsonElement>();
+        var firstModel = listContent.GetProperty("data").EnumerateArray().First();
+        var firstModelId = firstModel.GetProperty("id").GetString();
+        var encodedModelId = Uri.EscapeDataString(firstModelId!);
+        
+        var response = await _client.GetAsync($"/openai/v1/models/{encodedModelId}");
+        response.EnsureSuccessStatusCode();
+        
+        var content = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.True(content.TryGetProperty("provider", out var provider));
+        Assert.False(string.IsNullOrEmpty(provider.GetString()));
+    }
+
+    [Fact]
+    public async Task GetModels_ContainsAliases()
+    {
+        var response = await _client.GetAsync("/openai/v1/models");
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var models = content.GetProperty("data").EnumerateArray();
+
+        var aliasModels = models.Where(m => m.GetProperty("owned_by").GetString() == "synaxis").ToList();
+        Assert.True(aliasModels.Count > 0, "Should contain at least one alias model (e.g., 'default')");
+    }
+
+    [Fact]
+    public async Task GetModels_AliasesHaveSynaxisOwnedBy()
+    {
+        var response = await _client.GetAsync("/openai/v1/models");
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var models = content.GetProperty("data").EnumerateArray();
+
+        var aliasModel = models.First(m => m.GetProperty("owned_by").GetString() == "synaxis");
+        Assert.Equal("synaxis", aliasModel.GetProperty("provider").GetString());
+    }
+
+    [Fact]
+    public async Task GetModels_CapabilitiesAreBoolean()
+    {
+        var response = await _client.GetAsync("/openai/v1/models");
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var models = content.GetProperty("data").EnumerateArray();
+
+        var canonicalModel = models.First(m => m.GetProperty("owned_by").GetString() != "synaxis");
+        var capabilities = canonicalModel.GetProperty("capabilities");
+
+        Assert.Equal(JsonValueKind.True, capabilities.GetProperty("streaming").ValueKind);
+    }
+}
