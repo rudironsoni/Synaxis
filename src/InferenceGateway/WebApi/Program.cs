@@ -15,6 +15,7 @@ using Synaxis.InferenceGateway.WebApi.Middleware;
 using Synaxis.InferenceGateway.WebApi.Endpoints.Antigravity;
 using Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI;
 using Synaxis.InferenceGateway.WebApi.Endpoints.Identity;
+using Synaxis.InferenceGateway.WebApi.Endpoints.Admin;
 using Quartz;
 using Synaxis.InferenceGateway.Infrastructure.Jobs;
 
@@ -214,10 +215,9 @@ app.UseMiddleware<OpenAIErrorHandlerMiddleware>();
 app.UseMiddleware<OpenAIMetadataMiddleware>();
 
     app.MapOpenAIEndpoints();
-
-
     app.MapAntigravityEndpoints();
     app.MapIdentityEndpoints();
+    app.MapAdminEndpoints();
     app.MapControllers();
 
 // NOTE: Removed temporary debug endpoint that created AggregateException for testing.

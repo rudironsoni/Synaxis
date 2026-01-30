@@ -2,13 +2,9 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Net.Http.Json;
 using System.Security.Claims;
-using System.Text;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.IdentityModel.Tokens;
-using Moq;
 using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
 using Synaxis.InferenceGateway.Application.Security;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
@@ -44,8 +40,7 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task CreateKey_WithAuth_InvalidProject_ReturnsNotFound()
     {
-        var user = await CreateTestUserWithTenantAsync();
-        var client = CreateAuthenticatedClient(user);
+        var (client, _) = await CreateAuthenticatedClientAsync();
         var invalidProjectId = Guid.NewGuid();
 
         var request = new { Name = "Test Key" };
@@ -57,22 +52,27 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task CreateKey_WithAuth_ValidProject_ReturnsCreatedKey()
     {
-        var user = await CreateTestUserWithTenantAsync();
+        var (client, user) = await CreateAuthenticatedClientAsync();
         var project = await CreateTestProjectAsync(user.TenantId);
-        var client = CreateAuthenticatedClient(user);
 
         var request = new { Name = "Production API Key" };
         var response = await client.PostAsJsonAsync($"/projects/{project.Id}/keys", request);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            _output.WriteLine($"Error response: {errorContent}");
+        }
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
         Assert.True(content.ValueKind == JsonValueKind.Object);
-        Assert.NotEqual(Guid.Empty, content.GetProperty("Id").GetGuid());
-        var name = content.GetProperty("Name").GetString();
+        Assert.NotEqual(Guid.Empty, content.GetProperty("id").GetGuid());
+        var name = content.GetProperty("name").GetString();
         Assert.NotNull(name);
         Assert.Equal("Production API Key", name);
-        var key = content.GetProperty("Key").GetString();
+        var key = content.GetProperty("key").GetString();
         Assert.NotNull(key);
         Assert.StartsWith("sk-synaxis-", key);
     }
@@ -80,13 +80,16 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task CreateKey_WithAuth_WrongTenant_ReturnsNotFound()
     {
-        var user1 = await CreateTestUserWithTenantAsync("user1@example.com");
-        var user2 = await CreateTestUserWithTenantAsync("user2@example.com");
+        // Create first user and their project
+        var (client1, user1) = await CreateAuthenticatedClientAsync("user1@example.com");
+        
+        // Create second user with their own tenant
+        var (_, user2) = await CreateAuthenticatedClientAsync("user2@example.com");
         var projectForUser2 = await CreateTestProjectAsync(user2.TenantId);
-        var client = CreateAuthenticatedClient(user1);
 
+        // Try to create key in user2's project using user1's token
         var request = new { Name = "Test Key" };
-        var response = await client.PostAsJsonAsync($"/projects/{projectForUser2.Id}/keys", request);
+        var response = await client1.PostAsJsonAsync($"/projects/{projectForUser2.Id}/keys", request);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
@@ -105,9 +108,8 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task RevokeKey_WithAuth_InvalidKey_ReturnsNotFound()
     {
-        var user = await CreateTestUserWithTenantAsync();
+        var (client, user) = await CreateAuthenticatedClientAsync();
         var project = await CreateTestProjectAsync(user.TenantId);
-        var client = CreateAuthenticatedClient(user);
         var invalidKeyId = Guid.NewGuid();
 
         var response = await client.DeleteAsync($"/projects/{project.Id}/keys/{invalidKeyId}");
@@ -118,10 +120,9 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task RevokeKey_WithAuth_InvalidProject_ReturnsNotFound()
     {
-        var user = await CreateTestUserWithTenantAsync();
+        var (client, user) = await CreateAuthenticatedClientAsync();
         var project = await CreateTestProjectAsync(user.TenantId);
         var apiKey = await CreateTestApiKeyAsync(project.Id);
-        var client = CreateAuthenticatedClient(user);
         var invalidProjectId = Guid.NewGuid();
 
         var response = await client.DeleteAsync($"/projects/{invalidProjectId}/keys/{apiKey.Id}");
@@ -132,10 +133,9 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task RevokeKey_WithAuth_ValidKey_ReturnsNoContent()
     {
-        var user = await CreateTestUserWithTenantAsync();
+        var (client, user) = await CreateAuthenticatedClientAsync();
         var project = await CreateTestProjectAsync(user.TenantId);
         var apiKey = await CreateTestApiKeyAsync(project.Id);
-        var client = CreateAuthenticatedClient(user);
 
         var response = await client.DeleteAsync($"/projects/{project.Id}/keys/{apiKey.Id}");
 
@@ -152,13 +152,16 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task RevokeKey_WithAuth_WrongTenant_ReturnsNotFound()
     {
-        var user1 = await CreateTestUserWithTenantAsync("user1@example.com");
-        var user2 = await CreateTestUserWithTenantAsync("user2@example.com");
+        // Create first user
+        var (client1, user1) = await CreateAuthenticatedClientAsync("user1@example.com");
+        
+        // Create second user with their own tenant and project
+        var (_, user2) = await CreateAuthenticatedClientAsync("user2@example.com");
         var projectForUser2 = await CreateTestProjectAsync(user2.TenantId);
         var apiKey = await CreateTestApiKeyAsync(projectForUser2.Id);
-        var client = CreateAuthenticatedClient(user1);
 
-        var response = await client.DeleteAsync($"/projects/{projectForUser2.Id}/keys/{apiKey.Id}");
+        // Try to revoke key in user2's project using user1's token
+        var response = await client1.DeleteAsync($"/projects/{projectForUser2.Id}/keys/{apiKey.Id}");
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
@@ -166,16 +169,15 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task CreateKey_StoresCorrectDataInDatabase()
     {
-        var user = await CreateTestUserWithTenantAsync();
+        var (client, user) = await CreateAuthenticatedClientAsync();
         var project = await CreateTestProjectAsync(user.TenantId);
-        var client = CreateAuthenticatedClient(user);
 
         var request = new { Name = "Database Test Key" };
         var response = await client.PostAsJsonAsync($"/projects/{project.Id}/keys", request);
 
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
-        var keyId = content.GetProperty("Id").GetGuid();
+        var keyId = content.GetProperty("id").GetGuid();
 
         // Verify in database
         var scope = _factory.Services.CreateScope();
@@ -193,10 +195,9 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task RevokeKey_CreatesAuditLog()
     {
-        var user = await CreateTestUserWithTenantAsync();
+        var (client, user) = await CreateAuthenticatedClientAsync();
         var project = await CreateTestProjectAsync(user.TenantId);
         var apiKey = await CreateTestApiKeyAsync(project.Id);
-        var client = CreateAuthenticatedClient(user);
 
         var response = await client.DeleteAsync($"/projects/{project.Id}/keys/{apiKey.Id}");
 
@@ -218,16 +219,15 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task CreateKey_CreatesAuditLog()
     {
-        var user = await CreateTestUserWithTenantAsync();
+        var (client, user) = await CreateAuthenticatedClientAsync();
         var project = await CreateTestProjectAsync(user.TenantId);
-        var client = CreateAuthenticatedClient(user);
 
         var request = new { Name = "Audit Test Key" };
         var response = await client.PostAsJsonAsync($"/projects/{project.Id}/keys", request);
 
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
-        var keyId = content.GetProperty("Id").GetGuid();
+        var keyId = content.GetProperty("id").GetGuid();
 
         // Verify audit log was created
         var scope = _factory.Services.CreateScope();
@@ -246,17 +246,17 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task CreateKey_KeyHashIsValid()
     {
-        var user = await CreateTestUserWithTenantAsync();
+        var (client, user) = await CreateAuthenticatedClientAsync();
         var project = await CreateTestProjectAsync(user.TenantId);
-        var client = CreateAuthenticatedClient(user);
 
         var request = new { Name = "Hash Test Key" };
         var response = await client.PostAsJsonAsync($"/projects/{project.Id}/keys", request);
 
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
-        var rawKey = content.GetProperty("Key").GetString();
-        var keyId = content.GetProperty("Id").GetGuid();
+        var rawKey = content.GetProperty("key").GetString();
+        var keyId = content.GetProperty("id").GetGuid();
+        Assert.NotNull(rawKey);
 
         // Get the stored hash
         var scope = _factory.Services.CreateScope();
@@ -267,39 +267,39 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
 
         // Verify the hash is valid using the ApiKeyService
         var apiKeyService = scope.ServiceProvider.GetRequiredService<IApiKeyService>();
-        Assert.True(apiKeyService.ValidateKey(rawKey!, storedKey.KeyHash));
+        Assert.True(apiKeyService.ValidateKey(rawKey, storedKey.KeyHash));
     }
 
     #region Helper Methods
 
-    private async Task<User> CreateTestUserWithTenantAsync(string email = "test@example.com")
+    private async Task<(HttpClient Client, User User)> CreateAuthenticatedClientAsync(string email = "test@example.com")
     {
+        // Use the dev-login endpoint to get a valid JWT token
+        var loginRequest = new { Email = email };
+        var response = await _client.PostAsJsonAsync("/auth/dev-login", loginRequest);
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var token = content.GetProperty("token").GetString();
+        Assert.NotNull(token);
+
+        // Parse the token to get user info
+        var handler = new JwtSecurityTokenHandler();
+        var jwtToken = handler.ReadJwtToken(token);
+        var userId = Guid.Parse(jwtToken.Claims.First(c => c.Type == JwtRegisteredClaimNames.Sub).Value);
+        var tenantId = Guid.Parse(jwtToken.Claims.First(c => c.Type == "tenantId").Value);
+
+        // Get the user from database
         var scope = _factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
+        var user = await dbContext.Users.FindAsync(userId);
+        Assert.NotNull(user);
 
-        var tenant = new Tenant
-        {
-            Id = Guid.NewGuid(),
-            Name = "Test Tenant",
-            Region = TenantRegion.Us,
-            Status = TenantStatus.Active
-        };
+        // Create a new client with the authorization header
+        var authenticatedClient = _factory.CreateClient();
+        authenticatedClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-        var user = new User
-        {
-            Id = Guid.NewGuid(),
-            TenantId = tenant.Id,
-            Email = email,
-            Role = UserRole.Developer,
-            AuthProvider = "dev",
-            ProviderUserId = email
-        };
-
-        dbContext.Tenants.Add(tenant);
-        dbContext.Users.Add(user);
-        await dbContext.SaveChangesAsync();
-
-        return user;
+        return (authenticatedClient, user);
     }
 
     private async Task<Project> CreateTestProjectAsync(Guid tenantId, string name = "Test Project")
@@ -345,52 +345,6 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
         await dbContext.SaveChangesAsync();
 
         return apiKey;
-    }
-
-    private HttpClient CreateAuthenticatedClient(User user)
-    {
-        var token = GenerateJwtToken(user);
-        var client = _factory.CreateClient();
-        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-        return client;
-    }
-
-    private string GenerateJwtToken(User user)
-    {
-        // Get JWT secret from configuration - ensure minimum 32 bytes (256 bits) for HMAC-SHA256
-        var scope = _factory.Services.CreateScope();
-        var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
-        var jwtSecret = configuration["Synaxis:InferenceGateway:JwtSecret"]
-            ?? "SynaxisDefaultSecretKeyDoNotUseInProduction1234567890!";
-
-        // Pad or truncate to ensure exactly 32 bytes (256 bits) minimum
-        var keyBytes = Encoding.UTF8.GetBytes(jwtSecret);
-        if (keyBytes.Length < 32)
-        {
-            // Pad with additional characters to reach 32 bytes
-            var padded = jwtSecret + new string('X', 32 - keyBytes.Length);
-            keyBytes = Encoding.UTF8.GetBytes(padded);
-        }
-
-        var key = new SymmetricSecurityKey(keyBytes);
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        var claims = new[]
-        {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email),
-            new Claim("role", user.Role.ToString()),
-            new Claim("tenantId", user.TenantId.ToString())
-        };
-
-        var token = new JwtSecurityToken(
-            issuer: "Synaxis",
-            audience: "Synaxis",
-            claims: claims,
-            expires: DateTime.UtcNow.AddHours(1),
-            signingCredentials: creds);
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
     #endregion
