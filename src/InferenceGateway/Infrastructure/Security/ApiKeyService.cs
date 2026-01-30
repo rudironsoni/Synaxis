@@ -10,7 +10,7 @@ public sealed class ApiKeyService : IApiKeyService
 
     public string GenerateKey()
     {
-        var bytes = new byte[32];
+        var bytes = new byte[16];
         RandomNumberGenerator.Fill(bytes);
         // Use base62 or hex. Hex is simpler.
         var hex = Convert.ToHexString(bytes).ToLowerInvariant();
