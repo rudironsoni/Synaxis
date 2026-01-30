@@ -16,6 +16,19 @@ public class ModelResolver : IModelResolver
 
     public ModelResolver(IOptions<SynaxisConfiguration> config, IProviderRegistry registry, IControlPlaneStore store)
     {
+        if (config is null)
+        {
+            throw new ArgumentNullException(nameof(config));
+        }
+        if (registry is null)
+        {
+            throw new ArgumentNullException(nameof(registry));
+        }
+        if (store is null)
+        {
+            throw new ArgumentNullException(nameof(store));
+        }
+        
         _config = config.Value;
         _registry = registry;
         _store = store;

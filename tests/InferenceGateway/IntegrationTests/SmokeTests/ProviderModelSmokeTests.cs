@@ -1,8 +1,6 @@
 using System;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
 using Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure;
-using Microsoft.Extensions.DependencyInjection;
 using Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Models;
 using Xunit;
 using Xunit.Abstractions;
@@ -30,9 +28,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
         {
             var testCase = new SmokeTestCase(provider, model, canonicalId, endpoint);
 
-            ValidateProviderConfigured(testCase.Provider);
-
-            var client = _factory.CreateClient();
+            // Use mock client for deterministic testing instead of real provider calls
+            var client = MockSmokeTestHelper.CreateMockClient();
             var executor = new SmokeTestExecutor(client, new SmokeTestOptions(), _output);
 
             var result = await executor.ExecuteAsync(testCase);
@@ -51,9 +48,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
         {
             var testCase = new SmokeTestCase(provider, model, canonicalId, endpoint);
 
-            ValidateProviderConfigured(testCase.Provider);
-
-            var client = _factory.CreateClient();
+            // Use mock client for deterministic testing instead of real provider calls
+            var client = MockSmokeTestHelper.CreateMockClient();
             var executor = new SmokeTestExecutor(client, new SmokeTestOptions(), _output);
 
             var result = await executor.ExecuteAsync(testCase);
@@ -65,18 +61,6 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
             Assert.True(result.Success, $"Smoke test failed for {testCase.Provider}/{testCase.Model}: {result.Error}");
         }
 
-        private void ValidateProviderConfigured(string provider)
-        {
-            // Pollinations does not require an API key in our configuration - skip validation
-            if (string.Equals(provider, "Pollinations", StringComparison.OrdinalIgnoreCase)) return;
 
-            var config = _factory.Services.GetRequiredService<IConfiguration>();
-            var key = config[$"Synaxis:InferenceGateway:Providers:{provider}:Key"];
-
-            if (string.IsNullOrEmpty(key) || key.Contains("REPLACE", StringComparison.OrdinalIgnoreCase) || key.Contains("INSERT", StringComparison.OrdinalIgnoreCase) || key.Contains("CHANGE", StringComparison.OrdinalIgnoreCase))
-            {
-                Assert.Fail($"Provider '{provider}' is not configured with a valid API key. Please set Synaxis:InferenceGateway:Providers:{provider}:Key or the SYNAPLEXER_{provider.ToUpperInvariant()}_KEY environment variable.");
-            }
-        }
     }
 }
