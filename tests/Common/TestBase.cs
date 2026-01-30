@@ -149,7 +149,7 @@ public abstract class TestBase
             It.IsAny<long>(), 
             It.IsAny<long>(), 
             It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
+            .Returns(Task.CompletedTask);
         return mock;
     }
 
