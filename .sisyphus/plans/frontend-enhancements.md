@@ -59,10 +59,76 @@ Enhance the Synaxis frontend with a 9router-style dashboard interface (inspired 
 - **Scope creep**: Define clear MVP boundaries
 
 ### Authentication Integration Strategy
-- **Enhanced Auth System**: Extend current dev login to proper user authentication
+- **Current Auth System**: JWT-based authentication via `AuthController.cs` exists
+- **Dashboard Access**: Use existing JWT tokens for dashboard authentication
+- **Fallback Strategy**: If enhanced auth not ready, use current dev login with dashboard access
 - **API Key Management**: Keys are user-scoped and authenticated
-- **Dashboard Access**: Requires authentication for all management features
 - **Error Handling**: Graceful handling of authentication failures with redirect to login
+
+### Backend API Implementation Strategy
+- **Use Minimal APIs**: Follow `OpenAIEndpointsExtensions.cs` pattern (not Controller pattern)
+- **Create Dashboard Endpoints Group**: `/api/providers`, `/api/analytics`, `/api/config`
+- **Leverage Existing Infrastructure**: Use current JWT auth, Redis, PostgreSQL patterns
+- **Progressive Enhancement**: Frontend can use mock data while backend APIs are being developed
+
+### AppShell Integration Strategy
+**Current App Structure**:
+- `App.tsx` renders `AppShell` with `ChatWindow` as main content
+- `AppShell` has sidebar with `SessionList` and header with cost rate badge
+- Sidebar collapses on mobile breakpoints (`max-width: 640px`)
+
+**Dashboard Integration Approach**:
+- **Create `DashboardShell` component**: Extends `AppShell` structure but replaces sidebar content
+- **Sidebar Replacement**: Replace `SessionList` with dashboard navigation (Providers, Analytics, Keys, Models, Chat tabs)
+- **Main Content Area**: Use React Router `Outlet` to render dashboard sections
+- **Mobile Responsiveness**: Keep existing sidebar collapse behavior, dashboard sections adapt to mobile
+- **Route Structure**: 
+  - `/dashboard` → Main dashboard with overview
+  - `/dashboard/providers` → Provider management
+  - `/dashboard/analytics` → Usage analytics
+  - `/dashboard/keys` → API key management
+  - `/dashboard/models` → Model configuration
+  - `/dashboard/chat` → Chat interface (preserves current functionality)
+
+### State Management Strategy
+**Dashboard Store Structure**:
+```typescript
+interface DashboardState {
+  providers: Provider[]
+  analytics: AnalyticsData
+  config: ConfigData
+  loading: boolean
+  error: string | null
+}
+```
+
+**Integration with Existing Stores**:
+- **Separate Store**: Create `useDashboardStore` separate from existing stores
+- **Authentication**: Extend `settings` store to include JWT token management
+- **Data Flow**: Dashboard components read from dashboard store, backend APIs update store
+
+### Authentication Flow
+**Current Authentication**:
+- JWT tokens generated via `AuthController.cs` `dev-login` endpoint
+- Tokens stored in `settings` store (need to extend)
+
+**Dashboard Authentication**:
+- **Route Guards**: Wrap dashboard routes with authentication check using JWT token
+- **Login Redirect**: If no valid token, redirect to enhanced login page
+- **Token Management**: Extend `settings` store to handle JWT tokens
+- **Fallback**: If auth not ready, use mock authentication for development
+
+### Mock Data Strategy
+**Frontend Development Approach**:
+- **Mock Services**: Create `mockProviderService.ts`, `mockAnalyticsService.ts`, `mockConfigService.ts`
+- **Interface Consistency**: Mock services implement same interfaces as real services
+- **Easy Replacement**: Switch from mock to real services by changing imports
+- **Development Flow**: Frontend development proceeds with mock data, backend development proceeds in parallel
+
+**Mock Data Structure**:
+- Follows backend API response structure exactly
+- Realistic data that matches expected production data
+- Easy to verify mock-to-real transition
 
 ### Backend API Contracts
 
@@ -204,6 +270,18 @@ Response: {"success": true}
 - **Persistence**: Follow settings store pattern with localStorage persistence for user preferences
 - **Integration**: Dashboard store integrates with existing stores (sessions, settings, usage) via shared actions
 
+**Mobile Responsiveness Strategy**:
+- **Sidebar Behavior**: Preserve existing mobile collapse (`max-width: 640px`)
+- **Dashboard Sections**: Adapt to mobile with responsive layouts
+- **Navigation**: Mobile-friendly sidebar with touch interactions
+- **Breakpoints**: Use existing CSS custom properties and responsive patterns
+
+**Error Handling Strategy**:
+- **Backend Unavailable**: Dashboard shows mock data with "backend not ready" indicator
+- **Authentication Failure**: Redirect to login page with return URL
+- **API Errors**: Show error states with retry functionality
+- **Loading States**: Show loading indicators for async operations
+
 **Fallback Strategy for Backend Dependencies**:
 - **Mock Data First**: Frontend development proceeds with mock services regardless of backend API readiness
 - **Progressive Enhancement**: Dashboard works with mock data, enhances with real APIs when available
@@ -339,19 +417,19 @@ Critical Path: Task 1 → Task 2 → Task 4 → Task 8 → Task 9 (Frontend can 
 
 | Task | Depends On | Blocks | Can Parallelize With |
 |------|------------|--------|---------------------|
-| B1 | None | 9 | B2, B3, B4, 1, 2, 3 |
-| B2 | None | 9 | B1, B3, B4, 1, 2, 3 |
-| B3 | None | 9 | B1, B2, B4, 1, 2, 3 |
-| B4 | None | 9 | B1, B2, B3, 1, 2, 3 |
-| 1 | None | 2, 3 | B1, B2, B3, B4 |
-| 2 | 1 | 4, 5, 6, 7 | 3, B1, B2, B3, B4 |
-| 3 | 1 | 4, 5, 6, 7 | 2, B1, B2, B3, B4 |
-| 4 | 2, 3 | 9 | 5, 6, 7 |
-| 5 | 2, 3 | 9 | 4, 6, 7 |
-| 6 | 2, 3 | 9 | 4, 5, 7 |
-| 7 | 2, 3 | 9 | 4, 5, 6 |
-| 8 | 4, 5, 6, 7 | 10, 11 | None |
-| 9 | B1, B2, B3, B4, 8 | 10, 11 | None |
+| B1 | None | 8 | B2, B3, B4 |
+| B2 | None | 8 | B1, B3, B4 |
+| B3 | None | 8 | B1, B2, B4 |
+| B4 | None | 8 | B1, B2, B3 |
+| 1 | None | 2, 3 | None |
+| 2 | 1 | 4, 5, 6, 7 | 3 |
+| 3 | 1 | 4, 5, 6, 7 | 2 |
+| 4 | 2, 3, B1, B2, B3, B4 | 8 | 5, 6, 7 |
+| 5 | 2, 3, B1, B2, B3, B4 | 8 | 4, 6, 7 |
+| 6 | 2, 3, B1, B2, B3, B4 | 8 | 4, 5, 7 |
+| 7 | 2, 3, B1, B2, B3, B4 | 8 | 4, 5, 6 |
+| 8 | 4, 5, 6, 7 | 9, 10 | None |
+| 9 | 8 | 10, 11 | None |
 | 10 | 8, 9 | 11 | None |
 | 11 | 10 | None | None |
 
@@ -422,10 +500,10 @@ dotnet test src/InferenceGateway/WebApi.Tests/ProvidersEndpointTests.cs
   - [ ] Terminal output from API tests
   - [ ] HTTP response codes and content
 
-  **Commit**: YES
-  - Message: `feat(api): add provider management endpoints`
-  - Files: `src/InferenceGateway/WebApi/Controllers/ProvidersController.cs`
-  - Pre-commit: `dotnet test`
+**Commit**: YES
+- Message: `feat(api): add provider management endpoints`
+- Files: `src/InferenceGateway/WebApi/Endpoints/Dashboard/ProvidersEndpoint.cs`
+- Pre-commit: `dotnet test`
 
 - [ ] B2. Analytics and Usage API Endpoints
 
@@ -451,9 +529,9 @@ dotnet test src/InferenceGateway/WebApi.Tests/ProvidersEndpointTests.cs
   - **Blocks**: Task 8 (frontend integration)
   - **Blocked By**: None (can start immediately)
 
-  **References**:
-  - `src/Synaxis.WebApp/ClientApp/src/stores/usage.ts:1-25` - Usage tracking patterns
-  - `src/InferenceGateway/WebApi/Controllers/ApiKeysController.cs:1-83` - Controller patterns
+**References**:
+- `src/Synaxis.WebApp/ClientApp/src/stores/usage.ts:1-25` - Usage tracking patterns
+- `src/InferenceGateway/WebApi/Endpoints/OpenAI/OpenAIEndpointsExtensions.cs:1-161` - Minimal API patterns
 
   **Acceptance Criteria**:
   - [ ] Usage statistics endpoint returns data
@@ -474,10 +552,10 @@ dotnet test src/InferenceGateway/WebApi.Tests/ProvidersEndpointTests.cs
   - [ ] Terminal output from API tests
   - [ ] Analytics data structure validation
 
-  **Commit**: YES
-  - Message: `feat(api): add analytics and usage endpoints`
-  - Files: `src/InferenceGateway/WebApi/Controllers/AnalyticsController.cs`
-  - Pre-commit: `dotnet test`
+**Commit**: YES
+- Message: `feat(api): add analytics and usage endpoints`
+- Files: `src/InferenceGateway/WebApi/Endpoints/Dashboard/AnalyticsEndpoint.cs`
+- Pre-commit: `dotnet test`
 
 - [ ] B3. Configuration Management API Endpoints
 
@@ -526,10 +604,10 @@ dotnet test src/InferenceGateway/WebApi.Tests/ProvidersEndpointTests.cs
   - [ ] Terminal output from API tests
   - [ ] Configuration validation results
 
-  **Commit**: YES
-  - Message: `feat(api): add configuration management endpoints`
-  - Files: `src/InferenceGateway/WebApi/Controllers/ConfigurationController.cs`
-  - Pre-commit: `dotnet test`
+**Commit**: YES
+- Message: `feat(api): add configuration management endpoints`
+- Files: `src/InferenceGateway/WebApi/Endpoints/Dashboard/ConfigurationEndpoint.cs`
+- Pre-commit: `dotnet test`
 
 - [ ] B4. Enhanced Authentication System
 
@@ -555,9 +633,9 @@ dotnet test src/InferenceGateway/WebApi.Tests/ProvidersEndpointTests.cs
   - **Blocks**: Task 8 (frontend integration)
   - **Blocked By**: None (can start immediately)
 
-  **References**:
-  - `src/InferenceGateway/WebApi/Controllers/AuthController.cs:1-56` - Existing auth patterns
-  - `src/InferenceGateway/WebApi/Controllers/ApiKeysController.cs:1-83` - API key patterns
+**References**:
+- `src/InferenceGateway/WebApi/Controllers/AuthController.cs:1-56` - Existing JWT auth patterns
+- `src/InferenceGateway/WebApi/Endpoints/OpenAI/OpenAIEndpointsExtensions.cs:1-161` - Minimal API patterns
 
   **Acceptance Criteria**:
   - [ ] User registration and login work
@@ -578,10 +656,10 @@ dotnet test src/InferenceGateway/WebApi.Tests/ProvidersEndpointTests.cs
   - [ ] Terminal output from auth tests
   - [ ] Authentication token validation
 
-  **Commit**: YES
-  - Message: `feat(auth): enhance authentication system`
-  - Files: `src/InferenceGateway/WebApi/Controllers/AuthController.cs`
-  - Pre-commit: `dotnet test`
+**Commit**: YES
+- Message: `feat(auth): extend authentication for dashboard`
+- Files: `src/InferenceGateway/WebApi/Controllers/AuthController.cs`
+- Pre-commit: `dotnet test`
 
 ### Wave 1: Foundation
 
@@ -666,14 +744,19 @@ dotnet test src/InferenceGateway/WebApi.Tests/ProvidersEndpointTests.cs
 
 **References**:
 - `src/Synaxis.WebApp/ClientApp/src/components/layout/AppShell.tsx:1-48` - Current AppShell implementation pattern (sidebar, header, main content)
+- `src/Synaxis.WebApp/ClientApp/src/App.tsx:1-23` - Current app structure (AppShell wrapping ChatWindow)
 - `src/Synaxis.WebApp/ClientApp/src/index.css:1-50` - CSS variables and styling patterns (custom properties for Miser theme)
 - `src/Synaxis.WebApp/ClientApp/src/components/ui/Button.tsx:1-30` - UI component patterns (variants: primary, ghost, danger)
+- `src/Synaxis.WebApp/ClientApp/src/stores/sessions.ts:1-37` - Zustand store pattern with async actions
+- `src/Synaxis.WebApp/ClientApp/src/stores/settings.ts:1-24` - Zustand store with persistence
 
-  **Acceptance Criteria**:
-  - [ ] Dashboard component created: `src/features/dashboard/DashboardLayout.tsx`
-  - [ ] Sidebar navigation displays dashboard sections
-  - [ ] Main content area loads without errors
-  - [ ] Responsive design works on mobile breakpoints
+**Acceptance Criteria**:
+- [ ] Dashboard component created: `src/features/dashboard/DashboardLayout.tsx`
+- [ ] Sidebar navigation displays dashboard sections (Providers, Analytics, Keys, Models, Chat)
+- [ ] Main content area loads dashboard sections via React Router `Outlet`
+- [ ] Responsive design works on mobile breakpoints (sidebar collapses, dashboard adapts)
+- [ ] Existing chat functionality preserved at `/dashboard/chat` route
+- [ ] AppShell header preserved with cost rate badge and settings button
 
   **Automated Verification**:
   ```bash
@@ -724,12 +807,43 @@ dotnet test src/InferenceGateway/WebApi.Tests/ProvidersEndpointTests.cs
 - `src/Synaxis.WebApp/ClientApp/src/stores/sessions.ts:1-37` - Store with async actions pattern (loadSessions, createSession, deleteSession)
 - `src/Synaxis.WebApp/ClientApp/src/stores/usage.ts:1-25` - Usage tracking store pattern (token counting, database initialization)
 
-  **Acceptance Criteria**:
-  - [ ] Dashboard store created: `src/stores/dashboard.ts`
-  - [ ] Store manages provider state
-  - [ ] Store manages analytics data
-  - [ ] Store manages configuration state
-  - [ ] Store integrates with existing patterns
+**Dashboard Store Implementation Pattern**:
+```typescript
+// src/stores/dashboard.ts
+export const useDashboardStore = create<DashboardState>()(
+  devtools(
+    persist(
+      (set, get) => ({
+        providers: [],
+        analytics: {},
+        config: {},
+        loading: false,
+        error: null,
+        // Async actions
+        loadProviders: async () => {
+          set({ loading: true, error: null })
+          try {
+            const providers = await providerService.getProviders()
+            set({ providers, loading: false })
+          } catch (error) {
+            set({ error: error.message, loading: false })
+          }
+        }
+      }),
+      { name: 'synaxis-dashboard' }
+    )
+  )
+)
+```
+
+**Acceptance Criteria**:
+- [ ] Dashboard store created: `src/stores/dashboard.ts`
+- [ ] Store manages provider state (providers array, loading, error)
+- [ ] Store manages analytics data (usage statistics, performance metrics)
+- [ ] Store manages configuration state (model settings, user preferences)
+- [ ] Store integrates with existing patterns (devtools, persistence)
+- [ ] Store provides async actions for data loading
+- [ ] Store handles error states gracefully
 
   **Automated Verification**:
   ```bash
@@ -778,11 +892,42 @@ dotnet test src/InferenceGateway/WebApi.Tests/ProvidersEndpointTests.cs
 - `src/Synaxis.WebApp/ClientApp/src/db/db.ts:1-36` - Data structure patterns (Dexie schema for sessions, messages)
 - `src/InferenceGateway/WebApi/Endpoints/OpenAI/ModelsEndpoint.cs:1-50` - Backend API response structure (OpenAI-compatible models endpoint)
 
-  **Acceptance Criteria**:
-  - [ ] Mock provider service created
-  - [ ] Mock analytics service created
-  - [ ] Mock configuration service created
-  - [ ] Mock data matches backend API structure
+**Mock Service Implementation Pattern**:
+```typescript
+// src/services/mockProviderService.ts
+export const mockProviderService = {
+  getProviders: async (): Promise<Provider[]> => [
+    {
+      id: 'groq',
+      name: 'Groq',
+      status: 'healthy',
+      tier: 0,
+      models: ['llama-3.1-70b-versatile'],
+      usage: { totalTokens: 15000, requests: 45 }
+    }
+  ],
+  getProviderStatus: async (id: string): Promise<ProviderStatus> => ({
+    status: 'healthy',
+    lastChecked: new Date().toISOString()
+  })
+}
+
+// Real service interface matches mock exactly
+export const realProviderService = {
+  getProviders: async (): Promise<Provider[]> => {
+    const response = await fetch('/api/providers')
+    return response.json()
+  }
+}
+```
+
+**Acceptance Criteria**:
+- [ ] Mock provider service created with realistic data
+- [ ] Mock analytics service created with usage statistics
+- [ ] Mock configuration service created with model settings
+- [ ] Mock data matches backend API structure exactly
+- [ ] Mock services can be easily replaced with real services
+- [ ] Frontend development proceeds independently of backend availability
 
   **Automated Verification**:
   ```bash
@@ -1200,10 +1345,10 @@ dotnet test src/InferenceGateway/WebApi.Tests/ProvidersEndpointTests.cs
 
 | After Task | Message | Files | Verification |
 |------------|---------|-------|--------------|
-| B1 | `feat(api): add provider management endpoints` | `src/InferenceGateway/WebApi/Controllers/ProvidersController.cs` | `dotnet test` |
-| B2 | `feat(api): add analytics and usage endpoints` | `src/InferenceGateway/WebApi/Controllers/AnalyticsController.cs` | `dotnet test` |
-| B3 | `feat(api): add configuration management endpoints` | `src/InferenceGateway/WebApi/Controllers/ConfigurationController.cs` | `dotnet test` |
-| B4 | `feat(auth): enhance authentication system` | `src/InferenceGateway/WebApi/Controllers/AuthController.cs` | `dotnet test` |
+| B1 | `feat(api): add provider management endpoints` | `src/InferenceGateway/WebApi/Endpoints/Dashboard/ProvidersEndpoint.cs` | `dotnet test` |
+| B2 | `feat(api): add analytics and usage endpoints` | `src/InferenceGateway/WebApi/Endpoints/Dashboard/AnalyticsEndpoint.cs` | `dotnet test` |
+| B3 | `feat(api): add configuration management endpoints` | `src/InferenceGateway/WebApi/Endpoints/Dashboard/ConfigurationEndpoint.cs` | `dotnet test` |
+| B4 | `feat(auth): extend authentication for dashboard` | `src/InferenceGateway/WebApi/Controllers/AuthController.cs` | `dotnet test` |
 | 1 | `feat(dashboard): add React Router dependencies` | `package.json`, `src/main.tsx` | `npx vitest run` |
 | 2 | `feat(dashboard): add dashboard layout foundation` | `src/features/dashboard/DashboardLayout.tsx` | `npx vitest run src/features/dashboard/DashboardLayout.test.tsx` |
 | 3 | `feat(dashboard): add mock data services` | `src/services/mockProviderService.ts` etc | `npx vitest run src/services/*.test.ts` |
