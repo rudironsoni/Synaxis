@@ -15,6 +15,11 @@ public sealed class JwtService : IJwtService
 
     public JwtService(IOptions<SynaxisConfiguration> config)
     {
+        if (config is null)
+        {
+            throw new ArgumentNullException(nameof(config));
+        }
+        
         _config = config.Value;
     }
 
