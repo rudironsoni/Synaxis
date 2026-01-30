@@ -2,11 +2,22 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import ChatInput from './ChatInput';
 
+const mockSetStreamingEnabled = vi.fn();
+let mockStreamingEnabled = false;
+
+vi.mock('@/stores/settings', () => ({
+  default: (selector: any) => selector({
+    streamingEnabled: mockStreamingEnabled,
+    setStreamingEnabled: mockSetStreamingEnabled,
+  }),
+}));
+
 describe('ChatInput', () => {
   const mockOnSend = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockStreamingEnabled = false;
   });
 
   it('should render textarea and send button', () => {
@@ -126,5 +137,76 @@ describe('ChatInput', () => {
 
     expect(mockOnSend).toHaveBeenCalledTimes(1);
     expect(mockOnSend).toHaveBeenCalledWith('Message');
+  });
+
+  describe('Streaming Toggle', () => {
+    it('should render streaming toggle button', () => {
+      render(<ChatInput onSend={mockOnSend} />);
+
+      expect(screen.getByText('Streaming OFF')).toBeInTheDocument();
+    });
+
+    it('should show streaming ON when enabled', () => {
+      mockStreamingEnabled = true;
+      render(<ChatInput onSend={mockOnSend} />);
+
+      expect(screen.getByText('Streaming ON')).toBeInTheDocument();
+    });
+
+    it('should toggle streaming mode when clicked', () => {
+      render(<ChatInput onSend={mockOnSend} />);
+
+      const toggleButton = screen.getByText('Streaming OFF');
+      fireEvent.click(toggleButton);
+
+      expect(mockSetStreamingEnabled).toHaveBeenCalledWith(true);
+    });
+
+    it('should toggle streaming off when currently on', () => {
+      mockStreamingEnabled = true;
+      render(<ChatInput onSend={mockOnSend} />);
+
+      const toggleButton = screen.getByText('Streaming ON');
+      fireEvent.click(toggleButton);
+
+      expect(mockSetStreamingEnabled).toHaveBeenCalledWith(false);
+    });
+
+    it('should have correct aria label for streaming toggle', () => {
+      render(<ChatInput onSend={mockOnSend} />);
+
+      const toggleButton = screen.getByLabelText('Enable streaming');
+      expect(toggleButton).toBeInTheDocument();
+    });
+
+    it('should have correct aria label when streaming is enabled', () => {
+      mockStreamingEnabled = true;
+      render(<ChatInput onSend={mockOnSend} />);
+
+      const toggleButton = screen.getByLabelText('Disable streaming');
+      expect(toggleButton).toBeInTheDocument();
+    });
+
+    it('should disable streaming toggle when input is disabled', () => {
+      render(<ChatInput onSend={mockOnSend} disabled={true} />);
+
+      const toggleButton = screen.getByLabelText('Enable streaming');
+      expect(toggleButton).toBeDisabled();
+    });
+
+    it('should have title tooltip explaining streaming mode', () => {
+      render(<ChatInput onSend={mockOnSend} />);
+
+      const toggleButton = screen.getByTitle('Streaming disabled - responses will appear all at once');
+      expect(toggleButton).toBeInTheDocument();
+    });
+
+    it('should have title tooltip when streaming is enabled', () => {
+      mockStreamingEnabled = true;
+      render(<ChatInput onSend={mockOnSend} />);
+
+      const toggleButton = screen.getByTitle('Streaming enabled - responses will appear word by word');
+      expect(toggleButton).toBeInTheDocument();
+    });
   });
 });

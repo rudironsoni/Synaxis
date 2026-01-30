@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using DotNetEnv;
 using Tests.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure;
 using Microsoft.Extensions.Logging;
@@ -104,8 +105,20 @@ public class SynaxisWebApplicationFactory : WebApplicationFactory<Program>, IAsy
         await Task.WhenAll(_postgres.DisposeAsync().AsTask(), _redis.DisposeAsync().AsTask());
     }
 
+    protected override IHost CreateHost(IHostBuilder builder)
+    {
+        // Set JWT secret BEFORE host creation so it's available when Program.cs reads configuration
+        // This must happen before WebApplication.CreateBuilder is called
+        Environment.SetEnvironmentVariable("Synaxis__InferenceGateway__JwtSecret",
+            "TestJwtSecretKeyThatIsAtLeast32BytesLongForHmacSha256Algorithm");
+
+        return base.CreateHost(builder);
+    }
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        // JWT secret is already set in CreateHost above
+
         builder.UseEnvironment("Development"); // Use Development to load appsettings.Development.json
 
         builder.ConfigureLogging(logging =>
@@ -119,13 +132,13 @@ public class SynaxisWebApplicationFactory : WebApplicationFactory<Program>, IAsy
             // Load .env files if present so environment variables are available for tests
             DotNetEnv.Env.TraversePath().Load();
 
-            var settings = new Dictionary<string, string?>
-            {
-                ["Synaxis:ControlPlane:ConnectionString"] = _postgres.GetConnectionString(),
-                ["Synaxis:ControlPlane:UseInMemory"] = "false",
-                ["Synaxis:ControlPlane:RunMigrations"] = "false",
-                ["ConnectionStrings:Redis"] = $"{_redis.GetConnectionString()},abortConnect=false"
-            };
+        var settings = new Dictionary<string, string?>
+        {
+            ["Synaxis:ControlPlane:ConnectionString"] = _postgres.GetConnectionString(),
+            ["Synaxis:ControlPlane:UseInMemory"] = "false",
+            ["Synaxis:ControlPlane:RunMigrations"] = "false",
+            ["ConnectionStrings:Redis"] = $"{_redis.GetConnectionString()},abortConnect=false"
+        };
             // Map a standard list of provider environment variables to configuration keys.
             // Support both modern names like GROQ_API_KEY and legacy SYNAPLEXER_* variants by trying
             // multiple candidate env var names for each provider.
