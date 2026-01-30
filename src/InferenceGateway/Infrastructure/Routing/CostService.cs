@@ -11,6 +11,11 @@ public sealed class CostService : ICostService
 
     public CostService(ControlPlaneDbContext dbContext)
     {
+        if (dbContext is null)
+        {
+            throw new ArgumentNullException(nameof(dbContext));
+        }
+        
         _dbContext = dbContext;
     }
 

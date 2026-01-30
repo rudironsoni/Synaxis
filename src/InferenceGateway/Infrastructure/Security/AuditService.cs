@@ -11,6 +11,11 @@ public sealed class AuditService : IAuditService
 
     public AuditService(ControlPlaneDbContext dbContext)
     {
+        if (dbContext is null)
+        {
+            throw new ArgumentNullException(nameof(dbContext));
+        }
+        
         _dbContext = dbContext;
     }
 

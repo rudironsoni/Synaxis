@@ -55,8 +55,8 @@ public class SmartRouter : ISmartRouter
                  continue;
              }
 
-             var cost = await _costService.GetCostAsync(candidate.Key!, "default", cancellationToken);
-             enriched.Add(new EnrichedCandidate(candidate, cost, resolution.CanonicalId.ModelPath));
+              var cost = await _costService.GetCostAsync(candidate.Key!, resolution.CanonicalId.ModelPath, cancellationToken);
+              enriched.Add(new EnrichedCandidate(candidate, cost, resolution.CanonicalId.ModelPath));
         }
 
         return enriched
