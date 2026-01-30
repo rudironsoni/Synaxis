@@ -38,14 +38,14 @@ public class SmartRoutingChatClient : IChatClient
         ActivitySource activitySource,
         ILogger<SmartRoutingChatClient> logger)
     {
-        _chatClientFactory = chatClientFactory;
-        _smartRouter = smartRouter;
-        _healthStore = healthStore;
-        _quotaTracker = quotaTracker;
-        _pipelineProvider = pipelineProvider;
-        _strategies = strategies;
-        _activitySource = activitySource;
-        _logger = logger;
+        _chatClientFactory = chatClientFactory ?? throw new ArgumentNullException(nameof(chatClientFactory));
+        _smartRouter = smartRouter ?? throw new ArgumentNullException(nameof(smartRouter));
+        _healthStore = healthStore ?? throw new ArgumentNullException(nameof(healthStore));
+        _quotaTracker = quotaTracker ?? throw new ArgumentNullException(nameof(quotaTracker));
+        _pipelineProvider = pipelineProvider ?? throw new ArgumentNullException(nameof(pipelineProvider));
+        _strategies = strategies ?? throw new ArgumentNullException(nameof(strategies));
+        _activitySource = activitySource ?? throw new ArgumentNullException(nameof(activitySource));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public async Task<ChatResponse> GetResponseAsync(
@@ -154,7 +154,7 @@ public class SmartRoutingChatClient : IChatClient
 
         var pipeline = _pipelineProvider.GetPipeline("provider-retry");
         var strategy = _strategies.FirstOrDefault(s => s.CanHandle(candidate.Config.Type)) 
-                       ?? _strategies.First();
+                       ?? _strategies.FirstOrDefault() ?? throw new InvalidOperationException("No chat client strategies available");
 
         try
         {
@@ -192,7 +192,7 @@ public class SmartRoutingChatClient : IChatClient
 
         var pipeline = _pipelineProvider.GetPipeline("provider-retry");
         var strategy = _strategies.FirstOrDefault(s => s.CanHandle(candidate.Config.Type)) 
-                       ?? _strategies.First();
+                       ?? _strategies.FirstOrDefault() ?? throw new InvalidOperationException("No chat client strategies available");
 
         try
         {
