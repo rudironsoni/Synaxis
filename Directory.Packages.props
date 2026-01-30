@@ -6,6 +6,7 @@
   <ItemGroup>
     <PackageVersion Include="AspNetCore.HealthChecks.Redis" Version="9.0.0" />
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+    <!-- coverlet.msbuild removed from central versions to avoid NU1603 restore issue; individual projects may reference coverlet.collector instead -->
     <PackageVersion Include="DotNetEnv" Version="3.1.1" />
     <PackageVersion Include="GitHub.Copilot.SDK" Version="0.1.19" />
     <PackageVersion Include="Google.Apis.Auth" Version="1.73.0" />
