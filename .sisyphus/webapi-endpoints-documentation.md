@@ -1,7 +1,7 @@
 # Synaxis WebAPI Endpoints Documentation
 
-**Generated:** $(date)  
-**Source:** `/src/InferenceGateway/WebApi/`  
+**Generated:** $(date)
+**Source:** `/src/InferenceGateway/WebApi/`
 **Configuration:** `appsettings.json`, `Program.cs`
 
 ## Overview
@@ -24,15 +24,15 @@ Synaxis exposes a unified, OpenAI-compatible API gateway that routes requests to
 POST /openai/v1/chat/completions
 ```
 
-**Description**: Main OpenAI-compatible chat completion endpoint  
-**Authentication**: Bearer token required  
-**Streaming**: ✅ Full SSE support  
+**Description**: Main OpenAI-compatible chat completion endpoint
+**Authentication**: Bearer token required
+**Streaming**: ✅ Full SSE support
 **Schema**: OpenAI Chat Completions v1 format
 
 **Request Body**:
 ```json
 {
-  "model": "llama-3.1-70b-versatile", 
+  "model": "llama-3.1-70b-versatile",
   "messages": [
     {"role": "user", "content": "Hello!"}
   ],
@@ -88,9 +88,9 @@ data: [DONE]
 POST /openai/v1/completions
 ```
 
-**Status**: ⚠️ DEPRECATED but functional  
-**Description**: Simple text completion (pre-ChatGPT format)  
-**Streaming**: ✅ SSE support  
+**Status**: ⚠️ DEPRECATED but functional
+**Description**: Simple text completion (pre-ChatGPT format)
+**Streaming**: ✅ SSE support
 **Authentication**: Bearer token required
 
 **Request Body**:
@@ -112,8 +112,8 @@ GET /openai/v1/models
 GET /openai/v1/models/{id}
 ```
 
-**Description**: List available models and retrieve model details  
-**Authentication**: Bearer token required  
+**Description**: List available models and retrieve model details
+**Authentication**: Bearer token required
 **Public**: Can be called without authentication in development
 
 **Models Endpoint Response**:
@@ -152,7 +152,7 @@ GET /openai/v1/models/{id}
 POST /openai/v1/responses
 ```
 
-**Status**: ❌ 501 Not Implemented  
+**Status**: ❌ 501 Not Implemented
 **Description**: OpenAI Responses API (future enhancement)
 
 ---
@@ -164,8 +164,8 @@ POST /openai/v1/responses
 GET /oauth/antigravity/callback?code=xxx&state=yyy
 ```
 
-**Description**: OAuth callback handler for Antigravity provider  
-**Authentication**: None (OAuth callback)  
+**Description**: OAuth callback handler for Antigravity provider
+**Authentication**: None (OAuth callback)
 **Usage**: Internal callback URL for OAuth flow
 
 ### 2.2 Authentication Management
@@ -223,10 +223,10 @@ POST /api/identity/{provider}/start
 POST /api/identity/{provider}/complete
 ```
 
-**Description**: Generic identity provider authentication flow  
+**Description**: Generic identity provider authentication flow
 **Parameters**: `provider` - Identity provider identifier
 
-**Start Request** (no body):  
+**Start Request** (no body):
 **Start Response**: Authentication URL and instructions
 
 **Complete Request**:
@@ -242,8 +242,8 @@ POST /api/identity/{provider}/complete
 GET /api/identity/accounts
 ```
 
-**Description**: List all authenticated accounts with masked tokens  
-**Authentication**: Bearer token required  
+**Description**: List all authenticated accounts with masked tokens
+**Authentication**: Bearer token required
 **Security**: Access tokens are masked (first 4 + last 4 characters)
 
 **Response**:
@@ -267,8 +267,8 @@ GET /api/identity/accounts
 POST /auth/dev-login
 ```
 
-**Description**: Simple email-based authentication (dev only)  
-**Security**: ⚠️ DEVELOPMENT ONLY - Auto-registers users  
+**Description**: Simple email-based authentication (dev only)
+**Security**: ⚠️ DEVELOPMENT ONLY - Auto-registers users
 **Rate Limiting**: None
 
 **Request**:
@@ -299,7 +299,7 @@ POST /auth/dev-login
 POST /projects/{projectId}/keys
 ```
 
-**Authentication**: Bearer token required (user must own project)  
+**Authentication**: Bearer token required (user must own project)
 **Description**: Generate project-specific API keys
 
 **Request**:
@@ -328,7 +328,7 @@ POST /projects/{projectId}/keys
 DELETE /projects/{projectId}/keys/{keyId}
 ```
 
-**Authentication**: Bearer token required (user must own project)  
+**Authentication**: Bearer token required (user must own project)
 **Description**: Revoke an API key (soft delete via status flag)
 
 **Response**: `204 No Content`
@@ -342,8 +342,8 @@ DELETE /projects/{projectId}/keys/{keyId}
 GET /health/liveness
 ```
 
-**Purpose**: Kubernetes/Docker health check endpoint  
-**Check**: Basic application health  
+**Purpose**: Kubernetes/Docker health check endpoint
+**Check**: Basic application health
 **Response**: Simple health status
 
 ### 6.2 Readiness Check
@@ -351,7 +351,7 @@ GET /health/liveness
 GET /health/readiness
 ```
 
-**Purpose**: Application startup dependency validation  
+**Purpose**: Application startup dependency validation
 **Checks**:
 - PostgreSQL database connectivity (`ControlPlaneDbContext`)
 - Redis connection (`StackExchange.Redis`)
@@ -374,7 +374,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 **Configuration** (from `Program.cs`):
 - **Algorithm**: HS256 (HMAC-SHA256)
 - **Secret**: `Synaxis:InferenceGateway:JwtSecret` (configurable)
-- **Validation**: 
+- **Validation**:
   - ✅ Issuer signing key
   - ❌ Issuer validation (disabled)
   - ❌ Audience validation (disabled)
@@ -408,24 +408,24 @@ From `/src/InferenceGateway/WebApi/Program.cs` environment mapping:
   "Providers": {
     "Groq": { "Key": "GROQ_API_KEY" },
     "Cohere": { "Key": "COHERE_API_KEY" },
-    "Cloudflare": { 
+    "Cloudflare": {
       "Key": "CLOUDFLARE_API_KEY",
-      "AccountId": "CLOUDFLARE_ACCOUNT_ID" 
+      "AccountId": "CLOUDFLARE_ACCOUNT_ID"
     },
     "Gemini": { "Key": "GEMINI_API_KEY" },
     "OpenRouter": { "Key": "OPENROUTER_API_KEY" },
-    "DeepSeek": { 
+    "DeepSeek": {
       "Key": "DEEPSEEK_API_KEY",
-      "Endpoint": "DEEPSEEK_API_ENDPOINT" 
+      "Endpoint": "DEEPSEEK_API_ENDPOINT"
     },
-    "OpenAI": { 
+    "OpenAI": {
       "Key": "OPENAI_API_KEY",
-      "Endpoint": "OPENAI_API_ENDPOINT" 
+      "Endpoint": "OPENAI_API_ENDPOINT"
     },
-    "Antigravity": { 
+    "Antigravity": {
       "ProjectId": "ANTIGRAVITY_PROJECT_ID",
       "Endpoint": "ANTIGRAVITY_API_ENDPOINT",
-      "FallbackEndpoint": "ANTIGRAVITY_API_ENDPOINT_FALLBACK" 
+      "FallbackEndpoint": "ANTIGRAVITY_API_ENDPOINT_FALLBACK"
     },
     "KiloCode": { "Key": "KILOCODE_API_KEY" },
     "NVIDIA": { "Key": "NVIDIA_API_KEY" },
@@ -470,7 +470,7 @@ From `/src/InferenceGateway/WebApi/Program.cs` environment mapping:
 
 ### Common Error Types
 - `invalid_request_error`: Malformed requests
-- `insufficient_quota`: Provider quota exceeded  
+- `insufficient_quota`: Provider quota exceeded
 - `rate_limit_exceeded`: Too many requests
 - `model_not_found`: Unknown model requested
 - `context_length_exceeded`: Input too long
@@ -552,8 +552,8 @@ From `/src/InferenceGateway/WebApi/Program.cs` environment mapping:
 
 ---
 
-**Total Endpoints**: 15+ endpoints across 5 main categories  
-**Authentication**: JWT Bearer tokens  
-**Streaming**: Full SSE support for real-time responses  
-**Providers**: 13+ AI providers with intelligent routing  
+**Total Endpoints**: 15+ endpoints across 5 main categories
+**Authentication**: JWT Bearer tokens
+**Streaming**: Full SSE support for real-time responses
+**Providers**: 13+ AI providers with intelligent routing
 **Health**: Comprehensive health monitoring with dependency checks
