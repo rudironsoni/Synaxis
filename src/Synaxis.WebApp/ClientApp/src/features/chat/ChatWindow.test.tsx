@@ -5,6 +5,7 @@ import ChatWindow from './ChatWindow';
 // Hoisted mocks
 const mocks = vi.hoisted(() => ({
   sendMessage: vi.fn(),
+  sendMessageStream: vi.fn(),
   addUsage: vi.fn(),
   messagesWhere: vi.fn().mockReturnValue({
     equals: vi.fn().mockReturnValue({
@@ -13,12 +14,15 @@ const mocks = vi.hoisted(() => ({
   }),
   messagesAdd: vi.fn().mockResolvedValue(1),
   gatewayUrl: 'http://localhost:5000',
+  streamingEnabled: false,
+  setStreamingEnabled: vi.fn(),
 }));
 
 // Mock API client
 vi.mock('@/api/client', () => ({
   defaultClient: {
     sendMessage: mocks.sendMessage,
+    sendMessageStream: mocks.sendMessageStream,
     updateConfig: vi.fn(),
   },
 }));
@@ -35,7 +39,11 @@ vi.mock('@/db/db', () => ({
 
 // Mock settings store
 vi.mock('@/stores/settings', () => ({
-  default: (selector: any) => selector({ gatewayUrl: mocks.gatewayUrl }),
+  default: (selector: any) => selector({
+    gatewayUrl: mocks.gatewayUrl,
+    streamingEnabled: mocks.streamingEnabled,
+    setStreamingEnabled: mocks.setStreamingEnabled,
+  }),
 }));
 
 // Mock usage store
@@ -320,6 +328,213 @@ describe('ChatWindow', () => {
 
     await waitFor(() => {
       expect(input.value).toBe('');
+    });
+  });
+
+  describe('Streaming Mode', () => {
+    beforeEach(() => {
+      mocks.streamingEnabled = true;
+    });
+
+    it('should use streaming when enabled', async () => {
+      mocks.messagesWhere.mockReturnValue({
+        equals: vi.fn().mockReturnValue({
+          toArray: vi.fn().mockResolvedValue([]),
+        }),
+      });
+
+      const mockStream = async function* () {
+        yield {
+          id: 'stream-1',
+          object: 'chat.completion.chunk',
+          created: 1234567890,
+          model: 'default',
+          choices: [{ index: 0, delta: { content: 'Hello' }, finish_reason: null }],
+        };
+        yield {
+          id: 'stream-1',
+          object: 'chat.completion.chunk',
+          created: 1234567890,
+          model: 'default',
+          choices: [{ index: 0, delta: { content: ' world' }, finish_reason: null }],
+        };
+        yield {
+          id: 'stream-1',
+          object: 'chat.completion.chunk',
+          created: 1234567890,
+          model: 'default',
+          choices: [{ index: 0, delta: {}, finish_reason: 'stop' }],
+        };
+      };
+
+      mocks.sendMessageStream.mockReturnValue(mockStream());
+
+      render(<ChatWindow sessionId={1} />);
+
+      const input = screen.getByPlaceholderText('Type a message...');
+      fireEvent.change(input, { target: { value: 'Stream test' } });
+      fireEvent.click(screen.getByLabelText('Send'));
+
+      await waitFor(() => {
+        expect(mocks.sendMessageStream).toHaveBeenCalled();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('Hello world')).toBeInTheDocument();
+      }, { timeout: 2000 });
+    });
+
+    it('should disable input while streaming', async () => {
+      mocks.messagesWhere.mockReturnValue({
+        equals: vi.fn().mockReturnValue({
+          toArray: vi.fn().mockResolvedValue([]),
+        }),
+      });
+
+      const mockStream = async function* () {
+        yield {
+          id: 'stream-2',
+          object: 'chat.completion.chunk',
+          created: 1234567890,
+          model: 'default',
+          choices: [{ index: 0, delta: { content: 'Streaming' }, finish_reason: null }],
+        };
+        await new Promise(resolve => setTimeout(resolve, 100));
+        yield {
+          id: 'stream-2',
+          object: 'chat.completion.chunk',
+          created: 1234567890,
+          model: 'default',
+          choices: [{ index: 0, delta: {}, finish_reason: 'stop' }],
+        };
+      };
+
+      mocks.sendMessageStream.mockReturnValue(mockStream());
+
+      render(<ChatWindow sessionId={1} />);
+
+      const input = screen.getByPlaceholderText('Type a message...');
+      fireEvent.change(input, { target: { value: 'Test' } });
+      fireEvent.click(screen.getByLabelText('Send'));
+
+      await waitFor(() => {
+        const disabledInput = screen.getByPlaceholderText('Waiting for response...');
+        expect(disabledInput).toBeDisabled();
+      });
+    });
+
+    it('should show streaming indicator', async () => {
+      mocks.messagesWhere.mockReturnValue({
+        equals: vi.fn().mockReturnValue({
+          toArray: vi.fn().mockResolvedValue([]),
+        }),
+      });
+
+      const mockStream = async function* () {
+        yield {
+          id: 'stream-3',
+          object: 'chat.completion.chunk',
+          created: 1234567890,
+          model: 'default',
+          choices: [{ index: 0, delta: { content: 'Typing' }, finish_reason: null }],
+        };
+        await new Promise(resolve => setTimeout(resolve, 50));
+        yield {
+          id: 'stream-3',
+          object: 'chat.completion.chunk',
+          created: 1234567890,
+          model: 'default',
+          choices: [{ index: 0, delta: {}, finish_reason: 'stop' }],
+        };
+      };
+
+      mocks.sendMessageStream.mockReturnValue(mockStream());
+
+      render(<ChatWindow sessionId={1} />);
+
+      const input = screen.getByPlaceholderText('Type a message...');
+      fireEvent.change(input, { target: { value: 'Test streaming' } });
+      fireEvent.click(screen.getByLabelText('Send'));
+
+      await waitFor(() => {
+        expect(screen.getByText(/streaming/i)).toBeInTheDocument();
+      });
+    });
+
+    it('should handle streaming errors gracefully', async () => {
+      mocks.messagesWhere.mockReturnValue({
+        equals: vi.fn().mockReturnValue({
+          toArray: vi.fn().mockResolvedValue([]),
+        }),
+      });
+
+      mocks.sendMessageStream.mockImplementation(async function* () {
+        throw new Error('Stream failed');
+      });
+
+      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+
+      render(<ChatWindow sessionId={1} />);
+
+      const input = screen.getByPlaceholderText('Type a message...');
+      fireEvent.change(input, { target: { value: 'Error test' } });
+      fireEvent.click(screen.getByLabelText('Send'));
+
+      await waitFor(() => {
+        expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('Failed to send message'));
+      });
+
+      alertSpy.mockRestore();
+    });
+
+    it('should save completed stream message to database', async () => {
+      mocks.messagesWhere.mockReturnValue({
+        equals: vi.fn().mockReturnValue({
+          toArray: vi.fn().mockResolvedValue([]),
+        }),
+      });
+
+      const mockStream = async function* () {
+        yield {
+          id: 'stream-4',
+          object: 'chat.completion.chunk',
+          created: 1234567890,
+          model: 'default',
+          choices: [{ index: 0, delta: { content: 'Complete' }, finish_reason: null }],
+        };
+        yield {
+          id: 'stream-4',
+          object: 'chat.completion.chunk',
+          created: 1234567890,
+          model: 'default',
+          choices: [{ index: 0, delta: { content: ' message' }, finish_reason: null }],
+        };
+        yield {
+          id: 'stream-4',
+          object: 'chat.completion.chunk',
+          created: 1234567890,
+          model: 'default',
+          choices: [{ index: 0, delta: {}, finish_reason: 'stop' }],
+        };
+      };
+
+      mocks.sendMessageStream.mockReturnValue(mockStream());
+
+      render(<ChatWindow sessionId={1} />);
+
+      const input = screen.getByPlaceholderText('Type a message...');
+      fireEvent.change(input, { target: { value: 'DB stream test' } });
+      fireEvent.click(screen.getByLabelText('Send'));
+
+      await waitFor(() => {
+        expect(mocks.messagesAdd).toHaveBeenCalledWith(
+          expect.objectContaining({
+            sessionId: 1,
+            role: 'assistant',
+            content: 'Complete message',
+          })
+        );
+      }, { timeout: 2000 });
     });
   });
 });
