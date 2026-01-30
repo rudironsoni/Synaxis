@@ -1,7 +1,7 @@
 # Synaxis WebApp Features & Gaps Analysis
 
-**Generated:** $(date)  
-**Source:** `/src/Synaxis.WebApp/ClientApp/`  
+**Generated:** $(date)
+**Source:** `/src/Synaxis.WebApp/ClientApp/`
 **Technology Stack:** React 19 + TypeScript + Vite + TailwindCSS + Zustand + Dexie
 
 ## Overview
@@ -46,7 +46,7 @@ Synaxis WebApp is a modern React-based chat interface that provides a user-frien
 // Primary chat functionality
 function ChatWindow({ sessionId }: { sessionId?: number }) {
   const { messages, send } = useChat(sessionId)
-  
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-auto p-2">
@@ -74,10 +74,10 @@ const useSessionsStore = create<SessionsState>()(
   devtools((set, get) => ({
     sessions: [],
     createSession: async (title: string) => {
-      const session = await db.sessions.add({ 
-        title, 
-        createdAt: now, 
-        updatedAt: now 
+      const session = await db.sessions.add({
+        title,
+        createdAt: now,
+        updatedAt: now
       })
       return session
     },
@@ -154,7 +154,7 @@ db.version(1).stores({
 const send = async (text: string) => {
   const userMsg: Message = { sessionId, role: 'user', content: text, createdAt: now }
   await db.messages.add(userMsg)
-  
+
   const resp = await defaultClient.sendMessage([{ role: 'user', content: text }])
   const assistantContent = resp.choices?.[0]?.message?.content ?? 'No response'
   await db.messages.add(reply)
@@ -173,7 +173,7 @@ const send = async (text: string) => {
 // Responsive app shell with sidebar
 function AppShell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  
+
   useEffect(() => {
     const m = window.matchMedia('(max-width: 640px)')
     const fn = () => setSidebarOpen(!m.matches)
@@ -181,7 +181,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
     m.addEventListener('change', fn)
     return () => m.removeEventListener('change', fn)
   }, [])
-  
+
   return (
     <div className="min-h-screen w-full flex">
       {sidebarOpen && (
@@ -227,7 +227,7 @@ async sendMessage(messages: ChatMessage[], model: string = 'default'): Promise<C
 - ❌ Cancel streaming requests
 - ❌ Stream error recovery
 
-**API Capability**: ✅ WebAPI supports full streaming  
+**API Capability**: ✅ WebAPI supports full streaming
 **Implementation Gap**: WebApp hardcoded to `stream: false`
 
 ### 2. No Model/Provider Selection
@@ -337,15 +337,15 @@ if(usage?.total) addUsage(usage.total)
 ## WebAPI vs WebApp Capability Gap Analysis
 
 ### WebAPI Capabilities (✅ Full Support)
-| Feature | WebAPI Status | WebApp Status |
-|---------|---------------|---------------|
-| **Streaming** | ✅ Full SSE support | ❌ Hardcoded non-streaming |
-| **Model Selection** | ✅ All 13+ providers | ❌ Fixed model only |
-| **Authentication** | ✅ JWT Bearer | ❌ Basic token only |
-| **Provider Health** | ✅ Health checks | ❌ No visibility |
-| **Usage Analytics** | ✅ OpenTelemetry | ❌ Basic local tracking |
-| **Error Handling** | ✅ Structured errors | ❌ Alert-based only |
-| **Admin Features** | ✅ Full control plane | ❌ No admin UI |
+| Feature             | WebAPI Status        | WebApp Status             |
+| ------------------- | -------------------- | ------------------------- |
+| **Streaming**       | ✅ Full SSE support   | ❌ Hardcoded non-streaming |
+| **Model Selection** | ✅ All 13+ providers  | ❌ Fixed model only        |
+| **Authentication**  | ✅ JWT Bearer         | ❌ Basic token only        |
+| **Provider Health** | ✅ Health checks      | ❌ No visibility           |
+| **Usage Analytics** | ✅ OpenTelemetry      | ❌ Basic local tracking    |
+| **Error Handling**  | ✅ Structured errors  | ❌ Alert-based only        |
+| **Admin Features**  | ✅ Full control plane | ❌ No admin UI             |
 
 ### Provider Configuration Gap
 ```json
@@ -387,7 +387,7 @@ async sendStreamMessage(messages: ChatMessage[], model: string, onChunk: (chunk:
     body: JSON.stringify({ model, messages, stream: true }),
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
   })
-  
+
   const reader = response.body?.getReader()
   // Handle SSE stream...
 }
@@ -455,8 +455,8 @@ async getProviderHealth(): Promise<ProviderHealth[]> {
 // Implement in client.ts
 class GatewayClient {
   async sendStreamingMessage(
-    messages: ChatMessage[], 
-    model: string, 
+    messages: ChatMessage[],
+    model: string,
     onToken: (token: string) => void,
     onComplete: () => void,
     onError: (error: Error) => void
@@ -474,17 +474,17 @@ class GatewayClient {
           stream: true
         })
       })
-      
+
       const reader = response.body?.getReader()
       const decoder = new TextDecoder()
-      
+
       while (true) {
         const { done, value } = await reader!.read()
         if (done) break
-        
+
         const chunk = decoder.decode(value)
         const lines = chunk.split('\n')
-        
+
         for (const line of lines) {
           if (line.startsWith('data: ')) {
             const data = line.slice(6)
@@ -492,7 +492,7 @@ class GatewayClient {
               onComplete()
               return
             }
-            
+
             try {
               const parsed = JSON.parse(data)
               const content = parsed.choices?.[0]?.delta?.content
@@ -517,14 +517,14 @@ export default function ModelSelector() {
   const [models, setModels] = useState<Model[]>([])
   const selectedModel = useSettingsStore(s => s.selectedModel)
   const setSelectedModel = useSettingsStore(s => s.setSelectedModel)
-  
+
   useEffect(() => {
     loadAvailableModels().then(setModels)
   }, [])
-  
+
   return (
-    <select 
-      value={selectedModel} 
+    <select
+      value={selectedModel}
       onChange={(e) => setSelectedModel(e.target.value)}
       className="w-full rounded px-2 py-1"
     >
@@ -543,15 +543,15 @@ export default function ModelSelector() {
 // New component: ErrorBoundary.tsx
 export class ErrorBoundary extends Component {
   state = { hasError: false, error: null }
-  
+
   static getDerivedStateFromError(error) {
     return { hasError: true, error }
   }
-  
+
   componentDidCatch(error, errorInfo) {
     console.error('React Error Boundary caught:', error, errorInfo)
   }
-  
+
   render() {
     if (this.state.hasError) {
       return (
@@ -567,7 +567,7 @@ export class ErrorBoundary extends Component {
         </div>
       )
     }
-    
+
     return this.props.children
   }
 }
@@ -595,13 +595,13 @@ export class ErrorBoundary extends Component {
 
 **Impact Assessment**:
 - **High Impact**: Streaming + Model Selection = Core functionality gaps
-- **Medium Impact**: Authentication + Admin UI = Operational concerns  
+- **Medium Impact**: Authentication + Admin UI = Operational concerns
 - **Low Impact**: Advanced features = Nice-to-have enhancements
 
 **Next Steps**: Focus on streaming support and model selection as Phase 1 priorities, then build admin/provder management capabilities.
 
 ---
 
-**Total Features Implemented**: 6/12 core features  
-**Critical Gaps**: 5 major functionality gaps identified  
+**Total Features Implemented**: 6/12 core features
+**Critical Gaps**: 5 major functionality gaps identified
 **Recommendation**: Prioritize streaming support and model selection for immediate user experience improvement

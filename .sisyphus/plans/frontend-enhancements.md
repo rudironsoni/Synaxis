@@ -3,14 +3,14 @@
 ## TL;DR
 
 > **Quick Summary**: Replace current chat-focused interface with comprehensive dashboard similar to 9router, featuring provider management, usage analytics, model configuration, and API key management.
-> 
-> **Deliverables**: 
+>
+> **Deliverables**:
 > - Dashboard with provider status cards and analytics
 > - Provider management interface
 > - Usage tracking and monitoring
 > - API key management
 > - Model configuration interface
-> 
+>
 > **Estimated Effort**: Large
 > **Parallel Execution**: YES - 3 waves (foundation → features → integration)
 > **Critical Path**: Dashboard foundation → Provider management → Analytics → Integration
@@ -82,7 +82,7 @@ Enhance the Synaxis frontend with a 9router-style dashboard interface (inspired 
 - **Sidebar Replacement**: Replace `SessionList` with dashboard navigation (Providers, Analytics, Keys, Models, Chat tabs)
 - **Main Content Area**: Use React Router `Outlet` to render dashboard sections
 - **Mobile Responsiveness**: Keep existing sidebar collapse behavior, dashboard sections adapt to mobile
-- **Route Structure**: 
+- **Route Structure**:
   - `/dashboard` → Main dashboard with overview
   - `/dashboard/providers` → Provider management
   - `/dashboard/analytics` → Usage analytics
@@ -173,7 +173,7 @@ GET /api/analytics/providers
 Response: {
   "providers": [
     {
-      "id": "groq", 
+      "id": "groq",
       "performance": {"avgResponseTime": 450, "successRate": 0.98},
       "usage": {"dailyTokens": 1500, "dailyRequests": 15}
     }
@@ -543,7 +543,7 @@ dotnet test src/InferenceGateway/WebApi.Tests/ProvidersEndpointTests.cs
   # Agent runs API tests:
   curl -s http://localhost:5000/api/analytics/usage | jq '.totalTokens > 0'
   # Assert: Output is "true"
-  
+
   curl -s http://localhost:5000/api/analytics/providers | jq '.providers | length > 0'
   # Assert: Output is "true"
   ```
@@ -595,7 +595,7 @@ dotnet test src/InferenceGateway/WebApi.Tests/ProvidersEndpointTests.cs
   # Agent runs API tests:
   curl -s http://localhost:5000/api/config/models | jq '.models | length > 0'
   # Assert: Output is "true"
-  
+
   curl -s -X POST http://localhost:5000/api/config/models -H "Content-Type: application/json" -d '{"model":"test"}' | jq '.success'
   # Assert: Output is "true"
   ```
@@ -647,7 +647,7 @@ dotnet test src/InferenceGateway/WebApi.Tests/ProvidersEndpointTests.cs
   # Agent runs auth tests:
   curl -s -X POST http://localhost:5000/auth/register -H "Content-Type: application/json" -d '{"email":"test@test.com","password":"test"}' | jq '.success'
   # Assert: Output is "true"
-  
+
   curl -s -X POST http://localhost:5000/auth/login -H "Content-Type: application/json" -d '{"email":"test@test.com","password":"test"}' | jq '.token'
   # Assert: Output contains JWT token
   ```
@@ -701,7 +701,7 @@ dotnet test src/InferenceGateway/WebApi.Tests/ProvidersEndpointTests.cs
   # Agent checks dependency installation:
   grep "react-router-dom" package.json
   # Assert: Dependency found in package.json
-  
+
   # Agent checks routing setup:
   grep "BrowserRouter" src/main.tsx
   # Assert: BrowserRouter found in main.tsx
@@ -763,7 +763,7 @@ dotnet test src/InferenceGateway/WebApi.Tests/ProvidersEndpointTests.cs
   # Agent runs component tests:
   npm run dev & sleep 5 && npx vitest run src/features/dashboard/DashboardLayout.test.tsx
   # Assert: Tests pass (0 failures)
-  
+
   # Agent runs routing integration tests:
   npx vitest run src/features/dashboard/routing.test.tsx
   # Assert: Routing tests pass (0 failures)
@@ -850,7 +850,7 @@ export const useDashboardStore = create<DashboardState>()(
   # Agent runs via Node.js test:
   bun -e "import { useDashboardStore } from './src/stores/dashboard'; console.log('Store loaded successfully')"
   # Assert: Output is "Store loaded successfully"
-  
+
   npx vitest run src/stores/dashboard.test.ts
   # Assert: All tests pass (0 failures)
   ```
@@ -934,7 +934,7 @@ export const realProviderService = {
   # Agent runs via Node.js test:
   bun -e "import { mockProviderService } from './src/services/mockProviderService'; console.log(mockProviderService.getProviders().length)"
   # Assert: Output is greater than 0
-  
+
   npx vitest run src/services/mockProviderService.test.ts
   # Assert: All tests pass (0 failures)
   ```
@@ -991,7 +991,7 @@ export const realProviderService = {
   # Agent runs provider component tests:
   npm run test -- src/features/dashboard/providers/ProviderCards.test.tsx
   # Assert: Tests pass (0 failures)
-  
+
   # Agent runs modal integration tests:
   npm run test -- src/features/dashboard/providers/ProviderModal.test.tsx
   # Assert: Modal tests pass (0 failures)
@@ -1047,7 +1047,7 @@ export const realProviderService = {
   # Agent runs analytics component tests:
   npm run test -- src/features/dashboard/analytics/AnalyticsCharts.test.tsx
   # Assert: Chart tests pass (0 failures)
-  
+
   # Agent runs usage stats tests:
   npm run test -- src/features/dashboard/analytics/UsageStats.test.tsx
   # Assert: Usage tests pass (0 failures)
@@ -1103,7 +1103,7 @@ export const realProviderService = {
   # Agent runs API key component tests:
   npm run test -- src/features/dashboard/keys/ApiKeyList.test.tsx
   # Assert: Key list tests pass (0 failures)
-  
+
   # Agent runs key creation modal tests:
   npm run test -- src/features/dashboard/keys/KeyCreationModal.test.tsx
   # Assert: Modal tests pass (0 failures)
@@ -1159,7 +1159,7 @@ export const realProviderService = {
   # Agent runs model list component tests:
   npm run test -- src/features/dashboard/models/ModelList.test.tsx
   # Assert: Model list tests pass (0 failures)
-  
+
   # Agent runs model configuration tests:
   npm run test -- src/features/dashboard/models/ModelConfiguration.test.tsx
   # Assert: Configuration tests pass (0 failures)
@@ -1217,7 +1217,7 @@ export const realProviderService = {
   # Agent runs API integration tests:
   curl -s http://localhost:8080/api/providers | jq '.providers | length'
   # Assert: Output is greater than 0
-  
+
   npx vitest run src/features/dashboard/integration.test.ts
   # Assert: All integration tests pass (0 failures)
   ```
@@ -1270,7 +1270,7 @@ export const realProviderService = {
   # Agent runs responsive design tests:
   npm run test -- src/features/dashboard/responsive.test.tsx
   # Assert: Responsive tests pass (0 failures)
-  
+
   # Agent runs mobile layout tests:
   npm run test -- src/features/dashboard/mobile.test.tsx
   # Assert: Mobile layout tests pass (0 failures)
@@ -1324,7 +1324,7 @@ export const realProviderService = {
   # Agent runs full test suite:
   npx vitest run
   # Assert: All tests pass (0 failures)
-  
+
   # Check for console errors:
   bun run dev 2>&1 | grep -i error
   # Assert: No error output
