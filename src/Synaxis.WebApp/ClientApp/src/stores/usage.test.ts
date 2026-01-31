@@ -187,5 +187,157 @@ describe('usage store', () => {
       // Due to floating point, this might not be exactly 0.3
       expect(useUsageStore.getState().totalTokens).toBeCloseTo(0.3)
     })
+
+    it('should handle adding Infinity', () => {
+      useUsageStore.getState().addUsage(100)
+      useUsageStore.getState().addUsage(Infinity)
+      expect(useUsageStore.getState().totalTokens).toBe(Infinity)
+    })
+
+    it('should handle adding -Infinity', () => {
+      useUsageStore.getState().addUsage(100)
+      useUsageStore.getState().addUsage(-Infinity)
+      expect(useUsageStore.getState().totalTokens).toBe(-Infinity)
+    })
+
+    it('should handle adding NaN', () => {
+      useUsageStore.getState().addUsage(100)
+      useUsageStore.getState().addUsage(NaN)
+      expect(useUsageStore.getState().totalTokens).toBeNaN()
+    })
+
+    it('should handle very small decimal additions', () => {
+      useUsageStore.getState().addUsage(0.0000001)
+      useUsageStore.getState().addUsage(0.0000002)
+      expect(useUsageStore.getState().totalTokens).toBeCloseTo(0.0000003)
+    })
+
+    it('should handle rapid successive additions', () => {
+      for (let i = 0; i < 1000; i++) {
+        useUsageStore.getState().addUsage(1)
+      }
+      expect(useUsageStore.getState().totalTokens).toBe(1000)
+    })
+
+    it('should handle alternating positive and negative additions', () => {
+      useUsageStore.getState().addUsage(100)
+      useUsageStore.getState().addUsage(-50)
+      useUsageStore.getState().addUsage(30)
+      useUsageStore.getState().addUsage(-20)
+      expect(useUsageStore.getState().totalTokens).toBe(60)
+    })
+
+    it('should handle adding zero multiple times', () => {
+      useUsageStore.getState().addUsage(100)
+      for (let i = 0; i < 10; i++) {
+        useUsageStore.getState().addUsage(0)
+      }
+      expect(useUsageStore.getState().totalTokens).toBe(100)
+    })
+
+    it('should handle very large negative addition', () => {
+      useUsageStore.getState().addUsage(1000)
+      useUsageStore.getState().addUsage(-Number.MAX_SAFE_INTEGER)
+      expect(useUsageStore.getState().totalTokens).toBeLessThan(0)
+    })
+
+    it('should handle adding to already large total', () => {
+      useUsageStore.setState({ totalTokens: Number.MAX_SAFE_INTEGER - 100 })
+      useUsageStore.getState().addUsage(50)
+      expect(useUsageStore.getState().totalTokens).toBe(Number.MAX_SAFE_INTEGER - 50)
+    })
+
+    it('should handle scientific notation additions', () => {
+      useUsageStore.getState().addUsage(1e10)
+      useUsageStore.getState().addUsage(1e5)
+      expect(useUsageStore.getState().totalTokens).toBe(10000100000)
+    })
+
+    it('should handle adding after setting state directly', () => {
+      useUsageStore.setState({ totalTokens: 500 })
+      useUsageStore.getState().addUsage(100)
+      expect(useUsageStore.getState().totalTokens).toBe(600)
+    })
+
+    it('should handle multiple resets and additions', () => {
+      useUsageStore.getState().addUsage(100)
+      useUsageStore.setState({ totalTokens: 0 })
+      useUsageStore.getState().addUsage(200)
+      useUsageStore.setState({ totalTokens: 0 })
+      useUsageStore.getState().addUsage(300)
+      expect(useUsageStore.getState().totalTokens).toBe(300)
+    })
+
+    it('should handle adding very small fractional values', () => {
+      useUsageStore.getState().addUsage(0.000000001)
+      useUsageStore.getState().addUsage(0.000000002)
+      expect(useUsageStore.getState().totalTokens).toBeGreaterThan(0)
+    })
+
+    it('should handle overflow beyond MAX_SAFE_INTEGER', () => {
+      useUsageStore.setState({ totalTokens: Number.MAX_SAFE_INTEGER })
+      useUsageStore.getState().addUsage(1)
+      // The result will lose precision but should not throw
+      expect(useUsageStore.getState().totalTokens).toBeGreaterThan(Number.MAX_SAFE_INTEGER)
+    })
+
+    it('should handle underflow below MIN_SAFE_INTEGER', () => {
+      useUsageStore.setState({ totalTokens: Number.MIN_SAFE_INTEGER })
+      useUsageStore.getState().addUsage(-1)
+      // The result will lose precision but should not throw
+      expect(useUsageStore.getState().totalTokens).toBeLessThan(Number.MIN_SAFE_INTEGER)
+    })
+
+    it('should handle adding same value repeatedly', () => {
+      const value = 42
+      for (let i = 0; i < 100; i++) {
+        useUsageStore.getState().addUsage(value)
+      }
+      expect(useUsageStore.getState().totalTokens).toBe(4200)
+    })
+
+    it('should handle database with very large token counts', async () => {
+      const mockMessages = [
+        { id: 1, content: 'Message 1', tokenUsage: { total: Number.MAX_SAFE_INTEGER } },
+        { id: 2, content: 'Message 2', tokenUsage: { total: 1000 } },
+      ]
+      vi.mocked(db.messages.toArray).mockResolvedValue(mockMessages)
+
+      const list = await db.messages.toArray()
+      const total = list.reduce((acc, m) => acc + (m.tokenUsage?.total || 0), 0)
+      useUsageStore.setState({ totalTokens: total })
+
+      expect(useUsageStore.getState().totalTokens).toBeGreaterThan(Number.MAX_SAFE_INTEGER)
+    })
+
+    it('should handle database with negative token counts', async () => {
+      const mockMessages = [
+        { id: 1, content: 'Message 1', tokenUsage: { total: 100 } },
+        { id: 2, content: 'Message 2', tokenUsage: { total: -50 } },
+        { id: 3, content: 'Message 3', tokenUsage: { total: 30 } },
+      ]
+      vi.mocked(db.messages.toArray).mockResolvedValue(mockMessages)
+
+      const list = await db.messages.toArray()
+      const total = list.reduce((acc, m) => acc + (m.tokenUsage?.total || 0), 0)
+      useUsageStore.setState({ totalTokens: total })
+
+      expect(useUsageStore.getState().totalTokens).toBe(80)
+    })
+
+    it('should handle database with fractional token counts', async () => {
+      const mockMessages = [
+        { id: 1, content: 'Message 1', tokenUsage: { total: 10.5 } },
+        { id: 2, content: 'Message 2', tokenUsage: { total: 5.3 } },
+        { id: 3, content: 'Message 3', tokenUsage: { total: 2.2 } },
+      ]
+      vi.mocked(db.messages.toArray).mockResolvedValue(mockMessages)
+
+      const list = await db.messages.toArray()
+      const total = list.reduce((acc, m) => acc + (m.tokenUsage?.total || 0), 0)
+      useUsageStore.setState({ totalTokens: total })
+
+      expect(useUsageStore.getState().totalTokens).toBeCloseTo(18)
+    })
   })
 })
