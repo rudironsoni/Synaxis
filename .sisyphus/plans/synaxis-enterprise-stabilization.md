@@ -1187,7 +1187,7 @@ Parallel Speedup: ~60% faster than sequential
   - All tests use mocks for database dependencies
   - Total: 62 tests passing (100% pass rate)
 
-- [ ] 4.2. Add Component Tests for UI Components
+- [x] 4.2. Add Component Tests for UI Components
   **What to do**:
   - Test `Button` component (click, disabled states)
   - Test `Input` component (change, validation)
@@ -1226,6 +1226,15 @@ Parallel Speedup: ~60% faster than sequential
   - Message: `test: Add component tests for UI components`
   - Files: `src/Synaxis.WebApp/ClientApp/src/components/ui/*.test.tsx`
   - Pre-commit: `npm test components`
+
+  **Status**: COMPLETED (2026-01-31)
+  **Results**:
+  - Button.test.tsx: 27 tests (variants, interactions, disabled state, accessibility)
+  - Input.test.tsx: 35 tests (rendering, interactions, types, events, accessibility)
+  - Modal.test.tsx: 21 tests (visibility, content, close interactions, structure)
+  - Badge.test.tsx: 23 tests (rendering, styling, variants, use cases)
+  - AppShell.test.tsx: 22 tests (layout, header, sidebar, settings dialog)
+  - Total: 128 tests passing (100% pass rate)
 
 - [ ] 4.3. Add Component Tests for Chat Features
   **What to do**:
