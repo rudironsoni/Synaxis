@@ -264,7 +264,7 @@ Parallel Speedup: ~60% faster than sequential
 
 > Execute these BEFORE any implementation. These are planning/discovery tasks.
 
-- [ ] 0.1. Verify Repository State
+- [x] 0.1. Verify Repository State
   **What to do**:
   - Ensure Synaxis.sln builds without errors
   - Ensure WebApp builds with `npm run build`
@@ -305,11 +305,20 @@ Parallel Speedup: ~60% faster than sequential
 
   **Commit**: NO
 
+  **Status**: COMPLETED (2026-01-30)
+  **Results**:
+  - dotnet build Synaxis.sln: FAILED (6 errors, 0 warnings)
+    - 2 TypeScript errors (unused declarations in HealthDashboard.tsx, ChatWindow.tsx)
+    - 3 C# test compile errors (unreachable code, null dereference, missing Name member)
+  - npm run build: FAILED (2 TypeScript errors)
+  - docker compose build: SUCCEEDED (with warnings about missing env vars)
+  **Notes**: Baseline verification complete. Build issues recorded in issues.md for later phases.
+
 ---
 
 ### Phase 1: Discovery & Baseline (Wave 1)
 
-- [ ] 1.1. Measure Baseline Test Coverage (Backend)
+- [x] 1.1. Measure Baseline Test Coverage (Backend)
   **What to do**:
   - Install Coverlet package if not present
   - Run coverage on all test projects
@@ -348,7 +357,14 @@ Parallel Speedup: ~60% faster than sequential
 
   **Commit**: NO
 
-- [ ] 1.2. Measure Baseline Test Coverage (Frontend)
+  **Status**: COMPLETED (2026-01-30)
+  **Results**:
+  - Baseline coverage: 7.19% (0.0719)
+  - Coverage report: ./coverage/coverage.xml
+  - Baseline saved to: .sisyphus/baseline-coverage.txt
+  - Note: Partial failure due to central package management issue (NU1010), but coverage was measured
+
+- [x] 1.2. Measure Baseline Test Coverage (Frontend)
   **What to do**:
   - Verify Vitest coverage config
   - Run coverage on all test files
@@ -388,7 +404,14 @@ Parallel Speedup: ~60% faster than sequential
 
   **Commit**: NO
 
-- [ ] 1.3. Measure Smoke Test Flakiness Baseline
+  **Status**: COMPLETED (2026-01-30)
+  **Results**:
+  - Baseline coverage: 85.77% (already above 80% target!)
+  - Coverage report: src/Synaxis.WebApp/ClientApp/coverage/lcov-report/index.html
+  - Baseline saved to: .sisyphus/baseline-coverage-frontend.txt
+  - All tests passed: 127 tests
+
+- [x] 1.3. Measure Smoke Test Flakiness Baseline
   **What to do**:
   - Run smoke tests 10 times consecutively
   - Record pass/fail for each run
@@ -430,7 +453,14 @@ Parallel Speedup: ~60% faster than sequential
 
   **Commit**: NO
 
-- [ ] 1.4. Document Current WebAPI Endpoints
+  **Status**: COMPLETED (2026-01-30)
+  **Results**:
+  - 10 runs, all passed
+  - Failure rate: 0.0% (0/10 runs)
+  - No flaky tests observed
+  - Results saved to: .sisyphus/smoke-test-results.txt, .sisyphus/baseline-flakiness.txt, .sisyphus/flaky-tests.txt
+
+- [x] 1.4. Document Current WebAPI Endpoints
   **What to do**:
   - List ALL WebAPI routes (including minimal APIs)
   - Document request/response schemas
@@ -480,7 +510,14 @@ Parallel Speedup: ~60% faster than sequential
 
   **Commit**: NO
 
-- [ ] 1.5. Document Current WebApp Features & Gaps
+  **Status**: COMPLETED (2026-01-30)
+  **Results**:
+  - Documentation file created: .sisyphus/webapi-endpoints.md
+  - All WebAPI routes documented with methods, auth, streaming support
+  - Request/response schemas documented
+  - Missing endpoints in WebApp identified (noted /v1 vs /openai/v1 mismatch)
+
+- [x] 1.5. Document Current WebApp Features & Gaps
   **What to do**:
   - List ALL WebApp components/views
   - Identify which WebAPI endpoints are used
@@ -527,11 +564,18 @@ Parallel Speedup: ~60% faster than sequential
 
   **Commit**: NO
 
+  **Status**: COMPLETED (2026-01-30)
+  **Results**:
+  - Documentation file created: .sisyphus/webapp-features.md
+  - All WebApp components/views listed
+  - WebAPI endpoint usage documented
+  - Missing features identified (streaming backend test, model-selection UI, admin-login wiring)
+
 ---
 
 ### Phase 2: Test Infrastructure & Smoke Test Stabilization (Wave 2)
 
-- [ ] 2.1. Setup Backend Test Mocking Framework
+- [x] 2.1. Setup Backend Test Mocking Framework
   **What to do**:
   - Install NSubstitute or Moq package
   - Create mock base classes for `IChatClient`, `IProviderRegistry`
@@ -577,7 +621,16 @@ Parallel Speedup: ~60% faster than sequential
   - Files: `tests/Common/TestBase.cs`, `tests/Common/*.csproj`
   - Pre-commit: `dotnet build tests/Common`
 
-- [ ] 2.2. Refactor Smoke Tests to Use Mock Providers
+  **Status**: COMPLETED (2026-01-30)
+  **Results**:
+  - Test infrastructure was already complete
+  - Fixed build error: replaced coverlet.msbuild with coverlet.collector
+  - TestBase.cs exists with mock setup (factory methods for IChatClient, IProviderRegistry, etc.)
+  - TestDataFactory.cs exists for test data
+  - InMemoryDbContext.cs exists for in-memory database
+  - Build verification: 0 warnings, 0 errors
+
+- [x] 2.2. Refactor Smoke Tests to Use Mock Providers
   **What to do**:
 
   **Step 1: Extract and Mock ExecuteSingleAttemptAsync Logic**
@@ -674,7 +727,18 @@ Parallel Speedup: ~60% faster than sequential
     - `tests/InferenceGateway/IntegrationTests/Security/RetryPolicyTests.cs` (new)
   - Pre-commit: `dotnet test tests/InferenceGateway.IntegrationTests`
 
-- [ ] 2.3. Fix Identified Flaky Tests
+  **Status**: COMPLETED (2026-01-30)
+  **Results**:
+  - MockSmokeTestHelper.cs already existed with comprehensive mock infrastructure
+  - SmokeTestExecutor already supported DI via HttpClient (no refactoring needed)
+  - RetryPolicyTests.cs created with 16 test cases (all passing)
+  - CircuitBreakerSmokeTests.cs created with circuit breaker logic
+  - ProviderModelSmokeTests updated with [Trait("Category", "Mocked")]
+  - Circuit breaker state file created: .sisyphus/circuit-breaker-state.json
+  - Test results: 87/87 passed (100% pass rate)
+  - Flakiness: 0% (10 consecutive runs verified)
+
+- [x] 2.3. Fix Identified Flaky Tests
   **What to do**:
   - For each test identified as flaky in Phase 1:
     - Add proper cleanup (teardown)
@@ -720,6 +784,15 @@ Parallel Speedup: ~60% faster than sequential
   - Message: `fix: Fix flaky test [test name] - [reason]`
   - Files: Specific test file
   - Pre-commit: `dotnet test [file]`
+
+  **Status**: COMPLETED (2026-01-30)
+  **Results**:
+  - Baseline flakiness showed 0% failure rate (no flaky tests in smoke tests)
+  - Found flaky test patterns in IdentityManagerTests.cs using Task.Delay for synchronization
+  - Fixed IdentityManager background loading synchronization by adding TaskCompletionSource
+  - Fixed test failure in RefreshTokenAsync_ExpiredToken_ThrowsException by adding null check and proper mock setup
+  - Test results: 11/11 passed (100% pass rate)
+  - Build: 0 warnings, 0 errors
 
 - [ ] 2.4. Add Integration Tests with Test Containers
   **What to do**:

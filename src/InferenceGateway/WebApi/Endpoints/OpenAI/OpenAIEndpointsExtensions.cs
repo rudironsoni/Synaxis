@@ -146,15 +146,132 @@ public static class OpenAIEndpointsExtensions
         })
         .WithName("ChatCompletions");
 
-        // Responses
-        group.MapPost("/v1/responses", async (HttpContext context, RoutingService routingService, CancellationToken ct) =>
+// Responses
+        group.MapPost("/v1/responses", async (HttpContext context, IMediator mediator, CancellationToken ct) =>
         {
-             return Results.StatusCode(501); 
-        })
-        .WithTags("Responses");
+            var request = await OpenAIRequestParser.ParseAsync(context, ct);
+            if (request == null) return Results.BadRequest("Invalid request body");
 
-        // Legacy & Models
+            var messages = OpenAIRequestMapper.ToChatMessages(request);
+
+            if (request.Stream)
+            {
+                context.Response.Headers.ContentType = "text/event-stream";
+                context.Response.Headers.CacheControl = "no-cache";
+                context.Response.Headers.Connection = "keep-alive";
+
+                var id = "resp_" + Guid.NewGuid().ToString("N");
+                var created = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
+                var stream = mediator.CreateStream(new ChatStreamCommand(request, messages), ct);
+
+                await foreach (var update in stream)
+                {
+                    var content = update.Text;
+
+                    if (string.IsNullOrEmpty(content)) continue;
+
+                    var chunk = new ResponseStreamChunk
+                    {
+                        Id = id,
+                        Object = "response.output_item.delta",
+                        Created = created,
+                        Model = request.Model ?? "default",
+                        Delta = new ResponseDelta { Content = content }
+                    };
+                    await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(chunk, ModelJsonContext.Options)}\n\n", ct);
+                    await context.Response.Body.FlushAsync(ct);
+                }
+
+                var finalChunk = new ResponseStreamChunk
+                {
+                    Id = id,
+                    Object = "response.completed",
+                    Created = created,
+                    Model = request.Model ?? "default",
+                    Delta = new ResponseDelta()
+                };
+                await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(finalChunk, ModelJsonContext.Options)}\n\n", ct);
+                await context.Response.WriteAsync("data: [DONE]\n\n", ct);
+
+                return Results.Empty;
+            }
+            else
+            {
+                var response = await mediator.Send(new ChatCommand(request, messages), ct);
+
+                var message = response.Messages.FirstOrDefault();
+                var content = message?.Text ?? "";
+
+                var openAIResponse = new ResponseCompletion
+                {
+                    Id = "resp_" + Guid.NewGuid().ToString("N"),
+                    Object = "response",
+                    Created = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                    Model = request.Model ?? "default",
+                    Output = new List<ResponseOutput>
+                    {
+                        new ResponseOutput
+                        {
+                            Type = "message",
+                            Role = "assistant",
+                            Content = new List<ResponseContent>
+                            {
+                                new ResponseContent
+                                {
+                                    Type = "output_text",
+                                    Text = content
+                                }
+                            }
+                        }
+                    }
+                };
+
+                return Results.Json(openAIResponse, ModelJsonContext.Options);
+            }
+        })
+        .WithTags("Responses")
+        .WithSummary("Create response")
+        .WithDescription("OpenAI-compatible responses endpoint supporting both streaming and non-streaming modes");
+
+// Legacy & Models
         group.MapLegacyCompletions();
-        group.MapModels(); 
+        group.MapModels();
     }
+}
+
+public class ResponseStreamChunk
+{
+    public string Id { get; set; } = "";
+    public string Object { get; set; } = "";
+    public long Created { get; set; }
+    public string Model { get; set; } = "";
+    public ResponseDelta Delta { get; set; } = new();
+}
+
+public class ResponseDelta
+{
+    public string Content { get; set; } = "";
+}
+
+public class ResponseCompletion
+{
+    public string Id { get; set; } = "";
+    public string Object { get; set; } = "";
+    public long Created { get; set; }
+    public string Model { get; set; } = "";
+    public List<ResponseOutput> Output { get; set; } = new();
+}
+
+public class ResponseOutput
+{
+    public string Type { get; set; } = "";
+    public string Role { get; set; } = "";
+    public List<ResponseContent> Content { get; set; } = new();
+}
+
+public class ResponseContent
+{
+    public string Type { get; set; } = "";
+    public string Text { get; set; } = "";
 }
