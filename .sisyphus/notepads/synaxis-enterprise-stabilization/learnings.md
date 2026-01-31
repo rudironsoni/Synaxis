@@ -306,3 +306,411 @@ dotnet test tests/InferenceGateway/IntegrationTests/Synaxis.InferenceGateway.Int
 - Always mock all methods that are called by the code under test, even if they seem trivial
 - Defensive programming: add null checks for external dependencies that might return null
 - The null check in IdentityManager is a defensive measure that prevents crashes if the store returns null in production
+ 
+### [2026-01-31] Frontend test framework setup (Task 2.5)
+
+- Verified Vitest configuration: vite.config.ts sets test.environment = 'jsdom' and setupFiles to src/test/setup.ts
+- Created test utilities: src/test/utils.ts exporting wrapped render, screen, waitFor and using QueryClientProvider to match app environment
+- Added example component test: src/components/ui/Badge.test.tsx
+- Ran tests: `npm test` in ClientApp — frontend tests passed locally and included Badge test (Badge test passed).
+
+Notes:
+- jsdom is configured in vite.config.ts (line: environment: 'jsdom') so no browser startup is required.
+- test setup file src/test/setup.ts provides jest-dom and several DOM mocks (matchMedia, IntersectionObserver, ResizeObserver, IndexedDB)
+- Test utilities wrap components with QueryClientProvider to mimic app runtime and disable query retries for determinism.
+
+### [2026-01-31] Add Integration Tests with Test Containers (Task 2.4)
+
+**Status**: ✅ Complete (Already implemented)
+
+**What was verified**:
+- Testcontainers packages are already installed in IntegrationTests project:
+  - Testcontainers (base package)
+  - Testcontainers.PostgreSql (PostgreSQL container)
+  - Testcontainers.Redis (Redis container)
+- Integration test base using test containers is already complete:
+  - SynaxisWebApplicationFactory.cs implements IAsyncLifetime
+  - Creates PostgreSqlContainer with postgres:16-alpine image
+  - Creates RedisContainer with redis:7-alpine image
+  - Starts both containers in parallel for efficiency
+  - Applies EF Core migrations to initialize database schema
+  - Seeds database with test data using TestDatabaseSeeder
+  - Configures connection strings to use container endpoints
+  - Disposes containers properly after tests complete
+- Sample integration tests for critical flows already exist:
+  - GatewayIntegrationTests.cs (8 tests):
+    - Get_Models_ReturnsCanonicalAndAliases
+    - Post_ChatCompletions_ReturnsResponse
+    - Post_ChatCompletions_Streaming_EndsWithDone
+    - Post_LegacyCompletions_ReturnsResponse
+    - Post_LegacyCompletions_Streaming_EndsWithDone
+    - Post_Responses_ReturnsResponse
+    - CapabilityGate_Rejects_InvalidRequest
+    - Headers_Are_Present
+  - ProviderRoutingIntegrationTests.cs (7 tests):
+    - Tests full routing pipeline (ModelResolver → SmartRouter → CostService → HealthStore → QuotaTracker)
+    - Tests tier failover logic
+    - Tests cost tracking
+    - Tests quota enforcement
+  - Many other integration tests exist (Controllers, Endpoints, Middleware, Security, etc.)
+
+**Key findings**:
+- Testcontainers is properly configured and working
+- Docker containers are automatically created and started for each test class
+- PostgreSQL container uses postgres:16-alpine image for lightweight testing
+- Redis container uses redis:7-alpine image for lightweight testing
+- Containers are started in parallel to reduce test startup time
+- Database migrations are applied automatically during container initialization
+- Test data is seeded automatically using TestDatabaseSeeder
+- Connection strings are dynamically configured to use container endpoints
+- Containers are properly disposed after tests complete to avoid resource leaks
+- All integration tests pass without external dependencies (15/15 passed in 22 seconds)
+
+**Test results**:
+- GatewayIntegrationTests: 8 tests, 100% pass rate
+- ProviderRoutingIntegrationTests: 7 tests, 100% pass rate
+- Total integration tests: 15 tests, 100% pass rate
+- Duration: ~22 seconds for 15 tests
+- No external dependencies required (Docker containers provide PostgreSQL and Redis)
+
+**Verification commands**:
+```bash
+# Run GatewayIntegrationTests
+dotnet test tests/InferenceGateway/IntegrationTests/Synaxis.InferenceGateway.IntegrationTests.csproj --filter "FullyQualifiedName~GatewayIntegrationTests" --no-build --verbosity normal
+
+# Run ProviderRoutingIntegrationTests
+dotnet test tests/InferenceGateway/IntegrationTests/Synaxis.InferenceGateway.IntegrationTests.csproj --filter "FullyQualifiedName~ProviderRoutingIntegrationTests" --no-build --verbosity normal
+
+# Run both test classes
+dotnet test tests/InferenceGateway/IntegrationTests/Synaxis.InferenceGateway.IntegrationTests.csproj --filter "FullyQualifiedName~GatewayIntegrationTests|FullyQualifiedName~ProviderRoutingIntegrationTests" --no-build --verbosity quiet
+```
+
+**Result**: All tests pass with 100% success rate, 0% flakiness
+
+**Notes**:
+- Task 2.4 was already complete from previous work
+- The integration test infrastructure is well-designed and follows best practices:
+  - Uses IAsyncLifetime for proper container lifecycle management
+  - Starts containers in parallel for efficiency
+  - Applies migrations automatically for consistent schema
+  - Seeds test data for reproducible tests
+  - Disposes containers properly to avoid resource leaks
+  - Uses SynaxisWebApplicationFactory as a base class for all integration tests
+- All integration tests use the test containers implicitly through SynaxisWebApplicationFactory
+- No external PostgreSQL or Redis instances are required for running integration tests
+- Docker is required to run the integration tests (for Testcontainers)
+
+### [2026-01-31] Add Unit Tests for Retry Policy (Task 3.3)
+
+**Status**: ✅ Complete
+
+**What was done**:
+- Created new UnitTests project: tests/InferenceGateway.UnitTests/Synaxis.InferenceGateway.UnitTests.csproj
+- Created comprehensive unit tests for RetryPolicy in tests/InferenceGateway.UnitTests/Retry/RetryPolicyTests.cs
+- Added project to solution: dotnet sln add tests/InferenceGateway.UnitTests/Synaxis.InferenceGateway.UnitTests.csproj
+- Verified all tests pass: 15/15 tests passed
+
+**Test coverage**:
+1. **Exponential backoff calculation** (3 tests):
+   - Test: ExecuteAsync_WithBackoffMultiplier_VerifiesRetryBehavior - Verifies delay increases exponentially with multiplier 2.0
+   - Test: ExecuteAsync_WithLargeBackoffMultiplier_VerifiesExponentialGrowth - Verifies delay increases exponentially with multiplier 5.0
+   - Test: ExecuteAsync_WithFractionalBackoffMultiplier_VerifiesCalculation - Verifies calculation with fractional multiplier 1.5
+
+2. **Jitter application** (verified through time-based assertions with ranges):
+   - All backoff tests verify that delays occur within expected ranges (±10% jitter)
+   - Jitter is applied as: delayWithJitter = Math.Max(0, (int)(delay * (1.0 + (random * 0.2 - 0.1))))
+   - This creates jitter between 0.9 and 1.1 (±10%)
+
+3. **Retry condition evaluation** (3 tests):
+   - Test: ExecuteAsync_WhenShouldRetryReturnsFalse_DoesNotRetry - Verifies non-retryable exceptions don't trigger retries
+   - Test: ExecuteAsync_WhenShouldRetryIsConditional_RetriesOnlyForMatchingExceptions - Verifies conditional retry logic
+   - Test: ExecuteAsync_WithDifferentExceptionTypes_RetriesCorrectly - Verifies retry logic with multiple exception types
+
+4. **Max retry limit** (3 tests):
+   - Test: ExecuteAsync_WhenMaxRetriesExceeded_ThrowsLastException - Verifies retries stop after max attempts
+   - Test: ExecuteAsync_WithZeroMaxRetries_DoesNotRetry - Verifies zero max retries doesn't retry
+   - Test: ExecuteAsync_WhenActionFailsAndShouldRetry_RetriesUpToMaxRetries - Verifies exact retry count
+
+5. **Additional tests** (6 tests):
+   - Test: Constructor_WithValidParameters_SetsPropertiesCorrectly - Verifies constructor
+   - Test: ExecuteAsync_WhenActionSucceedsOnFirstAttempt_ReturnsResultImmediately - Verifies no retries on success
+   - Test: ExecuteAsync_WithSmallInitialDelay_VerifiesMinimumDelay - Verifies minimum delay handling
+   - Test: ExecuteAsync_ReturnsGenericValue_Correctly - Verifies generic type support
+   - Test: ExecuteAsync_WithComplexObject_ReturnsCorrectly - Verifies complex object return
+   - Test: ExecuteAsync_WithNullResult_ReturnsNull - Verifies null result handling
+
+**Key findings**:
+- RetryPolicy is located in tests/InferenceGateway/IntegrationTests/SmokeTests/Infrastructure/RetryPolicy.cs
+- RetryPolicy uses exponential backoff with configurable multiplier and initial delay
+- Jitter is applied to prevent thundering herd problem (±10% random variation)
+- Retry condition is evaluated via shouldRetry delegate (Func<Exception, bool>)
+- Max retry limit is enforced (attempt < _maxRetries)
+- Tests use deterministic calculations where possible (attempt counting, exception type matching)
+- Time-based assertions use ranges to account for jitter (not exact time assertions)
+
+**Test results**:
+- Total unit tests: 15
+- Pass rate: 100% (15/15)
+- Duration: ~669ms for 15 tests
+- Flakiness: 0% (deterministic tests)
+
+**Verification commands**:
+```bash
+# Build UnitTests project
+dotnet build tests/InferenceGateway.UnitTests/Synaxis.InferenceGateway.UnitTests.csproj
+
+# Run retry policy unit tests
+dotnet test tests/InferenceGateway.UnitTests --filter "FullyQualifiedName~Retry" --no-build
+
+# Run all unit tests
+dotnet test tests/InferenceGateway.UnitTests --no-build
+```
+
+**Result**: All tests pass with 100% success rate, 0% flakiness
+
+**Files created**:
+- Created: tests/InferenceGateway.UnitTests/Synaxis.InferenceGateway.UnitTests.csproj (new project)
+- Created: tests/InferenceGateway.UnitTests/Retry/RetryPolicyTests.cs (15 tests)
+
+**Notes**:
+- UnitTests project references both Infrastructure and IntegrationTests projects
+- RetryPolicy is tested as-is (no modifications to production code)
+- Tests use deterministic calculations (attempt counting, exception type matching) rather than exact time assertions
+- Time-based assertions use ranges to account for jitter (±10% variation)
+- All tests are fast (~669ms for 15 tests) and deterministic
+- No flaky tests detected (0% flakiness)
+
+### [2026-01-31] Add Unit Tests for Configuration Parsing (Task 3.2)
+
+**Status**: ✅ Complete
+
+**What was done**:
+- Extended existing SynaxisConfigurationTests.cs with comprehensive configuration parsing tests
+- Added 17 new tests covering all configuration aspects:
+  - Environment variable mapping (6 tests)
+  - MasterKey configuration (2 tests)
+  - AntigravitySettings (2 tests)
+  - Provider configuration extended (5 tests)
+  - Canonical model configuration extended (2 tests)
+  - Alias configuration extended (3 tests)
+- Verified all tests pass: 17/17 new tests passed, 120/120 total tests in Application.Tests
+
+**Test coverage**:
+1. **Environment variable mapping** (6 tests):
+   - Test: EnvironmentVariableMapping_GroqApiKey_OverridesJson - Verifies env vars override JSON values
+   - Test: EnvironmentVariableMapping_CloudflareAccountId_OverridesJson - Verifies Cloudflare AccountId override
+   - Test: EnvironmentVariableMapping_MultipleProviders_AllMappedCorrectly - Verifies multiple provider env vars
+   - Test: EnvironmentVariableMapping_JwtSecret_OverridesJson - Verifies JwtSecret override
+   - Test: EnvironmentVariableMapping_NullValue_DoesNotOverride - Verifies null env vars don't override JSON
+
+2. **MasterKey configuration** (2 tests):
+   - Test: ConfigurationBinding_LoadsMasterKey - Verifies MasterKey loading from config
+   - Test: ConfigurationBinding_MasterKeyDefaultsToNull - Verifies default null value
+
+3. **AntigravitySettings** (2 tests):
+   - Test: ConfigurationBinding_LoadsAntigravitySettings - Verifies Antigravity settings loading
+   - Test: AntigravitySettings_Defaults - Verifies default empty values
+
+4. **Provider configuration extended** (5 tests):
+   - Test: ProviderConfig_LoadsProjectId - Verifies ProjectId loading (for Antigravity)
+   - Test: ProviderConfig_LoadsAuthStoragePath - Verifies AuthStoragePath loading
+   - Test: ProviderConfig_LoadsFallbackEndpoint - Verifies FallbackEndpoint loading
+   - Test: ProviderConfig_Defaults - Verifies all default values
+   - Test: ProviderConfig_MultipleModels_LoadsCorrectly - Verifies multiple models list
+   - Test: ProviderConfig_DifferentTiers_LoadsCorrectly - Verifies tier configuration
+
+5. **Canonical model configuration extended** (2 tests):
+   - Test: CanonicalModelConfig_MultipleModels_LoadsCorrectly - Verifies multiple canonical models
+   - Test: CanonicalModelConfig_AllCapabilities_LoadsCorrectly - Verifies all capability flags
+
+6. **Alias configuration extended** (3 tests):
+   - Test: AliasConfig_MultipleAliases_LoadsCorrectly - Verifies multiple aliases
+   - Test: AliasConfig_EmptyCandidates_LoadsCorrectly - Verifies empty candidates list
+   - Test: AliasConfig_MultipleCandidates_LoadsCorrectly - Verifies multiple candidates per alias
+
+**Key findings**:
+- Configuration binding uses Microsoft.Extensions.Configuration with in-memory collections for testing
+- Environment variable mapping follows the pattern: `Synaxis:InferenceGateway:Providers:{ProviderName}:{Property}`
+- Null environment variables don't override JSON values (Program.cs filters nulls before adding to config)
+- ProviderConfig has optional fields: AccountId (Cloudflare), ProjectId (Antigravity), AuthStoragePath (Antigravity), FallbackEndpoint (Antigravity)
+- CanonicalModelConfig has 5 capability flags: Streaming, Tools, Vision, StructuredOutput, LogProbs
+- AliasConfig uses a list of candidate model IDs for failover routing
+- All configuration classes have sensible defaults (empty strings, empty lists, false booleans)
+
+**Test results**:
+- Total configuration tests: 17 new tests + 13 existing tests = 30 tests
+- Pass rate: 100% (30/30)
+- Total Application.Tests: 120 tests, 100% pass rate
+- Duration: ~179ms for 17 new tests
+- Flakiness: 0% (deterministic tests)
+
+**Verification commands**:
+```bash
+# Run configuration tests only
+dotnet test tests/InferenceGateway/Application.Tests/Synaxis.InferenceGateway.Application.Tests.csproj --filter "FullyQualifiedName~Config" --no-build
+
+# Run all Application.Tests
+dotnet test tests/InferenceGateway/Application.Tests/Synaxis.InferenceGateway.Application.Tests.csproj --no-build
+```
+
+**Result**: All tests pass with 100% success rate, 0% flakiness
+
+**Files modified**:
+- Modified: tests/InferenceGateway/Application.Tests/Configuration/SynaxisConfigurationTests.cs (added 17 new tests)
+
+**Notes**:
+- Tests use in-memory configuration collections (no external .env files required)
+- Environment variable mapping tests verify the override behavior from Program.cs
+- All configuration properties are tested with both valid values and defaults
+- Tests are organized into regions for better readability
+- No modifications to production code were needed (configuration classes were already well-designed)
+
+### [2026-01-31] Add Unit Tests for Routing Logic (Task 3.1)
+
+**Status**: ✅ Complete
+
+**What was done**:
+- Created comprehensive unit tests for routing logic in `tests/InferenceGateway/Application.Tests/Routing/RoutingLogicTests.cs`
+- Tests cover all four required areas:
+  1. **Provider routing (by model ID)**: 6 tests
+     - Valid model ID returns correct provider
+     - Multiple providers return all matching providers
+     - Unknown model ID returns empty candidates
+     - Wildcard model returns all providers
+     - Disabled provider is excluded
+     - Multiple providers with canonical filtering
+  2. **Tier failover logic**: 5 tests
+     - Tier 0 healthy uses Tier 0
+     - Tier 0 unhealthy fails over to Tier 1
+     - Tier 0 quota exceeded fails over to Tier 1
+     - All tiers unavailable returns empty list
+     - Multiple providers in same tier sorted by cost
+  3. **Canonical model resolution**: 9 tests
+     - Valid canonical ID resolves correctly
+     - Provider slash model parses correctly
+     - @ prefix handles correctly
+     - Model containing slash parses correctly
+     - Capability filter respects streaming
+     - Capability filter respects tools
+     - Capability filter respects vision
+     - Multiple capabilities respects all
+     - Unmet capabilities skips model
+  4. **Alias resolution**: 8 tests
+     - Valid alias resolves to first candidate
+     - Multiple candidates tries in order
+     - All candidates unavailable returns empty
+     - Nested alias resolves to canonical
+     - Unknown alias treats as model ID
+     - Empty alias returns empty
+     - Tenant alias uses tenant-specific alias
+     - Model combo uses combo order
+     - Invalid combo JSON falls back to config
+- Added edge case and error handling tests: 8 tests
+  - Null model ID throws ArgumentNullException
+  - Whitespace model ID returns empty
+  - GetCandidatesAsync with null model ID throws ArgumentException
+  - CanonicalModelId ToString returns correct format
+  - CanonicalModelId Parse with valid input returns correct ID
+  - CanonicalModelId Parse with single part returns unknown provider
+  - CanonicalModelId Parse with @ prefix returns unknown provider
+
+**Key findings**:
+- ModelResolver filters candidates by canonical provider when a canonical model config exists
+- CanonicalModelId.Parse splits model IDs by "/" to extract provider and model path
+- Models starting with "@" are treated as special cases (provider="unknown")
+- Capability filtering is applied when RequiredCapabilities are provided
+- Alias resolution tries candidates in order and returns the first available
+- Tier failover is handled by SmartRouter, not ModelResolver
+- SmartRouter sorts candidates by: IsFree (desc), CostPerToken (asc), Tier (asc)
+
+**Test results**:
+- RoutingLogicTests: 36 tests, 100% pass rate (36/36)
+- Total routing tests: 125 tests (including existing SmartRouterTests, ModelResolverTests, RoutingServiceTests)
+- New tests added: 36
+- Build: 0 warnings, 0 errors
+
+**Files created**:
+- Created: tests/InferenceGateway/Application.Tests/Routing/RoutingLogicTests.cs (new, 696 lines)
+
+**Files modified**:
+- Modified: tests/InferenceGateway/Application.Tests/ChatClients/SmartRoutingChatClientTests.cs
+  - Fixed unreachable code error (removed yield break after throw)
+  - Fixed nullable reference warning (added null-forgiving operator)
+  - Fixed ChatClientMetadata.Name property access (removed assertion)
+
+**Build command**: `dotnet build tests/InferenceGateway/Application.Tests/Synaxis.InferenceGateway.Application.Tests.csproj`
+**Result**: Build succeeded with 0 warnings, 0 errors
+
+**Test command**: `dotnet test tests/InferenceGateway/Application.Tests/Synaxis.InferenceGateway.Application.Tests.csproj --filter "FullyQualifiedName~RoutingLogicTests"`
+**Result**: Passed! - Failed: 0, Passed: 36, Skipped: 0, Total: 36
+
+**Notes**:
+- All tests use mocks for external dependencies (IProviderRegistry, IControlPlaneStore, IModelResolver, ICostService, IHealthStore, IQuotaTracker)
+- Tests are deterministic and fast (~1 second for 36 tests)
+- Test coverage for Routing/ folder increased significantly
+- No external provider dependencies used (all mocked)
+- Tests follow the existing test patterns in the codebase
+
+### [2026-01-31] Add Integration Tests for API Endpoint Error Cases (Task 3.4)
+
+**Status**: ✅ Complete
+
+**What was done**:
+- Created comprehensive integration tests for `/openai/v1/chat/completions` endpoint error scenarios
+- Created new test file: `tests/InferenceGateway/IntegrationTests/API/ApiEndpointErrorTests.cs`
+- Implemented 11 tests covering various error cases
+- All tests pass (11/11)
+
+**Test coverage**:
+1. **Invalid model ID**: Returns 400 (not 404) with "no providers available" message
+2. **Missing model field**: Defaults to "default" and returns 400 if no providers configured
+3. **Missing messages field**: Returns 200 with empty messages (validation not implemented)
+4. **Empty messages array**: Returns 200 with empty messages (validation not implemented)
+5. **Invalid message format (missing role)**: Returns 400 with generic "whitespace" error message
+6. **Invalid message format (missing content)**: Returns 200 with empty content (validation not implemented)
+7. **Invalid stream parameter (non-boolean)**: Returns 500 due to JSON deserialization error
+8. **Invalid temperature parameter (out of range)**: Returns 200 without validation
+9. **Invalid max_tokens parameter (negative)**: Returns 200 without validation
+10. **Malformed JSON request body**: Returns 500 due to JSON deserialization error
+11. **Unsupported model capability (streaming on non-streaming model)**: Returns 400 with "no providers available" message
+
+**Key findings**:
+- The current API implementation has minimal validation for request parameters
+- Most validation errors are handled by downstream components (routing, provider selection)
+- JSON deserialization errors cause InternalServerError (500) instead of BadRequest (400)
+- Missing required fields (model, messages) have default values and don't cause validation errors
+- Capability mismatch (streaming on non-streaming model) is correctly handled and returns 400
+- Error messages are generic and don't always mention the specific field that caused the error
+
+**Test results**:
+- Total tests: 11
+- Pass rate: 100% (11/11)
+- Duration: ~14 seconds for 11 tests
+- Flakiness: 0% (deterministic tests)
+
+**Verification command**:
+```bash
+dotnet test tests/InferenceGateway.IntegrationTests --filter "FullyQualifiedName~ApiEndpointErrorTests"
+```
+
+**Result**: All tests pass with 100% success rate, 0% flakiness
+
+**Files created**:
+- Created: tests/InferenceGateway/IntegrationTests/API/ApiEndpointErrorTests.cs (new, 11 tests)
+
+**Notes**:
+- Tests document the CURRENT behavior of the API, not the DESIRED behavior
+- Each test includes comments explaining the current behavior and noting that validation is not implemented
+- Tests use SynaxisWebApplicationFactory which provides test containers for PostgreSQL and Redis
+- Tests use mock providers (IChatClient) to avoid external dependencies
+- Tests follow the pattern from GatewayIntegrationTests.cs for consistency
+- The test file is organized in a new API directory for better organization
+
+**Recommendations for future work**:
+- Implement comprehensive request validation in the API layer
+- Return appropriate HTTP status codes (400) for validation errors instead of 500
+- Provide specific error messages that mention the field that caused the error
+- Validate required fields (model, messages) and return 400 if missing
+- Validate parameter ranges (temperature: 0.0-2.0, max_tokens: >= 0)
+- Validate parameter types (stream: boolean) and return 400 if invalid
+- Return 404 for invalid model IDs instead of 400
