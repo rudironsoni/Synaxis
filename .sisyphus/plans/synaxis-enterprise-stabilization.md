@@ -794,7 +794,7 @@ Parallel Speedup: ~60% faster than sequential
   - Test results: 11/11 passed (100% pass rate)
   - Build: 0 warnings, 0 errors
 
-- [ ] 2.4. Add Integration Tests with Test Containers
+- [x] 2.4. Add Integration Tests with Test Containers
   **What to do**:
   - Install Testcontainers package
   - Setup PostgreSQL test container
@@ -828,16 +828,27 @@ Parallel Speedup: ~60% faster than sequential
 
   # Verify integration test:
   dotnet test tests/Integration --filter "FullyQualifiedName~Container"
-  # Assert: PostgreSQL and Redis containers started and used
+  # Assert: PostgreSQL and Redis started and used
   # Assert: Test passes without external dependencies
   ```
 
   **Commit**: YES
   - Message: `test: Add integration test infrastructure with Testcontainers`
-  - Files: `tests/Integration/*.cs`, tests/**/*.csproj`
+  - Files: `tests/Integration/*.cs`, tests/**/*.csproj
   - Pre-commit: `dotnet test tests/Integration`
 
-- [ ] 2.5. Setup Frontend Component Test Framework
+  **Status**: COMPLETED (2026-01-30)
+  **Results**:
+  - Task was already complete from previous work
+  - Testcontainers packages installed (Testcontainers, Testcontainers.PostgreSql, Testcontainers.Redis)
+  - PostgreSQL test container setup (postgres:16-alpine)
+  - Redis test container setup (redis:7-alpine)
+  - Integration test base created (SynaxisWebApplicationFactory.cs)
+  - Sample integration tests for critical flows (GatewayIntegrationTests, ProviderRoutingIntegrationTests, etc.)
+  - Test results: 15/15 passed (100% success rate)
+  - No external dependencies required (Docker containers provide all dependencies)
+
+- [x] 2.5. Setup Frontend Component Test Framework
   **What to do**:
   - Verify Vitest + React Testing Library configured
   - Create test setup for React Testing Library
@@ -881,11 +892,20 @@ Parallel Speedup: ~60% faster than sequential
   - Files: `src/Synaxis.WebApp/ClientApp/src/test/setup.ts`, `src/Synaxis.WebApp/ClientApp/src/components/ui/Badge.test.tsx`
   - Pre-commit: `npm test`
 
+  **Status**: COMPLETED (2026-01-30)
+  **Results**:
+  - Vitest + React Testing Library configured (jsdom environment)
+  - Test setup verified (src/test/setup.ts provides jest-dom + DOM mocks)
+  - Test utilities created (src/test/utils.tsx with render wrapper)
+  - Badge test already existed and passes
+  - Test results: 127/127 passed (100% pass rate)
+  - All frontend tests pass (14 test files)
+
 ---
 
 ### Phase 3: Backend Unit & Integration Tests (Wave 2-3)
 
-- [ ] 3.1. Add Unit Tests for Routing Logic
+- [x] 3.1. Add Unit Tests for Routing Logic
   **What to do**:
   - Test provider routing (by model ID)
   - Test tier failover logic
@@ -924,7 +944,14 @@ Parallel Speedup: ~60% faster than sequential
   - Files: `tests/InferenceGateway.UnitTests/Routing/*Tests.cs`
   - Pre-commit: `dotnet test tests/InferenceGateway.UnitTests`
 
-- [ ] 3.2. Add Unit Tests for Configuration Parsing
+  **Status**: COMPLETED (2026-01-31)
+  **Results**:
+  - Created RoutingLogicTests.cs with 36 comprehensive tests
+  - Fixed 3 build errors in SmartRoutingChatClientTests.cs
+  - Tests cover provider routing, tier failover, canonical model resolution, alias resolution
+  - 36/36 tests passing
+
+- [x] 3.2. Add Unit Tests for Configuration Parsing
   **What to do**:
   - Test appsettings.json parsing
   - Test environment variable mapping
@@ -963,7 +990,13 @@ Parallel Speedup: ~60% faster than sequential
   - Files: `tests/InferenceGateway.UnitTests/Config/*Tests.cs`
   - Pre-commit: `dotnet test tests/InferenceGateway.UnitTests`
 
-- [ ] 3.3. Add Unit Tests for Retry Policy
+  **Status**: COMPLETED (2026-01-31)
+  **Results**:
+  - Created 17 unit tests in SynaxisConfigurationTests.cs
+  - Tests cover appsettings.json, environment variables, provider config, canonical model config, alias config
+  - 17/17 tests passing
+
+- [x] 3.3. Add Unit Tests for Retry Policy
   **What to do**:
   - Test exponential backoff calculation
   - Test jitter application
@@ -1000,7 +1033,14 @@ Parallel Speedup: ~60% faster than sequential
   - Files: `tests/InferenceGateway.UnitTests/Retry/*Tests.cs`
   - Pre-commit: `dotnet test tests/InferenceGateway.UnitTests`
 
-- [ ] 3.4. Add Integration Tests for API Endpoints
+  **Status**: COMPLETED (2026-01-31)
+  **Results**:
+  - Created new UnitTests project at tests/InferenceGateway.UnitTests/
+  - Created 15 comprehensive unit tests in RetryPolicyTests.cs
+  - Tests cover exponential backoff, jitter, retry conditions, max retry limit
+  - 15/15 tests passing
+
+- [x] 3.4. Add Integration Tests for API Endpoints
   **What to do**:
   - Test `/openai/v1/chat/completions` endpoint (happy path)
   - Test `/openai/v1/chat/completions` endpoint (error cases)
@@ -1040,7 +1080,15 @@ Parallel Speedup: ~60% faster than sequential
   - Files: `tests/Integration/API/*Tests.cs`
   - Pre-commit: `dotnet test tests/Integration`
 
-- [ ] 3.5. Add Integration Tests for WebApp API Client
+  **Status**: COMPLETED (2026-01-31)
+  **Results**:
+  - Created ApiEndpointErrorTests.cs with 11 comprehensive error case tests
+  - Tests cover invalid model ID, missing fields, invalid message format, invalid parameters, malformed JSON
+  - All tests document current API behavior (some differ from desired behavior)
+  - 11/11 tests passing
+  - Used SynaxisWebApplicationFactory with test containers for PostgreSQL/Redis
+
+- [x] 3.5. Add Integration Tests for WebApp API Client
   **What to do**:
   - Test `GatewayClient.sendMessage` (happy path)
   - Test `GatewayClient.sendMessage` (error cases)
@@ -1079,11 +1127,19 @@ Parallel Speedup: ~60% faster than sequential
   - Files: `src/Synaxis.WebApp/ClientApp/src/api/client.test.ts`
   - Pre-commit: `npm test client.test.ts`
 
+  **Status**: COMPLETED (2026-01-31)
+  **Results**:
+  - Task was already complete from previous work
+  - Existing client.test.ts has 27 comprehensive tests
+  - Tests cover sendMessage (happy path + error cases), updateConfig, sendMessageStream
+  - All tests use mocked axios and fetch (appropriate for frontend client tests)
+  - 27/27 tests passing
+
 ---
 
 ### Phase 4: Frontend Unit Tests & Component Tests (Wave 2-3)
 
-- [ ] 4.1. Add Unit Tests for Zustand Stores
+- [x] 4.1. Add Unit Tests for Zustand Stores
   **What to do**:
   - Test `sessions` store state management
   - Test `settings` store state management
@@ -1122,6 +1178,14 @@ Parallel Speedup: ~60% faster than sequential
   - Message: `test: Add unit tests for Zustand stores`
   - Files: `src/Synaxis.WebApp/ClientApp/src/stores/*.test.ts`
   - Pre-commit: `npm test stores`
+
+  **Status**: COMPLETED (2026-01-31)
+  **Results**:
+  - Expanded sessions.test.ts from 1 to 16 tests (loadSessions, createSession, deleteSession, error handling)
+  - Expanded settings.test.ts from 3 to 26 tests (all setters, logout, edge cases)
+  - Expanded usage.test.ts from 2 to 20 tests (addUsage, DB integration, edge cases)
+  - All tests use mocks for database dependencies
+  - Total: 62 tests passing (100% pass rate)
 
 - [ ] 4.2. Add Component Tests for UI Components
   **What to do**:
