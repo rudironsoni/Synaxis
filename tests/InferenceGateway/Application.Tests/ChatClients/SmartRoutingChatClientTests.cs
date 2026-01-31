@@ -412,6 +412,8 @@ public class SmartRoutingChatClientTests : TestBase
         Assert.Equal(2, callCount);
     }
 
+    #region Constructor Tests
+
     [Fact]
     public void Constructor_WithNullProvider_ThrowsArgumentNullException()
     {
@@ -465,6 +467,995 @@ public class SmartRoutingChatClientTests : TestBase
             _activitySource,
             _loggerMock.Object));
     }
+
+    [Fact]
+    public void Constructor_WithNullQuotaTracker_ThrowsArgumentNullException()
+    {
+        // Arrange
+        IQuotaTracker quotaTracker = null!;
+
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => new SmartRoutingChatClient(
+            _chatClientFactoryMock.Object,
+            _smartRouterMock.Object,
+            _healthStoreMock.Object,
+            quotaTracker,
+            _pipelineProviderMock.Object,
+            _strategiesMock.Object,
+            _activitySource,
+            _loggerMock.Object));
+    }
+
+    [Fact]
+    public void Constructor_WithNullPipelineProvider_ThrowsArgumentNullException()
+    {
+        // Arrange
+        ResiliencePipelineProvider<string> pipelineProvider = null!;
+
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => new SmartRoutingChatClient(
+            _chatClientFactoryMock.Object,
+            _smartRouterMock.Object,
+            _healthStoreMock.Object,
+            _quotaTrackerMock.Object,
+            pipelineProvider,
+            _strategiesMock.Object,
+            _activitySource,
+            _loggerMock.Object));
+    }
+
+    [Fact]
+    public void Constructor_WithNullStrategies_ThrowsArgumentNullException()
+    {
+        // Arrange
+        IEnumerable<IChatClientStrategy> strategies = null!;
+
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => new SmartRoutingChatClient(
+            _chatClientFactoryMock.Object,
+            _smartRouterMock.Object,
+            _healthStoreMock.Object,
+            _quotaTrackerMock.Object,
+            _pipelineProviderMock.Object,
+            strategies,
+            _activitySource,
+            _loggerMock.Object));
+    }
+
+    [Fact]
+    public void Constructor_WithNullActivitySource_ThrowsArgumentNullException()
+    {
+        // Arrange
+        ActivitySource activitySource = null!;
+
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => new SmartRoutingChatClient(
+            _chatClientFactoryMock.Object,
+            _smartRouterMock.Object,
+            _healthStoreMock.Object,
+            _quotaTrackerMock.Object,
+            _pipelineProviderMock.Object,
+            _strategiesMock.Object,
+            activitySource,
+            _loggerMock.Object));
+    }
+
+    [Fact]
+    public void Constructor_WithNullLogger_ThrowsArgumentNullException()
+    {
+        // Arrange
+        ILogger<SmartRoutingChatClient> logger = null!;
+
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => new SmartRoutingChatClient(
+            _chatClientFactoryMock.Object,
+            _smartRouterMock.Object,
+            _healthStoreMock.Object,
+            _quotaTrackerMock.Object,
+            _pipelineProviderMock.Object,
+            _strategiesMock.Object,
+            _activitySource,
+            logger));
+    }
+
+    #endregion
+
+    #region GetResponseAsync Edge Cases
+
+    [Fact]
+    public async Task GetResponseAsync_AllProvidersUnhealthy_ThrowsAggregateException()
+    {
+        // Arrange
+        var messages = new[] { new ChatMessage(ChatRole.User, "Hello") };
+        var options = new ChatOptions { ModelId = "gpt-4" };
+        var candidate1 = new EnrichedCandidate(
+            new ProviderConfig { Key = "openai", Type = "openai" },
+            null,
+            "gpt-4");
+        var candidate2 = new EnrichedCandidate(
+            new ProviderConfig { Key = "groq", Type = "groq" },
+            null,
+            "llama-3.1-70b-versatile");
+
+        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<EnrichedCandidate> { candidate1, candidate2 });
+        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("groq", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<AggregateException>(() => _client.GetResponseAsync(messages, options));
+        Assert.Contains("All providers failed for model 'gpt-4'", exception.Message);
+    }
+
+    [Fact]
+    public async Task GetResponseAsync_NoStrategiesAvailable_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var messages = new[] { new ChatMessage(ChatRole.User, "Hello") };
+        var options = new ChatOptions { ModelId = "gpt-4" };
+        var candidate = new EnrichedCandidate(
+            new ProviderConfig { Key = "openai", Type = "openai" },
+            null,
+            "gpt-4");
+
+        var mockChatClient = CreateMockChatClient();
+
+        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<EnrichedCandidate> { candidate });
+        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+            .Returns(mockChatClient.Object);
+        _strategiesMock.Setup(x => x.GetEnumerator())
+            .Returns(new List<IChatClientStrategy>().GetEnumerator());
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => _client.GetResponseAsync(messages, options));
+        Assert.Equal("No chat client strategies available", exception.Message);
+    }
+
+    [Fact]
+    public async Task GetResponseAsync_StrategyCannotHandle_UsesDefaultStrategy()
+    {
+        // Arrange
+        var messages = new[] { new ChatMessage(ChatRole.User, "Hello") };
+        var options = new ChatOptions { ModelId = "gpt-4" };
+        var candidate = new EnrichedCandidate(
+            new ProviderConfig { Key = "openai", Type = "openai" },
+            null,
+            "gpt-4");
+
+        var mockChatClient = CreateMockChatClient();
+        var mockStrategy1 = new Mock<IChatClientStrategy>();
+        var mockStrategy2 = new Mock<IChatClientStrategy>();
+
+        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<EnrichedCandidate> { candidate });
+        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+            .Returns(mockChatClient.Object);
+
+        var strategiesList = new List<IChatClientStrategy> { mockStrategy1.Object, mockStrategy2.Object };
+        var clientWithStrategies = new SmartRoutingChatClient(
+            _chatClientFactoryMock.Object,
+            _smartRouterMock.Object,
+            _healthStoreMock.Object,
+            _quotaTrackerMock.Object,
+            _pipelineProviderMock.Object,
+            strategiesList,
+            _activitySource,
+            _loggerMock.Object);
+
+        mockStrategy1.Setup(x => x.CanHandle("openai"))
+            .Returns(false);
+        mockStrategy2.Setup(x => x.CanHandle("openai"))
+            .Returns(true);
+        mockStrategy2.Setup(x => x.ExecuteAsync(mockChatClient.Object, It.IsAny<List<ChatMessage>>(), It.IsAny<ChatOptions>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ChatResponse(new ChatMessage(ChatRole.Assistant, "Success with fallback strategy")));
+
+        // Act
+        var result = await clientWithStrategies.GetResponseAsync(messages, options);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal("Success with fallback strategy", result.Messages.First().Text);
+    }
+
+    [Fact]
+    public async Task GetResponseAsync_ProviderNotRegistered_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var messages = new[] { new ChatMessage(ChatRole.User, "Hello") };
+        var options = new ChatOptions { ModelId = "gpt-4" };
+        var candidate = new EnrichedCandidate(
+            new ProviderConfig { Key = "unknown", Type = "unknown" },
+            null,
+            "gpt-4");
+
+        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<EnrichedCandidate> { candidate });
+        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("unknown", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _chatClientFactoryMock.Setup(x => x.GetClient("unknown"))
+            .Returns((IChatClient?)null);
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => _client.GetResponseAsync(messages, options));
+        Assert.Contains("Provider 'unknown' not registered", exception.Message);
+    }
+
+    [Fact]
+    public async Task GetResponseAsync_RecordsMetricsWithZeroTokens_DoesNotRecordUsage()
+    {
+        // Arrange
+        var messages = new[] { new ChatMessage(ChatRole.User, "Hello") };
+        var options = new ChatOptions { ModelId = "gpt-4" };
+        var candidate = new EnrichedCandidate(
+            new ProviderConfig { Key = "openai", Type = "openai" },
+            null,
+            "gpt-4");
+
+        var mockChatClient = CreateMockChatClient();
+        var mockStrategy = new Mock<IChatClientStrategy>();
+
+        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<EnrichedCandidate> { candidate });
+        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+            .Returns(mockChatClient.Object);
+
+        var strategiesList = new List<IChatClientStrategy> { mockStrategy.Object };
+        var clientWithStrategy = new SmartRoutingChatClient(
+            _chatClientFactoryMock.Object,
+            _smartRouterMock.Object,
+            _healthStoreMock.Object,
+            _quotaTrackerMock.Object,
+            _pipelineProviderMock.Object,
+            strategiesList,
+            _activitySource,
+            _loggerMock.Object);
+
+        mockStrategy.Setup(x => x.CanHandle("openai"))
+            .Returns(true);
+        mockStrategy.Setup(x => x.ExecuteAsync(mockChatClient.Object, It.IsAny<List<ChatMessage>>(), It.IsAny<ChatOptions>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ChatResponse(new ChatMessage(ChatRole.Assistant, "Hello there!"))
+            {
+                Usage = new UsageDetails { InputTokenCount = 0, OutputTokenCount = 0 }
+            });
+
+        // Act
+        await clientWithStrategy.GetResponseAsync(messages, options);
+
+        // Assert
+        _healthStoreMock.Verify(x => x.MarkSuccessAsync("openai", It.IsAny<CancellationToken>()), Times.Once);
+        _quotaTrackerMock.Verify(x => x.RecordUsageAsync(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<long>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetResponseAsync_MetricsRecordingThrows_LogsWarning()
+    {
+        // Arrange
+        var messages = new[] { new ChatMessage(ChatRole.User, "Hello") };
+        var options = new ChatOptions { ModelId = "gpt-4" };
+        var candidate = new EnrichedCandidate(
+            new ProviderConfig { Key = "openai", Type = "openai" },
+            null,
+            "gpt-4");
+
+        var mockChatClient = CreateMockChatClient();
+        var mockStrategy = new Mock<IChatClientStrategy>();
+
+        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<EnrichedCandidate> { candidate });
+        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+            .Returns(mockChatClient.Object);
+        _healthStoreMock.Setup(x => x.MarkSuccessAsync("openai", It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Health store error"));
+
+        var strategiesList = new List<IChatClientStrategy> { mockStrategy.Object };
+        var clientWithStrategy = new SmartRoutingChatClient(
+            _chatClientFactoryMock.Object,
+            _smartRouterMock.Object,
+            _healthStoreMock.Object,
+            _quotaTrackerMock.Object,
+            _pipelineProviderMock.Object,
+            strategiesList,
+            _activitySource,
+            _loggerMock.Object);
+
+        mockStrategy.Setup(x => x.CanHandle("openai"))
+            .Returns(true);
+        mockStrategy.Setup(x => x.ExecuteAsync(mockChatClient.Object, It.IsAny<List<ChatMessage>>(), It.IsAny<ChatOptions>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ChatResponse(new ChatMessage(ChatRole.Assistant, "Hello there!"))
+            {
+                Usage = new UsageDetails { InputTokenCount = 10, OutputTokenCount = 20 }
+            });
+
+        // Act
+        var result = await clientWithStrategy.GetResponseAsync(messages, options);
+
+        // Assert
+        Assert.NotNull(result);
+        _loggerMock.Verify(x => x.Log(
+            LogLevel.Warning,
+            It.IsAny<EventId>(),
+            It.IsAny<It.IsAnyType>(),
+            It.IsAny<Exception?>(),
+            It.IsAny<Func<It.IsAnyType, Exception?, string>>()!),
+            Times.AtLeastOnce);
+    }
+
+    [Fact]
+    public async Task GetResponseAsync_WithNullOptions_UsesDefaultModelId()
+    {
+        // Arrange
+        var messages = new[] { new ChatMessage(ChatRole.User, "Hello") };
+        ChatOptions? options = null;
+        var candidate = new EnrichedCandidate(
+            new ProviderConfig { Key = "openai", Type = "openai" },
+            null,
+            "default");
+
+        var mockChatClient = CreateMockChatClient();
+        var mockStrategy = new Mock<IChatClientStrategy>();
+
+        _smartRouterMock.Setup(x => x.GetCandidatesAsync("default", false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<EnrichedCandidate> { candidate });
+        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+            .Returns(mockChatClient.Object);
+
+        var strategiesList = new List<IChatClientStrategy> { mockStrategy.Object };
+        var clientWithStrategy = new SmartRoutingChatClient(
+            _chatClientFactoryMock.Object,
+            _smartRouterMock.Object,
+            _healthStoreMock.Object,
+            _quotaTrackerMock.Object,
+            _pipelineProviderMock.Object,
+            strategiesList,
+            _activitySource,
+            _loggerMock.Object);
+
+        mockStrategy.Setup(x => x.CanHandle("openai"))
+            .Returns(true);
+        mockStrategy.Setup(x => x.ExecuteAsync(mockChatClient.Object, It.IsAny<List<ChatMessage>>(), It.IsAny<ChatOptions>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ChatResponse(new ChatMessage(ChatRole.Assistant, "Hello there!")));
+
+        // Act
+        var result = await clientWithStrategy.GetResponseAsync(messages, options);
+
+        // Assert
+        Assert.NotNull(result);
+        _smartRouterMock.Verify(x => x.GetCandidatesAsync("default", false, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetResponseAsync_ResponseWithoutAdditionalProperties_CreatesNewDictionary()
+    {
+        // Arrange
+        var messages = new[] { new ChatMessage(ChatRole.User, "Hello") };
+        var options = new ChatOptions { ModelId = "gpt-4" };
+        var candidate = new EnrichedCandidate(
+            new ProviderConfig { Key = "openai", Type = "openai" },
+            null,
+            "gpt-4");
+
+        var mockChatClient = CreateMockChatClient();
+        var mockStrategy = new Mock<IChatClientStrategy>();
+
+        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<EnrichedCandidate> { candidate });
+        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+            .Returns(mockChatClient.Object);
+
+        var strategiesList = new List<IChatClientStrategy> { mockStrategy.Object };
+        var clientWithStrategy = new SmartRoutingChatClient(
+            _chatClientFactoryMock.Object,
+            _smartRouterMock.Object,
+            _healthStoreMock.Object,
+            _quotaTrackerMock.Object,
+            _pipelineProviderMock.Object,
+            strategiesList,
+            _activitySource,
+            _loggerMock.Object);
+
+        var response = new ChatResponse(new ChatMessage(ChatRole.Assistant, "Hello there!"));
+        // AdditionalProperties is null by default
+
+        mockStrategy.Setup(x => x.CanHandle("openai"))
+            .Returns(true);
+        mockStrategy.Setup(x => x.ExecuteAsync(mockChatClient.Object, It.IsAny<List<ChatMessage>>(), It.IsAny<ChatOptions>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(response);
+
+        // Act
+        var result = await clientWithStrategy.GetResponseAsync(messages, options);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.AdditionalProperties);
+        Assert.Equal("openai", result.AdditionalProperties["provider_name"]);
+        Assert.Equal("gpt-4", result.AdditionalProperties["model_id"]);
+    }
+
+    #endregion
+
+    #region GetStreamingResponseAsync Edge Cases
+
+    [Fact]
+    public async Task GetStreamingResponseAsync_AllProvidersFail_ThrowsAggregateException()
+    {
+        // Arrange
+        var messages = new[] { new ChatMessage(ChatRole.User, "Hello") };
+        var options = new ChatOptions { ModelId = "gpt-4" };
+        var candidate1 = new EnrichedCandidate(
+            new ProviderConfig { Key = "openai", Type = "openai" },
+            null,
+            "gpt-4");
+        var candidate2 = new EnrichedCandidate(
+            new ProviderConfig { Key = "groq", Type = "groq" },
+            null,
+            "llama-3.1-70b-versatile");
+
+        var mockStrategy = new Mock<IChatClientStrategy>();
+
+        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", true, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<EnrichedCandidate> { candidate1, candidate2 });
+        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("groq", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+            .Returns(CreateMockChatClient().Object);
+        _chatClientFactoryMock.Setup(x => x.GetClient("groq"))
+            .Returns(CreateMockChatClient().Object);
+        _strategiesMock.Setup(x => x.GetEnumerator())
+            .Returns(new List<IChatClientStrategy> { mockStrategy.Object }.GetEnumerator());
+        mockStrategy.Setup(x => x.CanHandle(It.IsAny<string>()))
+            .Returns(true);
+        mockStrategy.Setup(x => x.ExecuteStreamingAsync(It.IsAny<IChatClient>(), It.IsAny<List<ChatMessage>>(), It.IsAny<ChatOptions>(), It.IsAny<CancellationToken>()))
+            .Returns(CreateThrowingStream(new Exception("Stream failed")));
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<AggregateException>(async () =>
+        {
+            var stream = _client.GetStreamingResponseAsync(messages, options);
+            await foreach (var _ in stream) { }
+        });
+        Assert.Contains("All providers failed to initiate stream for model 'gpt-4'", exception.Message);
+    }
+
+    private static async IAsyncEnumerable<ChatResponseUpdate> CreateThrowingStream(Exception ex)
+    {
+        throw ex;
+        yield break;
+    }
+
+    [Fact]
+    public async Task GetStreamingResponseAsync_AllProvidersUnhealthy_ThrowsAggregateException()
+    {
+        // Arrange
+        var messages = new[] { new ChatMessage(ChatRole.User, "Hello") };
+        var options = new ChatOptions { ModelId = "gpt-4" };
+        var candidate1 = new EnrichedCandidate(
+            new ProviderConfig { Key = "openai", Type = "openai" },
+            null,
+            "gpt-4");
+        var candidate2 = new EnrichedCandidate(
+            new ProviderConfig { Key = "groq", Type = "groq" },
+            null,
+            "llama-3.1-70b-versatile");
+
+        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", true, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<EnrichedCandidate> { candidate1, candidate2 });
+        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("groq", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<AggregateException>(async () =>
+        {
+            var stream = _client.GetStreamingResponseAsync(messages, options);
+            await foreach (var _ in stream) { }
+        });
+        Assert.Contains("All providers failed to initiate stream for model 'gpt-4'", exception.Message);
+    }
+
+    [Fact]
+    public async Task GetStreamingResponseAsync_NoStrategiesAvailable_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var messages = new[] { new ChatMessage(ChatRole.User, "Hello") };
+        var options = new ChatOptions { ModelId = "gpt-4" };
+        var candidate = new EnrichedCandidate(
+            new ProviderConfig { Key = "openai", Type = "openai" },
+            null,
+            "gpt-4");
+
+        var mockChatClient = CreateMockChatClient();
+
+        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", true, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<EnrichedCandidate> { candidate });
+        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+            .Returns(mockChatClient.Object);
+        _strategiesMock.Setup(x => x.GetEnumerator())
+            .Returns(new List<IChatClientStrategy>().GetEnumerator());
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            var stream = _client.GetStreamingResponseAsync(messages, options);
+            await foreach (var _ in stream) { }
+        });
+        Assert.Equal("No chat client strategies available", exception.Message);
+    }
+
+    [Fact]
+    public async Task GetStreamingResponseAsync_ProviderNotRegistered_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var messages = new[] { new ChatMessage(ChatRole.User, "Hello") };
+        var options = new ChatOptions { ModelId = "gpt-4" };
+        var candidate = new EnrichedCandidate(
+            new ProviderConfig { Key = "unknown", Type = "unknown" },
+            null,
+            "gpt-4");
+
+        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", true, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<EnrichedCandidate> { candidate });
+        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("unknown", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _chatClientFactoryMock.Setup(x => x.GetClient("unknown"))
+            .Returns((IChatClient?)null);
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            var stream = _client.GetStreamingResponseAsync(messages, options);
+            await foreach (var _ in stream) { }
+        });
+        Assert.Contains("Provider 'unknown' not registered", exception.Message);
+    }
+
+    [Fact]
+    public async Task GetStreamingResponseAsync_AddsMetadataToUpdates()
+    {
+        // Arrange
+        var messages = new[] { new ChatMessage(ChatRole.User, "Hello") };
+        var options = new ChatOptions { ModelId = "gpt-4" };
+        var candidate = new EnrichedCandidate(
+            new ProviderConfig { Key = "openai", Type = "openai" },
+            null,
+            "gpt-4-turbo");
+
+        var mockChatClient = CreateMockChatClient();
+        var mockStrategy = new Mock<IChatClientStrategy>();
+
+        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", true, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<EnrichedCandidate> { candidate });
+        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+            .Returns(mockChatClient.Object);
+        _strategiesMock.Setup(x => x.GetEnumerator())
+            .Returns(new List<IChatClientStrategy> { mockStrategy.Object }.GetEnumerator());
+        mockStrategy.Setup(x => x.CanHandle("openai"))
+            .Returns(true);
+        mockStrategy.Setup(x => x.ExecuteStreamingAsync(mockChatClient.Object, It.IsAny<List<ChatMessage>>(), It.IsAny<ChatOptions>(), It.IsAny<CancellationToken>()))
+            .Returns(GenerateStreamingResponse(new[] { "Hello", " World" }));
+
+        // Act
+        var stream = _client.GetStreamingResponseAsync(messages, options);
+        var results = new List<ChatResponseUpdate>();
+        await foreach (var update in stream)
+        {
+            results.Add(update);
+        }
+
+        // Assert
+        Assert.Equal(2, results.Count);
+        Assert.Equal("openai", results[0].AdditionalProperties?["provider_name"]);
+        Assert.Equal("gpt-4-turbo", results[0].AdditionalProperties?["model_id"]);
+    }
+
+    [Fact]
+    public async Task GetStreamingResponseAsync_UpdateWithoutAdditionalProperties_CreatesNewDictionary()
+    {
+        // Arrange
+        var messages = new[] { new ChatMessage(ChatRole.User, "Hello") };
+        var options = new ChatOptions { ModelId = "gpt-4" };
+        var candidate = new EnrichedCandidate(
+            new ProviderConfig { Key = "openai", Type = "openai" },
+            null,
+            "gpt-4");
+
+        var mockChatClient = CreateMockChatClient();
+        var mockStrategy = new Mock<IChatClientStrategy>();
+
+        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", true, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<EnrichedCandidate> { candidate });
+        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+            .Returns(mockChatClient.Object);
+        _strategiesMock.Setup(x => x.GetEnumerator())
+            .Returns(new List<IChatClientStrategy> { mockStrategy.Object }.GetEnumerator());
+        mockStrategy.Setup(x => x.CanHandle("openai"))
+            .Returns(true);
+
+        // Create update without AdditionalProperties
+        async IAsyncEnumerable<ChatResponseUpdate> GenerateUpdateWithoutProperties()
+        {
+            var update = new ChatResponseUpdate(ChatRole.Assistant, "Hello");
+            // AdditionalProperties is null
+            yield return update;
+            await Task.Yield();
+        }
+
+        mockStrategy.Setup(x => x.ExecuteStreamingAsync(mockChatClient.Object, It.IsAny<List<ChatMessage>>(), It.IsAny<ChatOptions>(), It.IsAny<CancellationToken>()))
+            .Returns(GenerateUpdateWithoutProperties());
+
+        // Act
+        var stream = _client.GetStreamingResponseAsync(messages, options);
+        var results = new List<ChatResponseUpdate>();
+        await foreach (var update in stream)
+        {
+            results.Add(update);
+        }
+
+        // Assert
+        Assert.Single(results);
+        Assert.NotNull(results[0].AdditionalProperties);
+        Assert.Equal("openai", results[0].AdditionalProperties["provider_name"]);
+    }
+
+    [Fact]
+    public async Task GetStreamingResponseAsync_WithNullOptions_UsesDefaultModelId()
+    {
+        // Arrange
+        var messages = new[] { new ChatMessage(ChatRole.User, "Hello") };
+        ChatOptions? options = null;
+        var candidate = new EnrichedCandidate(
+            new ProviderConfig { Key = "openai", Type = "openai" },
+            null,
+            "default");
+
+        var mockChatClient = CreateMockChatClient();
+        var mockStrategy = new Mock<IChatClientStrategy>();
+
+        _smartRouterMock.Setup(x => x.GetCandidatesAsync("default", true, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<EnrichedCandidate> { candidate });
+        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+            .Returns(mockChatClient.Object);
+        _strategiesMock.Setup(x => x.GetEnumerator())
+            .Returns(new List<IChatClientStrategy> { mockStrategy.Object }.GetEnumerator());
+        mockStrategy.Setup(x => x.CanHandle("openai"))
+            .Returns(true);
+        mockStrategy.Setup(x => x.ExecuteStreamingAsync(mockChatClient.Object, It.IsAny<List<ChatMessage>>(), It.IsAny<ChatOptions>(), It.IsAny<CancellationToken>()))
+            .Returns(GenerateStreamingResponse(new[] { "Hello" }));
+
+        // Act
+        var stream = _client.GetStreamingResponseAsync(messages, options);
+        var results = new List<ChatResponseUpdate>();
+        await foreach (var update in stream)
+        {
+            results.Add(update);
+        }
+
+        // Assert
+        Assert.Single(results);
+        _smartRouterMock.Verify(x => x.GetCandidatesAsync("default", true, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    #endregion
+
+    #region RecordFailureAsync Tests
+
+    [Fact]
+    public async Task GetResponseAsync_With429StatusCode_Applies60SecondCooldown()
+    {
+        // Arrange
+        var messages = new[] { new ChatMessage(ChatRole.User, "Hello") };
+        var options = new ChatOptions { ModelId = "gpt-4" };
+        var candidate = new EnrichedCandidate(
+            new ProviderConfig { Key = "openai", Type = "openai" },
+            null,
+            "gpt-4");
+
+        var mockChatClient = CreateMockChatClient();
+        var mockStrategy = new Mock<IChatClientStrategy>();
+        var exception = new Exception("Rate limited");
+        exception.Data["StatusCode"] = 429;
+
+        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<EnrichedCandidate> { candidate });
+        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+            .Returns(mockChatClient.Object);
+        _strategiesMock.Setup(x => x.GetEnumerator())
+            .Returns(new List<IChatClientStrategy> { mockStrategy.Object }.GetEnumerator());
+        mockStrategy.Setup(x => x.CanHandle("openai"))
+            .Returns(true);
+        mockStrategy.Setup(x => x.ExecuteAsync(mockChatClient.Object, It.IsAny<List<ChatMessage>>(), It.IsAny<ChatOptions>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(exception);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<AggregateException>(() => _client.GetResponseAsync(messages, options));
+        _healthStoreMock.Verify(x => x.MarkFailureAsync("openai", TimeSpan.FromSeconds(60), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetResponseAsync_With401StatusCode_Applies1HourCooldown()
+    {
+        // Arrange
+        var messages = new[] { new ChatMessage(ChatRole.User, "Hello") };
+        var options = new ChatOptions { ModelId = "gpt-4" };
+        var candidate = new EnrichedCandidate(
+            new ProviderConfig { Key = "openai", Type = "openai" },
+            null,
+            "gpt-4");
+
+        var mockChatClient = CreateMockChatClient();
+        var mockStrategy = new Mock<IChatClientStrategy>();
+        var exception = new Exception("Unauthorized");
+        exception.Data["StatusCode"] = 401;
+
+        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<EnrichedCandidate> { candidate });
+        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+            .Returns(mockChatClient.Object);
+        _strategiesMock.Setup(x => x.GetEnumerator())
+            .Returns(new List<IChatClientStrategy> { mockStrategy.Object }.GetEnumerator());
+        mockStrategy.Setup(x => x.CanHandle("openai"))
+            .Returns(true);
+        mockStrategy.Setup(x => x.ExecuteAsync(mockChatClient.Object, It.IsAny<List<ChatMessage>>(), It.IsAny<ChatOptions>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(exception);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<AggregateException>(() => _client.GetResponseAsync(messages, options));
+        _healthStoreMock.Verify(x => x.MarkFailureAsync("openai", TimeSpan.FromHours(1), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetResponseAsync_With400StatusCode_DoesNotMarkFailure()
+    {
+        // Arrange
+        var messages = new[] { new ChatMessage(ChatRole.User, "Hello") };
+        var options = new ChatOptions { ModelId = "gpt-4" };
+        var candidate = new EnrichedCandidate(
+            new ProviderConfig { Key = "openai", Type = "openai" },
+            null,
+            "gpt-4");
+
+        var mockChatClient = CreateMockChatClient();
+        var mockStrategy = new Mock<IChatClientStrategy>();
+        var exception = new Exception("Bad Request");
+        exception.Data["StatusCode"] = 400;
+
+        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<EnrichedCandidate> { candidate });
+        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+            .Returns(mockChatClient.Object);
+        _strategiesMock.Setup(x => x.GetEnumerator())
+            .Returns(new List<IChatClientStrategy> { mockStrategy.Object }.GetEnumerator());
+        mockStrategy.Setup(x => x.CanHandle("openai"))
+            .Returns(true);
+        mockStrategy.Setup(x => x.ExecuteAsync(mockChatClient.Object, It.IsAny<List<ChatMessage>>(), It.IsAny<ChatOptions>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(exception);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<AggregateException>(() => _client.GetResponseAsync(messages, options));
+        _healthStoreMock.Verify(x => x.MarkFailureAsync(It.IsAny<string>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetResponseAsync_With404StatusCode_DoesNotMarkFailure()
+    {
+        // Arrange
+        var messages = new[] { new ChatMessage(ChatRole.User, "Hello") };
+        var options = new ChatOptions { ModelId = "gpt-4" };
+        var candidate = new EnrichedCandidate(
+            new ProviderConfig { Key = "openai", Type = "openai" },
+            null,
+            "gpt-4");
+
+        var mockChatClient = CreateMockChatClient();
+        var mockStrategy = new Mock<IChatClientStrategy>();
+        var exception = new Exception("Not Found");
+        exception.Data["StatusCode"] = 404;
+
+        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<EnrichedCandidate> { candidate });
+        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+            .Returns(mockChatClient.Object);
+        _strategiesMock.Setup(x => x.GetEnumerator())
+            .Returns(new List<IChatClientStrategy> { mockStrategy.Object }.GetEnumerator());
+        mockStrategy.Setup(x => x.CanHandle("openai"))
+            .Returns(true);
+        mockStrategy.Setup(x => x.ExecuteAsync(mockChatClient.Object, It.IsAny<List<ChatMessage>>(), It.IsAny<ChatOptions>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(exception);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<AggregateException>(() => _client.GetResponseAsync(messages, options));
+        _healthStoreMock.Verify(x => x.MarkFailureAsync(It.IsAny<string>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetResponseAsync_With500StatusCode_Applies30SecondCooldown()
+    {
+        // Arrange
+        var messages = new[] { new ChatMessage(ChatRole.User, "Hello") };
+        var options = new ChatOptions { ModelId = "gpt-4" };
+        var candidate = new EnrichedCandidate(
+            new ProviderConfig { Key = "openai", Type = "openai" },
+            null,
+            "gpt-4");
+
+        var mockChatClient = CreateMockChatClient();
+        var mockStrategy = new Mock<IChatClientStrategy>();
+        var exception = new Exception("Server Error");
+        exception.Data["StatusCode"] = 500;
+
+        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<EnrichedCandidate> { candidate });
+        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+            .Returns(mockChatClient.Object);
+        _strategiesMock.Setup(x => x.GetEnumerator())
+            .Returns(new List<IChatClientStrategy> { mockStrategy.Object }.GetEnumerator());
+        mockStrategy.Setup(x => x.CanHandle("openai"))
+            .Returns(true);
+        mockStrategy.Setup(x => x.ExecuteAsync(mockChatClient.Object, It.IsAny<List<ChatMessage>>(), It.IsAny<ChatOptions>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(exception);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<AggregateException>(() => _client.GetResponseAsync(messages, options));
+        _healthStoreMock.Verify(x => x.MarkFailureAsync("openai", TimeSpan.FromSeconds(30), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetResponseAsync_WithNoStatusCode_AppliesDefaultCooldown()
+    {
+        // Arrange
+        var messages = new[] { new ChatMessage(ChatRole.User, "Hello") };
+        var options = new ChatOptions { ModelId = "gpt-4" };
+        var candidate = new EnrichedCandidate(
+            new ProviderConfig { Key = "openai", Type = "openai" },
+            null,
+            "gpt-4");
+
+        var mockChatClient = CreateMockChatClient();
+        var mockStrategy = new Mock<IChatClientStrategy>();
+
+        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<EnrichedCandidate> { candidate });
+        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+            .Returns(mockChatClient.Object);
+        _strategiesMock.Setup(x => x.GetEnumerator())
+            .Returns(new List<IChatClientStrategy> { mockStrategy.Object }.GetEnumerator());
+        mockStrategy.Setup(x => x.CanHandle("openai"))
+            .Returns(true);
+        mockStrategy.Setup(x => x.ExecuteAsync(mockChatClient.Object, It.IsAny<List<ChatMessage>>(), It.IsAny<ChatOptions>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Generic error without status code"));
+
+        // Act & Assert
+        await Assert.ThrowsAsync<AggregateException>(() => _client.GetResponseAsync(messages, options));
+        _healthStoreMock.Verify(x => x.MarkFailureAsync("openai", TimeSpan.FromSeconds(30), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetResponseAsync_WithInnerExceptionHavingStatusCode_ExtractsStatusCode()
+    {
+        // Arrange
+        var messages = new[] { new ChatMessage(ChatRole.User, "Hello") };
+        var options = new ChatOptions { ModelId = "gpt-4" };
+        var candidate = new EnrichedCandidate(
+            new ProviderConfig { Key = "openai", Type = "openai" },
+            null,
+            "gpt-4");
+
+        var mockChatClient = CreateMockChatClient();
+        var mockStrategy = new Mock<IChatClientStrategy>();
+        var innerException = new Exception("Inner error with 429");
+        var outerException = new Exception("Outer error", innerException);
+
+        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<EnrichedCandidate> { candidate });
+        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+            .Returns(mockChatClient.Object);
+        _strategiesMock.Setup(x => x.GetEnumerator())
+            .Returns(new List<IChatClientStrategy> { mockStrategy.Object }.GetEnumerator());
+        mockStrategy.Setup(x => x.CanHandle("openai"))
+            .Returns(true);
+        mockStrategy.Setup(x => x.ExecuteAsync(mockChatClient.Object, It.IsAny<List<ChatMessage>>(), It.IsAny<ChatOptions>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(outerException);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<AggregateException>(() => _client.GetResponseAsync(messages, options));
+        // Should apply 60 second cooldown for 429 extracted from inner exception message
+        _healthStoreMock.Verify(x => x.MarkFailureAsync("openai", TimeSpan.FromSeconds(60), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    #endregion
+
+    #region GetService and Dispose Tests
+
+    [Fact]
+    public void GetService_DelegatesToFactory()
+    {
+        // Arrange
+        var expectedService = new object();
+        _chatClientFactoryMock.Setup(x => x.GetService(typeof(string), null))
+            .Returns(expectedService);
+
+        // Act
+        var result = _client.GetService(typeof(string), null);
+
+        // Assert
+        Assert.Equal(expectedService, result);
+    }
+
+    [Fact]
+    public void GetService_WithServiceKey_DelegatesToFactory()
+    {
+        // Arrange
+        var expectedService = new object();
+        _chatClientFactoryMock.Setup(x => x.GetService(typeof(string), "key"))
+            .Returns(expectedService);
+
+        // Act
+        var result = _client.GetService(typeof(string), "key");
+
+        // Assert
+        Assert.Equal(expectedService, result);
+    }
+
+    [Fact]
+    public void Dispose_DoesNotThrow()
+    {
+        // Act & Assert
+        var exception = Record.Exception(() => _client.Dispose());
+        Assert.Null(exception);
+    }
+
+    #endregion
+
+    #region Metadata Tests
+
+    [Fact]
+    public void Metadata_ReturnsCorrectValue()
+    {
+        // Assert
+        Assert.NotNull(_client.Metadata);
+        Assert.Equal("SmartRoutingChatClient", _client.Metadata.Name);
+    }
+
+    #endregion
 
     private static async IAsyncEnumerable<ChatResponseUpdate> GenerateStreamingResponse(string[] chunks)
     {

@@ -7,6 +7,7 @@ using Xunit.Abstractions;
 
 namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
 {
+    [Trait("Category", "Mocked")]
     [Trait("Category", "Smoke")]
     [Trait("Type", "Integration")]
     public class ProviderModelSmokeTests : IClassFixture<SynaxisWebApplicationFactory>

@@ -16,6 +16,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
         private readonly List<IdentityAccount> _accounts = new List<IdentityAccount>();
         private Timer? _timer;
         private readonly object _lock = new object();
+        private readonly TaskCompletionSource<bool> _initialLoadComplete = new TaskCompletionSource<bool>();
 
         public IdentityManager(IEnumerable<IAuthStrategy> strategies, ISecureTokenStore store, ILogger<IdentityManager> logger)
         {
@@ -55,12 +56,17 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
                     lock (_lock)
                     {
                         _accounts.Clear();
-                        _accounts.AddRange(loaded);
+                        if (loaded != null)
+                        {
+                            _accounts.AddRange(loaded);
+                        }
                     }
+                    _initialLoadComplete.TrySetResult(true);
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Failed to load identity accounts from store");
+                    _initialLoadComplete.TrySetException(ex);
                 }
             });
         }
@@ -76,6 +82,15 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
         {
             _timer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Waits for the initial account loading to complete.
+        /// This is primarily used in tests to ensure background loading is finished.
+        /// </summary>
+        public Task WaitForInitialLoadAsync(CancellationToken ct = default)
+        {
+            return _initialLoadComplete.Task.WaitAsync(ct);
         }
 
         public void Dispose()
