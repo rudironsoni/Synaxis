@@ -1236,7 +1236,7 @@ Parallel Speedup: ~60% faster than sequential
   - AppShell.test.tsx: 22 tests (layout, header, sidebar, settings dialog)
   - Total: 128 tests passing (100% pass rate)
 
-- [ ] 4.3. Add Component Tests for Chat Features
+- [x] 4.3. Add Component Tests for Chat Features
   **What to do**:
   - Test `ChatWindow` (message rendering)
   - Test `ChatInput` (message submission)
@@ -1277,7 +1277,16 @@ Parallel Speedup: ~60% faster than sequential
   - Files: `src/Synaxis.WebApp/ClientApp/src/features/**/*.test.tsx`
   - Pre-commit: `npm test features`
 
-- [ ] 4.4. Add Tests for Utilities & Helpers
+  **Status**: COMPLETED (2026-01-31)
+  **Results**:
+  - ChatWindow.test.tsx: 17 tests (message display, API calls, streaming mode) - already existed
+  - ChatInput.test.tsx: 31 tests (message submission, streaming toggle) - already existed
+  - MessageBubble.test.tsx: 11 tests (role styling, usage display) - already existed
+  - SessionList.test.tsx: 15 tests (rendering, creating, deleting sessions) - NEW
+  - SettingsDialog.test.tsx: 16 tests (form fields, saving, edge cases) - NEW
+  - Total: 90+ tests passing (100% pass rate)
+
+- [x] 4.4. Add Tests for Utilities & Helpers
   **What to do**:
   - Test `utils.ts` functions (formatting, validation)
   - Test any other utility functions
@@ -1313,6 +1322,12 @@ Parallel Speedup: ~60% faster than sequential
   - Message: `test: Add tests for utilities and helpers`
   - Files: `src/Synaxis.WebApp/ClientApp/src/lib/utils.test.ts`
   - Pre-commit: `npm test utils`
+
+  **Status**: COMPLETED (2026-01-31)
+  **Results**:
+  - utils.test.ts: Expanded from 1 to 66 tests
+  - Tests cover cn utility, tailwind-merge, conditional classes, edge cases
+  - Total: 66 tests passing (100% pass rate)
 
 ---
 
