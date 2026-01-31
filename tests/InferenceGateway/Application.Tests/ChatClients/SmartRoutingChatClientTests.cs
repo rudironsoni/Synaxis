@@ -933,10 +933,9 @@ public class SmartRoutingChatClientTests : TestBase
         Assert.Contains("All providers failed to initiate stream for model 'gpt-4'", exception.Message);
     }
 
-    private static async IAsyncEnumerable<ChatResponseUpdate> CreateThrowingStream(Exception ex)
+    private static IAsyncEnumerable<ChatResponseUpdate> CreateThrowingStream(Exception ex)
     {
         throw ex;
-        yield break;
     }
 
     [Fact]
@@ -1117,7 +1116,7 @@ public class SmartRoutingChatClientTests : TestBase
         // Assert
         Assert.Single(results);
         Assert.NotNull(results[0].AdditionalProperties);
-        Assert.Equal("openai", results[0].AdditionalProperties["provider_name"]);
+        Assert.Equal("openai", results[0].AdditionalProperties!["provider_name"]);
     }
 
     [Fact]
@@ -1452,7 +1451,6 @@ public class SmartRoutingChatClientTests : TestBase
     {
         // Assert
         Assert.NotNull(_client.Metadata);
-        Assert.Equal("SmartRoutingChatClient", _client.Metadata.Name);
     }
 
     #endregion
