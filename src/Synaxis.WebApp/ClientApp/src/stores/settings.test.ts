@@ -268,5 +268,193 @@ describe('settings store', () => {
       })
       expect(useSettingsStore.getState().gatewayUrl).toBe(urlWithUnicode)
     })
+
+    it('should handle URL with fragment', () => {
+      const urlWithFragment = 'http://localhost:5000/path#section'
+      act(() => {
+        useSettingsStore.getState().setGatewayUrl(urlWithFragment)
+      })
+      expect(useSettingsStore.getState().gatewayUrl).toBe(urlWithFragment)
+    })
+
+    it('should handle URL with authentication', () => {
+      const urlWithAuth = 'http://user:pass@localhost:5000'
+      act(() => {
+        useSettingsStore.getState().setGatewayUrl(urlWithAuth)
+      })
+      expect(useSettingsStore.getState().gatewayUrl).toBe(urlWithAuth)
+    })
+
+    it('should handle URL with port 80 and 443', () => {
+      act(() => {
+        useSettingsStore.getState().setGatewayUrl('http://example.com:80')
+      })
+      expect(useSettingsStore.getState().gatewayUrl).toBe('http://example.com:80')
+
+      act(() => {
+        useSettingsStore.getState().setGatewayUrl('https://example.com:443')
+      })
+      expect(useSettingsStore.getState().gatewayUrl).toBe('https://example.com:443')
+    })
+
+    it('should handle cost rate with very small decimal', () => {
+      act(() => {
+        useSettingsStore.getState().setCostRate(0.000001)
+      })
+      expect(useSettingsStore.getState().costRate).toBe(0.000001)
+    })
+
+    it('should handle cost rate with scientific notation', () => {
+      act(() => {
+        useSettingsStore.getState().setCostRate(1e-10)
+      })
+      expect(useSettingsStore.getState().costRate).toBe(1e-10)
+    })
+
+    it('should handle cost rate at Number.MAX_SAFE_INTEGER', () => {
+      act(() => {
+        useSettingsStore.getState().setCostRate(Number.MAX_SAFE_INTEGER)
+      })
+      expect(useSettingsStore.getState().costRate).toBe(Number.MAX_SAFE_INTEGER)
+    })
+
+    it('should handle cost rate at Number.MIN_SAFE_INTEGER', () => {
+      act(() => {
+        useSettingsStore.getState().setCostRate(Number.MIN_SAFE_INTEGER)
+      })
+      expect(useSettingsStore.getState().costRate).toBe(Number.MIN_SAFE_INTEGER)
+    })
+
+    it('should handle Infinity cost rate', () => {
+      act(() => {
+        useSettingsStore.getState().setCostRate(Infinity)
+      })
+      expect(useSettingsStore.getState().costRate).toBe(Infinity)
+    })
+
+    it('should handle NaN cost rate', () => {
+      act(() => {
+        useSettingsStore.getState().setCostRate(NaN)
+      })
+      expect(useSettingsStore.getState().costRate).toBeNaN()
+    })
+
+    it('should handle token with newlines', () => {
+      const tokenWithNewlines = 'token\nwith\nnewlines'
+      act(() => {
+        useSettingsStore.getState().setJwtToken(tokenWithNewlines)
+      })
+      expect(useSettingsStore.getState().jwtToken).toBe(tokenWithNewlines)
+    })
+
+    it('should handle token with tabs', () => {
+      const tokenWithTabs = 'token\twith\ttabs'
+      act(() => {
+        useSettingsStore.getState().setJwtToken(tokenWithTabs)
+      })
+      expect(useSettingsStore.getState().jwtToken).toBe(tokenWithTabs)
+    })
+
+    it('should handle token with emojis', () => {
+      const tokenWithEmojis = 'token🎉with🚀emojis'
+      act(() => {
+        useSettingsStore.getState().setJwtToken(tokenWithEmojis)
+      })
+      expect(useSettingsStore.getState().jwtToken).toBe(tokenWithEmojis)
+    })
+
+    it('should handle rapid successive setting updates', () => {
+      act(() => {
+        for (let i = 0; i < 100; i++) {
+          useSettingsStore.getState().setCostRate(i)
+        }
+      })
+      expect(useSettingsStore.getState().costRate).toBe(99)
+    })
+
+    it('should handle setting all properties to default values', () => {
+      act(() => {
+        useSettingsStore.getState().setGatewayUrl('http://custom.com')
+        useSettingsStore.getState().setCostRate(100)
+        useSettingsStore.getState().setStreamingEnabled(true)
+        useSettingsStore.getState().setJwtToken('token')
+      })
+
+      act(() => {
+        useSettingsStore.getState().setGatewayUrl('http://localhost:5000')
+        useSettingsStore.getState().setCostRate(0)
+        useSettingsStore.getState().setStreamingEnabled(false)
+        useSettingsStore.getState().setJwtToken(null)
+      })
+
+      const state = useSettingsStore.getState()
+      expect(state.gatewayUrl).toBe('http://localhost:5000')
+      expect(state.costRate).toBe(0)
+      expect(state.streamingEnabled).toBe(false)
+      expect(state.jwtToken).toBeNull()
+    })
+
+    it('should handle logout with other settings modified', () => {
+      act(() => {
+        useSettingsStore.getState().setGatewayUrl('http://custom.com')
+        useSettingsStore.getState().setCostRate(50)
+        useSettingsStore.getState().setStreamingEnabled(true)
+        useSettingsStore.getState().setJwtToken('auth-token')
+      })
+
+      act(() => {
+        useSettingsStore.getState().logout()
+      })
+
+      const state = useSettingsStore.getState()
+      expect(state.jwtToken).toBeNull()
+      expect(state.gatewayUrl).toBe('http://custom.com')
+      expect(state.costRate).toBe(50)
+      expect(state.streamingEnabled).toBe(true)
+    })
+
+    it('should handle multiple logouts in sequence', () => {
+      act(() => {
+        useSettingsStore.getState().setJwtToken('token1')
+        useSettingsStore.getState().logout()
+        useSettingsStore.getState().setJwtToken('token2')
+        useSettingsStore.getState().logout()
+        useSettingsStore.getState().setJwtToken('token3')
+        useSettingsStore.getState().logout()
+      })
+
+      expect(useSettingsStore.getState().jwtToken).toBeNull()
+    })
+
+    it('should handle URL with IPv6 address', () => {
+      const ipv6Url = 'http://[::1]:5000'
+      act(() => {
+        useSettingsStore.getState().setGatewayUrl(ipv6Url)
+      })
+      expect(useSettingsStore.getState().gatewayUrl).toBe(ipv6Url)
+    })
+
+    it('should handle URL with localhost variations', () => {
+      const variations = [
+        'http://localhost:5000',
+        'http://127.0.0.1:5000',
+        'http://0.0.0.0:5000',
+        'http://[::1]:5000',
+      ]
+
+      variations.forEach(url => {
+        act(() => {
+          useSettingsStore.getState().setGatewayUrl(url)
+        })
+        expect(useSettingsStore.getState().gatewayUrl).toBe(url)
+      })
+    })
+
+    it('should handle cost rate with many decimal places', () => {
+      act(() => {
+        useSettingsStore.getState().setCostRate(0.123456789)
+      })
+      expect(useSettingsStore.getState().costRate).toBeCloseTo(0.123456789)
+    })
   })
 })
