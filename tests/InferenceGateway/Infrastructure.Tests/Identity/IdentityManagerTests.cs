@@ -95,8 +95,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
 
         var manager = new IdentityManager(new[] { mockStrat.Object }, mockStore.Object, logger.Object);
 
-        // Wait for background loading to complete
-        await Task.Delay(200);
+        await manager.WaitForInitialLoadAsync();
 
         var token = await manager.GetToken(acc.Provider);
 
@@ -150,8 +149,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
 
         mockStrat.Setup(s => s.RefreshTokenAsync(It.IsAny<IdentityAccount>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("Refresh token expired"));
+        mockStore.Setup(s => s.LoadAsync()).ReturnsAsync(new List<IdentityAccount>());
 
         var manager = new IdentityManager(new[] { mockStrat.Object }, mockStore.Object, logger.Object);
+
+        await manager.WaitForInitialLoadAsync();
 
         var account = new IdentityAccount
         {
@@ -259,7 +261,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
 
         var manager = new IdentityManager(new[] { mockStrat.Object }, mockStore.Object, logger.Object);
 
-        await Task.Delay(20); // Allow background loading
+        await manager.WaitForInitialLoadAsync();
 
         var tokenBefore = await manager.GetToken("TestProvider");
         Assert.Equal("existing-token", tokenBefore);
