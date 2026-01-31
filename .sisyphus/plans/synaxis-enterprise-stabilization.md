@@ -1333,7 +1333,7 @@ Parallel Speedup: ~60% faster than sequential
 
 ### Phase 5: Feature Implementation - WebApp Streaming (Wave 3)
 
-- [ ] 5.1. Implement Streaming Support in GatewayClient
+- [x] 5.1. Implement Streaming Support in GatewayClient
   **What to do**:
   - Add `sendMessageStream` method to GatewayClient
   - Handle Server-Sent Events (SSE) parsing
@@ -1381,7 +1381,15 @@ Parallel Speedup: ~60% faster than sequential
   - Files: `src/Synaxis.WebApp/ClientApp/src/api/client.ts`, `src/Synaxis.WebApp/ClientApp/src/api/client.test.ts`
   - Pre-commit: `npm test client.test.ts`
 
-- [ ] 5.2. Integrate Streaming in ChatWindow Component
+  **Status**: COMPLETED (2026-01-31)
+  **Results**:
+  - sendMessageStream method already implemented with SSE parsing
+  - Returns AsyncGenerator<ChatStreamChunk> 
+  - Handles connection errors and invalid JSON
+  - 12 comprehensive tests in client.test.ts
+  - All tests passing (100% pass rate)
+
+- [x] 5.2. Integrate Streaming in ChatWindow Component
   **What to do**:
   - Add toggle for streaming/non-streaming mode
   - Render stream chunks as they arrive
@@ -1428,7 +1436,16 @@ Parallel Speedup: ~60% faster than sequential
   - Files: `src/Synaxis.WebApp/ClientApp/src/features/chat/ChatWindow.tsx`
   - Pre-commit: `npm test ChatWindow`
 
-- [ ] 5.3. Add Streaming Controls to ChatInput
+  **Status**: COMPLETED (2026-01-31)
+  **Results**:
+  - Streaming state management implemented (isStreaming, streamingContent, error)
+  - sendStreaming function integrated with sendMessageStream
+  - Renders stream chunks via MessageBubble with isStreaming prop
+  - Saves completed stream to database
+  - 17 tests in ChatWindow.test.tsx covering streaming scenarios
+  - All tests passing (100% pass rate)
+
+- [x] 5.3. Add Streaming Controls to ChatInput
   **What to do**:
   - Add checkbox/toggle for streaming mode
   - Persist streaming preference in settings store
@@ -1473,6 +1490,16 @@ Parallel Speedup: ~60% faster than sequential
   - Message: `feat: Add streaming controls to ChatInput`
   - Files: `src/Synaxis.WebApp/ClientApp/src/features/chat/ChatInput.tsx`
   - Pre-commit: `npm test ChatInput`
+
+  **Status**: COMPLETED (2026-01-31)
+  **Results**:
+  - Streaming toggle button with Zap icon implemented
+  - Visual feedback with ON/OFF states and color changes
+  - Connected to settings store (streamingEnabled, setStreamingEnabled)
+  - Disabled state during streaming with proper opacity/cursor
+  - Accessibility: aria-label and title attributes
+  - 31 tests in ChatInput.test.tsx covering streaming toggle
+  - All tests passing (100% pass rate)
 
 - [ ] 5.4. E2E Test for Streaming Flow
   **What to do**:
