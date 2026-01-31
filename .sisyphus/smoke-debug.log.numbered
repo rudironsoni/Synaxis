@@ -1,0 +1,14 @@
+     1	  Determining projects to restore...
+     2	  All projects are up-to-date for restore.
+     3	  Synaxis.InferenceGateway.Application -> /home/rrj/src/github/rudironsoni/Synaxis/src/InferenceGateway/Application/bin/Debug/net10.0/Synaxis.InferenceGateway.Application.dll
+     4	  Synaxis.InferenceGateway.Infrastructure -> /home/rrj/src/github/rudironsoni/Synaxis/src/InferenceGateway/Infrastructure/bin/Debug/net10.0/Synaxis.InferenceGateway.Infrastructure.dll
+     5	  Synaxis.InferenceGateway.WebApi -> /home/rrj/src/github/rudironsoni/Synaxis/src/InferenceGateway/WebApi/bin/Debug/net10.0/Synaxis.InferenceGateway.WebApi.dll
+     6	  Synaxis.InferenceGateway.IntegrationTests -> /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/IntegrationTests/bin/Debug/net10.0/Synaxis.InferenceGateway.IntegrationTests.dll
+     7	Test run for /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/IntegrationTests/bin/Debug/net10.0/Synaxis.InferenceGateway.IntegrationTests.dll (.NETCoreApp,Version=v10.0)
+     8	VSTest version 18.0.1 (x64)
+     9	
+    10	Starting test execution, please wait...
+    11	A total of 1 test files matched the specified pattern.
+    12	Results File: /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/IntegrationTests/TestResults/.sisyphus/smoke-debug.trx
+    13	
+    14	Passed!  - Failed:     0, Passed:    79, Skipped:     0, Total:    79, Duration: 5 s - Synaxis.InferenceGateway.IntegrationTests.dll (net10.0)
