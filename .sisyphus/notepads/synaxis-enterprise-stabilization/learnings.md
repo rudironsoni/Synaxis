@@ -1302,3 +1302,9 @@ Baseline testing showed 0% failure rate after remediation efforts.
 - Smoke test flakiness: 0% (10/10 runs)
 
 Notes: This appendix entry records that the final verification report was generated from existing baseline files; no tests or builds were executed during this step.
+
+### [2026-02-01] Cleanup & handoff summary appended
+
+- Created `.sisyphus/cleanup-handoff-summary.md` documenting temporary artifacts to remove, secrets scan summary, stabilization changes, accomplishments, and next steps.
+- Secrets scan highlights: `.env` and `token.json` contain JWT-like tokens; recommend immediate removal from repo and key rotation.
+- Recommended repository hygiene: add .gitignore entries for /.env, /coverage/, /BenchmarkDotNet.Artifacts/, and large test build artifacts; add secret scanning to CI.
