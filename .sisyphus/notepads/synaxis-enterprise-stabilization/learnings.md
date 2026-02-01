@@ -890,6 +890,21 @@ cd src/Synaxis.WebApp/ClientApp && npm test stores -- --run
 - Tests are deterministic and fast (~3.5 seconds for 128 tests)
 - AppShell tests use mocks for dependencies (SessionList, SettingsDialog, settings store)
 
+### [2026-02-01] Security audit (created .sisyphus/security-audit.md)
+
+- Performed a focused security review of the WebApi and WebApp client, created a security audit document at `.sisyphus/security-audit.md`.
+- Key findings:
+  - Input validation is incomplete at API boundary; many malformed inputs result in 500 or are silently accepted.
+  - Rate limiting framework exists but enforcement is a TODO (RedisQuotaTracker.CheckQuotaAsync currently returns true).
+  - JwtService issues 7-day tokens and Program.cs contains a default JwtSecret fallback; production should fail fast if secret missing.
+  - No explicit CORS policy found in Program.cs; recommend adding explicit policies and avoiding AllowAnyOrigin for authenticated endpoints.
+  - No security headers middleware found (HSTS, CSP, X-Frame-Options); recommend adding conservative defaults in production.
+  - Client renders model responses; ensure views escape HTML to avoid XSS.
+
+Actions taken:
+- Created `.sisyphus/security-audit.md` (documentation-only) listing findings, risks, recommendations, and required security tests.
+- Next recommended tasks (not implemented here): enforce JWT secret presence, implement quota enforcement, add validation layer, harden CORS and security headers, add automated security tests.
+
 **Test results**:
 - Total UI component tests: 128
 - Pass rate: 100% (128/128)
