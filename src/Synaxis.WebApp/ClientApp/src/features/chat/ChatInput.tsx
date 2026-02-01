@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Send, Zap } from 'lucide-react'
 import useSettingsStore from '@/stores/settings'
+import ModelSelection from './ModelSelection'
 
 type ChatInputProps = {
   onSend: (txt: string) => void
@@ -55,7 +56,8 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
           <Send className="w-4 h-4" />
         </button>
       </div>
-      <div className="flex items-center gap-2 mt-2 px-1">
+      <div className="flex items-center gap-4 mt-2 px-1 flex-wrap">
+        <ModelSelection disabled={disabled} />
         <button
           type="button"
           onClick={toggleStreaming}
