@@ -927,6 +927,74 @@ cd src/Synaxis.WebApp/ClientApp && npm test -- --run
 
 **Result**: All UI component tests pass with 100% success rate, 0% flakiness
 
+### [2026-02-01] README.md Update with New Features and Testing Information
+
+**Status**: ✅ Complete
+
+**What was done**:
+- Updated README.md with comprehensive documentation for new features and testing information
+- Added streaming support documentation with Server-Sent Events (SSE) examples
+- Added complete Admin Web UI section with features, access instructions, and endpoint documentation
+- Updated feature lists to include streaming and admin UI capabilities
+- Enhanced setup instructions with new endpoints and web app access
+- Added API documentation links to endpoint reference files
+- Added comprehensive testing section with coverage statistics and test categories
+- Added recent updates section highlighting new features
+
+**Key additions**:
+
+1. **Streaming Support Documentation**:
+   - Added real-time streaming responses with SSE to main features
+   - Added streaming example in usage section with `stream: true` parameter
+   - Documented Server-Sent Events format with `data: {json}` frames and `[DONE]` sentinel
+   - Explained streaming support across chat completions and responses endpoints
+
+2. **Admin Web UI Documentation**:
+   - Added dedicated Admin Web UI section with comprehensive feature overview
+   - Documented admin interface access at `http://localhost:8080/admin`
+   - Listed admin features: provider management, health monitoring, system health, usage analytics
+   - Documented admin endpoints: `/admin/providers`, `/admin/health`, `/auth/dev-login`
+   - Explained JWT authentication requirements for admin access
+
+3. **Updated Feature Lists**:
+   - Enhanced main features section with streaming and admin UI
+   - Updated Key Features section with streaming support and admin interface
+   - Maintained project's tone while adding technical details
+
+4. **Enhanced Setup Instructions**:
+   - Updated Docker Compose section to include web app
+   - Added web app port information: `http://localhost:8080/admin`
+   - Documented new API endpoints including admin API and health checks
+   - Clarified OpenAI-compatible endpoint paths
+
+5. **API Documentation Links**:
+   - Added links to `.sisyphus/webapi-endpoints.md` for complete endpoint reference
+   - Added links to `.sisyphus/webapp-features.md` for frontend capabilities
+   - Maintained existing documentation links
+
+6. **Testing Information**:
+   - Added comprehensive testing section with coverage statistics
+   - Documented current coverage: Backend 7.19%, Frontend 85.77%
+   - Added target coverage: 80% overall (currently at 46.48% combined)
+   - Listed test categories: Unit, Integration, Component, E2E tests
+   - Added test execution commands for both backend and frontend
+
+7. **Recent Updates Section**:
+   - Added ✨ emojis for visual appeal
+   - Listed streaming support, admin web UI, enhanced API, and improved testing
+   - Maintained project's enthusiastic tone
+
+**Verification**:
+- Confirmed README includes required keywords: "streaming", "admin", "80% coverage"
+- Verified all new sections maintain project's tone and style
+- Ensured technical accuracy based on webapi-endpoints.md and webapp-features.md
+- Maintained existing useful information while adding new features
+
+**Files modified**:
+- Modified: README.md (comprehensive updates across multiple sections)
+
+**Result**: README.md now comprehensively documents all new features including streaming support, admin UI, updated API endpoints, and testing information while maintaining the project's distinctive tone and style.
+
 **Files verified**:
 - Verified: src/Synaxis.WebApp/ClientApp/src/components/ui/Button.test.tsx (27 tests)
 - Verified: src/Synaxis.WebApp/ClientApp/src/components/ui/Input.test.tsx (35 tests)
