@@ -11,7 +11,7 @@ import {
   Pause,
   Play
 } from 'lucide-react';
-import useSettingsStore from '@/stores/settings';
+import useSettingsStore, { type SettingsState } from '@/stores/settings';
 
 interface ServiceHealth {
   name: string;
@@ -45,7 +45,7 @@ export default function HealthDashboard() {
   const [error, setError] = useState('');
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-   const jwtToken = useSettingsStore((s: { jwtToken: string }) => s.jwtToken);
+   const jwtToken = useSettingsStore((s: SettingsState) => s.jwtToken);
 
   const fetchHealth = useCallback(async () => {
     try {
