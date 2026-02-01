@@ -1,0 +1,46 @@
+// Validating benchmarks:
+// Benchmark JsonSerializationBenchmarks.Serialize_SmallRequest: Job-UXDTTB(IterationCount=10, WarmupCount=3)
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark JsonSerializationBenchmarks.Serialize_MediumRequest: Job-UXDTTB(IterationCount=10, WarmupCount=3)
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark JsonSerializationBenchmarks.Serialize_LargeRequest: Job-UXDTTB(IterationCount=10, WarmupCount=3)
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark JsonSerializationBenchmarks.Serialize_SmallResponse: Job-UXDTTB(IterationCount=10, WarmupCount=3)
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark JsonSerializationBenchmarks.Serialize_MediumResponse: Job-UXDTTB(IterationCount=10, WarmupCount=3)
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark JsonSerializationBenchmarks.Serialize_LargeResponse: Job-UXDTTB(IterationCount=10, WarmupCount=3)
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark JsonSerializationBenchmarks.Deserialize_SmallRequest: Job-UXDTTB(IterationCount=10, WarmupCount=3)
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark JsonSerializationBenchmarks.Deserialize_MediumRequest: Job-UXDTTB(IterationCount=10, WarmupCount=3)
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark JsonSerializationBenchmarks.Deserialize_LargeRequest: Job-UXDTTB(IterationCount=10, WarmupCount=3)
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark JsonSerializationBenchmarks.Deserialize_SmallResponse: Job-UXDTTB(IterationCount=10, WarmupCount=3)
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark JsonSerializationBenchmarks.Deserialize_MediumResponse: Job-UXDTTB(IterationCount=10, WarmupCount=3)
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark JsonSerializationBenchmarks.Deserialize_LargeResponse: Job-UXDTTB(IterationCount=10, WarmupCount=3)
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark JsonSerializationBenchmarks.SerializeDeserialize_SmallRequest: Job-UXDTTB(IterationCount=10, WarmupCount=3)
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark JsonSerializationBenchmarks.SerializeDeserialize_MediumRequest: Job-UXDTTB(IterationCount=10, WarmupCount=3)
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark JsonSerializationBenchmarks.SerializeDeserialize_LargeRequest: Job-UXDTTB(IterationCount=10, WarmupCount=3)
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+

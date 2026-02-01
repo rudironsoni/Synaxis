@@ -1,0 +1,25 @@
+// Validating benchmarks:
+// Benchmark ConfigurationLoadingBenchmarks.Bind_SmallConfiguration: Job-UXDTTB(IterationCount=10, WarmupCount=3)
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark ConfigurationLoadingBenchmarks.Bind_MediumConfiguration: Job-UXDTTB(IterationCount=10, WarmupCount=3)
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark ConfigurationLoadingBenchmarks.Bind_LargeConfiguration: Job-UXDTTB(IterationCount=10, WarmupCount=3)
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark ConfigurationLoadingBenchmarks.Bind_ConfigurationWithEnvironmentVariables: Job-UXDTTB(IterationCount=10, WarmupCount=3)
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark ConfigurationLoadingBenchmarks.GetProviderKey_SmallConfiguration: Job-UXDTTB(IterationCount=10, WarmupCount=3)
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark ConfigurationLoadingBenchmarks.GetProviderKey_LargeConfiguration: Job-UXDTTB(IterationCount=10, WarmupCount=3)
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark ConfigurationLoadingBenchmarks.GetJwtSecret: Job-UXDTTB(IterationCount=10, WarmupCount=3)
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark ConfigurationLoadingBenchmarks.GetAllProviderKeys: Job-UXDTTB(IterationCount=10, WarmupCount=3)
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+

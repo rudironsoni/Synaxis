@@ -1,0 +1,52 @@
+// Validating benchmarks:
+// Benchmark ProviderRoutingBenchmarks.SmartRouter_GetCandidatesAsync_AliasResolution: Job-UXDTTB(IterationCount=10, WarmupCount=3)
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark ProviderRoutingBenchmarks.SmartRouter_GetCandidatesAsync_WithStreamingCapability: Job-UXDTTB(IterationCount=10, WarmupCount=3)
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark ProviderRoutingBenchmarks.ModelResolver_ResolveAsync_MultipleCanonicalModels: Job-UXDTTB(IterationCount=10, WarmupCount=3) [canonicalModelCount=1]
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark ProviderRoutingBenchmarks.ModelResolver_ResolveAsync_SingleCanonicalModel: Job-UXDTTB(IterationCount=10, WarmupCount=3) [providerCount=1]
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark ProviderRoutingBenchmarks.SmartRouter_GetCandidatesAsync_SingleProvider: Job-UXDTTB(IterationCount=10, WarmupCount=3) [providerCount=1]
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark ProviderRoutingBenchmarks.SmartRouter_GetCandidatesAsync_MultipleProviders: Job-UXDTTB(IterationCount=10, WarmupCount=3) [providerCount=1]
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark ProviderRoutingBenchmarks.ModelResolver_ResolveAsync_MultipleCanonicalModels: Job-UXDTTB(IterationCount=10, WarmupCount=3) [canonicalModelCount=5]
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark ProviderRoutingBenchmarks.ModelResolver_ResolveAsync_SingleCanonicalModel: Job-UXDTTB(IterationCount=10, WarmupCount=3) [providerCount=5]
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark ProviderRoutingBenchmarks.SmartRouter_GetCandidatesAsync_SingleProvider: Job-UXDTTB(IterationCount=10, WarmupCount=3) [providerCount=5]
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark ProviderRoutingBenchmarks.SmartRouter_GetCandidatesAsync_MultipleProviders: Job-UXDTTB(IterationCount=10, WarmupCount=3) [providerCount=5]
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark ProviderRoutingBenchmarks.ModelResolver_ResolveAsync_MultipleCanonicalModels: Job-UXDTTB(IterationCount=10, WarmupCount=3) [canonicalModelCount=10]
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark ProviderRoutingBenchmarks.ModelResolver_ResolveAsync_SingleCanonicalModel: Job-UXDTTB(IterationCount=10, WarmupCount=3) [providerCount=10]
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark ProviderRoutingBenchmarks.SmartRouter_GetCandidatesAsync_SingleProvider: Job-UXDTTB(IterationCount=10, WarmupCount=3) [providerCount=10]
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark ProviderRoutingBenchmarks.SmartRouter_GetCandidatesAsync_MultipleProviders: Job-UXDTTB(IterationCount=10, WarmupCount=3) [providerCount=10]
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark ProviderRoutingBenchmarks.ModelResolver_ResolveAsync_SingleCanonicalModel: Job-UXDTTB(IterationCount=10, WarmupCount=3) [providerCount=13]
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark ProviderRoutingBenchmarks.SmartRouter_GetCandidatesAsync_SingleProvider: Job-UXDTTB(IterationCount=10, WarmupCount=3) [providerCount=13]
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+
+// Benchmark ProviderRoutingBenchmarks.SmartRouter_GetCandidatesAsync_MultipleProviders: Job-UXDTTB(IterationCount=10, WarmupCount=3) [providerCount=13]
+//    * DisassemblyDiagnoser supports only .NET Core 3.0+
+

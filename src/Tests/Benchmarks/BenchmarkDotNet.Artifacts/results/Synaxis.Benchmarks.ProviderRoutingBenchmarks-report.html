@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>Synaxis.Benchmarks.ProviderRoutingBenchmarks-20260201-143451</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; text-align: right; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet v0.14.0, Debian GNU/Linux 13 (trixie)
+Intel Core i5-7500 CPU 3.40GHz (Kaby Lake), 1 CPU, 4 logical and 4 physical cores
+.NET SDK 10.0.102
+  [Host]     : .NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX2
+  Job-VTZOQI : .NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX2
+</code></pre>
+<pre><code>IterationCount=10  WarmupCount=3  
+</code></pre>
+
+<table>
+<thead><tr><th>Method                                          </th><th>canonicalModelCount</th><th>providerCount</th><th>Mean</th><th>Error</th><th>StdDev</th><th>Gen0</th><th>Gen1</th><th>Allocated</th>
+</tr>
+</thead><tbody><tr><td>SmartRouter_GetCandidatesAsync_AliasResolution</td><td>?</td><td>?</td><td>11.99 &mu;s</td><td>1.154 &mu;s</td><td>0.687 &mu;s</td><td>0.6104</td><td>0.1221</td><td>4.74 KB</td>
+</tr><tr><td>SmartRouter_GetCandidatesAsync_WithStreamingCapability</td><td>?</td><td>?</td><td>11.62 &mu;s</td><td>1.167 &mu;s</td><td>0.694 &mu;s</td><td>0.5493</td><td>0.1221</td><td>4.61 KB</td>
+</tr><tr><td>ModelResolver_ResolveAsync_MultipleCanonicalModels</td><td>1</td><td>?</td><td>880.04 &mu;s</td><td>113.699 &mu;s</td><td>75.205 &mu;s</td><td>15.6250</td><td>13.6719</td><td>53.31 KB</td>
+</tr><tr><td>ModelResolver_ResolveAsync_SingleCanonicalModel</td><td>?</td><td>1</td><td>893.24 &mu;s</td><td>134.029 &mu;s</td><td>88.652 &mu;s</td><td>13.6719</td><td>11.7188</td><td>47.74 KB</td>
+</tr><tr><td>SmartRouter_GetCandidatesAsync_SingleProvider</td><td>?</td><td>1</td><td>894.67 &mu;s</td><td>120.298 &mu;s</td><td>79.570 &mu;s</td><td>15.6250</td><td>13.6719</td><td>49.78 KB</td>
+</tr><tr><td>SmartRouter_GetCandidatesAsync_MultipleProviders</td><td>?</td><td>1</td><td>924.17 &mu;s</td><td>156.525 &mu;s</td><td>103.532 &mu;s</td><td>15.6250</td><td>13.6719</td><td>52.94 KB</td>
+</tr><tr><td>ModelResolver_ResolveAsync_MultipleCanonicalModels</td><td>5</td><td>?</td><td>879.84 &mu;s</td><td>103.857 &mu;s</td><td>68.695 &mu;s</td><td>17.5781</td><td>15.6250</td><td>54.07 KB</td>
+</tr><tr><td>ModelResolver_ResolveAsync_SingleCanonicalModel</td><td>?</td><td>5</td><td>867.44 &mu;s</td><td>87.506 &mu;s</td><td>57.880 &mu;s</td><td>15.6250</td><td>13.6719</td><td>48.66 KB</td>
+</tr><tr><td>SmartRouter_GetCandidatesAsync_SingleProvider</td><td>?</td><td>5</td><td>926.17 &mu;s</td><td>98.153 &mu;s</td><td>64.922 &mu;s</td><td>15.6250</td><td>13.6719</td><td>51.25 KB</td>
+</tr><tr><td>SmartRouter_GetCandidatesAsync_MultipleProviders</td><td>?</td><td>5</td><td>921.16 &mu;s</td><td>86.538 &mu;s</td><td>51.497 &mu;s</td><td>17.5781</td><td>15.6250</td><td>58.52 KB</td>
+</tr><tr><td>ModelResolver_ResolveAsync_MultipleCanonicalModels</td><td>10</td><td>?</td><td>858.94 &mu;s</td><td>124.881 &mu;s</td><td>74.314 &mu;s</td><td>17.5781</td><td>15.6250</td><td>54.8 KB</td>
+</tr><tr><td>ModelResolver_ResolveAsync_SingleCanonicalModel</td><td>?</td><td>10</td><td>773.13 &mu;s</td><td>31.038 &mu;s</td><td>16.233 &mu;s</td><td>15.6250</td><td>13.6719</td><td>50.81 KB</td>
+</tr><tr><td>SmartRouter_GetCandidatesAsync_SingleProvider</td><td>?</td><td>10</td><td>850.58 &mu;s</td><td>88.830 &mu;s</td><td>58.756 &mu;s</td><td>15.6250</td><td>13.6719</td><td>53.05 KB</td>
+</tr><tr><td>SmartRouter_GetCandidatesAsync_MultipleProviders</td><td>?</td><td>10</td><td>851.31 &mu;s</td><td>61.682 &mu;s</td><td>36.706 &mu;s</td><td>9.7656</td><td>1.9531</td><td>66.46 KB</td>
+</tr><tr><td>ModelResolver_ResolveAsync_SingleCanonicalModel</td><td>?</td><td>13</td><td>828.97 &mu;s</td><td>88.072 &mu;s</td><td>58.254 &mu;s</td><td>15.6250</td><td>13.6719</td><td>51.56 KB</td>
+</tr><tr><td>SmartRouter_GetCandidatesAsync_SingleProvider</td><td>?</td><td>13</td><td>857.45 &mu;s</td><td>103.155 &mu;s</td><td>68.231 &mu;s</td><td>15.6250</td><td>13.6719</td><td>54.14 KB</td>
+</tr><tr><td>SmartRouter_GetCandidatesAsync_MultipleProviders</td><td>?</td><td>13</td><td>881.12 &mu;s</td><td>68.782 &mu;s</td><td>40.931 &mu;s</td><td>9.7656</td><td>1.9531</td><td>71.01 KB</td>
+</tr></tbody></table>
+</body>
+</html>

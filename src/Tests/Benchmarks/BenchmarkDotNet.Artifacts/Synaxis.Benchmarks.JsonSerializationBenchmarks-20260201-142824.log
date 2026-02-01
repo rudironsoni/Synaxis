@@ -1,0 +1,74 @@
+// Validating benchmarks:
+// ***** BenchmarkRunner: Start   *****
+// ***** Found 15 benchmark(s) in total *****
+// ***** Building 1 exe(s) in Parallel: Start   *****
+// ***** Done, took 00:00:00 (0.06 sec)   *****
+// Found 15 benchmarks:
+//   JsonSerializationBenchmarks.Serialize_SmallRequest: Job-LCAGCK(IterationCount=10, WarmupCount=3)
+//   JsonSerializationBenchmarks.Serialize_MediumRequest: Job-LCAGCK(IterationCount=10, WarmupCount=3)
+//   JsonSerializationBenchmarks.Serialize_LargeRequest: Job-LCAGCK(IterationCount=10, WarmupCount=3)
+//   JsonSerializationBenchmarks.Serialize_SmallResponse: Job-LCAGCK(IterationCount=10, WarmupCount=3)
+//   JsonSerializationBenchmarks.Serialize_MediumResponse: Job-LCAGCK(IterationCount=10, WarmupCount=3)
+//   JsonSerializationBenchmarks.Serialize_LargeResponse: Job-LCAGCK(IterationCount=10, WarmupCount=3)
+//   JsonSerializationBenchmarks.Deserialize_SmallRequest: Job-LCAGCK(IterationCount=10, WarmupCount=3)
+//   JsonSerializationBenchmarks.Deserialize_MediumRequest: Job-LCAGCK(IterationCount=10, WarmupCount=3)
+//   JsonSerializationBenchmarks.Deserialize_LargeRequest: Job-LCAGCK(IterationCount=10, WarmupCount=3)
+//   JsonSerializationBenchmarks.Deserialize_SmallResponse: Job-LCAGCK(IterationCount=10, WarmupCount=3)
+//   JsonSerializationBenchmarks.Deserialize_MediumResponse: Job-LCAGCK(IterationCount=10, WarmupCount=3)
+//   JsonSerializationBenchmarks.Deserialize_LargeResponse: Job-LCAGCK(IterationCount=10, WarmupCount=3)
+//   JsonSerializationBenchmarks.SerializeDeserialize_SmallRequest: Job-LCAGCK(IterationCount=10, WarmupCount=3)
+//   JsonSerializationBenchmarks.SerializeDeserialize_MediumRequest: Job-LCAGCK(IterationCount=10, WarmupCount=3)
+//   JsonSerializationBenchmarks.SerializeDeserialize_LargeRequest: Job-LCAGCK(IterationCount=10, WarmupCount=3)
+
+// Generate Exception: System.NotSupportedException: Found more than one matching project file for Synaxis.Benchmarks in /home/rrj/src/github/rudironsoni/Synaxis and its subfolders: '/home/rrj/src/github/rudironsoni/Synaxis/benchmarks/Synaxis.Benchmarks/Synaxis.Benchmarks.csproj','/home/rrj/src/github/rudironsoni/Synaxis/src/Tests/Benchmarks/Synaxis.Benchmarks.csproj'. Benchmark project names needs to be unique.
+   at BenchmarkDotNet.Toolchains.CsProj.CsProjGenerator.GetProjectFilePath(Type benchmarkTarget, ILogger logger)
+   at BenchmarkDotNet.Toolchains.CsProj.CsProjGenerator.GenerateProject(BuildPartition buildPartition, ArtifactsPaths artifactsPaths, ILogger logger)
+   at BenchmarkDotNet.Toolchains.GeneratorBase.GenerateProject(BuildPartition buildPartition, ILogger logger, String rootArtifactsFolderPath)
+
+// BenchmarkDotNet has failed to build the auto-generated boilerplate code.
+// It can be found in /home/rrj/src/github/rudironsoni/Synaxis/src/Tests/Benchmarks/bin/Release/net10.0/a03666a5-823c-4165-b2b8-e442d2b1fa8a
+// Please follow the troubleshooting guide: https://benchmarkdotnet.org/articles/guides/troubleshooting.html
+
+// ** Remained 0 (0.0%) benchmark(s) to run. Estimated finish 2026-02-01 14:28 (0h 0m from now) **
+// ***** BenchmarkRunner: Finish  *****
+
+// * Export *
+  BenchmarkDotNet.Artifacts/results/Synaxis.Benchmarks.JsonSerializationBenchmarks-report.csv
+  BenchmarkDotNet.Artifacts/results/Synaxis.Benchmarks.JsonSerializationBenchmarks-report-github.md
+  BenchmarkDotNet.Artifacts/results/Synaxis.Benchmarks.JsonSerializationBenchmarks-report.html
+
+// * Detailed results *
+JsonSerializationBenchmarks.Serialize_SmallRequest: Job-LCAGCK(IterationCount=10, WarmupCount=3)
+Runtime = ; GC = 
+There are not any results runs
+
+// * Summary *
+
+BenchmarkDotNet v0.14.0, Debian GNU/Linux 13 (trixie)
+Intel Core i5-7500 CPU 3.40GHz (Kaby Lake), 1 CPU, 4 logical and 4 physical cores
+.NET SDK 10.0.102
+  [Host] : .NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX2
+
+IterationCount=10  WarmupCount=3  
+
+| Method                 | Mean | Error |
+|----------------------- |-----:|------:|
+| Serialize_SmallRequest |   NA |    NA |
+
+Benchmarks with issues:
+  JsonSerializationBenchmarks.Serialize_SmallRequest: Job-LCAGCK(IterationCount=10, WarmupCount=3)
+
+// * Legends *
+  Mean  : Arithmetic mean of all measurements
+  Error : Half of 99.9% confidence interval
+  1 ns  : 1 Nanosecond (0.000000001 sec)
+
+// * Diagnostic Output - MemoryDiagnoser *
+
+
+// ***** BenchmarkRunner: End *****
+Run time: 00:00:00 (0 sec), executed benchmarks: 0
+
+Global total time: 00:00:00 (0.06 sec), executed benchmarks: 0
+// * Artifacts cleanup *
+Artifacts cleanup is finished
