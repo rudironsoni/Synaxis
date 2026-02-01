@@ -952,6 +952,20 @@ cd src/Synaxis.WebApp/ClientApp && npm test -- --run
 
 Append verified by: Sisyphus-Junior automation — recorded 2026-02-01
 
+### [2026-02-01] Final status: Zero skipped tests enforced
+
+- Task: Enforce zero skipped tests across repository (backend + frontend).
+- Outcome: SUCCESS — no skipped tests were present in source and runtime test runs reported 0 skipped tests.
+- Actions performed:
+  - Code searches for skip markers in backend and frontend test sources.
+  - Executed `dotnet test Synaxis.sln` and `npm test` (ClientApp) to verify runtime skipped counts.
+  - Documented results and recommendations above.
+- Notes:
+  - Several failing tests and Playwright e2e configuration issues were observed during verification; these are failures (not skips) and require separate triage.
+  - No code modifications were required to remove skips since none existed.
+
+This completes the "zero test skips" enforcement task. All associated todos marked complete.
+
 ### [2026-02-01] README.md Update with New Features and Testing Information
 
 **Status**: ✅ Complete
