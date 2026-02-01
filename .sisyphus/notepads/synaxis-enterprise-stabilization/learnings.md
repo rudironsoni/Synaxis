@@ -905,6 +905,15 @@ Actions taken:
 - Created `.sisyphus/security-audit.md` (documentation-only) listing findings, risks, recommendations, and required security tests.
 - Next recommended tasks (not implemented here): enforce JWT secret presence, implement quota enforcement, add validation layer, harden CORS and security headers, add automated security tests.
 
+### [2026-02-01] Error handling review added
+
+- Created document `.sisyphus/error-handling-review.md` summarizing current error handling across WebApi and WebApp, listing gaps and recommended tests.
+- Key additions:
+  - Noted that OpenAIErrorHandlerMiddleware formats errors but does not perform structured logging or inject RequestId.
+  - Documented that many deserialization/validation errors currently map to 500 and recommended adding API validation layer to convert to 400.
+  - Recommended error code catalog and tests for consistent status-code mapping and streaming error handling.
+
+
 **Test results**:
 - Total UI component tests: 128
 - Pass rate: 100% (128/128)
