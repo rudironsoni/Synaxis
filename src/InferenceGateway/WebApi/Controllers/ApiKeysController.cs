@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
@@ -11,6 +12,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers;
 [ApiController]
 [Route("projects/{projectId}/keys")]
 [Authorize]
+[EnableCors("WebApp")]
 public class ApiKeysController : ControllerBase
 {
     private readonly ControlPlaneDbContext _dbContext;

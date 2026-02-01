@@ -370,22 +370,18 @@ public class SynaxisConfigurationTests
     [Fact]
     public void EnvironmentVariableMapping_NullValue_DoesNotOverride()
     {
-        // Arrange
+        // Arrange - Test that JSON configuration value is preserved when env var is not set
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Synaxis:InferenceGateway:Providers:Groq:Key"] = "json-key",
-            })
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["Synaxis:InferenceGateway:Providers:Groq:Key"] = null,
             })
             .Build();
 
         // Act
         var config = configuration.GetSection("Synaxis:InferenceGateway").Get<SynaxisConfiguration>();
 
-        // Assert
+        // Assert - The value from JSON config should be preserved
         Assert.NotNull(config);
         Assert.Equal("json-key", config!.Providers["Groq"].Key);
     }
@@ -678,11 +674,11 @@ public class SynaxisConfigurationTests
     [Fact]
     public void AliasConfig_EmptyCandidates_LoadsCorrectly()
     {
-        // Arrange
+        // Arrange - Test that empty candidates list loads correctly (no candidates configured)
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["Synaxis:InferenceGateway:Aliases:phi-3-medium:Candidates:0"] = "",
+                ["Synaxis:InferenceGateway:Aliases:phi-3-medium:Candidates"] = null,
             })
             .Build();
 

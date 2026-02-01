@@ -20,7 +20,8 @@ public static class OpenAIEndpointsExtensions
 {
     public static IEndpointRouteBuilder MapOpenAIEndpoints(this IEndpointRouteBuilder endpoints)
     {
-        var group = endpoints.MapGroup("/openai");
+        var group = endpoints.MapGroup("/openai")
+            .RequireCors("PublicAPI");
         var apiPrefix = typeof(OpenAIEndpointsExtensions).Assembly.GetName().Name!.Split('.')[0];
         MapOpenAIRoutes(group, apiPrefix);
         return group;

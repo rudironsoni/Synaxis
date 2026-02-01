@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Synaxis.InferenceGateway.Application.Translation;
+using System.ComponentModel.DataAnnotations;
 using System.Text;
 using System.Text.Json;
 
@@ -78,7 +79,19 @@ public static class OpenAIRequestParser
 
         try
         {
-            return JsonSerializer.Deserialize<OpenAIRequest>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            var request = JsonSerializer.Deserialize<OpenAIRequest>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            if (request != null)
+            {
+                var validationErrors = ValidateRequest(request);
+                if (validationErrors.Count > 0)
+                {
+                    var errorMessage = string.Join("; ", validationErrors);
+                    throw new BadHttpRequestException($"Invalid request: {errorMessage}");
+                }
+            }
+
+            return request;
         }
         catch (JsonException ex)
         {
@@ -86,5 +99,51 @@ public static class OpenAIRequestParser
             // so middleware can convert it to a 400. Do not swallow other exceptions (OOM, etc.).
             throw new BadHttpRequestException("Invalid JSON body", ex);
         }
+    }
+
+    private static List<string> ValidateRequest(OpenAIRequest request)
+    {
+        var errors = new List<string>();
+        var validationContext = new ValidationContext(request);
+        var validationResults = new List<ValidationResult>();
+
+        if (!Validator.TryValidateObject(request, validationContext, validationResults, validateAllProperties: true))
+        {
+            foreach (var result in validationResults)
+            {
+                if (result != null)
+                {
+                    var fieldName = string.Join(", ", result.MemberNames);
+                    var errorMessage = result.ErrorMessage ?? "Validation failed";
+                    errors.Add(!string.IsNullOrEmpty(fieldName) ? $"{fieldName}: {errorMessage}" : errorMessage);
+                }
+            }
+        }
+
+        // Validate nested objects (messages)
+        if (request.Messages != null)
+        {
+            for (int i = 0; i < request.Messages.Count; i++)
+            {
+                var message = request.Messages[i];
+                var messageContext = new ValidationContext(message);
+                var messageResults = new List<ValidationResult>();
+
+                if (!Validator.TryValidateObject(message, messageContext, messageResults, validateAllProperties: true))
+                {
+                    foreach (var result in messageResults)
+                    {
+                        if (result != null)
+                        {
+                            var fieldName = string.Join(", ", result.MemberNames);
+                            var errorMessage = result.ErrorMessage ?? "Validation failed";
+                            errors.Add($"messages[{i}].{fieldName}: {errorMessage}");
+                        }
+                    }
+                }
+            }
+        }
+
+        return errors;
     }
 }

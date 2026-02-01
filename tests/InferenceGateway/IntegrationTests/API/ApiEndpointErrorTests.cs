@@ -192,7 +192,7 @@ public class ApiEndpointErrorTests : IClassFixture<SynaxisWebApplicationFactory>
     }
 
     [Fact]
-    public async Task Post_ChatCompletions_InvalidStreamParameter_NonBoolean_Returns500()
+    public async Task Post_ChatCompletions_InvalidStreamParameter_NonBoolean_Returns400()
     {
         // Arrange
         var request = new
@@ -208,16 +208,13 @@ public class ApiEndpointErrorTests : IClassFixture<SynaxisWebApplicationFactory>
         // Act
         var response = await _client.PostAsJsonAsync("/openai/v1/chat/completions", request);
 
-        // Assert - Current behavior: Invalid stream type causes InternalServerError
-        // This test documents the current behavior, not the desired behavior
         var content = await response.Content.ReadAsStringAsync();
         _factory.OutputHelper?.WriteLine($"Response: {content}");
-        // The API returns 500 due to JSON deserialization error
-        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]
-    public async Task Post_ChatCompletions_InvalidTemperatureParameter_OutOfRange_Returns200()
+    public async Task Post_ChatCompletions_InvalidTemperatureParameter_OutOfRange_Returns400()
     {
         // Arrange
         var request = new
@@ -233,16 +230,13 @@ public class ApiEndpointErrorTests : IClassFixture<SynaxisWebApplicationFactory>
         // Act
         var response = await _client.PostAsJsonAsync("/openai/v1/chat/completions", request);
 
-        // Assert - Current behavior: Temperature is not validated, returns 200
-        // This test documents the current behavior, not the desired behavior
         var content = await response.Content.ReadAsStringAsync();
         _factory.OutputHelper?.WriteLine($"Response: {content}");
-        // The API returns 200 without validating temperature range
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]
-    public async Task Post_ChatCompletions_InvalidMaxTokensParameter_Negative_Returns200()
+    public async Task Post_ChatCompletions_InvalidMaxTokensParameter_Negative_Returns400()
     {
         // Arrange
         var request = new
@@ -258,16 +252,13 @@ public class ApiEndpointErrorTests : IClassFixture<SynaxisWebApplicationFactory>
         // Act
         var response = await _client.PostAsJsonAsync("/openai/v1/chat/completions", request);
 
-        // Assert - Current behavior: MaxTokens is not validated, returns 200
-        // This test documents the current behavior, not the desired behavior
         var content = await response.Content.ReadAsStringAsync();
         _factory.OutputHelper?.WriteLine($"Response: {content}");
-        // The API returns 200 without validating max_tokens
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]
-    public async Task Post_ChatCompletions_MalformedJson_Returns500()
+    public async Task Post_ChatCompletions_MalformedJson_Returns400()
     {
         // Arrange
         var malformedJson = "{ \"model\": \"test-alias\", \"messages\": [ { \"role\": \"user\", \"content\": \"Hello\" } ]"; // Missing closing brace
@@ -276,12 +267,9 @@ public class ApiEndpointErrorTests : IClassFixture<SynaxisWebApplicationFactory>
         // Act
         var response = await _client.PostAsync("/openai/v1/chat/completions", content);
 
-        // Assert - Current behavior: Malformed JSON causes InternalServerError
-        // This test documents the current behavior, not the desired behavior
         var responseContent = await response.Content.ReadAsStringAsync();
         _factory.OutputHelper?.WriteLine($"Response: {responseContent}");
-        // The API returns 500 due to JSON deserialization error
-        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]
