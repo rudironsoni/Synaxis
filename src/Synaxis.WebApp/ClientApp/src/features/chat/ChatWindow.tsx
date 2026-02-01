@@ -57,8 +57,9 @@ function useChat(sessionId?: number){
         try {
           let fullContent = ''
           const messageHistory: ChatMessage[] = [{ role: 'user', content: text }]
+          const selectedModel = useSettingsStore.getState().selectedModel
 
-          for await (const chunk of defaultClient.sendMessageStream(messageHistory)) {
+          for await (const chunk of defaultClient.sendMessageStream(messageHistory, selectedModel)) {
             const content = chunk.choices?.[0]?.delta?.content
             if (content) {
               fullContent += content
@@ -85,7 +86,8 @@ function useChat(sessionId?: number){
           throw error
         }
       } else {
-        const resp = await defaultClient.sendMessage([{ role: 'user', content: text } as ChatMessage]) as ChatResponse
+        const selectedModel = useSettingsStore.getState().selectedModel
+        const resp = await defaultClient.sendMessage([{ role: 'user', content: text } as ChatMessage], selectedModel) as ChatResponse
         const assistantContent = resp.choices?.[0]?.message?.content ?? 'No response'
         const usage = resp.usage ? { prompt: resp.usage.prompt_tokens || 0, completion: resp.usage.completion_tokens || 0, total: resp.usage.total_tokens || 0 } : undefined
         const reply: Message = { sessionId, role: 'assistant', content: assistantContent, createdAt: new Date(), tokenUsage: usage }
