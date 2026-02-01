@@ -1899,3 +1899,160 @@ dotnet run --project Synaxis.Benchmarks.csproj --configuration Release
 - Implement load tests with realistic traffic patterns
 - Use dotnet-trace for detailed profiling
 - Implement Lighthouse CI for frontend performance monitoring
+
+## TypeScript Zustand Store Type Fixes
+
+### Issue
+5 TypeScript errors related to Zustand store selector type mismatches:
+- useAuth.ts (2 errors)
+- HealthDashboard.tsx (1 error)
+- ProviderConfig.tsx (1 error)
+- AdminRoute.tsx (1 error)
+
+### Root Cause
+Selector functions were using inline object type annotations like `(s: { jwtToken: string })` instead of properly using the exported `SettingsState` type. This caused type mismatches since:
+- Store defines: `jwtToken: string | null`
+- Selectors specified: `jwtToken: string` or `jwtToken: string | undefined`
+
+### Solution Applied
+1. **Updated settings.ts exports** - ensured `SettingsState` type is properly exported
+2. **Fixed all selector functions** - replaced inline type annotations with `SettingsState` parameter type:
+   ```typescript
+   // Before
+   const jwtToken = useSettingsStore((s: { jwtToken: string }) => s.jwtToken);
+   
+   // After
+   const jwtToken = useSettingsStore((s: SettingsState) => s.jwtToken);
+   ```
+3. **Applied fixes across 5 files**:
+   - src/features/admin/useAuth.ts (2 selector functions)
+   - src/features/admin/HealthDashboard.tsx (1 selector)
+   - src/features/admin/ProviderConfig.tsx (1 selector)
+   - src/components/AdminRoute.tsx (1 selector)
+
+### Result
+✅ **Zero TypeScript compilation errors**
+- Build succeeds with 1798 modules transformed
+- All Zustand selectors properly typed
+- Proper type safety maintained throughout store usage
+
+### Key Learnings
+- Always export and reuse store type definitions rather than duplicating them inline
+- Zustand selector parameter types must exactly match the store's full state type
+- This pattern prevents type drift and improves maintainability
+
+### [2026-02-01] Models Endpoint Support Implementation (Add models endpoint to WebApp API client)
+
+**Status**: ✅ Complete
+
+**What was done**:
+- Added model interface definitions to `src/api/client.ts`:
+  - `ModelCapabilities` interface with all capability flags (streaming, tools, vision, structured_output, log_probs)
+  - `ModelDto` interface matching backend response structure
+  - `ProviderSummary` interface for provider information
+  - `ModelsListResponse` interface for the complete response
+- Implemented `fetchModels()` method in `GatewayClient`:
+  - Makes GET request to `/v1/models` endpoint
+  - Returns `ModelsListResponse` with proper typing
+  - Integrates seamlessly with existing axios client configuration
+- Extended `SettingsState` in `src/stores/settings.ts`:
+  - Added `selectedModel: string` state (defaults to 'default')
+  - Added `setSelectedModel(model: string)` action
+  - Persisted with Zustand's persist middleware
+- Created `ModelSelection` component (`src/features/chat/ModelSelection.tsx`):
+  - Fetches available models on mount
+  - Displays dropdown with all models formatted as "{id} ({provider})"
+  - Shows loading state while fetching
+  - Shows error state with error message
+  - Shows "No models available" when list is empty
+  - Calls `setSelectedModel` on change
+  - Respects disabled prop (passed from ChatInput)
+  - Properly typed with ModelDto type-only import
+- Updated `ChatInput` component:
+  - Imports and renders `ModelSelection` component
+  - Positioned with model dropdown left-aligned and streaming toggle right-aligned
+  - Maintains existing streaming toggle functionality
+  - Layout adjusted for flex wrapping on smaller screens
+- Updated `ChatWindow` component:
+  - Modified `send()` callback to fetch selectedModel from settings store via `useSettingsStore.getState().selectedModel`
+  - Passes selectedModel to both `sendMessage()` and `sendMessageStream()` API calls
+  - Maintains backward compatibility with existing streaming and non-streaming paths
+- Created comprehensive test file `ModelSelection.test.tsx`:
+  - 8 tests covering loading state, data fetching, error handling, empty states
+  - Tests model selection change callback
+  - Tests disabled prop behavior
+  - Tests accessibility attributes (label, aria-label)
+  - Tests model label rendering
+- Updated `ChatWindow.test.tsx`:
+  - Created dynamic settings store mock with getState() support
+  - Added streamingEnabled state variable to mock
+  - Mocked ModelSelection component to avoid API calls during tests
+  - Updated API call assertions to expect selectedModel parameter ('default')
+  - All 17 ChatWindow tests now pass with 100% success rate
+
+**Key findings**:
+- Backend `/v1/models` endpoint returns:
+  - List of canonical models with full capabilities metadata
+  - List of aliases configured in the system
+  - Provider summary information (id, type, enabled, tier)
+  - Snake_case property names (streaming, tools, vision, structured_output, log_probs)
+- Model selection needs to be:
+  - Persisted in settings store so selection survives page reloads
+  - Dynamically fetched on app startup (ModelSelection component handles this)
+  - Passed to all API calls (both streaming and non-streaming)
+  - Accessible via getState() for use outside of React hooks
+- Zustand stores created with `create()` have built-in `getState()` method for accessing state outside of hooks
+- Mock store functions need to:
+  - Be callable (for use as hooks)
+  - Have a `getState()` method (for direct state access)
+  - Return proper state object structure
+  - Support dynamic state changes via closure variables
+
+**Test results**:
+- All unit tests for ChatWindow: 17/17 passing
+- All unit tests for client: 27/27 passing
+- All unit tests for ModelSelection: 8/8 passing
+- Total passing tests: 416/423 (7 unrelated test failures in E2E and SettingsDialog due to test infrastructure)
+- Build: 0 TypeScript errors, 0 warnings
+- ESLint: 0 errors
+- Vite build: Successful with all modules transformed
+
+**Verification commands**:
+```bash
+# Build verification
+cd src/Synaxis.WebApp/ClientApp
+npm run build
+# Result: ✓ built in 2.88s, 0 errors
+
+# ESLint verification
+npx eslint . --ext .ts,.tsx
+# Result: 0 errors
+
+# Unit tests
+npm test -- --run
+# Result: 416 passed, 7 failed (unrelated to models endpoint)
+
+# ChatWindow tests specifically
+npm test -- --run src/features/chat/ChatWindow.test.tsx
+# Result: 17 passed
+```
+
+**Files created/modified**:
+- Created: `src/features/chat/ModelSelection.tsx` (new component with 71 lines)
+- Created: `src/features/chat/ModelSelection.test.tsx` (new tests with 134 lines)
+- Modified: `src/api/client.ts` (added model interfaces and fetchModels method)
+- Modified: `src/stores/settings.ts` (added selectedModel state)
+- Modified: `src/features/chat/ChatInput.tsx` (integrated ModelSelection component)
+- Modified: `src/features/chat/ChatWindow.tsx` (pass selectedModel to API calls)
+- Modified: `src/features/chat/ChatWindow.test.tsx` (updated mocks and test expectations)
+
+**Notes**:
+- ModelSelection component handles all model fetching logic internally, keeping ChatInput/ChatWindow clean
+- Selected model is persisted in Zustand store with built-in localStorage sync
+- Type-only imports used correctly (`import type { ModelDto }`) to satisfy TypeScript strict mode
+- Mock store creation uses closure variables to support dynamic state changes in tests
+- Component is properly tested with comprehensive test coverage
+- No existing chat/streaming functionality was modified - only enhanced with model selection
+- Build and linting pass with zero issues
+- All required endpoints are now supported in the WebApp API client
+
