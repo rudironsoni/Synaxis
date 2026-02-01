@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   Cpu, 
   CheckCircle2, 
@@ -11,7 +11,7 @@ import {
   Save,
   AlertCircle
 } from 'lucide-react';
-import useSettingsStore from '@/stores/settings';
+import useSettingsStore, { type SettingsState } from '@/stores/settings';
 
 interface ProviderModel {
   id: string;
@@ -47,13 +47,9 @@ export default function ProviderConfig() {
   const [saving, setSaving] = useState<string | null>(null);
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [keyInput, setKeyInput] = useState('');
-  const jwtToken = useSettingsStore((s: any) => s.jwtToken);
+   const jwtToken = useSettingsStore((s: SettingsState) => s.jwtToken);
 
-  useEffect(() => {
-    fetchProviders();
-  }, []);
-
-  const fetchProviders = async () => {
+  const fetchProviders = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
@@ -70,8 +66,9 @@ export default function ProviderConfig() {
 
       const data = await response.json();
       setProviders(data);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const error = err as Error;
+      setError(error.message);
       
       setProviders([
         {
@@ -119,7 +116,11 @@ export default function ProviderConfig() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [jwtToken]);
+
+  useEffect(() => {
+    fetchProviders();
+  }, [fetchProviders]);
 
   const updateProvider = async (providerId: string, updates: ProviderUpdate) => {
     try {
@@ -146,8 +147,9 @@ export default function ProviderConfig() {
       
       setEditingKey(null);
       setKeyInput('');
-    } catch (err: any) {
-      setError(err.message);
+     } catch (err: unknown) {
+       const error = err as Error;
+       setError(error.message);
       
       setProviders(prev => prev.map(p => 
         p.id === providerId 
