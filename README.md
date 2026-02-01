@@ -26,8 +26,10 @@ ULTRA MISER MODE™ exists for:
 
 ## Features (87% of which exist purely to provide free usage)
 
-- One beautiful OpenAI-compatible `/v1` endpoint (so you don’t have to touch your client code ever again)
-- Automatic, merciless rotation when any provider inevitably says “you’ve had enough generosity for today”
+- One beautiful OpenAI-compatible `/v1` endpoint (so you don't have to touch your client code ever again)
+- **Real-time streaming responses** with Server-Sent Events (SSE) for that premium, instant-gratification feeling
+- **Admin Web UI** for provider configuration, health monitoring, and system management
+- Automatic, merciless rotation when any provider inevitably says "you've had enough generosity for today"
 - Failover choreography so smooth it almost feels ethical
 - Priority-based routing (burn the highest-quota ones first, obviously)
 - Natively supports Groq, Cloudflare Workers AI, Together AI, DeepInfra, Fireworks, Cohere, Lepton, and whatever sad little free tier appears next Tuesday
@@ -37,6 +39,8 @@ ULTRA MISER MODE™ exists for:
 ## Key Features
 
 *   **Unified API:** Access multiple LLM providers through a single, OpenAI-compatible interface.
+*   **Real-time Streaming:** Server-Sent Events (SSE) streaming for chat completions and responses with `stream: true` support.
+*   **Admin Web UI:** Beautiful React-based interface for provider configuration, health monitoring, and system management.
 *   **Intelligent Routing ("The Brain"):** Requests are routed based on the requested model ID.
 *   **Tiered Failover:** Configure providers in tiers. If a Tier 1 provider fails, Synaxis automatically fails over to Tier 2, and so on.
 *   **Load Balancing:** Requests within the same tier are shuffled to distribute load across available providers.
@@ -155,7 +159,48 @@ curl http://localhost:5000/v1/chat/completions \
   }'
 ```
 
-Synaxis will inspect the `model` parameter, find the configured provider (e.g., Groq), and route the request accordingly.
+### Streaming Support
+
+Enable real-time streaming responses by setting `stream: true`:
+
+```bash
+curl http://localhost:5000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "llama-3.3-70b-versatile",
+    "stream": true,
+    "messages": [
+      { "role": "user", "content": "Tell me a story about AI..." }
+    ]
+  }'
+```
+
+Synaxis will inspect the `model` parameter, find the configured provider (e.g., Groq), and route the request accordingly. For streaming requests, responses are delivered via Server-Sent Events (SSE) with `data: {json}` frames followed by `data: [DONE]`.
+
+## Admin Web UI
+
+Synaxis includes a beautiful React-based admin interface for managing your AI provider ecosystem:
+
+### Access the Admin UI
+
+1. **Start the application** (see Docker Compose section below)
+2. **Navigate to the admin interface** at `http://localhost:8080/admin`
+3. **Authenticate** using your JWT token (see setup instructions)
+
+### Admin Features
+
+- **Provider Management:** Configure API keys, endpoints, tiers, and model availability
+- **Health Monitoring:** Real-time status of all providers and system services
+- **System Health:** Monitor Redis, database, and overall system status
+- **Usage Analytics:** Track request patterns and provider performance
+
+### Admin Endpoints
+
+The admin interface communicates with these protected endpoints:
+- `GET /admin/providers` - List all configured providers
+- `PUT /admin/providers/{id}` - Update provider configuration
+- `GET /admin/health` - System health status
+- `POST /auth/dev-login` - Development authentication
 
 ## Docker Compose (Dev)
 
@@ -163,15 +208,23 @@ Synaxis will inspect the `model` parameter, find the configured provider (e.g., 
 # Create your env file
 cp .env.example .env
 
-# Start dependencies + API (pgAdmin is in the dev profile)
+# Start dependencies + API + WebApp (pgAdmin is in the dev profile)
 docker compose --profile dev up --build
 ```
 
 Default ports:
-- API: http://localhost:8080
-- Postgres: localhost:5432
-- Redis: localhost:6379
-- pgAdmin: http://localhost:5050
+- **Web API:** http://localhost:8080
+- **Web App (Admin UI):** http://localhost:8080/admin
+- **Postgres:** localhost:5432
+- **Redis:** localhost:6379
+- **pgAdmin:** http://localhost:5050
+
+### API Endpoints
+
+- **OpenAI Compatible:** `http://localhost:8080/v1/chat/completions`
+- **Streaming:** `http://localhost:8080/v1/chat/completions` (with `stream: true`)
+- **Admin API:** `http://localhost:8080/admin/*` (requires JWT authentication)
+- **Health Checks:** `http://localhost:8080/health/liveness`, `http://localhost:8080/health/readiness`
 
 ## Health Checks
 
@@ -179,6 +232,35 @@ Default ports:
 - Readiness: `GET /health/readiness`
 
 Readiness fails if Redis or the Control Plane DB is unavailable, or if any enabled provider fails connectivity checks.
+
+## Testing & Quality
+
+Synaxis maintains comprehensive test coverage across both backend and frontend:
+
+- **Backend Coverage:** 7.19% (focused on core inference logic)
+- **Frontend Coverage:** 85.77% (comprehensive React component testing)
+- **Target Coverage:** 80% overall (currently at 46.48% combined)
+
+### Running Tests
+
+```bash
+# Backend tests
+dotnet test src/InferenceGateway/InferenceGateway.sln
+
+# Frontend tests (from ClientApp directory)
+cd src/Synaxis.WebApp/ClientApp
+npm test
+
+# Full test suite
+dotnet test && npm test
+```
+
+### Test Categories
+
+- **Unit Tests:** Core business logic and provider integrations
+- **Integration Tests:** API endpoint validation and streaming functionality
+- **Component Tests:** React UI components and admin interface
+- **E2E Tests:** Full user workflows including admin operations
 
 ## License
 
@@ -194,3 +276,12 @@ Proud .NET 10 energy all the way.
 
 *   [Architecture Overview](docs/ARCHITECTURE.md)
 *   [Configuration Guide](docs/CONFIGURATION.md)
+*   [API Documentation](.sisyphus/webapi-endpoints.md) - Complete endpoint reference
+*   [WebApp Features](.sisyphus/webapp-features.md) - Admin UI and frontend capabilities
+
+## Recent Updates
+
+✨ **Streaming Support:** Real-time Server-Sent Events (SSE) streaming for chat completions
+✨ **Admin Web UI:** Beautiful React-based interface for provider management and health monitoring
+✨ **Enhanced API:** New admin endpoints, identity management, and OAuth integration
+✨ **Improved Testing:** Comprehensive test suite with 85.77% frontend coverage
