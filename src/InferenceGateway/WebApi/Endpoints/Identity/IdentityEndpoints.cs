@@ -13,7 +13,9 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Identity
     {
         public static void MapIdentityEndpoints(this IEndpointRouteBuilder app)
         {
-            var group = app.MapGroup("/api/identity").WithTags("Identity");
+            var group = app.MapGroup("/api/identity")
+                .WithTags("Identity")
+                .RequireCors("WebApp");
 
             group.MapPost("/{provider}/start", async (IdentityManager manager, [FromRoute] string provider) =>
             {

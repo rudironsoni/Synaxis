@@ -105,10 +105,11 @@ package.json
 
 
 coverage/
-coverate-history/
+coverage-app/
+coverage-history/
+coverage-latest/
 coverage-report/
 coverage-result/
 coverage-results/
 coverage-summary/
-coverage/
 **/coverage/**

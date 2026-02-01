@@ -3,7 +3,7 @@ import MessageBubble from './MessageBubble'
 import ChatInput from './ChatInput'
 import db, { type Message } from '@/db/db'
 import useSettingsStore from '@/stores/settings'
-import { defaultClient, type ChatMessage, type ChatResponse, type ChatStreamChunk } from '@/api/client'
+import { defaultClient, type ChatMessage, type ChatResponse } from '@/api/client'
 import useUsageStore from '@/stores/usage'
 
 interface StreamingState {

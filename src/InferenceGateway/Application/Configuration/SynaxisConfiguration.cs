@@ -29,6 +29,8 @@ public class ProviderConfig
     public string Type { get; set; } = string.Empty; // "OpenAI", "Groq", "Cohere", "Cloudflare", etc.
     public string? Endpoint { get; set; } // Optional override
     public string? FallbackEndpoint { get; set; } // Optional fallback
+    public int? RateLimitRPM { get; set; } // Requests per minute limit
+    public int? RateLimitTPM { get; set; } // Tokens per minute limit
 }
 
 public class CanonicalModelConfig
