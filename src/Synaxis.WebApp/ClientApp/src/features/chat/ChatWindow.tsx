@@ -19,9 +19,9 @@ function useChat(sessionId?: number){
     isStreaming: false,
     streamingContent: '',
   })
-  const gatewayUrl = useSettingsStore((s:any)=>s.gatewayUrl)
-  const streamingEnabled = useSettingsStore((s:any)=>s.streamingEnabled)
-  const addUsage = useUsageStore((s:any)=>s.addUsage)
+  const gatewayUrl = useSettingsStore((s: { gatewayUrl: string }) => s.gatewayUrl)
+  const streamingEnabled = useSettingsStore((s: { streamingEnabled: boolean }) => s.streamingEnabled)
+  const addUsage = useUsageStore((s: { addUsage: (tokens: number) => void }) => s.addUsage)
   const abortControllerRef = useRef<AbortController | null>(null)
 
   useEffect(()=>{
@@ -36,76 +36,69 @@ function useChat(sessionId?: number){
   },[gatewayUrl])
 
   useEffect(() => {
+    const controller = abortControllerRef.current
     return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort()
+      if (controller) {
+        controller.abort()
       }
     }
-  }, [sessionId])
+  }, [])
 
-  const sendNonStreaming = async (text: string, sessionId: number) => {
-    const resp = await defaultClient.sendMessage([{ role: 'user', content: text } as ChatMessage]) as ChatResponse
-    const assistantContent = resp.choices?.[0]?.message?.content ?? 'No response'
-    const usage = resp.usage ? { prompt: resp.usage.prompt_tokens || 0, completion: resp.usage.completion_tokens || 0, total: resp.usage.total_tokens || 0 } : undefined
-    const reply: Message = { sessionId, role: 'assistant', content: assistantContent, createdAt: new Date(), tokenUsage: usage }
-    const rid = await db.messages.add(reply)
-    setMessages((s)=>[...s, { ...reply, id: rid }])
-    if(usage?.total) addUsage(usage.total)
-  }
-
-  const sendStreaming = async (text: string, sessionId: number) => {
-    setStreaming({ isStreaming: true, streamingContent: '' })
-
-    try {
-      let fullContent = ''
-      const messageHistory: ChatMessage[] = [{ role: 'user', content: text }]
-
-      for await (const chunk of defaultClient.sendMessageStream(messageHistory)) {
-        const content = chunk.choices?.[0]?.delta?.content
-        if (content) {
-          fullContent += content
-          setStreaming({ isStreaming: true, streamingContent: fullContent })
-        }
-
-        if (chunk.choices?.[0]?.finish_reason === 'stop') {
-          break
-        }
-      }
-
-      const reply: Message = {
-        sessionId,
-        role: 'assistant',
-        content: fullContent,
-        createdAt: new Date(),
-      }
-      const rid = await db.messages.add(reply)
-      setMessages((s)=>[...s, { ...reply, id: rid }])
-      setStreaming({ isStreaming: false, streamingContent: '' })
-    } catch (error) {
-      console.error('Streaming error:', error)
-      setStreaming({ isStreaming: false, streamingContent: '', error: error as Error })
-      throw error
-    }
-  }
-
-  const send = useCallback(async (text:string)=>{
-    if(!sessionId) return
+  const send = useCallback(async (text: string) => {
+    if (!sessionId) return
     const now = new Date()
     const userMsg: Message = { sessionId, role: 'user', content: text, createdAt: now }
     const id = await db.messages.add(userMsg)
-    setMessages((s)=>[...s, { ...userMsg, id }])
+    setMessages((s) => [...s, { ...userMsg, id }])
 
-    try{
+    try {
       if (streamingEnabled) {
-        await sendStreaming(text, sessionId)
+        setStreaming({ isStreaming: true, streamingContent: '' })
+        try {
+          let fullContent = ''
+          const messageHistory: ChatMessage[] = [{ role: 'user', content: text }]
+
+          for await (const chunk of defaultClient.sendMessageStream(messageHistory)) {
+            const content = chunk.choices?.[0]?.delta?.content
+            if (content) {
+              fullContent += content
+              setStreaming({ isStreaming: true, streamingContent: fullContent })
+            }
+
+            if (chunk.choices?.[0]?.finish_reason === 'stop') {
+              break
+            }
+          }
+
+          const reply: Message = {
+            sessionId,
+            role: 'assistant',
+            content: fullContent,
+            createdAt: new Date(),
+          }
+          const rid = await db.messages.add(reply)
+          setMessages((s) => [...s, { ...reply, id: rid }])
+          setStreaming({ isStreaming: false, streamingContent: '' })
+        } catch (error) {
+          console.error('Streaming error:', error)
+          setStreaming({ isStreaming: false, streamingContent: '', error: error as Error })
+          throw error
+        }
       } else {
-        await sendNonStreaming(text, sessionId)
+        const resp = await defaultClient.sendMessage([{ role: 'user', content: text } as ChatMessage]) as ChatResponse
+        const assistantContent = resp.choices?.[0]?.message?.content ?? 'No response'
+        const usage = resp.usage ? { prompt: resp.usage.prompt_tokens || 0, completion: resp.usage.completion_tokens || 0, total: resp.usage.total_tokens || 0 } : undefined
+        const reply: Message = { sessionId, role: 'assistant', content: assistantContent, createdAt: new Date(), tokenUsage: usage }
+        const rid = await db.messages.add(reply)
+        setMessages((s) => [...s, { ...reply, id: rid }])
+        if (usage?.total) addUsage(usage.total)
       }
-    }catch(e:any){
-      console.error('send message failed', e)
-      alert('Failed to send message: '+(e?.message ?? String(e)))
+    } catch (e: unknown) {
+      const error = e as Error
+      console.error('send message failed', error)
+      alert('Failed to send message: ' + (error?.message ?? String(error)))
     }
-  }, [sessionId, streamingEnabled])
+  }, [sessionId, streamingEnabled, addUsage])
 
   return { messages, send, streaming }
 }
@@ -114,7 +107,11 @@ export default function ChatWindow({ sessionId }:{ sessionId?:number }){
   const { messages, send, streaming } = useChat(sessionId)
   const listRef = useRef<HTMLDivElement|null>(null)
 
-  useEffect(()=>{ if(listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight },[messages, streaming.streamingContent])
+  useEffect(() => {
+    if (listRef.current) {
+      listRef.current.scrollTop = listRef.current.scrollHeight
+    }
+  })
 
   if(!sessionId) return <div className="text-center text-[var(--muted-foreground)]">Select a chat</div>
 

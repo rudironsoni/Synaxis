@@ -8,7 +8,7 @@ global.fetch = mockFetch;
 const mockJwtToken = 'test-jwt-token';
 
 vi.mock('@/stores/settings', () => ({
-  default: (selector: any) => selector({
+  default: (selector: (s: { jwtToken: string }) => string) => selector({
     jwtToken: mockJwtToken,
   }),
 }));

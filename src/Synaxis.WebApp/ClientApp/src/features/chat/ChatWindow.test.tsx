@@ -39,7 +39,7 @@ vi.mock('@/db/db', () => ({
 
 // Mock settings store
 vi.mock('@/stores/settings', () => ({
-  default: (selector: any) => selector({
+  default: (selector: (s: { gatewayUrl: string; streamingEnabled: boolean; setStreamingEnabled: () => void }) => unknown) => selector({
     gatewayUrl: mocks.gatewayUrl,
     streamingEnabled: mocks.streamingEnabled,
     setStreamingEnabled: mocks.setStreamingEnabled,
@@ -48,7 +48,7 @@ vi.mock('@/stores/settings', () => ({
 
 // Mock usage store
 vi.mock('@/stores/usage', () => ({
-  default: (selector: any) => selector({ addUsage: mocks.addUsage }),
+  default: (selector: (s: { addUsage: () => void }) => unknown) => selector({ addUsage: mocks.addUsage }),
 }));
 
 describe('ChatWindow', () => {
@@ -468,7 +468,7 @@ describe('ChatWindow', () => {
         }),
       });
 
-      mocks.sendMessageStream.mockImplementation(async function* () {
+      mocks.sendMessageStream.mockImplementation(async () => {
         throw new Error('Stream failed');
       });
 

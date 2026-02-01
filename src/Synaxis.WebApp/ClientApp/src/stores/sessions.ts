@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import db, { type Session } from '../db/db'
 
-type SessionsState = {
+export type SessionsState = {
   sessions: Session[]
   loading: boolean
   loadSessions: () => Promise<void>

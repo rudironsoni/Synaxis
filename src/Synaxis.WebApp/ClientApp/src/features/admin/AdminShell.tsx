@@ -24,7 +24,7 @@ function AdminNavLink({ to, icon: Icon, children }: { to: string; icon: React.El
 export default function AdminShell() {
   useAuth(true)
   const navigate = useNavigate()
-  const logout = useSettingsStore((s: any) => s.logout)
+  const logout = useSettingsStore((s: { logout: () => void }) => s.logout)
 
   const handleLogout = () => {
     logout()

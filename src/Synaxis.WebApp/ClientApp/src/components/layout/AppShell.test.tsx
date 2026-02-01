@@ -16,7 +16,7 @@ vi.mock('@/features/settings/SettingsDialog', () => ({
 }))
 
 vi.mock('@/stores/settings', () => ({
-  default: (selector: (s: any) => any) => selector({ costRate: 0.5 })
+  default: (selector: (s: { costRate: number }) => number) => selector({ costRate: 0.5 })
 }))
 
 describe('AppShell', () => {
