@@ -37,6 +37,37 @@ export interface ChatStreamState {
   error?: Error;
 }
 
+export interface ModelCapabilities {
+  streaming: boolean;
+  tools: boolean;
+  vision: boolean;
+  structured_output: boolean;
+  log_probs: boolean;
+}
+
+export interface ModelDto {
+  id: string;
+  object: string;
+  created: number;
+  owned_by: string;
+  provider: string;
+  model_path: string;
+  capabilities: ModelCapabilities;
+}
+
+export interface ProviderSummary {
+  id: string;
+  type: string;
+  enabled: boolean;
+  tier: number;
+}
+
+export interface ModelsListResponse {
+  object: string;
+  data: ModelDto[];
+  providers: ProviderSummary[];
+}
+
 // Configurable client that can be updated with new BaseURL/Token from settings
 export class GatewayClient {
   private client = axios.create({
@@ -150,6 +181,11 @@ export class GatewayClient {
     } finally {
       reader.releaseLock();
     }
+  }
+
+  async fetchModels(): Promise<ModelsListResponse> {
+    const response = await this.client.get<ModelsListResponse>('/models');
+    return response.data;
   }
 }
 
