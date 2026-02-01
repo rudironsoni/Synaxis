@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using Synaxis.InferenceGateway.WebApi.Errors;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,15 +8,15 @@ using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace Synaxis.InferenceGateway.WebApi.Middleware;
-
 public class OpenAIErrorHandlerMiddleware
 {
     private readonly RequestDelegate _next;
+    private readonly ILogger<OpenAIErrorHandlerMiddleware> _logger;
 
-    public OpenAIErrorHandlerMiddleware(RequestDelegate next)
+    public OpenAIErrorHandlerMiddleware(RequestDelegate next, ILogger<OpenAIErrorHandlerMiddleware> logger)
     {
         _next = next;
+        _logger = logger;
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -27,6 +29,15 @@ public class OpenAIErrorHandlerMiddleware
         {
             if (context.Response.HasStarted) throw;
 
+            var requestId = context.Request.Headers["X-Request-ID"].FirstOrDefault()
+                         ?? context.Request.Headers["x-request-id"].FirstOrDefault()
+                         ?? context.TraceIdentifier;
+
+            var isStreamingRequest = IsStreamingRequest(context);
+
+            _logger.LogError(ex, "Unhandled exception caught. RequestId: {RequestId}, Path: {Path}, Method: {Method}, IsStreaming: {IsStreaming}",
+                requestId, context.Request.Path, context.Request.Method, isStreamingRequest);
+
             // Special handling for AggregateException produced by the router
             if (ex is AggregateException agg)
             {
@@ -34,6 +45,9 @@ public class OpenAIErrorHandlerMiddleware
                 var details = new List<object>();
                 var summaries = new List<string>();
                 var statusCodes = new List<int>();
+
+                _logger.LogError(ex, "AggregateException caught. RequestId: {RequestId}, Path: {Path}, Inner exceptions: {InnerExceptionCount}",
+                    requestId, context.Request.Path, flat.InnerExceptions.Count);
 
                 foreach (var inner in flat.InnerExceptions)
                 {
@@ -110,42 +124,111 @@ public class OpenAIErrorHandlerMiddleware
                 var message = $"Routing failed. Details: {string.Join(", ", summaries)}";
 
                 context.Response.StatusCode = overallStatus;
-                context.Response.ContentType = "application/json";
 
-                var error = new
+                if (isStreamingRequest)
                 {
-                    error = new
-                    {
-                        message = message,
-                        code = "upstream_routing_failure",
-                        details = details
-                    }
-                };
+                    context.Response.ContentType = "text/event-stream";
 
-                await context.Response.WriteAsync(JsonSerializer.Serialize(error));
+                    var errorEvent = new
+                    {
+                        error = new
+                        {
+                            message = message,
+                            code = "upstream_routing_failure",
+                            details = details,
+                            request_id = requestId
+                        }
+                    };
+
+                    await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(errorEvent)}\n\n");
+                    await context.Response.WriteAsync("data: [DONE]\n\n");
+                }
+                else
+                {
+                    context.Response.ContentType = "application/json";
+
+                    var error = new
+                    {
+                        error = new
+                        {
+                            message = message,
+                            code = "upstream_routing_failure",
+                            details = details,
+                            request_id = requestId
+                        }
+                    };
+
+                    await context.Response.WriteAsync(JsonSerializer.Serialize(error));
+                }
                 return;
             }
 
-            // Non-aggregate exceptions: keep previous behavior
-            var statusCode = ex is ArgumentException ? (int)HttpStatusCode.BadRequest : (int)HttpStatusCode.InternalServerError;
-            var type = ex is ArgumentException ? "invalid_request_error" : "server_error";
-            var code = ex is ArgumentException ? "invalid_value" : "internal_error";
+            // Non-aggregate exceptions: use error code catalog
+            string errorCode;
+            string errorType;
+            int statusCode;
+
+            if (ex is ArgumentException or BadHttpRequestException)
+            {
+                errorCode = ErrorCodes.InvalidValue;
+                errorType = ErrorCodes.GetErrorType(errorCode);
+                statusCode = ErrorCodes.GetStatusCode(errorCode);
+            }
+            else
+            {
+                errorCode = ErrorCodes.InternalError;
+                errorType = ErrorCodes.GetErrorType(errorCode);
+                statusCode = ErrorCodes.GetStatusCode(errorCode);
+            }
+
+            _logger.LogError(ex, "Exception caught. RequestId: {RequestId}, Path: {Path}, ErrorCode: {ErrorCode}, ErrorType: {ErrorType}, ExceptionType: {ExceptionType}, Message: {ExceptionMessage}",
+                requestId, context.Request.Path, errorCode, errorType, ex.GetType().Name, ex.Message);
 
             context.Response.StatusCode = statusCode;
-            context.Response.ContentType = "application/json";
 
-            var singleError = new
+            if (isStreamingRequest)
             {
-                error = new
-                {
-                    message = ex.Message,
-                    type = type,
-                    param = (string?)null,
-                    code = code
-                }
-            };
+                context.Response.ContentType = "text/event-stream";
 
-            await context.Response.WriteAsync(JsonSerializer.Serialize(singleError));
+                var errorEvent = new
+                {
+                    error = new
+                    {
+                        message = ex.Message,
+                        type = errorType,
+                        param = (string?)null,
+                        code = errorCode,
+                        request_id = requestId
+                    }
+                };
+
+                await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(errorEvent)}\n\n");
+                await context.Response.WriteAsync("data: [DONE]\n\n");
+            }
+            else
+            {
+                context.Response.ContentType = "application/json";
+
+                var singleError = new
+                {
+                    error = new
+                    {
+                        message = ex.Message,
+                        type = errorType,
+                        param = (string?)null,
+                        code = errorCode,
+                        request_id = requestId
+                    }
+                };
+
+                await context.Response.WriteAsync(JsonSerializer.Serialize(singleError));
+            }
         }
+    }
+
+    private static bool IsStreamingRequest(HttpContext context)
+    {
+        return context.Request.Headers["Accept"].ToString().Contains("text/event-stream")
+               || context.Request.Query.ContainsKey("stream");
     }
 }

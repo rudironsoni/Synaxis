@@ -3,6 +3,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Primitives;
 using Moq;
 using Synaxis.InferenceGateway.WebApi.Middleware;
 using Xunit;
@@ -19,7 +20,7 @@ public class OpenAIErrorHandlerMiddlewareTests
     {
         _mockNext = new Mock<RequestDelegate>();
         _mockLogger = new Mock<ILogger<OpenAIErrorHandlerMiddleware>>();
-        _middleware = new OpenAIErrorHandlerMiddleware(_mockNext.Object);
+        _middleware = new OpenAIErrorHandlerMiddleware(_mockNext.Object, _mockLogger.Object);
     }
 
     [Fact]
@@ -204,7 +205,11 @@ public class OpenAIErrorHandlerMiddlewareTests
 
         // Assert
         Assert.Equal((int)HttpStatusCode.InternalServerError, context.Response.StatusCode);
-        Assert.Equal("application/json", context.Response.ContentType);
+        Assert.Equal("text/event-stream", context.Response.ContentType);
+
+        var responseBody = await GetResponseBody(context);
+        Assert.Contains("data: {", responseBody);
+        Assert.Contains("data: [DONE]", responseBody);
     }
 
     [Fact]
@@ -239,13 +244,150 @@ public class OpenAIErrorHandlerMiddlewareTests
         // Assert
         var responseBody = await GetResponseBody(context);
         var errorResponse = JsonSerializer.Deserialize<ErrorResponse>(responseBody, _jsonOptions);
-        
+
         Assert.NotNull(errorResponse);
         Assert.NotNull(errorResponse.Error);
         Assert.Equal("Invalid request parameters", errorResponse.Error.Message);
         Assert.Equal("invalid_request_error", errorResponse.Error.Type);
         Assert.Equal("invalid_value", errorResponse.Error.Code);
         Assert.Null(errorResponse.Error.Param);
+    }
+
+    [Fact]
+    public async Task InvokeAsync_WithRequestId_IncludesRequestIdInErrorResponse()
+    {
+        // Arrange
+        var context = CreateMockHttpContext();
+        context.Request.Headers["X-Request-ID"] = "test-request-id-123";
+        var exception = new ArgumentException("Test error");
+        _mockNext.Setup(next => next(It.IsAny<HttpContext>())).ThrowsAsync(exception);
+
+        // Act
+        await _middleware.InvokeAsync(context);
+
+        // Assert
+        var responseBody = await GetResponseBody(context);
+        var errorResponse = JsonSerializer.Deserialize<ErrorResponse>(responseBody, _jsonOptions);
+
+        Assert.NotNull(errorResponse);
+        Assert.NotNull(errorResponse.Error);
+        Assert.Equal("test-request-id-123", errorResponse.Error.RequestId);
+    }
+
+    [Fact]
+    public async Task InvokeAsync_WithoutRequestId_GeneratesRequestIdFromTraceIdentifier()
+    {
+        // Arrange
+        var context = CreateMockHttpContext();
+        var exception = new ArgumentException("Test error");
+        _mockNext.Setup(next => next(It.IsAny<HttpContext>())).ThrowsAsync(exception);
+
+        // Act
+        await _middleware.InvokeAsync(context);
+
+        // Assert
+        var responseBody = await GetResponseBody(context);
+        var errorResponse = JsonSerializer.Deserialize<ErrorResponse>(responseBody, _jsonOptions);
+
+        Assert.NotNull(errorResponse);
+        Assert.NotNull(errorResponse.Error);
+        Assert.NotNull(errorResponse.Error.RequestId);
+        Assert.Equal(context.TraceIdentifier, errorResponse.Error.RequestId);
+    }
+
+    [Fact]
+    public async Task InvokeAsync_LogsStructuredErrorWithRequestId()
+    {
+        // Arrange
+        var context = CreateMockHttpContext();
+        context.Request.Headers["X-Request-ID"] = "test-request-id-456";
+        var exception = new InvalidOperationException("Test error for logging");
+        _mockNext.Setup(next => next(It.IsAny<HttpContext>())).ThrowsAsync(exception);
+
+        // Act
+        await _middleware.InvokeAsync(context);
+
+        // Assert
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Error,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("test-request-id-456")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.AtLeastOnce);
+    }
+
+    [Fact]
+    public async Task InvokeAsync_StreamingRequest_ReturnsSSEFormatError()
+    {
+        // Arrange
+        var context = CreateMockHttpContext();
+        context.Request.Headers["Accept"] = "text/event-stream";
+        var exception = new InvalidOperationException("Stream error");
+        _mockNext.Setup(next => next(It.IsAny<HttpContext>())).ThrowsAsync(exception);
+
+        // Act
+        await _middleware.InvokeAsync(context);
+
+        // Assert
+        Assert.Equal((int)HttpStatusCode.InternalServerError, context.Response.StatusCode);
+        Assert.Equal("text/event-stream", context.Response.ContentType);
+
+        var responseBody = await GetResponseBody(context);
+        Assert.Contains("data: {", responseBody);
+        Assert.Contains("data: [DONE]", responseBody);
+    }
+
+    [Fact]
+    public async Task InvokeAsync_StreamingRequestWithStreamQuery_ReturnsSSEFormatError()
+    {
+        // Arrange
+        var context = CreateMockHttpContext();
+        context.Request.Query = new QueryCollection(new Dictionary<string, StringValues>
+        {
+            { "stream", "true" }
+        });
+        var exception = new InvalidOperationException("Stream error");
+        _mockNext.Setup(next => next(It.IsAny<HttpContext>())).ThrowsAsync(exception);
+
+        // Act
+        await _middleware.InvokeAsync(context);
+
+        // Assert
+        Assert.Equal((int)HttpStatusCode.InternalServerError, context.Response.StatusCode);
+        Assert.Equal("text/event-stream", context.Response.ContentType);
+
+        var responseBody = await GetResponseBody(context);
+        Assert.Contains("data: {", responseBody);
+        Assert.Contains("data: [DONE]", responseBody);
+    }
+
+    [Fact]
+    public async Task InvokeAsync_AggregateException_LogsStructuredErrorWithInnerExceptionCount()
+    {
+        // Arrange
+        var context = CreateMockHttpContext();
+        var exceptions = new Exception[]
+        {
+            new HttpRequestException("Error 1", null, HttpStatusCode.BadRequest),
+            new HttpRequestException("Error 2", null, HttpStatusCode.NotFound)
+        };
+        var aggregateException = new AggregateException("Multiple failures", exceptions);
+        _mockNext.Setup(next => next(It.IsAny<HttpContext>())).ThrowsAsync(aggregateException);
+
+        // Act
+        await _middleware.InvokeAsync(context);
+
+        // Assert
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Error,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Inner exceptions: 2")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
     }
 
     private HttpContext CreateMockHttpContext()
@@ -275,7 +417,8 @@ public class OpenAIErrorHandlerMiddlewareTests
 
     private static readonly JsonSerializerOptions _jsonOptions = new()
     {
-        PropertyNameCaseInsensitive = true
+        PropertyNameCaseInsensitive = true,
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
     };
 
     // Helper classes for deserialization
@@ -295,6 +438,7 @@ public class OpenAIErrorHandlerMiddlewareTests
         public string? Type { get; set; }
         public string? Param { get; set; }
         public string? Code { get; set; }
+        public string? RequestId { get; set; }
     }
 
     private class AggregateErrorDetail
@@ -302,5 +446,6 @@ public class OpenAIErrorHandlerMiddlewareTests
         public string? Message { get; set; }
         public string? Code { get; set; }
         public List<object>? Details { get; set; }
+        public string? RequestId { get; set; }
     }
 }

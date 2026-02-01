@@ -23,7 +23,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
         /// <summary>
         /// Start polling GitHub token endpoint for the device flow. Calls onSuccess when token received.
         /// </summary>
-        public Task StartPollingAsync(string deviceCode, int intervalSeconds, Func<TokenResponse, Task> onSuccess, CancellationToken ct)
+        public virtual Task StartPollingAsync(string deviceCode, int intervalSeconds, Func<TokenResponse, Task> onSuccess, CancellationToken ct)
         {
             if (string.IsNullOrEmpty(deviceCode)) throw new ArgumentNullException(nameof(deviceCode));
             if (onSuccess == null) throw new ArgumentNullException(nameof(onSuccess));

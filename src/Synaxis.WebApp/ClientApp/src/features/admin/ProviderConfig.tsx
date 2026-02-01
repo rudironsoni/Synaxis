@@ -229,6 +229,7 @@ export default function ProviderConfig() {
         {providers.map(provider => (
           <div
             key={provider.id}
+            data-testid="provider-card"
             className="bg-[var(--card)] border border-[var(--border)] rounded-lg overflow-hidden"
           >
             <div
@@ -416,6 +417,7 @@ export default function ProviderConfig() {
                       {provider.models.map(model => (
                         <div
                           key={model.id}
+                          data-testid="provider-model"
                           className="flex items-center justify-between p-3 bg-[var(--input)] border border-[var(--border)] rounded"
                         >
                           <div className="flex items-center gap-3">
