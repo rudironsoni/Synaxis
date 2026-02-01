@@ -927,6 +927,31 @@ cd src/Synaxis.WebApp/ClientApp && npm test -- --run
 
 **Result**: All UI component tests pass with 100% success rate, 0% flakiness
 
+### [2026-02-01] Zero-skipped-tests verification (this run)
+
+- Action performed: Enforce zero skipped tests across backend (xUnit) and frontend (Vitest).
+- Commands executed:
+  - dotnet test Synaxis.sln
+  - npm test (in src/Synaxis.WebApp/ClientApp)
+- Searches executed (code-level):
+  - Searched backend tests for xUnit skip attributes: "[Fact(Skip=\"...\")]" and "[Theory(Skip=\"...\")]" across tests/ → None found.
+  - Searched for any occurrences of "Skip=\"" within tests/ → None found.
+  - Searched frontend tests for Vitest/Jest skip patterns: "test.skip", "it.skip", "describe.skip" across src/Synaxis.WebApp/ClientApp/src → None found.
+
+- Results (verification):
+  - Backend (dotnet test): multiple test projects executed. Observed summary for solution run: Skipped: 0 across all test projects. (Some integration tests failed due to Playwright browser not installed and one failing retry test; failures are NOT skipped tests.)
+  - Frontend (Vitest): Ran 21 test files (415 tests). Summary: 415 passed, 0 skipped; 2 Playwright e2e suites failed because Playwright test harness (e2e) requires different runner/config; these are failing suites, not skipped tests.
+
+- Conclusion:
+  - There are currently NO skipped tests (no [Fact(Skip=...)] / [Theory(Skip=...)] in backend, and no test.skip/it.skip/describe.skip in frontend test source files).
+  - Therefore no skipped tests required removal or fixes.
+
+- Next recommended actions (optional, not performed here):
+  1. Resolve Playwright-related failures by installing browsers in CI (run the Playwright install script) or exclude e2e suites from the default vitest run to keep unit/component runs isolated.
+  2. Investigate the single failing integration test (RetryPolicyTests) to determine if it's a logic regression — this is a failure, not a skipped test.
+
+Append verified by: Sisyphus-Junior automation — recorded 2026-02-01
+
 ### [2026-02-01] README.md Update with New Features and Testing Information
 
 **Status**: ✅ Complete
