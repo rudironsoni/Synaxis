@@ -8,7 +8,7 @@ export default function AdminLogin() {
   const [showToken, setShowToken] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
-  const setJwtToken = useSettingsStore((s: any) => s.setJwtToken)
+  const setJwtToken = useSettingsStore((s: { setJwtToken: (token: string) => void }) => s.setJwtToken)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -34,9 +34,9 @@ export default function AdminLogin() {
 
       setJwtToken(token)
       navigate('/admin')
-    } catch (err) {
-      setError('Invalid JWT token')
-    }
+     } catch {
+        setError('Invalid JWT token')
+      }
   }
 
   return (

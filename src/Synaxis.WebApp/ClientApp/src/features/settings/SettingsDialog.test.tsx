@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import useSettingsStore from '@/stores/settings'
+import useSettingsStore, { type SettingsState } from '@/stores/settings'
 import SettingsDialog from './SettingsDialog'
 
 // Mock the settings store module
@@ -15,7 +15,7 @@ describe('SettingsDialog', () => {
     vi.clearAllMocks()
     
     // Create a mock store implementation that supports both selector and getState calls
-    const mockState = {
+    const mockState: SettingsState = {
       gatewayUrl: 'http://localhost:5000',
       costRate: 0,
       setGatewayUrl: mockSetGatewayUrl,
@@ -23,18 +23,20 @@ describe('SettingsDialog', () => {
       setStreamingEnabled: vi.fn(),
       setJwtToken: vi.fn(),
       logout: vi.fn(),
+      streamingEnabled: false,
+      jwtToken: null,
     }
     
     // Mock the store to work with selectors
-    vi.mocked(useSettingsStore).mockImplementation(((selector?: any) => {
+    vi.mocked(useSettingsStore).mockImplementation(((selector?: (state: SettingsState) => unknown) => {
       if (typeof selector === 'function') {
         return selector(mockState)
       }
       return mockState
-    }) as any)
+    }) as typeof useSettingsStore)
     
     // Also mock getState
-    ;(useSettingsStore as any).getState = vi.fn(() => mockState)
+    ;(useSettingsStore as { getState: () => SettingsState }).getState = vi.fn(() => mockState)
   })
 
   describe('visibility', () => {
@@ -60,48 +62,52 @@ describe('SettingsDialog', () => {
       expect(screen.getByText(/Cost Rate/)).toBeInTheDocument()
     })
 
-    it('displays current gateway URL', () => {
-      const mockState = {
-        gatewayUrl: 'http://custom-api.com',
-        costRate: 0,
-        setGatewayUrl: mockSetGatewayUrl,
-        setCostRate: mockSetCostRate,
-        setStreamingEnabled: vi.fn(),
-        setJwtToken: vi.fn(),
-        logout: vi.fn(),
-      }
-      
-      vi.mocked(useSettingsStore).mockImplementation(((selector?: any) => {
-        if (typeof selector === 'function') {
-          return selector(mockState)
-        }
-        return mockState
-      }) as any)
-      ;(useSettingsStore as any).getState = vi.fn(() => mockState)
+     it('displays current gateway URL', () => {
+       const mockState: SettingsState = {
+         gatewayUrl: 'http://custom-api.com',
+         costRate: 0,
+         setGatewayUrl: mockSetGatewayUrl,
+         setCostRate: mockSetCostRate,
+         setStreamingEnabled: vi.fn(),
+         setJwtToken: vi.fn(),
+         logout: vi.fn(),
+         streamingEnabled: false,
+         jwtToken: null,
+       }
+       
+       vi.mocked(useSettingsStore).mockImplementation(((selector?: (state: SettingsState) => unknown) => {
+         if (typeof selector === 'function') {
+           return selector(mockState)
+         }
+         return mockState
+       }) as typeof useSettingsStore)
+       ;(useSettingsStore as { getState: () => SettingsState }).getState = vi.fn(() => mockState)
       
       render(<SettingsDialog open={true} onClose={mockOnClose} />)
       const urlInput = screen.getByDisplayValue('http://custom-api.com')
       expect(urlInput).toBeInTheDocument()
     })
 
-    it('displays current cost rate', () => {
-      const mockState = {
-        gatewayUrl: 'http://localhost:5000',
-        costRate: 0.5,
-        setGatewayUrl: mockSetGatewayUrl,
-        setCostRate: mockSetCostRate,
-        setStreamingEnabled: vi.fn(),
-        setJwtToken: vi.fn(),
-        logout: vi.fn(),
-      }
-      
-      vi.mocked(useSettingsStore).mockImplementation(((selector?: any) => {
-        if (typeof selector === 'function') {
-          return selector(mockState)
-        }
-        return mockState
-      }) as any)
-      ;(useSettingsStore as any).getState = vi.fn(() => mockState)
+     it('displays current cost rate', () => {
+       const mockState: SettingsState = {
+         gatewayUrl: 'http://localhost:5000',
+         costRate: 0.5,
+         setGatewayUrl: mockSetGatewayUrl,
+         setCostRate: mockSetCostRate,
+         setStreamingEnabled: vi.fn(),
+         setJwtToken: vi.fn(),
+         logout: vi.fn(),
+         streamingEnabled: false,
+         jwtToken: null,
+       }
+       
+       vi.mocked(useSettingsStore).mockImplementation(((selector?: (state: SettingsState) => unknown) => {
+         if (typeof selector === 'function') {
+           return selector(mockState)
+         }
+         return mockState
+       }) as typeof useSettingsStore)
+       ;(useSettingsStore as { getState: () => SettingsState }).getState = vi.fn(() => mockState)
       
       render(<SettingsDialog open={true} onClose={mockOnClose} />)
       const rateInput = screen.getByDisplayValue(0.5)

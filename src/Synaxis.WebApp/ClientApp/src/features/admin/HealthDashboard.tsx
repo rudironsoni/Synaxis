@@ -45,7 +45,7 @@ export default function HealthDashboard() {
   const [error, setError] = useState('');
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const jwtToken = useSettingsStore((s: any) => s.jwtToken);
+   const jwtToken = useSettingsStore((s: { jwtToken: string }) => s.jwtToken);
 
   const fetchHealth = useCallback(async () => {
     try {
@@ -65,8 +65,9 @@ export default function HealthDashboard() {
       setHealthData(data);
       setLastUpdated(new Date());
       setError('');
-    } catch (err: any) {
-      setError(err.message);
+     } catch (err: unknown) {
+       const error = err as Error;
+       setError(error.message);
       setHealthData({
         services: [
           { name: 'PostgreSQL', status: 'healthy', latency: 15, lastChecked: new Date().toISOString() },

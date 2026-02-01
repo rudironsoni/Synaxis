@@ -4,7 +4,7 @@ import useSettingsStore from '@/stores/settings';
 
 export function useAuth(requireAuth: boolean = true) {
   const navigate = useNavigate();
-  const jwtToken = useSettingsStore((s: any) => s.jwtToken);
+  const jwtToken = useSettingsStore((s: { jwtToken: string | undefined }) => s.jwtToken);
 
   useEffect(() => {
     if (requireAuth && !jwtToken) {
@@ -16,11 +16,11 @@ export function useAuth(requireAuth: boolean = true) {
 }
 
 export function useIsAuthenticated(): boolean {
-  const jwtToken = useSettingsStore((s: any) => s.jwtToken);
+  const jwtToken = useSettingsStore((s: { jwtToken: string | undefined }) => s.jwtToken);
   return !!jwtToken;
 }
 
 export function useLogout(): () => void {
-  const logout = useSettingsStore((s: any) => s.logout);
+  const logout = useSettingsStore((s: { logout: () => void }) => s.logout);
   return logout;
 }
