@@ -87,7 +87,7 @@ describe('sessions store', () => {
       const newSessionId = 1
       vi.mocked(db.sessions.add).mockResolvedValue(newSessionId)
 
-      let createdSession: any
+      let createdSession: { id: number; title: string; createdAt: Date; updatedAt: Date } | undefined
       await act(async () => {
         createdSession = await useSessionsStore.getState().createSession('New Session')
       })
@@ -288,13 +288,13 @@ describe('sessions store', () => {
       expect(useSessionsStore.getState().sessions).toHaveLength(5)
     })
 
-    it('should handle session with null/undefined title gracefully', async () => {
-      const sessionId = 1
-      vi.mocked(db.sessions.add).mockResolvedValue(sessionId)
+     it('should handle session with null/undefined title gracefully', async () => {
+       const sessionId = 1
+       vi.mocked(db.sessions.add).mockResolvedValue(sessionId)
 
-      await act(async () => {
-        await useSessionsStore.getState().createSession(null as any)
-      })
+       await act(async () => {
+         await useSessionsStore.getState().createSession(null as unknown as string)
+       })
 
       expect(useSessionsStore.getState().sessions[0].title).toBeNull()
     })

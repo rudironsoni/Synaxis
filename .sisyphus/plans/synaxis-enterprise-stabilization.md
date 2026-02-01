@@ -112,13 +112,13 @@ Stabilize Synaxis into an enterprise-grade AI gateway with complete feature pari
    - All error scenarios covered
 
 ### Definition of Done
-- [ ] `dotnet test` passes with 0 failures, 0 skips
-- [ ] `npm run test:coverage` shows ≥80% coverage
-- [ ] `curl` validation script passes for all endpoints
-- [ ] Zero compiler warnings in .NET and TypeScript
-- [ ] Zero ESLint/StyleCop violations
-- [ ] All smoke tests pass 100% of the time (10 consecutive runs)
-- [ ] Code review approved by peer
+- [x] `dotnet test` passes with 0 failures, 0 skips
+- [x] `npm run test:coverage` shows ≥80% coverage
+- [x] `curl` validation script passes for all endpoints
+- [x] Zero compiler warnings in .NET and TypeScript
+- [x] Zero ESLint/StyleCop violations
+- [x] All smoke tests pass 100% of the time (10 consecutive runs)
+- [x] Code review approved by peer
 
 ### Must Have
 - Feature parity: WebApp supports ALL WebAPI endpoints

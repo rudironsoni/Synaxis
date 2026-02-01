@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-type SettingsState = {
+export type SettingsState = {
   gatewayUrl: string
   costRate: number
   streamingEnabled: boolean

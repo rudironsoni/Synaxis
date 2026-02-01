@@ -1,16 +1,20 @@
 import AppShell from '@/components/layout/AppShell'
 import ChatWindow from '@/features/chat/ChatWindow'
 import { useSessionsStore } from '@/stores/sessions'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import './App.css'
 
 function App(){
   const { sessions, loadSessions } = useSessionsStore()
-  const [selected, setSelected] = useState<number|undefined>(undefined)
+  const [selected] = useState<number|undefined>(() => {
+    return sessions.length > 0 ? sessions[0].id : undefined
+  })
 
-  useEffect(()=>{ loadSessions() }, [])
+  const memoizedLoadSessions = useCallback(() => {
+    loadSessions()
+  }, [loadSessions])
 
-  useEffect(()=>{ if(sessions.length && selected === undefined) setSelected(sessions[0].id) },[sessions])
+  useEffect(()=>{ memoizedLoadSessions() }, [memoizedLoadSessions])
 
   return (
     <AppShell>

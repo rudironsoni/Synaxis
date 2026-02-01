@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { useSessionsStore } from '@/stores/sessions'
+import { useSessionsStore, type SessionsState } from '@/stores/sessions'
 import SessionList from './SessionList'
 
 // Mock the sessions store module
@@ -22,7 +22,7 @@ describe('SessionList', () => {
       loadSessions: mockLoadSessions,
       createSession: mockCreateSession,
       deleteSession: mockDeleteSession,
-    } as any)
+    } as SessionsState)
   })
 
   describe('rendering', () => {
@@ -42,33 +42,33 @@ describe('SessionList', () => {
       expect(sessionItems).toHaveLength(0)
     })
 
-    it('renders sessions from store', () => {
-      vi.mocked(useSessionsStore).mockReturnValue({
-        sessions: [
-          { id: 1, title: 'Session 1' },
-          { id: 2, title: 'Session 2' },
-        ],
-        loadSessions: mockLoadSessions,
-        createSession: mockCreateSession,
-        deleteSession: mockDeleteSession,
-      } as any)
+     it('renders sessions from store', () => {
+       vi.mocked(useSessionsStore).mockReturnValue({
+         sessions: [
+           { id: 1, title: 'Session 1' },
+           { id: 2, title: 'Session 2' },
+         ],
+         loadSessions: mockLoadSessions,
+         createSession: mockCreateSession,
+         deleteSession: mockDeleteSession,
+       } as SessionsState)
       
       render(<SessionList />)
       expect(screen.getByText('Session 1')).toBeInTheDocument()
       expect(screen.getByText('Session 2')).toBeInTheDocument()
     })
 
-    it('renders multiple sessions', () => {
-      vi.mocked(useSessionsStore).mockReturnValue({
-        sessions: [
-          { id: 1, title: 'Chat A' },
-          { id: 2, title: 'Chat B' },
-          { id: 3, title: 'Chat C' },
-        ],
-        loadSessions: mockLoadSessions,
-        createSession: mockCreateSession,
-        deleteSession: mockDeleteSession,
-      } as any)
+     it('renders multiple sessions', () => {
+       vi.mocked(useSessionsStore).mockReturnValue({
+         sessions: [
+           { id: 1, title: 'Chat A' },
+           { id: 2, title: 'Chat B' },
+           { id: 3, title: 'Chat C' },
+         ],
+         loadSessions: mockLoadSessions,
+         createSession: mockCreateSession,
+         deleteSession: mockDeleteSession,
+       } as SessionsState)
       
       render(<SessionList />)
       expect(screen.getByText('Chat A')).toBeInTheDocument()
@@ -111,13 +111,13 @@ describe('SessionList', () => {
   })
 
   describe('deleting sessions', () => {
-    it('calls deleteSession when delete button is clicked', async () => {
-      vi.mocked(useSessionsStore).mockReturnValue({
-        sessions: [{ id: 1, title: 'Session to Delete' }],
-        loadSessions: mockLoadSessions,
-        createSession: mockCreateSession,
-        deleteSession: mockDeleteSession,
-      } as any)
+     it('calls deleteSession when delete button is clicked', async () => {
+       vi.mocked(useSessionsStore).mockReturnValue({
+         sessions: [{ id: 1, title: 'Session to Delete' }],
+         loadSessions: mockLoadSessions,
+         createSession: mockCreateSession,
+         deleteSession: mockDeleteSession,
+       } as SessionsState)
       
       mockDeleteSession.mockResolvedValue(undefined)
       
@@ -131,16 +131,16 @@ describe('SessionList', () => {
       })
     })
 
-    it('shows delete button for each session', () => {
-      vi.mocked(useSessionsStore).mockReturnValue({
-        sessions: [
-          { id: 1, title: 'Session 1' },
-          { id: 2, title: 'Session 2' },
-        ],
-        loadSessions: mockLoadSessions,
-        createSession: mockCreateSession,
-        deleteSession: mockDeleteSession,
-      } as any)
+     it('shows delete button for each session', () => {
+       vi.mocked(useSessionsStore).mockReturnValue({
+         sessions: [
+           { id: 1, title: 'Session 1' },
+           { id: 2, title: 'Session 2' },
+         ],
+         loadSessions: mockLoadSessions,
+         createSession: mockCreateSession,
+         deleteSession: mockDeleteSession,
+       } as SessionsState)
       
       render(<SessionList />)
       
@@ -148,13 +148,13 @@ describe('SessionList', () => {
       expect(deleteButtons).toHaveLength(2)
     })
 
-    it('delete button has correct title', () => {
-      vi.mocked(useSessionsStore).mockReturnValue({
-        sessions: [{ id: 1, title: 'Session 1' }],
-        loadSessions: mockLoadSessions,
-        createSession: mockCreateSession,
-        deleteSession: mockDeleteSession,
-      } as any)
+     it('delete button has correct title', () => {
+       vi.mocked(useSessionsStore).mockReturnValue({
+         sessions: [{ id: 1, title: 'Session 1' }],
+         loadSessions: mockLoadSessions,
+         createSession: mockCreateSession,
+         deleteSession: mockDeleteSession,
+       } as SessionsState)
       
       render(<SessionList />)
       
@@ -164,25 +164,25 @@ describe('SessionList', () => {
   })
 
   describe('session display', () => {
-    it('displays session title', () => {
-      vi.mocked(useSessionsStore).mockReturnValue({
-        sessions: [{ id: 1, title: 'My Chat' }],
-        loadSessions: mockLoadSessions,
-        createSession: mockCreateSession,
-        deleteSession: mockDeleteSession,
-      } as any)
+     it('displays session title', () => {
+       vi.mocked(useSessionsStore).mockReturnValue({
+         sessions: [{ id: 1, title: 'My Chat' }],
+         loadSessions: mockLoadSessions,
+         createSession: mockCreateSession,
+         deleteSession: mockDeleteSession,
+       } as SessionsState)
       
       render(<SessionList />)
       expect(screen.getByText('My Chat')).toBeInTheDocument()
     })
 
-    it('displays default session title', () => {
-      vi.mocked(useSessionsStore).mockReturnValue({
-        sessions: [{ id: 1, title: 'New Chat' }],
-        loadSessions: mockLoadSessions,
-        createSession: mockCreateSession,
-        deleteSession: mockDeleteSession,
-      } as any)
+     it('displays default session title', () => {
+       vi.mocked(useSessionsStore).mockReturnValue({
+         sessions: [{ id: 1, title: 'New Chat' }],
+         loadSessions: mockLoadSessions,
+         createSession: mockCreateSession,
+         deleteSession: mockDeleteSession,
+       } as SessionsState)
       
       render(<SessionList />)
       expect(screen.getByText('New Chat')).toBeInTheDocument()
@@ -190,16 +190,16 @@ describe('SessionList', () => {
   })
 
   describe('layout and styling', () => {
-    it('has scrollable container for many sessions', () => {
-      vi.mocked(useSessionsStore).mockReturnValue({
-        sessions: Array.from({ length: 20 }, (_, i) => ({
-          id: i + 1,
-          title: `Session ${i + 1}`,
-        })),
-        loadSessions: mockLoadSessions,
-        createSession: mockCreateSession,
-        deleteSession: mockDeleteSession,
-      } as any)
+     it('has scrollable container for many sessions', () => {
+       vi.mocked(useSessionsStore).mockReturnValue({
+         sessions: Array.from({ length: 20 }, (_, i) => ({
+           id: i + 1,
+           title: `Session ${i + 1}`,
+         })),
+         loadSessions: mockLoadSessions,
+         createSession: mockCreateSession,
+         deleteSession: mockDeleteSession,
+       } as SessionsState)
       
       const { container } = render(<SessionList />)
       const scrollContainer = container.querySelector('.overflow-auto')

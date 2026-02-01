@@ -44,7 +44,7 @@ export default defineConfig({
         provider: 'v8',
         reporter: ['text', 'lcov'],
         // include all source files so test coverage can be measured project-wide
-        include: ['src/**/*.{ts,tsx}'],
-      } as any,
+         include: ['src/**/*.{ts,tsx}'],
+       } as const,
     },
 })

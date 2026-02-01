@@ -10,15 +10,15 @@ type ChatInputProps = {
 export default function ChatInput({ onSend, disabled }: ChatInputProps) {
   const [text, setText] = useState('')
   const taRef = useRef<HTMLTextAreaElement|null>(null)
-  const streamingEnabled = useSettingsStore((s: any) => s.streamingEnabled)
-  const setStreamingEnabled = useSettingsStore((s: any) => s.setStreamingEnabled)
+  const streamingEnabled = useSettingsStore((s: { streamingEnabled: boolean }) => s.streamingEnabled)
+  const setStreamingEnabled = useSettingsStore((s: { setStreamingEnabled: (v: boolean) => void }) => s.setStreamingEnabled)
 
-  useEffect(()=>{
+  useEffect(() => {
     const ta = taRef.current
-    if(!ta) return
+    if (!ta) return
     ta.style.height = 'auto'
     ta.style.height = Math.min(200, ta.scrollHeight) + 'px'
-  },[text])
+  })
 
   const submit = ()=>{
     if(!text.trim() || disabled) return
@@ -46,6 +46,7 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
           disabled={disabled}
         />
         <button
+          type="button"
           aria-label="Send"
           onClick={submit}
           disabled={disabled}
@@ -56,6 +57,7 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
       </div>
       <div className="flex items-center gap-2 mt-2 px-1">
         <button
+          type="button"
           onClick={toggleStreaming}
           disabled={disabled}
           className={`flex items-center gap-1.5 text-xs px-2 py-1 rounded transition-colors ${

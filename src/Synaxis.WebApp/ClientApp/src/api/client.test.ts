@@ -4,6 +4,8 @@ import axios from 'axios';
 
 vi.mock('axios');
 
+type AxiosError = Error & { response?: { status: number; data: { error: string } }; request?: Record<string, unknown> };
+
 describe('GatewayClient', () => {
   let client: GatewayClient;
   let mockAxiosInstance: {
@@ -23,8 +25,8 @@ describe('GatewayClient', () => {
         headers: { common: {} },
       },
     };
-    // @ts-ignore
-    axios.create.mockReturnValue(mockAxiosInstance);
+    // @ts-expect-error - mocking private axios creation
+     axios.create.mockReturnValue(mockAxiosInstance);
     client = new GatewayClient();
   });
 
@@ -129,7 +131,7 @@ describe('GatewayClient', () => {
 
     it('should throw error on 400 Bad Request', async () => {
       const error = new Error('Bad Request');
-      (error as any).response = { status: 400, data: { error: 'Invalid request' } };
+      (error as AxiosError).response = { status: 400, data: { error: 'Invalid request' } };
       mockAxiosInstance.post.mockRejectedValue(error);
 
       const messages = [{ role: 'user' as const, content: 'Hi' }];
@@ -139,7 +141,7 @@ describe('GatewayClient', () => {
 
     it('should throw error on 401 Unauthorized', async () => {
       const error = new Error('Unauthorized');
-      (error as any).response = { status: 401, data: { error: 'Invalid token' } };
+      (error as AxiosError).response = { status: 401, data: { error: 'Invalid token' } };
       mockAxiosInstance.post.mockRejectedValue(error);
 
       const messages = [{ role: 'user' as const, content: 'Hi' }];
@@ -149,7 +151,7 @@ describe('GatewayClient', () => {
 
     it('should throw error on 429 Rate Limit', async () => {
       const error = new Error('Too Many Requests');
-      (error as any).response = { status: 429, data: { error: 'Rate limit exceeded' } };
+      (error as AxiosError).response = { status: 429, data: { error: 'Rate limit exceeded' } };
       mockAxiosInstance.post.mockRejectedValue(error);
 
       const messages = [{ role: 'user' as const, content: 'Hi' }];
@@ -159,7 +161,7 @@ describe('GatewayClient', () => {
 
     it('should throw error on 500 Internal Server Error', async () => {
       const error = new Error('Internal Server Error');
-      (error as any).response = { status: 500, data: { error: 'Server error' } };
+      (error as AxiosError).response = { status: 500, data: { error: 'Server error' } };
       mockAxiosInstance.post.mockRejectedValue(error);
 
       const messages = [{ role: 'user' as const, content: 'Hi' }];
@@ -169,7 +171,7 @@ describe('GatewayClient', () => {
 
     it('should throw error on network failure', async () => {
       const error = new Error('Network Error');
-      (error as any).request = {}; // Indicates request was made but no response
+      (error as AxiosError).request = {}; // Indicates request was made but no response
       mockAxiosInstance.post.mockRejectedValue(error);
 
       const messages = [{ role: 'user' as const, content: 'Hi' }];
@@ -340,102 +342,108 @@ describe('GatewayClient', () => {
       expect(chunks[0].id).toBe('chatcmpl-456');
     });
 
-    it('should include authorization header when token is set', async () => {
-      client.updateConfig('http://api.com', 'my-token');
+     it('should include authorization header when token is set', async () => {
+       client.updateConfig('http://api.com', 'my-token');
 
-      mockReader.read.mockResolvedValue({ done: true });
-      mockFetch.mockResolvedValue({
-        ok: true,
-        body: mockBody,
-      });
+       mockReader.read.mockResolvedValue({ done: true });
+       mockFetch.mockResolvedValue({
+         ok: true,
+         body: mockBody,
+       });
 
-      for await (const _ of client.sendMessageStream([{ role: 'user', content: 'Hi' }])) {
-      }
-
-      expect(mockFetch).toHaveBeenCalledWith(
-        'http://api.com/chat/completions',
-        expect.objectContaining({
-          headers: expect.objectContaining({
-            'Authorization': 'Bearer my-token',
-          }),
-        })
-      );
-    });
-
-    it('should throw error on HTTP error response', async () => {
-      mockFetch.mockResolvedValue({
-        ok: false,
-        status: 401,
-        statusText: 'Unauthorized',
-        text: async () => 'Invalid token',
-      });
-
-      const messages = [{ role: 'user' as const, content: 'Hi' }];
-
-      await expect(async () => {
-        for await (const _ of client.sendMessageStream(messages)) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-empty
+        for await (const _chunk of client.sendMessageStream([{ role: 'user', content: 'Hi' }])) {
         }
-      }).rejects.toThrow('HTTP 401: Invalid token');
-    });
 
-    it('should throw error when response body is null', async () => {
-      mockFetch.mockResolvedValue({
-        ok: true,
-        body: null,
+        expect(mockFetch).toHaveBeenCalledWith(
+          'http://api.com/chat/completions',
+          expect.objectContaining({
+            headers: expect.objectContaining({
+              'Authorization': 'Bearer my-token',
+            }),
+          })
+        );
       });
 
-      const messages = [{ role: 'user' as const, content: 'Hi' }];
+      it('should throw error on HTTP error response', async () => {
+        mockFetch.mockResolvedValue({
+          ok: false,
+          status: 401,
+          statusText: 'Unauthorized',
+          text: async () => 'Invalid token',
+        });
 
-      await expect(async () => {
-        for await (const _ of client.sendMessageStream(messages)) {
+        const messages = [{ role: 'user' as const, content: 'Hi' }];
+
+        await expect(async () => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-empty
+          for await (const _chunk of client.sendMessageStream(messages)) {
+          }
+       }).rejects.toThrow('HTTP 401: Invalid token');
+     });
+
+      it('should throw error when response body is null', async () => {
+        mockFetch.mockResolvedValue({
+          ok: true,
+          body: null,
+        });
+
+        const messages = [{ role: 'user' as const, content: 'Hi' }];
+
+        await expect(async () => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-empty
+          for await (const _chunk of client.sendMessageStream(messages)) {
+          }
+        }).rejects.toThrow('Response body is null');
+      });
+
+      it('should use default model when not specified', async () => {
+        mockReader.read.mockResolvedValue({ done: true });
+        mockFetch.mockResolvedValue({
+          ok: true,
+          body: mockBody,
+        });
+
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-empty
+        for await (const _chunk of client.sendMessageStream([{ role: 'user', content: 'Hi' }])) {
         }
-      }).rejects.toThrow('Response body is null');
-    });
 
-    it('should use default model when not specified', async () => {
-      mockReader.read.mockResolvedValue({ done: true });
-      mockFetch.mockResolvedValue({
-        ok: true,
-        body: mockBody,
-      });
+       const [, init] = mockFetch.mock.calls[0];
+       const body = JSON.parse(init.body);
+       expect(body.model).toBe('default');
+     });
 
-      for await (const _ of client.sendMessageStream([{ role: 'user', content: 'Hi' }])) {
-      }
+      it('should use custom model when specified', async () => {
+        mockReader.read.mockResolvedValue({ done: true });
+        mockFetch.mockResolvedValue({
+          ok: true,
+          body: mockBody,
+        });
 
-      const [, init] = mockFetch.mock.calls[0];
-      const body = JSON.parse(init.body);
-      expect(body.model).toBe('default');
-    });
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-empty
+        for await (const _chunk of client.sendMessageStream([{ role: 'user', content: 'Hi' }], 'gpt-4')) {
+        }
 
-    it('should use custom model when specified', async () => {
-      mockReader.read.mockResolvedValue({ done: true });
-      mockFetch.mockResolvedValue({
-        ok: true,
-        body: mockBody,
-      });
+       const [, init] = mockFetch.mock.calls[0];
+       const body = JSON.parse(init.body);
+       expect(body.model).toBe('gpt-4');
+     });
 
-      for await (const _ of client.sendMessageStream([{ role: 'user', content: 'Hi' }], 'gpt-4')) {
-      }
+      it('should set stream flag to true', async () => {
+        mockReader.read.mockResolvedValue({ done: true });
+        mockFetch.mockResolvedValue({
+          ok: true,
+          body: mockBody,
+        });
 
-      const [, init] = mockFetch.mock.calls[0];
-      const body = JSON.parse(init.body);
-      expect(body.model).toBe('gpt-4');
-    });
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-empty
+        for await (const _chunk of client.sendMessageStream([{ role: 'user', content: 'Hi' }])) {
+        }
 
-    it('should set stream flag to true', async () => {
-      mockReader.read.mockResolvedValue({ done: true });
-      mockFetch.mockResolvedValue({
-        ok: true,
-        body: mockBody,
-      });
-
-      for await (const _ of client.sendMessageStream([{ role: 'user', content: 'Hi' }])) {
-      }
-
-      const [, init] = mockFetch.mock.calls[0];
-      const body = JSON.parse(init.body);
-      expect(body.stream).toBe(true);
-    });
+       const [, init] = mockFetch.mock.calls[0];
+       const body = JSON.parse(init.body);
+       expect(body.stream).toBe(true);
+     });
 
     it('should handle invalid JSON gracefully', async () => {
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
