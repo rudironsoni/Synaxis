@@ -1,242 +1,177 @@
 # Synaxis API Documentation
 
-**Last Updated**: 2026-02-01
-**Version**: 1.0.0
+## Introduction
 
-## Overview
+Synaxis provides a unified, OpenAI-compatible API for accessing multiple AI inference providers through a single endpoint. The API supports real-time streaming, comprehensive error handling, and intelligent provider routing with automatic failover.
 
-Synaxis provides an OpenAI-compatible inference gateway that routes requests to multiple AI providers. This document describes all available API endpoints, authentication requirements, and response formats.
+### OpenAI Compatibility
 
-**Total Endpoints Documented**: 15+ endpoints across 6 categories
+Synaxis is fully compatible with the OpenAI API specification, allowing you to use existing OpenAI clients with minimal configuration changes. Simply point your client to the Synaxis gateway URL instead of OpenAI's endpoints.
 
-### Endpoint Categories
+### Base URL
 
-| Category | Endpoints | Authentication |
-|----------|-----------|----------------|
-| OpenAI Compatible | 5 | None |
-| Identity Management | 3 | None |
-| Antigravity OAuth | 4 | None |
-| Health Checks | 2 | None |
-| Admin Management | 3 | JWT Required |
-| Auth & API Keys | 3 | JWT Required |
+```
+http://localhost:8080/openai/v1
+```
 
-## Base URLs
+### API Version
 
-| Environment | WebAPI URL | WebApp URL |
-|-------------|------------|------------|
-| Development | `http://localhost:5000` | `http://localhost:5001` |
-| Production | `https://api.synaxis.io` | `https://app.synaxis.io` |
+Current API version: `v1`
+
+---
 
 ## Authentication
 
-All admin endpoints require JWT authentication. Use the development login endpoint to obtain a token.
+### JWT Authentication
 
-### Obtaining a JWT Token (Development)
+Admin endpoints require JWT (JSON Web Token) authentication. Include the token in the Authorization header:
 
-```bash
-curl -X POST http://localhost:5000/auth/dev-login \
-  -H "Content-Type: application/json" \
-  -d '{"email": "admin@example.com"}'
+```
+Authorization: Bearer <your-jwt-token>
 ```
 
-Response:
+### Development Login
+
+For development and testing purposes, use the dev-login endpoint to obtain a JWT token:
+
+**Endpoint:** `POST /auth/dev-login`
+
+**Request:**
 ```json
 {
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "expiresAt": "2026-02-01T12:00:00Z"
+  "email": "developer@example.com"
 }
 ```
 
-### Using the Token
-
-Include the token in the Authorization header:
-```
-Authorization: Bearer <token>
-```
-
-## Chat Completions
-
-### POST /openai/v1/chat/completions
-
-Send a chat completion request to generate AI responses.
-
-**Request Headers**:
-| Header | Required | Description |
-|--------|----------|-------------|
-| Content-Type | Yes | Must be `application/json` |
-| Authorization | No | Required for admin models |
-
-**Request Body**:
+**Response:**
 ```json
 {
-  "model": "gpt-4",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+### Token Generation
+
+Tokens are generated using the configured JWT secret and include user identity and tenant information. Tokens expire after the configured duration.
+
+---
+
+## OpenAI-Compatible Endpoints
+
+### Chat Completions
+
+#### POST /openai/v1/chat/completions
+
+Creates a model response for the given chat conversation. Supports both streaming and non-streaming modes.
+
+**Authentication:** None required
+
+**Request:**
+```json
+{
+  "model": "llama-3.1-70b-versatile",
   "messages": [
-    {
-      "role": "user",
-      "content": "Hello, how are you?"
-    }
+    { "role": "system", "content": "You are a helpful assistant." },
+    { "role": "user", "content": "Hello, world!" }
   ],
+  "stream": false,
   "temperature": 0.7,
   "max_tokens": 1000,
-  "stream": false,
-  "tools": []
+  "top_p": 1.0,
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "get_weather",
+        "description": "Get weather information",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "location": {
+              "type": "string",
+              "description": "The location to get weather for"
+            }
+          },
+          "required": ["location"]
+        }
+      }
+    }
+  ],
+  "tool_choice": "auto"
 }
 ```
 
-**Parameters**:
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| model | string | Yes | - | Model ID (e.g., `gpt-4`, `claude-3-opus`) |
-| messages | array | Yes | - | Array of message objects |
-| temperature | number | No | 0.7 | Randomness (0-2) |
-| max_tokens | number | No | - | Maximum tokens to generate |
-| stream | boolean | No | false | Enable streaming response |
-| tools | array | No | [] | Tool definitions for function calling |
+**Parameters:**
+- `model` (string, required): The model identifier
+- `messages` (array, required): Array of message objects with `role` and `content`
+- `stream` (boolean, optional): Enable streaming response (default: false)
+- `temperature` (number, optional): Sampling temperature (0-2)
+- `max_tokens` (integer, optional): Maximum tokens to generate
+- `top_p` (number, optional): Nucleus sampling parameter (0-1)
+- `tools` (array, optional): Available tools/functions
+- `tool_choice` (string, optional): Tool selection strategy
+- `response_format` (object, optional): Response format specification
+- `stop` (string/array, optional): Stop sequences
 
-**Non-Streaming Response**:
+**Response (non-streaming):**
 ```json
 {
-  "id": "chatcmpl-abc123",
+  "id": "chatcmpl-123",
   "object": "chat.completion",
-  "created": 1699000000,
-  "model": "gpt-4",
+  "created": 1699012345,
+  "model": "llama-3.1-70b-versatile",
   "choices": [
     {
       "index": 0,
       "message": {
         "role": "assistant",
-        "content": "Hello! I'm doing well, thank you for asking."
+        "content": "Hello! How can I help you today?"
       },
       "finish_reason": "stop"
     }
   ],
   "usage": {
-    "prompt_tokens": 15,
-    "completion_tokens": 12,
-    "total_tokens": 27
+    "prompt_tokens": 10,
+    "completion_tokens": 20,
+    "total_tokens": 30
   }
 }
 ```
 
-**Streaming Response (SSE)**:
+**Response (streaming):**
 ```
-data: {"id":"chatcmpl-abc123","object":"chat.completion.chunk","created":1699000000,"model":"gpt-4","choices":[{"index":0,"delta":{"content":"Hello"},"finish_reason":null}]}
+data: {"id":"chatcmpl-123","object":"chat.completion.chunk","created":1699012345,"model":"llama-3.1-70b-versatile","choices":[{"index":0,"delta":{"role":"assistant","content":"Hello"},"finish_reason":null}]}
 
-data: {"id":"chatcmpl-abc123","object":"chat.completion.chunk","created":1699000000,"model":"gpt-4","choices":[{"index":0,"delta":{"content":"!"},"finish_reason":null}]}
+data: {"id":"chatcmpl-123","object":"chat.completion.chunk","created":1699012345,"model":"llama-3.1-70b-versatile","choices":[{"index":0,"delta":{"content":"!"},"finish_reason":null}]}
 
 data: [DONE]
 ```
 
-### POST /openai/v1/completions
+### Responses
 
-Legacy completion endpoint (for backward compatibility).
+#### POST /openai/v1/responses
 
-**Request Body**:
+OpenAI-compatible responses endpoint supporting both streaming and non-streaming modes.
+
+**Authentication:** None required
+
+**Request:** Same as chat completions
+
+**Response (non-streaming):**
 ```json
 {
-  "model": "text-davinci-003",
-  "prompt": "Once upon a time",
-  "max_tokens": 100,
-  "temperature": 0.7,
-  "stream": false
-}
-```
-
-## Models
-
-### GET /openai/v1/models
-
-List all available models grouped by provider.
-
-**Response**:
-```json
-{
-  "object": "list",
-  "data": [
-    {
-      "id": "gpt-4",
-      "object": "model",
-      "created": 1699000000,
-      "owned_by": "openai",
-      "provider": "openai",
-      "model_path": "gpt-4",
-      "capabilities": {
-        "streaming": true,
-        "tools": true,
-        "vision": true,
-        "structured_output": true,
-        "log_probs": true
-      }
-    }
-  ],
-  "providers": [
-    {
-      "id": "openai",
-      "type": "OpenAI",
-      "enabled": true,
-      "tier": 1
-    }
-  ]
-}
-```
-
-### GET /openai/v1/models/{id}
-
-Get details for a specific model.
-
-**Response**:
-```json
-{
-  "id": "gpt-4",
-  "object": "model",
-  "created": 1699000000,
-  "owned_by": "openai",
-  "provider": "openai",
-  "model_path": "gpt-4",
-  "capabilities": {
-    "streaming": true,
-    "tools": true,
-    "vision": true,
-    "structured_output": true,
-    "log_probs": true
-  }
-}
-```
-
-## Responses API
-
-### POST /openai/v1/responses
-
-OpenAI Responses API endpoint (supports both streaming and non-streaming).
-
-**Request Body**:
-```json
-{
-  "input": "Summarize the following text...",
-  "model": "gpt-4o",
-  "text": {
-    "format": {
-      "type": "text"
-    }
-  },
-  "max_output_tokens": 1000
-}
-```
-
-**Response**:
-```json
-{
-  "id": "resp_abc123",
+  "id": "resp_123",
   "object": "response",
-  "created": 1699000000,
+  "created": 1699012345,
+  "model": "llama-3.1-70b-versatile",
   "output": [
     {
-      "id": "msg_123",
-      "object": "message",
+      "type": "message",
+      "role": "assistant",
       "content": [
         {
           "type": "output_text",
-          "text": "Here is the summary..."
+          "text": "Hello! How can I help you today?"
         }
       ]
     }
@@ -244,392 +179,126 @@ OpenAI Responses API endpoint (supports both streaming and non-streaming).
 }
 ```
 
-**Streaming Response (SSE)**:
+**Response (streaming):**
 ```
-data: {"id":"resp_abc123","object":"response","created":1699000000,"output":[{"id":"msg_123","object":"message","content":[{"type":"output_text","text":"Here is"}]}]}
+data: {"id":"resp_123","object":"response.output_item.delta","created":1699012345,"model":"llama-3.1-70b-versatile","delta":{"content":"Hello"}}
 
-data: {"id":"resp_abc123","object":"response","created":1699000000,"output":[{"id":"msg_123","object":"message","content":[{"type":"output_text","text":" the summary"}]}]}
+data: {"id":"resp_123","object":"response.completed","created":1699012345,"model":"llama-3.1-70b-versatile","delta":{}}
 
 data: [DONE]
 ```
 
-## Identity Management
+### Legacy Completions
 
-### POST /api/identity/{provider}/start
+#### POST /openai/v1/completions
 
-Start authentication flow for an identity provider.
+**⚠️ Deprecated:** This endpoint is deprecated and maintained for backward compatibility only.
 
-**Path Parameters**:
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| provider | string | Yes | Identity provider name (e.g., "google", "github") |
+**Authentication:** None required
 
-**Request Body**: None
-
-**Response**:
+**Request:**
 ```json
 {
-  "authUrl": "https://provider.com/oauth/authorize?...",
-  "state": "random_state_string",
-  "instructions": "Complete authentication in the opened window"
+  "model": "llama-3.1-70b-versatile",
+  "prompt": "Once upon a time",
+  "max_tokens": 100,
+  "temperature": 0.7,
+  "stream": false
 }
 ```
 
-### POST /api/identity/{provider}/complete
-
-Complete authentication flow for an identity provider.
-
-**Path Parameters**:
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| provider | string | Yes | Identity provider name |
-
-**Request Body**:
+**Response:**
 ```json
 {
-  "code": "authorization_code_from_provider",
-  "state": "state_from_start_endpoint"
-}
-```
-
-**Response**:
-```json
-{
-  "success": true,
-  "account": {
-    "id": "user_123",
-    "email": "user@example.com",
-    "provider": "google"
-  }
-}
-```
-
-### GET /api/identity/accounts
-
-List all connected identity accounts.
-
-**Response**:
-```json
-[
-  {
-    "id": "user_123",
-    "email": "user@example.com",
-    "provider": "google",
-    "connectedAt": "2026-02-01T12:00:00Z"
-  }
-]
-```
-
-## Antigravity OAuth Integration
-
-### GET /oauth/antigravity/callback
-
-OAuth callback endpoint for Antigravity authentication.
-
-**Query Parameters**:
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| code | string | Yes | Authorization code |
-| state | string | Yes | State parameter |
-
-**Response**: HTML page with success/failure message
-
-### GET /antigravity/accounts
-
-List all connected Antigravity accounts.
-
-**Response**:
-```json
-[
-  {
-    "id": "ag_account_123",
-    "email": "user@example.com",
-    "connectedAt": "2026-02-01T12:00:00Z"
-  }
-]
-```
-
-### POST /antigravity/auth/start
-
-Start Antigravity authentication flow.
-
-**Request Body**:
-```json
-{
-  "redirectUrl": "https://your-app.com/callback"
-}
-```
-
-**Response**:
-```json
-{
-  "authUrl": "https://antigravity.com/auth?...",
-  "redirectUrl": "https://your-app.com/callback",
-  "instructions": "Complete authentication and return to redirectUrl"
-}
-```
-
-### POST /antigravity/auth/complete
-
-Complete Antigravity authentication flow.
-
-**Request Body**:
-```json
-{
-  "code": "authorization_code",
-  "state": "state_parameter",
-  "redirectUrl": "https://your-app.com/callback",
-  "callbackUrl": "https://your-app.com/api/callback"
-}
-```
-
-**Response**:
-```json
-{
-  "success": true,
-  "message": "Authentication completed successfully"
-}
-```
-
-## Health Checks
-
-### GET /health/liveness
-
-Liveness probe endpoint for container orchestration.
-
-**Response**:
-```json
-{
-  "status": "healthy",
-  "timestamp": "2026-02-01T12:00:00Z"
-}
-```
-
-### GET /health/readiness
-
-Readiness probe endpoint that checks dependencies.
-
-**Response**:
-```json
-{
-  "status": "ready",
-  "timestamp": "2026-02-01T12:00:00Z",
-  "checks": {
-    "database": "healthy",
-    "redis": "healthy",
-    "providers": "healthy"
-  }
-}
-```
-
-## Authentication & API Keys
-
-### POST /auth/dev-login
-
-Development-only authentication endpoint for testing.
-
-**Request Body**:
-```json
-{
-  "email": "admin@example.com"
-}
-```
-
-**Response**:
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "expiresAt": "2026-02-01T12:00:00Z"
-}
-```
-
-### POST /projects/{projectId}/keys
-
-Create a new API key for a project.
-
-**Path Parameters**:
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| projectId | string | Yes | Project identifier |
-
-**Headers**:
-| Header | Required | Description |
-|--------|----------|-------------|
-| Authorization | Yes | `Bearer <token>` |
-
-**Request Body**:
-```json
-{
-  "name": "Production Key"
-}
-```
-
-**Response**:
-```json
-{
-  "id": "key_123",
-  "key": "sk-proj-abc123...",
-  "name": "Production Key",
-  "createdAt": "2026-02-01T12:00:00Z"
-}
-```
-
-### DELETE /projects/{projectId}/keys/{keyId}
-
-Delete an API key from a project.
-
-**Path Parameters**:
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| projectId | string | Yes | Project identifier |
-| keyId | string | Yes | API key identifier |
-
-**Headers**:
-| Header | Required | Description |
-|--------|----------|-------------|
-| Authorization | Yes | `Bearer <token>` |
-
-**Response**: 204 No Content
-
-## Admin Endpoints
-
-All admin endpoints require JWT authentication.
-
-### GET /admin/providers
-
-List all configured providers and their status.
-
-**Headers**:
-| Header | Required | Description |
-|--------|----------|-------------|
-| Authorization | Yes | `Bearer <token>` |
-
-**Response**:
-```json
-[
-  {
-    "id": "openai",
-    "type": "OpenAI",
-    "enabled": true,
-    "tier": 1,
-    "defaultModel": "gpt-4",
-    "models": ["gpt-4", "gpt-4-turbo", "gpt-3.5-turbo"]
-  },
-  {
-    "id": "anthropic",
-    "type": "Anthropic",
-    "enabled": true,
-    "tier": 1,
-    "defaultModel": "claude-3-opus-20240229",
-    "models": ["claude-3-opus-20240229", "claude-3-sonnet-20240229"]
-  }
-]
-```
-
-### PUT /admin/providers/{providerId}
-
-Update provider configuration.
-
-**Request Body**:
-```json
-{
-  "enabled": true,
-  "tier": 2,
-  "apiKey": "sk-...",
-  "defaultModel": "gpt-4-turbo"
-}
-```
-
-**Response**:
-```json
-{
-  "id": "openai",
-  "type": "OpenAI",
-  "enabled": true,
-  "tier": 2,
-  "message": "Provider updated successfully"
-}
-```
-
-### GET /admin/health
-
-Get detailed health status of all providers.
-
-**Response**:
-```json
-{
-  "status": "healthy",
-  "timestamp": "2026-02-01T12:00:00Z",
-  "providers": {
-    "openai": {
-      "status": "healthy",
-      "latencyMs": 45,
-      "lastChecked": "2026-02-01T12:00:00Z"
-    },
-    "anthropic": {
-      "status": "healthy",
-      "latencyMs": 120,
-      "lastChecked": "2026-02-01T12:00:00Z"
+  "id": "cmpl-123",
+  "object": "text_completion",
+  "created": 1699012345,
+  "model": "llama-3.1-70b-versatile",
+  "choices": [
+    {
+      "text": "Once upon a time, in a land far away...",
+      "index": 0,
+      "finish_reason": "stop"
     }
-  },
-  "circuitBreakers": {
-    "openai": "closed",
-    "anthropic": "closed"
+  ],
+  "usage": {
+    "prompt_tokens": 5,
+    "completion_tokens": 25,
+    "total_tokens": 30
   }
 }
 ```
 
-## Streaming Format
+### Models
 
-Synaxis supports Server-Sent Events (SSE) streaming for real-time responses. When `stream: true` is set in the request, responses are delivered incrementally.
+#### GET /openai/v1/models
 
-### SSE Format
+Returns a list of all available models with their capabilities and provider information.
 
-All streaming responses use the following format:
+**Authentication:** None required
 
-```
-data: {json_chunk_1}
-
-data: {json_chunk_2}
-
-data: [DONE]
-```
-
-### Streaming Headers
-
-Streaming responses include these headers:
-- `Content-Type: text/event-stream`
-- `Cache-Control: no-cache`
-- `Connection: keep-alive`
-
-### Streaming Examples
-
-**Chat Completions Streaming**:
-```
-data: {"id":"chatcmpl-abc123","object":"chat.completion.chunk","created":1699000000,"model":"gpt-4","choices":[{"index":0,"delta":{"content":"Hello"},"finish_reason":null}]}
-
-data: {"id":"chatcmpl-abc123","object":"chat.completion.chunk","created":1699000000,"model":"gpt-4","choices":[{"index":0,"delta":{"content":"!"},"finish_reason":null}]}
-
-data: [DONE]
-```
-
-**Responses API Streaming**:
-```
-data: {"id":"resp_abc123","object":"response","created":1699000000,"output":[{"id":"msg_123","object":"message","content":[{"type":"output_text","text":"Here is"}]}]}
-
-data: {"id":"resp_abc123","object":"response","created":1699000000,"output":[{"id":"msg_123","object":"message","content":[{"type":"output_text","text":" the summary"}]}]}
-
-data: [DONE]
+**Response:**
+```json
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "llama-3.1-70b-versatile",
+      "object": "model",
+      "created": 1699012345,
+      "owned_by": "groq",
+      "provider": "groq",
+      "model_path": "llama-3.1-70b-versatile",
+      "capabilities": {
+        "streaming": true,
+        "tools": true,
+        "vision": false,
+        "structured_output": false,
+        "log_probs": false
+      }
+    }
+  ],
+  "providers": [
+    {
+      "id": "groq",
+      "type": "groq",
+      "enabled": true,
+      "tier": 0
+    }
+  ]
+}
 ```
 
-## Error Responses
+#### GET /openai/v1/models/{id}
 
-### Standard Error Format
+Returns detailed information about a specific model.
 
+**Authentication:** None required
+
+**Response:**
+```json
+{
+  "id": "llama-3.1-70b-versatile",
+  "object": "model",
+  "created": 1699012345,
+  "owned_by": "groq",
+  "provider": "groq",
+  "model_path": "llama-3.1-70b-versatile",
+  "capabilities": {
+    "streaming": true,
+    "tools": true,
+    "vision": false,
+    "structured_output": false,
+    "log_probs": false
+  }
+}
+```
+
+**Error Response (404):**
 ```json
 {
   "error": {
-    "message": "Invalid model ID",
+    "message": "The model 'invalid-model' does not exist",
     "type": "invalid_request_error",
     "param": "model",
     "code": "model_not_found"
@@ -637,85 +306,490 @@ data: [DONE]
 }
 ```
 
-### HTTP Status Codes
+---
 
-| Code | Description |
-|------|-------------|
-| 200 | Success |
-| 201 | Created (for POST endpoints) |
-| 204 | No Content (for DELETE endpoints) |
-| 400 | Bad Request (invalid parameters) |
-| 401 | Unauthorized (missing/invalid token) |
-| 403 | Forbidden (insufficient permissions) |
-| 404 | Not Found (resource doesn't exist) |
-| 429 | Rate Limited |
-| 500 | Internal Server Error |
-| 503 | Service Unavailable (all providers down) |
+## Admin Endpoints
 
-### Error Types
+All admin endpoints require JWT authentication via the Authorization header.
 
-| Type | Description |
-|------|-------------|
-| `invalid_request_error` | Missing or invalid parameters |
-| `authentication_error` | Authentication failed |
-| `permission_error` | Insufficient permissions |
-| `rate_limit_error` | Rate limit exceeded |
-| `server_error` | Internal server error |
-| `upstream_routing_failure` | All providers failed |
-| `provider_error` | Upstream provider error |
-| `model_not_found` | Requested model not available |
-| `quota_exceeded` | Provider quota exceeded |
+### Provider Management
 
-### Provider-Specific Errors
+#### GET /admin/providers
 
-When upstream providers return errors, they are wrapped with additional context:
+Returns a list of all configured AI providers with their settings and status.
 
+**Authentication:** JWT token required
+
+**Response:**
+```json
+[
+  {
+    "id": "groq",
+    "name": "groq",
+    "type": "groq",
+    "enabled": true,
+    "tier": 0,
+    "endpoint": null,
+    "keyConfigured": true,
+    "models": [
+      {
+        "id": "llama-3.1-70b-versatile",
+        "name": "llama-3.1-70b-versatile",
+        "enabled": true
+      }
+    ],
+    "status": "online",
+    "latency": 45
+  }
+]
+```
+
+#### PUT /admin/providers/{providerId}
+
+Update provider settings including enabled status, API key, endpoint, and tier.
+
+**Authentication:** JWT token required
+
+**Request:**
 ```json
 {
-  "error": {
-    "message": "Provider request failed",
-    "type": "provider_error",
-    "provider": "openai",
-    "original_error": {
-      "message": "Rate limit exceeded",
-      "type": "rate_limit_error"
+  "enabled": true,
+  "key": "new-api-key",
+  "endpoint": "https://api.example.com/v1",
+  "tier": 1
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Provider 'groq' updated successfully"
+}
+```
+
+### Health Monitoring
+
+#### GET /admin/health
+
+Returns detailed health information about services and AI providers.
+
+**Authentication:** JWT token required
+
+**Response:**
+```json
+{
+  "services": [
+    {
+      "name": "API Gateway",
+      "status": "healthy",
+      "lastChecked": "2024-01-15T10:30:00Z"
+    },
+    {
+      "name": "PostgreSQL",
+      "status": "healthy",
+      "latency": 15,
+      "lastChecked": "2024-01-15T10:30:00Z"
+    },
+    {
+      "name": "Redis",
+      "status": "healthy",
+      "latency": 5,
+      "lastChecked": "2024-01-15T10:30:00Z"
     }
+  ],
+  "providers": [
+    {
+      "id": "groq",
+      "name": "groq",
+      "status": "online",
+      "lastChecked": "2024-01-15T10:30:00Z",
+      "successRate": 98.5,
+      "latency": 45
+    }
+  ],
+  "overallStatus": "healthy",
+  "timestamp": "2024-01-15T10:30:00Z"
+}
+```
+
+---
+
+## Health Check Endpoints
+
+### Liveness Check
+
+#### GET /health/liveness
+
+Simple liveness check that always returns healthy if the service is running.
+
+**Authentication:** None required
+
+**Response:**
+```json
+{
+  "status": "healthy"
+}
+```
+
+### Readiness Check
+
+#### GET /health/readiness
+
+Comprehensive readiness check including database and Redis connectivity.
+
+**Authentication:** None required
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "checks": {
+    "database": "healthy",
+    "redis": "healthy"
   }
 }
 ```
 
+---
+
+## Identity Management Endpoints
+
+### OAuth Identity
+
+#### POST /api/identity/{provider}/start
+
+Start OAuth authentication flow for a specific provider.
+
+**Authentication:** None required
+
+**Response:**
+```json
+{
+  "authUrl": "https://provider.com/oauth/authorize?...",
+  "state": "random-state-string"
+}
+```
+
+#### POST /api/identity/{provider}/complete
+
+Complete OAuth authentication flow.
+
+**Authentication:** None required
+
+**Request:**
+```json
+{
+  "code": "authorization-code",
+  "state": "state-from-start"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "user": {
+    "id": "user-id",
+    "email": "user@example.com"
+  }
+}
+```
+
+#### GET /api/identity/accounts
+
+List all configured identity accounts (with masked tokens).
+
+**Authentication:** None required
+
+**Response:**
+```json
+[
+  {
+    "id": "account-id",
+    "provider": "google",
+    "email": "user@example.com",
+    "accessToken": "abcd....1234"
+  }
+]
+```
+
+---
+
+## Antigravity OAuth Endpoints
+
+### Authentication Flow
+
+#### GET /oauth/antigravity/callback
+
+OAuth callback endpoint for Antigravity authentication.
+
+**Authentication:** None required
+
+**Response:** HTML page with authentication result
+
+#### POST /antigravity/auth/start
+
+Start Antigravity authentication flow.
+
+**Authentication:** None required
+
+**Request:**
+```json
+{
+  "redirectUrl": "http://localhost:51121/oauth/antigravity/callback"
+}
+```
+
+**Response:**
+```json
+{
+  "authUrl": "https://antigravity.com/auth?...",
+  "redirectUrl": "http://localhost:51121/oauth/antigravity/callback",
+  "instructions": "Open AuthUrl in your browser. After login, you will be redirected to the callback; no manual code copy is required."
+}
+```
+
+#### POST /antigravity/auth/complete
+
+Complete Antigravity authentication flow.
+
+**Authentication:** None required
+
+**Request:**
+```json
+{
+  "code": "authorization-code",
+  "state": "state-string",
+  "redirectUrl": "http://localhost:51121/oauth/antigravity/callback"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Authentication successful. Account added."
+}
+```
+
+#### GET /antigravity/accounts
+
+List all Antigravity accounts.
+
+**Authentication:** None required
+
+**Response:**
+```json
+[
+  {
+    "id": "account-id",
+    "provider": "antigravity",
+    "email": "user@example.com"
+  }
+]
+```
+
+---
+
+## Streaming Format
+
+Synaxis uses Server-Sent Events (SSE) for streaming responses. The format follows the OpenAI specification:
+
+### SSE Headers
+
+Streaming responses include these headers:
+```
+Content-Type: text/event-stream
+Cache-Control: no-cache
+Connection: keep-alive
+```
+
+### Data Frames
+
+Each chunk is sent as a separate data frame:
+```
+data: {"id":"chatcmpl-123","object":"chat.completion.chunk","created":1699012345,"model":"llama-3.1-70b-versatile","choices":[{"index":0,"delta":{"content":"Hello"},"finish_reason":null}]}
+
+```
+
+### End Marker
+
+The stream ends with a special marker:
+```
+data: [DONE]
+
+```
+
+### Streaming Example
+
+Complete streaming response example:
+```
+data: {"id":"chatcmpl-123","object":"chat.completion.chunk","created":1699012345,"model":"llama-3.1-70b-versatile","choices":[{"index":0,"delta":{"role":"assistant","content":"Hello"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-123","object":"chat.completion.chunk","created":1699012345,"model":"llama-3.1-70b-versatile","choices":[{"index":0,"delta":{"content":" world"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-123","object":"chat.completion.chunk","created":1699012345,"model":"llama-3.1-70b-versatile","choices":[{"index":0,"delta":{"content":"!"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-123","object":"chat.completion.chunk","created":1699012345,"model":"llama-3.1-70b-versatile","choices":[{"index":0,"delta":{},"finish_reason":"stop"}]}
+
+data: [DONE]
+
+```
+
+---
+
+## Error Responses
+
+All errors follow the OpenAI error format with additional Synaxis-specific error codes.
+
+### Error Format
+
+```json
+{
+  "error": {
+    "message": "Error description",
+    "type": "error_type",
+    "param": "parameter_name",
+    "code": "error_code"
+  }
+}
+```
+
+### Error Codes
+
+| Error Code | HTTP Status | Description |
+|------------|-------------|-------------|
+| `invalid_request_error` | 400 | Invalid request format or parameters |
+| `invalid_value` | 400 | Specific parameter has invalid value |
+| `authentication_error` | 401 | Invalid or missing authentication |
+| `authorization_error` | 403 | Insufficient permissions |
+| `not_found` | 404 | Resource not found |
+| `rate_limit_exceeded` | 429 | Rate limit exceeded |
+| `upstream_routing_failure` | 502 | All providers failed |
+| `provider_error` | 502 | Specific provider error |
+| `service_unavailable` | 503 | Service temporarily unavailable |
+| `internal_error` | 500 | Unexpected server error |
+
+### Common Error Examples
+
+**Invalid Model:**
+```json
+{
+  "error": {
+    "message": "The model 'invalid-model' does not exist",
+    "type": "invalid_request_error",
+    "param": "model",
+    "code": "model_not_found"
+  }
+}
+```
+
+**Authentication Error:**
+```json
+{
+  "error": {
+    "message": "Authentication failed. Please check your credentials.",
+    "type": "authentication_error",
+    "code": "authentication_error"
+  }
+}
+```
+
+**Rate Limit Exceeded:**
+```json
+{
+  "error": {
+    "message": "Rate limit exceeded. Please try again later.",
+    "type": "rate_limit_error",
+    "code": "rate_limit_exceeded"
+  }
+}
+```
+
+**Provider Error:**
+```json
+{
+  "error": {
+    "message": "An error occurred while processing your request.",
+    "type": "api_error",
+    "code": "provider_error"
+  }
+}
+```
+
+---
+
 ## Rate Limiting
 
-Synaxis implements rate limiting per provider. Limits are configurable per tier.
+Synaxis implements rate limiting to protect against abuse and ensure fair usage across all users.
 
-| Tier | Requests/Minute | Tokens/Minute |
-|------|-----------------|---------------|
-| 1 (Primary) | 1000 | 100,000 |
-| 2 (Secondary) | 500 | 50,000 |
-| 3 (Backup) | 100 | 10,000 |
+### Rate Limit Headers
 
-## Supported Providers
+Rate limit information is included in response headers:
 
-| Provider | Type | Models | Tier |
-|----------|------|--------|------|
-| OpenAI | OpenAI | gpt-4, gpt-4-turbo, gpt-3.5-turbo | 1 |
-| Anthropic | Anthropic | claude-3-opus, claude-3-sonnet | 1 |
-| Google | VertexAI | gemini-pro, gemini-ultra | 1 |
-| Groq | Groq | llama-3.3-70b, mixtral-8x7b | 1 |
-| Cohere | Cohere | command-r-plus | 2 |
-| Cloudflare | Workers AI | @cf/meta/llama-3.1-8b | 2 |
-| HuggingFace | Inference | microsoft/Phi-3.5-mini | 3 |
+```
+X-RateLimit-Limit: 1000
+X-RateLimit-Remaining: 999
+X-RateLimit-Reset: 1642428789
+X-RateLimit-Window: 60
+```
 
-## Response Headers
+### Rate Limit Tiers
 
-All responses include the following headers:
+Different endpoints may have different rate limits:
 
-| Header | Description |
-|--------|-------------|
-| x-request-id | Unique request identifier |
-| x-gateway-model-requested | Original model requested |
-| x-gateway-model-resolved | Actual model used |
-| x-gateway-provider | Provider that handled the request |
+- **OpenAI-Compatible Endpoints:** 1000 requests per minute
+- **Admin Endpoints:** 100 requests per minute
+- **Identity Endpoints:** 50 requests per minute
+
+### Rate Limit Exceeded Response
+
+When rate limits are exceeded:
+
+```json
+{
+  "error": {
+    "message": "Rate limit exceeded. Please try again later.",
+    "type": "rate_limit_error",
+    "code": "rate_limit_exceeded"
+  }
+}
+```
+
+**Response Headers:**
+```
+Retry-After: 60
+X-RateLimit-Limit: 1000
+X-RateLimit-Remaining: 0
+X-RateLimit-Reset: 1642428789
+```
+
+---
+
+## Security Headers
+
+Synaxis implements comprehensive security headers to protect against common web vulnerabilities.
+
+### Implemented Security Headers
+
+| Header | Value | Purpose |
+|--------|-------|---------|
+| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains` | Force HTTPS connections |
+| `Content-Security-Policy` | Configured CSP policy | Prevent XSS attacks |
+| `X-Frame-Options` | `DENY` | Prevent clickjacking |
+| `X-Content-Type-Options` | `nosniff` | Prevent MIME type sniffing |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | Control referrer information |
+| `X-XSS-Protection` | `1; mode=block` | Enable XSS protection |
+
+### CORS Policy
+
+Synaxis implements CORS (Cross-Origin Resource Sharing) with the following policies:
+
+- **PublicAPI:** Allows all origins for OpenAI-compatible endpoints
+- **WebApp:** Restricted to admin interface origins
+- **Admin:** JWT-authenticated admin endpoints
+
+---
 
 ## Request/Response Schemas
 
@@ -723,32 +797,77 @@ All responses include the following headers:
 
 ```json
 {
-  "model": "string (required)",
-  "messages": [
-    {
-      "role": "user|assistant|system",
-      "content": "string or array",
-      "name": "string (optional)",
-      "tool_calls": "array (optional)"
-    }
-  ],
-  "temperature": "number (0-2, optional)",
-  "max_tokens": "integer (optional)",
-  "top_p": "number (0-1, optional)",
-  "stream": "boolean (default: false)",
-  "tools": [
-    {
-      "type": "function",
-      "function": {
-        "name": "string",
-        "description": "string (optional)",
-        "parameters": "object (optional)"
+  "type": "object",
+  "required": ["model", "messages"],
+  "properties": {
+    "model": {
+      "type": "string",
+      "description": "Model identifier"
+    },
+    "messages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["role", "content"],
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": ["system", "user", "assistant", "tool"],
+            "description": "Message role"
+          },
+          "content": {
+            "type": ["string", "array"],
+            "description": "Message content"
+          },
+          "name": {
+            "type": "string",
+            "description": "Message sender name"
+          },
+          "tool_calls": {
+            "type": "array",
+            "description": "Tool calls made by assistant"
+          }
+        }
       }
+    },
+    "stream": {
+      "type": "boolean",
+      "description": "Enable streaming response"
+    },
+    "temperature": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 2,
+      "description": "Sampling temperature"
+    },
+    "max_tokens": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Maximum tokens to generate"
+    },
+    "top_p": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Nucleus sampling parameter"
+    },
+    "tools": {
+      "type": "array",
+      "description": "Available tools/functions"
+    },
+    "tool_choice": {
+      "type": ["string", "object"],
+      "description": "Tool selection strategy"
+    },
+    "response_format": {
+      "type": "object",
+      "description": "Response format specification"
+    },
+    "stop": {
+      "type": ["string", "array"],
+      "description": "Stop sequences"
     }
-  ],
-  "tool_choice": "string|object (optional)",
-  "response_format": "object (optional)",
-  "stop": "string|array (optional)"
+  }
 }
 ```
 
@@ -756,67 +875,273 @@ All responses include the following headers:
 
 ```json
 {
-  "id": "string",
-  "object": "chat.completion",
-  "created": "integer (timestamp)",
-  "model": "string",
-  "choices": [
-    {
-      "index": "integer",
-      "message": {
-        "role": "assistant",
-        "content": "string",
-        "tool_calls": "array (optional)"
-      },
-      "finish_reason": "stop|length|content_filter|null"
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the completion"
+    },
+    "object": {
+      "type": "string",
+      "enum": ["chat.completion"],
+      "description": "Object type"
+    },
+    "created": {
+      "type": "integer",
+      "description": "Unix timestamp of creation"
+    },
+    "model": {
+      "type": "string",
+      "description": "Model used for completion"
+    },
+    "choices": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer",
+            "description": "Choice index"
+          },
+          "message": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "type": "string",
+                "enum": ["assistant"],
+                "description": "Message role"
+              },
+              "content": {
+                "type": "string",
+                "description": "Message content"
+              }
+            }
+          },
+          "finish_reason": {
+            "type": "string",
+            "enum": ["stop", "length", "content_filter", "tool_calls"],
+            "description": "Reason for completion"
+          }
+        }
+      }
+    },
+    "usage": {
+      "type": "object",
+      "properties": {
+        "prompt_tokens": {
+          "type": "integer",
+          "description": "Tokens in prompt"
+        },
+        "completion_tokens": {
+          "type": "integer",
+          "description": "Tokens in completion"
+        },
+        "total_tokens": {
+          "type": "integer",
+          "description": "Total tokens used"
+        }
+      }
     }
-  ],
-  "usage": {
-    "prompt_tokens": "integer",
-    "completion_tokens": "integer",
-    "total_tokens": "integer"
   }
 }
 ```
 
-### Provider Admin DTO Schema
+### Model Schema
 
 ```json
 {
-  "id": "string",
-  "name": "string",
-  "type": "string",
-  "enabled": "boolean",
-  "tier": "integer",
-  "endpoint": "string (optional)",
-  "keyConfigured": "boolean",
-  "models": [
-    {
-      "id": "string",
-      "name": "string",
-      "enabled": "boolean"
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Model identifier"
+    },
+    "object": {
+      "type": "string",
+      "enum": ["model"],
+      "description": "Object type"
+    },
+    "created": {
+      "type": "integer",
+      "description": "Unix timestamp of creation"
+    },
+    "owned_by": {
+      "type": "string",
+      "description": "Model owner"
+    },
+    "provider": {
+      "type": "string",
+      "description": "Provider name"
+    },
+    "model_path": {
+      "type": "string",
+      "description": "Provider-specific model path"
+    },
+    "capabilities": {
+      "type": "object",
+      "properties": {
+        "streaming": {
+          "type": "boolean",
+          "description": "Supports streaming responses"
+        },
+        "tools": {
+          "type": "boolean",
+          "description": "Supports function calling"
+        },
+        "vision": {
+          "type": "boolean",
+          "description": "Supports image input"
+        },
+        "structured_output": {
+          "type": "boolean",
+          "description": "Supports structured output"
+        },
+        "log_probs": {
+          "type": "boolean",
+          "description": "Supports log probability"
+        }
+      }
     }
-  ],
-  "status": "string",
-  "latency": "integer (optional)"
+  }
 }
 ```
 
+---
+
+## SDK Integration Examples
+
+### JavaScript/Node.js
+
+```javascript
+const response = await fetch('http://localhost:8080/openai/v1/chat/completions', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    model: 'llama-3.1-70b-versatile',
+    messages: [
+      { role: 'user', content: 'Hello, world!' }
+    ],
+    stream: true
+  })
+});
+
+// Handle streaming response
+const reader = response.body.getReader();
+const decoder = new TextDecoder();
+
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+  
+  const chunk = decoder.decode(value);
+  const lines = chunk.split('\n');
+  
+  for (const line of lines) {
+    if (line.startsWith('data: ')) {
+      const data = line.slice(6);
+      if (data === '[DONE]') {
+        console.log('Stream completed');
+        return;
+      }
+      
+      try {
+        const parsed = JSON.parse(data);
+        console.log('Received chunk:', parsed);
+      } catch (e) {
+        console.error('Failed to parse chunk:', data);
+      }
+    }
+  }
+}
+```
+
+### Python
+
+```python
+import requests
+import json
+
+response = requests.post(
+    'http://localhost:8080/openai/v1/chat/completions',
+    json={
+        'model': 'llama-3.1-70b-versatile',
+        'messages': [
+            {'role': 'user', 'content': 'Hello, world!'}
+        ],
+        'stream': True
+    },
+    stream=True
+)
+
+for line in response.iter_lines():
+    if line:
+        line = line.decode('utf-8')
+        if line.startswith('data: '):
+            data = line[6:]
+            if data == '[DONE]':
+                print('Stream completed')
+                break
+            
+            try:
+                chunk = json.loads(data)
+                print('Received chunk:', chunk)
+            except json.JSONDecodeError:
+                print(f'Failed to parse chunk: {data}')
+```
+
+### cURL
+
+```bash
+# Non-streaming request
+curl -X POST http://localhost:8080/openai/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "llama-3.1-70b-versatile",
+    "messages": [
+      { "role": "user", "content": "Hello, world!" }
+    ]
+  }'
+
+# Streaming request
+curl -X POST http://localhost:8080/openai/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "llama-3.1-70b-versatile",
+    "messages": [
+      { "role": "user", "content": "Tell me a story..." }
+    ],
+    "stream": true
+  }'
+```
+
+---
+
 ## Changelog
 
-### v1.0.1 (2026-02-01)
-- Enhanced API documentation with comprehensive endpoint coverage
-- Added identity management endpoints documentation
-- Added Antigravity OAuth integration endpoints
-- Added health check endpoints documentation
-- Added authentication & API key management endpoints
-- Enhanced error response documentation
-- Added streaming format specifications
-- Added request/response schema definitions
+### Version 1.0.0
 
-### v1.0.0 (2026-02-01)
-- Initial API documentation
-- OpenAI-compatible endpoints
-- Multi-provider routing
-- Admin management endpoints
-- Streaming support
+- Initial release
+- OpenAI-compatible chat completions endpoint
+- Streaming support via Server-Sent Events
+- Admin endpoints for provider management
+- Health check endpoints
+- Identity management endpoints
+- Comprehensive error handling
+- Rate limiting and security headers
+
+---
+
+## Support
+
+For questions, issues, or contributions:
+
+- **Documentation:** This file and inline code comments
+- **Issues:** GitHub Issues (if available)
+- **API Testing:** Use the provided examples and test with your preferred HTTP client
+
+---
+
+*Last updated: January 2024*
+*API Version: v1*
