@@ -163,8 +163,8 @@ public class ApiEndpointErrorTests : IClassFixture<SynaxisWebApplicationFactory>
         _factory.OutputHelper?.WriteLine($"Response: {content}");
         // The API returns 400 but error message doesn't mention "role"
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        // Error message is generic: "Argument is whitespace"
-        Assert.Contains("whitespace", content.ToLowerInvariant());
+        // Error message is specific: "Message role is required"
+        Assert.Contains("Message role is required", content);
     }
 
     [Fact]

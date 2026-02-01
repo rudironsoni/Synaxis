@@ -200,6 +200,7 @@ public class JwtValidationTests
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims),
+            NotBefore = DateTime.UtcNow.AddDays(-3),
             Expires = DateTime.UtcNow.AddDays(-1),
             Issuer = config.JwtIssuer,
             Audience = config.JwtAudience,

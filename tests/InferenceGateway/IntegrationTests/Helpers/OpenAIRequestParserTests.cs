@@ -103,20 +103,17 @@ public class OpenAIRequestParserTests
     }
 
     [Fact]
-    public async Task ParseAsync_WithCaseInsensitiveProperties_ReturnsRequest()
+    public async Task ParseAsync_WithCaseInsensitiveProperties_ThrowsBadHttpRequestException()
     {
         // Arrange
         var json = @"{ ""MODEL"": ""gpt-4"", ""MESSAGES"": [{""ROLE"": ""USER"", ""CONTENT"": ""Hello""}] }";
         var context = CreateHttpContextWithBody(json);
 
-        // Act
-        var result = await OpenAIRequestParser.ParseAsync(context);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal("gpt-4", result.Model);
-        Assert.Single(result.Messages);
-        Assert.Equal("USER", result.Messages[0].Role);
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<BadHttpRequestException>(
+            () => OpenAIRequestParser.ParseAsync(context));
+        
+        Assert.Contains("Role must be one of: system, user, assistant, tool", exception.Message);
     }
 
     [Fact]
@@ -441,7 +438,7 @@ public class OpenAIRequestParserTests
     }
 
     [Fact]
-    public async Task ParseAsync_WithEmptyMessagesArray_ReturnsRequestWithEmptyMessages()
+    public async Task ParseAsync_WithEmptyMessagesArray_ThrowsBadHttpRequestException()
     {
         // Arrange
         var json = JsonSerializer.Serialize(new
@@ -451,27 +448,25 @@ public class OpenAIRequestParserTests
         });
         var context = CreateHttpContextWithBody(json);
 
-        // Act
-        var result = await OpenAIRequestParser.ParseAsync(context);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Empty(result.Messages);
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<BadHttpRequestException>(
+            () => OpenAIRequestParser.ParseAsync(context));
+        
+        Assert.Contains("At least one message is required", exception.Message);
     }
 
     [Fact]
-    public async Task ParseAsync_WithMessagesAsNull_ReturnsRequestWithEmptyMessages()
+    public async Task ParseAsync_WithMessagesAsNull_ThrowsBadHttpRequestException()
     {
         // Arrange
         var json = @"{ ""model"": ""gpt-4"", ""messages"": null }";
         var context = CreateHttpContextWithBody(json);
 
-        // Act
-        var result = await OpenAIRequestParser.ParseAsync(context);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Null(result.Messages);
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<BadHttpRequestException>(
+            () => OpenAIRequestParser.ParseAsync(context));
+        
+        Assert.Contains("Messages are required", exception.Message);
     }
 
     #endregion
@@ -747,7 +742,7 @@ public class OpenAIRequestParserTests
     }
 
     [Fact]
-    public async Task ParseAsync_WithZeroMaxTokens_ParsesCorrectly()
+    public async Task ParseAsync_WithZeroMaxTokens_ThrowsBadHttpRequestException()
     {
         // Arrange
         var json = JsonSerializer.Serialize(new
@@ -758,12 +753,11 @@ public class OpenAIRequestParserTests
         });
         var context = CreateHttpContextWithBody(json);
 
-        // Act
-        var result = await OpenAIRequestParser.ParseAsync(context);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal(0, result.MaxTokens);
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<BadHttpRequestException>(
+            () => OpenAIRequestParser.ParseAsync(context));
+        
+        Assert.Contains("MaxTokens must be a positive integer", exception.Message);
     }
 
     [Fact]
