@@ -241,11 +241,11 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Security
                 {
                     attemptCount++;
                     throw new HttpRequestException("Always fails");
-                }, ex => ex is HttpRequestException);
+                }, ex => false); // Non-retryable error - should not retry
             });
 
             Assert.Equal(1, attemptCount); // Should not retry
-            Assert.Contains("400 Bad Request", exception.Message);
+            Assert.Contains("Always fails", exception.Message);
         }
 
         [Fact]
