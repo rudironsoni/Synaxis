@@ -110,5 +110,5 @@ coverage-report/
 coverage-result/
 coverage-results/
 coverage-summary/
-
-src/Synaxis.WebApp/ClientApp/coverage/**
+coverage/
+**/coverage/**
