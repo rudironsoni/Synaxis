@@ -155,7 +155,29 @@ builder.AddOpenAIResponses();
 builder.AddOpenAIConversations();
 
 // Auth
-var jwtSecret = builder.Configuration["Synaxis:InferenceGateway:JwtSecret"] ?? "SynaxisDefaultSecretKeyDoNotUseInProd1234567890";
+const string defaultJwtSecret = "SynaxisDefaultSecretKeyDoNotUseInProd1234567890";
+var jwtSecret = builder.Configuration["Synaxis:InferenceGateway:JwtSecret"];
+
+// Security: Fail fast in production if default JWT secret is used
+if (string.IsNullOrWhiteSpace(jwtSecret))
+{
+    throw new InvalidOperationException(
+        "Synaxis:InferenceGateway:JwtSecret must be configured. " +
+        "Set a strong JWT secret in configuration or environment variable.");
+}
+
+if (jwtSecret == defaultJwtSecret && !builder.Environment.IsDevelopment())
+{
+    throw new InvalidOperationException(
+        "Default JWT secret detected. This is insecure for production. " +
+        "Set a strong JWT secret in configuration or environment variable.");
+}
+
+if (jwtSecret == defaultJwtSecret && builder.Environment.IsDevelopment())
+{
+    Log.Warning("Using default JWT secret. This is insecure and should only be used in development.");
+}
+
 var key = Encoding.ASCII.GetBytes(jwtSecret);
 
 builder.Services.AddAuthentication(x =>
@@ -165,19 +187,63 @@ builder.Services.AddAuthentication(x =>
 })
 .AddJwtBearer(x =>
 {
-    x.RequireHttpsMetadata = false;
+    // Require HTTPS in production
+    x.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
     x.SaveToken = true;
     x.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(key),
-        ValidateIssuer = false,
-        ValidateAudience = false
+        // Enable issuer/audience validation in production
+        ValidateIssuer = !builder.Environment.IsDevelopment(),
+        ValidateAudience = !builder.Environment.IsDevelopment(),
+        ValidIssuer = builder.Configuration["Synaxis:InferenceGateway:JwtIssuer"] ?? "Synaxis",
+        ValidAudience = builder.Configuration["Synaxis:InferenceGateway:JwtAudience"] ?? "Synaxis"
     };
 });
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("WebApp", policy =>
+    {
+        var allowedOrigins = builder.Configuration["Synaxis:InferenceGateway:Cors:WebAppOrigins"]?.Split(',') ?? new[] { "http://localhost:8080" };
+        policy.WithOrigins(allowedOrigins)
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+
+    options.AddPolicy("PublicAPI", policy =>
+    {
+        var allowedOrigins = builder.Configuration["Synaxis:InferenceGateway:Cors:PublicOrigins"]?.Split(',') ?? Array.Empty<string>();
+        if (allowedOrigins.Length > 0 && allowedOrigins[0] != "*")
+        {
+            policy.WithOrigins(allowedOrigins)
+                  .AllowAnyMethod()
+                  .AllowAnyHeader();
+        }
+        else if (builder.Environment.IsDevelopment())
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyMethod()
+                  .AllowAnyHeader();
+        }
+    });
+
+    options.AddPolicy("Development", policy =>
+    {
+        if (builder.Environment.IsDevelopment())
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+        }
+    });
+});
 
 var app = builder.Build();
 
@@ -202,6 +268,11 @@ catch (Exception ex)
 
 app.UseHttpsRedirection();
 
+app.UseMiddleware<SecurityHeadersMiddleware>();
+
+// Enable CORS middleware - policies are applied per endpoint
+app.UseCors();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -211,6 +282,7 @@ app.Use(async (context, next) =>
     await next();
 });
 
+app.UseMiddleware<RequestIdMiddleware>();
 app.UseMiddleware<OpenAIErrorHandlerMiddleware>();
 app.UseMiddleware<OpenAIMetadataMiddleware>();
 

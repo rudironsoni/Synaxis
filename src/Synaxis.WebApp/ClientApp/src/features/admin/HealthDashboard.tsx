@@ -7,7 +7,6 @@ import {
   RefreshCw,
   Clock,
   Database,
-  Server,
   Cpu,
   Pause,
   Play
@@ -392,4 +391,3 @@ export default function HealthDashboard() {
     </div>
   );
 }
-

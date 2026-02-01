@@ -39,7 +39,8 @@ public static class AntigravityEndpoints
         .WithName("AntigravityAuthCallback");
 
         var group = app.MapGroup("/antigravity")
-            .WithTags("Antigravity");
+            .WithTags("Antigravity")
+            .RequireCors("PublicAPI");
 
         group.MapGet("/accounts", (IAntigravityAuthManager authManager) =>
         {

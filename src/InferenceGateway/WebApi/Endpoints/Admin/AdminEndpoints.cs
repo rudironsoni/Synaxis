@@ -16,7 +16,8 @@ public static class AdminEndpoints
     public static IEndpointRouteBuilder MapAdminEndpoints(this IEndpointRouteBuilder app)
     {
         var adminGroup = app.MapGroup("/admin")
-            .RequireAuthorization(policy => policy.RequireAuthenticatedUser());
+            .RequireAuthorization(policy => policy.RequireAuthenticatedUser())
+            .RequireCors("WebApp");
 
         adminGroup.MapGet("/providers", (IOptions<SynaxisConfiguration> config) =>
         {

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Cors;
 using Synaxis.InferenceGateway.Application.Security;
 using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
@@ -8,6 +9,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers;
 
 [ApiController]
 [Route("auth")]
+[EnableCors("WebApp")]
 public class AuthController : ControllerBase
 {
     private readonly IJwtService _jwtService;

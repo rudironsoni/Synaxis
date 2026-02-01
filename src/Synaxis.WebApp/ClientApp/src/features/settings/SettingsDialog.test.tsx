@@ -14,15 +14,27 @@ describe('SettingsDialog', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     
-    // Reset mock implementation
-    vi.mocked(useSettingsStore).mockImplementation((selector: any) => {
-      return selector({
-        gatewayUrl: 'http://localhost:5000',
-        costRate: 0,
-        setGatewayUrl: mockSetGatewayUrl,
-        setCostRate: mockSetCostRate,
-      })
-    })
+    // Create a mock store implementation that supports both selector and getState calls
+    const mockState = {
+      gatewayUrl: 'http://localhost:5000',
+      costRate: 0,
+      setGatewayUrl: mockSetGatewayUrl,
+      setCostRate: mockSetCostRate,
+      setStreamingEnabled: vi.fn(),
+      setJwtToken: vi.fn(),
+      logout: vi.fn(),
+    }
+    
+    // Mock the store to work with selectors
+    vi.mocked(useSettingsStore).mockImplementation(((selector?: any) => {
+      if (typeof selector === 'function') {
+        return selector(mockState)
+      }
+      return mockState
+    }) as any)
+    
+    // Also mock getState
+    ;(useSettingsStore as any).getState = vi.fn(() => mockState)
   })
 
   describe('visibility', () => {
@@ -49,14 +61,23 @@ describe('SettingsDialog', () => {
     })
 
     it('displays current gateway URL', () => {
-      vi.mocked(useSettingsStore).mockImplementation((selector: any) => {
-        return selector({
-          gatewayUrl: 'http://custom-api.com',
-          costRate: 0,
-          setGatewayUrl: mockSetGatewayUrl,
-          setCostRate: mockSetCostRate,
-        })
-      })
+      const mockState = {
+        gatewayUrl: 'http://custom-api.com',
+        costRate: 0,
+        setGatewayUrl: mockSetGatewayUrl,
+        setCostRate: mockSetCostRate,
+        setStreamingEnabled: vi.fn(),
+        setJwtToken: vi.fn(),
+        logout: vi.fn(),
+      }
+      
+      vi.mocked(useSettingsStore).mockImplementation(((selector?: any) => {
+        if (typeof selector === 'function') {
+          return selector(mockState)
+        }
+        return mockState
+      }) as any)
+      ;(useSettingsStore as any).getState = vi.fn(() => mockState)
       
       render(<SettingsDialog open={true} onClose={mockOnClose} />)
       const urlInput = screen.getByDisplayValue('http://custom-api.com')
@@ -64,17 +85,26 @@ describe('SettingsDialog', () => {
     })
 
     it('displays current cost rate', () => {
-      vi.mocked(useSettingsStore).mockImplementation((selector: any) => {
-        return selector({
-          gatewayUrl: 'http://localhost:5000',
-          costRate: 0.5,
-          setGatewayUrl: mockSetGatewayUrl,
-          setCostRate: mockSetCostRate,
-        })
-      })
+      const mockState = {
+        gatewayUrl: 'http://localhost:5000',
+        costRate: 0.5,
+        setGatewayUrl: mockSetGatewayUrl,
+        setCostRate: mockSetCostRate,
+        setStreamingEnabled: vi.fn(),
+        setJwtToken: vi.fn(),
+        logout: vi.fn(),
+      }
+      
+      vi.mocked(useSettingsStore).mockImplementation(((selector?: any) => {
+        if (typeof selector === 'function') {
+          return selector(mockState)
+        }
+        return mockState
+      }) as any)
+      ;(useSettingsStore as any).getState = vi.fn(() => mockState)
       
       render(<SettingsDialog open={true} onClose={mockOnClose} />)
-      const rateInput = screen.getByDisplayValue('0.5')
+      const rateInput = screen.getByDisplayValue(0.5)
       expect(rateInput).toBeInTheDocument()
     })
   })
@@ -90,10 +120,10 @@ describe('SettingsDialog', () => {
 
     it('updates rate input when typing', () => {
       render(<SettingsDialog open={true} onClose={mockOnClose} />)
-      const rateInput = screen.getByDisplayValue('0')
+      const rateInput = screen.getByDisplayValue(0)
       
       fireEvent.change(rateInput, { target: { value: '1.5' } })
-      expect(rateInput).toHaveValue('1.5')
+      expect(rateInput).toHaveValue(1.5)
     })
   })
 
@@ -156,7 +186,7 @@ describe('SettingsDialog', () => {
     it('handles decimal cost rate', async () => {
       render(<SettingsDialog open={true} onClose={mockOnClose} />)
       
-      const rateInput = screen.getByDisplayValue('0')
+      const rateInput = screen.getByDisplayValue(0)
       fireEvent.change(rateInput, { target: { value: '1.25' } })
       
       const saveButton = screen.getByText('Save')
