@@ -3,26 +3,70 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import ChatWindow from './ChatWindow';
 
 // Hoisted mocks
-const mocks = vi.hoisted(() => ({
-  sendMessage: vi.fn(),
-  sendMessageStream: vi.fn(),
-  addUsage: vi.fn(),
-  messagesWhere: vi.fn().mockReturnValue({
-    equals: vi.fn().mockReturnValue({
-      toArray: vi.fn().mockResolvedValue([]),
+const mocks = vi.hoisted(() => {
+  let streamingEnabledState = false;
+  
+  const mockSettingsStore = vi.fn((selector: (s: { gatewayUrl: string; streamingEnabled: boolean; selectedModel: string; setStreamingEnabled: () => void }) => unknown) => 
+    selector({
+      gatewayUrl: 'http://localhost:5000',
+      streamingEnabled: streamingEnabledState,
+      selectedModel: 'default',
+      setStreamingEnabled: vi.fn(),
+    })
+  );
+  mockSettingsStore.getState = vi.fn(() => ({
+    selectedModel: 'default',
+    gatewayUrl: 'http://localhost:5000',
+    streamingEnabled: streamingEnabledState,
+  }));
+
+  return {
+    sendMessage: vi.fn(),
+    sendMessageStream: vi.fn(),
+    fetchModels: vi.fn().mockResolvedValue({
+      object: 'list',
+      data: [
+        {
+          id: 'default',
+          object: 'model',
+          created: 1234567890,
+          owned_by: 'test',
+          provider: 'test',
+          model_path: 'test',
+          capabilities: {
+            streaming: true,
+            tools: false,
+            vision: false,
+            structured_output: false,
+            log_probs: false,
+          },
+        },
+      ],
+      providers: [],
     }),
-  }),
-  messagesAdd: vi.fn().mockResolvedValue(1),
-  gatewayUrl: 'http://localhost:5000',
-  streamingEnabled: false,
-  setStreamingEnabled: vi.fn(),
-}));
+    addUsage: vi.fn(),
+    messagesWhere: vi.fn().mockReturnValue({
+      equals: vi.fn().mockReturnValue({
+        toArray: vi.fn().mockResolvedValue([]),
+      }),
+    }),
+    messagesAdd: vi.fn().mockResolvedValue(1),
+    mockSettingsStore,
+    get streamingEnabled() {
+      return streamingEnabledState;
+    },
+    set streamingEnabled(value: boolean) {
+      streamingEnabledState = value;
+    },
+  };
+});
 
 // Mock API client
 vi.mock('@/api/client', () => ({
   defaultClient: {
     sendMessage: mocks.sendMessage,
     sendMessageStream: mocks.sendMessageStream,
+    fetchModels: mocks.fetchModels,
     updateConfig: vi.fn(),
   },
 }));
@@ -37,13 +81,17 @@ vi.mock('@/db/db', () => ({
   },
 }));
 
+// Mock ModelSelection component to avoid API calls in tests
+vi.mock('./ModelSelection', () => ({
+  default: ({ disabled }: { disabled?: boolean }) => (
+    <div data-testid="model-selection">{disabled ? 'disabled' : 'enabled'}</div>
+  ),
+}));
+
 // Mock settings store
 vi.mock('@/stores/settings', () => ({
-  default: (selector: (s: { gatewayUrl: string; streamingEnabled: boolean; setStreamingEnabled: () => void }) => unknown) => selector({
-    gatewayUrl: mocks.gatewayUrl,
-    streamingEnabled: mocks.streamingEnabled,
-    setStreamingEnabled: mocks.setStreamingEnabled,
-  }),
+  default: mocks.mockSettingsStore,
+  useSettingsStore: mocks.mockSettingsStore,
 }));
 
 // Mock usage store
@@ -141,7 +189,8 @@ describe('ChatWindow', () => {
       expect(mocks.sendMessage).toHaveBeenCalledWith(
         expect.arrayContaining([
           expect.objectContaining({ role: 'user', content: 'API test' }),
-        ])
+        ]),
+        'default'
       );
     });
   });
