@@ -921,3 +921,111 @@ cd src/Synaxis.WebApp/ClientApp && npm test -- --run
 - No modifications to component implementations were needed (only tests verified)
 - Tests use render wrapper from src/test/utils.tsx (QueryClientProvider)
 - Tests follow React Testing Library best practices (test user behavior, not implementation)
+
+# Performance Benchmarking Learnings
+
+## Date: 2026-02-01
+
+## BenchmarkDotNet Setup
+
+### Project Structure
+- Created `benchmarks/Synaxis.Benchmarks/` directory with separate csproj
+- Added BenchmarkDotNet package to Directory.Packages.props (Version 0.14.0)
+- Required additional packages: Moq, Microsoft.Extensions.Configuration, Microsoft.Extensions.Logging
+
+### Configuration Challenges
+1. **Central Package Management**: All packages must be declared in Directory.Packages.props
+2. **Runtime Moniker**: BenchmarkDotNet's RuntimeMoniker doesn't support .NET 10.0 (Net100), use SimpleJob without runtime specification
+3. **Optimizations Validator**: Disabled with `WithOptions(ConfigOptions.DisableOptimizationsValidator)` for development builds
+
+### Type System Issues
+1. **Microsoft.Extensions.AI Types**: ChatResponse and ChatResponseUpdate have different constructors than expected
+   - ChatResponse doesn't have a 2-argument constructor
+   - ChatResponseUpdate.Text is read-only
+   - Solution: Simplified benchmarks to avoid constructor issues
+
+2. **Synaxis Types**:
+   - EnrichedCandidate: `record EnrichedCandidate(ProviderConfig Config, ModelCost? Cost, string CanonicalModelPath)`
+   - ResolutionResult: `record ResolutionResult(string OriginalModelId, CanonicalModelId CanonicalId, List<ProviderConfig> Candidates)`
+   - CanonicalModelId: `record CanonicalModelId(string Provider, string ModelPath)`
+   - ModelCost: `class` with Provider, Model, CostPerToken, FreeTier properties
+
+### Benchmark Categories Implemented
+
+#### 1. Chat Completion Benchmarks (11 benchmarks)
+- Message creation (single, multiple, long)
+- Chat options creation
+- Streaming chunks creation
+- Streaming response simulation
+- Message filtering by role
+- Token counting (simple, long)
+- Response metadata creation
+- Usage details creation
+
+#### 2. Provider Routing Benchmarks (7 benchmarks)
+- Enriched candidate creation (small: 3, large: 20)
+- Sorting by cost (free tier first, then cost per token, then tier)
+- Filtering by tier
+- Filtering by free tier
+- Resolution result creation
+- Full routing pipeline
+
+#### 3. Configuration Loading Benchmarks (7 benchmarks)
+- Loading from JSON stream
+- Loading from IConfiguration
+- Loading individual sections (providers, models, aliases)
+- Loading large configuration (20 providers/models)
+- Configuration serialization
+
+### Performance Characteristics
+
+#### Chat Completion
+- Message creation: O(n) where n is message count
+- Streaming: Minimal async overhead per chunk
+- Filtering: O(n) where n is message count
+- Token counting: O(n) where n is word count
+
+#### Provider Routing
+- Candidate creation: O(n) where n is candidate count
+- Sorting: O(n log n) for multi-criteria sort
+- Filtering: O(n) per filter
+- Full pipeline: O(n log n) due to sorting
+
+#### Configuration Loading
+- JSON parsing: O(n) where n is JSON size
+- Binding: O(n) where n is property count
+- Serialization: O(n) where n is property count
+- Large config: Linear scaling with size
+
+### Optimization Opportunities
+
+1. **Provider Routing**: Cache sorted candidates when provider configs don't change
+2. **Configuration**: Lazy load sections instead of loading entire config
+3. **Message Creation**: Object pooling for frequently created messages
+4. **Streaming**: Batch small chunks to reduce async overhead
+
+### Running Benchmarks
+
+```bash
+# Run all benchmarks
+dotnet run --project benchmarks/Synaxis.Benchmarks/Synaxis.Benchmarks.csproj
+
+# Run specific category
+dotnet run --project benchmarks/Synaxis.Benchmarks/Synaxis.Benchmarks.csproj -- --filter "*ChatCompletion*"
+
+# Custom iterations
+dotnet run --project benchmarks/Synaxis.Benchmarks/Synaxis.Benchmarks.csproj -- --iterationCount 5 --warmupCount 2
+```
+
+### Notes
+- Benchmarks use mocked data to avoid external dependencies
+- External provider calls are not benchmarked (as per requirements)
+- Results may vary based on hardware and runtime conditions
+- For accurate production metrics, run in Release mode on production-like hardware
+
+### Future Improvements
+1. Add benchmarks for HTTP client operations (with mocked responses)
+2. Add benchmarks for database operations (ControlPlaneDbContext)
+3. Add benchmarks for Redis operations (health store, quota tracker)
+4. Add benchmarks for authentication and authorization operations
+5. Add benchmarks for OpenTelemetry tracing overhead
