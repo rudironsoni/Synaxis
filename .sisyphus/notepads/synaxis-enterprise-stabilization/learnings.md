@@ -1184,3 +1184,110 @@ Created comprehensive API documentation for Synaxis by enhancing the existing `d
 2. **Rate Limiting**: Document specific rate limits per endpoint
 3. **Examples**: Add more code examples for different programming languages
 4. **Interactive Documentation**: Consider adding OpenAPI/Swagger specification
+
+# Testing Guide Creation - Learnings
+
+## Task Summary
+Created comprehensive testing guide for Synaxis project covering backend (.NET) and frontend (React/TypeScript) testing, coverage reporting, flaky test remediation, and best practices.
+
+## Key Findings
+
+### Testing Infrastructure Analysis
+- **Backend Framework**: xUnit with Coverlet for coverage
+- **Frontend Framework**: Vitest with @vitest/coverage-v8
+- **E2E Testing**: Playwright for end-to-end tests
+- **Mocking**: Moq for backend, Vitest mocks for frontend
+- **Test Organization**: Layered by architectural boundaries
+
+### Test Project Structure Discovered
+```
+tests/
+├── Common/                          # Shared test utilities
+│   ├── TestBase.cs                 # Mock factories (IChatClient, IProviderRegistry, etc.)
+│   ├── TestDataFactory.cs          # Test data generators (ChatMessage, ProviderConfig, etc.)
+│   └── Infrastructure/InMemoryDbContext.cs  # In-memory database setup
+├── InferenceGateway.UnitTests/     # Unit tests (e.g., RetryPolicyTests.cs - 407 lines)
+├── InferenceGateway/
+│   ├── Application.Tests/          # Application layer tests
+│   ├── Infrastructure.Tests/       # Infrastructure layer tests
+│   └── IntegrationTests/           # Integration tests
+```
+
+### Frontend Testing Setup
+- **Test Scripts**: test, test:coverage, test:e2e, test:e2e:ui
+- **Configuration**: vite.config.ts with jsdom environment
+- **E2E Tests**: Located in e2e/ directory (streaming-flow.spec.ts, example.spec.ts)
+- **Component Tests**: Colocated with components using Testing Library
+
+### Coverage Baseline Analysis
+- **Backend Coverage**: 7.19% (from .sisyphus/baseline-coverage.txt)
+- **Frontend Coverage**: 85.77% (from .sisyphus/baseline-coverage-frontend.txt)
+- **Combined Coverage**: Approximately 46.48%
+- **Target**: 80% overall (frontend exceeds target, backend needs significant improvement)
+
+### Flaky Test Patterns Identified
+From notepad analysis, flaky tests were primarily caused by:
+1. **Real Provider Dependencies**: Tests hitting actual API providers
+2. **Timing Dependencies**: Tests depending on real delays/timeouts
+3. **Shared State**: Tests interfering with each other
+4. **Network Dependencies**: Tests requiring network availability
+
+Baseline testing showed 0% failure rate after remediation efforts.
+
+### Test Utilities and Patterns
+- **TestBase.cs**: Provides factory methods for creating mocks
+- **TestDataFactory.cs**: Generates test data for various entities
+- **InMemoryDbContext.cs**: EF Core in-memory database setup
+- **RetryPolicyTests.cs**: Comprehensive example of unit testing async operations with proper mocking
+
+## Testing Guide Content Created
+
+### Comprehensive Sections Included
+1. **Quick Start**: Commands for running all tests
+2. **Backend Testing**: xUnit framework, project structure, running tests
+3. **Frontend Testing**: Vitest framework, component testing, E2E tests
+4. **Coverage Reports**: Backend and frontend coverage generation and targets
+5. **Fixing Flaky Tests**: Common causes, remediation steps, examples
+6. **Testing Best Practices**: Backend, frontend, and E2E specific guidelines
+7. **Troubleshooting**: Common issues and solutions
+
+### Key Best Practices Documented
+- **AAA Pattern**: Arrange-Act-Assert for backend tests
+- **User Behavior Testing**: Testing what users see, not implementation
+- **Proper Mocking**: Replacing external dependencies with mocks
+- **Descriptive Test Names**: Clear, descriptive test method names
+- **Edge Case Testing**: Testing null inputs, error conditions, boundaries
+
+### Flaky Test Remediation Examples
+- **Before/After Examples**: Showed how to fix timing-dependent tests
+- **Mock Usage**: Proper setup for IChatClient, IProviderRegistry mocks
+- **Isolation Techniques**: Ensuring tests don't share state
+- **Deterministic Testing**: Making tests produce consistent results
+
+## Verification Results
+✅ **File created**: `/home/rrj/src/github/rudironsoni/Synaxis/TESTING.md`
+✅ **Comprehensive coverage**: All required sections included
+✅ **Backend testing**: xUnit, Coverlet, test utilities documented
+✅ **Frontend testing**: Vitest, Playwright, Testing Library documented
+✅ **Coverage reporting**: Both backend and frontend coverage explained
+✅ **Flaky test fixes**: Common causes and solutions provided
+✅ **Best practices**: Detailed guidelines for both backend and frontend
+✅ **Troubleshooting**: Common issues and solutions included
+
+## Recommendations for Future Testing Improvements
+1. **Increase Backend Coverage**: Focus on core inference logic to reach 80% target
+2. **Add Integration Tests**: More comprehensive API endpoint testing
+3. **Performance Testing**: Add benchmarks for critical paths
+4. **Contract Testing**: Ensure provider integrations remain stable
+5. **Test Automation**: Set up CI/CD pipeline for automated testing
+6. **Test Data Management**: Implement better test data factories
+7. **Parallel Test Execution**: Optimize test execution time
+
+## Technical Insights
+- Synaxis has well-structured test infrastructure with shared utilities
+- Frontend testing is mature with 85.77% coverage
+- Backend testing needs significant expansion (currently 7.19%)
+- Test utilities (TestBase, TestDataFactory) provide excellent foundation
+- Flaky test issues have been largely resolved through proper mocking
+- E2E testing covers critical user flows like streaming functionality
+
