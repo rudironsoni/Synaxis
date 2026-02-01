@@ -6,7 +6,7 @@ const mockSetStreamingEnabled = vi.fn();
 let mockStreamingEnabled = false;
 
 vi.mock('@/stores/settings', () => ({
-  default: (selector: any) => selector({
+  default: (selector: (s: { streamingEnabled: boolean; setStreamingEnabled: () => void }) => unknown) => selector({
     streamingEnabled: mockStreamingEnabled,
     setStreamingEnabled: mockSetStreamingEnabled,
   }),

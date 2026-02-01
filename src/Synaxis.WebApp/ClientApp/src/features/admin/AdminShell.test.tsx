@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { MemoryRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import AdminShell from './AdminShell';
 import AdminLogin from './AdminLogin';
 
@@ -11,7 +11,7 @@ const mockLogout = vi.fn();
 let mockJwtToken: string | null = null;
 
 vi.mock('@/stores/settings', () => ({
-  default: (selector: any) => selector({
+  default: (selector: (s: { jwtToken: string | null; setJwtToken: () => void; logout: () => void }) => unknown) => selector({
     jwtToken: mockJwtToken,
     setJwtToken: mockSetJwtToken,
     logout: mockLogout,

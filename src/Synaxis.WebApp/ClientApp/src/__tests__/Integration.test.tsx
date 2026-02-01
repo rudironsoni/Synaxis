@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import App from '../App';
-import { db } from '@/db/db';
 
 // 1. Hoist the mock function so it's available to vi.mock
 const mocks = vi.hoisted(() => ({
@@ -27,13 +26,13 @@ vi.mock('@/db/db', () => {
     messages: {
       toArray: vi.fn().mockResolvedValue([]),
       where: () => ({
-        equals: (val: any) => ({ toArray: vi.fn().mockResolvedValue([]) }),
+        equals: () => ({ toArray: vi.fn().mockResolvedValue([]) }),
         sortBy: vi.fn().mockResolvedValue([]),
       }),
       add: vi.fn().mockResolvedValue(1),
       bulkAdd: vi.fn().mockResolvedValue(1),
     },
-    transaction: vi.fn((mode, tables, callback) => callback()),
+    transaction: vi.fn((_mode, _tables, callback) => callback()),
   };
 
   return {

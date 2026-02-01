@@ -8,12 +8,7 @@ import AdminLogin from './features/admin/AdminLogin.tsx'
 import HealthDashboard from './features/admin/HealthDashboard.tsx'
 import ProviderConfig from './features/admin/ProviderConfig.tsx'
 import AdminSettings from './features/admin/AdminSettings.tsx'
-import useSettingsStore from './stores/settings.ts'
-
-function AdminRoute({ children }: { children: React.ReactNode }) {
-  const jwtToken = useSettingsStore((s: any) => s.jwtToken)
-  return jwtToken ? <>{children}</> : <Navigate to="/admin/login" />
-}
+import { AdminRoute } from './components/AdminRoute.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
