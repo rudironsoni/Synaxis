@@ -46,6 +46,7 @@ public sealed class ControlPlaneDbContext : DbContext
         {
             entity.HasKey(u => u.Id);
             entity.Property(u => u.Email).HasMaxLength(320).IsRequired();
+            entity.Property(u => u.PasswordHash).HasMaxLength(512);
             entity.Property(u => u.AuthProvider).HasMaxLength(50).IsRequired();
             entity.Property(u => u.ProviderUserId).HasMaxLength(200).IsRequired();
             entity.Property(u => u.Role).HasConversion<string>().IsRequired();
@@ -73,6 +74,7 @@ public sealed class ControlPlaneDbContext : DbContext
             entity.Property(k => k.KeyHash).HasMaxLength(512).IsRequired();
             entity.Property(k => k.Name).HasMaxLength(200).IsRequired();
             entity.Property(k => k.Status).HasConversion<string>().IsRequired();
+            entity.HasOne(k => k.User).WithMany().HasForeignKey(k => k.UserId).OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<OAuthAccount>(entity =>

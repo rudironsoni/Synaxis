@@ -2,6 +2,8 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
+RUN dotnet --version
+
 # Copy solution and project files for restore
 COPY ["Synaxis.sln", "./"]
 COPY ["Directory.Packages.props", "./"]
@@ -12,6 +14,9 @@ COPY ["src/Synaxis.WebApp/Synaxis.WebApp.csproj", "src/Synaxis.WebApp/"]
 COPY ["tests/InferenceGateway/Infrastructure.Tests/Synaxis.InferenceGateway.Infrastructure.Tests.csproj", "tests/InferenceGateway/Infrastructure.Tests/"]
 COPY ["tests/InferenceGateway/Application.Tests/Synaxis.InferenceGateway.Application.Tests.csproj", "tests/InferenceGateway/Application.Tests/"]
 COPY ["tests/InferenceGateway/IntegrationTests/Synaxis.InferenceGateway.IntegrationTests.csproj", "tests/InferenceGateway/IntegrationTests/"]
+COPY ["tests/InferenceGateway.UnitTests/Synaxis.InferenceGateway.UnitTests.csproj", "tests/InferenceGateway.UnitTests/"]
+COPY ["src/Tests/Benchmarks/Synaxis.Benchmarks.csproj", "src/Tests/Benchmarks/"]
+COPY ["tests/Common/Synaxis.Common.Tests.csproj", "tests/Common/"]
 
 RUN dotnet restore
 

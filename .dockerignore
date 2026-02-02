@@ -1,0 +1,129 @@
+# Git and version control
+.git
+.gitignore
+.git
+.gitattributes
+.github
+
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+.envsitter
+token.json
+*.pem
+*.key
+*.secret
+
+# IDE and editor files
+.vscode
+.vscode/
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# .NET build artifacts
+**/bin/
+**/obj/
+*.dll
+*.exe
+*.pdb
+*.log
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+TestResults/
+BenchmarkDotNet.Artifacts/
+*.testcache
+
+# Frontend artifacts (Vite/React)
+**/node_modules/
+**/dist/
+**/build/
+**/.cache/
+**/coverage/
+**/test-results/
+**/playwright-report/
+**/playwright/.cache/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json (optional - uncomment if you want to use npm-shrinkwrap.json instead)
+
+# Test directories (but allow csproj files for docker restore)
+tests/
+!tests/**/*.csproj
+**/e2e/
+benchmarks/
+**/__tests__/
+**/*.test.ts
+**/*.spec.ts
+
+# Coverage reports
+coverage/
+coverage-*/
+coverage-backend/
+coverage-history/
+coverage-report/
+coverage-results/
+coverage-summary/
+
+# Documentation (not needed in container)
+docs/
+*.md
+.sisyphus/
+.opencode/
+**/README.md
+**/CHANGELOG.md
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.cache
+
+# Logs
+*.log
+logs/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+**/pg_data/
+**/db_data/
+
+# Docker files
+docker-compose.infrastructure.yml
+docker-compose.override.yml
+**/.dockerignore
+
+# Python artifacts (if any)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# NuGet
+.project.lock.json
+.nuget/
+
+# Misc
+*.pid
+*.seed
+*.pid.lock
+
+# Explicitly exclude obj directory from copy
+**/obj/

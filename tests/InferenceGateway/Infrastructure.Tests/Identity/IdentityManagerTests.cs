@@ -188,6 +188,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
         var mockStore = new Mock<ISecureTokenStore>();
         var logger = new Mock<ILogger<IdentityManager>>();
 
+        var storedAccounts = new List<IdentityAccount>();
+        mockStore.Setup(s => s.SaveAsync(It.IsAny<List<IdentityAccount>>()))
+            .Callback<List<IdentityAccount>>(accounts => storedAccounts.AddRange(accounts))
+            .Returns(Task.CompletedTask);
+        mockStore.Setup(s => s.LoadAsync())
+            .ReturnsAsync(storedAccounts);
+
         var manager = new IdentityManager(new[] { mockStrat.Object }, mockStore.Object, logger.Object);
 
         var account = new IdentityAccount

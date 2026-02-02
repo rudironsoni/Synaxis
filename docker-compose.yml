@@ -11,6 +11,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       Synaxis__ControlPlane__ConnectionString: Host=postgres;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
       ConnectionStrings__Redis: redis:6379,password=${REDIS_PASSWORD},abortConnect=false
+      Synaxis__InferenceGateway__JwtSecret: ${JWT_SECRET:-SynaxisDefaultSecretKeyDoNotUseInProd1234567890}
       Synaxis__InferenceGateway__Providers__Groq__Key: ${GROQ_API_KEY}
       Synaxis__InferenceGateway__Providers__Cohere__Key: ${COHERE_API_KEY}
       Synaxis__InferenceGateway__Providers__Cloudflare__Key: ${CLOUDFLARE_API_KEY}
