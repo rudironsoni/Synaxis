@@ -44,6 +44,7 @@ public class ApiKeysController : ControllerBase
         {
             Id = Guid.NewGuid(),
             ProjectId = projectId,
+            UserId = userId,
             Name = request.Name,
             KeyHash = hash,
             Status = ApiKeyStatus.Active,

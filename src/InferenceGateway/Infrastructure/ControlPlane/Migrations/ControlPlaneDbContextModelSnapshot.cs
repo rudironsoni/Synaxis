@@ -63,9 +63,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ProjectId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("ApiKeys");
                 });
@@ -655,6 +660,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations
                         .HasMaxLength(320)
                         .HasColumnType("character varying(320)");
 
+                    b.Property<string>("PasswordHash")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
                     b.Property<string>("ProviderUserId")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -697,7 +706,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Synaxis.InferenceGateway.Application.ControlPlane.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Project");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Synaxis.InferenceGateway.Application.ControlPlane.Entities.AuditLog", b =>

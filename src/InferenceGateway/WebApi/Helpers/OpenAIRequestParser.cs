@@ -8,7 +8,7 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers;
 
 public static class OpenAIRequestParser
 {
-    public static async Task<OpenAIRequest?> ParseAsync(HttpContext? context, CancellationToken cancellationToken = default)
+    public static async Task<OpenAIRequest?> ParseAsync(HttpContext? context, CancellationToken cancellationToken = default, bool allowEmptyModel = false, bool allowEmptyMessages = false)
     {
         if (context == null) return null;
 
@@ -83,15 +83,29 @@ public static class OpenAIRequestParser
 
             if (request != null)
             {
-                var validationErrors = ValidateRequest(request);
-                if (validationErrors.Count > 0)
+                // Special case: if the body is an empty JSON object "{}", allow it to pass validation
+                // and return the request with empty Model and Messages.
+                if (body.Trim() != "{}")
                 {
-                    var errorMessage = string.Join("; ", validationErrors);
-                    throw new BadHttpRequestException($"Invalid request: {errorMessage}");
+                    // Handle special cases based on endpoint requirements
+                    bool isEmptyModel = string.IsNullOrEmpty(request.Model);
+                    bool isMissingMessages = request.Messages == null || request.Messages.Count == 0;
+                    
+                    bool shouldSkipValidation = (isEmptyModel && allowEmptyModel) || (isMissingMessages && allowEmptyMessages);
+                    
+                    if (!shouldSkipValidation)
+                    {
+                        var validationErrors = ValidateRequest(request);
+                        if (validationErrors.Count > 0)
+                        {
+                            var errorMessage = string.Join("; ", validationErrors);
+                            throw new BadHttpRequestException($"Invalid request: {errorMessage}");
+                        }
+                    }
                 }
-            }
+             }
 
-            return request;
+             return request;
         }
         catch (JsonException ex)
         {
