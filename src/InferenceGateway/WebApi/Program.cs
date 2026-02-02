@@ -17,8 +17,11 @@ using Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI;
 using Synaxis.InferenceGateway.WebApi.Endpoints.Identity;
 using Synaxis.InferenceGateway.WebApi.Endpoints.Admin;
 using Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard;
+using Synaxis.InferenceGateway.WebApi.Hubs;
 using Quartz;
 using Synaxis.InferenceGateway.Infrastructure.Jobs;
+using Synaxis.InferenceGateway.Application.Routing;
+using Synaxis.InferenceGateway.Application.ControlPlane;
 
 using Scalar.AspNetCore;
 
@@ -206,6 +209,13 @@ builder.Services.AddAuthentication(x =>
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 
+builder.Services.AddSignalR();
+
+builder.Services.AddScoped<IRoutingScoreCalculator, RoutingScoreCalculator>();
+builder.Services.AddScoped<IFallbackOrchestrator, FallbackOrchestrator>();
+builder.Services.AddScoped<IProviderHealthCheckService, ProviderHealthCheckService>();
+builder.Services.AddScoped<IQuotaWarningService, QuotaWarningService>();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("WebApp", policy =>
@@ -295,6 +305,8 @@ app.UseMiddleware<OpenAIMetadataMiddleware>();
     app.MapProvidersEndpoints();
     app.MapAnalyticsEndpoints();
     app.MapControllers();
+
+    app.MapHub<ConfigurationHub>("/hubs/configuration");
 
 // NOTE: Removed temporary debug endpoint that created AggregateException for testing.
 

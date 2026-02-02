@@ -10,8 +10,6 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
     /// </summary>
     public class MockProviderResponses
     {
-        private static readonly Random _random = new Random();
-        
         // Mock responses for different providers/models
         private readonly Dictionary<string, ChatCompletionResponse> _chatResponses;
         private readonly Dictionary<string, LegacyCompletionResponse> _legacyResponses;

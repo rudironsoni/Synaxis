@@ -24,6 +24,7 @@ public class SmartRoutingChatClient : IChatClient
     private readonly ResiliencePipelineProvider<string> _pipelineProvider;
     private readonly IEnumerable<IChatClientStrategy> _strategies;
     private readonly ActivitySource _activitySource;
+    private readonly IFallbackOrchestrator _fallbackOrchestrator;
     private readonly ILogger<SmartRoutingChatClient> _logger;
 
     public ChatClientMetadata Metadata { get; } = new("SmartRoutingChatClient");
@@ -36,6 +37,7 @@ public class SmartRoutingChatClient : IChatClient
         ResiliencePipelineProvider<string> pipelineProvider,
         IEnumerable<IChatClientStrategy> strategies,
         ActivitySource activitySource,
+        IFallbackOrchestrator fallbackOrchestrator,
         ILogger<SmartRoutingChatClient> logger)
     {
         _chatClientFactory = chatClientFactory ?? throw new ArgumentNullException(nameof(chatClientFactory));
@@ -45,6 +47,7 @@ public class SmartRoutingChatClient : IChatClient
         _pipelineProvider = pipelineProvider ?? throw new ArgumentNullException(nameof(pipelineProvider));
         _strategies = strategies ?? throw new ArgumentNullException(nameof(strategies));
         _activitySource = activitySource ?? throw new ArgumentNullException(nameof(activitySource));
+        _fallbackOrchestrator = fallbackOrchestrator ?? throw new ArgumentNullException(nameof(fallbackOrchestrator));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -57,44 +60,21 @@ public class SmartRoutingChatClient : IChatClient
         var modelId = options?.ModelId ?? "default";
         activity?.SetTag("model.id", modelId);
 
-        // 1. Get Candidates from Router (Policy Layer)
-        var candidates = await _smartRouter.GetCandidatesAsync(modelId, false, cancellationToken);
-        var exceptions = new List<Exception>();
-
-        // 2. Rotation Loop (Resilience Layer)
-        foreach (var candidate in candidates)
+        string? preferredProviderKey = null;
+        if (options?.AdditionalProperties?.TryGetValue("preferred_provider", out var preferred) == true)
         {
-            // Fast check: Is this provider explicitly blocked or quota-out?
-            if (!await _quotaTracker.IsHealthyAsync(candidate.Key, cancellationToken)) 
-            {
-                _logger.LogDebug("Skipping provider '{ProviderKey}' due to quota/health check.", candidate.Key);
-                continue;
-            }
-
-            try
-            {
-                return await ExecuteCandidateAsync(candidate, chatMessages, options, cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Provider '{ProviderKey}' failed. Rotating to next candidate.", candidate.Key);
-                exceptions.Add(ex);
-                
-                // Check if this is a non-retryable error (400/404) - skip retry
-                if (IsNonRetryableError(ex))
-                {
-                    _logger.LogDebug("Skipping retry for provider '{ProviderKey}' due to non-retryable error (400/404).", candidate.Key);
-                    // Don't retry and don't record failure, but still throw AggregateException
-                }
-                else
-                {
-                    try { await RecordFailureAsync(candidate.Key, modelId, ex, cancellationToken); } catch { }
-                    // Continue loop to next candidate
-                }
-            }
+            preferredProviderKey = preferred?.ToString();
         }
 
-        throw new AggregateException($"All providers failed for model '{modelId}'.", exceptions);
+        _logger.LogInformation("Executing chat request with intelligent fallback for model '{ModelId}'", modelId);
+        
+        return await _fallbackOrchestrator.ExecuteWithFallbackAsync(
+            modelId,
+            streaming: false,
+            preferredProviderKey: preferredProviderKey,
+            operation: async (candidate) => await ExecuteCandidateAsync(candidate, chatMessages, options, cancellationToken),
+            cancellationToken: cancellationToken
+        );
     }
 
     public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
@@ -106,45 +86,25 @@ public class SmartRoutingChatClient : IChatClient
         var modelId = options?.ModelId ?? "default";
         activity?.SetTag("model.id", modelId);
 
-        var candidates = await _smartRouter.GetCandidatesAsync(modelId, true, cancellationToken);
-        var exceptions = new List<Exception>();
-
-        IAsyncEnumerable<ChatResponseUpdate>? successfulStream = null;
-        EnrichedCandidate? successfulCandidate = null;
-
-        // Rotation Loop for Streaming
-        foreach (var candidate in candidates)
+        string? preferredProviderKey = null;
+        if (options?.AdditionalProperties?.TryGetValue("preferred_provider", out var preferred) == true)
         {
-            if (!await _quotaTracker.IsHealthyAsync(candidate.Key, cancellationToken)) continue;
-
-            try
-            {
-                successfulStream = await ExecuteCandidateStreamingAsync(candidate, chatMessages, options, cancellationToken);
-                successfulCandidate = candidate;
-                break; // Stream initiated successfully
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Provider '{ProviderKey}' failed to initiate stream. Rotating...", candidate.Key);
-                exceptions.Add(ex);
-                try { await RecordFailureAsync(candidate.Key, modelId, ex, cancellationToken); } catch { }
-            }
+            preferredProviderKey = preferred?.ToString();
         }
 
-        if (successfulStream == null)
-        {
-            throw new AggregateException($"All providers failed to initiate stream for model '{modelId}'.", exceptions);
-        }
+        _logger.LogInformation("Executing streaming chat request with intelligent fallback for model '{ModelId}'", modelId);
+        
+        var stream = await _fallbackOrchestrator.ExecuteWithFallbackAsync(
+            modelId,
+            streaming: true,
+            preferredProviderKey: preferredProviderKey,
+            operation: async (candidate) => await ExecuteCandidateStreamingAsync(candidate, chatMessages, options, cancellationToken),
+            cancellationToken: cancellationToken
+        );
 
-        await foreach (var update in successfulStream.WithCancellation(cancellationToken))
+        await foreach (var update in stream.WithCancellation(cancellationToken))
         {
-             if (successfulCandidate != null)
-             {
-                 if (update.AdditionalProperties == null) update.AdditionalProperties = new AdditionalPropertiesDictionary();
-                 update.AdditionalProperties["provider_name"] = successfulCandidate.Key;
-                 update.AdditionalProperties["model_id"] = successfulCandidate.CanonicalModelPath;
-             }
-             yield return update;
+            yield return update;
         }
     }
 
