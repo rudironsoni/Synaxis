@@ -168,10 +168,10 @@ public static class InfrastructureExtensions
                 switch (config.Type?.ToLowerInvariant())
                 {
                     case "openai":
-                        services.AddOpenAiCompatibleClient(name, config.Endpoint ?? "https://api.openai.com/v1", config.Key ?? "", defaultModel);
+                        services.AddOpenAiCompatibleClient(name, config.Endpoint ?? "https://api.openai.com/v1", config.Key ?? "", defaultModel, config.CustomHeaders);
                         break;
                     case "groq":
-                        services.AddOpenAiCompatibleClient(name, "https://api.groq.com/openai/v1", config.Key ?? "", defaultModel);
+                        services.AddOpenAiCompatibleClient(name, "https://api.groq.com/openai/v1", config.Key ?? "", defaultModel, config.CustomHeaders);
                         break;
                     case "cohere":
                         services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>
@@ -254,7 +254,7 @@ public static class InfrastructureExtensions
                     default:
                         if (!string.IsNullOrEmpty(config.Endpoint))
                         {
-                            services.AddOpenAiCompatibleClient(name, config.Endpoint, config.Key ?? "", defaultModel);
+                            services.AddOpenAiCompatibleClient(name, config.Endpoint, config.Key ?? "", defaultModel, config.CustomHeaders);
                         }
                         break;
                 }
