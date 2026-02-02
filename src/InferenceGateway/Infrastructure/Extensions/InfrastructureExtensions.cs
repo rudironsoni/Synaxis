@@ -146,6 +146,7 @@ public static class InfrastructureExtensions
         // 1.5 Register Security Services
         services.AddScoped<ITokenVault, AesGcmTokenVault>();
         services.AddSingleton<IApiKeyService, ApiKeyService>();
+        services.AddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IAuditService, AuditService>();
         services.AddSingleton<IJwtService, JwtService>();
 

@@ -9,9 +9,14 @@ COPY Directory.Packages.props .
 COPY src/Synaxis.WebApp/Synaxis.WebApp.csproj src/Synaxis.WebApp/
 RUN dotnet restore src/Synaxis.WebApp/Synaxis.WebApp.csproj
 
-COPY src/Synaxis.WebApp/ src/Synaxis.WebApp/
+COPY src/Synaxis.WebApp/ClientApp/ src/Synaxis.WebApp/ClientApp/
+COPY src/Synaxis.WebApp/Properties/ src/Synaxis.WebApp/Properties/
+COPY src/Synaxis.WebApp/Program.cs src/Synaxis.WebApp/Program.cs
+COPY src/Synaxis.WebApp/appsettings*.json src/Synaxis.WebApp/
+
 WORKDIR /src/src/Synaxis.WebApp
-RUN dotnet publish -c Release -o /app/publish
+RUN dotnet restore
+RUN dotnet publish -c Release -o /app/publish --no-restore
 
 # Stage 2: Runtime
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
