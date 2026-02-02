@@ -13,6 +13,7 @@ public class SmartRouter : ISmartRouter
     private readonly ICostService _costService;
     private readonly IHealthStore _healthStore;
     private readonly IQuotaTracker _quotaTracker;
+    private readonly IRoutingScoreCalculator _routingScoreCalculator;
     private readonly ILogger<SmartRouter> _logger;
 
     public SmartRouter(
@@ -20,12 +21,14 @@ public class SmartRouter : ISmartRouter
         ICostService costService,
         IHealthStore healthStore,
         IQuotaTracker quotaTracker,
+        IRoutingScoreCalculator routingScoreCalculator,
         ILogger<SmartRouter> logger)
     {
         _modelResolver = modelResolver;
         _costService = costService;
         _healthStore = healthStore;
         _quotaTracker = quotaTracker;
+        _routingScoreCalculator = routingScoreCalculator;
         _logger = logger;
     }
 
@@ -59,10 +62,17 @@ public class SmartRouter : ISmartRouter
               enriched.Add(new EnrichedCandidate(candidate, cost, resolution.CanonicalId.ModelPath));
         }
 
-        return enriched
-            .OrderByDescending(c => c.IsFree)
-            .ThenBy(c => c.CostPerToken)
-            .ThenBy(c => c.Config.Tier)
+        var scoredCandidates = new List<(EnrichedCandidate Candidate, double Score)>();
+        foreach (var candidate in enriched)
+        {
+            var score = _routingScoreCalculator.CalculateScore(candidate, tenantId: null, userId: null);
+            scoredCandidates.Add((candidate, score));
+            _logger.LogDebug("Provider '{ProviderKey}' routing score: {Score}", candidate.Key, score);
+        }
+
+        return scoredCandidates
+            .OrderByDescending(x => x.Score)
+            .Select(x => x.Candidate)
             .ToList();
     }
 }

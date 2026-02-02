@@ -1,18 +1,39 @@
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 
 namespace Synaxis.InferenceGateway.WebApi.Middleware;
 
+/// <summary>
+/// Middleware for adding security headers to all responses.
+/// </summary>
 public class SecurityHeadersMiddleware
 {
     private readonly RequestDelegate _next;
+    private readonly ILogger<SecurityHeadersMiddleware> _logger;
     private readonly bool _isDevelopment;
 
-    public SecurityHeadersMiddleware(RequestDelegate next, IWebHostEnvironment environment)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SecurityHeadersMiddleware"/> class.
+    /// </summary>
+    /// <param name="next">The next middleware in the pipeline.</param>
+    /// <param name="logger">The logger instance.</param>
+    /// <param name="environment">The web hosting environment.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="next"/> or <paramref name="logger"/> is null.</exception>
+    public SecurityHeadersMiddleware(
+        RequestDelegate next,
+        ILogger<SecurityHeadersMiddleware> logger,
+        IWebHostEnvironment environment)
     {
-        _next = next;
+        _next = next ?? throw new ArgumentNullException(nameof(next));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _isDevelopment = environment.IsDevelopment();
     }
 
+    /// <summary>
+    /// Processes the HTTP request and adds security headers to the response.
+    /// </summary>
+    /// <param name="context">The HTTP context for the current request.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     public async Task InvokeAsync(HttpContext context)
     {
         var response = context.Response;
@@ -42,6 +63,8 @@ public class SecurityHeadersMiddleware
                     "frame-ancestors 'none'; " +
                     "base-uri 'self'; " +
                     "form-action 'self';");
+
+                _logger.LogDebug("Security headers added to response for {Path}", context.Request.Path);
             }
 
             return Task.CompletedTask;
