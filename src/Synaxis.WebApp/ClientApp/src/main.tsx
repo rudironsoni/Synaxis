@@ -9,6 +9,13 @@ import HealthDashboard from './features/admin/HealthDashboard.tsx'
 import ProviderConfig from './features/admin/ProviderConfig.tsx'
 import AdminSettings from './features/admin/AdminSettings.tsx'
 import { AdminRoute } from './components/AdminRoute.tsx'
+import DashboardLayout from './features/dashboard/DashboardLayout.tsx'
+import DashboardOverview from './features/dashboard/DashboardOverview.tsx'
+import DashboardProviders from './features/dashboard/DashboardProviders.tsx'
+import DashboardAnalytics from './features/dashboard/DashboardAnalytics.tsx'
+import DashboardKeys from './features/dashboard/DashboardKeys.tsx'
+import DashboardModels from './features/dashboard/DashboardModels.tsx'
+import DashboardChat from './features/dashboard/DashboardChat.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -28,6 +35,14 @@ createRoot(document.getElementById('root')!).render(
           <Route path="health" element={<HealthDashboard />} />
           <Route path="providers" element={<ProviderConfig />} />
           <Route path="settings" element={<AdminSettings />} />
+        </Route>
+        <Route path="/dashboard" element={<DashboardLayout />}>
+          <Route index element={<DashboardOverview />} />
+          <Route path="providers" element={<DashboardProviders />} />
+          <Route path="analytics" element={<DashboardAnalytics />} />
+          <Route path="keys" element={<DashboardKeys />} />
+          <Route path="models" element={<DashboardModels />} />
+          <Route path="chat" element={<DashboardChat />} />
         </Route>
       </Routes>
     </BrowserRouter>

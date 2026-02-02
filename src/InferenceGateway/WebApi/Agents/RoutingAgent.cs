@@ -38,17 +38,18 @@ public class RoutingAgent : Microsoft.Agents.AI.AIAgent
         _logger = logger;
     }
 
-    protected override async Task<Microsoft.Agents.AI.AgentResponse> RunCoreAsync(
-        IEnumerable<ChatMessage> messages,
-        Microsoft.Agents.AI.AgentThread? thread = null,
-        Microsoft.Agents.AI.AgentRunOptions? options = null,
-        CancellationToken cancellationToken = default)
-    {
-        var httpContext = _httpContextAccessor?.HttpContext;
+     protected override async Task<Microsoft.Agents.AI.AgentResponse> RunCoreAsync(
+         IEnumerable<ChatMessage> messages,
+         Microsoft.Agents.AI.AgentThread? thread = null,
+         Microsoft.Agents.AI.AgentRunOptions? options = null,
+         CancellationToken cancellationToken = default)
+     {
+         var httpContext = _httpContextAccessor?.HttpContext;
 
-        // 1. Parse Input
-        var openReq = await OpenAIRequestParser.ParseAsync(httpContext, cancellationToken)
-                      ?? new OpenAIRequest { Model = "default" };
+         // 1. Parse Input (or use pre-parsed request from context)
+         var openReq = httpContext?.Items["ParsedOpenAIRequest"] as OpenAIRequest
+                       ?? await OpenAIRequestParser.ParseAsync(httpContext, cancellationToken)
+                       ?? new OpenAIRequest { Model = "default" };
 
         // 2. Map to Canonical
         var canonicalRequest = OpenAIRequestMapper.ToCanonicalRequest(openReq, messages);
@@ -94,17 +95,18 @@ public class RoutingAgent : Microsoft.Agents.AI.AIAgent
         return new Microsoft.Agents.AI.AgentResponse(agentMessage);
     }
 
-    protected override async IAsyncEnumerable<Microsoft.Agents.AI.AgentResponseUpdate> RunCoreStreamingAsync(
-        IEnumerable<ChatMessage> messages,
-        Microsoft.Agents.AI.AgentThread? thread = null,
-        Microsoft.Agents.AI.AgentRunOptions? options = null,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
-    {
-        var httpContext = _httpContextAccessor?.HttpContext;
+     protected override async IAsyncEnumerable<Microsoft.Agents.AI.AgentResponseUpdate> RunCoreStreamingAsync(
+         IEnumerable<ChatMessage> messages,
+         Microsoft.Agents.AI.AgentThread? thread = null,
+         Microsoft.Agents.AI.AgentRunOptions? options = null,
+         [EnumeratorCancellation] CancellationToken cancellationToken = default)
+     {
+         var httpContext = _httpContextAccessor?.HttpContext;
 
-        // 1. Parse Input
-        var openReq = await OpenAIRequestParser.ParseAsync(httpContext, cancellationToken)
-                      ?? new OpenAIRequest { Model = "default" };
+         // 1. Parse Input (or use pre-parsed request from context)
+         var openReq = httpContext?.Items["ParsedOpenAIRequest"] as OpenAIRequest
+                       ?? await OpenAIRequestParser.ParseAsync(httpContext, cancellationToken)
+                       ?? new OpenAIRequest { Model = "default" };
 
         // 2. Map to Canonical
         var canonicalRequest = OpenAIRequestMapper.ToCanonicalRequest(openReq, messages);

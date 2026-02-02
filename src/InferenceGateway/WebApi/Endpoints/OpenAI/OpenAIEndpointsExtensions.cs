@@ -11,6 +11,7 @@ using System.Text.Json;
 using System.Linq;
 using Microsoft.AspNetCore.Http;
 using Mediator;
+using Microsoft.Extensions.AI;
 using Synaxis.InferenceGateway.WebApi.Features.Chat.Commands;
 using Synaxis.InferenceGateway.WebApi.DTOs.OpenAi;
 
@@ -33,7 +34,7 @@ public static class OpenAIEndpointsExtensions
         group.MapPost("/v1/chat/completions", async (HttpContext context, IMediator mediator, CancellationToken ct) =>
         {
             // 1. Parse Request
-            var request = await OpenAIRequestParser.ParseAsync(context, ct);
+            var request = await OpenAIRequestParser.ParseAsync(context, ct, allowEmptyModel: false, allowEmptyMessages: false);
             if (request == null) return Results.BadRequest("Invalid request body");
 
             // 2. Map Messages
@@ -150,8 +151,12 @@ public static class OpenAIEndpointsExtensions
 // Responses
         group.MapPost("/v1/responses", async (HttpContext context, IMediator mediator, CancellationToken ct) =>
         {
-            var request = await OpenAIRequestParser.ParseAsync(context, ct);
+            var request = await OpenAIRequestParser.ParseAsync(context, ct, allowEmptyModel: true, allowEmptyMessages: true);
+            
             if (request == null) return Results.BadRequest("Invalid request body");
+            
+            // Store the parsed request in HTTP context so RoutingAgent doesn't re-parse
+            context.Items["ParsedOpenAIRequest"] = request;
 
             var messages = OpenAIRequestMapper.ToChatMessages(request);
 
@@ -164,7 +169,7 @@ public static class OpenAIEndpointsExtensions
                 var id = "resp_" + Guid.NewGuid().ToString("N");
                 var created = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
-                var stream = mediator.CreateStream(new ChatStreamCommand(request, messages), ct);
+                var stream = mediator.CreateStream(new ChatStreamCommand(request, messages ?? Enumerable.Empty<ChatMessage>()), ct);
 
                 await foreach (var update in stream)
                 {
@@ -199,7 +204,7 @@ public static class OpenAIEndpointsExtensions
             }
             else
             {
-                var response = await mediator.Send(new ChatCommand(request, messages), ct);
+                var response = await mediator.Send(new ChatCommand(request, messages ?? Enumerable.Empty<ChatMessage>()), ct);
 
                 var message = response.Messages.FirstOrDefault();
                 var content = message?.Text ?? "";

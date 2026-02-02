@@ -100,46 +100,48 @@ public class ApiEndpointErrorTests : IClassFixture<SynaxisWebApplicationFactory>
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
-    [Fact]
-    public async Task Post_ChatCompletions_MissingMessagesField_Returns200()
-    {
-        // Arrange
-        var request = new
-        {
-            model = "test-alias"
-        };
+     [Fact]
+     public async Task Post_ChatCompletions_MissingMessagesField_Returns200()
+     {
+         // Arrange
+         var request = new
+         {
+             model = "test-alias"
+         };
 
-        // Act
-        var response = await _client.PostAsJsonAsync("/openai/v1/chat/completions", request);
+         // Act
+         var response = await _client.PostAsJsonAsync("/openai/v1/chat/completions", request);
 
-        // Assert - Current behavior: Missing messages defaults to empty list and returns 200
-        // This test documents the current behavior, not the desired behavior
-        var content = await response.Content.ReadAsStringAsync();
-        _factory.OutputHelper?.WriteLine($"Response: {content}");
-        // The API returns 200 with empty messages (validation not implemented)
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-    }
+         // Assert - Updated behavior: Missing messages field returns 400 with validation error
+         // Validation is now implemented via [Required] attribute
+         var content = await response.Content.ReadAsStringAsync();
+         _factory.OutputHelper?.WriteLine($"Response: {content}");
+         // The API returns 400 with appropriate error message
+         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+         Assert.Contains("At least one message is required", content);
+     }
 
-    [Fact]
-    public async Task Post_ChatCompletions_EmptyMessagesArray_Returns200()
-    {
-        // Arrange
-        var request = new
-        {
-            model = "test-alias",
-            messages = Array.Empty<object>()
-        };
+     [Fact]
+     public async Task Post_ChatCompletions_EmptyMessagesArray_Returns200()
+     {
+         // Arrange
+         var request = new
+         {
+             model = "test-alias",
+             messages = Array.Empty<object>()
+         };
 
-        // Act
-        var response = await _client.PostAsJsonAsync("/openai/v1/chat/completions", request);
+         // Act
+         var response = await _client.PostAsJsonAsync("/openai/v1/chat/completions", request);
 
-        // Assert - Current behavior: Empty messages array returns 200
-        // This test documents the current behavior, not the desired behavior
-        var content = await response.Content.ReadAsStringAsync();
-        _factory.OutputHelper?.WriteLine($"Response: {content}");
-        // The API returns 200 with empty messages (validation not implemented)
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-    }
+         // Assert - Updated behavior: Empty messages array returns 400 with validation error
+         // Validation is now implemented via [MinLength(1)] attribute
+         var content = await response.Content.ReadAsStringAsync();
+         _factory.OutputHelper?.WriteLine($"Response: {content}");
+         // The API returns 400 with appropriate error message
+         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+         Assert.Contains("At least one message is required", content);
+     }
 
     [Fact]
     public async Task Post_ChatCompletions_InvalidMessageFormat_MissingRole_Returns400()
