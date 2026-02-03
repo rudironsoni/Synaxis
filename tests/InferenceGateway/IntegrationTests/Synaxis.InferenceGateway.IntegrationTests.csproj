@@ -16,8 +16,10 @@
     <PackageReference Include="Microsoft.Playwright" />
     <PackageReference Include="Moq" />
     <PackageReference Include="NSubstitute" />
+    <PackageReference Include="StackExchange.Redis" />
     <PackageReference Include="Testcontainers" />
     <PackageReference Include="Testcontainers.PostgreSql" />
+    <PackageReference Include="Testcontainers.Qdrant" />
     <PackageReference Include="Testcontainers.Redis" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" />
