@@ -166,4 +166,43 @@ public abstract class TestBase
             .ReturnsAsync((ModelCost?)null);
         return mock;
     }
+
+    /// <summary>
+    /// Creates a mock IEmbeddingProvider that returns test embeddings.
+    /// </summary>
+    protected Mock<IEmbeddingProvider> CreateMockEmbeddingProvider()
+    {
+        var mock = new Mock<IEmbeddingProvider>();
+        mock.Setup(x => x.GenerateEmbeddingAsync(
+                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(TestDataFactory.CreateTestEmbedding());
+        return mock;
+    }
+
+    /// <summary>
+    /// Creates a mock IQdrantClient for vector database operations.
+    /// </summary>
+    protected Mock<IQdrantClient> CreateMockQdrantClient()
+    {
+        var mock = new Mock<IQdrantClient>();
+        return mock;
+    }
+}
+
+/// <summary>
+/// Interface for embedding generation.
+/// This is a test stub - replace with actual implementation reference when available.
+/// </summary>
+public interface IEmbeddingProvider
+{
+    Task<float[]> GenerateEmbeddingAsync(string text, string model, CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// Interface for Qdrant vector database client.
+/// This is a test stub - replace with actual implementation reference when available.
+/// </summary>
+public interface IQdrantClient
+{
+    // Placeholder for Qdrant client methods
 }
