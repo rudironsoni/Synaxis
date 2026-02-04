@@ -19,10 +19,16 @@ token.json
 .vscode
 .vscode/
 .idea
+.vs/
+.run/
 *.swp
 *.swo
 *~
 .DS_Store
+
+# HTTP client files (REST client, may contain secrets)
+*.http
+*.rest
 
 # .NET build artifacts
 **/bin/
