@@ -18,6 +18,8 @@ using Synaxis.InferenceGateway.WebApi.Endpoints.Identity;
 using Synaxis.InferenceGateway.WebApi.Endpoints.Admin;
 using Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard;
 using Synaxis.InferenceGateway.WebApi.Hubs;
+using Synaxis.InferenceGateway.Application.RealTime;
+using Synaxis.InferenceGateway.Infrastructure.Security;
 using Quartz;
 using Synaxis.InferenceGateway.Infrastructure.Jobs;
 using Synaxis.InferenceGateway.Application.Routing;
@@ -127,6 +129,42 @@ builder.Services.AddQuartz(q =>
         .StartNow()
         .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromHours(1)).RepeatForever())
     );
+
+    // Health Monitoring - every 2 minutes
+    var healthJobKey = new JobKey("HealthMonitoringJob");
+    q.AddJob<HealthMonitoringAgent>(opts => opts.WithIdentity(healthJobKey));
+    q.AddTrigger(opts => opts
+        .ForJob(healthJobKey)
+        .StartNow()
+        .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromMinutes(2)).RepeatForever())
+    );
+
+    // Cost Optimization - every 15 minutes
+    var costJobKey = new JobKey("CostOptimizationJob");
+    q.AddJob<CostOptimizationAgent>(opts => opts.WithIdentity(costJobKey));
+    q.AddTrigger(opts => opts
+        .ForJob(costJobKey)
+        .StartNow()
+        .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromMinutes(15)).RepeatForever())
+    );
+
+    // Model Discovery - daily at 2 AM
+    var discoveryJobKey = new JobKey("ModelDiscoveryJob");
+    q.AddJob<ModelDiscoveryAgent>(opts => opts.WithIdentity(discoveryJobKey));
+    q.AddTrigger(opts => opts
+        .ForJob(discoveryJobKey)
+        .StartNow()
+        .WithCronSchedule("0 0 2 * * ?")
+    ); // 2 AM daily
+
+    // Security Audit - every 6 hours
+    var securityJobKey = new JobKey("SecurityAuditJob");
+    q.AddJob<SecurityAuditAgent>(opts => opts.WithIdentity(securityJobKey));
+    q.AddTrigger(opts => opts
+        .ForJob(securityJobKey)
+        .StartNow()
+        .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromHours(6)).RepeatForever())
+    );
 });
 
 // Add hosted service to run Quartz and wait for jobs to complete on shutdown
@@ -150,6 +188,17 @@ builder.Services.AddHealthChecks()
     .AddRedis(sp => sp.GetRequiredService<IConnectionMultiplexer>(), tags: new[] { "readiness" })
     .AddCheck<ConfigHealthCheck>("config", tags: new[] { "readiness" })
     .AddCheck<ProviderConnectivityHealthCheck>("providers", tags: new[] { "readiness" });
+
+// Register Agent Tools
+builder.Services.AddScoped<Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IProviderTool, Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderTool>();
+builder.Services.AddScoped<Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IAlertTool, Synaxis.InferenceGateway.Infrastructure.Agents.Tools.AlertTool>();
+builder.Services.AddScoped<Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IRoutingTool, Synaxis.InferenceGateway.Infrastructure.Agents.Tools.RoutingTool>();
+builder.Services.AddScoped<Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IHealthTool, Synaxis.InferenceGateway.Infrastructure.Agents.Tools.HealthTool>();
+builder.Services.AddScoped<Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IAuditTool, Synaxis.InferenceGateway.Infrastructure.Agents.Tools.AuditTool>();
+builder.Services.AddScoped<Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IAgentTools, Synaxis.InferenceGateway.Infrastructure.Agents.Tools.AgentTools>();
+
+// Register Notification Service
+builder.Services.AddScoped<Synaxis.InferenceGateway.Application.ControlPlane.INotificationService, Synaxis.InferenceGateway.Infrastructure.ControlPlane.NotificationService>();
 
 builder.Services.AddScoped<RoutingService>();
 builder.Services.AddScoped<RoutingAgent>();
@@ -204,12 +253,31 @@ builder.Services.AddAuthentication(x =>
         ValidIssuer = builder.Configuration["Synaxis:InferenceGateway:JwtIssuer"] ?? "Synaxis",
         ValidAudience = builder.Configuration["Synaxis:InferenceGateway:JwtAudience"] ?? "Synaxis"
     };
+    
+    // Enable JWT authentication for WebSocket connections (SignalR)
+    x.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+            
+            // If the request is for SignalR hub and token is present
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+            {
+                context.Token = accessToken;
+            }
+            
+            return Task.CompletedTask;
+        }
+    };
 });
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 
 builder.Services.AddSignalR();
+builder.Services.AddSingleton<IRealTimeNotifier, RealTimeNotifier>();
 
 builder.Services.AddScoped<IRoutingScoreCalculator, RoutingScoreCalculator>();
 builder.Services.AddScoped<IFallbackOrchestrator, FallbackOrchestrator>();
@@ -257,6 +325,27 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Validate security configuration at startup
+using (var scope = app.Services.CreateScope())
+{
+    var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<SecurityConfigurationValidator>>();
+    var securityValidator = new SecurityConfigurationValidator(configuration, logger, app.Environment.EnvironmentName);
+    var validationResult = securityValidator.Validate();
+    
+    if (!validationResult.IsValid)
+    {
+        Log.Fatal("Security configuration validation failed. Application cannot start.");
+        foreach (var error in validationResult.Errors)
+        {
+            Log.Fatal("Security Error: {Error}", error);
+        }
+        throw new InvalidOperationException(
+            $"Security configuration validation failed with {validationResult.Errors.Count} error(s). " +
+            "Please fix the security issues before starting the application.");
+    }
+}
 
 if (app.Environment.IsDevelopment())
 {
@@ -307,6 +396,7 @@ app.UseMiddleware<OpenAIMetadataMiddleware>();
     app.MapControllers();
 
     app.MapHub<ConfigurationHub>("/hubs/configuration");
+    app.MapHub<SynaxisHub>("/hubs/synaxis");
 
 // NOTE: Removed temporary debug endpoint that created AggregateException for testing.
 
