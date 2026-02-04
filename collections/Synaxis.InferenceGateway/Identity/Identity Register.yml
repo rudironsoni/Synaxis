@@ -8,17 +8,15 @@ http:
   headers:
     - name: Content-Type
       value: application/json
-    - name: Authorization
-      value: Bearer {{token}}
   body:
     type: json
     data: |-
       {
-        "email": "user@organization.com",
+        "email": "test-{{$timestamp}}@organization.com",
         "password": "SecurePass123!",
+        "firstName": "Test",
+        "lastName": "User",
         "organizationName": "My Organization"
       }
 auth:
-  mode: bearer
-  bearer:
-    token: "{{token}}"
+  mode: none

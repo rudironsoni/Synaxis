@@ -4,7 +4,7 @@ info:
   seq: 2
 http:
   method: POST
-  url: "{{baseUrl}}/auth/login"
+  url: "{{baseUrl}}/identity/login"
   headers:
     - name: Content-Type
       value: application/json

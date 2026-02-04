@@ -24,6 +24,9 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
 WORKDIR /app
 EXPOSE 54872
 
+# Install required libraries for Npgsql and internationalization
+RUN apk add --no-cache krb5-libs icu-libs
+
 # Set ASP.NET to listen on the correct port
 ENV ASPNETCORE_URLS=http://+:54872
 
@@ -32,8 +35,8 @@ RUN adduser -D -s /bin/sh appuser && chown -R appuser /app
 USER appuser
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:54872/health || exit 1
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD wget -qO- http://localhost:54872/health/liveness 2>/dev/null | grep -q 'healthy' || exit 1
 
 COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "Synaxis.InferenceGateway.WebApi.dll"]

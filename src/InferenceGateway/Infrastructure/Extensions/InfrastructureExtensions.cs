@@ -31,6 +31,8 @@ using Synaxis.InferenceGateway.Infrastructure.ChatClients.Strategies;
 using Synaxis.InferenceGateway.Application.ChatClients.Strategies;
 using StackExchange.Redis;
 using Microsoft.EntityFrameworkCore;
+using Synaxis.InferenceGateway.Application.Identity;
+using Synaxis.InferenceGateway.Infrastructure.Services;
 
 namespace Synaxis.InferenceGateway.Infrastructure.Extensions;
 
@@ -145,10 +147,11 @@ public static class InfrastructureExtensions
 
         // 1.5 Register Security Services
         services.AddScoped<ITokenVault, AesGcmTokenVault>();
-        services.AddSingleton<IApiKeyService, ApiKeyService>();
+        services.AddSingleton<IApiKeyService, Security.ApiKeyService>();
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IAuditService, AuditService>();
         services.AddSingleton<IJwtService, JwtService>();
+        services.AddScoped<IIdentityService, Services.IdentityService>();
 
         // 1.6 Register Routing Services
         services.AddScoped<ICostService, CostService>();

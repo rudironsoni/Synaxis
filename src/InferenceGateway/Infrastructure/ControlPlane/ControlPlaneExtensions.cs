@@ -25,6 +25,23 @@ public static class ControlPlaneExtensions
             }
         });
 
+        // Register SynaxisDbContext for Identity
+        services.AddDbContext<SynaxisDbContext>((sp, builder) =>
+        {
+            var config = sp.GetRequiredService<IConfiguration>();
+            var options = new ControlPlaneOptions();
+            config.GetSection("Synaxis:ControlPlane").Bind(options);
+
+            if (options.UseInMemory || string.IsNullOrWhiteSpace(options.ConnectionString))
+            {
+                builder.UseInMemoryDatabase("SynaxisIdentity");
+            }
+            else
+            {
+                builder.UseNpgsql(options.ConnectionString);
+            }
+        });
+
         services.AddScoped<IDeviationRegistry, DeviationRegistry>();
 
         return services;

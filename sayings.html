@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sayings | Synaxis</title>
+    <style>
+        /* Minimal, readable styling inspired by sive.rs */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Georgia, 'Times New Roman', serif;
+            font-size: 18px;
+            line-height: 1.7;
+            color: #222;
+            background: #fff;
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        a {
+            color: #0066cc;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* Header */
+        .site-header {
+            margin-bottom: 40px;
+        }
+
+        .site-header a {
+            color: #222;
+            font-weight: normal;
+        }
+
+        /* Main title */
+        h1 {
+            font-size: 2.2em;
+            font-weight: bold;
+            margin: 0 0 20px 0;
+            line-height: 1.2;
+        }
+
+        h2 {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin: 40px 0 15px 0;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+
+        h2:first-of-type {
+            border-top: none;
+            padding-top: 0;
+        }
+
+        p {
+            margin-bottom: 1.2em;
+        }
+
+        /* Table of contents */
+        .toc {
+            margin: 30px 0;
+            padding: 20px 0;
+            border-top: 1px solid #ddd;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .toc h3 {
+            font-size: 1em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .toc ol {
+            margin-left: 25px;
+        }
+
+        .toc li {
+            margin-bottom: 5px;
+        }
+
+        /* Lists */
+        ol, ul {
+            margin: 1em 0 1em 25px;
+        }
+
+        li {
+            margin-bottom: 0.5em;
+        }
+
+        /* Code and emphasis */
+        code {
+            font-family: 'Courier New', Courier, monospace;
+            background: #f4f4f4;
+            padding: 2px 6px;
+            font-size: 0.9em;
+        }
+
+        strong {
+            font-weight: bold;
+        }
+
+        em {
+            font-style: italic;
+        }
+
+        /* Blockquote */
+        blockquote {
+            margin: 1.5em 0;
+            padding-left: 20px;
+            border-left: 3px solid #ddd;
+            color: #555;
+            font-style: italic;
+        }
+
+        /* Horizontal rule */
+        hr {
+            border: none;
+            border-top: 1px solid #ddd;
+            margin: 40px 0;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            body {
+                font-size: 16px;
+                padding: 20px 15px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            h2 {
+                font-size: 1.2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <a href="/">Synaxis</a>
+    </header>
+
+    <h1>Sayings</h1>
+
+    <p>A collection of thoughts, principles, and reminders for building better systems and living with intention.</p>
+
+    <nav class="toc">
+        <h3>Contents:</h3>
+        <ol>
+            <li><a href="#building">On Building</a></li>
+            <li><a href="#simplicity">On Simplicity</a></li>
+            <li><a href="#focus">On Focus</a></li>
+            <li><a href="#systems">On Systems</a></li>
+            <li><a href="#learning">On Learning</a></li>
+            <li><a href="#independence">On Independence</a></li>
+        </ol>
+    </nav>
+
+    <h2 id="building">On Building</h2>
+
+    <p><strong>Start with the boring parts.</strong> The interesting problems will still be there once the foundation is solid. The unglamorous work of setting up builds, tests, and documentation is what lets you move fast later.</p>
+
+    <p><strong>Optimize for deletion.</strong> Every line of code is a liability. Write code that is easy to remove, not clever code that is hard to understand. The best code is often the code you don't write.</p>
+
+    <p><strong>Ship small, ship often.</strong> The gap between "working on it" and "in production" should be measured in hours, not weeks. Small changes are easier to reason about, easier to roll back, and faster to learn from.</p>
+
+    <h2 id="simplicity">On Simplicity</h2>
+
+    <p><strong>Complexity is the enemy.</strong> It hides bugs. It slows teams down. It makes systems fragile. Fight complexity at every turn. Simple is not the same as easy — simple is about clarity, about reducing the number of moving parts.</p>
+
+    <blockquote>
+        "Simplicity is the ultimate sophistication." — Leonardo da Vinci
+    </blockquote>
+
+    <p><strong>Don't confuse familiar with simple.</strong> Just because you've seen it before doesn't mean it's simple. Just because it's new doesn't mean it's complex. Judge ideas by their essence, not their novelty.</p>
+
+    <h2 id="focus">On Focus</h2>
+
+    <p><strong>Depth over breadth.</strong> It's better to do one thing exceptionally well than ten things adequately. Depth creates moats. Depth creates mastery. Depth is rare because it requires saying no to almost everything.</p>
+
+    <p><strong>Protect your attention.</strong> It's your most limited resource. The cost of context switching is higher than you think. Guard your deep work time fiercely. Most "urgent" things can wait.</p>
+
+    <p><strong>Finish what you start.</strong> Unfinished projects drain energy. Better to complete one thing than to have ten half-built things haunting your mental space. The last 10% often takes 90% of the effort — that's where the value is.</p>
+
+    <h2 id="systems">On Systems</h2>
+
+    <p><strong>Good systems run themselves.</strong> If it requires constant manual intervention, it's not a system — it's a job. Build things that work without you. Document so others don't need to ask. Automate what repeats.</p>
+
+    <p><strong>Design for failure.</strong> Everything breaks eventually. The question is not if, but when. Build in redundancy. Have a plan for when things go wrong. Test your recovery procedures before you need them.</p>
+
+    <p><strong>Measure what matters.</strong> Not all metrics are useful. Vanity metrics feel good but don't guide decisions. Find the few numbers that actually correlate with success and watch them carefully.</p>
+
+    <h2 id="learning">On Learning</h2>
+
+    <p><strong>Learn in public.</strong> Teaching is the best way to learn. Write about what you're learning. Share your mistakes. The act of explaining reveals gaps in your understanding you'd never find otherwise.</p>
+
+    <p><strong>Embrace being a beginner.</strong> The expert was once a beginner. The beginner mindset — curious, open, willing to look foolish — is a superpower. Don't let expertise calcify into closed-mindedness.</p>
+
+    <p><strong>Read the source.</strong> Documentation lies. Examples get outdated. The source code is the truth. Get comfortable reading it. Get comfortable debugging deep into layers you didn't write.</p>
+
+    <h2 id="independence">On Independence</h2>
+
+    <p><strong>Own your dependencies.</strong> Every external service is a liability. Every library is a commitment. Choose carefully what you depend on. Know what you'd do if any piece disappeared tomorrow.</p>
+
+    <p><strong>Self-reliance is freedom.</strong> The ability to build, deploy, and maintain your own systems is liberating. You don't need permission. You don't need to wait. You can just do it.</p>
+
+    <p><strong>Tech independence is possible.</strong> You can run your own services. You can own your data. You can build things that last. It takes effort, but the alternative is renting your digital life from companies that may not have your interests at heart.</p>
+
+    <hr>
+
+    <footer>
+        <p>Last updated: February 2026</p>
+        <p><a href="/">← Back to Synaxis</a></p>
+    </footer>
+</body>
+</html>

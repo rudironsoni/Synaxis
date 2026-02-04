@@ -7,6 +7,8 @@ using Synaxis.InferenceGateway.Application.Extensions;
 using Synaxis.InferenceGateway.Application.Configuration;
 using Synaxis.InferenceGateway.Infrastructure.Extensions;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
+using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.Agents.AI.Hosting.OpenAI;
 using Microsoft.AspNetCore.OpenApi;
@@ -100,6 +102,19 @@ builder.Services.AddControlPlane(builder.Configuration);
 builder.Services.AddSynaxisInfrastructure(builder.Configuration);
 builder.Services.AddSynaxisApplication(builder.Configuration);
 builder.Services.AddOpenApi();
+
+// Add ASP.NET Core Identity
+builder.Services.AddIdentity<SynaxisUser, IdentityRole<Guid>>(options =>
+{
+    options.Password.RequireDigit = true;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireNonAlphanumeric = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequiredLength = 8;
+    options.User.RequireUniqueEmail = true;
+})
+.AddEntityFrameworkStores<ControlPlaneDbContext>()
+.AddDefaultTokenProviders();
 
 // Quartz.NET - schedule periodic jobs
 builder.Services.AddQuartz(q =>
