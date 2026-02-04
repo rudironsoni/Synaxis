@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
+using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit;
 
 namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 
@@ -156,7 +157,7 @@ public sealed class ControlPlaneDbContext : DbContext
         {
             entity.HasKey(a => a.Id);
             entity.Property(a => a.Action).HasMaxLength(200).IsRequired();
-            entity.Property(a => a.PayloadJson).HasColumnType("jsonb");
+            entity.Property(a => a.NewValues).HasColumnType("jsonb");
         });
 
         modelBuilder.Entity<GlobalModel>(entity =>
