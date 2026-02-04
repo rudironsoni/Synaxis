@@ -41,7 +41,7 @@ public class HealthMonitoringAgent : IJob
         {
             // Get all organizations and their enabled providers
             var orgProviders = await db.Database.SqlQuery<OrgProviderDto>(
-                $"SELECT \"Id\", \"OrganizationId\", \"IsEnabled\", \"HealthCheckEnabled\" FROM operations.\"OrganizationProvider\" WHERE \"IsEnabled\" = true AND \"HealthCheckEnabled\" = true"
+                $"SELECT \"Id\", \"OrganizationId\", \"IsEnabled\", \"HealthCheckEnabled\" FROM operations.\"OrganizationProviders\" WHERE \"IsEnabled\" = true AND \"HealthCheckEnabled\" = true"
             ).ToListAsync(context.CancellationToken);
 
             _logger.LogInformation("[HealthMonitoring][{CorrelationId}] Checking {Count} providers", correlationId, orgProviders.Count);

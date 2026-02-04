@@ -4,7 +4,7 @@ info:
   seq: 1
 http:
   method: POST
-  url: "{{baseUrl}}/auth/register"
+  url: "{{baseUrl}}/identity/register"
   headers:
     - name: Content-Type
       value: application/json
@@ -12,8 +12,11 @@ http:
     type: json
     data: |-
       {
-        "email": "user@example.com",
-        "password": "SecurePassword123!"
+        "email": "test-{{$timestamp}}@example.com",
+        "password": "SecurePassword123!",
+        "firstName": "Test",
+        "lastName": "User",
+        "organizationName": "Test Organization"
       }
 auth:
   mode: none

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keyboard Todo</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⌨️ Keyboard Todo</h1>
+            <p class="subtitle">Pure keyboard navigation. Press <kbd>?</kbd> for help.</p>
+        </header>
+
+        <div class="input-section">
+            <input 
+                type="text" 
+                id="taskInput" 
+                placeholder="Type a task and press Enter..." 
+                autocomplete="off"
+            />
+            <div class="input-hint">Press <kbd>Enter</kbd> to add</div>
+        </div>
+
+        <div class="filters" role="tablist" aria-label="Task filters">
+            <button class="filter-btn active" data-filter="all" role="tab" aria-selected="true" tabindex="0">
+                <span class="key-hint">1</span> All
+            </button>
+            <button class="filter-btn" data-filter="active" role="tab" aria-selected="false" tabindex="-1">
+                <span class="key-hint">2</span> Active
+            </button>
+            <button class="filter-btn" data-filter="completed" role="tab" aria-selected="false" tabindex="-1">
+                <span class="key-hint">3</span> Completed
+            </button>
+        </div>
+
+        <div class="task-stats">
+            <span id="taskCount">0 items</span>
+            <button id="clearCompleted" class="clear-btn hidden">
+                Clear completed (<span id="completedCount">0</span>)
+            </button>
+        </div>
+
+        <ul id="taskList" class="task-list" role="listbox" aria-label="Tasks">
+            <!-- Tasks will be inserted here -->
+        </ul>
+
+        <div class="empty-state" id="emptyState">
+            <div class="empty-icon">📝</div>
+            <p>No tasks yet. Press <kbd>/</kbd> to focus input and add one!</p>
+        </div>
+
+        <div class="keyboard-help" id="keyboardHelp">
+            <h3>Keyboard Shortcuts</h3>
+            <div class="shortcuts-grid">
+                <div class="shortcut"><kbd>/</kbd> <span>Focus input</span></div>
+                <div class="shortcut"><kbd>↑</kbd><kbd>↓</kbd> <span>Navigate tasks</span></div>
+                <div class="shortcut"><kbd>Enter</kbd> <span>Toggle complete / Add task</span></div>
+                <div class="shortcut"><kbd>Space</kbd> <span>Toggle complete</span></div>
+                <div class="shortcut"><kbd>D</kbd> or <kbd>Delete</kbd> <span>Delete task</span></div>
+                <div class="shortcut"><kbd>E</kbd> <span>Edit task</span></div>
+                <div class="shortcut"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> <span>Filter All/Active/Completed</span></div>
+                <div class="shortcut"><kbd>Escape</kbd> <span>Cancel / Close help</span></div>
+                <div class="shortcut"><kbd>?</kbd> <span>Toggle this help</span></div>
+            </div>
+            <button class="close-help" id="closeHelp">Close (Esc)</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

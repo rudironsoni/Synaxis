@@ -113,20 +113,17 @@ public class IdentityService : IIdentityService
                 return result;
             }
 
-            // Generate slug if not provided
+            // Generate unique slug
             var slug = request.OrganizationSlug ?? 
                        GenerateSlug(request.OrganizationName);
-
-            // Check if organization slug exists
-            var existingOrg = await _context.Organizations
-                .Where(o => o.Slug == slug)
-                .FirstOrDefaultAsync(cancellationToken);
-
-            if (existingOrg != null)
+            
+            // Ensure slug is unique by appending a number if needed
+            var originalSlug = slug;
+            var counter = 1;
+            while (await _context.Organizations.AnyAsync(o => o.Slug == slug, cancellationToken))
             {
-                result.Errors.Add("Organization with this slug already exists.");
-                await transaction.RollbackAsync(cancellationToken);
-                return result;
+                slug = $"{originalSlug}-{counter}";
+                counter++;
             }
 
             // Create organization

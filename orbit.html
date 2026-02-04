@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orbit - Decrypt the Alien Signal</title>
+    <link rel="stylesheet" href="orbit.css">
+</head>
+<body>
+    <div class="orbit-container">
+        <header class="orbit-header">
+            <h1 class="glitch" data-text="ORBIT">ORBIT</h1>
+            <p class="tagline">Decrypt the Alien Signal</p>
+        </header>
+
+        <main class="game-area">
+            <!-- Signal Status -->
+            <div class="signal-status">
+                <div class="signal-indicator" id="signalIndicator">
+                    <span class="pulse"></span>
+                    <span class="status-text">Signal Detected</span>
+                </div>
+                <div class="attempts-counter">
+                    Attempts: <span id="attemptsLeft">8</span>/8
+                </div>
+            </div>
+
+            <!-- Secret Code Display (hidden until game over) -->
+            <div class="secret-code hidden" id="secretCode">
+                <p>The Signal:</p>
+                <div class="code-slots" id="codeSlots"></div>
+            </div>
+
+            <!-- Game Board -->
+            <div class="game-board" id="gameBoard">
+                <!-- Attempt rows will be generated here -->
+            </div>
+
+            <!-- Current Prediction -->
+            <div class="prediction-area" id="predictionArea">
+                <p>Your Prediction:</p>
+                <div class="prediction-slots" id="predictionSlots">
+                    <div class="slot" data-index="0"></div>
+                    <div class="slot" data-index="1"></div>
+                    <div class="slot" data-index="2"></div>
+                    <div class="slot" data-index="3"></div>
+                </div>
+                <button class="submit-btn" id="submitBtn" disabled>Transmit</button>
+            </div>
+
+            <!-- Color Palette -->
+            <div class="color-palette">
+                <p>Select Colors:</p>
+                <div class="colors">
+                    <button class="color-btn red" data-color="red"></button>
+                    <button class="color-btn blue" data-color="blue"></button>
+                    <button class="color-btn green" data-color="green"></button>
+                    <button class="color-btn yellow" data-color="yellow"></button>
+                    <button class="color-btn purple" data-color="purple"></button>
+                    <button class="color-btn cyan" data-color="cyan"></button>
+                </div>
+            </div>
+
+            <!-- Feedback Messages -->
+            <div class="feedback" id="feedback"></div>
+
+            <!-- Legend -->
+            <div class="legend">
+                <div class="legend-item">
+                    <span class="peg correct"></span>
+                    <span>Correct color & position</span>
+                </div>
+                <div class="legend-item">
+                    <span class="peg partial"></span>
+                    <span>Correct color, wrong position</span>
+                </div>
+            </div>
+
+            <!-- Game Over Overlay -->
+            <div class="game-overlay hidden" id="gameOverlay">
+                <div class="overlay-content">
+                    <h2 id="gameResult"></h2>
+                    <p id="gameMessage"></p>
+                    <button class="restart-btn" id="restartBtn">New Signal</button>
+                </div>
+            </div>
+        </main>
+
+        <footer class="orbit-footer">
+            <p>Decode the sequence to establish contact</p>
+        </footer>
+    </div>
+
+    <script src="orbit.js"></script>
+</body>
+</html>

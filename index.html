@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Synaxis | Excellence in Athens</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header" id="header">
+        <div class="header-container">
+            <a href="#" class="logo">
+                <span class="logo-icon">
+                    <i class="fas fa-columns"></i>
+                </span>
+                <span class="logo-text">Synaxis</span>
+            </a>
+            
+            <nav class="nav" id="nav">
+                <ul class="nav-list">
+                    <li><a href="#home" class="nav-link active">Home</a></li>
+                    <li><a href="#about" class="nav-link">About</a></li>
+                    <li><a href="#team" class="nav-link">Team</a></li>
+                    <li><a href="#contact" class="nav-link">Contact</a></li>
+                </ul>
+            </nav>
+            
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+                <span class="hamburger"></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Hero Slider Section -->
+    <section class="hero" id="home">
+        <div class="slider-container">
+            <div class="slider" id="slider">
+                <!-- Slide 1 -->
+                <div class="slide active">
+                    <div class="slide-image">
+                        <img src="https://images.unsplash.com/photo-1555993539-1732b0258235?w=1920&q=80" alt="Athens Acropolis">
+                        <div class="slide-overlay"></div>
+                    </div>
+                    <div class="slide-content">
+                        <span class="slide-subtitle">Welcome to Synaxis</span>
+                        <h1 class="slide-title">Excellence Rooted in Heritage</h1>
+                        <p class="slide-description">Where ancient wisdom meets modern innovation in the heart of Athens</p>
+                        <a href="#about" class="btn btn-primary">Discover More</a>
+                    </div>
+                </div>
+                
+                <!-- Slide 2 -->
+                <div class="slide">
+                    <div class="slide-image">
+                        <img src="https://images.unsplash.com/photo-1516483638261-f4dbaf036963?w=1920&q=80" alt="Greek coastline">
+                        <div class="slide-overlay"></div>
+                    </div>
+                    <div class="slide-content">
+                        <span class="slide-subtitle">Our Vision</span>
+                        <h1 class="slide-title">Connecting Business & Culture</h1>
+                        <p class="slide-description">Building bridges between tradition and progress</p>
+                        <a href="#team" class="btn btn-primary">Meet Our Team</a>
+                    </div>
+                </div>
+                
+                <!-- Slide 3 -->
+                <div class="slide">
+                    <div class="slide-image">
+                        <img src="https://images.unsplash.com/photo-1603565816030-6b389eeb23cb?w=1920&q=80" alt="Modern Athens">
+                        <div class="slide-overlay"></div>
+                    </div>
+                    <div class="slide-content">
+                        <span class="slide-subtitle">Get in Touch</span>
+                        <h1 class="slide-title">Let's Create Together</h1>
+                        <p class="slide-description">Your vision, our expertise</p>
+                        <a href="#contact" class="btn btn-primary">Contact Us</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Slider Controls -->
+            <button class="slider-control prev" id="prevSlide" aria-label="Previous slide">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="slider-control next" id="nextSlide" aria-label="Next slide">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+            
+            <!-- Thumbnail Navigation -->
+            <div class="slider-thumbnails" id="sliderThumbnails">
+                <button class="thumbnail active" data-slide="0">
+                    <img src="https://images.unsplash.com/photo-1555993539-1732b0258235?w=200&q=80" alt="Thumbnail 1">
+                </button>
+                <button class="thumbnail" data-slide="1">
+                    <img src="https://images.unsplash.com/photo-1516483638261-f4dbaf036963?w=200&q=80" alt="Thumbnail 2">
+                </button>
+                <button class="thumbnail" data-slide="2">
+                    <img src="https://images.unsplash.com/photo-1603565816030-6b389eeb23cb?w=200&q=80" alt="Thumbnail 3">
+                </button>
+            </div>
+            
+            <!-- Progress Bar -->
+            <div class="slider-progress">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about" id="about">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-subtitle">About Us</span>
+                <h2 class="section-title">Our Story</h2>
+                <div class="section-line"></div>
+            </div>
+            
+            <div class="about-content">
+                <p class="about-text">
+                    Synaxis embodies the timeless spirit of Athens — a city where ancient wisdom and contemporary vision converge. 
+                    Founded with a commitment to excellence, we draw inspiration from Greece's rich heritage of philosophy, 
+                    art, and commerce. Our name, derived from the Greek word for "gathering" or "assembly," reflects our 
+                    dedication to bringing together exceptional talent, innovative ideas, and meaningful partnerships.
+                </p>
+                <p class="about-text">
+                    Located in the vibrant heart of Athens, we serve as a bridge between tradition and innovation, 
+                    offering world-class services that honor the past while embracing the future. Our team of dedicated 
+                    professionals combines deep local expertise with global perspectives to deliver results that exceed expectations.
+                </p>
+            </div>
+            
+            <div class="about-grid">
+                <div class="about-card">
+                    <div class="about-card-image">
+                        <img src="https://images.unsplash.com/photo-1507499739999-097706ad8914?w=600&q=80" alt="Parthenon">
+                        <div class="about-card-overlay">
+                            <span class="about-card-caption">Heritage</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="about-card">
+                    <div class="about-card-image">
+                        <img src="https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=600&q=80" alt="Santorini">
+                        <div class="about-card-overlay">
+                            <span class="about-card-caption">Vision</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="about-card">
+                    <div class="about-card-image">
+                        <img src="https://images.unsplash.com/photo-1533105079780-92b9be482077?w=600&q=80" alt="Greek architecture">
+                        <div class="about-card-overlay">
+                            <span class="about-card-caption">Excellence</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Team Section -->
+    <section class="team" id="team">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-subtitle">Our Team</span>
+                <h2 class="section-title">Meet the Experts</h2>
+                <div class="section-line"></div>
+            </div>
+            
+            <div class="team-grid">
+                <div class="team-card">
+                    <div class="team-card-image">
+                        <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&q=80" alt="Dimitrios Papadopoulos">
+                        <div class="team-card-social">
+                            <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                            <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                            <a href="#" aria-label="Email"><i class="fas fa-envelope"></i></a>
+                        </div>
+                    </div>
+                    <div class="team-card-info">
+                        <h3 class="team-card-name">Dimitrios Papadopoulos</h3>
+                        <span class="team-card-title">Founder & CEO</span>
+                        <p class="team-card-bio">With over 20 years of experience in strategic leadership, Dimitrios founded Synaxis with a vision to bridge traditional values with modern innovation.</p>
+                    </div>
+                </div>
+                
+                <div class="team-card">
+                    <div class="team-card-image">
+                        <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&q=80" alt="Elena Christodoulou">
+                        <div class="team-card-social">
+                            <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                            <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                            <a href="#" aria-label="Email"><i class="fas fa-envelope"></i></a>
+                        </div>
+                    </div>
+                    <div class="team-card-info">
+                        <h3 class="team-card-name">Elena Christodoulou</h3>
+                        <span class="team-card-title">Creative Director</span>
+                        <p class="team-card-bio">Elena brings a unique blend of artistic vision and strategic thinking to every project, ensuring creative excellence across all initiatives.</p>
+                    </div>
+                </div>
+                
+                <div class="team-card">
+                    <div class="team-card-image">
+                        <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&q=80" alt="Nikolas Ioannidis">
+                        <div class="team-card-social">
+                            <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                            <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                            <a href="#" aria-label="Email"><i class="fas fa-envelope"></i></a>
+                        </div>
+                    </div>
+                    <div class="team-card-info">
+                        <h3 class="team-card-name">Nikolas Ioannidis</h3>
+                        <span class="team-card-title">Operations Manager</span>
+                        <p class="team-card-bio">Nikolas ensures seamless execution of all operations, combining meticulous attention to detail with a passion for efficiency and growth.</p>
+                    </div>
+                </div>
+                
+                <div class="team-card">
+                    <div class="team-card-image">
+                        <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&q=80" alt="Maria Georgiou">
+                        <div class="team-card-social">
+                            <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                            <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                            <a href="#" aria-label="Email"><i class="fas fa-envelope"></i></a>
+                        </div>
+                    </div>
+                    <div class="team-card-info">
+                        <h3 class="team-card-name">Maria Georgiou</h3>
+                        <span class="team-card-title">Client Relations</span>
+                        <p class="team-card-bio">Maria's warm approach and dedication to client satisfaction make every interaction with Synaxis a memorable and rewarding experience.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="contact" id="contact">
+        <div class="contact-map">
+            <iframe 
+                src="https://www.openstreetmap.org/export/embed.html?bbox=23.725%2C37.975%2C23.735%2C37.985&layer=mapnik&marker=37.9795%2C23.73" 
+                width="100%" 
+                height="100%" 
+                style="border:0;" 
+                allowfullscreen="" 
+                loading="lazy" 
+                referrerpolicy="no-referrer-when-downgrade"
+                title="Synaxis Location in Athens">
+            </iframe>
+        </div>
+        
+        <div class="container">
+            <div class="contact-wrapper">
+                <div class="contact-info">
+                    <div class="section-header">
+                        <span class="section-subtitle">Get in Touch</span>
+                        <h2 class="section-title">Contact Us</h2>
+                        <div class="section-line"></div>
+                    </div>
+                    
+                    <p class="contact-description">
+                        We'd love to hear from you. Reach out to discuss how we can work together to achieve your goals.
+                    </p>
+                    
+                    <div class="contact-details">
+                        <div class="contact-item">
+                            <div class="contact-icon">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div class="contact-text">
+                                <h4>Address</h4>
+                                <p>15 Plateia Syntagmatos<br>Athens 105 57, Greece</p>
+                            </div>
+                        </div>
+                        
+                        <div class="contact-item">
+                            <div class="contact-icon">
+                                <i class="fas fa-phone"></i>
+                            </div>
+                            <div class="contact-text">
+                                <h4>Phone</h4>
+                                <p><a href="tel:+302101234567">+30 210 123 4567</a></p>
+                            </div>
+                        </div>
+                        
+                        <div class="contact-item">
+                            <div class="contact-icon">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <div class="contact-text">
+                                <h4>Email</h4>
+                                <p><a href="mailto:info@synaxis.gr">info@synaxis.gr</a></p>
+                            </div>
+                        </div>
+                        
+                        <div class="contact-item">
+                            <div class="contact-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="contact-text">
+                                <h4>Business Hours</h4>
+                                <p>Mon - Fri: 9:00 AM - 6:00 PM<br>Sat - Sun: Closed</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="contact-form-wrapper">
+                    <form class="contact-form" id="contactForm" novalidate>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="name">Full Name *</label>
+                                <input type="text" id="name" name="name" required>
+                                <span class="form-error" id="nameError"></span>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="email">Email Address *</label>
+                                <input type="email" id="email" name="email" required>
+                                <span class="form-error" id="emailError"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="phone">Phone Number</label>
+                                <input type="tel" id="phone" name="phone">
+                                <span class="form-error" id="phoneError"></span>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="subject">Subject *</label>
+                                <input type="text" id="subject" name="subject" required>
+                                <span class="form-error" id="subjectError"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="message">Message *</label>
+                            <textarea id="message" name="message" rows="5" required></textarea>
+                            <span class="form-error" id="messageError"></span>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-full">
+                            <span>Send Message</span>
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                        
+                        <div class="form-success" id="formSuccess">
+                            <i class="fas fa-check-circle"></i>
+                            <p>Thank you for your message! We'll get back to you soon.</p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-top">
+            <div class="container">
+                <div class="footer-grid">
+                    <div class="footer-brand">
+                        <a href="#" class="footer-logo">
+                            <i class="fas fa-columns"></i>
+                            <span>Synaxis</span>
+                        </a>
+                        <p class="footer-tagline">Where ancient wisdom meets modern innovation in the heart of Athens.</p>
+                        <div class="footer-social">
+                            <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                            <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                            <a href="#" aria-label="Twitter"><i class="fab fa-x-twitter"></i></a>
+                            <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                        </div>
+                    </div>
+                    
+                    <div class="footer-links">
+                        <h4>Quick Links</h4>
+                        <ul>
+                            <li><a href="#home">Home</a></li>
+                            <li><a href="#about">About Us</a></li>
+                            <li><a href="#team">Our Team</a></li>
+                            <li><a href="#contact">Contact</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="footer-links">
+                        <h4>Services</h4>
+                        <ul>
+                            <li><a href="#">Consulting</a></li>
+                            <li><a href="#">Strategy</a></li>
+                            <li><a href="#">Development</a></li>
+                            <li><a href="#">Support</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="footer-contact">
+                        <h4>Contact Info</h4>
+                        <ul>
+                            <li><i class="fas fa-map-marker-alt"></i> 15 Plateia Syntagmatos, Athens</li>
+                            <li><i class="fas fa-phone"></i> +30 210 123 4567</li>
+                            <li><i class="fas fa-envelope"></i> info@synaxis.gr</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <div class="container">
+                <p>&copy; 2026 Synaxis. All rights reserved.</p>
+                <div class="footer-legal">
+                    <a href="#">Privacy Policy</a>
+                    <span class="separator">|</span>
+                    <a href="#">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <button class="back-to-top" id="backToTop" aria-label="Back to top">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <!-- JavaScript -->
+    <script src="app.js"></script>
+</body>
+</html>
