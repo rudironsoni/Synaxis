@@ -130,7 +130,7 @@ public class IdentityServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task AssignUserToOrganizationAsync_WithValidData_CreatesM Membership()
+    public async Task AssignUserToOrganizationAsync_WithValidData_CreatesMembership()
     {
         // Arrange
         var userId = Guid.NewGuid();

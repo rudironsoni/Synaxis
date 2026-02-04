@@ -41,10 +41,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             var logs = await dbContext.AuditLogs.ToListAsync();
             Assert.Single(logs);
             var log = logs[0];
-            Assert.Equal(tenantId, log.TenantId);
+            Assert.Equal(tenantId, log.OrganizationId);
             Assert.Equal(userId, log.UserId);
             Assert.Equal(action, log.Action);
-            Assert.NotNull(log.PayloadJson);
+            Assert.NotNull(log.NewValues);
         }
 
         [Fact]
@@ -68,13 +68,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             var log = logs[0];
             
             Assert.NotEqual(Guid.Empty, log.Id);
-            Assert.Equal(tenantId, log.TenantId);
+            Assert.Equal(tenantId, log.OrganizationId);
             Assert.Equal(userId, log.UserId);
             Assert.Equal(action, log.Action);
-            Assert.NotNull(log.PayloadJson);
+            Assert.NotNull(log.NewValues);
             
             // Verify payload was serialized correctly
-            var deserializedPayload = JsonSerializer.Deserialize<JsonElement>(log.PayloadJson!);
+            var deserializedPayload = JsonSerializer.Deserialize<JsonElement>(log.NewValues!);
             Assert.Equal("Value1", deserializedPayload.GetProperty("Property1").GetString());
             Assert.Equal(123, deserializedPayload.GetProperty("Property2").GetInt32());
             
@@ -102,7 +102,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             var logs = await dbContext.AuditLogs.ToListAsync();
             Assert.Single(logs);
             var log = logs[0];
-            Assert.Null(log.PayloadJson);
+            Assert.Null(log.NewValues);
         }
 
         [Fact]

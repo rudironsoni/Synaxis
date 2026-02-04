@@ -29,5 +29,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\InferenceGateway\Infrastructure\Synaxis.InferenceGateway.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\src\InferenceGateway\WebApi\Synaxis.InferenceGateway.WebApi.csproj" />
   </ItemGroup>
 </Project>

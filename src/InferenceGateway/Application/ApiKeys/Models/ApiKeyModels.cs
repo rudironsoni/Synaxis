@@ -34,6 +34,11 @@ public class GenerateApiKeyRequest
     /// Gets or sets the rate limit in tokens per minute (optional).
     /// </summary>
     public int? RateLimitTpm { get; set; }
+
+    /// <summary>
+    /// Gets or sets the user ID who created this API key (optional).
+    /// </summary>
+    public Guid? CreatedBy { get; set; }
 }
 
 /// <summary>
@@ -101,6 +106,16 @@ public class ApiKeyValidationResult
     /// Gets or sets the scopes if valid.
     /// </summary>
     public string[] Scopes { get; set; } = Array.Empty<string>();
+
+    /// <summary>
+    /// Gets or sets the rate limit in requests per minute (optional).
+    /// </summary>
+    public int? RateLimitRpm { get; set; }
+
+    /// <summary>
+    /// Gets or sets the rate limit in tokens per minute (optional).
+    /// </summary>
+    public int? RateLimitTpm { get; set; }
 
     /// <summary>
     /// Gets or sets the error message if invalid.

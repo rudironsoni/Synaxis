@@ -91,8 +91,8 @@ public class ConfigurationResolver : IConfigurationResolver
                     s => s.OrganizationId == organizationId.Value,
                     cancellationToken);
 
-            if (orgSettings?.DefaultRateLimitRpm.HasValue == true || 
-                orgSettings?.DefaultRateLimitTpm.HasValue == true)
+            if (orgSettings?.DefaultRateLimitRpm > 0 || 
+                orgSettings?.DefaultRateLimitTpm > 0)
             {
                 return new RateLimitConfiguration
                 {
