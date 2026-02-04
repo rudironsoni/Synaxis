@@ -44,23 +44,6 @@ services:
     networks:
       - synaxis-network
 
-  webapp:
-    image: synaxis/webapp:latest
-    restart: unless-stopped
-    build:
-      context: .
-      dockerfile: src/Synaxis.WebApp/Dockerfile
-    ports:
-      - "5002:8080"
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: http://+:8080
-      GatewayUrl: http://inference-gateway:8080
-    depends_on:
-      - inference-gateway
-    networks:
-      - synaxis-network
-
   postgres:
     image: postgres:16
     restart: unless-stopped
