@@ -1,0 +1,4 @@
+folder:
+  name: Identity
+  info:
+    description: Identity management endpoints for user profile and organization operations

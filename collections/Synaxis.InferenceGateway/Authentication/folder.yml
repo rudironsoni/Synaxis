@@ -1,0 +1,4 @@
+folder:
+  name: Authentication
+  info:
+    description: Authentication endpoints for user registration and login

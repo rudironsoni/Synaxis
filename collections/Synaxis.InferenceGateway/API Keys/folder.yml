@@ -1,0 +1,4 @@
+folder:
+  name: API Keys
+  info:
+    description: API key management endpoints for creating, listing, and revoking API keys

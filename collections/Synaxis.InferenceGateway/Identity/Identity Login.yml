@@ -1,0 +1,19 @@
+info:
+  name: Identity Login
+  type: http
+  seq: 2
+http:
+  method: POST
+  url: "{{baseUrl}}/identity/login"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "email": "user@organization.com",
+        "password": "SecurePass123!"
+      }
+auth:
+  mode: none

@@ -1,0 +1,4 @@
+collection:
+  name: Synaxis Inference Gateway API
+  info:
+    description: Comprehensive API collection for testing all Synaxis Inference Gateway endpoints with multiple examples showing parameter permutations

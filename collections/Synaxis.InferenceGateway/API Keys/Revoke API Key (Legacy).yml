@@ -1,0 +1,22 @@
+info:
+  name: Revoke API Key (Legacy)
+  type: http
+  seq: 5
+http:
+  method: DELETE
+  url: "{{baseUrl}}/apikeys/{{keyId}}"
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: Authorization
+      value: Bearer {{token}}
+  body:
+    type: json
+    data: |-
+      {
+        "reason": "Key compromised - rotating for security"
+      }
+auth:
+  mode: bearer
+  bearer:
+    token: "{{token}}"
