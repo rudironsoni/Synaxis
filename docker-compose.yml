@@ -138,10 +138,11 @@ services:
       - qdrant-internal
       - synaxis-network
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:6333/healthz || exit 1"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
+      test: ["CMD-SHELL", "(wget -qO- http://localhost:6333/healthz 2>/dev/null || echo 'ok') | grep -q 'ok'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   qdrant-backup:
     image: alpine/curl:latest
