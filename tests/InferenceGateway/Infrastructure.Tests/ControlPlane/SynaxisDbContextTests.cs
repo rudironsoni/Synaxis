@@ -218,7 +218,6 @@ public class SynaxisDbContextTests : IDisposable
         {
             Id = Guid.NewGuid(),
             OrganizationId = organization.Id,
-            ParentGroupId = parentGroup.Id,
             Name = "Backend Team",
             Slug = "backend-team",
             Status = "Active"
@@ -232,12 +231,10 @@ public class SynaxisDbContextTests : IDisposable
 
         // Assert
         var savedChild = _context.Groups
-            .Include(g => g.ParentGroup)
             .FirstOrDefault(g => g.Id == childGroup.Id);
 
         savedChild.Should().NotBeNull();
-        savedChild!.ParentGroup.Should().NotBeNull();
-        savedChild.ParentGroup!.Name.Should().Be("Engineering");
+        savedChild!.Name.Should().Be("Backend Team");
     }
 
     [Fact]

@@ -10,7 +10,6 @@ public class Group
     public required string Name { get; set; }
     public string? Description { get; set; }
     public required string Slug { get; set; }
-    public Guid? ParentGroupId { get; set; }
     public int? RateLimitRpm { get; set; }
     public int? RateLimitTpm { get; set; }
     public bool AllowAutoOptimization { get; set; } = true;
@@ -24,7 +23,5 @@ public class Group
 
     // Navigation properties
     public Organization Organization { get; set; } = null!;
-    public Group? ParentGroup { get; set; }
-    public ICollection<Group> ChildGroups { get; set; } = new List<Group>();
     public ICollection<UserGroupMembership> UserMemberships { get; set; } = new List<UserGroupMembership>();
 }

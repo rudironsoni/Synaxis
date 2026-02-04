@@ -159,31 +159,24 @@ public sealed class SynaxisDbContext : IdentityDbContext<SynaxisUser, Role, Guid
         // Group Configuration
         modelBuilder.Entity<Group>(entity =>
         {
-            entity.ToTable("Groups", "identity", t => 
-                t.HasCheckConstraint("CK_Group_Status", 
-                    "\"Status\" IN ('Active', 'Suspended', 'Archived')"));
+            entity.ToTable("Groups", "identity", t => t.HasCheckConstraint("CK_Group_Status", "\"Status\" IN ('Active', 'Suspended', 'Archived')"));
             
             entity.HasKey(g => g.Id);
-
+            
             entity.Property(g => g.Name).HasMaxLength(200).IsRequired();
             entity.Property(g => g.Description).HasMaxLength(1000);
             entity.Property(g => g.Slug).HasMaxLength(100).IsRequired();
             entity.Property(g => g.Status).HasMaxLength(50).IsRequired();
-
+            
             entity.HasOne(g => g.Organization)
                 .WithMany(o => o.Groups)
                 .HasForeignKey(g => g.OrganizationId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne(g => g.ParentGroup)
-                .WithMany(g => g.ChildGroups)
-                .HasForeignKey(g => g.ParentGroupId)
-                .OnDelete(DeleteBehavior.Restrict);
-
+            
             entity.HasIndex(g => new { g.OrganizationId, g.Slug }).IsUnique();
             entity.HasIndex(g => g.Status);
             entity.HasIndex(g => g.DeletedAt);
-
+            
             entity.HasQueryFilter(g => g.DeletedAt == null);
         });
 
