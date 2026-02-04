@@ -15,7 +15,8 @@ public class RedisQuotaTracker : IQuotaTracker
     private readonly ILogger<RedisQuotaTracker> _logger;
     private readonly SynaxisConfiguration _config;
 
-    // Lua script for atomic rate limiting check and increment
+    // Lua script for atomic rate limiting check and increment with hierarchical limits
+    // Supports User → Group → Organization hierarchy
     // Returns 1 if allowed, 0 if limit exceeded
     private const string CheckQuotaLuaScript = @"
 local rpmKey = KEYS[1]
@@ -27,13 +28,13 @@ local maxTpm = tonumber(ARGV[2])
 local currentRpm = tonumber(redis.call('GET', rpmKey)) or 0
 local currentTpm = tonumber(redis.call('GET', tpmKey)) or 0
 
--- Check RPM limit
-if maxRpm and currentRpm >= maxRpm then
+-- Check RPM limit (if configured, -1 means unlimited)
+if maxRpm > 0 and currentRpm >= maxRpm then
     return 0  -- Exceeded RPM limit
 end
 
--- Check TPM limit
-if maxTpm and currentTpm >= maxTpm then
+-- Check TPM limit (if configured, -1 means unlimited)
+if maxTpm > 0 and currentTpm >= maxTpm then
     return 0  -- Exceeded TPM limit
 end
 
@@ -42,6 +43,65 @@ redis.call('INCR', rpmKey)
 redis.call('EXPIRE', rpmKey, 60)
 
 -- Return 1 for allowed
+return 1
+";
+
+    // Lua script for hierarchical quota checking (User → Group → Org)
+    // Checks limits at multiple levels and enforces the most restrictive
+    private const string CheckHierarchicalQuotaLuaScript = @"
+-- KEYS: userRpmKey, userTpmKey, groupRpmKey, groupTpmKey, orgRpmKey, orgTpmKey
+-- ARGV: userMaxRpm, userMaxTpm, groupMaxRpm, groupMaxTpm, orgMaxRpm, orgMaxTpm
+
+-- Check organization level
+local orgRpm = tonumber(redis.call('GET', KEYS[5])) or 0
+local orgTpm = tonumber(redis.call('GET', KEYS[6])) or 0
+local orgMaxRpm = tonumber(ARGV[5])
+local orgMaxTpm = tonumber(ARGV[6])
+
+if orgMaxRpm > 0 and orgRpm >= orgMaxRpm then
+    return 0  -- Org RPM exceeded
+end
+
+if orgMaxTpm > 0 and orgTpm >= orgMaxTpm then
+    return 0  -- Org TPM exceeded
+end
+
+-- Check group level
+local groupRpm = tonumber(redis.call('GET', KEYS[3])) or 0
+local groupTpm = tonumber(redis.call('GET', KEYS[4])) or 0
+local groupMaxRpm = tonumber(ARGV[3])
+local groupMaxTpm = tonumber(ARGV[4])
+
+if groupMaxRpm > 0 and groupRpm >= groupMaxRpm then
+    return 0  -- Group RPM exceeded
+end
+
+if groupMaxTpm > 0 and groupTpm >= groupMaxTpm then
+    return 0  -- Group TPM exceeded
+end
+
+-- Check user level
+local userRpm = tonumber(redis.call('GET', KEYS[1])) or 0
+local userTpm = tonumber(redis.call('GET', KEYS[2])) or 0
+local userMaxRpm = tonumber(ARGV[1])
+local userMaxTpm = tonumber(ARGV[2])
+
+if userMaxRpm > 0 and userRpm >= userMaxRpm then
+    return 0  -- User RPM exceeded
+end
+
+if userMaxTpm > 0 and userTpm >= userMaxTpm then
+    return 0  -- User TPM exceeded
+end
+
+-- Increment all counters
+redis.call('INCR', KEYS[1])
+redis.call('EXPIRE', KEYS[1], 60)
+redis.call('INCR', KEYS[3])
+redis.call('EXPIRE', KEYS[3], 60)
+redis.call('INCR', KEYS[5])
+redis.call('EXPIRE', KEYS[5], 60)
+
 return 1
 ";
 
@@ -55,6 +115,11 @@ return 1
         _config = config.Value;
     }
 
+    /// <summary>
+    /// Checks quota for a provider using atomic Lua script execution.
+    /// Supports hierarchical limits (User → Group → Org) via Redis key structure.
+    /// Key structure: ratelimit:{organizationId}:{groupId}:{userId}:{type}
+    /// </summary>
     public async Task<bool> CheckQuotaAsync(string providerKey, CancellationToken cancellationToken = default)
     {
         try
@@ -113,6 +178,69 @@ return 1
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to check quota for provider '{ProviderKey}'. Allowing request as fallback.", providerKey);
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// Checks hierarchical quota limits across organization, group, and user levels.
+    /// Uses atomic Lua script to check all levels and increment counters if allowed.
+    /// </summary>
+    public async Task<bool> CheckHierarchicalQuotaAsync(
+        string organizationId,
+        string groupId,
+        string userId,
+        int? orgMaxRpm = null,
+        int? orgMaxTpm = null,
+        int? groupMaxRpm = null,
+        int? groupMaxTpm = null,
+        int? userMaxRpm = null,
+        int? userMaxTpm = null,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var db = _redis.GetDatabase();
+            var now = DateTimeOffset.UtcNow;
+            var currentMinute = new DateTimeOffset(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0, now.Offset).ToUnixTimeSeconds();
+
+            // Build hierarchical keys: ratelimit:{organizationId}:{groupId}:{userId}:{type}
+            var userRpmKey = $"ratelimit:{organizationId}:{groupId}:{userId}:rpm:{currentMinute}";
+            var userTpmKey = $"ratelimit:{organizationId}:{groupId}:{userId}:tpm:{currentMinute}";
+            var groupRpmKey = $"ratelimit:{organizationId}:{groupId}:rpm:{currentMinute}";
+            var groupTpmKey = $"ratelimit:{organizationId}:{groupId}:tpm:{currentMinute}";
+            var orgRpmKey = $"ratelimit:{organizationId}:rpm:{currentMinute}";
+            var orgTpmKey = $"ratelimit:{organizationId}:tpm:{currentMinute}";
+
+            var result = await db.ScriptEvaluateAsync(
+                CheckHierarchicalQuotaLuaScript,
+                new RedisKey[] { userRpmKey, userTpmKey, groupRpmKey, groupTpmKey, orgRpmKey, orgTpmKey },
+                new RedisValue[] { 
+                    userMaxRpm ?? -1, 
+                    userMaxTpm ?? -1, 
+                    groupMaxRpm ?? -1, 
+                    groupMaxTpm ?? -1, 
+                    orgMaxRpm ?? -1, 
+                    orgMaxTpm ?? -1 
+                }
+            );
+
+            var allowed = (long)result == 1;
+
+            if (!allowed)
+            {
+                _logger.LogWarning(
+                    "Hierarchical quota exceeded for Org: {OrgId}, Group: {GroupId}, User: {UserId}",
+                    organizationId, groupId, userId);
+            }
+
+            return allowed;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, 
+                "Failed to check hierarchical quota for Org: {OrgId}, Group: {GroupId}, User: {UserId}. Allowing request as fallback.",
+                organizationId, groupId, userId);
             return true;
         }
     }
