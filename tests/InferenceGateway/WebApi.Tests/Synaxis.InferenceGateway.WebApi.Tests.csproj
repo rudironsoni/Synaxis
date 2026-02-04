@@ -6,21 +6,15 @@
     <IsPackable>false</IsPackable>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
-    <ItemGroup>
+  <ItemGroup>
     <PackageReference Include="coverlet.collector">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="FluentAssertions" />
-    <PackageReference Include="GitHub.Copilot.SDK" />
-    <PackageReference Include="Microsoft.AspNetCore.DataProtection" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+    <PackageReference Include="FsCheck.Xunit" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="Moq" />
-    <PackageReference Include="RichardSzalay.MockHttp" />
-    <PackageReference Include="StackExchange.Redis" />
     <PackageReference Include="System.Linq.Async" />
-    <PackageReference Include="Testcontainers.Redis" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" />
   </ItemGroup>
@@ -28,6 +22,8 @@
     <Using Include="Xunit" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\InferenceGateway\Infrastructure\Synaxis.InferenceGateway.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\src\InferenceGateway\Application\Synaxis.InferenceGateway.Application.csproj" />
+    <ProjectReference Include="..\..\..\src\InferenceGateway\WebApi\Synaxis.InferenceGateway.WebApi.csproj" />
+    <ProjectReference Include="..\..\Common\Synaxis.Common.Tests.csproj" />
   </ItemGroup>
 </Project>
