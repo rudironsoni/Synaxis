@@ -1,44 +1,39 @@
 # Build Stage
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
 WORKDIR /src
 
-RUN dotnet --version
+# Disable telemetry for faster builds
+ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
+ENV DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
 
-# Copy solution and project files for restore
-COPY ["Synaxis.sln", "./"]
+# Copy only required project files for restore
 COPY ["Directory.Packages.props", "./"]
 COPY ["src/InferenceGateway/WebApi/Synaxis.InferenceGateway.WebApi.csproj", "src/InferenceGateway/WebApi/"]
 COPY ["src/InferenceGateway/Application/Synaxis.InferenceGateway.Application.csproj", "src/InferenceGateway/Application/"]
 COPY ["src/InferenceGateway/Infrastructure/Synaxis.InferenceGateway.Infrastructure.csproj", "src/InferenceGateway/Infrastructure/"]
-COPY ["src/Synaxis.WebApp/Synaxis.WebApp.csproj", "src/Synaxis.WebApp/"]
-COPY ["tests/InferenceGateway/Infrastructure.Tests/Synaxis.InferenceGateway.Infrastructure.Tests.csproj", "tests/InferenceGateway/Infrastructure.Tests/"]
-COPY ["tests/InferenceGateway/Application.Tests/Synaxis.InferenceGateway.Application.Tests.csproj", "tests/InferenceGateway/Application.Tests/"]
-COPY ["tests/InferenceGateway/IntegrationTests/Synaxis.InferenceGateway.IntegrationTests.csproj", "tests/InferenceGateway/IntegrationTests/"]
-COPY ["tests/InferenceGateway.UnitTests/Synaxis.InferenceGateway.UnitTests.csproj", "tests/InferenceGateway.UnitTests/"]
-COPY ["src/Tests/Benchmarks/Synaxis.Benchmarks.csproj", "src/Tests/Benchmarks/"]
-COPY ["tests/Common/Synaxis.Common.Tests.csproj", "tests/Common/"]
 
-RUN dotnet restore
+RUN dotnet restore src/InferenceGateway/WebApi/Synaxis.InferenceGateway.WebApi.csproj
 
-# Copy everything else and build
-COPY . .
-WORKDIR "/src/src/InferenceGateway/WebApi"
-RUN dotnet publish "Synaxis.InferenceGateway.WebApi.csproj" -c Release -o /app/publish /p:UseAppHost=false
+# Copy source and build
+COPY ["src/InferenceGateway/", "src/InferenceGateway/"]
+WORKDIR /src/src/InferenceGateway/WebApi
+RUN dotnet publish -c Release -o /app/publish --no-restore /p:UseAppHost=false
 
 # Runtime Stage
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
 WORKDIR /app
-EXPOSE 8080
+EXPOSE 54872
 
-# Install dependencies for GitHub Copilot SDK (gh CLI, nodejs, npm, copilot-cli)
-RUN apt-get update && apt-get install -y curl gnupg ca-certificates nodejs npm \
-    && mkdir -p -m 755 /etc/apt/keyrings \
-    && curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
-    && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
-    && apt-get update && apt-get install -y gh \
-    && npm install -g @githubnext/github-copilot-cli \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+# Set ASP.NET to listen on the correct port
+ENV ASPNETCORE_URLS=http://+:54872
+
+# Add non-root user
+RUN adduser -D -s /bin/sh appuser && chown -R appuser /app
+USER appuser
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:54872/health || exit 1
 
 COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "Synaxis.InferenceGateway.WebApi.dll"]

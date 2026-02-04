@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -11,11 +15,7 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
 
-@import "tailwindcss";
-
-:root {
   /* Miser theme variables */
   --background: #0B0F1A; /* Deep Slate */
   --foreground: #E2E8F0;
