@@ -30,7 +30,8 @@ public class SecurityHeadersMiddleware
     }
 
     /// <summary>
-    /// Processes the HTTP request and adds security headers to the response.
+    /// Processes the HTTP request and adds comprehensive security headers to the response.
+    /// Headers include CSP, HSTS (production), X-Frame-Options, and other protective measures.
     /// </summary>
     /// <param name="context">The HTTP context for the current request.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
@@ -42,27 +43,34 @@ public class SecurityHeadersMiddleware
         {
             if (!response.HasStarted)
             {
+                // Prevent MIME type sniffing
                 response.Headers.Append("X-Content-Type-Options", "nosniff");
+                
+                // Prevent clickjacking attacks
                 response.Headers.Append("X-Frame-Options", "DENY");
+                
+                // Enable XSS filtering
                 response.Headers.Append("X-XSS-Protection", "1; mode=block");
+                
+                // Control referrer information
                 response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
-                response.Headers.Append("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
+                
+                // Restrict browser features
+                response.Headers.Append("Permissions-Policy", "geolocation=(), microphone=(), camera=(), payment=(), usb=()");
 
+                // HSTS: Force HTTPS in production
                 if (!_isDevelopment)
                 {
                     response.Headers.Append("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
                 }
 
-                response.Headers.Append("Content-Security-Policy",
-                    "default-src 'self'; " +
-                    "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
-                    "style-src 'self' 'unsafe-inline'; " +
-                    "img-src 'self' data: https:; " +
-                    "font-src 'self' data:; " +
-                    "connect-src 'self'; " +
-                    "frame-ancestors 'none'; " +
-                    "base-uri 'self'; " +
-                    "form-action 'self';");
+                // Content Security Policy (CSP)
+                var csp = BuildContentSecurityPolicy(_isDevelopment);
+                response.Headers.Append("Content-Security-Policy", csp);
+
+                // Remove server identification header for security through obscurity
+                response.Headers.Remove("Server");
+                response.Headers.Remove("X-Powered-By");
 
                 _logger.LogDebug("Security headers added to response for {Path}", context.Request.Path);
             }
@@ -71,5 +79,38 @@ public class SecurityHeadersMiddleware
         });
 
         await _next(context);
+    }
+
+    /// <summary>
+    /// Builds a Content Security Policy based on environment.
+    /// Production uses stricter policies than development.
+    /// </summary>
+    private static string BuildContentSecurityPolicy(bool isDevelopment)
+    {
+        if (isDevelopment)
+        {
+            // More relaxed CSP for development (allows Scalar API docs, etc.)
+            return "default-src 'self'; " +
+                   "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+                   "style-src 'self' 'unsafe-inline'; " +
+                   "img-src 'self' data: https:; " +
+                   "font-src 'self' data:; " +
+                   "connect-src 'self' ws: wss:; " +
+                   "frame-ancestors 'none'; " +
+                   "base-uri 'self'; " +
+                   "form-action 'self';";
+        }
+
+        // Stricter CSP for production
+        return "default-src 'self'; " +
+               "script-src 'self'; " +
+               "style-src 'self'; " +
+               "img-src 'self' data:; " +
+               "font-src 'self'; " +
+               "connect-src 'self' wss:; " +
+               "frame-ancestors 'none'; " +
+               "base-uri 'self'; " +
+               "form-action 'self'; " +
+               "upgrade-insecure-requests;";
     }
 }

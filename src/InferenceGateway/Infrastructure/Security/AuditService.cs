@@ -1,5 +1,5 @@
 using System.Text.Json;
-using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
+using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit;
 using Synaxis.InferenceGateway.Application.Security;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 
@@ -24,11 +24,11 @@ public sealed class AuditService : IAuditService
         var log = new AuditLog
         {
             Id = Guid.NewGuid(),
-            TenantId = tenantId,
+            OrganizationId = tenantId,
             UserId = userId,
             Action = action,
-            PayloadJson = payload != null ? JsonSerializer.Serialize(payload) : null,
-            CreatedAt = DateTimeOffset.UtcNow
+            NewValues = payload != null ? JsonSerializer.Serialize(payload) : null,
+            CreatedAt = DateTime.UtcNow
         };
 
         _dbContext.AuditLogs.Add(log);
