@@ -113,3 +113,6 @@ coverage-result/
 coverage-results/
 coverage-summary/
 **/coverage/**
+# BenchmarkDotNet artifacts
+**/BenchmarkDotNet.Artifacts/
+benchmark-results/
