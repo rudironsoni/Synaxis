@@ -1,0 +1,22 @@
+info:
+  name: Create API Key
+  type: http
+  seq: 1
+http:
+  method: POST
+  url: "{{baseUrl}}/projects/{{projectId}}/keys"
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: Authorization
+      value: Bearer {{token}}
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Production API Key"
+      }
+auth:
+  mode: bearer
+  bearer:
+    token: "{{token}}"

@@ -1,0 +1,14 @@
+info:
+  name: Get API Key Usage
+  type: http
+  seq: 6
+http:
+  method: GET
+  url: "{{baseUrl}}/apikeys/{{keyId}}/usage?from=2025-01-01&to=2025-02-04"
+  headers:
+    - name: Authorization
+      value: Bearer {{token}}
+auth:
+  mode: bearer
+  bearer:
+    token: "{{token}}"

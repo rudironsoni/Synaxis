@@ -1,806 +1,228 @@
 {
   "info": {
-    "_postman_id": "synaxis-inference-gateway",
+    "_postman_id": "synaxis-inference-gateway-v2",
     "name": "Synaxis Inference Gateway API",
-    "description": "Complete API collection for Synaxis Inference Gateway including authentication, admin, user management, analytics, providers, models, completions, chat completions, and identity endpoints.",
+    "description": "Comprehensive API collection for testing all Synaxis Inference Gateway endpoints with multiple examples showing parameter permutations",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
       "name": "Authentication",
-      "description": "User authentication and registration endpoints",
       "item": [
         {
           "name": "Register User",
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/auth/register",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "register"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"SecureP@ssw0rd123\"\n}"
-            },
-            "description": "Register a new user with email and password"
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": { "mode": "raw", "raw": "{\"email\": \"user@example.com\", \"password\": \"SecurePassword123!\"}" },
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] }
           },
           "response": [
-            {
-              "name": "Success - New User",
-              "originalRequest": {
-                "method": "POST",
-                "header": [],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"SecureP@ssw0rd123\"\n}"
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"user\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n    \"email\": \"user@example.com\"\n  }\n}"
-            },
-            {
-              "name": "Error - Duplicate Email",
-              "originalRequest": {
-                "method": "POST",
-                "header": [],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"email\": \"existing@example.com\",\n  \"password\": \"password123\"\n}"
-                }
-              },
-              "status": "Bad Request",
-              "code": 400,
-              "body": "{\n  \"error\": \"User with this email already exists\"\n}"
-            }
+            { "name": "Success - New User", "status": "OK", "code": 200, "body": "{\"success\": true, \"userId\": \"550e8400-e29b-41d4-a716-446655440000\"}" },
+            { "name": "Error - User Exists", "status": "Bad Request", "code": 400, "body": "{\"success\": false, \"message\": \"User already exists\"}" },
+            { "name": "Error - Missing Fields", "status": "Bad Request", "code": 400, "body": "{\"success\": false, \"message\": \"Email and password are required\"}" }
           ]
         },
         {
           "name": "Login",
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/auth/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "login"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"SecureP@ssw0rd123\"\n}"
-            },
-            "description": "Authenticate user and get JWT token"
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": { "mode": "raw", "raw": "{\"email\": \"user@example.com\", \"password\": \"SecurePassword123!\"}" },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
           },
           "response": [
-            {
-              "name": "Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"user\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n    \"email\": \"user@example.com\"\n  }\n}"
-            },
-            {
-              "name": "Error - Invalid Credentials",
-              "status": "Unauthorized",
-              "code": 401,
-              "body": "{\n  \"error\": \"Invalid email or password\"\n}"
-            }
+            { "name": "Success - Valid Credentials", "status": "OK", "code": 200, "body": "{\"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\", \"user\": {\"id\": \"550e8400-e29b-41d4-a716-446655440000\", \"email\": \"admin@synaxis.ai\"}}" },
+            { "name": "Error - Invalid Password", "status": "Unauthorized", "code": 401, "body": "{\"success\": false, \"message\": \"Invalid credentials\"}" },
+            { "name": "Error - User Not Found", "status": "Unauthorized", "code": 401, "body": "{\"success\": false, \"message\": \"Invalid credentials\"}" }
           ]
         },
         {
-          "name": "Dev Login (Development Only)",
+          "name": "Dev Login",
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/auth/dev-login",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "dev-login"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"dev@example.com\"\n}"
-            },
-            "description": "Development-only endpoint for password-less authentication. Creates user if not exists."
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": { "mode": "raw", "raw": "{\"email\": \"dev@localhost\"}" },
+            "url": { "raw": "{{baseUrl}}/auth/dev-login", "host": ["{{baseUrl}}"], "path": ["auth", "dev-login"] }
           },
           "response": [
-            {
-              "name": "Success - New User Created",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"user\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"email\": \"dev@example.com\"\n  }\n}"
-            },
-            {
-              "name": "Success - Existing User",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"user\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n    \"email\": \"dev@example.com\"\n  }\n}"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "User",
-      "description": "User-specific operations and provider requests",
-      "item": [
-        {
-          "name": "Submit Provider Request",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/user/providers/request",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "user", "providers", "request"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"providerKey\": \"custom-llm\",\n  \"apiKey\": \"sk-custom-api-key-12345\",\n  \"baseUrl\": \"https://api.custom-llm.com/v1\",\n  \"displayName\": \"Custom LLM Provider\",\n  \"description\": \"My custom language model provider for internal use\"\n}"
-            },
-            "description": "Submit a request to add a custom provider. Admin approval required."
-          },
-          "response": [
-            {
-              "name": "Success - Request Submitted",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"requestId\": \"req_abc123def456\",\n  \"status\": \"pending\",\n  \"message\": \"Provider request submitted successfully. Awaiting admin approval.\"\n}"
-            },
-            {
-              "name": "Error - Invalid Provider Key",
-              "status": "Bad Request",
-              "code": 400,
-              "body": "{\n  \"error\": \"Invalid provider key format\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Get Provider Request Status",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/user/providers/request/{{requestId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "user", "providers", "request", "{{requestId}}"]
-            },
-            "description": "Check the status of a provider request"
-          },
-          "response": [
-            {
-              "name": "Status - Pending",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"requestId\": \"req_abc123def456\",\n  \"status\": \"pending\",\n  \"providerKey\": \"custom-llm\",\n  \"submittedAt\": \"2025-02-04T10:30:00Z\"\n}"
-            },
-            {
-              "name": "Status - Approved",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"requestId\": \"req_abc123def456\",\n  \"status\": \"approved\",\n  \"providerKey\": \"custom-llm\",\n  \"approvedAt\": \"2025-02-04T11:00:00Z\",\n  \"approvedBy\": \"admin@example.com\"\n}"
-            },
-            {
-              "name": "Status - Rejected",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"requestId\": \"req_abc123def456\",\n  \"status\": \"rejected\",\n  \"reason\": \"Invalid API endpoint URL\",\n  \"rejectedAt\": \"2025-02-04T11:00:00Z\"\n}"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Admin",
-      "description": "Administrative endpoints for managing providers",
-      "item": [
-        {
-          "name": "Get Provider Health",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/admin/providers/health/{{providerKey}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "providers", "health", "{{providerKey}}"]
-            },
-            "description": "Check health status of a specific provider"
-          },
-          "response": [
-            {
-              "name": "Healthy",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"provider\": \"openai\",\n  \"status\": \"healthy\",\n  \"latency\": \"45ms\",\n  \"lastCheck\": \"2025-02-04T12:00:00Z\"\n}"
-            },
-            {
-              "name": "Unhealthy",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"provider\": \"custom-llm\",\n  \"status\": \"unhealthy\",\n  \"error\": \"Connection timeout\",\n  \"lastCheck\": \"2025-02-04T12:00:00Z\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Approve Provider Request",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/admin/providers/{{providerKey}}/approve",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "providers", "{{providerKey}}", "approve"]
-            },
-            "description": "Approve a pending provider request"
-          },
-          "response": [
-            {
-              "name": "Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"providerKey\": \"custom-llm\",\n  \"status\": \"approved\",\n  \"message\": \"Provider approved and activated\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Get All Providers",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/admin/providers",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "providers"]
-            },
-            "description": "List all providers and their statuses"
-          },
-          "response": [
-            {
-              "name": "Provider List",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"providers\": [\n    {\n      \"key\": \"openai\",\n      \"name\": \"OpenAI\",\n      \"status\": \"active\",\n      \"health\": \"healthy\",\n      \"models\": 5\n    },\n    {\n      \"key\": \"anthropic\",\n      \"name\": \"Anthropic\",\n      \"status\": \"active\",\n      \"health\": \"healthy\",\n      \"models\": 3\n    }\n  ]\n}"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "API Keys",
-      "description": "Project API key management",
-      "item": [
-        {
-          "name": "Create API Key",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/projects/{{projectId}}/keys",
-              "host": ["{{baseUrl}}"],
-              "path": ["projects", "{{projectId}}", "keys"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Production API Key\"\n}"
-            },
-            "description": "Create a new API key for a project"
-          },
-          "response": [
-            {
-              "name": "Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"id\": \"key_abc123\",\n  \"name\": \"Production API Key\",\n  \"key\": \"synaxis_sk_live_abc123def456\",\n  \"createdAt\": \"2025-02-04T12:00:00Z\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Revoke API Key",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/projects/{{projectId}}/keys/{{keyId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["projects", "{{projectId}}", "keys", "{{keyId}}"]
-            },
-            "description": "Revoke and delete an API key"
-          },
-          "response": [
-            {
-              "name": "Success",
-              "status": "No Content",
-              "code": 204,
-              "body": ""
-            },
-            {
-              "name": "Error - Key Not Found",
-              "status": "Not Found",
-              "code": 404,
-              "body": "{\n  \"error\": \"API key not found\"\n}"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Analytics",
-      "description": "Usage analytics and metrics",
-      "item": [
-        {
-          "name": "Get Usage Analytics",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/analytics/usage?startDate=2025-01-01&endDate=2025-02-04",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "analytics", "usage"],
-              "query": [
-                {
-                  "key": "startDate",
-                  "value": "2025-01-01"
-                },
-                {
-                  "key": "endDate",
-                  "value": "2025-02-04"
-                }
-              ]
-            },
-            "description": "Get usage analytics for a date range"
-          },
-          "response": [
-            {
-              "name": "Usage Data",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"startDate\": \"2025-01-01\",\n  \"endDate\": \"2025-02-04\",\n  \"totalRequests\": 15420,\n  \"totalTokens\": 4528300,\n  \"byProvider\": [\n    {\n      \"provider\": \"openai\",\n      \"requests\": 8500,\n      \"tokens\": 2500000\n    },\n    {\n      \"provider\": \"anthropic\",\n      \"requests\": 6920,\n      \"tokens\": 2028300\n    }\n  ],\n  \"dailyBreakdown\": [\n    {\n      \"date\": \"2025-02-04\",\n      \"requests\": 450,\n      \"tokens\": 135000\n    }\n  ]\n}"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Providers",
-      "description": "Provider management and configuration",
-      "item": [
-        {
-          "name": "List All Providers",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/providers",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "providers"]
-            },
-            "description": "Get list of all configured providers"
-          },
-          "response": [
-            {
-              "name": "Provider List",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"providers\": [\n    {\n      \"id\": \"openai\",\n      \"name\": \"OpenAI\",\n      \"enabled\": true,\n      \"tier\": \"premium\",\n      \"supportedModels\": [\"gpt-4\", \"gpt-3.5-turbo\"]\n    },\n    {\n      \"id\": \"anthropic\",\n      \"name\": \"Anthropic\",\n      \"enabled\": true,\n      \"tier\": \"premium\",\n      \"supportedModels\": [\"claude-3-opus\", \"claude-3-sonnet\"]\n    }\n  ]\n}"
-            }
-          ]
-        },
-        {
-          "name": "Get Provider Status",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/providers/{{providerId}}/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "providers", "{{providerId}}", "status"]
-            },
-            "description": "Get detailed status of a specific provider"
-          },
-          "response": [
-            {
-              "name": "Status",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"id\": \"openai\",\n  \"name\": \"OpenAI\",\n  \"status\": \"healthy\",\n  \"enabled\": true,\n  \"lastHealthCheck\": \"2025-02-04T12:00:00Z\",\n  \"latency\": \"45ms\",\n  \"errorRate\": 0.001\n}"
-            }
-          ]
-        },
-        {
-          "name": "Update Provider Config",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/providers/{{providerId}}/config",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "providers", "{{providerId}}", "config"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"enabled\": true,\n  \"tier\": \"standard\"\n}"
-            },
-            "description": "Update provider configuration"
-          },
-          "response": [
-            {
-              "name": "Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"id\": \"openai\",\n  \"enabled\": true,\n  \"tier\": \"standard\",\n  \"updatedAt\": \"2025-02-04T12:00:00Z\"\n}"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "OpenAI Compatible",
-      "description": "OpenAI API compatible endpoints for chat completions and models",
-      "item": [
-        {
-          "name": "List Models",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/v1/models",
-              "host": ["{{baseUrl}}"],
-              "path": ["v1", "models"]
-            },
-            "description": "List all available models (OpenAI compatible)"
-          },
-          "response": [
-            {
-              "name": "Models List",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"object\": \"list\",\n  \"data\": [\n    {\n      \"id\": \"gpt-4\",\n      \"object\": \"model\",\n      \"created\": 1677610602,\n      \"owned_by\": \"openai\"\n    },\n    {\n      \"id\": \"gpt-3.5-turbo\",\n      \"object\": \"model\",\n      \"created\": 1677610602,\n      \"owned_by\": \"openai\"\n    },\n    {\n      \"id\": \"claude-3-opus\",\n      \"object\": \"model\",\n      \"created\": 1677610602,\n      \"owned_by\": \"anthropic\"\n    }\n  ]\n}"
-            }
-          ]
-        },
-        {
-          "name": "Get Model",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/v1/models/gpt-4",
-              "host": ["{{baseUrl}}"],
-              "path": ["v1", "models", "gpt-4"]
-            },
-            "description": "Get information about a specific model"
-          },
-          "response": [
-            {
-              "name": "Model Info",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"id\": \"gpt-4\",\n  \"object\": \"model\",\n  \"created\": 1677610602,\n  \"owned_by\": \"openai\",\n  \"permission\": [],\n  \"root\": \"gpt-4\",\n  \"parent\": null\n}"
-            }
-          ]
-        },
-        {
-          "name": "Chat Completions",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/v1/chat/completions",
-              "host": ["{{baseUrl}}"],
-              "path": ["v1", "chat", "completions"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"model\": \"gpt-4\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a helpful assistant.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Hello, how are you?\"\n    }\n  ],\n  \"temperature\": 0.7,\n  \"max_tokens\": 150,\n  \"stream\": false\n}"
-            },
-            "description": "Create a chat completion"
-          },
-          "response": [
-            {
-              "name": "Non-streaming Response",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"id\": \"chatcmpl-abc123\",\n  \"object\": \"chat.completion\",\n  \"created\": 1677652288,\n  \"model\": \"gpt-4\",\n  \"choices\": [\n    {\n      \"index\": 0,\n      \"message\": {\n        \"role\": \"assistant\",\n        \"content\": \"Hello! I'm doing well, thank you for asking. How can I help you today?\"\n      },\n      \"finish_reason\": \"stop\"\n    }\n  ],\n  \"usage\": {\n    \"prompt_tokens\": 19,\n    \"completion_tokens\": 18,\n    \"total_tokens\": 37\n  }\n}"
-            },
-            {
-              "name": "Streaming Response (Server-Sent Events)",
-              "originalRequest": {
-                "method": "POST",
-                "header": [],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"model\": \"gpt-4\",\n  \"messages\": [{\"role\": \"user\", \"content\": \"Say hello\"}],\n  \"stream\": true\n}"
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "body": "data: {\"id\":\"chatcmpl-abc123\",\"object\":\"chat.completion.chunk\",\"created\":1677652288,\"model\":\"gpt-4\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\"},\"finish_reason\":null}]}\n\ndata: {\"id\":\"chatcmpl-abc123\",\"object\":\"chat.completion.chunk\",\"created\":1677652288,\"model\":\"gpt-4\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Hello\"},\"finish_reason\":null}]}\n\ndata: {\"id\":\"chatcmpl-abc123\",\"object\":\"chat.completion.chunk\",\"created\":1677652288,\"model\":\"gpt-4\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"!\"},\"finish_reason\":null}]}\n\ndata: [DONE]\n\n"
-            },
-            {
-              "name": "With Tools/Functions",
-              "originalRequest": {
-                "method": "POST",
-                "header": [],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"model\": \"gpt-4\",\n  \"messages\": [{\"role\": \"user\", \"content\": \"What's the weather in Paris?\"}],\n  \"tools\": [\n    {\n      \"type\": \"function\",\n      \"function\": {\n        \"name\": \"get_weather\",\n        \"description\": \"Get weather for a location\",\n        \"parameters\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"location\": {\"type\": \"string\"}\n          }\n        }\n      }\n    }\n  ]\n}"
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"id\": \"chatcmpl-abc123\",\n  \"object\": \"chat.completion\",\n  \"created\": 1677652288,\n  \"model\": \"gpt-4\",\n  \"choices\": [\n    {\n      \"index\": 0,\n      \"message\": {\n        \"role\": \"assistant\",\n        \"content\": null,\n        \"tool_calls\": [\n          {\n            \"id\": \"call_abc123\",\n            \"type\": \"function\",\n            \"function\": {\n              \"name\": \"get_weather\",\n              \"arguments\": \"{\\\"location\\\": \\\"Paris\\\"}\"\n            }\n          }\n        ]\n      },\n      \"finish_reason\": \"tool_calls\"\n    }\n  ]\n}"
-            }
-          ]
-        },
-        {
-          "name": "Legacy Completions",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/v1/completions",
-              "host": ["{{baseUrl}}"],
-              "path": ["v1", "completions"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"model\": \"text-davinci-003\",\n  \"prompt\": \"Once upon a time\",\n  \"max_tokens\": 100,\n  \"temperature\": 0.8,\n  \"stream\": false,\n  \"best_of\": 1\n}"
-            },
-            "description": "Legacy completions endpoint (non-chat models)"
-          },
-          "response": [
-            {
-              "name": "Completion Response",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"id\": \"cmpl-abc123\",\n  \"object\": \"text_completion\",\n  \"created\": 1677652288,\n  \"model\": \"text-davinci-003\",\n  \"choices\": [\n    {\n      \"text\": \", in a land far away, there lived a brave knight...\",\n      \"index\": 0,\n      \"logprobs\": null,\n      \"finish_reason\": \"length\"\n    }\n  ],\n  \"usage\": {\n    \"prompt_tokens\": 4,\n    \"completion_tokens\": 16,\n    \"total_tokens\": 20\n  }\n}"
-            }
+            { "name": "Success - Existing Dev User", "status": "OK", "code": 200, "body": "{\"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"}" },
+            { "name": "Success - New Dev User Created", "status": "OK", "code": 200, "body": "{\"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\", \"message\": \"New dev user created\"}" }
           ]
         }
       ]
     },
     {
       "name": "Identity",
-      "description": "Identity provider integration (OAuth/SAML)",
       "item": [
         {
-          "name": "Start Identity Flow",
+          "name": "Identity Register",
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/identity/{{provider}}/start",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "identity", "{{provider}}", "start"]
-            },
-            "description": "Initiate identity provider authentication flow (google, github, saml, etc.)"
+            "header": [{"key": "Content-Type", "value": "application/json"}, {"key": "Authorization", "value": "Bearer {{token}}"}],
+            "body": { "mode": "raw", "raw": "{\"email\": \"user@organization.com\", \"password\": \"SecurePass123!\", \"organizationName\": \"My Organization\"}" },
+            "url": { "raw": "{{baseUrl}}/identity/register", "host": ["{{baseUrl}}"], "path": ["identity", "register"] }
           },
           "response": [
-            {
-              "name": "OAuth Redirect",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"authorizationUrl\": \"https://accounts.google.com/o/oauth2/auth?client_id=...&redirect_uri=...&scope=...\",\n  \"state\": \"abc123xyz\"\n}"
-            }
+            { "name": "Success - Org Registration", "status": "OK", "code": 200, "body": "{\"userId\": \"550e8400-e29b-41d4-a716-446655440000\", \"organizationId\": \"660e8400-e29b-41d4-a716-446655440001\", \"message\": \"Registration successful\"}" },
+            { "name": "Error - Validation Failed", "status": "Bad Request", "code": 400, "body": "{\"errors\": [\"Email is required\", \"Password must be at least 8 characters\"]}" }
           ]
         },
         {
-          "name": "Complete Identity Flow",
+          "name": "Identity Login",
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/identity/{{provider}}/complete",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "identity", "{{provider}}", "complete"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"code\": \"auth_code_from_provider\",\n  \"state\": \"abc123xyz\"\n}"
-            },
-            "description": "Complete identity provider authentication and link account"
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": { "mode": "raw", "raw": "{\"email\": \"user@organization.com\", \"password\": \"SecurePass123!\"}" },
+            "url": { "raw": "{{baseUrl}}/identity/login", "host": ["{{baseUrl}}"], "path": ["identity", "login"] }
           },
           "response": [
-            {
-              "name": "Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"success\": true,\n  \"message\": \"Identity provider linked successfully\",\n  \"provider\": \"google\",\n  \"linkedAt\": \"2025-02-04T12:00:00Z\"\n}"
-            }
+            { "name": "Success - With Tokens", "status": "OK", "code": 200, "body": "{\"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\", \"refreshToken\": \"dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4...\", \"expiresIn\": 3600, \"tokenType\": \"Bearer\"}" },
+            { "name": "Error - Invalid Credentials", "status": "Unauthorized", "code": 401, "body": "{\"error\": \"Invalid email or password\"}" }
           ]
         },
         {
-          "name": "List Linked Accounts",
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": { "mode": "raw", "raw": "{\"refreshToken\": \"{{refreshToken}}\"}" },
+            "url": { "raw": "{{baseUrl}}/identity/refresh", "host": ["{{baseUrl}}"], "path": ["identity", "refresh"] }
+          },
+          "response": [
+            { "name": "Success - New Tokens", "status": "OK", "code": 200, "body": "{\"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.new...\", \"refreshToken\": \"dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4.new...\", \"expiresIn\": 3600}" },
+            { "name": "Error - Invalid Refresh Token", "status": "Unauthorized", "code": 401, "body": "{\"error\": \"Invalid or expired refresh token\"}" }
+          ]
+        },
+        {
+          "name": "Get Current User",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/identity/accounts",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "identity", "accounts"]
-            },
-            "description": "List all linked identity provider accounts"
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": { "raw": "{{baseUrl}}/identity/me", "host": ["{{baseUrl}}"], "path": ["identity", "me"] }
           },
           "response": [
-            {
-              "name": "Linked Accounts",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"accounts\": [\n    {\n      \"provider\": \"google\",\n      \"email\": \"user@gmail.com\",\n      \"linkedAt\": \"2025-02-04T12:00:00Z\"\n    },\n    {\n      \"provider\": \"github\",\n      \"email\": \"user@example.com\",\n      \"linkedAt\": \"2025-02-03T10:00:00Z\"\n    }\n  ]\n}"
-            }
+            { "name": "Success - User Profile", "status": "OK", "code": 200, "body": "{\"id\": \"550e8400-e29b-41d4-a716-446655440000\", \"email\": \"user@organization.com\", \"name\": \"John Doe\", \"role\": \"Owner\", \"organizations\": [{\"id\": \"660e8400-e29b-41d4-a716-446655440001\", \"name\": \"My Organization\", \"role\": \"Owner\"}]}" },
+            { "name": "Error - Unauthorized", "status": "Unauthorized", "code": 401, "body": "{\"message\": \"Unauthorized\"}" }
+          ]
+        },
+        {
+          "name": "Get Organizations",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": { "raw": "{{baseUrl}}/identity/organizations", "host": ["{{baseUrl}}"], "path": ["identity", "organizations"] }
+          },
+          "response": [
+            { "name": "Success - Multiple Orgs", "status": "OK", "code": 200, "body": "[{\"id\": \"660e8400-e29b-41d4-a716-446655440001\", \"name\": \"My Organization\", \"role\": \"Owner\", \"memberCount\": 5}, {\"id\": \"770e8400-e29b-41d4-a716-446655440002\", \"name\": \"Client Project\", \"role\": \"Member\", \"memberCount\": 12}]" },
+            { "name": "Success - Single Org", "status": "OK", "code": 200, "body": "[{\"id\": \"660e8400-e29b-41d4-a716-446655440001\", \"name\": \"Personal\", \"role\": \"Owner\"}]" }
+          ]
+        },
+        {
+          "name": "Switch Organization",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": { "raw": "{{baseUrl}}/identity/organizations/{{organizationId}}/switch", "host": ["{{baseUrl}}"], "path": ["identity", "organizations", "{{organizationId}}", "switch"] }
+          },
+          "response": [
+            { "name": "Success - Switch Notice", "status": "OK", "code": 200, "body": "{\"message\": \"Organization switch requires new login\", \"organizationId\": \"770e8400-e29b-41d4-a716-446655440002\"}" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "API Keys",
+      "item": [
+        {
+          "name": "Create API Key",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}, {"key": "Authorization", "value": "Bearer {{token}}"}],
+            "body": { "mode": "raw", "raw": "{\"name\": \"Production API Key\"}" },
+            "url": { "raw": "{{baseUrl}}/projects/{{projectId}}/keys", "host": ["{{baseUrl}}"], "path": ["projects", "{{projectId}}", "keys"] }
+          },
+          "response": [
+            { "name": "Success - Key Created", "status": "OK", "code": 200, "body": "{\"id\": \"880e8400-e29b-41d4-a716-446655440003\", \"key\": \"sk-synaxis-abc123xyz789production\", \"name\": \"Production API Key\"}" },
+            { "name": "Error - Project Not Found", "status": "Not Found", "code": 404, "body": "{\"message\": \"Project not found\"}" },
+            { "name": "Error - Unauthorized", "status": "Unauthorized", "code": 401, "body": "{\"message\": \"Unauthorized\"}" }
+          ]
+        },
+        {
+          "name": "Revoke API Key",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": { "raw": "{{baseUrl}}/projects/{{projectId}}/keys/{{keyId}}", "host": ["{{baseUrl}}"], "path": ["projects", "{{projectId}}", "keys", "{{keyId}}"] }
+          },
+          "response": [
+            { "name": "Success - Key Revoked", "status": "No Content", "code": 204 },
+            { "name": "Error - Key Not Found", "status": "Not Found", "code": 404, "body": "{\"message\": \"API Key not found\"}" }
+          ]
+        },
+        {
+          "name": "Generate API Key (Legacy)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}, {"key": "Authorization", "value": "Bearer {{token}}"}],
+            "body": { "mode": "raw", "raw": "{\"name\": \"Test Key\", \"permissions\": [\"read\", \"write\"], \"expiresInDays\": 30}" },
+            "url": { "raw": "{{baseUrl}}/apikeys", "host": ["{{baseUrl}}"], "path": ["apikeys"] }
+          },
+          "response": [
+            { "name": "Success - With Expiration", "status": "OK", "code": 200, "body": "{\"id\": \"880e8400-e29b-41d4-a716-446655440003\", \"key\": \"sk-synaxis-testkey123xyz\", \"name\": \"Test Key\", \"expiresAt\": \"2025-03-04T12:00:00Z\"}" },
+            { "name": "Success - No Expiration", "status": "OK", "code": 200, "body": "{\"id\": \"990e8400-e29b-41d4-a716-446655440004\", \"key\": \"sk-synaxis-permanentkey456\", \"name\": \"Permanent Key\"}" },
+            { "name": "Error - Org Required", "status": "Unauthorized", "code": 401, "body": "{\"error\": \"Organization context required\"}" }
+          ]
+        },
+        {
+          "name": "List API Keys",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": { "raw": "{{baseUrl}}/apikeys?includeRevoked=false", "host": ["{{baseUrl}}"], "path": ["apikeys"], "query": [{"key": "includeRevoked", "value": "false"}] }
+          },
+          "response": [
+            { "name": "Success - Active Only", "status": "OK", "code": 200, "body": "[{\"id\": \"880e8400-e29b-41d4-a716-446655440003\", \"name\": \"Production Key\", \"createdAt\": \"2025-01-01T00:00:00Z\", \"lastUsed\": \"2025-02-04T10:30:00Z\", \"status\": \"Active\"}]" },
+            { "name": "Success - With Revoked", "status": "OK", "code": 200, "body": "[{\"id\": \"880e8400-e29b-41d4-a716-446655440003\", \"name\": \"Production Key\", \"status\": \"Active\"}, {\"id\": \"990e8400-e29b-41d4-a716-446655440004\", \"name\": \"Old Key\", \"status\": \"Revoked\", \"revokedAt\": \"2025-01-15T00:00:00Z\"}]" }
+          ]
+        },
+        {
+          "name": "Revoke API Key (Legacy)",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key": "Content-Type", "value": "application/json"}, {"key": "Authorization", "value": "Bearer {{token}}"}],
+            "body": { "mode": "raw", "raw": "{\"reason\": \"Key compromised - rotating for security\"}" },
+            "url": { "raw": "{{baseUrl}}/apikeys/{{keyId}}", "host": ["{{baseUrl}}"], "path": ["apikeys", "{{keyId}}"] }
+          },
+          "response": [
+            { "name": "Success - Revoked", "status": "OK", "code": 200, "body": "{\"message\": \"API key revoked successfully\"}" },
+            { "name": "Error - Not Found", "status": "Not Found", "code": 404, "body": "{\"error\": \"API key not found\"}" }
+          ]
+        },
+        {
+          "name": "Get API Key Usage",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": { "raw": "{{baseUrl}}/apikeys/{{keyId}}/usage?from=2025-01-01&to=2025-02-04", "host": ["{{baseUrl}}"], "path": ["apikeys", "{{keyId}}", "usage"], "query": [{"key": "from", "value": "2025-01-01"}, {"key": "to", "value": "2025-02-04"}] }
+          },
+          "response": [
+            { "name": "Success - With Date Range", "status": "OK", "code": 200, "body": "{\"keyId\": \"880e8400-e29b-41d4-a716-446655440003\", \"totalRequests\": 15420, \"totalTokens\": 8923400, \"period\": {\"from\": \"2025-01-01\", \"to\": \"2025-02-04\"}, \"dailyUsage\": [{\"date\": \"2025-02-04\", \"requests\": 523, \"tokens\": 302100}]}" },
+            { "name": "Success - Default Range (30 days)", "status": "OK", "code": 200, "body": "{\"keyId\": \"880e8400-e29b-41d4-a716-446655440003\", \"totalRequests\": 45230, \"totalTokens\": 26345000}" }
           ]
         }
       ]
     }
   ],
   "variable": [
-    {
-      "key": "baseUrl",
-      "value": "http://localhost:54872",
-      "type": "string",
-      "description": "Base URL for the Inference Gateway API"
-    },
-    {
-      "key": "authToken",
-      "value": "",
-      "type": "string",
-      "description": "JWT authentication token (obtained from login)"
-    },
-    {
-      "key": "projectId",
-      "value": "proj_default",
-      "type": "string",
-      "description": "Project ID for API key management"
-    },
-    {
-      "key": "requestId",
-      "value": "req_abc123",
-      "type": "string",
-      "description": "Provider request ID"
-    },
-    {
-      "key": "providerId",
-      "value": "openai",
-      "type": "string",
-      "description": "Provider identifier (openai, anthropic, etc.)"
-    },
-    {
-      "key": "providerKey",
-      "value": "custom-llm",
-      "type": "string",
-      "description": "Provider key for health checks"
-    },
-    {
-      "key": "keyId",
-      "value": "key_abc123",
-      "type": "string",
-      "description": "API key ID"
-    }
+    { "key": "baseUrl", "value": "http://localhost:51121", "type": "string", "description": "Base URL for the Synaxis Inference Gateway API" },
+    { "key": "token", "value": "", "type": "string", "description": "JWT Bearer token for authenticated requests" },
+    { "key": "adminToken", "value": "", "type": "string", "description": "Admin JWT token for administrative operations" },
+    { "key": "apiKey", "value": "", "type": "string", "description": "API Key for OpenAI-compatible endpoints" },
+    { "key": "projectId", "value": "550e8400-e29b-41d4-a716-446655440000", "type": "string", "description": "Project ID for API key management" },
+    { "key": "keyId", "value": "880e8400-e29b-41d4-a716-446655440003", "type": "string", "description": "API Key ID for operations on specific keys" },
+    { "key": "organizationId", "value": "660e8400-e29b-41d4-a716-446655440001", "type": "string", "description": "Organization ID for identity operations" },
+    { "key": "refreshToken", "value": "", "type": "string", "description": "Refresh token for obtaining new access tokens" },
+    { "key": "requestId", "value": "aa0e8400-e29b-41d4-a716-446655440000", "type": "string", "description": "Provider request ID" }
   ]
 }

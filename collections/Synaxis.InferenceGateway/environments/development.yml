@@ -1,0 +1,30 @@
+environment:
+  name: development
+  variables:
+    - name: baseUrl
+      value: http://localhost:51121
+      type: text
+    - name: token
+      value: ""
+      type: text
+    - name: adminToken
+      value: ""
+      type: text
+    - name: apiKey
+      value: ""
+      type: text
+    - name: projectId
+      value: 550e8400-e29b-41d4-a716-446655440000
+      type: text
+    - name: keyId
+      value: 880e8400-e29b-41d4-a716-446655440003
+      type: text
+    - name: organizationId
+      value: 660e8400-e29b-41d4-a716-446655440001
+      type: text
+    - name: refreshToken
+      value: ""
+      type: text
+    - name: requestId
+      value: aa0e8400-e29b-41d4-a716-446655440000
+      type: text
