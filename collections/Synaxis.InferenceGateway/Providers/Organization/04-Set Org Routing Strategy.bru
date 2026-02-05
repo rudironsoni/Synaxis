@@ -1,0 +1,73 @@
+meta {
+  name: Set Org Routing Strategy
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/api/orgs/{{organizationId}}/providers/routing
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "strategy": "priority",
+    "fallbackEnabled": true,
+    "providers": [
+      {
+        "id": "groq",
+        "priority": 1,
+        "weight": 100
+      },
+      {
+        "id": "cohere",
+        "priority": 2,
+        "weight": 80
+      },
+      {
+        "id": "gemini",
+        "priority": 3,
+        "weight": 60
+      }
+    ]
+  }
+}
+
+tests {
+  test("should return 200 OK or 404 Not Implemented", function() {
+    expect([200, 404]).to.include(res.status);
+  });
+  
+  if (res.status === 200) {
+    test("should return routing configuration", function() {
+      const body = res.getBody();
+      expect(body.strategy).to.be.a('string');
+    });
+    
+    test("should confirm fallback enabled", function() {
+      const body = res.getBody();
+      expect(body.fallbackEnabled).to.be.a('boolean');
+    });
+    
+    test("should return provider list", function() {
+      const body = res.getBody();
+      expect(body.providers).to.be.an('array');
+    });
+  }
+}
+
+script:post-response {
+  const response = res.getBody();
+  if (response && response.strategy) {
+    bru.setEnvVar("routingStrategy", response.strategy);
+  }
+}

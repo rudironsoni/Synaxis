@@ -1,0 +1,55 @@
+meta {
+  name: Identity Login
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/identity/login
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "email": "{{uniqueIdentityEmail}}",
+    "password": "SecurePass123!"
+  }
+}
+
+tests {
+  test("should return 200 OK or 401 (if identity not registered)", function() {
+    // Note: 401 is expected if the identity user doesn't exist yet
+    expect([200, 401]).to.include(res.status);
+  });
+  
+  if (res.status === 200) {
+    test("should return success flag", function() {
+      const body = res.getBody();
+      expect(body.success).to.equal(true);
+    });
+    
+    test("should return a valid access token", function() {
+      const body = res.getBody();
+      expect(body.accessToken).to.be.a('string');
+      expect(body.accessToken.length).to.be.greaterThan(0);
+    });
+    
+    test("should return refresh token", function() {
+      const body = res.getBody();
+      expect(body.refreshToken).to.be.a('string');
+    });
+  }
+}
+
+script:post-response {
+  const response = res.getBody();
+  if (response && response.accessToken) {
+    bru.setEnvVar("identityToken", response.accessToken);
+    bru.setEnvVar("identityRefreshToken", response.refreshToken);
+  }
+}

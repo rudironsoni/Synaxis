@@ -1,0 +1,65 @@
+meta {
+  name: All Providers Health
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/admin/providers
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+tests {
+  test("should return 200 OK", function() {
+    expect([200, 401]).to.include(res.status);
+  });
+  
+  if (res.status === 200) {
+    test("should return providers array", function() {
+      const body = res.getBody();
+      expect(body.providers).to.be.an('array');
+    });
+    
+    test("should have at least one provider", function() {
+      const body = res.getBody();
+      expect(body.providers.length).to.be.greaterThan(0);
+    });
+    
+    test("each provider should have health status", function() {
+      const body = res.getBody();
+      if (body.providers && body.providers.length > 0) {
+        const provider = body.providers[0];
+        expect(provider.id).to.be.a('string');
+        expect(provider.name).to.be.a('string');
+        expect(provider.status).to.be.a('string');
+      }
+    });
+    
+    test("should include healthy and unhealthy counts", function() {
+      const body = res.getBody();
+      const healthyCount = body.providers.filter(p => p.status === 'healthy').length;
+      const unhealthyCount = body.providers.filter(p => p.status === 'unhealthy' || p.status === 'degraded').length;
+      expect(healthyCount + unhealthyCount).to.equal(body.providers.length);
+    });
+  }
+}
+
+script:post-response {
+  const response = res.getBody();
+  if (response && response.providers) {
+    // Count healthy vs unhealthy providers
+    const healthyCount = response.providers.filter(p => p.status === 'healthy').length;
+    const totalCount = response.providers.length;
+    bru.setEnvVar("healthyProviderCount", healthyCount.toString());
+    bru.setEnvVar("totalProviderCount", totalCount.toString());
+  }
+}

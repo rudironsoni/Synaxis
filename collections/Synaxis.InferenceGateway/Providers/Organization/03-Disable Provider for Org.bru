@@ -1,0 +1,49 @@
+meta {
+  name: Disable Provider for Org
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/orgs/{{organizationId}}/providers/groq/disable
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+tests {
+  test("should return 200 OK or 404 Not Implemented", function() {
+    expect([200, 404]).to.include(res.status);
+  });
+  
+  if (res.status === 200) {
+    test("should confirm provider disabled", function() {
+      const body = res.getBody();
+      expect(body.enabled).to.equal(false);
+    });
+    
+    test("should return provider ID", function() {
+      const body = res.getBody();
+      expect(body.providerId).to.be.a('string');
+    });
+    
+    test("should return organization ID", function() {
+      const body = res.getBody();
+      expect(body.organizationId).to.equal(bru.getEnvVar("organizationId"));
+    });
+  }
+}
+
+script:post-response {
+  const response = res.getBody();
+  if (response) {
+    bru.setEnvVar("providerDisabled", "true");
+  }
+}

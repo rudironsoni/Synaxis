@@ -1,0 +1,65 @@
+meta {
+  name: Identity Register
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/identity/register
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+script:pre-request {
+  // Generate unique email for each test run
+  const timestamp = new Date().getTime();
+  const random = Math.floor(Math.random() * 10000);
+  bru.setVar("uniqueIdentityEmail", `testidentity${timestamp}${random}@example.com`);
+}
+
+body:json {
+  {
+    "email": "{{uniqueIdentityEmail}}",
+    "password": "SecurePass123!",
+    "firstName": "Test",
+    "lastName": "User",
+    "organizationName": "My Organization"
+  }
+}
+
+tests {
+  test("should return 200 OK or 400 if user exists", function() {
+    expect([200, 400]).to.include(res.status);
+  });
+  
+  if (res.status === 200) {
+    test("should return user ID", function() {
+      const body = res.getBody();
+      expect(body.userId).to.be.a('string');
+      expect(body.userId.length).to.be.greaterThan(0);
+    });
+    
+    test("should return organization ID", function() {
+      const body = res.getBody();
+      expect(body.organizationId).to.be.a('string');
+      expect(body.organizationId.length).to.be.greaterThan(0);
+    });
+    
+    test("should return success message", function() {
+      const body = res.getBody();
+      expect(body.message).to.equal("Registration successful");
+    });
+  }
+}
+
+script:post-response {
+  const response = res.getBody();
+  if (response && response.userId) {
+    bru.setEnvVar("identityUserId", response.userId);
+    bru.setEnvVar("identityOrgId", response.organizationId);
+  }
+}

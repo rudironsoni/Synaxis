@@ -2,7 +2,7 @@ environment:
   name: development
   variables:
     - name: baseUrl
-      value: http://localhost:51121
+      value: http://localhost:8080
       type: text
     - name: token
       value: ""

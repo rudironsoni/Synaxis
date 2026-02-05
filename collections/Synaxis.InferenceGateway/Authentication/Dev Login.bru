@@ -1,0 +1,40 @@
+meta {
+  name: Dev Login
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/auth/dev-login
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "email": "dev@localhost"
+  }
+}
+
+tests {
+  test("should return 200 OK", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("should return a valid token", function() {
+    const body = res.getBody();
+    expect(body.token).to.be.a('string');
+    expect(body.token.length).to.be.greaterThan(0);
+  });
+}
+
+script:post-response {
+  const response = res.getBody();
+  if (response && response.token) {
+    bru.setEnvVar("devToken", response.token);
+  }
+}

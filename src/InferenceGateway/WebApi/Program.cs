@@ -180,6 +180,16 @@ builder.Services.AddQuartz(q =>
         .StartNow()
         .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromHours(6)).RepeatForever())
     );
+
+    // Audit Log Partition Management - daily at 3 AM
+    var auditPartitionJobKey = new JobKey("AuditLogPartitionJob");
+    q.AddJob<AuditLogPartitionJob>(opts => opts.WithIdentity(auditPartitionJobKey));
+    q.AddTrigger(opts => opts
+        .ForJob(auditPartitionJobKey)
+        .WithIdentity("AuditLogPartitionTrigger")
+        .StartNow()
+        .WithCronSchedule("0 0 3 * * ?") // 3 AM daily
+    );
 });
 
 // Add hosted service to run Quartz and wait for jobs to complete on shutdown

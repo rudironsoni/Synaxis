@@ -14,10 +14,18 @@ COPY ["src/InferenceGateway/Infrastructure/Synaxis.InferenceGateway.Infrastructu
 
 RUN dotnet restore src/InferenceGateway/WebApi/Synaxis.InferenceGateway.WebApi.csproj
 
-# Copy source and build
-COPY ["src/InferenceGateway/", "src/InferenceGateway/"]
+# Copy source files, excluding obj/bin directories
+COPY ["src/InferenceGateway/Application/", "src/InferenceGateway/Application/"]
+COPY ["src/InferenceGateway/Infrastructure/", "src/InferenceGateway/Infrastructure/"]
+COPY ["src/InferenceGateway/WebApi/", "src/InferenceGateway/WebApi/"]
+
+# Remove any obj/bin directories that might have been copied despite .dockerignore
+# This prevents stale build artifacts with .resx references from causing build errors
+RUN find /src/src/InferenceGateway -type d -name "bin" -prune -exec rm -rf {} \; 2>/dev/null || true
+RUN find /src/src/InferenceGateway -type d -name "obj" -prune -exec rm -rf {} \; 2>/dev/null || true
+
 WORKDIR /src/src/InferenceGateway/WebApi
-RUN dotnet publish -c Release -o /app/publish --no-restore /p:UseAppHost=false
+RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime Stage
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
