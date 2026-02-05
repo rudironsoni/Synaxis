@@ -265,6 +265,9 @@ public sealed class SynaxisDbContext : IdentityDbContext<SynaxisUser, Role, Guid
 
             entity.HasIndex(m => new { m.UserId, m.OrganizationId }).IsUnique();
             entity.HasIndex(m => m.Status);
+            entity.HasIndex(m => m.DeletedAt);
+
+            entity.HasQueryFilter(m => m.DeletedAt == null);
         });
 
         // UserGroupMembership Configuration

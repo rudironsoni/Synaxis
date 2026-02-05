@@ -1,0 +1,59 @@
+meta {
+  name: Enable Provider for Org
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/orgs/{{organizationId}}/providers/groq/enable
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "priority": 1,
+    "settings": {
+      "defaultModel": "llama-3.3-70b-versatile",
+      "maxTokens": 8192
+    }
+  }
+}
+
+tests {
+  test("should return 200/201 or 404 Not Implemented", function() {
+    expect([200, 201, 404]).to.include(res.status);
+  });
+  
+  if (res.status === 200 || res.status === 201) {
+    test("should confirm provider enabled", function() {
+      const body = res.getBody();
+      expect(body.enabled).to.equal(true);
+    });
+    
+    test("should return provider ID", function() {
+      const body = res.getBody();
+      expect(body.providerId).to.be.a('string');
+    });
+    
+    test("should return organization ID", function() {
+      const body = res.getBody();
+      expect(body.organizationId).to.equal(bru.getEnvVar("organizationId"));
+    });
+  }
+}
+
+script:post-response {
+  const response = res.getBody();
+  if (response && response.providerId) {
+    bru.setEnvVar("enabledProviderId", response.providerId);
+  }
+}

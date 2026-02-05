@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Synaxis.InferenceGateway.Application.ControlPlane;
 
 namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane;
@@ -12,11 +13,26 @@ public static class ControlPlaneExtensions
         services.AddDbContext<ControlPlaneDbContext>((sp, builder) =>
         {
             var config = sp.GetRequiredService<IConfiguration>();
+            var logger = sp.GetRequiredService<ILogger<ControlPlaneDbContext>>();
             var options = new ControlPlaneOptions();
             config.GetSection("Synaxis:ControlPlane").Bind(options);
 
+            logger.LogInformation("ControlPlane configuration - UseInMemory: {UseInMemory}, ConnectionString present: {HasConnectionString}", 
+                options.UseInMemory, !string.IsNullOrWhiteSpace(options.ConnectionString));
+            
+            if (!string.IsNullOrWhiteSpace(options.ConnectionString))
+            {
+                // Mask password for logging
+                var connStrMasked = System.Text.RegularExpressions.Regex.Replace(
+                    options.ConnectionString, 
+                    @"Password=([^;]+)", 
+                    "Password=***");
+                logger.LogInformation("Using PostgreSQL with connection string: {ConnectionString}", connStrMasked);
+            }
+
             if (options.UseInMemory || string.IsNullOrWhiteSpace(options.ConnectionString))
             {
+                logger.LogWarning("Using in-memory database for ControlPlane");
                 builder.UseInMemoryDatabase("SynaxisControlPlane");
             }
             else
@@ -29,11 +45,13 @@ public static class ControlPlaneExtensions
         services.AddDbContext<SynaxisDbContext>((sp, builder) =>
         {
             var config = sp.GetRequiredService<IConfiguration>();
+            var logger = sp.GetRequiredService<ILogger<SynaxisDbContext>>();
             var options = new ControlPlaneOptions();
             config.GetSection("Synaxis:ControlPlane").Bind(options);
 
             if (options.UseInMemory || string.IsNullOrWhiteSpace(options.ConnectionString))
             {
+                logger.LogWarning("Using in-memory database for Identity");
                 builder.UseInMemoryDatabase("SynaxisIdentity");
             }
             else

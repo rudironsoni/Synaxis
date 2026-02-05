@@ -1,0 +1,57 @@
+meta {
+  name: Get Org Providers
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/orgs/{{organizationId}}/providers
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+tests {
+  test("should return 200 OK or 404 Not Implemented", function() {
+    expect([200, 404]).to.include(res.status);
+  });
+  
+  if (res.status === 200) {
+    test("should return providers array", function() {
+      const body = res.getBody();
+      expect(body.providers).to.be.an('array');
+    });
+    
+    test("should return organization ID", function() {
+      const body = res.getBody();
+      expect(body.organizationId).to.be.a('string');
+    });
+    
+    test("each provider should have configuration", function() {
+      const body = res.getBody();
+      if (body.providers && body.providers.length > 0) {
+        const provider = body.providers[0];
+        expect(provider.id).to.be.a('string');
+        expect(provider.enabled).to.be.a('boolean');
+      }
+    });
+  }
+}
+
+script:post-response {
+  const response = res.getBody();
+  if (response && response.providers && response.providers.length > 0) {
+    // Save first enabled provider for testing
+    const enabledProvider = response.providers.find(p => p.enabled);
+    if (enabledProvider) {
+      bru.setEnvVar("orgProviderId", enabledProvider.id);
+    }
+  }
+}

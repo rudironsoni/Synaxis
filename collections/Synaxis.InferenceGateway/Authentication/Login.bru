@@ -1,0 +1,61 @@
+meta {
+  name: Login
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/identity/login
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "email": "{{uniqueEmail}}",
+    "password": "SecurePassword123!"
+  }
+}
+
+tests {
+  test("should return 200 OK", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("should return success flag", function() {
+    const body = res.getBody();
+    expect(body.success).to.equal(true);
+  });
+  
+  test("should return a valid access token", function() {
+    const body = res.getBody();
+    expect(body.accessToken).to.be.a('string');
+    expect(body.accessToken.length).to.be.greaterThan(0);
+  });
+  
+  test("should return refresh token", function() {
+    const body = res.getBody();
+    expect(body.refreshToken).to.be.a('string');
+  });
+  
+  test("should return user information", function() {
+    const body = res.getBody();
+    expect(body.user).to.be.an('object');
+    expect(body.user.id).to.be.a('string');
+    expect(body.user.email).to.be.a('string');
+  });
+}
+
+script:post-response {
+  const response = res.getBody();
+  if (response && response.accessToken) {
+    bru.setEnvVar("token", response.accessToken);
+    bru.setEnvVar("refreshToken", response.refreshToken);
+    bru.setEnvVar("userId", response.user.id);
+    bru.setEnvVar("organizationId", response.user.currentOrganization.id);
+  }
+}

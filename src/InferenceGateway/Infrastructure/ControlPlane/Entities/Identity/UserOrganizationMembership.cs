@@ -1,9 +1,12 @@
+using Synaxis.InferenceGateway.Infrastructure.Data.Interfaces;
+
 namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity;
 
 /// <summary>
 /// Represents a user's membership in an organization.
+/// Implements soft delete to support cascade deletion when organization is soft deleted.
 /// </summary>
-public class UserOrganizationMembership
+public class UserOrganizationMembership : ISoftDeletable
 {
     public Guid Id { get; set; }
     public Guid UserId { get; set; }
@@ -14,6 +17,10 @@ public class UserOrganizationMembership
     public int? RateLimitTpm { get; set; }
     public bool AllowAutoOptimization { get; set; } = true;
     public required string Status { get; set; } = "Active";
+
+    // Soft delete properties
+    public DateTime? DeletedAt { get; set; }
+    public Guid? DeletedBy { get; set; }
 
     // Navigation properties
     public SynaxisUser User { get; set; } = null!;

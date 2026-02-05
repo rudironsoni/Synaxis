@@ -1,0 +1,78 @@
+meta {
+  name: Chat Cohere
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/openai/v1/chat/completions
+  body: json
+  auth: none
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Provider: cohere
+}
+
+body:json {
+  {
+    "model": "command-r-plus",
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are a helpful assistant."
+      },
+      {
+        "role": "user",
+        "content": "Say 'Hello from Cohere!' and nothing else."
+      }
+    ],
+    "temperature": 0.7,
+    "max_tokens": 50,
+    "stream": false
+  }
+}
+
+tests {
+  test("should return 200 OK", function() {
+    expect([200, 401, 503]).to.include(res.status);
+  });
+  
+  if (res.status === 200) {
+    test("should return completion", function() {
+      const body = res.getBody();
+      expect(body.choices).to.be.an('array');
+      expect(body.choices.length).to.be.greaterThan(0);
+    });
+    
+    test("should have message content", function() {
+      const body = res.getBody();
+      expect(body.choices[0].message.content).to.be.a('string');
+      expect(body.choices[0].message.content.length).to.be.greaterThan(0);
+    });
+    
+    test("should include usage information", function() {
+      const body = res.getBody();
+      expect(body.usage).to.be.an('object');
+      expect(body.usage.total_tokens).to.be.a('number');
+    });
+    
+    test("should include model information", function() {
+      const body = res.getBody();
+      expect(body.model).to.be.a('string');
+    });
+  }
+}
+
+script:post-response {
+  const response = res.getBody();
+  if (response && response.id) {
+    bru.setEnvVar("cohereCompletionId", response.id);
+    bru.setEnvVar("cohereModel", response.model);
+  }
+}

@@ -1,0 +1,42 @@
+meta {
+  name: Get Provider Health
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/providers/groq/status
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+tests {
+  test("should return 200 OK", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("should return health status", function() {
+    const body = res.getBody();
+    expect(body.status).to.be.a('string');
+  });
+  
+  test("should include timestamp", function() {
+    const body = res.getBody();
+    expect(body.lastChecked).to.be.a('string');
+  });
+}
+
+script:post-response {
+  const response = res.getBody();
+  if (response) {
+    bru.setEnvVar("providerHealthStatus", response.status);
+  }
+}

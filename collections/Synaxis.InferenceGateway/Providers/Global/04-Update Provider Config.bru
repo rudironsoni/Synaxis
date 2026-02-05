@@ -1,0 +1,44 @@
+meta {
+  name: Update Provider Config
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/api/providers/{{providerId}}/config
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "enabled": true,
+    "tier": 1
+  }
+}
+
+tests {
+  test("should return 200 OK", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("should return success flag", function() {
+    const body = res.getBody();
+    expect(body.success).to.equal(true);
+  });
+}
+
+script:post-response {
+  const response = res.getBody();
+  if (response && response.success) {
+    bru.setEnvVar("providerConfigUpdated", "true");
+  }
+}
