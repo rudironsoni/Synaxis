@@ -1,0 +1,89 @@
+meta {
+  name: 422-07-Validation Errors
+  type: http
+  seq: 39
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "name": "A",
+    "slug": "invalid_slug_with_underscores!",
+    "tier": "unknown",
+    "contactEmail": "not-an-email"
+  }
+}
+
+assert {
+  res.status: eq 422
+  res.body.error: isDefined
+  res.body.error.code: eq VALIDATION_ERROR
+  res.body.error.message: isDefined
+  res.body.error.details: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 422", function() {
+    expect(res.status).to.equal(422);
+  });
+  
+  test("Error code is VALIDATION_ERROR", function() {
+    expect(res.body.error.code).to.equal("VALIDATION_ERROR");
+  });
+  
+  test("Error message mentions validation failures", function() {
+    expect(res.body.error.message).to.match(/validation|invalid|errors/i);
+  });
+  
+  test("Error details list all validation errors", function() {
+    expect(res.body.error.details).to.be.an('array');
+    expect(res.body.error.details.length).to.be.greaterThan(1);
+  });
+  
+  test("Each error includes field and constraint", function() {
+    res.body.error.details.forEach(error => {
+      expect(error).to.have.property('field');
+      expect(error).to.have.property('constraint');
+    });
+  });
+  
+  test("Errors include name length validation", function() {
+    const nameError = res.body.error.details.find(e => e.field === 'name');
+    expect(nameError).to.be.defined;
+  });
+}
+
+docs {
+  # 422 Unprocessable Entity - Validation Errors
+  
+  Tests multiple validation errors in single request.
+  
+  ## Trigger Condition
+  - POST to /organizations with multiple invalid fields
+  - name too short, slug invalid format, tier unknown, email invalid
+  
+  ## Expected Response
+  - Status: 422
+  - Error code: VALIDATION_ERROR
+  - Array of all validation errors with field/constraint
+  
+  ## Validation
+  - Multiple validation errors collected
+  - Each error detailed separately
+  - Comprehensive feedback for fixes
+}

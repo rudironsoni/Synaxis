@@ -1,0 +1,79 @@
+meta {
+  name: 400-01-Missing Required Fields
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "slug": "test-org"
+  }
+}
+
+assert {
+  res.status: eq 400
+  res.body.error: isDefined
+  res.body.error.code: eq MISSING_REQUIRED_FIELDS
+  res.body.error.message: isDefined
+  res.body.error.details: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 400", function() {
+    expect(res.status).to.equal(400);
+  });
+  
+  test("Error code is MISSING_REQUIRED_FIELDS", function() {
+    expect(res.body.error.code).to.equal("MISSING_REQUIRED_FIELDS");
+  });
+  
+  test("Error message mentions missing fields", function() {
+    expect(res.body.error.message).to.match(/required|missing/i);
+  });
+  
+  test("Error details list missing fields", function() {
+    expect(res.body.error.details).to.be.an('array');
+    expect(res.body.error.details.length).to.be.greaterThan(0);
+    expect(res.body.error.details[0]).to.have.property('field');
+  });
+  
+  test("Response includes error timestamp", function() {
+    expect(res.body.error.timestamp).to.be.a('string');
+  });
+}
+
+docs {
+  # 400 Bad Request - Missing Required Fields
+  
+  Tests validation when required fields are omitted from request body.
+  
+  ## Trigger Condition
+  - POST to /organizations without required "name" field
+  - Only provides "slug" field
+  
+  ## Expected Response
+  - Status: 400
+  - Error code: MISSING_REQUIRED_FIELDS
+  - Details array listing missing fields
+  
+  ## Validation
+  - Ensures API rejects incomplete requests
+  - Returns actionable error details
+  - Identifies all missing required fields
+}

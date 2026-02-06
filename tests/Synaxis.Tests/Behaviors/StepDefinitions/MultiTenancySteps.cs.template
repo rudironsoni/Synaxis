@@ -1,0 +1,215 @@
+using Xunit;
+using FluentAssertions;
+using Moq;
+using System.Net;
+using TechTalk.SpecFlow;
+using Synaxis.Core.Entities;
+using Synaxis.Core.Services;
+
+namespace Synaxis.Tests.Behaviors.StepDefinitions;
+
+/// <summary>
+/// Step definitions for Multi-Tenancy feature scenarios.
+/// Maps Gherkin steps to actual test implementation.
+/// </summary>
+[Binding]
+public class MultiTenancySteps
+{
+    private readonly ScenarioContext _scenarioContext;
+    private readonly Mock<ITenantService> _tenantService;
+    private readonly Mock<IAuditService> _auditService;
+    private readonly Mock<IApiKeyService> _apiKeyService;
+
+    public MultiTenancySteps(ScenarioContext scenarioContext)
+    {
+        _scenarioContext = scenarioContext;
+        _tenantService = new Mock<ITenantService>();
+        _auditService = new Mock<IAuditService>();
+        _apiKeyService = new Mock<IApiKeyService>();
+    }
+
+    #region Given Steps
+
+    [Given(@"Organization ""(.*)"" exists with ID ""(.*)""")]
+    public void GivenOrganizationExistsWithId(string orgName, string orgId)
+    {
+        var organization = new Organization
+        {
+            Id = orgId,
+            Name = orgName,
+            CreatedAt = DateTime.UtcNow,
+            Status = OrganizationStatus.Active
+        };
+
+        _tenantService
+            .Setup(s => s.GetOrganizationById(orgId))
+            .ReturnsAsync(organization);
+
+        _scenarioContext[$"Org_{orgName}"] = organization;
+    }
+
+    [Given(@"User ""(.*)"" belongs to ""(.*)""")]
+    public void GivenUserBelongsToOrganization(string userEmail, string orgId)
+    {
+        var user = new User
+        {
+            Id = Guid.NewGuid().ToString(),
+            Email = userEmail,
+            OrganizationId = orgId,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _tenantService
+            .Setup(s => s.GetUserByEmail(userEmail))
+            .ReturnsAsync(user);
+
+        _scenarioContext[$"User_{userEmail}"] = user;
+    }
+
+    [Given(@"API key ""(.*)"" belongs to ""(.*)""")]
+    public void GivenApiKeyBelongsToOrganization(string apiKey, string orgId)
+    {
+        var key = new ApiKey
+        {
+            Id = Guid.NewGuid().ToString(),
+            Key = apiKey,
+            OrganizationId = orgId,
+            CreatedAt = DateTime.UtcNow,
+            IsActive = true
+        };
+
+        _apiKeyService
+            .Setup(s => s.ValidateApiKey(apiKey))
+            .ReturnsAsync(key);
+
+        _scenarioContext[$"ApiKey_{apiKey}"] = key;
+    }
+
+    [Given(@"the system is running in multi-tenant mode")]
+    public void GivenSystemIsMultiTenant()
+    {
+        // Configure system for multi-tenancy
+        _scenarioContext["MultiTenantMode"] = true;
+    }
+
+    [Given(@"audit logging is enabled")]
+    public void GivenAuditLoggingEnabled()
+    {
+        _scenarioContext["AuditEnabled"] = true;
+    }
+
+    #endregion
+
+    #region When Steps
+
+    [When(@"User ""(.*)"" tries to access Organization ""(.*)"" data")]
+    public async Task WhenUserTriesToAccessOrgData(string userEmail, string orgId)
+    {
+        var user = _scenarioContext[$"User_{userEmail}"] as User;
+
+        try
+        {
+            // Simulate API request with user context
+            var result = await _tenantService.Object.GetOrganizationData(orgId, user.OrganizationId);
+            _scenarioContext["AccessResult"] = result;
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _scenarioContext["Exception"] = ex;
+            _scenarioContext["StatusCode"] = HttpStatusCode.Forbidden;
+        }
+    }
+
+    [When(@"API key ""(.*)"" is used to authenticate")]
+    public async Task WhenApiKeyIsUsed(string apiKey)
+    {
+        var key = await _apiKeyService.Object.ValidateApiKey(apiKey);
+        _scenarioContext["AuthenticatedKey"] = key;
+    }
+
+    [When(@"System executes query for user in ""(.*)""")]
+    public async Task WhenSystemExecutesQuery(string orgId)
+    {
+        // Simulate database query with tenant filter
+        var requests = await _tenantService.Object.GetInferenceRequests(orgId);
+        _scenarioContext["QueryResults"] = requests;
+    }
+
+    #endregion
+
+    #region Then Steps
+
+    [Then(@"Access should be denied with 403 Forbidden")]
+    public void ThenAccessShouldBeDenied()
+    {
+        _scenarioContext.Should().ContainKey("StatusCode");
+        var statusCode = (HttpStatusCode)_scenarioContext["StatusCode"];
+        statusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Then(@"Audit log should record the unauthorized access attempt")]
+    public void ThenAuditLogShouldRecordAttempt()
+    {
+        _auditService.Verify(
+            s => s.LogUnauthorizedAccess(
+                It.IsAny<string>(),  // userId
+                It.IsAny<string>(),  // attemptedResource
+                It.IsAny<string>()   // reason
+            ),
+            Times.Once
+        );
+    }
+
+    [Then(@"Response should include error code ""(.*)""")]
+    public void ThenResponseShouldIncludeErrorCode(string errorCode)
+    {
+        var exception = _scenarioContext["Exception"] as Exception;
+        exception.Should().NotBeNull();
+        exception.Message.Should().Contain(errorCode);
+    }
+
+    [Then(@"Requests should be charged to ""(.*)"" organization")]
+    public void ThenRequestsShouldBeChargedTo(string orgId)
+    {
+        var key = _scenarioContext["AuthenticatedKey"] as ApiKey;
+        key.Should().NotBeNull();
+        key.OrganizationId.Should().Be(orgId);
+    }
+
+    [Then(@"Exactly (.*) requests should be returned")]
+    public void ThenExactRequestsShouldBeReturned(int expectedCount)
+    {
+        var results = _scenarioContext["QueryResults"] as List<InferenceRequest>;
+        results.Should().NotBeNull();
+        results.Should().HaveCount(expectedCount);
+    }
+
+    [Then(@"All returned requests should have tenant_id = ""(.*)""")]
+    public void ThenAllRequestsShouldHaveTenantId(string expectedTenantId)
+    {
+        var results = _scenarioContext["QueryResults"] as List<InferenceRequest>;
+        results.Should().NotBeNull();
+        results.Should().OnlyContain(r => r.OrganizationId == expectedTenantId);
+    }
+
+    #endregion
+
+    #region Helper Methods
+
+    private void SetupTenantIsolation()
+    {
+        // Configure tenant isolation rules
+        _tenantService
+            .Setup(s => s.GetOrganizationData(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns<string, string>((targetOrgId, userOrgId) =>
+            {
+                if (targetOrgId != userOrgId)
+                {
+                    throw new UnauthorizedAccessException("TENANT_ISOLATION_VIOLATION");
+                }
+                return Task.FromResult(new OrganizationData());
+            });
+    }
+
+    #endregion
+}

@@ -1,0 +1,57 @@
+meta {
+  name: EU User - EU Region - Cross Border False - SCC Invalid
+  type: http
+  seq: 28
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: eu-west-1
+  X-Processed-Region: eu-west-1
+  X-Cross-Border: false
+  X-Legal-Basis: SCC
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test invalid SCC for same-region processing"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("Invalid legal basis for non-transfer rejected", function() {
+    expect(res.status).to.equal(400);
+    expect(res.body.error).to.include('legal basis not required');
+  });
+}
+
+docs {
+  # EU User - EU Region - Invalid Legal Basis
+  
+  Tests error handling when legal basis is specified for same-region processing.
+  Legal basis should only be provided for cross-border transfers.
+  
+  ## Expected Behavior
+  - Request rejected with 400
+  - Error indicates legal basis not applicable
+}

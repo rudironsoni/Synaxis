@@ -1,0 +1,71 @@
+meta {
+  name: 401-03-Expired Token
+  type: http
+  seq: 13
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjE1MTYyMzkwMjJ9.4Adcj0vW1xz8hR5M8FLPmKzKq1N6g5K9JqX7dGZxJ3s
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+assert {
+  res.status: eq 401
+  res.body.error: isDefined
+  res.body.error.code: eq TOKEN_EXPIRED
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 401", function() {
+    expect(res.status).to.equal(401);
+  });
+  
+  test("Error code is TOKEN_EXPIRED", function() {
+    expect(res.body.error.code).to.equal("TOKEN_EXPIRED");
+  });
+  
+  test("Error message mentions expiration", function() {
+    expect(res.body.error.message).to.match(/expired|expiration/i);
+  });
+  
+  test("Error details include expiry time", function() {
+    expect(res.body.error.details).to.have.property('expiredAt');
+  });
+  
+  test("Error suggests refresh token usage", function() {
+    expect(res.body.error.details).to.have.property('suggestion');
+    expect(res.body.error.details.suggestion).to.match(/refresh/i);
+  });
+}
+
+docs {
+  # 401 Unauthorized - Expired Token
+  
+  Tests expired JWT token handling.
+  
+  ## Trigger Condition
+  - Request with expired JWT token
+  - Token exp claim in the past
+  
+  ## Expected Response
+  - Status: 401
+  - Error code: TOKEN_EXPIRED
+  - Expiry timestamp and refresh suggestion
+  
+  ## Validation
+  - Token expiration enforcement
+  - Clear expiry messaging
+  - Helpful refresh token guidance
+}

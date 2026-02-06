@@ -1,0 +1,72 @@
+meta {
+  name: 404-02-Non-Existent User
+  type: http
+  seq: 28
+}
+
+get {
+  url: {{baseUrl}}/api/v1/users/user_nonexistent_xyz789
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+assert {
+  res.status: eq 404
+  res.body.error: isDefined
+  res.body.error.code: eq USER_NOT_FOUND
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 404", function() {
+    expect(res.status).to.equal(404);
+  });
+  
+  test("Error code is USER_NOT_FOUND", function() {
+    expect(res.body.error.code).to.equal("USER_NOT_FOUND");
+  });
+  
+  test("Error message mentions user not found", function() {
+    expect(res.body.error.message).to.match(/user|not found|does not exist/i);
+  });
+  
+  test("Error details include requested ID", function() {
+    expect(res.body.error.details).to.have.property('userId');
+    expect(res.body.error.details.userId).to.equal('user_nonexistent_xyz789');
+  });
+  
+  test("No timing attack vector", function() {
+    // Response time should be consistent regardless of user existence
+    expect(res.responseTime).to.be.lessThan(1000);
+  });
+}
+
+docs {
+  # 404 Not Found - Non-Existent User
+  
+  Tests handling of requests for non-existent users.
+  
+  ## Trigger Condition
+  - GET /users/{id} with non-existent user ID
+  - User ID not in database
+  
+  ## Expected Response
+  - Status: 404
+  - Error code: USER_NOT_FOUND
+  - Requested user ID
+  
+  ## Validation
+  - Proper 404 for missing users
+  - No timing attack vectors
+  - No user enumeration leakage
+}

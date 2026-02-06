@@ -1,0 +1,56 @@
+meta {
+  name: US User - EU Region - SCC - Third Party Processor
+  type: http
+  seq: 57
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: us-east-1
+  X-Processed-Region: eu-west-1
+  X-Cross-Border: true
+  X-Legal-Basis: SCC
+  X-Sub-Processor: OpenAI-EU
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test with sub-processor involvement"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-sub-processor-approved: eq true
+  res.headers.x-processor-agreement: eq executed
+}
+
+tests {
+  test("Sub-processor compliance verified", function() {
+    expect(res.headers['x-sub-processor-approved']).to.equal('true');
+    expect(res.headers['x-processor-agreement']).to.equal('executed');
+  });
+}
+
+docs {
+  # US to EU with Sub-Processor
+  
+  Tests cross-border transfer with third-party sub-processor.
+  Verifies GDPR Article 28 processor agreement requirements.
+}

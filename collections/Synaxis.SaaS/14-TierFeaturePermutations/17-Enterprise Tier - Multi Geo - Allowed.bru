@@ -1,0 +1,82 @@
+meta {
+  name: Enterprise Tier - Multi Geo - Allowed
+  type: http
+  seq: 17
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/multi-geo/configure
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{enterpriseOrgId}}
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "primaryRegion": "us-east-1",
+    "replicaRegions": ["eu-west-1", "ap-southeast-1", "ap-northeast-1"],
+    "dataResidency": "multi_region",
+    "failoverPolicy": "automatic",
+    "replicationStrategy": "synchronous"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.config: isDefined
+  res.body.config.primaryRegion: eq us-east-1
+  res.body.config.replicaRegions: isArray
+  res.body.config.status: eq active
+  res.body.config.replicationStrategy: eq synchronous
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("enterpriseOrgId"));
+}
+
+tests {
+  test("Enterprise tier can access multi-geo feature", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body.config).to.be.an('object');
+  });
+  
+  test("Multiple replica regions supported", function() {
+    expect(res.body.config.replicaRegions).to.be.an('array');
+    expect(res.body.config.replicaRegions.length).to.be.greaterThan(1);
+  });
+  
+  test("Synchronous replication available", function() {
+    expect(res.body.config.replicationStrategy).to.equal("synchronous");
+  });
+  
+  test("Configuration is active", function() {
+    expect(res.body.config.status).to.equal("active");
+  });
+}
+
+docs {
+  # Enterprise Tier - Multi Geo - Allowed
+  
+  Tests that Enterprise tier organizations can configure multi-geo with unlimited regions.
+  
+  ## Expected Behavior
+  - Returns 200 OK
+  - Configuration created with multiple replica regions
+  - Synchronous replication available (Enterprise feature)
+  
+  ## Feature: Multi-Geo Deployment
+  Available on: Pro, Enterprise
+  Enterprise advantages:
+  - Unlimited replica regions
+  - Synchronous replication
+  - Advanced failover policies
+}

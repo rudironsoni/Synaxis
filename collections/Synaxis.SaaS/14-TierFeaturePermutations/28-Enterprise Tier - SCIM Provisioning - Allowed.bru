@@ -1,0 +1,84 @@
+meta {
+  name: Enterprise Tier - SCIM Provisioning - Allowed
+  type: http
+  seq: 28
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/scim/configure
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{enterpriseOrgId}}
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "enabled": true,
+    "scimEndpoint": "https://api.synaxis.ai/scim/v2",
+    "autoProvision": true,
+    "autoDeprovision": true,
+    "groupSync": true
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.config: isDefined
+  res.body.config.enabled: eq true
+  res.body.config.bearerToken: isDefined
+  res.body.config.scimEndpoint: contains /scim/v2
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("enterpriseOrgId"));
+}
+
+tests {
+  test("Enterprise tier can configure SCIM", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body.config).to.be.an('object');
+  });
+  
+  test("SCIM endpoint provided", function() {
+    expect(res.body.config.scimEndpoint).to.include("/scim/v2");
+  });
+  
+  test("Bearer token generated", function() {
+    expect(res.body.config.bearerToken).to.be.a('string');
+  });
+  
+  test("Auto-provisioning enabled", function() {
+    expect(res.body.config.autoProvision).to.equal(true);
+  });
+}
+
+docs {
+  # Enterprise Tier - SCIM Provisioning - Allowed
+  
+  Tests that Enterprise tier can configure SCIM 2.0 user provisioning.
+  
+  ## Expected Behavior
+  - Returns 200 OK
+  - SCIM configuration created
+  - Bearer token for IdP
+  - Auto-provisioning enabled
+  
+  ## Feature: SCIM Provisioning
+  Available on: Enterprise only
+  
+  Supports:
+  - SCIM 2.0 protocol
+  - Auto user provisioning
+  - Auto de-provisioning
+  - Group synchronization
+  - Attribute mapping
+}

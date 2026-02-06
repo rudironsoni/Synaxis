@@ -1,0 +1,66 @@
+meta {
+  name: Free Tier - IP Whitelisting - Denied
+  type: http
+  seq: 31
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/security/ip-whitelist
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{freeOrgId}}
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "enabled": true,
+    "allowedIPs": ["203.0.113.0/24"]
+  }
+}
+
+assert {
+  res.status: eq 403
+  res.body.error: isDefined
+  res.body.error.code: eq FEATURE_NOT_AVAILABLE
+  res.body.error.message: contains IP whitelist
+  res.body.error.requiredTier: eq enterprise
+  res.body.error.currentTier: eq free
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("freeOrgId"));
+}
+
+tests {
+  test("Free tier cannot configure IP whitelisting", function() {
+    expect(res.status).to.equal(403);
+    expect(res.body.error.code).to.equal("FEATURE_NOT_AVAILABLE");
+  });
+  
+  test("Enterprise tier required", function() {
+    expect(res.body.error.requiredTier).to.equal("enterprise");
+  });
+}
+
+docs {
+  # Free Tier - IP Whitelisting - Denied
+  
+  Tests that free tier cannot configure IP whitelisting.
+  
+  ## Expected Behavior
+  - Returns 403 Forbidden
+  - Error code: FEATURE_NOT_AVAILABLE
+  - Enterprise tier required
+  
+  ## Feature: IP Whitelisting
+  Available on: Enterprise only
+}

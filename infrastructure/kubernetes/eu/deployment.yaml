@@ -1,0 +1,216 @@
+# Synaxis API Deployment for EU Region
+# Production-ready deployment with GDPR compliance
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: synaxis-api
+  namespace: synaxis-eu
+  labels:
+    app: synaxis-api
+    version: v1
+    component: api
+    region: eu-west-1
+spec:
+  replicas: 3 # Minimum 3 replicas for high availability across AZs
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0 # Zero downtime deployments
+  selector:
+    matchLabels:
+      app: synaxis-api
+  template:
+    metadata:
+      labels:
+        app: synaxis-api
+        version: v1
+        component: api
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      # Service account with IRSA for AWS access
+      serviceAccountName: synaxis-api
+      
+      # Pod anti-affinity to spread across AZs
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - synaxis-api
+              topologyKey: topology.kubernetes.io/zone
+          - weight: 50
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - synaxis-api
+              topologyKey: kubernetes.io/hostname
+      
+      # Security context for pod
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 3000
+        fsGroup: 2000
+        seccompProfile:
+          type: RuntimeDefault
+      
+      containers:
+      - name: api
+        # Replace with your ECR image URL
+        image: <AWS_ACCOUNT_ID>.dkr.ecr.eu-west-1.amazonaws.com/synaxis-api:latest
+        imagePullPolicy: Always
+        
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        - name: metrics
+          containerPort: 9090
+          protocol: TCP
+        
+        # Environment variables from ConfigMap
+        envFrom:
+        - configMapRef:
+            name: synaxis-config
+        
+        # Environment variables from Secrets
+        env:
+        - name: POSTGRES_HOST
+          valueFrom:
+            secretKeyRef:
+              name: synaxis-db-credentials
+              key: POSTGRES_HOST
+        - name: POSTGRES_PORT
+          valueFrom:
+            secretKeyRef:
+              name: synaxis-db-credentials
+              key: POSTGRES_PORT
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: synaxis-db-credentials
+              key: POSTGRES_DB
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: synaxis-db-credentials
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: synaxis-db-credentials
+              key: POSTGRES_PASSWORD
+        - name: REDIS_CONNECTION_STRING
+          valueFrom:
+            secretKeyRef:
+              name: synaxis-redis-credentials
+              key: REDIS_CONNECTION_STRING
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: synaxis-app-secrets
+              key: JWT_SECRET
+        
+        # Resource requests and limits
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 2000m
+            memory: 4Gi
+        
+        # Liveness probe
+        livenessProbe:
+          httpGet:
+            path: /health/liveness
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        
+        # Readiness probe
+        readinessProbe:
+          httpGet:
+            path: /health/readiness
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 2
+        
+        # Startup probe for slow-starting apps
+        startupProbe:
+          httpGet:
+            path: /health/liveness
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 0
+          periodSeconds: 10
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 30 # 5 minutes to start
+        
+        # Security context for container
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+            - ALL
+        
+        # Volume mounts
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: app-logs
+          mountPath: /app/logs
+      
+      # Volumes
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: app-logs
+        emptyDir: {}
+      
+      # DNS policy
+      dnsPolicy: ClusterFirst
+      
+      # Termination grace period
+      terminationGracePeriodSeconds: 30
+---
+# Service Account with IRSA
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: synaxis-api
+  namespace: synaxis-eu
+  labels:
+    app: synaxis-api
+  annotations:
+    # Replace with actual IAM role ARN from Terraform
+    eks.amazonaws.com/role-arn: arn:aws:iam::<AWS_ACCOUNT_ID>:role/synaxis-prod-api-role
+---
+# IAM Role for Service Account (IRSA) - Created via Terraform
+# This allows pods to assume AWS IAM roles for accessing AWS services
+# Example: accessing S3, CloudWatch Logs, Secrets Manager, etc.

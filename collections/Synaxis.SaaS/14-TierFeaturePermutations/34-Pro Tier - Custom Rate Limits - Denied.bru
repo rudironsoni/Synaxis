@@ -1,0 +1,66 @@
+meta {
+  name: Pro Tier - Custom Rate Limits - Denied
+  type: http
+  seq: 34
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/rate-limits/custom
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{proOrgId}}
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "requestsPerMinute": 5000,
+    "burstCapacity": 10000
+  }
+}
+
+assert {
+  res.status: eq 403
+  res.body.error: isDefined
+  res.body.error.code: eq FEATURE_NOT_AVAILABLE
+  res.body.error.message: contains custom rate limit
+  res.body.error.requiredTier: eq enterprise
+  res.body.error.currentTier: eq pro
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("proOrgId"));
+}
+
+tests {
+  test("Pro tier cannot configure custom rate limits", function() {
+    expect(res.status).to.equal(403);
+    expect(res.body.error.code).to.equal("FEATURE_NOT_AVAILABLE");
+  });
+  
+  test("Enterprise tier required", function() {
+    expect(res.body.error.requiredTier).to.equal("enterprise");
+  });
+}
+
+docs {
+  # Pro Tier - Custom Rate Limits - Denied
+  
+  Tests that Pro tier uses fixed enhanced rate limits, cannot customize.
+  
+  ## Expected Behavior
+  - Returns 403 Forbidden
+  - Pro gets enhanced fixed limits
+  - Custom limits require Enterprise
+  
+  ## Feature: Custom Rate Limits
+  Available on: Enterprise only
+}

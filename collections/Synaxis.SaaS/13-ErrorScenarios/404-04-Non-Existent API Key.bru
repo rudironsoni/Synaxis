@@ -1,0 +1,72 @@
+meta {
+  name: 404-04-Non-Existent API Key
+  type: http
+  seq: 30
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/virtual-keys/vk_missing_key_456
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+assert {
+  res.status: eq 404
+  res.body.error: isDefined
+  res.body.error.code: eq API_KEY_NOT_FOUND
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 404", function() {
+    expect(res.status).to.equal(404);
+  });
+  
+  test("Error code is API_KEY_NOT_FOUND", function() {
+    expect(res.body.error.code).to.equal("API_KEY_NOT_FOUND");
+  });
+  
+  test("Error message mentions API key not found", function() {
+    expect(res.body.error.message).to.match(/api key|virtual key|not found/i);
+  });
+  
+  test("Error details include key ID prefix only", function() {
+    expect(res.body.error.details).to.have.property('keyId');
+    // Should only show prefix for security
+    expect(res.body.error.details.keyId).to.match(/^vk_.*\*+$/);
+  });
+  
+  test("Full key value not leaked", function() {
+    expect(JSON.stringify(res.body)).to.not.include('vk_missing_key_456');
+  });
+}
+
+docs {
+  # 404 Not Found - Non-Existent API Key
+  
+  Tests handling of requests for non-existent virtual keys.
+  
+  ## Trigger Condition
+  - GET /virtual-keys/{keyId} with non-existent key
+  - Virtual key not found in organization
+  
+  ## Expected Response
+  - Status: 404
+  - Error code: API_KEY_NOT_FOUND
+  - Masked key ID (prefix only)
+  
+  ## Validation
+  - Proper 404 for missing keys
+  - No full key value leakage
+  - Security through masking
+}

@@ -1,0 +1,62 @@
+meta {
+  name: Pro Tier - SLA Guarantees - Standard
+  type: http
+  seq: 45
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/sla
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Organization-Id: {{proOrgId}}
+  X-Region: {{region}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.sla: isDefined
+  res.body.sla.uptime: eq 99.9%
+  res.body.sla.supportResponseTime: eq 24h
+  res.body.tier: eq pro
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("proOrgId"));
+}
+
+tests {
+  test("Pro tier has 99.9% uptime SLA", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body.sla.uptime).to.equal("99.9%");
+  });
+  
+  test("24-hour support response time", function() {
+    expect(res.body.sla.supportResponseTime).to.equal("24h");
+  });
+  
+  test("SLA document available", function() {
+    expect(res.body.sla.documentUrl).to.be.a('string');
+  });
+}
+
+docs {
+  # Pro Tier - SLA Guarantees - Standard
+  
+  Tests that Pro tier has 99.9% uptime SLA.
+  
+  ## Expected Behavior
+  - Returns 200 OK
+  - SLA terms shown
+  
+  ## SLA by Tier
+  - Free: No SLA (best effort)
+  - Pro: 99.9% uptime, 24h support response
+  - Enterprise: 99.99% uptime, 4h critical support response
+}

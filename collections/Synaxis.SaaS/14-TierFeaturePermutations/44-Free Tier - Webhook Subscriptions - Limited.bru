@@ -1,0 +1,69 @@
+meta {
+  name: Free Tier - Webhook Subscriptions - Limited
+  type: http
+  seq: 44
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/webhooks
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{freeOrgId}}
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "url": "https://customer.com/webhooks/second",
+    "events": ["inference.completed"]
+  }
+}
+
+assert {
+  res.status: eq 403
+  res.body.error: isDefined
+  res.body.error.code: eq TIER_LIMIT_EXCEEDED
+  res.body.error.message: contains webhook limit
+  res.body.error.currentLimit: eq 1
+  res.body.error.currentUsage: eq 1
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("freeOrgId"));
+}
+
+tests {
+  test("Free tier limited to 1 webhook", function() {
+    expect(res.status).to.equal(403);
+    expect(res.body.error.code).to.equal("TIER_LIMIT_EXCEEDED");
+  });
+  
+  test("Limit and usage shown", function() {
+    expect(res.body.error.currentLimit).to.equal(1);
+    expect(res.body.error.currentUsage).to.equal(1);
+  });
+}
+
+docs {
+  # Free Tier - Webhook Subscriptions - Limited
+  
+  Tests that free tier is limited to 1 webhook.
+  
+  ## Expected Behavior
+  - Returns 403 Forbidden
+  - Error code: TIER_LIMIT_EXCEEDED
+  - Shows current usage vs limit
+  
+  ## Webhook Limits by Tier
+  - Free: 1 webhook
+  - Pro: 5 webhooks
+  - Enterprise: Unlimited
+}

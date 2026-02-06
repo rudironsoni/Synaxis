@@ -1,0 +1,94 @@
+meta {
+  name: Verify Email
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/auth/verify-email
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "token": "{{verificationToken}}",
+    "email": "{{email}}"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+  res.body.message: contains verified
+  res.body.emailVerified: eq true
+  res.headers.content-type: contains application/json
+}
+
+script:pre-request {
+  // In real scenarios, token would come from email
+  // For testing, we use a mock token or one from registration response
+  const token = bru.getEnvVar("verificationToken");
+  if (!token) {
+    // Generate mock token for testing
+    bru.setVar("verificationToken", "mock-verification-token-" + Date.now());
+  }
+}
+
+script:post-response {
+  // Email is now verified, user can login
+  if (res.body.success) {
+    console.log("Email verified successfully");
+  }
+}
+
+tests {
+  test("Verification successful", function() {
+    expect(res.body.success).to.be.true;
+  });
+  
+  test("Email verified flag set", function() {
+    expect(res.body.emailVerified).to.be.true;
+  });
+  
+  test("Confirmation message present", function() {
+    expect(res.body.message).to.be.a('string');
+    expect(res.body.message.length).to.be.greaterThan(0);
+  });
+}
+
+docs {
+  # Verify Email
+  
+  Verifies user's email address using token sent to their inbox.
+  
+  ## Request Body
+  - `token`: Verification token from email
+  - `email`: Email address to verify
+  
+  ## Response
+  - `success`: Boolean indicating verification status
+  - `message`: Human-readable confirmation message
+  - `emailVerified`: True if verification successful
+  
+  ## Token Validity
+  - Tokens expire after 24 hours
+  - Single-use only (cannot be reused)
+  - Invalidated after use
+  
+  ## Error Codes
+  - 400: Invalid or expired token
+  - 404: User not found
+  - 409: Email already verified
+  - 422: Missing required fields
+  
+  ## Notes
+  - User must verify email before logging in
+  - Resend verification email if token expired
+  - Email verification required for GDPR compliance
+}

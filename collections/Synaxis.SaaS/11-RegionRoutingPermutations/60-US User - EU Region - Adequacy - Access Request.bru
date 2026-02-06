@@ -1,0 +1,56 @@
+meta {
+  name: US User - EU Region - Adequacy - Access Request
+  type: http
+  seq: 60
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: us-east-1
+  X-Processed-Region: eu-west-1
+  X-Cross-Border: true
+  X-Legal-Basis: adequacy
+  X-Subject-Access-Request: pending
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test with active SAR"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-sar-status: eq acknowledged
+  res.headers.x-sar-deadline: isDefined
+}
+
+tests {
+  test("Subject Access Request tracked", function() {
+    expect(res.headers['x-sar-status']).to.equal('acknowledged');
+    expect(res.headers['x-sar-deadline']).to.be.defined;
+  });
+}
+
+docs {
+  # US to EU with Subject Access Request
+  
+  Tests cross-border transfer with pending access request.
+  Verifies GDPR Article 15 right of access compliance.
+}

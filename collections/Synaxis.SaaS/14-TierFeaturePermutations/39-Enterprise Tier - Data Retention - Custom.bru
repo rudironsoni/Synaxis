@@ -1,0 +1,84 @@
+meta {
+  name: Enterprise Tier - Data Retention - Custom
+  type: http
+  seq: 39
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/data-retention
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{enterpriseOrgId}}
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "auditLogs": "5y",
+    "requestLogs": "2y",
+    "analytics": "3y",
+    "backups": "7y"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.policy: isDefined
+  res.body.policy.auditLogs: eq 5y
+  res.body.policy.requestLogs: eq 2y
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("enterpriseOrgId"));
+}
+
+tests {
+  test("Enterprise tier can configure custom retention", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body.policy).to.be.an('object');
+  });
+  
+  test("Custom retention periods applied", function() {
+    expect(res.body.policy.auditLogs).to.equal("5y");
+    expect(res.body.policy.requestLogs).to.equal("2y");
+    expect(res.body.policy.analytics).to.equal("3y");
+    expect(res.body.policy.backups).to.equal("7y");
+  });
+}
+
+docs {
+  # Enterprise Tier - Data Retention - Custom
+  
+  Tests that Enterprise tier can configure custom data retention policies.
+  
+  ## Expected Behavior
+  - Returns 200 OK
+  - Custom retention periods configured
+  
+  ## Feature: Custom Data Retention
+  Available on: Enterprise only
+  
+  ## Default Retention by Tier
+  Free:
+  - Audit Logs: N/A
+  - Request Logs: 7 days
+  - Analytics: 7 days
+  - Backups: 7 days
+  
+  Pro:
+  - Audit Logs: 30 days
+  - Request Logs: 30 days
+  - Analytics: 30 days
+  - Backups: 14 days
+  
+  Enterprise:
+  - Fully customizable (up to 7 years)
+}

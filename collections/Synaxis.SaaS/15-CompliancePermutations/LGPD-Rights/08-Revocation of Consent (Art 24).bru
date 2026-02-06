@@ -1,0 +1,131 @@
+meta {
+  name: 08-Revocation of Consent (Art 24)
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/v1/compliance/lgpd/consent/revoke
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: sa-east-1
+  X-Compliance-Framework: LGPD
+  X-Legal-Basis: consent
+}
+
+body:json {
+  {
+    "requestType": "consent_revocation",
+    "consentIds": [
+      "marketing_consent",
+      "analytics_consent",
+      "third_party_sharing_consent"
+    ],
+    "revocationReason": "No longer wish to share data for these purposes"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.revocationId: isDefined
+  res.body.consentRevoked: eq true
+  res.body.dataLocation: contains brazil
+  res.body.auditTrailId: isDefined
+}
+
+tests {
+  test("Consent revocation processed", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Revocation ID generated", function() {
+    expect(res.body.revocationId).to.be.a('string');
+  });
+  
+  test("Consent revoked", function() {
+    expect(res.body.consentRevoked).to.equal(true);
+  });
+  
+  test("Data location in Brazil", function() {
+    expect(res.body.dataLocation).to.match(/brazil|sa-east/i);
+  });
+  
+  test("Audit trail created", function() {
+    expect(res.body.auditTrailId).to.be.a('string');
+  });
+  
+  test("Processing ceased immediately", function() {
+    expect(res.body.processingCeased).to.equal(true);
+  });
+  
+  test("Free and easy to revoke", function() {
+    expect(res.body.freeToRevoke).to.equal(true);
+    expect(res.body.easyToRevoke).to.equal(true);
+  });
+  
+  test("Prior processing remains lawful", function() {
+    expect(res.body.priorProcessingLawful).to.equal(true);
+  });
+}
+
+docs {
+  # LGPD Revocation of Consent (Article 24)
+  
+  Article 24 - Right to revoke consent
+  
+  ## Right
+  Data subject has right to:
+  - Revoke consent at any time
+  - Free of charge
+  - Through facilitated procedure
+  
+  ## Revocation Requirements
+  - Must be as easy to revoke as to give
+  - Free of charge
+  - Immediate cessation of processing
+  - No detriment for revocation
+  
+  ## Effect of Revocation
+  - Processing must cease immediately
+  - Prior processing remains lawful (Art. 8, §5)
+  - Does not affect lawfulness before revocation
+  - Controller may retain data if other legal basis exists
+  
+  ## Controller Obligations
+  - Provide facilitated mechanism for revocation
+  - Process revocation immediately
+  - Confirm revocation to data subject
+  - Document revocation
+  
+  ## Consent Requirements (Art. 8)
+  1. Free (genuine choice)
+  2. Informed (full information)
+  3. Unambiguous (clear affirmative action)
+  4. Specific purpose
+  5. Separate from other matters
+  
+  ## Exceptions
+  If other legal basis exists (not consent-based):
+  - Legal/regulatory obligation
+  - Contract performance
+  - Legitimate interest
+  - Etc.
+  
+  ## Verification
+  ✓ Revocation processed
+  ✓ Consent revoked
+  ✓ Data location disclosed
+  ✓ Audit trail created
+  ✓ Processing ceased
+  ✓ Free to revoke
+  ✓ Easy to revoke
+  ✓ Prior processing lawful
+}

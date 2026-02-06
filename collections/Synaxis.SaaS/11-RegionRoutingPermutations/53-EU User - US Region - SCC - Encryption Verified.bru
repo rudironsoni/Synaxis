@@ -1,0 +1,56 @@
+meta {
+  name: EU User - US Region - SCC - Encryption Verified
+  type: http
+  seq: 53
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: eu-west-1
+  X-Processed-Region: us-east-1
+  X-Cross-Border: true
+  X-Legal-Basis: SCC
+  X-Encryption-Required: true
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test with encryption requirements"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-encryption-at-rest: eq AES-256
+  res.headers.x-encryption-in-transit: eq TLS-1.3
+}
+
+tests {
+  test("Encryption standards verified", function() {
+    expect(res.headers['x-encryption-at-rest']).to.equal('AES-256');
+    expect(res.headers['x-encryption-in-transit']).to.equal('TLS-1.3');
+  });
+}
+
+docs {
+  # EU to US with Encryption Verification
+  
+  Tests cross-border transfer with encryption standard verification.
+  Ensures technical safeguards meet SCC requirements.
+}

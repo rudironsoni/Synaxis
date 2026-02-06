@@ -1,0 +1,68 @@
+meta {
+  name: Enterprise Tier - SLA Guarantees - Premium
+  type: http
+  seq: 46
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/sla
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Organization-Id: {{enterpriseOrgId}}
+  X-Region: {{region}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.sla: isDefined
+  res.body.sla.uptime: eq 99.99%
+  res.body.sla.supportResponseTime: eq 4h
+  res.body.sla.financialCredits: eq true
+  res.body.tier: eq enterprise
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("enterpriseOrgId"));
+}
+
+tests {
+  test("Enterprise tier has 99.99% uptime SLA", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body.sla.uptime).to.equal("99.99%");
+  });
+  
+  test("4-hour critical support response", function() {
+    expect(res.body.sla.supportResponseTime).to.equal("4h");
+  });
+  
+  test("Financial credits for SLA breach", function() {
+    expect(res.body.sla.financialCredits).to.equal(true);
+  });
+  
+  test("Custom SLA available", function() {
+    expect(res.body.sla.customizable).to.equal(true);
+  });
+}
+
+docs {
+  # Enterprise Tier - SLA Guarantees - Premium
+  
+  Tests that Enterprise tier has 99.99% uptime SLA with financial credits.
+  
+  ## Expected Behavior
+  - Returns 200 OK
+  - Premium SLA terms
+  - Financial credits for breaches
+  
+  ## SLA by Tier
+  - Free: No SLA (best effort)
+  - Pro: 99.9% uptime, 24h support response
+  - Enterprise: 99.99% uptime, 4h critical support, financial credits
+}

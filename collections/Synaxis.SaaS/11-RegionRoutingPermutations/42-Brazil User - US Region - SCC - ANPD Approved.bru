@@ -1,0 +1,55 @@
+meta {
+  name: Brazil User - US Region - SCC - ANPD Approved
+  type: http
+  seq: 42
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: sa-east-1
+  X-Processed-Region: us-east-1
+  X-Cross-Border: true
+  X-Legal-Basis: SCC
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test Brazil-US with ANPD requirements"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-compliance-frameworks: contains LGPD
+  res.headers.x-anpd-approved: eq true
+}
+
+tests {
+  test("ANPD approval verified", function() {
+    expect(res.headers['x-anpd-approved']).to.equal('true');
+    expect(res.headers['x-compliance-frameworks']).to.include('LGPD');
+  });
+}
+
+docs {
+  # Brazil to US with ANPD Approval
+  
+  Tests Brazil-US transfer with ANPD (Brazilian DPA) approved mechanisms.
+  Verifies LGPD Article 33 compliance.
+}

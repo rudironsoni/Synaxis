@@ -1,0 +1,56 @@
+meta {
+  name: Brazil User - US Region - SCC - Processing Restriction
+  type: http
+  seq: 64
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: sa-east-1
+  X-Processed-Region: us-east-1
+  X-Cross-Border: true
+  X-Legal-Basis: SCC
+  X-Processing-Restriction: partial
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test with processing restrictions"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-restriction-applied: eq true
+  res.headers.x-allowed-operations: isDefined
+}
+
+tests {
+  test("Processing restrictions enforced", function() {
+    expect(res.headers['x-restriction-applied']).to.equal('true');
+    expect(res.headers['x-allowed-operations']).to.be.defined;
+  });
+}
+
+docs {
+  # Brazil to US with Processing Restriction
+  
+  Tests cross-border transfer with processing restrictions.
+  Verifies LGPD right to restrict certain data processing.
+}

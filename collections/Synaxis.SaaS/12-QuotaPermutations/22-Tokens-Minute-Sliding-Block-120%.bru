@@ -1,0 +1,87 @@
+meta {
+  name: Tokens-Minute-Sliding-Block-120%
+  type: http
+  seq: 22
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{orgId}}
+  X-Test-Quota-Type: tokens
+  X-Test-Quota-Limit: 150000
+  X-Test-Quota-Window: minute
+  X-Test-Quota-Window-Type: sliding
+  X-Test-Quota-Action: block
+  X-Test-Simulate-Token-Usage: 180000
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test blocking with 120% token usage in sliding window"
+      }
+    ],
+    "max_tokens": 100
+  }
+}
+
+assert {
+  res.status: eq 403
+  res.headers.x-ratelimit-limit-tokens: eq 150000
+  res.headers.x-ratelimit-remaining-tokens: eq 0
+  res.body.error.code: eq token_quota_blocked
+}
+
+tests {
+  test("Blocked at 120% token usage", function() {
+    expect(res.status).to.equal(403);
+  });
+  
+  test("Severe overage detected", function() {
+    expect(res.body.error.details.overage_tokens).to.equal(30000);
+    expect(res.body.error.details.overage_percent).to.equal(20);
+  });
+  
+  test("Sliding window overage more serious", function() {
+    // In sliding windows, 120% usage means sustained high rate
+    // Not just a burst at window boundary
+    expect(res.body.error.message).to.match(/sustained|abuse|excessive/i);
+  });
+  
+  test("Block type indicates severity", function() {
+    expect(res.body.error.type).to.equal('block');
+    expect(res.body.error.severity).to.equal('high');
+  });
+}
+
+docs {
+  # Tokens-Minute-Sliding-Block-120%
+  
+  Tests blocking for severe token overage in sliding window.
+  
+  ## Why 120% is More Serious in Sliding Windows
+  
+  **Fixed Window 120%:**
+  - Could be burst right before reset
+  - Window boundary artifact
+  - May be accidental
+  
+  **Sliding Window 120%:**
+  - Sustained rate of 180k tokens/minute
+  - 20% over limit consistently
+  - More likely intentional abuse
+  - Requires blocking
+}

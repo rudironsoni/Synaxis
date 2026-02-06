@@ -1,0 +1,117 @@
+meta {
+  name: Requests-Day-Fixed-Allow-50%
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{orgId}}
+  X-Test-Quota-Type: requests
+  X-Test-Quota-Limit: 10000
+  X-Test-Quota-Window: day
+  X-Test-Quota-Window-Type: fixed
+  X-Test-Quota-Action: allow
+  X-Test-Simulate-Usage: 5000
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test request - 50% daily quota"
+      }
+    ],
+    "max_tokens": 10
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-ratelimit-limit: eq 10000
+  res.headers.x-ratelimit-remaining: eq 5000
+  res.headers.x-ratelimit-window: eq day
+}
+
+tests {
+  test("Daily quota at 50% succeeds", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Daily rate limit headers", function() {
+    expect(res.headers['x-ratelimit-window']).to.equal('day');
+    expect(res.headers['x-ratelimit-limit']).to.equal('10000');
+    expect(parseInt(res.headers['x-ratelimit-remaining'])).to.equal(5000);
+  });
+  
+  test("Reset at day boundary", function() {
+    const reset = parseInt(res.headers['x-ratelimit-reset']);
+    const now = Math.floor(Date.now() / 1000);
+    const secondsUntilReset = reset - now;
+    
+    // Should be between 0 and 86400 seconds (24 hours)
+    expect(secondsUntilReset).to.be.greaterThan(0);
+    expect(secondsUntilReset).to.be.lessThanOrEqual(86400);
+    
+    // Reset should be at midnight
+    const resetDate = new Date(reset * 1000);
+    expect(resetDate.getHours()).to.equal(0);
+    expect(resetDate.getMinutes()).to.equal(0);
+  });
+  
+  test("Response successful", function() {
+    expect(res.body.id).to.be.a('string');
+    expect(res.body.choices).to.be.an('array');
+  });
+}
+
+docs {
+  # Requests-Day-Fixed-Allow-50%
+  
+  Tests daily quota enforcement at 50% usage.
+  
+  ## Test Configuration
+  - Metric Type: requests
+  - Time Granularity: day
+  - Window Type: fixed
+  - Action: allow
+  - Usage Level: 50% (5000/10000 requests)
+  
+  ## Daily Window Behavior
+  - Window: Calendar day (00:00:00 - 23:59:59 UTC)
+  - Reset: Midnight UTC
+  - Longest standard window
+  - Highest burst capacity
+  
+  ## Use Cases
+  ✅ Free tier limits
+  ✅ Batch processing jobs
+  ✅ Data analytics pipelines
+  ✅ Scheduled reports
+  ✅ Development/testing environments
+  
+  ## Daily vs Shorter Windows
+  
+  | Window | Limit | Burst Capacity | Use Case |
+  |--------|-------|----------------|----------|
+  | Minute | 100   | Low            | Real-time API |
+  | Hour   | 1000  | Medium         | Interactive apps |
+  | Day    | 10000 | High           | Batch processing |
+  
+  ## Timezone Considerations
+  - Fixed windows typically use UTC
+  - May not align with user timezone
+  - Consider for scheduled jobs
+}

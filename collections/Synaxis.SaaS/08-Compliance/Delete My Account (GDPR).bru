@@ -1,0 +1,168 @@
+meta {
+  name: Delete My Account (GDPR)
+  type: http
+  seq: 2
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/users/me
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "confirmation": "DELETE MY ACCOUNT",
+    "password": "{{password}}",
+    "reason": "Testing GDPR deletion",
+    "exportDataFirst": true
+  }
+}
+
+assert {
+  res.status: eq 202
+  res.body.deletionId: isDefined
+  res.body.status: eq scheduled
+  res.body.scheduledDeletionDate: isDefined
+  res.body.dataExportId: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Deletion request accepted", function() {
+    expect(res.status).to.equal(202);
+  });
+  
+  test("Deletion ID is UUID", function() {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    expect(res.body.deletionId).to.match(uuidRegex);
+  });
+  
+  test("Deletion scheduled for future", function() {
+    const scheduledDate = new Date(res.body.scheduledDeletionDate);
+    const now = new Date();
+    const daysDiff = (scheduledDate - now) / (1000 * 60 * 60 * 24);
+    expect(daysDiff).to.be.closeTo(30, 1);
+  });
+  
+  test("Data export initiated", function() {
+    if (res.body.dataExportId) {
+      expect(res.body.dataExportId).to.be.a('string');
+    }
+  });
+  
+  test("Cancellation instructions provided", function() {
+    expect(res.body.message).to.include('cancel');
+    expect(res.body.cancellationUrl).to.be.a('string');
+  });
+}
+
+docs {
+  # Delete My Account (GDPR)
+  
+  Requests permanent deletion of user account and all personal data (GDPR Article 17 - Right to Erasure).
+  
+  ## GDPR Compliance
+  Fulfills "Right to be Forgotten" under GDPR.
+  
+  ## Request Body
+  - `confirmation`: Must be exactly "DELETE MY ACCOUNT"
+  - `password`: User's password for verification
+  - `reason`: Deletion reason (optional, for analytics)
+  - `exportDataFirst`: Request data export before deletion (recommended)
+  
+  ## Deletion Process
+  
+  ### 1. Grace Period (30 days)
+  - Account marked for deletion
+  - Login disabled immediately
+  - All API keys revoked immediately
+  - User can cancel deletion within 30 days
+  - Data retained but access blocked
+  
+  ### 2. After 30 Days (Permanent Deletion)
+  - User profile deleted
+  - Personal data anonymized
+  - Email replaced with hash
+  - Name replaced with "Deleted User"
+  - Organization memberships removed
+  
+  ### 3. Data Retention (Legal Requirements)
+  Some data retained for compliance:
+  - Billing records: 7 years (tax law)
+  - Audit logs: 90 days (security)
+  - Usage statistics: Anonymized and aggregated
+  
+  ## What Gets Deleted
+  ✅ User profile (name, email, phone)
+  ✅ Authentication credentials
+  ✅ API keys
+  ✅ Personal preferences
+  ✅ Usage data (after retention period)
+  ✅ Consent records (after retention period)
+  
+  ## What's Retained (Anonymized)
+  - Invoices: Required by law, personal data anonymized
+  - Audit logs: Security requirement, IP addresses hashed
+  - Aggregated analytics: No personal identifiers
+  
+  ## Organization Impact
+  - If you're the ONLY owner of organizations:
+    - Organizations also scheduled for deletion
+    - Transfer ownership first to preserve orgs
+  - If you're a member/admin:
+    - Membership removed
+    - Organizations unaffected
+  
+  ## Cancel Deletion
+  ```
+  POST /api/v1/users/me/cancel-deletion
+  {
+    "deletionId": "uuid"
+  }
+  ```
+  
+  Only possible within 30-day grace period.
+  
+  ## Response (202 Accepted)
+  ```json
+  {
+    "deletionId": "uuid",
+    "status": "scheduled",
+    "requestedAt": "2026-02-05T10:00:00Z",
+    "scheduledDeletionDate": "2026-03-07T10:00:00Z",
+    "dataExportId": "uuid",
+    "message": "Account scheduled for deletion in 30 days.",
+    "cancellationUrl": "/users/me/cancel-deletion"
+  }
+  ```
+  
+  ## Error Codes
+  - 400: Invalid confirmation text
+  - 401: Invalid password
+  - 403: Cannot delete (outstanding invoices, etc.)
+  - 409: Deletion already in progress
+  
+  ## Security
+  - Requires password re-authentication
+  - Email confirmation sent
+  - All active sessions terminated
+  - All API keys revoked immediately
+  - Audit log entry created
+  
+  ## Best Practices
+  1. Export data first (`exportDataFirst: true`)
+  2. Transfer organization ownership if needed
+  3. Cancel subscriptions manually
+  4. Download invoices for records
+  5. Revoke OAuth apps using your account
+}

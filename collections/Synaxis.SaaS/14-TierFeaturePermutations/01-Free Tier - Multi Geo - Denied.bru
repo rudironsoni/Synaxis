@@ -1,0 +1,88 @@
+meta {
+  name: Free Tier - Multi Geo - Denied
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/multi-geo/configure
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{freeOrgId}}
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "primaryRegion": "us-east-1",
+    "replicaRegions": ["eu-west-1", "ap-southeast-1"],
+    "dataResidency": "multi_region"
+  }
+}
+
+assert {
+  res.status: eq 403
+  res.body.error: isDefined
+  res.body.error.code: eq FEATURE_NOT_AVAILABLE
+  res.body.error.message: contains multi-geo
+  res.body.error.requiredTier: eq pro
+  res.body.error.currentTier: eq free
+  res.body.upgrade: isDefined
+  res.body.upgrade.url: contains /upgrade
+  res.body.upgrade.availableTiers: includes pro
+}
+
+script:pre-request {
+  // Ensure we're using a free tier organization
+  bru.setVar("orgId", bru.getEnvVar("freeOrgId"));
+}
+
+tests {
+  test("Free tier cannot access multi-geo feature", function() {
+    expect(res.status).to.equal(403);
+    expect(res.body.error.code).to.equal("FEATURE_NOT_AVAILABLE");
+  });
+  
+  test("Response includes upgrade prompt", function() {
+    expect(res.body.upgrade).to.be.an('object');
+    expect(res.body.upgrade.url).to.include('/upgrade');
+  });
+  
+  test("Required tier is specified", function() {
+    expect(res.body.error.requiredTier).to.equal("pro");
+  });
+  
+  test("Current tier is free", function() {
+    expect(res.body.error.currentTier).to.equal("free");
+  });
+  
+  test("Upgrade options available", function() {
+    expect(res.body.upgrade.availableTiers).to.include("pro");
+  });
+}
+
+docs {
+  # Free Tier - Multi Geo - Denied
+  
+  Tests that free tier organizations cannot access multi-geo deployment features.
+  
+  ## Expected Behavior
+  - Returns 403 Forbidden
+  - Error code: FEATURE_NOT_AVAILABLE
+  - Includes upgrade prompt to Pro tier
+  - Specifies required tier (Pro)
+  
+  ## Feature: Multi-Geo Deployment
+  Available on: Pro, Enterprise
+  
+  ## Upgrade Path
+  Free → Pro ($99/month)
+}

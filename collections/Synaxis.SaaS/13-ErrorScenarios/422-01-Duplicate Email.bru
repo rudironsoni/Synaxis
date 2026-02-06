@@ -1,0 +1,81 @@
+meta {
+  name: 422-01-Duplicate Email
+  type: http
+  seq: 33
+}
+
+post {
+  url: {{baseUrl}}/api/v1/auth/register
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "email": "{{email}}",
+    "password": "NewPassword123!",
+    "firstName": "Duplicate",
+    "lastName": "User"
+  }
+}
+
+assert {
+  res.status: eq 422
+  res.body.error: isDefined
+  res.body.error.code: eq DUPLICATE_EMAIL
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 422", function() {
+    expect(res.status).to.equal(422);
+  });
+  
+  test("Error code is DUPLICATE_EMAIL", function() {
+    expect(res.body.error.code).to.equal("DUPLICATE_EMAIL");
+  });
+  
+  test("Error message mentions duplicate email", function() {
+    expect(res.body.error.message).to.match(/duplicate|already exists|registered/i);
+  });
+  
+  test("Error details identify conflicting field", function() {
+    expect(res.body.error.details).to.have.property('field');
+    expect(res.body.error.details.field).to.equal('email');
+  });
+  
+  test("Error suggests login or recovery", function() {
+    expect(res.body.error.details).to.have.property('suggestion');
+    expect(res.body.error.details.suggestion).to.match(/login|forgot password/i);
+  });
+  
+  test("No email value leaked", function() {
+    expect(res.body.error.details).to.not.have.property('value');
+  });
+}
+
+docs {
+  # 422 Unprocessable Entity - Duplicate Email
+  
+  Tests duplicate email constraint enforcement.
+  
+  ## Trigger Condition
+  - POST to /auth/register with existing email
+  - Email already registered in system
+  
+  ## Expected Response
+  - Status: 422
+  - Error code: DUPLICATE_EMAIL
+  - Field identification and account recovery guidance
+  
+  ## Validation
+  - Unique email constraint enforced
+  - Helpful user guidance (login/recovery)
+  - No email value leakage
+}

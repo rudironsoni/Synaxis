@@ -1,0 +1,82 @@
+meta {
+  name: Enterprise Tier - IP Whitelisting - Allowed
+  type: http
+  seq: 30
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/security/ip-whitelist
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{enterpriseOrgId}}
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "enabled": true,
+    "allowedIPs": [
+      "203.0.113.0/24",
+      "198.51.100.42",
+      "2001:db8::/32"
+    ],
+    "enforceForAPI": true,
+    "enforceForDashboard": true
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.config: isDefined
+  res.body.config.enabled: eq true
+  res.body.config.allowedIPs: isArray
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("enterpriseOrgId"));
+}
+
+tests {
+  test("Enterprise tier can configure IP whitelisting", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body.config).to.be.an('object');
+  });
+  
+  test("IP whitelist configured", function() {
+    expect(res.body.config.allowedIPs).to.be.an('array');
+    expect(res.body.config.allowedIPs.length).to.be.greaterThan(0);
+  });
+  
+  test("Enforcement settings applied", function() {
+    expect(res.body.config.enforceForAPI).to.equal(true);
+    expect(res.body.config.enforceForDashboard).to.equal(true);
+  });
+}
+
+docs {
+  # Enterprise Tier - IP Whitelisting - Allowed
+  
+  Tests that Enterprise tier can configure IP whitelisting.
+  
+  ## Expected Behavior
+  - Returns 200 OK
+  - IP whitelist configuration created
+  - Supports CIDR notation and IPv6
+  
+  ## Feature: IP Whitelisting
+  Available on: Enterprise only
+  
+  Supports:
+  - IPv4 and IPv6
+  - CIDR notation
+  - Per-service enforcement
+  - API and Dashboard protection
+}

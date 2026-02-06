@@ -1,0 +1,130 @@
+meta {
+  name: 20-Biometric Data - Biometric Rights
+  type: http
+  seq: 20
+}
+
+get {
+  url: {{baseUrl}}/api/v1/compliance/gdpr/biometric-data
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Region: {{region}}
+  X-Compliance-Framework: GDPR
+  X-Legal-Basis: explicit_consent
+}
+
+assert {
+  res.status: eq 200
+  res.body.biometricProcessing: isDefined
+  res.body.explicitConsent: eq true
+  res.body.auditTrailId: isDefined
+}
+
+tests {
+  test("Biometric processing disclosed", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Biometric data types documented", function() {
+    expect(res.body.biometricProcessing).to.be.an('array');
+  });
+  
+  test("Explicit consent obtained", function() {
+    expect(res.body.explicitConsent).to.equal(true);
+  });
+  
+  test("Legal basis is explicit consent or substantial public interest", function() {
+    expect(res.body.legalBasis).to.be.oneOf([
+      'explicit_consent',
+      'substantial_public_interest'
+    ]);
+  });
+  
+  test("Special category safeguards in place", function() {
+    expect(res.body.specialCategorySafeguards).to.be.an('array');
+    expect(res.body.specialCategorySafeguards.length).to.be.greaterThan(0);
+  });
+  
+  test("DPIA performed", function() {
+    expect(res.body.dpiaPerformed).to.equal(true);
+  });
+  
+  test("Encryption applied", function() {
+    expect(res.body.encryptionApplied).to.equal(true);
+  });
+  
+  test("Purpose limitation enforced", function() {
+    expect(res.body.purposeLimitation).to.be.an('array');
+  });
+}
+
+docs {
+  # GDPR Biometric Data Rights
+  
+  GDPR Article 9 - Processing of special categories of personal data
+  
+  ## Definition (Art. 4(14))
+  Biometric data = personal data resulting from specific technical processing 
+  relating to physical, physiological or behavioral characteristics which 
+  allow or confirm unique identification (facial images, fingerprints, etc.)
+  
+  ## Special Category
+  Biometric data FOR UNIQUELY IDENTIFYING a person = special category.
+  
+  ## Processing Prohibited UNLESS (Art. 9(2))
+  1. Explicit consent (with safeguards)
+  2. Employment/social security/social protection law (with safeguards)
+  3. Vital interests (if consent impossible)
+  4. Legitimate activities of foundation/association/non-profit
+  5. Data manifestly made public by subject
+  6. Legal claims
+  7. Substantial public interest (with legal basis + proportionate + safeguards)
+  8. Health/social care (with professional secrecy)
+  9. Public health interest (with safeguards)
+  10. Public interest in archiving/research/statistics (with safeguards)
+  
+  ## Explicit Consent Requirements
+  - Clear affirmative action
+  - Specific to biometric processing
+  - Informed (purpose, risks, safeguards)
+  - Free (genuine choice, no detriment)
+  - Easy to withdraw
+  
+  ## DPIA Required (Art. 35)
+  - Large-scale processing of special categories
+  - Use of new technologies
+  - Systematic monitoring
+  
+  ## Safeguards Required
+  - Encryption (in transit and at rest)
+  - Access controls
+  - Pseudonymization (where possible)
+  - Purpose limitation
+  - Retention limits
+  - Regular security assessments
+  - Staff training
+  
+  ## Common Use Cases
+  - Facial recognition
+  - Fingerprint authentication
+  - Iris scanning
+  - Voice recognition
+  - Gait analysis
+  - Vein pattern recognition
+  
+  ## Verification
+  ✓ Biometric processing disclosed
+  ✓ Explicit consent obtained
+  ✓ Legal basis documented
+  ✓ Special category safeguards
+  ✓ DPIA performed
+  ✓ Encryption applied
+  ✓ Purpose limitation enforced
+}

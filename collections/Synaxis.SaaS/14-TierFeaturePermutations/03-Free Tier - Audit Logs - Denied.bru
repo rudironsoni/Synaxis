@@ -1,0 +1,75 @@
+meta {
+  name: Free Tier - Audit Logs - Denied
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/audit-logs
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Organization-Id: {{freeOrgId}}
+  X-Region: {{region}}
+}
+
+params:query {
+  startDate: 2026-01-01
+  endDate: 2026-02-05
+  limit: 100
+}
+
+assert {
+  res.status: eq 403
+  res.body.error: isDefined
+  res.body.error.code: eq FEATURE_NOT_AVAILABLE
+  res.body.error.message: contains audit
+  res.body.error.requiredTier: eq pro
+  res.body.error.currentTier: eq free
+  res.body.upgrade: isDefined
+  res.body.upgrade.url: contains /upgrade
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("freeOrgId"));
+}
+
+tests {
+  test("Free tier cannot access audit logs", function() {
+    expect(res.status).to.equal(403);
+    expect(res.body.error.code).to.equal("FEATURE_NOT_AVAILABLE");
+  });
+  
+  test("Response includes upgrade prompt", function() {
+    expect(res.body.upgrade).to.be.an('object');
+    expect(res.body.upgrade.url).to.include('/upgrade');
+  });
+  
+  test("Required tier is pro", function() {
+    expect(res.body.error.requiredTier).to.equal("pro");
+  });
+}
+
+docs {
+  # Free Tier - Audit Logs - Denied
+  
+  Tests that free tier organizations cannot access audit logs.
+  
+  ## Expected Behavior
+  - Returns 403 Forbidden
+  - Error code: FEATURE_NOT_AVAILABLE
+  - Includes upgrade prompt to Pro tier
+  
+  ## Feature: Audit Logs
+  Available on: Pro, Enterprise
+  Retention: Pro (30 days), Enterprise (1 year)
+  
+  ## Upgrade Path
+  Free → Pro ($99/month)
+}

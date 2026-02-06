@@ -1,0 +1,103 @@
+meta {
+  name: Super Admin - Impersonate User
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/admin/impersonate
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+  X-Admin-Action: impersonate-user
+}
+
+body:json {
+  {
+    "userId": "{{userId}}",
+    "reason": "Customer support troubleshooting",
+    "durationMinutes": 15
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.impersonationToken: isDefined
+  res.body.expiresAt: isDefined
+}
+
+script:post-response {
+  if (res.body.impersonationToken) {
+    bru.setEnvVar("impersonationToken", res.body.impersonationToken);
+  }
+}
+
+tests {
+  test("Impersonation token generated", function() {
+    expect(res.body.impersonationToken).to.be.a('string');
+  });
+  
+  test("Limited duration", function() {
+    const expiresAt = new Date(res.body.expiresAt);
+    const now = new Date();
+    const minutesDiff = (expiresAt - now) / (1000 * 60);
+    expect(minutesDiff).to.be.closeTo(15, 2);
+  });
+  
+  test("Audit log created", function() {
+    expect(res.body.auditLogId).to.be.a('string');
+  });
+}
+
+docs {
+  # Super Admin - Impersonate User
+  
+  Allows super admin to impersonate user for troubleshooting.
+  
+  ## Use Cases
+  - Customer support debugging
+  - Reproduce user-reported issues
+  - Verify permissions
+  - Test UI/UX
+  
+  ## Request Body
+  - userId: User to impersonate
+  - reason: Required justification
+  - durationMinutes: 5-60 minutes (default: 15)
+  
+  ## Security
+  - Requires super_admin role
+  - Reason is mandatory (audit compliance)
+  - All actions logged with "impersonated by" flag
+  - Limited duration (auto-expires)
+  - Email notification sent to user
+  - Cannot impersonate other admins
+  
+  ## Response
+  - impersonationToken: Use as Bearer token
+  - expiresAt: Token expiry time
+  - auditLogId: Reference for audit trail
+  
+  ## Limitations
+  During impersonation:
+  - ✅ Can view user's data
+  - ✅ Can reproduce issues
+  - ❌ Cannot change password
+  - ❌ Cannot delete account
+  - ❌ Cannot modify billing
+  - ❌ Cannot transfer ownership
+  
+  ## Compliance
+  - GDPR Article 32: Security measures
+  - SOC2: Access monitoring
+  - All impersonations logged
+  - Monthly audit reports generated
+}

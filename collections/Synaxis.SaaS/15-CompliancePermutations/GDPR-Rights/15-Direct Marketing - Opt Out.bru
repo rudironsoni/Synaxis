@@ -1,0 +1,118 @@
+meta {
+  name: 15-Direct Marketing - Opt Out
+  type: http
+  seq: 15
+}
+
+post {
+  url: {{baseUrl}}/api/v1/compliance/gdpr/marketing/opt-out
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+  X-Compliance-Framework: GDPR
+  X-Legal-Basis: legitimate_interest
+}
+
+body:json {
+  {
+    "requestType": "marketing_opt_out",
+    "channels": [
+      "email",
+      "sms",
+      "phone",
+      "postal"
+    ],
+    "includeProfilingOptOut": true
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.optOutId: isDefined
+  res.body.marketingCeased: eq true
+  res.body.profilingCeased: eq true
+  res.body.auditTrailId: isDefined
+}
+
+tests {
+  test("Marketing opt-out processed", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Marketing ceased immediately", function() {
+    expect(res.body.marketingCeased).to.equal(true);
+  });
+  
+  test("Profiling ceased", function() {
+    expect(res.body.profilingCeased).to.equal(true);
+  });
+  
+  test("Audit trail created", function() {
+    expect(res.body.auditTrailId).to.be.a('string');
+  });
+  
+  test("Right was clearly presented", function() {
+    expect(res.body.rightClearlyPresented).to.equal(true);
+  });
+  
+  test("Separate from other information", function() {
+    expect(res.body.presentedSeparately).to.equal(true);
+  });
+  
+  test("Opt-out was easy", function() {
+    expect(res.body.easyOptOut).to.equal(true);
+  });
+}
+
+docs {
+  # GDPR Direct Marketing Opt-Out
+  
+  GDPR Article 21(2-3) - Right to object to direct marketing
+  
+  ## Absolute Right
+  Data subject has RIGHT to object to processing for direct marketing:
+  - No balancing test required
+  - Must cease immediately upon objection
+  - Applies to profiling related to marketing
+  
+  ## Notification Requirements (Art. 21(4))
+  Right must be:
+  - Explicitly brought to attention of data subject
+  - Presented clearly and separately from other information
+  - At latest at first communication with data subject
+  
+  ## Recital 70
+  "Easy way to withdraw consent" and "easy to object to processing"
+  
+  ## Channels Covered
+  - Electronic communications (email, SMS, etc.)
+  - Telephone marketing
+  - Postal marketing
+  - Online behavioral advertising
+  - Social media marketing
+  - Profiling for marketing purposes
+  
+  ## ePrivacy Directive
+  Additional requirements for:
+  - Cookie consent
+  - Email marketing (opt-in required)
+  - Automated calling systems
+  - Fax marketing
+  
+  ## Verification
+  ✓ Marketing ceased
+  ✓ Profiling ceased
+  ✓ Audit trail created
+  ✓ Right clearly presented
+  ✓ Presented separately
+  ✓ Easy opt-out mechanism
+  ✓ Immediate cessation
+}

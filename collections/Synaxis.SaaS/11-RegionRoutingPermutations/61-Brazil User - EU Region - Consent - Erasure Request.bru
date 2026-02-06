@@ -1,0 +1,56 @@
+meta {
+  name: Brazil User - EU Region - Consent - Erasure Request
+  type: http
+  seq: 61
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: sa-east-1
+  X-Processed-Region: eu-west-1
+  X-Cross-Border: true
+  X-Legal-Basis: consent
+  X-Erasure-Request: pending
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test with right to be forgotten"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-rtbf-status: eq scheduled
+  res.headers.x-deletion-scheduled: isDefined
+}
+
+tests {
+  test("Right to erasure request honored", function() {
+    expect(res.headers['x-rtbf-status']).to.equal('scheduled');
+    expect(res.headers['x-deletion-scheduled']).to.be.defined;
+  });
+}
+
+docs {
+  # Brazil to EU with Erasure Request
+  
+  Tests cross-border transfer with pending erasure request.
+  Verifies GDPR Article 17 right to be forgotten.
+}

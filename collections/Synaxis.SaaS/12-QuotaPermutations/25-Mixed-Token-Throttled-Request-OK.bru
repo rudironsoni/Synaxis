@@ -1,0 +1,86 @@
+meta {
+  name: Mixed-Token-Throttled-Request-OK
+  type: http
+  seq: 25
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{orgId}}
+  X-Test-Quota-Type: both
+  X-Test-Quota-Requests-Limit: 1000
+  X-Test-Quota-Tokens-Limit: 150000
+  X-Test-Simulate-Request-Usage: 500
+  X-Test-Simulate-Token-Usage: 150000
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test token quota exhausted but request quota OK"
+      }
+    ],
+    "max_tokens": 100
+  }
+}
+
+assert {
+  res.status: eq 429
+  res.headers.x-ratelimit-remaining-requests: gt 0
+  res.headers.x-ratelimit-remaining-tokens: eq 0
+  res.body.error.code: eq token_quota_exceeded
+}
+
+tests {
+  test("Throttled due to token quota", function() {
+    expect(res.status).to.equal(429);
+  });
+  
+  test("Request quota still has capacity", function() {
+    expect(parseInt(res.headers['x-ratelimit-remaining-requests'])).to.equal(500);
+  });
+  
+  test("Token quota exhausted", function() {
+    expect(parseInt(res.headers['x-ratelimit-remaining-tokens'])).to.equal(0);
+  });
+  
+  test("Error identifies token limit as blocker", function() {
+    expect(res.body.error.code).to.equal('token_quota_exceeded');
+    expect(res.body.error.details.limiting_factor).to.equal('tokens');
+  });
+  
+  test("Retry-After based on token window", function() {
+    const retryAfter = parseInt(res.headers['retry-after']);
+    expect(retryAfter).to.be.a('number');
+  });
+}
+
+docs {
+  # Mixed-Token-Throttled-Request-OK
+  
+  Tests scenario where token quota is exhausted but request quota has capacity.
+  
+  ## Dual Quota Blocking
+  Request denied because:
+  - ✅ Requests: 500/1000 (50%)
+  - ❌ Tokens: 150k/150k (100%)
+  
+  ## Use Case
+  Few large requests (high tokens each) can exhaust token quota
+  while request quota remains healthy.
+  
+  Example: 500 requests × 300 tokens avg = 150k tokens used
+}

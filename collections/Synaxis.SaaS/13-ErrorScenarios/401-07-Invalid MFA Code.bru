@@ -1,0 +1,76 @@
+meta {
+  name: 401-07-Invalid MFA Code
+  type: http
+  seq: 17
+}
+
+post {
+  url: {{baseUrl}}/api/v1/auth/mfa/verify
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "sessionToken": "{{mfaSessionToken}}",
+    "code": "000000"
+  }
+}
+
+assert {
+  res.status: eq 401
+  res.body.error: isDefined
+  res.body.error.code: eq INVALID_MFA_CODE
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 401", function() {
+    expect(res.status).to.equal(401);
+  });
+  
+  test("Error code is INVALID_MFA_CODE", function() {
+    expect(res.body.error.code).to.equal("INVALID_MFA_CODE");
+  });
+  
+  test("Error message mentions MFA code", function() {
+    expect(res.body.error.message).to.match(/mfa|code|invalid/i);
+  });
+  
+  test("Error details include attempts remaining", function() {
+    expect(res.body.error.details).to.have.property('attemptsRemaining');
+    expect(res.body.error.details.attemptsRemaining).to.be.a('number');
+  });
+  
+  test("Error includes lockout warning if needed", function() {
+    if (res.body.error.details.attemptsRemaining <= 2) {
+      expect(res.body.error.details).to.have.property('warning');
+    }
+  });
+}
+
+docs {
+  # 401 Unauthorized - Invalid MFA Code
+  
+  Tests MFA verification with incorrect code.
+  
+  ## Trigger Condition
+  - POST to /auth/mfa/verify with code "000000"
+  - Invalid/incorrect TOTP code
+  
+  ## Expected Response
+  - Status: 401
+  - Error code: INVALID_MFA_CODE
+  - Attempts remaining counter
+  
+  ## Validation
+  - MFA code validation
+  - Attempt tracking and limiting
+  - Lockout warning for low attempts
+}

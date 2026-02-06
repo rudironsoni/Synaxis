@@ -1,0 +1,74 @@
+meta {
+  name: Pro Tier - Multi Geo - Allowed
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/multi-geo/configure
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{proOrgId}}
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "primaryRegion": "us-east-1",
+    "replicaRegions": ["eu-west-1"],
+    "dataResidency": "multi_region",
+    "failoverPolicy": "automatic"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.config: isDefined
+  res.body.config.primaryRegion: eq us-east-1
+  res.body.config.replicaRegions: isArray
+  res.body.config.status: eq active
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("proOrgId"));
+}
+
+tests {
+  test("Pro tier can access multi-geo feature", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body.config).to.be.an('object');
+  });
+  
+  test("Multi-geo configuration applied", function() {
+    expect(res.body.config.primaryRegion).to.equal("us-east-1");
+    expect(res.body.config.replicaRegions).to.include("eu-west-1");
+  });
+  
+  test("Configuration is active", function() {
+    expect(res.body.config.status).to.equal("active");
+  });
+}
+
+docs {
+  # Pro Tier - Multi Geo - Allowed
+  
+  Tests that Pro tier organizations can successfully configure multi-geo deployments.
+  
+  ## Expected Behavior
+  - Returns 200 OK
+  - Configuration created and activated
+  - Primary and replica regions configured
+  
+  ## Feature: Multi-Geo Deployment
+  Available on: Pro, Enterprise
+  Pro limits: Up to 2 replica regions
+  Enterprise limits: Unlimited regions
+}

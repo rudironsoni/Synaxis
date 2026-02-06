@@ -1,0 +1,55 @@
+meta {
+  name: EU User - Brazil Region - SCC - Large Payload
+  type: http
+  seq: 45
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: eu-west-1
+  X-Processed-Region: sa-east-1
+  X-Cross-Border: true
+  X-Legal-Basis: SCC
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "This is a test message with significantly more content to test large payload handling in cross-border transfers. ".repeat(50)
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-cross-border-transfer: eq true
+  res.headers.x-payload-size: isDefined
+}
+
+tests {
+  test("Large payload transfer tracked", function() {
+    expect(res.headers['x-payload-size']).to.be.defined;
+    expect(res.headers['x-cross-border-transfer']).to.equal('true');
+  });
+}
+
+docs {
+  # EU to Brazil with Large Payload
+  
+  Tests cross-border transfer with large request payload.
+  Verifies payload size tracking for compliance auditing.
+}

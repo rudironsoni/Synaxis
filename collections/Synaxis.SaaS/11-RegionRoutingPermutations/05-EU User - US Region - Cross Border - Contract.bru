@@ -1,0 +1,65 @@
+meta {
+  name: EU User - US Region - Cross Border - Contract
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: eu-west-1
+  X-Processed-Region: us-east-1
+  X-Cross-Border: true
+  X-Legal-Basis: contract
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test message for EU to US transfer for contract performance"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-cross-border-transfer: eq true
+  res.headers.x-legal-basis: eq contract
+  res.headers.x-processed-region: eq us-east-1
+}
+
+tests {
+  test("Transfer necessary for contract performance", function() {
+    expect(res.headers['x-cross-border-transfer']).to.equal('true');
+    expect(res.headers['x-legal-basis']).to.equal('contract');
+  });
+  
+  test("Contract reference documented", function() {
+    expect(res.headers['x-contract-id']).to.be.defined;
+  });
+}
+
+docs {
+  # EU User - US Region - Cross Border - Contract
+  
+  Tests EU to US data transfer necessary for contract performance.
+  Transfer must be necessary (not just useful) for contract execution.
+  
+  ## Legal Basis
+  - Article 49(1)(b) GDPR - Contract necessity
+  - Limited to what's strictly required
+  - Must document necessity
+}

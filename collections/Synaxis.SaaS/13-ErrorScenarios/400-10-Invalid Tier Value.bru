@@ -1,0 +1,79 @@
+meta {
+  name: 400-10-Invalid Tier Value
+  type: http
+  seq: 10
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "tier": "platinum"
+  }
+}
+
+assert {
+  res.status: eq 400
+  res.body.error: isDefined
+  res.body.error.code: eq INVALID_TIER
+  res.body.error.message: isDefined
+  res.body.error.details: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 400", function() {
+    expect(res.status).to.equal(400);
+  });
+  
+  test("Error code is INVALID_TIER", function() {
+    expect(res.body.error.code).to.equal("INVALID_TIER");
+  });
+  
+  test("Error message mentions tier", function() {
+    expect(res.body.error.message).to.match(/tier|invalid/i);
+  });
+  
+  test("Error details include valid tiers", function() {
+    expect(res.body.error.details).to.have.property('validTiers');
+    expect(res.body.error.details.validTiers).to.be.an('array');
+    expect(res.body.error.details.validTiers).to.include.members(['free', 'pro', 'enterprise']);
+  });
+  
+  test("Error details include provided tier", function() {
+    expect(res.body.error.details.providedTier).to.equal('platinum');
+  });
+}
+
+docs {
+  # 400 Bad Request - Invalid Tier Value
+  
+  Tests tier enumeration validation.
+  
+  ## Trigger Condition
+  - PATCH /organizations with tier="platinum"
+  - Tier not in allowed values (free/pro/enterprise)
+  
+  ## Expected Response
+  - Status: 400
+  - Error code: INVALID_TIER
+  - List of valid tier values
+  
+  ## Validation
+  - Tier enum validation
+  - Subscription tier protection
+  - Clear allowed values list
+}

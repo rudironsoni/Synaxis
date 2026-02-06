@@ -1,0 +1,130 @@
+meta {
+  name: 13-International Transfers - View SCCs
+  type: http
+  seq: 13
+}
+
+get {
+  url: {{baseUrl}}/api/v1/compliance/gdpr/international-transfers
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Region: {{region}}
+  X-Compliance-Framework: GDPR
+  X-Legal-Basis: contract
+}
+
+assert {
+  res.status: eq 200
+  res.body.transfers: isArray
+  res.body.auditTrailId: isDefined
+}
+
+tests {
+  test("International transfers disclosed", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Transfers list provided", function() {
+    expect(res.body.transfers).to.be.an('array');
+  });
+  
+  test("Each transfer has legal basis", function() {
+    if (res.body.transfers.length > 0) {
+      const transfer = res.body.transfers[0];
+      expect(transfer.legalBasis).to.be.oneOf([
+        'adequacy_decision',
+        'standard_contractual_clauses',
+        'binding_corporate_rules',
+        'code_of_conduct',
+        'certification_mechanism',
+        'ad_hoc_clauses',
+        'explicit_consent',
+        'contract_performance',
+        'public_interest',
+        'legal_claims',
+        'vital_interests'
+      ]);
+    }
+  });
+  
+  test("Destination countries disclosed", function() {
+    if (res.body.transfers.length > 0) {
+      const transfer = res.body.transfers[0];
+      expect(transfer.destinationCountry).to.be.a('string');
+    }
+  });
+  
+  test("SCCs available if applicable", function() {
+    if (res.body.transfers.length > 0) {
+      const transfer = res.body.transfers[0];
+      if (transfer.legalBasis === 'standard_contractual_clauses') {
+        expect(transfer.sccVersion).to.be.a('string');
+        expect(transfer.sccDownloadUrl).to.be.a('string');
+      }
+    }
+  });
+  
+  test("Supplementary measures documented", function() {
+    if (res.body.transfers.length > 0) {
+      const transfer = res.body.transfers[0];
+      expect(transfer.supplementaryMeasures).to.be.an('array');
+    }
+  });
+}
+
+docs {
+  # GDPR International Transfers
+  
+  GDPR Chapter V (Articles 44-50) - Transfers to third countries
+  
+  ## Transfer Mechanisms
+  
+  ### 1. Adequacy Decision (Art. 45)
+  Commission determines adequate level of protection.
+  Current adequacy decisions: EEA, Switzerland, UK, Japan, etc.
+  
+  ### 2. Appropriate Safeguards (Art. 46)
+  - Standard Contractual Clauses (SCCs) - 2021 version
+  - Binding Corporate Rules (BCRs)
+  - Code of Conduct (approved)
+  - Certification Mechanism (approved)
+  - Ad hoc contractual clauses (approved by authority)
+  - International agreements
+  
+  ### 3. Derogations (Art. 49) - EXCEPTIONAL ONLY
+  - Explicit consent (informed of risks)
+  - Contract performance
+  - Public interest
+  - Legal claims
+  - Vital interests
+  - Public register
+  
+  ## Schrems II Requirements
+  After CJEU ruling (Schrems II):
+  - Assess laws in destination country
+  - Implement supplementary measures if needed
+  - Document transfer impact assessment
+  - Suspend/terminate if adequate protection not possible
+  
+  ## Supplementary Measures
+  - Encryption (in transit and at rest)
+  - Pseudonymization
+  - Technical access controls
+  - Contractual guarantees
+  - Organizational measures
+  
+  ## Verification
+  ✓ Transfers disclosed
+  ✓ Legal basis documented
+  ✓ Destination countries listed
+  ✓ SCCs available
+  ✓ Supplementary measures documented
+  ✓ Transfer impact assessment performed
+}

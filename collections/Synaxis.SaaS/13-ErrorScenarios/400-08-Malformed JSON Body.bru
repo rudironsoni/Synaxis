@@ -1,0 +1,79 @@
+meta {
+  name: 400-08-Malformed JSON Body
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations
+  body: text
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:text {
+  {
+    "name": "Test Org",
+    "slug": "test-org"
+    "invalid": "missing comma"
+  }
+}
+
+assert {
+  res.status: eq 400
+  res.body.error: isDefined
+  res.body.error.code: eq MALFORMED_JSON
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 400", function() {
+    expect(res.status).to.equal(400);
+  });
+  
+  test("Error code is MALFORMED_JSON", function() {
+    expect(res.body.error.code).to.equal("MALFORMED_JSON");
+  });
+  
+  test("Error message mentions JSON parsing", function() {
+    expect(res.body.error.message).to.match(/json|parse|malformed|syntax/i);
+  });
+  
+  test("Error details include parse error", function() {
+    expect(res.body.error.details).to.have.property('parseError');
+  });
+  
+  test("No stack trace leaked", function() {
+    expect(res.body.error).to.not.have.property('stack');
+    expect(JSON.stringify(res.body)).to.not.match(/at Object\./);
+  });
+}
+
+docs {
+  # 400 Bad Request - Malformed JSON Body
+  
+  Tests JSON parsing error handling.
+  
+  ## Trigger Condition
+  - POST with malformed JSON (missing comma)
+  - Invalid JSON syntax in request body
+  
+  ## Expected Response
+  - Status: 400
+  - Error code: MALFORMED_JSON
+  - Parse error details (no stack trace)
+  
+  ## Validation
+  - JSON parsing validation
+  - Safe error messaging (no stack leak)
+  - Clear syntax error indication
+}

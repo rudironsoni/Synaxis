@@ -1,0 +1,73 @@
+meta {
+  name: Enterprise Tier - Compliance Reports - Allowed
+  type: http
+  seq: 35
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/compliance/reports
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Organization-Id: {{enterpriseOrgId}}
+  X-Region: {{region}}
+}
+
+params:query {
+  reportType: soc2,hipaa,gdpr
+  period: 2025-Q4
+}
+
+assert {
+  res.status: eq 200
+  res.body.reports: isArray
+  res.body.reports[0].type: isDefined
+  res.body.reports[0].downloadUrl: isDefined
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("enterpriseOrgId"));
+}
+
+tests {
+  test("Enterprise tier can access compliance reports", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body.reports).to.be.an('array');
+  });
+  
+  test("Multiple report types available", function() {
+    expect(res.body.reports.length).to.be.greaterThan(0);
+  });
+  
+  test("Download URLs provided", function() {
+    if (res.body.reports.length > 0) {
+      expect(res.body.reports[0].downloadUrl).to.be.a('string');
+    }
+  });
+}
+
+docs {
+  # Enterprise Tier - Compliance Reports - Allowed
+  
+  Tests that Enterprise tier can access compliance reports.
+  
+  ## Expected Behavior
+  - Returns 200 OK
+  - Compliance reports available for download
+  
+  ## Feature: Compliance Reports
+  Available on: Enterprise only
+  
+  Report types:
+  - SOC 2 Type II
+  - HIPAA compliance
+  - GDPR compliance
+  - ISO 27001
+  - Custom attestations
+}

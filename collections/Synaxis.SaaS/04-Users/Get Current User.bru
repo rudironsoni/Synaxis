@@ -1,0 +1,68 @@
+meta {
+  name: Get Current User
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/users/me
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Region: {{region}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.id: eq {{userId}}
+  res.body.email: eq {{email}}
+  res.body.firstName: isDefined
+  res.body.lastName: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("User ID matches authenticated user", function() {
+    expect(res.body.id).to.equal(bru.getEnvVar("userId"));
+  });
+  
+  test("Email matches", function() {
+    expect(res.body.email).to.equal(bru.getEnvVar("email"));
+  });
+  
+  test("Profile complete", function() {
+    expect(res.body.firstName).to.be.a('string');
+    expect(res.body.lastName).to.be.a('string');
+    expect(res.body.region).to.be.a('string');
+  });
+  
+  test("No sensitive data", function() {
+    expect(res.body.password).to.be.undefined;
+    expect(res.body.passwordHash).to.be.undefined;
+  });
+  
+  test("Preferences included", function() {
+    expect(res.body.preferences).to.be.an('object');
+  });
+}
+
+docs {
+  # Get Current User
+  
+  Retrieves authenticated user's profile.
+  
+  ## Response Includes
+  - Basic profile (name, email, photo)
+  - Email verification status
+  - MFA status
+  - Region/locale preferences
+  - Account creation date
+  - Organizations count
+  - Teams count
+}

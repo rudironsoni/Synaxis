@@ -1,0 +1,45 @@
+meta {
+  name: Revoke API Key
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/api-keys/{{apiKeyId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Region: {{region}}
+}
+
+assert {
+  res.status: eq 204
+}
+
+tests {
+  test("Revocation successful", function() {
+    expect(res.status).to.equal(204);
+  });
+}
+
+docs {
+  # Revoke API Key
+  
+  Immediately revokes API key (all requests fail instantly).
+  
+  ## Immediate Effect
+  - Key added to revocation list (Redis)
+  - All in-flight requests with this key rejected
+  - Cannot be undone (create new key if needed)
+  
+  ## Best Practice
+  - Revoke compromised keys immediately
+  - Rotate instead of revoke for planned updates
+  - Check usage logs before revoking production keys
+}

@@ -1,0 +1,98 @@
+meta {
+  name: Requests-Minute-Fixed-Allow-0%
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{orgId}}
+  X-Test-Quota-Type: requests
+  X-Test-Quota-Limit: 100
+  X-Test-Quota-Window: minute
+  X-Test-Quota-Window-Type: fixed
+  X-Test-Quota-Action: allow
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test request - 0% quota usage"
+      }
+    ],
+    "max_tokens": 10
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-ratelimit-limit: eq 100
+  res.headers.x-ratelimit-remaining: isDefined
+  res.headers.x-ratelimit-reset: isDefined
+}
+
+tests {
+  test("First request within quota succeeds", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Rate limit headers present", function() {
+    expect(res.headers['x-ratelimit-limit']).to.equal('100');
+    expect(parseInt(res.headers['x-ratelimit-remaining'])).to.be.greaterThan(95);
+  });
+  
+  test("Reset timestamp is in future", function() {
+    const reset = parseInt(res.headers['x-ratelimit-reset']);
+    const now = Math.floor(Date.now() / 1000);
+    expect(reset).to.be.greaterThan(now);
+    expect(reset - now).to.be.lessThanOrEqual(60); // Within 1 minute
+  });
+  
+  test("No throttle or retry headers", function() {
+    expect(res.headers['retry-after']).to.be.undefined;
+    expect(res.headers['x-ratelimit-throttled']).to.be.undefined;
+  });
+  
+  test("Response successful", function() {
+    expect(res.body.id).to.be.a('string');
+    expect(res.body.choices).to.be.an('array');
+  });
+}
+
+docs {
+  # Requests-Minute-Fixed-Allow-0%
+  
+  Tests quota enforcement with 0% usage (first request in window).
+  
+  ## Test Configuration
+  - Metric Type: requests
+  - Time Granularity: minute
+  - Window Type: fixed
+  - Action: allow
+  - Usage Level: 0% (0/100 requests)
+  
+  ## Expected Behavior
+  - Status: 200 OK
+  - X-RateLimit-Limit: 100
+  - X-RateLimit-Remaining: ~100
+  - X-RateLimit-Reset: Unix timestamp (within 60s)
+  - Request succeeds without throttling
+  
+  ## Fixed Window Behavior
+  - Window starts at minute boundary (e.g., 14:03:00)
+  - Resets at next minute boundary (e.g., 14:04:00)
+  - All requests in same minute count toward limit
+}

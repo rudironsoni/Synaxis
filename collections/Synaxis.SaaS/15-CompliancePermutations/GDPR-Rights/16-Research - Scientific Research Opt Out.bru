@@ -1,0 +1,118 @@
+meta {
+  name: 16-Research - Scientific Research Opt Out
+  type: http
+  seq: 16
+}
+
+post {
+  url: {{baseUrl}}/api/v1/compliance/gdpr/research/opt-out
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+  X-Compliance-Framework: GDPR
+  X-Legal-Basis: public_interest
+}
+
+body:json {
+  {
+    "requestType": "research_opt_out",
+    "researchPurposes": [
+      "behavioral_analysis",
+      "model_training",
+      "statistical_analysis"
+    ],
+    "objectionGround": "particular_situation"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.optOutId: isDefined
+  res.body.researchProcessingRestricted: eq true
+  res.body.auditTrailId: isDefined
+}
+
+tests {
+  test("Research opt-out processed", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Research processing restricted", function() {
+    expect(res.body.researchProcessingRestricted).to.equal(true);
+  });
+  
+  test("Audit trail created", function() {
+    expect(res.body.auditTrailId).to.be.a('string');
+  });
+  
+  test("Objection ground assessed", function() {
+    expect(res.body.objectionGroundAssessed).to.equal(true);
+  });
+  
+  test("Public interest assessed", function() {
+    expect(res.body.publicInterestAssessment).to.be.an('object');
+  });
+  
+  test("Safeguards in place", function() {
+    expect(res.body.safeguards).to.be.an('array');
+  });
+  
+  test("Data minimization applied", function() {
+    expect(res.body.dataMinimized).to.equal(true);
+  });
+}
+
+docs {
+  # GDPR Scientific Research Opt-Out
+  
+  GDPR Article 21(6) - Right to object to processing for scientific research
+  
+  ## Right to Object
+  Data subject has right to object to processing for:
+  - Scientific research purposes
+  - Historical research purposes
+  - Statistical purposes
+  
+  Based on grounds relating to particular situation.
+  
+  ## Exception
+  Processing necessary for public interest task.
+  
+  ## Research Derogations (Art. 89)
+  Member States can provide derogations from rights (15, 16, 18, 21) 
+  for research purposes IF:
+  - Processing necessary for research
+  - Rights make research impossible/seriously impair
+  - Safeguards in place (Art. 89(1))
+  
+  ## Safeguards (Art. 89(1))
+  Must ensure:
+  - Technical and organizational measures
+  - Pseudonymization (where possible)
+  - Data minimization
+  - Purpose limitation
+  
+  ## Recital 156
+  "Processing necessary for scientific research should be subject 
+  to appropriate safeguards for rights and freedoms"
+  
+  ## Compatible Processing (Art. 5(1)(b))
+  Further processing for research = compatible with original purpose 
+  (with safeguards).
+  
+  ## Verification
+  ✓ Opt-out processed
+  ✓ Research processing restricted
+  ✓ Objection ground assessed
+  ✓ Public interest evaluated
+  ✓ Safeguards implemented
+  ✓ Data minimization applied
+}

@@ -1,0 +1,93 @@
+# Synaxis API Service for EU Region
+# ClusterIP service for internal communication and ALB target group
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: synaxis-api
+  namespace: synaxis-eu
+  labels:
+    app: synaxis-api
+    component: api
+  annotations:
+    # AWS Load Balancer Controller annotations
+    service.beta.kubernetes.io/aws-load-balancer-type: "external"
+    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: "ip"
+    service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+    # HTTPS/TLS configuration
+    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "<ACM_CERTIFICATE_ARN>"
+    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "443"
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "http"
+    # Security
+    service.beta.kubernetes.io/aws-load-balancer-ssl-negotiation-policy: "ELBSecurityPolicy-TLS13-1-2-2021-06"
+    # Health check
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-path: "/health/readiness"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-port: "8080"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-protocol: "http"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-interval: "30"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-timeout: "5"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-healthy-threshold: "2"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-unhealthy-threshold: "2"
+    # Logging
+    service.beta.kubernetes.io/aws-load-balancer-access-log-enabled: "true"
+    service.beta.kubernetes.io/aws-load-balancer-access-log-s3-bucket-name: "synaxis-prod-alb-logs-eu"
+    # Tags
+    service.beta.kubernetes.io/aws-load-balancer-additional-resource-tags: "Environment=prod,Region=eu-west-1,Compliance=GDPR"
+spec:
+  type: LoadBalancer
+  selector:
+    app: synaxis-api
+  ports:
+  - name: https
+    port: 443
+    targetPort: http
+    protocol: TCP
+  - name: http
+    port: 80
+    targetPort: http
+    protocol: TCP
+  sessionAffinity: None
+  externalTrafficPolicy: Local # Preserve client IPs
+---
+# Internal ClusterIP service for pod-to-pod communication
+apiVersion: v1
+kind: Service
+metadata:
+  name: synaxis-api-internal
+  namespace: synaxis-eu
+  labels:
+    app: synaxis-api
+    component: api
+spec:
+  type: ClusterIP
+  selector:
+    app: synaxis-api
+  ports:
+  - name: http
+    port: 8080
+    targetPort: http
+    protocol: TCP
+  - name: metrics
+    port: 9090
+    targetPort: metrics
+    protocol: TCP
+  sessionAffinity: None
+---
+# Headless service for StatefulSet (if needed for Qdrant or other stateful components)
+apiVersion: v1
+kind: Service
+metadata:
+  name: synaxis-api-headless
+  namespace: synaxis-eu
+  labels:
+    app: synaxis-api
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector:
+    app: synaxis-api
+  ports:
+  - name: http
+    port: 8080
+    targetPort: http
+    protocol: TCP

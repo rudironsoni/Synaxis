@@ -1,0 +1,171 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: synaxis-api-network-policy
+  namespace: synaxis
+  labels:
+    app.kubernetes.io/name: synaxis
+    app.kubernetes.io/component: api
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: synaxis
+      app.kubernetes.io/component: api
+  
+  policyTypes:
+    - Ingress
+    - Egress
+  
+  ingress:
+    # Allow traffic from ALB/Ingress controller
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: kube-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: aws-load-balancer-controller
+      ports:
+        - protocol: TCP
+          port: 8080
+    
+    # Allow traffic from same namespace (for pod-to-pod communication)
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: synaxis
+      ports:
+        - protocol: TCP
+          port: 8080
+    
+    # Allow metrics scraping from Prometheus
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: monitoring
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+      ports:
+        - protocol: TCP
+          port: 8080
+  
+  egress:
+    # Allow DNS resolution
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    
+    # Allow access to RDS (PostgreSQL)
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 5432
+    
+    # Allow access to ElastiCache (Redis)
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 6379
+    
+    # Allow access to Qdrant
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 6333
+        - protocol: TCP
+          port: 6334
+    
+    # Allow HTTPS for external API calls (model providers, etc.)
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 443
+    
+    # Allow access to Kubernetes API server
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 443
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all-ingress-default
+  namespace: synaxis
+  labels:
+    app.kubernetes.io/name: synaxis
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  # Empty ingress rules mean deny all ingress by default
+  # Specific ingress rules above override this
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-cross-region-traffic
+  namespace: synaxis
+  labels:
+    app.kubernetes.io/name: synaxis
+    app.kubernetes.io/component: api
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: synaxis
+      app.kubernetes.io/component: api
+  
+  policyTypes:
+    - Ingress
+    - Egress
+  
+  ingress:
+    # Allow traffic from EU region (10.1.0.0/16)
+    - from:
+        - ipBlock:
+            cidr: 10.1.0.0/16
+      ports:
+        - protocol: TCP
+          port: 8080
+    
+    # Allow traffic from Brazil region (10.2.0.0/16)
+    - from:
+        - ipBlock:
+            cidr: 10.2.0.0/16
+      ports:
+        - protocol: TCP
+          port: 8080
+  
+  egress:
+    # Allow traffic to EU region
+    - to:
+        - ipBlock:
+            cidr: 10.1.0.0/16
+      ports:
+        - protocol: TCP
+          port: 8080
+    
+    # Allow traffic to Brazil region
+    - to:
+        - ipBlock:
+            cidr: 10.2.0.0/16
+      ports:
+        - protocol: TCP
+          port: 8080

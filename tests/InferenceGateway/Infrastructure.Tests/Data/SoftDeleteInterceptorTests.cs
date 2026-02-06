@@ -315,7 +315,8 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
         };
 
         await _dbContext.Organizations.AddAsync(organization);
-        await _dbContext.Groups.AddRangeAsync(group1, group2);
+        await _dbContext.Groups.AddAsync(group1);
+        await _dbContext.Groups.AddAsync(group2);
         await _dbContext.SaveChangesAsync();
 
         // Act
@@ -367,7 +368,8 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
         };
 
         await _dbContext.Organizations.AddAsync(organization);
-        await _dbContext.ApiKeys.AddRangeAsync(apiKey1, apiKey2);
+        await _dbContext.ApiKeys.AddAsync(apiKey1);
+        await _dbContext.ApiKeys.AddAsync(apiKey2);
         await _dbContext.SaveChangesAsync();
 
         // Act
@@ -512,8 +514,10 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             Status = "Active"
         };
 
-        await _dbContext.Organizations.AddRangeAsync(org1, org2);
-        await _dbContext.Groups.AddRangeAsync(group1, group2);
+        await _dbContext.Organizations.AddAsync(org1);
+        await _dbContext.Organizations.AddAsync(org2);
+        await _dbContext.Groups.AddAsync(group1);
+        await _dbContext.Groups.AddAsync(group2);
         await _dbContext.SaveChangesAsync();
 
         // Act
@@ -600,7 +604,8 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             PlanTier = "Free"
         };
 
-        await _dbContext.Organizations.AddRangeAsync(org1, org2);
+        await _dbContext.Organizations.AddAsync(org1);
+        await _dbContext.Organizations.AddAsync(org2);
         await _dbContext.SaveChangesAsync();
 
         _dbContext.Organizations.Remove(org2);
@@ -639,7 +644,8 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             PlanTier = "Free"
         };
 
-        await _dbContext.Organizations.AddRangeAsync(org1, org2);
+        await _dbContext.Organizations.AddAsync(org1);
+        await _dbContext.Organizations.AddAsync(org2);
         await _dbContext.SaveChangesAsync();
 
         _dbContext.Organizations.Remove(org2);

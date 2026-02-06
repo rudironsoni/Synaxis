@@ -1,0 +1,60 @@
+meta {
+  name: List Team Members
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/teams/{{teamId}}/members
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Region: {{region}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.data: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Members list returned", function() {
+    expect(res.body.data).to.be.an('array');
+  });
+  
+  test("Each member has required fields", function() {
+    res.body.data.forEach(member => {
+      expect(member).to.have.property('userId');
+      expect(member).to.have.property('email');
+      expect(member).to.have.property('role');
+      expect(member).to.have.property('joinedAt');
+    });
+  });
+  
+  test("No sensitive user data", function() {
+    res.body.data.forEach(member => {
+      expect(member.password).to.be.undefined;
+    });
+  });
+}
+
+docs {
+  # List Team Members
+  
+  Lists all members of a team with their roles.
+  
+  ## Response Fields
+  - userId, email, name
+  - role (admin/member/readonly)
+  - joinedAt timestamp
+  - lastActive timestamp
+  - API key count
+  - Status (active/inactive/invited)
+}

@@ -1,0 +1,66 @@
+meta {
+  name: EU User - EU Region - No Transfer - No Basis
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: eu-west-1
+  X-Processed-Region: eu-west-1
+  X-Cross-Border: false
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test message for EU region routing"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-cross-border-transfer: eq false
+  res.headers.x-processed-region: eq eu-west-1
+}
+
+tests {
+  test("No cross-border transfer for same region", function() {
+    expect(res.headers['x-cross-border-transfer']).to.equal('false');
+  });
+  
+  test("Response processed in correct region", function() {
+    expect(res.headers['x-processed-region']).to.equal('eu-west-1');
+  });
+  
+  test("No legal basis header required", function() {
+    expect(res.headers['x-legal-basis']).to.be.undefined;
+  });
+}
+
+docs {
+  # EU User - EU Region - No Transfer
+  
+  Tests routing when user and processing region are the same (EU).
+  No cross-border data transfer occurs, so no legal basis is required.
+  
+  ## Expected Behavior
+  - Request routed to eu-west-1
+  - No GDPR transfer mechanisms needed
+  - Standard processing within EU jurisdiction
+}

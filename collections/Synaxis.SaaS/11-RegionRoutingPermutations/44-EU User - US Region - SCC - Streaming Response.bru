@@ -1,0 +1,56 @@
+meta {
+  name: EU User - US Region - SCC - Streaming Response
+  type: http
+  seq: 44
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: eu-west-1
+  X-Processed-Region: us-east-1
+  X-Cross-Border: true
+  X-Legal-Basis: SCC
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test streaming with cross-border"
+      }
+    ],
+    "stream": true
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-cross-border-transfer: eq true
+  res.headers.content-type: contains text/event-stream
+}
+
+tests {
+  test("Streaming response with compliance headers", function() {
+    expect(res.headers['content-type']).to.include('text/event-stream');
+    expect(res.headers['x-cross-border-transfer']).to.equal('true');
+  });
+}
+
+docs {
+  # EU to US with Streaming Response
+  
+  Tests cross-border transfer with streaming response mode.
+  Verifies compliance headers present in streaming context.
+}

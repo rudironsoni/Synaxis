@@ -1,0 +1,119 @@
+meta {
+  name: 14-Profiling - View Automated Decisions
+  type: http
+  seq: 14
+}
+
+get {
+  url: {{baseUrl}}/api/v1/compliance/gdpr/profiling
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Region: {{region}}
+  X-Compliance-Framework: GDPR
+  X-Legal-Basis: legitimate_interest
+}
+
+assert {
+  res.status: eq 200
+  res.body.profiles: isArray
+  res.body.auditTrailId: isDefined
+}
+
+tests {
+  test("Profiling activities disclosed", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Profiles list provided", function() {
+    expect(res.body.profiles).to.be.an('array');
+  });
+  
+  test("Each profile details complete", function() {
+    if (res.body.profiles.length > 0) {
+      const profile = res.body.profiles[0];
+      expect(profile.purpose).to.be.a('string');
+      expect(profile.dataUsed).to.be.an('array');
+      expect(profile.logic).to.be.a('string');
+      expect(profile.significance).to.be.a('string');
+    }
+  });
+  
+  test("Legal basis for profiling", function() {
+    if (res.body.profiles.length > 0) {
+      const profile = res.body.profiles[0];
+      expect(profile.legalBasis).to.be.oneOf([
+        'consent',
+        'contract',
+        'legitimate_interest'
+      ]);
+    }
+  });
+  
+  test("Opt-out available", function() {
+    expect(res.body.optOutAvailable).to.equal(true);
+  });
+  
+  test("Special categories protection", function() {
+    if (res.body.profiles.length > 0) {
+      const profile = res.body.profiles[0];
+      if (profile.usesSpecialCategories) {
+        expect(profile.explicitConsent).to.equal(true);
+      }
+    }
+  });
+}
+
+docs {
+  # GDPR Profiling Disclosure
+  
+  GDPR Article 4(4) - Definition
+  Profiling = automated processing to evaluate personal aspects, 
+  particularly to analyze/predict: performance, economic situation, 
+  health, preferences, interests, reliability, behavior, location, movements.
+  
+  ## Transparency Requirements (Art. 13-14)
+  Must inform of:
+  - Existence of profiling
+  - Logic involved
+  - Significance
+  - Envisaged consequences
+  
+  ## Special Categories (Art. 9)
+  Profiling based on special categories PROHIBITED unless:
+  - Explicit consent with safeguards
+  - Substantial public interest (legal basis + proportionate + safeguards)
+  
+  ## Automated Decision-Making (Art. 22)
+  If profiling produces legal/significant effects:
+  - Right to human intervention
+  - Right to express view
+  - Right to contest decision
+  
+  ## Data Protection Impact Assessment (Art. 35)
+  DPIA REQUIRED for:
+  - Systematic and extensive profiling with significant effects
+  - Large-scale processing of special categories
+  - Large-scale systematic monitoring of public areas
+  
+  ## Right to Object (Art. 21)
+  Data subject can object to profiling based on:
+  - Legitimate interests
+  - Public interest
+  Always for direct marketing profiling
+  
+  ## Verification
+  ✓ Profiling disclosed
+  ✓ Purpose explained
+  ✓ Data used listed
+  ✓ Logic described
+  ✓ Significance stated
+  ✓ Legal basis documented
+  ✓ Opt-out available
+}

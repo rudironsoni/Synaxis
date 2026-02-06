@@ -1,0 +1,106 @@
+meta {
+  name: Enterprise Tier - Custom Models - Allowed
+  type: http
+  seq: 23
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/models/custom
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{enterpriseOrgId}}
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "name": "custom-gpt-4-legal",
+    "displayName": "Legal Document Analyzer",
+    "baseModel": "gpt-4",
+    "fineTuningConfig": {
+      "datasetUrl": "s3://customer-datasets/legal-training.jsonl",
+      "epochs": 3,
+      "learningRate": 0.0001,
+      "batchSize": 32
+    },
+    "deploymentConfig": {
+      "instanceType": "dedicated",
+      "minReplicas": 2,
+      "maxReplicas": 10
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.model: isDefined
+  res.body.model.id: isDefined
+  res.body.model.name: eq custom-gpt-4-legal
+  res.body.model.status: eq training
+  res.body.trainingJob: isDefined
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("enterpriseOrgId"));
+}
+
+tests {
+  test("Enterprise tier can deploy custom models", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body.model).to.be.an('object');
+  });
+  
+  test("Custom model training initiated", function() {
+    expect(res.body.model.status).to.equal("training");
+  });
+  
+  test("Model has unique ID", function() {
+    expect(res.body.model.id).to.be.a('string');
+  });
+  
+  test("Training job created", function() {
+    expect(res.body.trainingJob).to.be.an('object');
+    expect(res.body.trainingJob.id).to.be.a('string');
+  });
+  
+  test("Deployment configuration accepted", function() {
+    expect(res.body.model.deploymentConfig).to.be.an('object');
+  });
+}
+
+docs {
+  # Enterprise Tier - Custom Models - Allowed
+  
+  Tests that Enterprise tier organizations can deploy custom fine-tuned models.
+  
+  ## Expected Behavior
+  - Returns 200 OK
+  - Custom model training initiated
+  - Deployment configuration accepted
+  - Training job ID provided
+  
+  ## Feature: Custom Models
+  Available on: Enterprise only
+  
+  Includes:
+  - Fine-tuned models
+  - Custom model hosting
+  - Private model endpoints
+  - Dedicated model replicas
+  - Custom deployment configs
+  - Training job monitoring
+  
+  Supported base models:
+  - GPT-4
+  - GPT-3.5-turbo
+  - Claude
+  - Custom architectures
+}

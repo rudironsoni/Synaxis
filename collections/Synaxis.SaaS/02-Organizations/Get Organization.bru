@@ -1,0 +1,123 @@
+meta {
+  name: Get Organization
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Region: {{region}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.id: eq {{orgId}}
+  res.body.name: isDefined
+  res.body.slug: isDefined
+  res.body.primaryRegion: isDefined
+  res.body.status: isDefined
+  res.body.createdAt: isDefined
+  res.body.updatedAt: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Organization ID matches", function() {
+    expect(res.body.id).to.equal(bru.getEnvVar("orgId"));
+  });
+  
+  test("Status is valid enum", function() {
+    const validStatuses = ['active', 'suspended', 'deleted'];
+    expect(validStatuses).to.include(res.body.status);
+  });
+  
+  test("Owner information included", function() {
+    expect(res.body.owner).to.be.an('object');
+    expect(res.body.owner.id).to.be.a('string');
+    expect(res.body.owner.email).to.be.a('string');
+  });
+  
+  test("Limits object present", function() {
+    expect(res.body.limits).to.be.an('object');
+    expect(res.body.limits.maxTokensPerMonth).to.be.a('number');
+    expect(res.body.limits.maxApiKeys).to.be.a('number');
+  });
+  
+  test("Usage object present", function() {
+    expect(res.body.usage).to.be.an('object');
+    expect(res.body.usage.tokensUsedThisMonth).to.be.a('number');
+    expect(res.body.usage.apiKeysCreated).to.be.a('number');
+  });
+  
+  test("Timestamps are ISO 8601", function() {
+    expect(new Date(res.body.createdAt).toISOString()).to.equal(res.body.createdAt);
+    expect(new Date(res.body.updatedAt).toISOString()).to.equal(res.body.updatedAt);
+  });
+  
+  test("User has read permission", function() {
+    expect(res.body.permissions).to.be.an('object');
+    expect(res.body.permissions.read).to.be.true;
+  });
+}
+
+docs {
+  # Get Organization
+  
+  Retrieves organization details by ID.
+  
+  ## URL Parameters
+  - `orgId`: Organization UUID
+  
+  ## Response
+  - Full organization object
+  - Owner information
+  - Current usage statistics
+  - Quota limits
+  - User's permissions for this org
+  
+  ## Response Fields
+  - `id`: Organization UUID
+  - `name`: Display name
+  - `slug`: URL-safe identifier
+  - `primaryRegion`: Data residency region
+  - `allowedRegions`: Additional storage regions
+  - `status`: active/suspended/deleted
+  - `plan`: Subscription plan
+  - `owner`: Owner user object
+  - `limits`: Quota limits object
+  - `usage`: Current usage object
+  - `permissions`: User's permissions (read/write/admin)
+  - `createdAt`: Creation timestamp
+  - `updatedAt`: Last update timestamp
+  
+  ## Permissions
+  - Organization members can read
+  - Organization admins can read all fields
+  - Non-members get 403 Forbidden
+  
+  ## Error Codes
+  - 401: Unauthorized (invalid token)
+  - 403: Forbidden (not an organization member)
+  - 404: Organization not found
+  
+  ## Usage Statistics
+  - `tokensUsedThisMonth`: Total tokens consumed
+  - `tokensRemainingThisMonth`: Remaining quota
+  - `apiKeysCreated`: Number of API keys
+  - `teamMembers`: Number of team members
+  - `teamsCreated`: Number of teams
+  
+  ## Caching
+  - Response cached for 60 seconds
+  - Use `Cache-Control: no-cache` to force refresh
+  - ETag support for conditional requests
+}

@@ -1,0 +1,61 @@
+meta {
+  name: Get Model Info
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/inference/models/{{modelProvider}}/{{modelName}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-Region: {{region}}
+  X-Organization-Id: {{orgId}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.id: isDefined
+  res.body.provider: eq {{modelProvider}}
+  res.body.name: isDefined
+  res.body.contextWindow: isDefined
+  res.body.pricing: isDefined
+}
+
+tests {
+  test("Model details complete", function() {
+    expect(res.body.description).to.be.a('string');
+    expect(res.body.contextWindow).to.be.a('number');
+    expect(res.body.maxOutputTokens).to.be.a('number');
+  });
+  
+  test("Capabilities listed", function() {
+    expect(res.body.capabilities).to.be.an('array');
+  });
+  
+  test("Regional availability shown", function() {
+    expect(res.body.regions).to.be.an('array');
+  });
+}
+
+docs {
+  # Get Model Info
+  
+  Retrieves detailed information about a specific AI model.
+  
+  ## URL Parameters
+  - provider: openai/anthropic/google/meta
+  - model: gpt-4/claude-3-opus/gemini-pro/llama-3
+  
+  ## Use Cases
+  - Check context window before request
+  - Calculate cost estimates
+  - Verify regional availability
+  - Check deprecation status
+}

@@ -1,0 +1,148 @@
+meta {
+  name: Get Current Usage
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/usage/current
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Region: {{region}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.organizationId: eq {{orgId}}
+  res.body.period: isDefined
+  res.body.usage: isDefined
+  res.body.costs: isDefined
+  res.body.creditBalance: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Period is current month", function() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    expect(res.body.period.month).to.equal(`${year}-${month}`);
+  });
+  
+  test("Usage breakdown by model", function() {
+    expect(res.body.usage.byModel).to.be.an('object');
+    Object.values(res.body.usage.byModel).forEach(modelUsage => {
+      expect(modelUsage).to.have.property('requests');
+      expect(modelUsage).to.have.property('tokens');
+      expect(modelUsage).to.have.property('cost');
+    });
+  });
+  
+  test("Total tokens match sum", function() {
+    let sumTokens = 0;
+    Object.values(res.body.usage.byModel).forEach(m => {
+      sumTokens += m.tokens;
+    });
+    expect(res.body.usage.totalTokens).to.equal(sumTokens);
+  });
+  
+  test("Credit balance is number", function() {
+    expect(res.body.creditBalance).to.be.a('number');
+  });
+  
+  test("Quota percentage calculated", function() {
+    expect(res.body.quotaUsagePercentage).to.be.a('number');
+    expect(res.body.quotaUsagePercentage).to.be.at.least(0);
+    expect(res.body.quotaUsagePercentage).to.be.at.most(100);
+  });
+}
+
+docs {
+  # Get Current Usage
+  
+  Retrieves real-time usage statistics for current billing period.
+  
+  ## Response Structure
+  ```json
+  {
+    "organizationId": "uuid",
+    "period": {
+      "month": "2026-02",
+      "startDate": "2026-02-01T00:00:00Z",
+      "endDate": "2026-02-28T23:59:59Z"
+    },
+    "usage": {
+      "totalRequests": 1250,
+      "totalTokens": 450000,
+      "byModel": {
+        "openai/gpt-4": {
+          "requests": 500,
+          "tokens": 200000,
+          "cost": 6.00
+        },
+        "openai/gpt-3.5-turbo": {
+          "requests": 750,
+          "tokens": 250000,
+          "cost": 0.50
+        }
+      },
+      "byApiKey": {
+        "sk-abc123": {
+          "name": "Production API Key",
+          "requests": 1000,
+          "tokens": 400000
+        }
+      },
+      "byRegion": {
+        "eu-central-1": {
+          "requests": 800,
+          "tokens": 300000
+        }
+      }
+    },
+    "costs": {
+      "totalCost": 6.50,
+      "breakdown": {
+        "inference": 6.00,
+        "dataTransfer": 0.50
+      }
+    },
+    "creditBalance": 93.50,
+    "quotaUsagePercentage": 45.0,
+    "projectedEndOfMonthUsage": 900000,
+    "warnings": [
+      "Projected to exceed quota by end of month"
+    ]
+  }
+  ```
+  
+  ## Usage Dimensions
+  - By model (GPT-4, GPT-3.5, etc.)
+  - By API key (track per application)
+  - By region (multi-region deployment)
+  - By time (hourly breakdown available)
+  
+  ## Cost Calculation
+  Token costs vary by model:
+  - GPT-4: $0.03/1K tokens
+  - GPT-3.5-turbo: $0.002/1K tokens
+  - Claude-3: $0.015/1K tokens
+  
+  ## Projections
+  - Based on current month's trend
+  - Linear extrapolation to month end
+  - Warns if quota will be exceeded
+  - Suggests auto top-up if enabled
+  
+  ## Caching
+  - Usage data cached for 5 minutes
+  - Real-time updates for active requests
+  - Force refresh with `?refresh=true`
+}

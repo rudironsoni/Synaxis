@@ -1,0 +1,94 @@
+meta {
+  name: Logout
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/v1/auth/logout
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "refreshToken": "{{refreshToken}}",
+    "allDevices": false
+  }
+}
+
+assert {
+  res.status: eq 204
+}
+
+script:post-response {
+  // Clear all auth tokens
+  bru.setEnvVar("authToken", "");
+  bru.setEnvVar("refreshToken", "");
+  bru.setEnvVar("tokenExpiry", "");
+  bru.setEnvVar("deviceToken", "");
+  
+  console.log("Logged out successfully, tokens cleared");
+}
+
+tests {
+  test("Logout successful (204)", function() {
+    expect(res.status).to.equal(204);
+  });
+  
+  test("No response body", function() {
+    expect(res.body).to.be.empty;
+  });
+}
+
+docs {
+  # Logout
+  
+  Invalidates current session and revokes tokens.
+  
+  ## Request Body
+  - `refreshToken`: Refresh token to invalidate
+  - `allDevices`: (Optional) Logout from all devices (default: false)
+  
+  ## Response
+  - 204 No Content (successful logout)
+  - No response body
+  
+  ## Behavior
+  - Invalidates access token (added to blacklist)
+  - Revokes refresh token (cannot be reused)
+  - Clears session from server
+  - If `allDevices: true`, revokes all user's refresh tokens
+  
+  ## Token Blacklist
+  - Access tokens added to Redis blacklist
+  - Blacklist checked on each authenticated request
+  - Entries expire when token naturally expires
+  - Prevents use of stolen tokens
+  
+  ## Error Codes
+  - 401: Unauthorized (invalid/expired token)
+  - 404: Session not found
+  
+  ## Security
+  - Always logout when done with sensitive operations
+  - Use `allDevices: true` if account compromised
+  - Monitor active sessions in account settings
+  - Implement logout on password change
+  
+  ## Client-Side Actions
+  After logout:
+  1. Clear all tokens from storage
+  2. Clear user data from memory
+  3. Redirect to login page
+  4. Clear any cached API responses
+}

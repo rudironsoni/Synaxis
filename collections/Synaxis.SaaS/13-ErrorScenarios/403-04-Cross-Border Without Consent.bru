@@ -1,0 +1,87 @@
+meta {
+  name: 403-04-Cross-Border Without Consent
+  type: http
+  seq: 22
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: us-east
+  X-Virtual-Key: {{virtualKey}}
+  X-Target-Region: eu-west
+}
+
+body:json {
+  {
+    "model": "gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hello"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 403
+  res.body.error: isDefined
+  res.body.error.code: eq CROSS_BORDER_CONSENT_REQUIRED
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 403", function() {
+    expect(res.status).to.equal(403);
+  });
+  
+  test("Error code is CROSS_BORDER_CONSENT_REQUIRED", function() {
+    expect(res.body.error.code).to.equal("CROSS_BORDER_CONSENT_REQUIRED");
+  });
+  
+  test("Error message mentions consent requirement", function() {
+    expect(res.body.error.message).to.match(/consent|cross-border|transfer/i);
+  });
+  
+  test("Error details include source and target regions", function() {
+    expect(res.body.error.details).to.have.property('sourceRegion');
+    expect(res.body.error.details).to.have.property('targetRegion');
+    expect(res.body.error.details.sourceRegion).to.equal('us-east');
+    expect(res.body.error.details.targetRegion).to.equal('eu-west');
+  });
+  
+  test("Error includes consent management link", function() {
+    expect(res.body.error.details).to.have.property('consentUrl');
+  });
+}
+
+docs {
+  # 403 Forbidden - Cross-Border Without Consent
+  
+  Tests cross-border data transfer consent enforcement.
+  
+  ## Trigger Condition
+  - POST to inference with X-Target-Region different from X-Region
+  - No cross-border consent on file
+  
+  ## Expected Response
+  - Status: 403
+  - Error code: CROSS_BORDER_CONSENT_REQUIRED
+  - Source/target regions and consent URL
+  
+  ## Validation
+  - Cross-border consent enforcement
+  - GDPR/data residency compliance
+  - Consent management guidance
+}

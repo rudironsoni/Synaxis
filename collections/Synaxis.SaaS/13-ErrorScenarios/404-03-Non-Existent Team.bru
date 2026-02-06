@@ -1,0 +1,71 @@
+meta {
+  name: 404-03-Non-Existent Team
+  type: http
+  seq: 29
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/teams/team_missing_abc
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+assert {
+  res.status: eq 404
+  res.body.error: isDefined
+  res.body.error.code: eq TEAM_NOT_FOUND
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 404", function() {
+    expect(res.status).to.equal(404);
+  });
+  
+  test("Error code is TEAM_NOT_FOUND", function() {
+    expect(res.body.error.code).to.equal("TEAM_NOT_FOUND");
+  });
+  
+  test("Error message mentions team not found", function() {
+    expect(res.body.error.message).to.match(/team|not found|does not exist/i);
+  });
+  
+  test("Error details include requested team ID", function() {
+    expect(res.body.error.details).to.have.property('teamId');
+    expect(res.body.error.details.teamId).to.equal('team_missing_abc');
+  });
+  
+  test("Error details include organization context", function() {
+    expect(res.body.error.details).to.have.property('organizationId');
+  });
+}
+
+docs {
+  # 404 Not Found - Non-Existent Team
+  
+  Tests handling of requests for non-existent teams.
+  
+  ## Trigger Condition
+  - GET /organizations/{orgId}/teams/{teamId}
+  - Team ID not found in specified organization
+  
+  ## Expected Response
+  - Status: 404
+  - Error code: TEAM_NOT_FOUND
+  - Requested team ID and organization context
+  
+  ## Validation
+  - Proper 404 for missing teams
+  - Organization context preserved
+  - Scoped team lookup
+}

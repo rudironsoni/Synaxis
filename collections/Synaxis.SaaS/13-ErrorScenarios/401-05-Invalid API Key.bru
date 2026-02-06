@@ -1,0 +1,84 @@
+meta {
+  name: 401-05-Invalid API Key
+  type: http
+  seq: 15
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+  X-Virtual-Key: vk_nonexistent_invalid_key_xyz
+}
+
+body:json {
+  {
+    "model": "gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hello"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 401
+  res.body.error: isDefined
+  res.body.error.code: eq INVALID_API_KEY
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 401", function() {
+    expect(res.status).to.equal(401);
+  });
+  
+  test("Error code is INVALID_API_KEY", function() {
+    expect(res.body.error.code).to.equal("INVALID_API_KEY");
+  });
+  
+  test("Error message mentions invalid key", function() {
+    expect(res.body.error.message).to.match(/invalid|api key|not found/i);
+  });
+  
+  test("Error does not leak key existence details", function() {
+    expect(res.body.error.message).to.not.match(/does not exist|not in database/i);
+  });
+  
+  test("Error suggests key management", function() {
+    expect(res.body.error.details).to.have.property('suggestion');
+    expect(res.body.error.details.suggestion).to.match(/key management|virtual key/i);
+  });
+}
+
+docs {
+  # 401 Unauthorized - Invalid API Key
+  
+  Tests non-existent virtual key handling.
+  
+  ## Trigger Condition
+  - POST with X-Virtual-Key that doesn't exist
+  - Key not found in database
+  
+  ## Expected Response
+  - Status: 401
+  - Error code: INVALID_API_KEY
+  - Generic error (no existence leak)
+  
+  ## Validation
+  - Non-existent key rejection
+  - No timing attack vectors
+  - No key existence disclosure
+}

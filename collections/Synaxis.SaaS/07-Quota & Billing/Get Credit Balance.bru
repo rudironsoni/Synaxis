@@ -1,0 +1,38 @@
+meta {
+  name: Get Credit Balance
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/credits/balance
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Region: {{region}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.balance: isDefined
+  res.body.currency: eq USD
+}
+
+tests {
+  test("Balance is number", function() {
+    expect(res.body.balance).to.be.a('number');
+    expect(res.body.balance).to.be.at.least(0);
+  });
+}
+
+docs {
+  # Get Credit Balance
+  
+  Retrieves current credit balance for organization.
+}

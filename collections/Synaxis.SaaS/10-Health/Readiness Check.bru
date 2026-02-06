@@ -1,0 +1,51 @@
+meta {
+  name: Readiness Check
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/health/ready
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.status: eq ready
+  res.body.checks: isDefined
+}
+
+tests {
+  test("Service is ready", function() {
+    expect(res.body.status).to.equal('ready');
+  });
+  
+  test("All dependency checks passed", function() {
+    expect(res.body.checks.database).to.equal('ok');
+    expect(res.body.checks.cache).to.equal('ok');
+    expect(res.body.checks.queue).to.equal('ok');
+  });
+}
+
+docs {
+  # Readiness Check
+  
+  Kubernetes readiness probe - checks if service can accept traffic.
+  
+  ## Checks Performed
+  - Database connectivity
+  - Redis cache connectivity
+  - Message queue connectivity
+  - External API dependencies
+  
+  ## Response Codes
+  - 200: Ready to serve traffic
+  - 503: Not ready (dependencies unavailable)
+  
+  ## Use Cases
+  - Kubernetes readiness probes
+  - Load balancer health checks
+  - Deployment verification
+  - Rolling update coordination
+}

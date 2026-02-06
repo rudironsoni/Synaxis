@@ -1,0 +1,127 @@
+meta {
+  name: 09-Review Automated Decisions (Art 25)
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{baseUrl}}/api/v1/compliance/lgpd/automated-decision/review
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: sa-east-1
+  X-Compliance-Framework: LGPD
+  X-Legal-Basis: legitimate_interest
+}
+
+body:json {
+  {
+    "requestType": "automated_decision_review",
+    "decisionId": "decision-12345",
+    "reviewReason": "Disagree with automated decision outcome"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.reviewId: isDefined
+  res.body.humanReviewScheduled: eq true
+  res.body.dataLocation: contains brazil
+  res.body.auditTrailId: isDefined
+}
+
+tests {
+  test("Automated decision review requested", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Review ID generated", function() {
+    expect(res.body.reviewId).to.be.a('string');
+  });
+  
+  test("Human review scheduled", function() {
+    expect(res.body.humanReviewScheduled).to.equal(true);
+  });
+  
+  test("Data location in Brazil", function() {
+    expect(res.body.dataLocation).to.match(/brazil|sa-east/i);
+  });
+  
+  test("Audit trail created", function() {
+    expect(res.body.auditTrailId).to.be.a('string');
+  });
+  
+  test("Criteria disclosed", function() {
+    expect(res.body.criteriaDisclosed).to.equal(true);
+  });
+  
+  test("Decision can be contested", function() {
+    expect(res.body.contestable).to.equal(true);
+  });
+  
+  test("ANPD regulations followed", function() {
+    expect(res.body.anpdRegulationsFollowed).to.equal(true);
+  });
+}
+
+docs {
+  # LGPD Review of Automated Decisions (Article 25)
+  
+  Article 25 - Right to review automated decisions
+  
+  ## Right
+  Data subject has right to:
+  - Request review of decisions made solely based on automated processing
+  - That affect their interests
+  - Including decisions based on personal aspects or profiling
+  
+  ## Automated Decision Definition
+  Decision made:
+  - Solely by automated means
+  - Without human intervention
+  - Affecting data subject's interests
+  - Based on personal data/profiling
+  
+  ## Review Process
+  - Request human review
+  - Explain criteria/procedures used
+  - Contest decision
+  - Request clarification
+  
+  ## Controller Obligations
+  - Provide clear information about automated decisions
+  - Disclose criteria used
+  - Allow review by natural person
+  - Respond to review request
+  - Document review process
+  
+  ## ANPD Regulations
+  ANPD will issue regulations on:
+  - Exceptions to review right
+  - Automated decision procedures
+  - Transparency requirements
+  - Review timelines
+  
+  ## Transparency (Art. 9, §1)
+  Must inform data subject about:
+  - Existence of automated decision
+  - Criteria used
+  - Purpose
+  - Right to review
+  
+  ## Verification
+  ✓ Review requested
+  ✓ Human review scheduled
+  ✓ Data location disclosed
+  ✓ Audit trail created
+  ✓ Criteria disclosed
+  ✓ Decision contestable
+  ✓ ANPD regulations followed
+}

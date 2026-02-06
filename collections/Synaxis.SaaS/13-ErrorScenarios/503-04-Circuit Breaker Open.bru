@@ -1,0 +1,100 @@
+meta {
+  name: 503-04-Circuit Breaker Open
+  type: http
+  seq: 54
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+  X-Virtual-Key: {{virtualKey}}
+  X-Simulate-Error: circuit-breaker-open
+}
+
+body:json {
+  {
+    "model": "gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hello"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 503
+  res.body.error: isDefined
+  res.body.error.code: eq CIRCUIT_BREAKER_OPEN
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+  res.headers.retry-after: isDefined
+}
+
+tests {
+  test("Status code is 503", function() {
+    expect(res.status).to.equal(503);
+  });
+  
+  test("Error code is CIRCUIT_BREAKER_OPEN", function() {
+    expect(res.body.error.code).to.equal("CIRCUIT_BREAKER_OPEN");
+  });
+  
+  test("Error message mentions circuit breaker", function() {
+    expect(res.body.error.message).to.match(/circuit breaker|temporarily unavailable|protecting/i);
+  });
+  
+  test("Error details include affected service", function() {
+    expect(res.body.error.details).to.have.property('affectedService');
+  });
+  
+  test("Error details include reset time", function() {
+    expect(res.body.error.details).to.have.property('resetAt');
+  });
+  
+  test("Error explains circuit breaker purpose", function() {
+    expect(res.body.error.details).to.have.property('explanation');
+    expect(res.body.error.details.explanation).to.match(/protect|prevent|cascading/i);
+  });
+  
+  test("Retry-After header indicates reset time", function() {
+    expect(res.headers['retry-after']).to.be.defined;
+  });
+  
+  test("Error includes status monitoring link", function() {
+    expect(res.body.error.details).to.have.property('statusUrl');
+  });
+}
+
+docs {
+  # 503 Service Unavailable - Circuit Breaker Open
+  
+  Tests circuit breaker pattern for failing services.
+  
+  ## Trigger Condition
+  - Request to service with open circuit breaker
+  - Simulated with X-Simulate-Error header
+  
+  ## Expected Response
+  - Status: 503
+  - Error code: CIRCUIT_BREAKER_OPEN
+  - Affected service, reset time, explanation
+  - Retry-After header
+  
+  ## Validation
+  - Circuit breaker pattern active
+  - Service protection mechanism
+  - Reset time communicated
+  - Status monitoring available
+}

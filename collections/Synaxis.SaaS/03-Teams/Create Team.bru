@@ -1,0 +1,103 @@
+meta {
+  name: Create Team
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/teams
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "name": "{{teamName}}",
+    "slug": "{{teamSlug}}",
+    "description": "Engineering team for API development",
+    "defaultRole": "member",
+    "settings": {
+      "requireMfa": false,
+      "allowApiKeyCreation": true,
+      "maxApiKeysPerMember": 3
+    }
+  }
+}
+
+assert {
+  res.status: eq 201
+  res.body.id: isDefined
+  res.body.name: eq {{teamName}}
+  res.body.slug: eq {{teamSlug}}
+  res.body.organizationId: eq {{orgId}}
+  res.headers.content-type: contains application/json
+}
+
+script:pre-request {
+  const timestamp = Date.now();
+  bru.setVar("teamSlug", `team-${timestamp}`);
+  bru.setVar("teamName", `Team ${timestamp}`);
+}
+
+script:post-response {
+  if (res.body.id) {
+    bru.setEnvVar("teamId", res.body.id);
+  }
+}
+
+tests {
+  test("Team created in correct organization", function() {
+    expect(res.body.organizationId).to.equal(bru.getEnvVar("orgId"));
+  });
+  
+  test("Creator is team admin", function() {
+    expect(res.body.members).to.be.an('array');
+    const creator = res.body.members.find(m => m.userId === bru.getEnvVar("userId"));
+    expect(creator.role).to.equal('admin');
+  });
+  
+  test("Settings applied correctly", function() {
+    expect(res.body.settings.requireMfa).to.be.false;
+    expect(res.body.settings.allowApiKeyCreation).to.be.true;
+  });
+}
+
+docs {
+  # Create Team
+  
+  Creates a new team within an organization.
+  
+  ## Teams Overview
+  Teams provide sub-organization grouping for:
+  - Access control (team-scoped API keys)
+  - Usage tracking (per-team quotas)
+  - Member management (team admins)
+  - Collaboration (shared resources)
+  
+  ## Request Body
+  - `name`: Team display name
+  - `slug`: URL-safe identifier (unique within org)
+  - `description`: Team purpose (optional)
+  - `defaultRole`: Role for new members (member/admin)
+  - `settings`: Team configuration
+  
+  ## Team Roles
+  - `admin`: Full team management + member management
+  - `member`: Use team resources, limited management
+  - `readonly`: View only, no modifications
+  
+  ## Error Codes
+  - 401: Unauthorized
+  - 403: Insufficient permissions (requires org admin)
+  - 409: Team slug already exists
+  - 429: Team limit exceeded for plan
+}

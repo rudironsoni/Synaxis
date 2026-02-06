@@ -1,0 +1,63 @@
+meta {
+  name: Update API Key
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/api-keys/{{apiKeyId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "name": "Updated API Key Name",
+    "rateLimit": 150,
+    "allowedModels": ["gpt-4", "gpt-3.5-turbo", "claude-3-opus"]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.name: eq Updated API Key Name
+  res.body.rateLimit: eq 150
+}
+
+tests {
+  test("Name updated", function() {
+    expect(res.body.name).to.equal("Updated API Key Name");
+  });
+  
+  test("Rate limit increased", function() {
+    expect(res.body.rateLimit).to.equal(150);
+  });
+}
+
+docs {
+  # Update API Key
+  
+  Updates API key metadata (name, limits, allowed models).
+  
+  ## Updatable Fields
+  - name
+  - rateLimit
+  - allowedModels
+  - allowedRegions
+  - metadata
+  
+  ## Restricted
+  Cannot update:
+  - key itself (use rotate)
+  - scopes (security risk - create new key)
+  - expiresAt (set at creation)
+}

@@ -1,0 +1,114 @@
+meta {
+  name: 07-Information about Consent Denial (Art 23)
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/v1/compliance/lgpd/consent-denial-consequences
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Region: sa-east-1
+  X-Compliance-Framework: LGPD
+  X-Legal-Basis: consent
+}
+
+assert {
+  res.status: eq 200
+  res.body.consequences: isDefined
+  res.body.dataLocation: contains brazil
+  res.body.auditTrailId: isDefined
+}
+
+tests {
+  test("Consent denial information provided", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Consequences explained", function() {
+    expect(res.body.consequences).to.be.an('array');
+    expect(res.body.consequences.length).to.be.greaterThan(0);
+  });
+  
+  test("Data location in Brazil", function() {
+    expect(res.body.dataLocation).to.match(/brazil|sa-east/i);
+  });
+  
+  test("Audit trail created", function() {
+    expect(res.body.auditTrailId).to.be.a('string');
+  });
+  
+  test("Service impact clearly stated", function() {
+    expect(res.body.serviceImpact).to.be.a('string');
+  });
+  
+  test("No detriment for refusal", function() {
+    expect(res.body.noDetriment).to.equal(true);
+  });
+  
+  test("Alternative options provided", function() {
+    expect(res.body.alternatives).to.be.an('array');
+  });
+  
+  test("Consent not bundled with service", function() {
+    expect(res.body.consentBundled).to.equal(false);
+  });
+}
+
+docs {
+  # LGPD Information about Consent Denial (Article 23)
+  
+  Article 23 - Right to information about denial consequences
+  
+  ## Right
+  Data subject has right to information about:
+  - Possibility of NOT providing consent
+  - Consequences of refusing to provide consent
+  
+  ## Transparency Requirement
+  Must clearly inform BEFORE collecting consent:
+  - That consent can be denied
+  - What happens if consent denied
+  - Whether service/access affected
+  - Whether alternative options available
+  
+  ## Consent Validity (Art. 8)
+  Consent must be:
+  - Free (no coercion)
+  - Informed (full information)
+  - Unambiguous (clear action)
+  - Specific (per purpose)
+  
+  ## Prohibition on Bundling
+  Cannot make service provision conditional on consent 
+  if consent not necessary for that service.
+  
+  ## Examples
+  - "You can use our service without marketing consent"
+  - "Denying analytics consent does not affect core functionality"
+  - "Location access optional for this feature"
+  - "Social media login alternative: email registration"
+  
+  ## Consequences Types
+  - Service access (blocked/allowed)
+  - Feature availability (limited/full)
+  - Pricing (standard/premium)
+  - Support level (basic/enhanced)
+  
+  ## Verification
+  ✓ Consent denial info provided
+  ✓ Consequences explained
+  ✓ Data location disclosed
+  ✓ Audit trail created
+  ✓ Service impact stated
+  ✓ No detriment for refusal
+  ✓ Alternatives provided
+  ✓ Consent not bundled
+}

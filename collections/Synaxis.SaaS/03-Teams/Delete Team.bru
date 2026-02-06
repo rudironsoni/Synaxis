@@ -1,0 +1,47 @@
+meta {
+  name: Delete Team
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/teams/{{teamId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "confirmation": "{{teamSlug}}"
+  }
+}
+
+assert {
+  res.status: eq 204
+}
+
+tests {
+  test("Deletion successful", function() {
+    expect(res.status).to.equal(204);
+  });
+}
+
+docs {
+  # Delete Team
+  
+  Deletes team and all associated resources.
+  
+  ## Cascade Effects
+  - All team-scoped API keys revoked
+  - Team memberships removed
+  - Team usage data retained for billing
+}

@@ -1,0 +1,117 @@
+meta {
+  name: Requests-Minute-Fixed-Throttle-100%
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{orgId}}
+  X-Test-Quota-Type: requests
+  X-Test-Quota-Limit: 100
+  X-Test-Quota-Window: minute
+  X-Test-Quota-Window-Type: fixed
+  X-Test-Quota-Action: throttle
+  X-Test-Simulate-Usage: 100
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test request - 100% quota usage (throttle)"
+      }
+    ],
+    "max_tokens": 10
+  }
+}
+
+assert {
+  res.status: eq 429
+  res.headers.x-ratelimit-limit: eq 100
+  res.headers.x-ratelimit-remaining: eq 0
+  res.headers.retry-after: isDefined
+  res.body.error.code: eq rate_limit_exceeded
+}
+
+tests {
+  test("Request throttled at 100% usage", function() {
+    expect(res.status).to.equal(429);
+  });
+  
+  test("Rate limit exhausted", function() {
+    expect(res.headers['x-ratelimit-limit']).to.equal('100');
+    expect(parseInt(res.headers['x-ratelimit-remaining'])).to.equal(0);
+  });
+  
+  test("Retry-After header present", function() {
+    const retryAfter = parseInt(res.headers['retry-after']);
+    expect(retryAfter).to.be.a('number');
+    expect(retryAfter).to.be.greaterThan(0);
+    expect(retryAfter).to.be.lessThanOrEqual(60); // Within window duration
+  });
+  
+  test("Error response structure", function() {
+    expect(res.body.error).to.be.an('object');
+    expect(res.body.error.code).to.equal('rate_limit_exceeded');
+    expect(res.body.error.message).to.be.a('string');
+    expect(res.body.error.type).to.equal('throttle');
+  });
+  
+  test("Reset timestamp provided", function() {
+    const reset = parseInt(res.headers['x-ratelimit-reset']);
+    const now = Math.floor(Date.now() / 1000);
+    expect(reset).to.be.greaterThan(now);
+  });
+  
+  test("Throttle details in response", function() {
+    expect(res.body.error.message).to.match(/rate limit|throttle|retry after/i);
+    if (res.body.error.details) {
+      expect(res.body.error.details.limit).to.equal(100);
+      expect(res.body.error.details.window).to.equal('minute');
+    }
+  });
+}
+
+docs {
+  # Requests-Minute-Fixed-Throttle-100%
+  
+  Tests throttling when quota is 100% consumed (at limit).
+  
+  ## Test Configuration
+  - Metric Type: requests
+  - Time Granularity: minute
+  - Window Type: fixed
+  - Action: throttle
+  - Usage Level: 100% (100/100 requests)
+  
+  ## Expected Behavior
+  - Status: 429 Too Many Requests
+  - X-RateLimit-Limit: 100
+  - X-RateLimit-Remaining: 0
+  - Retry-After: Seconds until window reset (≤60)
+  - Error code: rate_limit_exceeded
+  - Error type: throttle
+  
+  ## Client Recovery
+  1. Read Retry-After header
+  2. Wait specified seconds
+  3. Retry request after window reset
+  4. Implement exponential backoff for safety
+  
+  ## Difference from Block
+  - Throttle: Temporary, retry after window reset
+  - Block: Permanent/long-term, requires admin action
+}

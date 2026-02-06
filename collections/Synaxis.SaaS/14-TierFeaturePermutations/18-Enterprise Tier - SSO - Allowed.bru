@@ -1,0 +1,92 @@
+meta {
+  name: Enterprise Tier - SSO - Allowed
+  type: http
+  seq: 18
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/sso/configure
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{enterpriseOrgId}}
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "provider": "saml2",
+    "metadata": "https://idp.example.com/metadata",
+    "entityId": "synaxis-saas-{{enterpriseOrgId}}",
+    "attributeMapping": {
+      "email": "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress",
+      "firstName": "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname",
+      "lastName": "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname"
+    },
+    "enforceSSO": true
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.config: isDefined
+  res.body.config.provider: eq saml2
+  res.body.config.status: eq active
+  res.body.config.enforceSSO: eq true
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("enterpriseOrgId"));
+}
+
+tests {
+  test("Enterprise tier can configure SSO", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body.config).to.be.an('object');
+  });
+  
+  test("SSO configuration is active", function() {
+    expect(res.body.config.status).to.equal("active");
+  });
+  
+  test("SAML provider configured", function() {
+    expect(res.body.config.provider).to.equal("saml2");
+  });
+  
+  test("SSO enforcement enabled", function() {
+    expect(res.body.config.enforceSSO).to.equal(true);
+  });
+  
+  test("Attribute mapping configured", function() {
+    expect(res.body.config.attributeMapping).to.be.an('object');
+  });
+}
+
+docs {
+  # Enterprise Tier - SSO - Allowed
+  
+  Tests that Enterprise tier organizations can configure Single Sign-On.
+  
+  ## Expected Behavior
+  - Returns 200 OK
+  - SSO configuration created and activated
+  - Supports SAML 2.0 and OIDC
+  - Custom attribute mapping
+  - SSO enforcement option
+  
+  ## Feature: SSO (SAML/OIDC)
+  Available on: Enterprise only
+  Supported providers:
+  - SAML 2.0
+  - OpenID Connect
+  - Azure AD
+  - Okta
+  - Google Workspace
+}

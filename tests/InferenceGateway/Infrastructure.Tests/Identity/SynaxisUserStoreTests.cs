@@ -177,8 +177,10 @@ public class SynaxisUserStoreTests : IDisposable
         };
 
         _context.Users.Add(user);
-        _context.Organizations.AddRange(org1, org2);
-        _context.UserOrganizationMemberships.AddRange(membership1, membership2);
+        _context.Organizations.Add(org1);
+        _context.Organizations.Add(org2);
+        _context.UserOrganizationMemberships.Add(membership1);
+        _context.UserOrganizationMemberships.Add(membership2);
         await _context.SaveChangesAsync();
 
         // Act

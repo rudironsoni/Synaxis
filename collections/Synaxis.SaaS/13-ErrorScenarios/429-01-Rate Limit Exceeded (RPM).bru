@@ -1,0 +1,92 @@
+meta {
+  name: 429-01-Rate Limit Exceeded (RPM)
+  type: http
+  seq: 41
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+  X-Virtual-Key: {{virtualKey}}
+}
+
+body:json {
+  {
+    "model": "gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test message"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 429
+  res.body.error: isDefined
+  res.body.error.code: eq RATE_LIMIT_EXCEEDED
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+  res.headers.retry-after: isDefined
+}
+
+tests {
+  test("Status code is 429", function() {
+    expect(res.status).to.equal(429);
+  });
+  
+  test("Error code is RATE_LIMIT_EXCEEDED", function() {
+    expect(res.body.error.code).to.equal("RATE_LIMIT_EXCEEDED");
+  });
+  
+  test("Error message mentions rate limit", function() {
+    expect(res.body.error.message).to.match(/rate limit|too many requests/i);
+  });
+  
+  test("Retry-After header present", function() {
+    expect(res.headers['retry-after']).to.be.defined;
+    expect(parseInt(res.headers['retry-after'])).to.be.a('number');
+  });
+  
+  test("Error details include limit type", function() {
+    expect(res.body.error.details).to.have.property('limitType');
+    expect(res.body.error.details.limitType).to.equal('requestsPerMinute');
+  });
+  
+  test("Error details include limit and current usage", function() {
+    expect(res.body.error.details).to.have.property('limit');
+    expect(res.body.error.details).to.have.property('current');
+    expect(res.body.error.details).to.have.property('resetAt');
+  });
+}
+
+docs {
+  # 429 Too Many Requests - Rate Limit Exceeded (RPM)
+  
+  Tests requests-per-minute rate limiting.
+  
+  ## Trigger Condition
+  - POST to /inference after exceeding RPM limit
+  - Virtual key configured with RPM limit
+  
+  ## Expected Response
+  - Status: 429
+  - Error code: RATE_LIMIT_EXCEEDED
+  - Retry-After header, limit details, reset time
+  
+  ## Validation
+  - RPM rate limiting enforced
+  - Retry-After header compliance
+  - Clear limit information
+}

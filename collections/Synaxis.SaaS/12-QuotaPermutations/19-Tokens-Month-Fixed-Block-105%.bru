@@ -1,0 +1,167 @@
+meta {
+  name: Tokens-Month-Fixed-Block-105%
+  type: http
+  seq: 19
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{orgId}}
+  X-Test-Quota-Type: tokens
+  X-Test-Quota-Limit: 100000000
+  X-Test-Quota-Window: month
+  X-Test-Quota-Window-Type: fixed
+  X-Test-Quota-Action: block
+  X-Test-Simulate-Token-Usage: 105000000
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test request - 105% monthly token quota (blocked)"
+      }
+    ],
+    "max_tokens": 100
+  }
+}
+
+assert {
+  res.status: eq 403
+  res.headers.x-ratelimit-limit-tokens: eq 100000000
+  res.headers.x-ratelimit-remaining-tokens: eq 0
+  res.body.error.code: eq monthly_quota_exceeded
+}
+
+tests {
+  test("Monthly token quota blocked at 105%", function() {
+    expect(res.status).to.equal(403);
+  });
+  
+  test("Token limit exceeded", function() {
+    expect(res.headers['x-ratelimit-window']).to.equal('month');
+    expect(res.headers['x-ratelimit-limit-tokens']).to.equal('100000000');
+    expect(parseInt(res.headers['x-ratelimit-remaining-tokens'])).to.equal(0);
+  });
+  
+  test("Overage amount shown", function() {
+    expect(res.body.error.details.overage_tokens).to.equal(5000000);
+    expect(res.body.error.details.overage_percent).to.equal(5);
+  });
+  
+  test("Long wait until reset", function() {
+    const reset = parseInt(res.headers['x-ratelimit-reset']);
+    const now = Math.floor(Date.now() / 1000);
+    const secondsUntilReset = reset - now;
+    
+    // Could be up to a full month
+    expect(secondsUntilReset).to.be.greaterThan(0);
+    expect(secondsUntilReset).to.be.lessThanOrEqual(2678400); // 31 days
+  });
+  
+  test("Upgrade options provided", function() {
+    expect(res.body.error.upgrade_options).to.be.an('array');
+    expect(res.body.error.upgrade_options.length).to.be.greaterThan(0);
+    
+    res.body.error.upgrade_options.forEach(option => {
+      expect(option.name).to.be.a('string');
+      expect(option.monthly_tokens).to.be.a('number');
+      expect(option.price).to.be.a('number');
+    });
+  });
+  
+  test("Support contact available", function() {
+    expect(res.body.error.support_url).to.be.a('string');
+    expect(res.body.error.support_email).to.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
+  });
+  
+  test("Cost of overage shown", function() {
+    if (res.body.error.overage_cost) {
+      expect(res.body.error.overage_cost.currency).to.equal('USD');
+      expect(res.body.error.overage_cost.amount).to.be.greaterThan(0);
+    }
+  });
+}
+
+docs {
+  # Tokens-Month-Fixed-Block-105%
+  
+  Tests blocking when monthly token quota is exceeded.
+  
+  ## Test Configuration
+  - Metric Type: tokens
+  - Time Granularity: month
+  - Window Type: fixed
+  - Action: block
+  - Usage Level: 105% (105M/100M tokens - 5% over)
+  
+  ## Monthly Token Quotas (Typical)
+  
+  | Plan | Monthly Tokens | $/month | Overage Cost |
+  |------|---------------|---------|--------------|
+  | Free | 1M | $0 | Blocked |
+  | Basic | 10M | $29 | $0.002/1k |
+  | Pro | 100M | $199 | $0.001/1k |
+  | Enterprise | 1B+ | Custom | Negotiated |
+  
+  ## Expected Behavior
+  - Status: 403 Forbidden
+  - Error: monthly_quota_exceeded
+  - Overage: 5M tokens (5%)
+  - No requests until reset or upgrade
+  - Reset: 1st of next month
+  
+  ## Business Impact
+  
+  ⚠️ **Critical Situation**
+  - Service completely blocked
+  - May affect multiple users/systems
+  - Could last until end of month
+  - Revenue/SLA impact
+  
+  ## Recovery Options
+  
+  ### 1. Immediate (if supported)
+  - Purchase one-time overage package
+  - Add credit balance
+  - Enable burst billing
+  
+  ### 2. Short-term
+  - Upgrade to higher plan
+  - Contact support for temporary lift
+  - Use alternative API keys
+  
+  ### 3. Long-term
+  - Right-size plan for usage
+  - Implement usage monitoring
+  - Add auto-scaling quotas
+  - Set up alerts at 80%, 90%, 95%
+  
+  ## Prevention Strategies
+  
+  ✅ Monitor daily consumption
+  ✅ Set alerts at 80% threshold
+  ✅ Implement circuit breakers
+  ✅ Use tiered plans with overages
+  ✅ Cache aggressively
+  ✅ Optimize prompts (fewer tokens)
+  
+  ## Client Behavior
+  1. DO NOT retry blocked requests
+  2. Display user-friendly error
+  3. Show upgrade options
+  4. Queue non-urgent requests
+  5. Switch to fallback system if available
+}

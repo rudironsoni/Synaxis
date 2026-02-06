@@ -1,0 +1,81 @@
+meta {
+  name: Enterprise Tier - Custom Rate Limits - Allowed
+  type: http
+  seq: 33
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/rate-limits/custom
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{enterpriseOrgId}}
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "requestsPerMinute": 5000,
+    "requestsPerMonth": 10000000,
+    "burstCapacity": 10000,
+    "reservedThroughput": 1000
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.limits: isDefined
+  res.body.limits.requestsPerMinute: eq 5000
+  res.body.limits.burstCapacity: eq 10000
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("enterpriseOrgId"));
+}
+
+tests {
+  test("Enterprise tier can configure custom rate limits", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body.limits).to.be.an('object');
+  });
+  
+  test("Custom rate limits applied", function() {
+    expect(res.body.limits.requestsPerMinute).to.equal(5000);
+  });
+  
+  test("Burst capacity configured", function() {
+    expect(res.body.limits.burstCapacity).to.equal(10000);
+  });
+  
+  test("Reserved throughput configured", function() {
+    expect(res.body.limits.reservedThroughput).to.equal(1000);
+  });
+}
+
+docs {
+  # Enterprise Tier - Custom Rate Limits - Allowed
+  
+  Tests that Enterprise tier can configure custom rate limits.
+  
+  ## Expected Behavior
+  - Returns 200 OK
+  - Custom rate limits configured
+  - Burst capacity and reserved throughput
+  
+  ## Feature: Custom Rate Limits
+  Available on: Enterprise only
+  
+  Allows configuration of:
+  - Per-minute limits
+  - Monthly quotas
+  - Burst capacity
+  - Reserved throughput
+  - Per-endpoint limits
+}

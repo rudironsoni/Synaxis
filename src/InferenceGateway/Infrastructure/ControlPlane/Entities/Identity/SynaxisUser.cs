@@ -11,6 +11,8 @@ public class SynaxisUser : IdentityUser<Guid>
     public string? LastName { get; set; }
     public required string Status { get; set; } = "Active";
     public DateTime? DeletedAt { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
     // Navigation properties
     public ICollection<UserOrganizationMembership> OrganizationMemberships { get; set; } = new List<UserOrganizationMembership>();

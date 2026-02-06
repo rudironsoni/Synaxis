@@ -1,0 +1,101 @@
+meta {
+  name: 07-Automated Decision Making - Transparency
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/v1/compliance/gdpr/automated-decisions
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Region: {{region}}
+  X-Compliance-Framework: GDPR
+  X-Legal-Basis: consent
+}
+
+assert {
+  res.status: eq 200
+  res.body.decisions: isArray
+  res.body.humanReviewAvailable: eq true
+  res.body.logicExplained: eq true
+  res.body.auditTrailId: isDefined
+}
+
+tests {
+  test("Automated decisions disclosed", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Decision list provided", function() {
+    expect(res.body.decisions).to.be.an('array');
+  });
+  
+  test("Logic explained for each decision", function() {
+    expect(res.body.logicExplained).to.equal(true);
+  });
+  
+  test("Significance and consequences disclosed", function() {
+    expect(res.body.significanceDisclosed).to.equal(true);
+  });
+  
+  test("Human review available", function() {
+    expect(res.body.humanReviewAvailable).to.equal(true);
+  });
+  
+  test("Right to contest decision", function() {
+    expect(res.body.contestable).to.equal(true);
+  });
+  
+  test("Safeguards in place", function() {
+    expect(res.body.safeguards).to.be.an('array');
+    expect(res.body.safeguards.length).to.be.greaterThan(0);
+  });
+}
+
+docs {
+  # GDPR Automated Decision-Making Transparency
+  
+  GDPR Article 22 - Automated individual decision-making, including profiling
+  
+  ## Right
+  Data subject has right NOT to be subject to decision based solely 
+  on automated processing which produces legal or similarly significant effects.
+  
+  ## Exceptions (Permitted If)
+  1. Necessary for contract performance
+  2. Authorized by EU/Member State law (with safeguards)
+  3. Based on explicit consent
+  
+  ## Required Safeguards
+  - Right to obtain human intervention
+  - Right to express point of view
+  - Right to contest decision
+  - Regular accuracy checks
+  - Bias detection and mitigation
+  
+  ## Transparency Requirements (Art. 13-14)
+  Must inform data subject of:
+  - Existence of automated decision-making
+  - Logic involved
+  - Significance and envisaged consequences
+  
+  ## Special Category Data
+  Profiling based on special categories prohibited UNLESS:
+  - Explicit consent with suitable safeguards
+  - Substantial public interest (with legal basis)
+  
+  ## Verification
+  ✓ Decisions disclosed
+  ✓ Logic explained
+  ✓ Significance disclosed
+  ✓ Human review available
+  ✓ Contestable
+  ✓ Safeguards implemented
+}

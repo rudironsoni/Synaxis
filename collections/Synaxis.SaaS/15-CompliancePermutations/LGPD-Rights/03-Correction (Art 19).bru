@@ -1,0 +1,122 @@
+meta {
+  name: 03-Correction (Art 19)
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/compliance/lgpd/correction
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: sa-east-1
+  X-Compliance-Framework: LGPD
+  X-Legal-Basis: consent
+}
+
+body:json {
+  {
+    "requestType": "correction",
+    "corrections": {
+      "name": "Corrected Name",
+      "cpf": "123.456.789-00",
+      "address": "Corrected Address, São Paulo, SP"
+    },
+    "reason": "Incomplete or inaccurate data"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.correctionId: isDefined
+  res.body.dataLocation: contains brazil
+  res.body.auditTrailId: isDefined
+}
+
+tests {
+  test("Correction successful", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Correction ID generated", function() {
+    expect(res.body.correctionId).to.be.a('string');
+  });
+  
+  test("Data location in Brazil", function() {
+    expect(res.body.dataLocation).to.match(/brazil|sa-east/i);
+  });
+  
+  test("Audit trail created", function() {
+    expect(res.body.auditTrailId).to.be.a('string');
+  });
+  
+  test("Incomplete data completed", function() {
+    expect(res.body.dataCompleted).to.equal(true);
+  });
+  
+  test("Inaccurate data corrected", function() {
+    expect(res.body.dataCorrected).to.equal(true);
+  });
+  
+  test("Public/private entities notified", function() {
+    expect(res.body.entitiesNotified).to.be.an('array');
+  });
+  
+  test("Timeline compliance", function() {
+    const completedAt = new Date(res.body.completedAt);
+    const requestedAt = new Date(res.body.requestedAt);
+    const daysDiff = (completedAt - requestedAt) / (1000 * 60 * 60 * 24);
+    expect(daysDiff).to.be.lessThan(15); // 15 days
+  });
+}
+
+docs {
+  # LGPD Correction (Article 19)
+  
+  Article 19 - Right to correction
+  
+  ## Right
+  Data subject has right to:
+  - Correct incomplete, inaccurate, or outdated data
+  - Complete incomplete data
+  
+  ## Controller Obligations
+  - Correct data without undue delay
+  - Communicate correction to entities with whom data shared
+  - Inform data subject of entities notified (if requested)
+  
+  ## Timeline
+  - 15 days from request (Art. 19, §1)
+  - Can extend if reasonable justification
+  - Must inform of extension and reasons
+  
+  ## Communication
+  Must communicate correction to:
+  - Public entities with whom data shared
+  - Private entities with whom data shared
+  - Unless impossible or disproportionate effort
+  
+  ## Verification Method
+  Controller can request verification of data subject's identity 
+  before processing correction.
+  
+  ## Exceptions
+  - If correction impossible (must inform reasons)
+  - If legal/regulatory restriction
+  
+  ## Verification
+  ✓ Correction successful
+  ✓ Data location disclosed
+  ✓ Audit trail created
+  ✓ Incomplete data completed
+  ✓ Inaccurate data corrected
+  ✓ Entities notified
+  ✓ Timeline compliance (15 days)
+}

@@ -1,0 +1,56 @@
+meta {
+  name: EU User - Invalid Processed Region
+  type: http
+  seq: 34
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: eu-west-1
+  X-Processed-Region: invalid-region
+  X-Cross-Border: false
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test with invalid processed region"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("Invalid processed region rejected", function() {
+    expect(res.status).to.equal(400);
+    expect(res.body.error).to.include('invalid processed region');
+  });
+}
+
+docs {
+  # EU User - Invalid Processed Region
+  
+  Tests error handling for invalid processed region values.
+  Only eu-west-1, us-east-1, and sa-east-1 are valid.
+  
+  ## Expected Behavior
+  - Request rejected with 400
+  - Error indicates invalid processed region
+}

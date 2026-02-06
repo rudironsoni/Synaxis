@@ -24,6 +24,7 @@ public class ProviderRoutingBenchmarks : TestBase
     private IControlPlaneStore _controlPlaneStore = null!;
     private ILogger<ModelResolver> _modelResolverLogger = null!;
     private ILogger<SmartRouter> _smartRouterLogger = null!;
+    private IRoutingScoreCalculator _routingScoreCalculator = null!;
     private IOptions<SynaxisConfiguration> _configOptions = null!;
 
     private const string SingleProviderModel = "llama-3.1-70b-versatile";
@@ -39,6 +40,7 @@ public class ProviderRoutingBenchmarks : TestBase
         _quotaTracker = CreateMockQuotaTracker().Object;
         _costService = CreateMockCostService().Object;
         _controlPlaneStore = CreateMockControlPlaneStore().Object;
+        _routingScoreCalculator = CreateMockRoutingScoreCalculator().Object;
 
         var config = CreateSynaxisConfiguration(13, 10, 10);
         _configOptions = Options.Create(config);
@@ -56,6 +58,7 @@ public class ProviderRoutingBenchmarks : TestBase
             _costService,
             _healthStore,
             _quotaTracker,
+            _routingScoreCalculator,
             _smartRouterLogger);
     }
 
@@ -126,6 +129,7 @@ public class ProviderRoutingBenchmarks : TestBase
             _costService,
             _healthStore,
             _quotaTracker,
+            _routingScoreCalculator,
             _smartRouterLogger);
 
         return await router.GetCandidatesAsync(
@@ -155,6 +159,7 @@ public class ProviderRoutingBenchmarks : TestBase
             _costService,
             _healthStore,
             _quotaTracker,
+            _routingScoreCalculator,
             _smartRouterLogger);
 
         return await router.GetCandidatesAsync(

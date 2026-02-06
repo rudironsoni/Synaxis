@@ -1,0 +1,90 @@
+meta {
+  name: 429-03-Quota Exceeded (Daily)
+  type: http
+  seq: 43
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+  X-Virtual-Key: {{virtualKey}}
+}
+
+body:json {
+  {
+    "model": "gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hello"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 429
+  res.body.error: isDefined
+  res.body.error.code: eq QUOTA_EXCEEDED
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 429", function() {
+    expect(res.status).to.equal(429);
+  });
+  
+  test("Error code is QUOTA_EXCEEDED", function() {
+    expect(res.body.error.code).to.equal("QUOTA_EXCEEDED");
+  });
+  
+  test("Error message mentions daily quota", function() {
+    expect(res.body.error.message).to.match(/quota|daily|limit exceeded/i);
+  });
+  
+  test("Error details include quota type", function() {
+    expect(res.body.error.details).to.have.property('quotaType');
+    expect(res.body.error.details.quotaType).to.equal('daily');
+  });
+  
+  test("Error details include usage and limit", function() {
+    expect(res.body.error.details).to.have.property('limit');
+    expect(res.body.error.details).to.have.property('used');
+    expect(res.body.error.details).to.have.property('resetAt');
+  });
+  
+  test("Error includes upgrade suggestion for free tier", function() {
+    expect(res.body.error.details).to.have.property('suggestion');
+  });
+}
+
+docs {
+  # 429 Too Many Requests - Quota Exceeded (Daily)
+  
+  Tests daily quota enforcement.
+  
+  ## Trigger Condition
+  - POST to /inference after exceeding daily quota
+  - Organization daily token/request quota exhausted
+  
+  ## Expected Response
+  - Status: 429
+  - Error code: QUOTA_EXCEEDED
+  - Daily quota details, usage, reset time
+  
+  ## Validation
+  - Daily quota enforcement
+  - Usage tracking accuracy
+  - Reset time (next day) indication
+}

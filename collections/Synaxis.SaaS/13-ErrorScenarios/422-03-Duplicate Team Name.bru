@@ -1,0 +1,82 @@
+meta {
+  name: 422-03-Duplicate Team Name
+  type: http
+  seq: 35
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/teams
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "name": "Engineering",
+    "description": "Engineering team duplicate attempt"
+  }
+}
+
+assert {
+  res.status: eq 422
+  res.body.error: isDefined
+  res.body.error.code: eq DUPLICATE_TEAM_NAME
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 422", function() {
+    expect(res.status).to.equal(422);
+  });
+  
+  test("Error code is DUPLICATE_TEAM_NAME", function() {
+    expect(res.body.error.code).to.equal("DUPLICATE_TEAM_NAME");
+  });
+  
+  test("Error message mentions duplicate team name", function() {
+    expect(res.body.error.message).to.match(/team|name|duplicate|already exists/i);
+  });
+  
+  test("Error details identify conflicting field", function() {
+    expect(res.body.error.details).to.have.property('field');
+    expect(res.body.error.details.field).to.equal('name');
+  });
+  
+  test("Error details include organization context", function() {
+    expect(res.body.error.details).to.have.property('organizationId');
+  });
+  
+  test("Error suggests viewing existing teams", function() {
+    expect(res.body.error.details).to.have.property('suggestion');
+  });
+}
+
+docs {
+  # 422 Unprocessable Entity - Duplicate Team Name
+  
+  Tests team name uniqueness within organization.
+  
+  ## Trigger Condition
+  - POST to /organizations/{id}/teams
+  - Team name "Engineering" already exists in org
+  
+  ## Expected Response
+  - Status: 422
+  - Error code: DUPLICATE_TEAM_NAME
+  - Organization context and team list suggestion
+  
+  ## Validation
+  - Team name uniqueness per organization
+  - Organization-scoped constraint
+  - Helpful navigation to existing teams
+}

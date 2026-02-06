@@ -1,0 +1,184 @@
+meta {
+  name: Chat Completion (Streaming)
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "{{modelProvider}}/{{modelName}}",
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant."
+      },
+      {
+        "role": "user",
+        "content": "What is the capital of France?"
+      }
+    ],
+    "stream": true,
+    "temperature": 0.7,
+    "maxTokens": 500,
+    "topP": 1.0,
+    "frequencyPenalty": 0,
+    "presencePenalty": 0,
+    "metadata": {
+      "requestId": "bruno-test-001",
+      "environment": "development"
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.content-type: contains text/event-stream
+  res.headers.x-request-id: isDefined
+  res.headers.x-tokens-used: isDefined
+}
+
+script:post-response {
+  // Parse SSE stream
+  const lines = res.body.split('\n');
+  let totalTokens = 0;
+  let completionText = '';
+  
+  for (const line of lines) {
+    if (line.startsWith('data: ')) {
+      const data = line.substring(6);
+      if (data === '[DONE]') {
+        break;
+      }
+      
+      try {
+        const chunk = JSON.parse(data);
+        if (chunk.choices && chunk.choices[0].delta.content) {
+          completionText += chunk.choices[0].delta.content;
+        }
+        if (chunk.usage) {
+          totalTokens = chunk.usage.totalTokens;
+        }
+      } catch (e) {
+        // Skip invalid JSON
+      }
+    }
+  }
+  
+  console.log('Completion:', completionText);
+  console.log('Tokens used:', totalTokens);
+  
+  bru.setVar("lastCompletionText", completionText);
+  bru.setVar("lastTokensUsed", totalTokens);
+}
+
+tests {
+  test("Streaming response format", function() {
+    expect(res.headers['content-type']).to.include('text/event-stream');
+  });
+  
+  test("Request ID returned", function() {
+    expect(res.headers['x-request-id']).to.be.a('string');
+    expect(res.headers['x-request-id'].length).to.be.greaterThan(0);
+  });
+  
+  test("Tokens consumed tracked", function() {
+    expect(res.headers['x-tokens-used']).to.be.a('string');
+    const tokens = parseInt(res.headers['x-tokens-used']);
+    expect(tokens).to.be.greaterThan(0);
+  });
+  
+  test("SSE format valid", function() {
+    expect(res.body).to.include('data: ');
+    expect(res.body).to.include('[DONE]');
+  });
+  
+  test("Completion contains content", function() {
+    const completionText = bru.getVar("lastCompletionText");
+    expect(completionText).to.be.a('string');
+    expect(completionText.length).to.be.greaterThan(0);
+  });
+  
+  test("Answer mentions Paris", function() {
+    const completionText = bru.getVar("lastCompletionText");
+    expect(completionText.toLowerCase()).to.include('paris');
+  });
+}
+
+docs {
+  # Chat Completion (Streaming)
+  
+  Generates AI completion using Server-Sent Events (SSE) for real-time streaming.
+  
+  ## Authentication
+  Use API key as Bearer token (NOT user access token).
+  
+  ## Request Body
+  - `model`: Format: `{provider}/{model}` (e.g., `openai/gpt-4`)
+  - `messages`: Array of message objects (role + content)
+  - `stream`: true for SSE streaming
+  - `temperature`: 0.0-2.0 (creativity, default: 0.7)
+  - `maxTokens`: Max completion length (default: 1000)
+  - `topP`: Nucleus sampling (default: 1.0)
+  - `frequencyPenalty`: -2.0 to 2.0 (default: 0)
+  - `presencePenalty`: -2.0 to 2.0 (default: 0)
+  - `metadata`: Custom tracking data
+  
+  ## Message Roles
+  - `system`: Sets assistant behavior
+  - `user`: User message
+  - `assistant`: Previous AI response (for conversation history)
+  
+  ## SSE Stream Format
+  ```
+  data: {"id":"chatcmpl-123","object":"chat.completion.chunk","created":1234567890,"model":"gpt-4","choices":[{"index":0,"delta":{"content":"Hello"},"finish_reason":null}]}
+  
+  data: {"id":"chatcmpl-123","object":"chat.completion.chunk","created":1234567890,"model":"gpt-4","choices":[{"index":0,"delta":{"content":" there"},"finish_reason":null}]}
+  
+  data: {"id":"chatcmpl-123","object":"chat.completion.chunk","created":1234567890,"model":"gpt-4","choices":[{"index":0,"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":10,"completion_tokens":5,"total_tokens":15}}
+  
+  data: [DONE]
+  ```
+  
+  ## Response Headers
+  - `X-Request-ID`: Unique request identifier
+  - `X-Tokens-Used`: Total tokens consumed
+  - `X-Model-Used`: Actual model used (may differ from requested)
+  - `X-Region`: Region where inference executed
+  
+  ## Token Consumption
+  - Prompt tokens + completion tokens = total tokens
+  - Charged against organization quota
+  - Usage tracked per API key
+  - Real-time quota enforcement
+  
+  ## Error Codes
+  - 400: Invalid request (bad JSON, invalid model)
+  - 401: Invalid API key
+  - 403: Insufficient permissions (scope: inference:write)
+  - 429: Rate limit exceeded
+  - 402: Quota exceeded (insufficient credits)
+  - 503: Model unavailable (try different model/region)
+  
+  ## Best Practices
+  - Use system message for consistent behavior
+  - Include conversation history for context
+  - Set reasonable maxTokens to control costs
+  - Handle [DONE] signal to close stream
+  - Implement exponential backoff on errors
+}

@@ -1,0 +1,78 @@
+meta {
+  name: Pro Tier - Custom Backup - Denied
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/backups/configure
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{proOrgId}}
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "schedule": "0 2 * * *",
+    "retention": "30d",
+    "destination": "s3://customer-bucket/backups",
+    "encryption": "AES256"
+  }
+}
+
+assert {
+  res.status: eq 403
+  res.body.error: isDefined
+  res.body.error.code: eq FEATURE_NOT_AVAILABLE
+  res.body.error.message: contains backup
+  res.body.error.requiredTier: eq enterprise
+  res.body.error.currentTier: eq pro
+  res.body.upgrade: isDefined
+  res.body.upgrade.contactSales: eq true
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("proOrgId"));
+}
+
+tests {
+  test("Pro tier cannot configure custom backups", function() {
+    expect(res.status).to.equal(403);
+    expect(res.body.error.code).to.equal("FEATURE_NOT_AVAILABLE");
+  });
+  
+  test("Required tier is enterprise", function() {
+    expect(res.body.error.requiredTier).to.equal("enterprise");
+  });
+  
+  test("Current tier is pro", function() {
+    expect(res.body.error.currentTier).to.equal("pro");
+  });
+}
+
+docs {
+  # Pro Tier - Custom Backup - Denied
+  
+  Tests that Pro tier organizations cannot configure custom backup policies.
+  
+  ## Expected Behavior
+  - Returns 403 Forbidden
+  - Error code: FEATURE_NOT_AVAILABLE
+  - Contact sales prompt (Enterprise-only feature)
+  
+  ## Feature: Custom Backup Configuration
+  Available on: Enterprise only
+  Default backups: Automatic on all tiers (14-day retention for Pro)
+  
+  ## Upgrade Path
+  Pro → Enterprise (Contact Sales)
+}

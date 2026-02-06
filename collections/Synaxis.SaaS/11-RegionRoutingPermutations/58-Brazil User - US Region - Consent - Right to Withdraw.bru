@@ -1,0 +1,56 @@
+meta {
+  name: Brazil User - US Region - Consent - Right to Withdraw
+  type: http
+  seq: 58
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: sa-east-1
+  X-Processed-Region: us-east-1
+  X-Cross-Border: true
+  X-Legal-Basis: consent
+  X-Consent-Withdrawable: true
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test with consent withdrawal rights"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-consent-withdrawal-url: isDefined
+  res.headers.x-lgpd-rights-provided: eq true
+}
+
+tests {
+  test("Consent withdrawal mechanism available", function() {
+    expect(res.headers['x-consent-withdrawal-url']).to.be.defined;
+    expect(res.headers['x-lgpd-rights-provided']).to.equal('true');
+  });
+}
+
+docs {
+  # Brazil to US with Consent Withdrawal
+  
+  Tests cross-border transfer with consent withdrawal rights.
+  Verifies LGPD Article 8 right to revoke consent.
+}

@@ -1,0 +1,77 @@
+meta {
+  name: Requests-Day-Sliding-Throttle-100%
+  type: http
+  seq: 23
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{orgId}}
+  X-Test-Quota-Type: requests
+  X-Test-Quota-Limit: 10000
+  X-Test-Quota-Window: day
+  X-Test-Quota-Window-Type: sliding
+  X-Test-Quota-Action: throttle
+  X-Test-Simulate-Usage: 10000
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test daily sliding throttle"
+      }
+    ],
+    "max_tokens": 50
+  }
+}
+
+assert {
+  res.status: eq 429
+  res.headers.x-ratelimit-limit: eq 10000
+  res.headers.x-ratelimit-remaining: eq 0
+  res.headers.x-ratelimit-window-type: eq sliding
+  res.headers.retry-after: isDefined
+}
+
+tests {
+  test("Throttled at daily sliding limit", function() {
+    expect(res.status).to.equal(429);
+  });
+  
+  test("Retry-After shows next slot availability", function() {
+    const retryAfter = parseInt(res.headers['retry-after']);
+    // In 24h sliding window, retry after oldest request expires
+    expect(retryAfter).to.be.greaterThan(0);
+    expect(retryAfter).to.be.lessThanOrEqual(86400);
+  });
+  
+  test("Sliding daily window behavior", function() {
+    expect(res.headers['x-ratelimit-window-type']).to.equal('sliding');
+    // Looking back 24 hours from now, 10k requests made
+  });
+}
+
+docs {
+  # Requests-Day-Sliding-Throttle-100%
+  
+  Tests daily sliding window throttling.
+  
+  ## Sliding Daily Window
+  - Counts requests in last 86400 seconds
+  - No midnight reset spike
+  - Gradual capacity recovery
+  - Better for high-volume APIs
+}

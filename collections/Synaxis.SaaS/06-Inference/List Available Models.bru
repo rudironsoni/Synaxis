@@ -1,0 +1,92 @@
+meta {
+  name: List Available Models
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/inference/models
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-Region: {{region}}
+  X-Organization-Id: {{orgId}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.models: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Models array returned", function() {
+    expect(res.body.models).to.be.an('array');
+    expect(res.body.models.length).to.be.greaterThan(0);
+  });
+  
+  test("Each model has required fields", function() {
+    res.body.models.forEach(model => {
+      expect(model).to.have.property('id');
+      expect(model).to.have.property('provider');
+      expect(model).to.have.property('name');
+      expect(model).to.have.property('contextWindow');
+      expect(model).to.have.property('pricing');
+    });
+  });
+  
+  test("Pricing information accurate", function() {
+    res.body.models.forEach(model => {
+      expect(model.pricing.inputTokens).to.be.a('number');
+      expect(model.pricing.outputTokens).to.be.a('number');
+    });
+  });
+}
+
+docs {
+  # List Available Models
+  
+  Lists all AI models available to the organization.
+  
+  ## Response Structure
+  ```json
+  {
+    "models": [
+      {
+        "id": "openai/gpt-4",
+        "provider": "openai",
+        "name": "GPT-4",
+        "description": "Most capable GPT-4 model",
+        "contextWindow": 8192,
+        "maxOutputTokens": 4096,
+        "pricing": {
+          "inputTokens": 0.03,
+          "outputTokens": 0.06,
+          "per1000Tokens": true
+        },
+        "capabilities": ["chat", "completion", "function-calling"],
+        "languages": ["en", "de", "fr", "es", "it", "pt", "zh", "ja", "ko"],
+        "regions": ["us-east-1", "eu-central-1"],
+        "status": "available",
+        "deprecated": false
+      }
+    ]
+  }
+  ```
+  
+  ## Model Availability
+  - Filtered by organization plan
+  - Filtered by allowed regions
+  - Filtered by API key scopes
+  
+  ## Pricing
+  - Per 1000 tokens
+  - Separate pricing for input/output
+  - Currency: USD
+}

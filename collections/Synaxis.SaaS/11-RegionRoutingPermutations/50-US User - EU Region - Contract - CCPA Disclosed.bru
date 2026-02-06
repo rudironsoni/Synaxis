@@ -1,0 +1,56 @@
+meta {
+  name: US User - EU Region - Contract - CCPA Disclosed
+  type: http
+  seq: 50
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: us-east-1
+  X-Processed-Region: eu-west-1
+  X-Cross-Border: true
+  X-Legal-Basis: contract
+  X-CCPA-Disclosure: true
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test US user with CCPA disclosure"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-ccpa-compliant: eq true
+  res.headers.x-gdpr-applies: eq true
+}
+
+tests {
+  test("Dual CCPA/GDPR compliance", function() {
+    expect(res.headers['x-ccpa-compliant']).to.equal('true');
+    expect(res.headers['x-gdpr-applies']).to.equal('true');
+  });
+}
+
+docs {
+  # US to EU with CCPA Disclosure
+  
+  Tests US to EU transfer with CCPA disclosure requirements.
+  Verifies dual compliance with California and EU laws.
+}

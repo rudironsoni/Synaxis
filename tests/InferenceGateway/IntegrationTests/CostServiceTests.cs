@@ -112,7 +112,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             using var dbContext = CreateInMemoryDbContext();
             var cost1 = new ModelCost { Provider = "Groq", Model = "llama-3.3-70b-versatile", CostPerToken = 0.0001m };
             var cost2 = new ModelCost { Provider = "groq", Model = "llama-3.3-70b-versatile", CostPerToken = 0.0002m };
-            dbContext.ModelCosts.AddRange(cost1, cost2);
+            dbContext.ModelCosts.Add(cost1);
+            dbContext.ModelCosts.Add(cost2);
             await dbContext.SaveChangesAsync();
             
             var service = new CostService(dbContext);
@@ -133,7 +134,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             using var dbContext = CreateInMemoryDbContext();
             var cost1 = new ModelCost { Provider = "Provider1", Model = "model1", CostPerToken = 0.0001m };
             var cost2 = new ModelCost { Provider = "Provider2", Model = "model2", CostPerToken = 0.0002m };
-            dbContext.ModelCosts.AddRange(cost1, cost2);
+            dbContext.ModelCosts.Add(cost1);
+            dbContext.ModelCosts.Add(cost2);
             await dbContext.SaveChangesAsync();
             
             var service = new CostService(dbContext);
@@ -239,7 +241,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             using var dbContext = CreateInMemoryDbContext();
             var cost1 = new ModelCost { Provider = "Provider1", Model = "model1", CostPerToken = 0.0001m };
             var cost2 = new ModelCost { Provider = "Provider2", Model = "model2", CostPerToken = 0.0002m };
-            dbContext.ModelCosts.AddRange(cost1, cost2);
+            dbContext.ModelCosts.Add(cost1);
+            dbContext.ModelCosts.Add(cost2);
             await dbContext.SaveChangesAsync();
             
             var service = new CostService(dbContext);

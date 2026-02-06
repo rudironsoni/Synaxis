@@ -1,0 +1,56 @@
+meta {
+  name: US User - EU Region - SCC - Profiling Activity
+  type: http
+  seq: 66
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: us-east-1
+  X-Processed-Region: eu-west-1
+  X-Cross-Border: true
+  X-Legal-Basis: SCC
+  X-Profiling: enabled
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test with profiling enabled"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-profiling-disclosed: eq true
+  res.headers.x-opt-out-available: eq true
+}
+
+tests {
+  test("Profiling transparency requirements met", function() {
+    expect(res.headers['x-profiling-disclosed']).to.equal('true');
+    expect(res.headers['x-opt-out-available']).to.equal('true');
+  });
+}
+
+docs {
+  # US to EU with Profiling
+  
+  Tests cross-border transfer with user profiling activity.
+  Verifies GDPR Article 22 profiling disclosure requirements.
+}

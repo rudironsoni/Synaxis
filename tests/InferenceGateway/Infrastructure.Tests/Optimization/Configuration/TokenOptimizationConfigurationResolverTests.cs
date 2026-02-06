@@ -198,32 +198,31 @@ public class TokenOptimizationConfigurationResolverTests : IAsyncLifetime
     public async Task GetAllConfigurationsAsync_MultipleProviders_ReturnsAll()
     {
         // Arrange
-        var configs = new[]
+        var config1 = new TokenOptimizationConfiguration
         {
-            new TokenOptimizationConfiguration
-            {
-                ProviderId = "provider-1",
-                EnablePromptCaching = true,
-                MaxContextTokens = 8000,
-                UpdatedAt = DateTimeOffset.UtcNow
-            },
-            new TokenOptimizationConfiguration
-            {
-                ProviderId = "provider-2",
-                EnablePromptCaching = false,
-                MaxContextTokens = 4000,
-                UpdatedAt = DateTimeOffset.UtcNow
-            },
-            new TokenOptimizationConfiguration
-            {
-                ProviderId = "provider-3",
-                EnablePromptCaching = true,
-                MaxContextTokens = 16000,
-                UpdatedAt = DateTimeOffset.UtcNow
-            }
+            ProviderId = "provider-1",
+            EnablePromptCaching = true,
+            MaxContextTokens = 8000,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        var config2 = new TokenOptimizationConfiguration
+        {
+            ProviderId = "provider-2",
+            EnablePromptCaching = false,
+            MaxContextTokens = 4000,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        var config3 = new TokenOptimizationConfiguration
+        {
+            ProviderId = "provider-3",
+            EnablePromptCaching = true,
+            MaxContextTokens = 16000,
+            UpdatedAt = DateTimeOffset.UtcNow
         };
 
-        await _dbContext.TokenOptimizationConfigurations.AddRangeAsync(configs);
+        await _dbContext.TokenOptimizationConfigurations.AddAsync(config1);
+        await _dbContext.TokenOptimizationConfigurations.AddAsync(config2);
+        await _dbContext.TokenOptimizationConfigurations.AddAsync(config3);
         await _dbContext.SaveChangesAsync();
 
         var resolver = new TokenOptimizationConfigurationResolver(_dbContext);
@@ -243,32 +242,31 @@ public class TokenOptimizationConfigurationResolverTests : IAsyncLifetime
     public async Task GetConfigurationsByStrategyAsync_FiltersCorrectly()
     {
         // Arrange
-        var configs = new[]
+        var config1 = new TokenOptimizationConfiguration
         {
-            new TokenOptimizationConfiguration
-            {
-                ProviderId = "provider-sw-1",
-                CompressionStrategy = "sliding-window",
-                MaxContextTokens = 8000,
-                UpdatedAt = DateTimeOffset.UtcNow
-            },
-            new TokenOptimizationConfiguration
-            {
-                ProviderId = "provider-sw-2",
-                CompressionStrategy = "sliding-window",
-                MaxContextTokens = 4000,
-                UpdatedAt = DateTimeOffset.UtcNow
-            },
-            new TokenOptimizationConfiguration
-            {
-                ProviderId = "provider-none",
-                CompressionStrategy = "none",
-                MaxContextTokens = 16000,
-                UpdatedAt = DateTimeOffset.UtcNow
-            }
+            ProviderId = "provider-sw-1",
+            CompressionStrategy = "sliding-window",
+            MaxContextTokens = 8000,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        var config2 = new TokenOptimizationConfiguration
+        {
+            ProviderId = "provider-sw-2",
+            CompressionStrategy = "sliding-window",
+            MaxContextTokens = 4000,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        var config3 = new TokenOptimizationConfiguration
+        {
+            ProviderId = "provider-none",
+            CompressionStrategy = "none",
+            MaxContextTokens = 16000,
+            UpdatedAt = DateTimeOffset.UtcNow
         };
 
-        await _dbContext.TokenOptimizationConfigurations.AddRangeAsync(configs);
+        await _dbContext.TokenOptimizationConfigurations.AddAsync(config1);
+        await _dbContext.TokenOptimizationConfigurations.AddAsync(config2);
+        await _dbContext.TokenOptimizationConfigurations.AddAsync(config3);
         await _dbContext.SaveChangesAsync();
 
         var resolver = new TokenOptimizationConfigurationResolver(_dbContext);
@@ -286,32 +284,31 @@ public class TokenOptimizationConfigurationResolverTests : IAsyncLifetime
     public async Task GetConfigurationsWithCachingEnabledAsync_FiltersCorrectly()
     {
         // Arrange
-        var configs = new[]
+        var config1 = new TokenOptimizationConfiguration
         {
-            new TokenOptimizationConfiguration
-            {
-                ProviderId = "provider-cache-1",
-                EnablePromptCaching = true,
-                MaxContextTokens = 8000,
-                UpdatedAt = DateTimeOffset.UtcNow
-            },
-            new TokenOptimizationConfiguration
-            {
-                ProviderId = "provider-cache-2",
-                EnablePromptCaching = true,
-                MaxContextTokens = 4000,
-                UpdatedAt = DateTimeOffset.UtcNow
-            },
-            new TokenOptimizationConfiguration
-            {
-                ProviderId = "provider-no-cache",
-                EnablePromptCaching = false,
-                MaxContextTokens = 16000,
-                UpdatedAt = DateTimeOffset.UtcNow
-            }
+            ProviderId = "provider-cache-1",
+            EnablePromptCaching = true,
+            MaxContextTokens = 8000,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        var config2 = new TokenOptimizationConfiguration
+        {
+            ProviderId = "provider-cache-2",
+            EnablePromptCaching = true,
+            MaxContextTokens = 4000,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        var config3 = new TokenOptimizationConfiguration
+        {
+            ProviderId = "provider-no-cache",
+            EnablePromptCaching = false,
+            MaxContextTokens = 16000,
+            UpdatedAt = DateTimeOffset.UtcNow
         };
 
-        await _dbContext.TokenOptimizationConfigurations.AddRangeAsync(configs);
+        await _dbContext.TokenOptimizationConfigurations.AddAsync(config1);
+        await _dbContext.TokenOptimizationConfigurations.AddAsync(config2);
+        await _dbContext.TokenOptimizationConfigurations.AddAsync(config3);
         await _dbContext.SaveChangesAsync();
 
         var resolver = new TokenOptimizationConfigurationResolver(_dbContext);
@@ -399,7 +396,10 @@ public class TokenOptimizationConfigurationResolverTests : IAsyncLifetime
         }
 
         // Act
-        await _dbContext.TokenOptimizationConfigurations.AddRangeAsync(configs);
+        foreach (var config in configs)
+        {
+            await _dbContext.TokenOptimizationConfigurations.AddAsync(config);
+        }
         await _dbContext.SaveChangesAsync();
 
         var result = await resolver.GetAllConfigurationsAsync(CancellationToken.None);
@@ -447,7 +447,10 @@ public class TokenOptimizationConfigurationResolverTests : IAsyncLifetime
             });
         }
 
-        await _dbContext.TokenOptimizationConfigurations.AddRangeAsync(configs);
+        foreach (var config in configs)
+        {
+            await _dbContext.TokenOptimizationConfigurations.AddAsync(config);
+        }
         await _dbContext.SaveChangesAsync();
 
         var resolver = new TokenOptimizationConfigurationResolver(_dbContext);

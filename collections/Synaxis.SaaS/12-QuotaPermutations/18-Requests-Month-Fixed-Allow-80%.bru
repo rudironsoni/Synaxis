@@ -1,0 +1,158 @@
+meta {
+  name: Requests-Month-Fixed-Allow-80%
+  type: http
+  seq: 18
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{orgId}}
+  X-Test-Quota-Type: requests
+  X-Test-Quota-Limit: 1000000
+  X-Test-Quota-Window: month
+  X-Test-Quota-Window-Type: fixed
+  X-Test-Quota-Action: allow
+  X-Test-Simulate-Usage: 800000
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test request - 80% monthly quota"
+      }
+    ],
+    "max_tokens": 50
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-ratelimit-limit: eq 1000000
+  res.headers.x-ratelimit-remaining: eq 200000
+  res.headers.x-ratelimit-window: eq month
+  res.headers.x-ratelimit-warning: isDefined
+}
+
+tests {
+  test("Monthly quota at 80% succeeds", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Monthly rate limit headers", function() {
+    expect(res.headers['x-ratelimit-window']).to.equal('month');
+    expect(res.headers['x-ratelimit-limit']).to.equal('1000000');
+    expect(parseInt(res.headers['x-ratelimit-remaining'])).to.equal(200000);
+  });
+  
+  test("High usage warning at 80%", function() {
+    expect(res.headers['x-ratelimit-warning']).to.be.a('string');
+    expect(res.headers['x-ratelimit-warning']).to.match(/80%|approaching|high usage/i);
+  });
+  
+  test("Reset at month boundary", function() {
+    const reset = parseInt(res.headers['x-ratelimit-reset']);
+    const resetDate = new Date(reset * 1000);
+    
+    // Should be 1st day of next month at 00:00
+    expect(resetDate.getDate()).to.equal(1);
+    expect(resetDate.getHours()).to.equal(0);
+    expect(resetDate.getMinutes()).to.equal(0);
+  });
+  
+  test("Days remaining in month", function() {
+    if (res.headers['x-ratelimit-reset-days']) {
+      const daysRemaining = parseInt(res.headers['x-ratelimit-reset-days']);
+      expect(daysRemaining).to.be.greaterThan(0);
+      expect(daysRemaining).to.be.lessThanOrEqual(31);
+    }
+  });
+  
+  test("Recommended daily rate", function() {
+    // With 200k remaining, how much can be used per day?
+    const remaining = parseInt(res.headers['x-ratelimit-remaining']);
+    const reset = parseInt(res.headers['x-ratelimit-reset']);
+    const now = Math.floor(Date.now() / 1000);
+    const daysRemaining = Math.ceil((reset - now) / 86400);
+    const recommendedDailyRate = Math.floor(remaining / daysRemaining);
+    
+    expect(recommendedDailyRate).to.be.greaterThan(0);
+    // With ~7 days left, ~28.5k/day recommended
+  });
+}
+
+docs {
+  # Requests-Month-Fixed-Allow-80%
+  
+  Tests monthly quota enforcement at 80% usage (high consumption).
+  
+  ## Test Configuration
+  - Metric Type: requests
+  - Time Granularity: month
+  - Window Type: fixed
+  - Action: allow
+  - Usage Level: 80% (800k/1M requests)
+  
+  ## Monthly Quotas
+  
+  Most common in SaaS pricing:
+  - Free: 10k requests/month
+  - Starter: 100k requests/month
+  - Pro: 1M requests/month
+  - Enterprise: 10M+ requests/month
+  
+  ## Usage at 80%
+  
+  ### Implications
+  - Only 20% quota remaining
+  - If early in month: High burn rate
+  - If late in month: On track
+  - Warning headers present
+  - Time to monitor closely
+  
+  ### Critical Questions
+  1. How many days left in month?
+  2. What's daily burn rate?
+  3. Is usage accelerating?
+  4. Will we exhaust before reset?
+  
+  ## Client Actions at 80%
+  
+  ✅ **Monitor**: Check usage daily
+  ✅ **Alert**: Notify stakeholders
+  ✅ **Optimize**: Reduce unnecessary requests
+  ✅ **Plan**: Consider upgrade if recurring
+  ✅ **Cache**: Implement aggressive caching
+  
+  ## Burn Rate Analysis
+  
+  ```
+  Scenario 1: Day 25 of 30
+  - 800k used in 25 days = 32k/day
+  - 200k remaining for 5 days = 40k/day available
+  - ✅ On track
+  
+  Scenario 2: Day 10 of 30
+  - 800k used in 10 days = 80k/day
+  - 200k remaining for 20 days = 10k/day available
+  - ❌ Will exhaust quota - take action!
+  ```
+  
+  ## Upgrade Considerations
+  At 80% usage, consider:
+  - Upgrading plan before exhaustion
+  - Adding overage credits
+  - Implementing burst billing
+}

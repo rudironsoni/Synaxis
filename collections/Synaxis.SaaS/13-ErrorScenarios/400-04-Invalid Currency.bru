@@ -1,0 +1,80 @@
+meta {
+  name: 400-04-Invalid Currency
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/billing/settings
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "currency": "XYZ",
+    "paymentMethod": "card"
+  }
+}
+
+assert {
+  res.status: eq 400
+  res.body.error: isDefined
+  res.body.error.code: eq INVALID_CURRENCY
+  res.body.error.message: isDefined
+  res.body.error.details: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 400", function() {
+    expect(res.status).to.equal(400);
+  });
+  
+  test("Error code is INVALID_CURRENCY", function() {
+    expect(res.body.error.code).to.equal("INVALID_CURRENCY");
+  });
+  
+  test("Error message mentions currency", function() {
+    expect(res.body.error.message).to.match(/currency|invalid/i);
+  });
+  
+  test("Error details include valid currencies", function() {
+    expect(res.body.error.details).to.have.property('validCurrencies');
+    expect(res.body.error.details.validCurrencies).to.be.an('array');
+    expect(res.body.error.details.validCurrencies).to.include('USD');
+  });
+  
+  test("Error details include provided currency", function() {
+    expect(res.body.error.details.providedCurrency).to.equal('XYZ');
+  });
+}
+
+docs {
+  # 400 Bad Request - Invalid Currency
+  
+  Tests currency code validation for billing.
+  
+  ## Trigger Condition
+  - POST to /billing/settings with currency "XYZ"
+  - Currency not in ISO 4217 supported list
+  
+  ## Expected Response
+  - Status: 400
+  - Error code: INVALID_CURRENCY
+  - List of valid currency codes
+  
+  ## Validation
+  - Currency validation enforced
+  - ISO 4217 compliance
+  - Billing configuration protection
+}

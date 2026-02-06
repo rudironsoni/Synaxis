@@ -1,0 +1,69 @@
+meta {
+  name: EU User - US Region - Cross Border - Consent
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: eu-west-1
+  X-Processed-Region: us-east-1
+  X-Cross-Border: true
+  X-Legal-Basis: consent
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test message for EU to US transfer with consent"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-cross-border-transfer: eq true
+  res.headers.x-legal-basis: eq consent
+  res.headers.x-processed-region: eq us-east-1
+}
+
+tests {
+  test("Cross-border transfer with explicit consent", function() {
+    expect(res.headers['x-cross-border-transfer']).to.equal('true');
+    expect(res.headers['x-legal-basis']).to.equal('consent');
+  });
+  
+  test("Consent mechanism validated", function() {
+    expect(res.headers['x-consent-id']).to.be.defined;
+  });
+  
+  test("Request processed in US region", function() {
+    expect(res.headers['x-processed-region']).to.equal('us-east-1');
+  });
+}
+
+docs {
+  # EU User - US Region - Cross Border - Consent
+  
+  Tests EU to US data transfer based on explicit user consent.
+  Requires informed, specific, and freely given consent from data subject.
+  
+  ## Legal Basis
+  - Article 49(1)(a) GDPR - Explicit consent
+  - Requires consent management record
+  - User must be informed of risks
+}

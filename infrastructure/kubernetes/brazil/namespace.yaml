@@ -1,0 +1,12 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: synaxis
+  labels:
+    name: synaxis
+    environment: production
+    region: sa-east-1
+    compliance: lgpd
+  annotations:
+    description: "Synaxis inference gateway namespace for Brazil region"

@@ -1,0 +1,124 @@
+meta {
+  name: 06-Right to Objection - Opt Out
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/v1/compliance/gdpr/objection
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+  X-Compliance-Framework: GDPR
+  X-Legal-Basis: legitimate_interest
+}
+
+body:json {
+  {
+    "requestType": "objection",
+    "ground": "particular_situation",
+    "processingToObject": [
+      "profiling",
+      "automated_decision_making",
+      "marketing"
+    ],
+    "objectionReason": "Privacy concerns regarding automated profiling"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.objectionId: isDefined
+  res.body.legalBasis: eq legitimate_interest
+  res.body.auditTrailId: isDefined
+  res.body.processingCeased: eq true
+}
+
+script:post-response {
+  if (res.body.objectionId) {
+    bru.setEnvVar("objectionId", res.body.objectionId);
+  }
+}
+
+tests {
+  test("Objection accepted", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Legal basis assessed", function() {
+    expect(res.body.legalBasis).to.be.oneOf(['legitimate_interest', 'public_interest']);
+  });
+  
+  test("Audit trail created", function() {
+    expect(res.body.auditTrailId).to.be.a('string');
+  });
+  
+  test("Processing ceased", function() {
+    expect(res.body.processingCeased).to.equal(true);
+  });
+  
+  test("Direct marketing objection absolute", function() {
+    if (res.body.processingType === 'direct_marketing') {
+      expect(res.body.mustCease).to.equal(true);
+      expect(res.body.noBalancingTest).to.equal(true);
+    }
+  });
+  
+  test("Legitimate interests assessed", function() {
+    if (res.body.processingType !== 'direct_marketing') {
+      expect(res.body.balancingTestPerformed).to.equal(true);
+    }
+  });
+  
+  test("Objection communicated clearly", function() {
+    expect(res.body.objectionAcknowledged).to.equal(true);
+  });
+}
+
+docs {
+  # GDPR Right to Object
+  
+  GDPR Article 21 - Right to object
+  
+  ## Grounds for Objection
+  1. Processing based on legitimate interests (Art. 6(1)(e) or (f))
+  2. Processing for public interest/official authority
+  3. Processing for direct marketing (ABSOLUTE right)
+  4. Processing for scientific/historical research/statistics
+  
+  ## Direct Marketing
+  - RIGHT IS ABSOLUTE
+  - No balancing test
+  - Must cease immediately
+  - Applies to profiling related to marketing
+  
+  ## Other Processing
+  - Controller must cease UNLESS
+  - Compelling legitimate grounds override subject's interests
+  - OR processing needed for legal claims
+  
+  ## Automated Decision-Making
+  Right to object to decisions based solely on automated processing 
+  with legal/significant effects.
+  
+  ## Notification Requirements
+  - Right must be explicitly brought to attention
+  - Presented clearly and separately
+  - At latest at first communication
+  
+  ## Verification
+  ✓ Legal basis assessed
+  ✓ Audit trail created
+  ✓ Processing ceased (or legitimate grounds documented)
+  ✓ Direct marketing objection absolute
+  ✓ Balancing test performed (if applicable)
+  ✓ Objection acknowledged
+}

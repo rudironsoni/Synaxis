@@ -1,0 +1,56 @@
+meta {
+  name: Brazil User - EU Region - Adequacy - Health Data
+  type: http
+  seq: 47
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: sa-east-1
+  X-Processed-Region: eu-west-1
+  X-Cross-Border: true
+  X-Legal-Basis: adequacy
+  X-Data-Category: health
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test with health data special category"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-sensitive-data-processed: eq true
+  res.headers.x-gdpr-special-category: eq true
+}
+
+tests {
+  test("Special category data under GDPR", function() {
+    expect(res.headers['x-gdpr-special-category']).to.equal('true');
+    expect(res.headers['x-data-category']).to.equal('health');
+  });
+}
+
+docs {
+  # Brazil to EU with Health Data
+  
+  Tests cross-border transfer with GDPR special category health data.
+  Verifies Article 9 GDPR compliance for sensitive data.
+}

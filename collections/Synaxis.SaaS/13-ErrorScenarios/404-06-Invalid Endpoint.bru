@@ -1,0 +1,75 @@
+meta {
+  name: 404-06-Invalid Endpoint
+  type: http
+  seq: 32
+}
+
+get {
+  url: {{baseUrl}}/api/v1/this-endpoint-does-not-exist
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+assert {
+  res.status: eq 404
+  res.body.error: isDefined
+  res.body.error.code: eq ENDPOINT_NOT_FOUND
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 404", function() {
+    expect(res.status).to.equal(404);
+  });
+  
+  test("Error code is ENDPOINT_NOT_FOUND", function() {
+    expect(res.body.error.code).to.equal("ENDPOINT_NOT_FOUND");
+  });
+  
+  test("Error message mentions endpoint not found", function() {
+    expect(res.body.error.message).to.match(/endpoint|route|not found|path/i);
+  });
+  
+  test("Error details include requested path", function() {
+    expect(res.body.error.details).to.have.property('requestedPath');
+    expect(res.body.error.details.requestedPath).to.include('/this-endpoint-does-not-exist');
+  });
+  
+  test("Error includes API documentation link", function() {
+    expect(res.body.error.details).to.have.property('documentationUrl');
+  });
+  
+  test("Error suggests similar endpoints", function() {
+    expect(res.body.error.details).to.have.property('suggestions');
+  });
+}
+
+docs {
+  # 404 Not Found - Invalid Endpoint
+  
+  Tests handling of requests to non-existent API endpoints.
+  
+  ## Trigger Condition
+  - GET to /api/v1/this-endpoint-does-not-exist
+  - Route not defined in API
+  
+  ## Expected Response
+  - Status: 404
+  - Error code: ENDPOINT_NOT_FOUND
+  - Requested path, documentation, and suggestions
+  
+  ## Validation
+  - Proper 404 for invalid routes
+  - API documentation guidance
+  - Similar endpoint suggestions
+}

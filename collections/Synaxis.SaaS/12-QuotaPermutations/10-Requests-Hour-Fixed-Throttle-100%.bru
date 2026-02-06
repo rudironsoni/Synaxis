@@ -1,0 +1,116 @@
+meta {
+  name: Requests-Hour-Fixed-Throttle-100%
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{orgId}}
+  X-Test-Quota-Type: requests
+  X-Test-Quota-Limit: 1000
+  X-Test-Quota-Window: hour
+  X-Test-Quota-Window-Type: fixed
+  X-Test-Quota-Action: throttle
+  X-Test-Simulate-Usage: 1000
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test request - 100% hourly quota (throttle)"
+      }
+    ],
+    "max_tokens": 10
+  }
+}
+
+assert {
+  res.status: eq 429
+  res.headers.x-ratelimit-limit: eq 1000
+  res.headers.x-ratelimit-remaining: eq 0
+  res.headers.retry-after: isDefined
+}
+
+tests {
+  test("Hourly quota throttled at 100%", function() {
+    expect(res.status).to.equal(429);
+  });
+  
+  test("Hourly limit exhausted", function() {
+    expect(res.headers['x-ratelimit-window']).to.equal('hour');
+    expect(res.headers['x-ratelimit-limit']).to.equal('1000');
+    expect(parseInt(res.headers['x-ratelimit-remaining'])).to.equal(0);
+  });
+  
+  test("Retry-After until hour reset", function() {
+    const retryAfter = parseInt(res.headers['retry-after']);
+    expect(retryAfter).to.be.a('number');
+    expect(retryAfter).to.be.greaterThan(0);
+    expect(retryAfter).to.be.lessThanOrEqual(3600); // Max 1 hour
+  });
+  
+  test("Reset at next hour boundary", function() {
+    const reset = parseInt(res.headers['x-ratelimit-reset']);
+    const now = Math.floor(Date.now() / 1000);
+    
+    // Reset should be at next hour (00 minutes, 00 seconds)
+    const resetDate = new Date(reset * 1000);
+    expect(resetDate.getMinutes()).to.equal(0);
+    expect(resetDate.getSeconds()).to.equal(0);
+  });
+  
+  test("Error details include window info", function() {
+    expect(res.body.error.code).to.equal('rate_limit_exceeded');
+    expect(res.body.error.details.limit).to.equal(1000);
+    expect(res.body.error.details.window).to.equal('hour');
+    expect(res.body.error.details.window_type).to.equal('fixed');
+  });
+}
+
+docs {
+  # Requests-Hour-Fixed-Throttle-100%
+  
+  Tests hourly quota throttling at 100% usage.
+  
+  ## Test Configuration
+  - Metric Type: requests
+  - Time Granularity: hour
+  - Window Type: fixed
+  - Action: throttle
+  - Usage Level: 100% (1000/1000 requests)
+  
+  ## Expected Behavior
+  - Status: 429 Too Many Requests
+  - Retry-After: Seconds until next hour boundary (≤3600)
+  - Reset: Next hour (XX:00:00)
+  
+  ## Implications
+  - Longer wait than minute throttles
+  - Client must wait up to 1 hour
+  - Consider implementing request queuing
+  - May want fallback API keys
+  
+  ## Client Strategies
+  1. **Immediate**: Wait for retry-after, then retry
+  2. **Queuing**: Queue requests until window resets
+  3. **Load Balancing**: Use multiple API keys
+  4. **Upgrade**: Request higher hourly limit
+  
+  ## When to Use Hour vs Minute
+  - Hour: Better for batch processing, scheduled jobs
+  - Minute: Better for real-time, interactive use
+}

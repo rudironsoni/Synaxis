@@ -1,0 +1,87 @@
+meta {
+  name: Enterprise Tier - Audit Logs - Allowed
+  type: http
+  seq: 19
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/audit-logs
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Organization-Id: {{enterpriseOrgId}}
+  X-Region: {{region}}
+}
+
+params:query {
+  startDate: 2025-02-01
+  endDate: 2026-02-05
+  limit: 100
+}
+
+assert {
+  res.status: eq 200
+  res.body.logs: isArray
+  res.body.pagination: isDefined
+  res.body.retention: eq 1y
+  res.body.exportAvailable: eq true
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("enterpriseOrgId"));
+}
+
+tests {
+  test("Enterprise tier can access audit logs", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body.logs).to.be.an('array');
+  });
+  
+  test("Retention period is 1 year for Enterprise", function() {
+    expect(res.body.retention).to.equal("1y");
+  });
+  
+  test("Export functionality available", function() {
+    expect(res.body.exportAvailable).to.equal(true);
+  });
+  
+  test("Each log entry has full details", function() {
+    if (res.body.logs.length > 0) {
+      const log = res.body.logs[0];
+      expect(log).to.have.property('timestamp');
+      expect(log).to.have.property('actor');
+      expect(log).to.have.property('action');
+      expect(log).to.have.property('resource');
+      expect(log).to.have.property('ipAddress');
+      expect(log).to.have.property('userAgent');
+      expect(log).to.have.property('metadata');
+    }
+  });
+}
+
+docs {
+  # Enterprise Tier - Audit Logs - Allowed
+  
+  Tests that Enterprise tier organizations can access audit logs with 1-year retention.
+  
+  ## Expected Behavior
+  - Returns 200 OK
+  - Audit logs with full metadata
+  - 1-year retention period
+  - Export capability
+  
+  ## Feature: Audit Logs
+  Available on: Pro, Enterprise
+  Retention: Pro (30 days), Enterprise (1 year)
+  
+  Enterprise exclusive:
+  - Export to SIEM systems
+  - Custom retention policies
+  - Real-time streaming
+}

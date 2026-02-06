@@ -1,0 +1,61 @@
+meta {
+  name: Brazil User - US Region - Cross Border - Adequacy
+  type: http
+  seq: 22
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: sa-east-1
+  X-Processed-Region: us-east-1
+  X-Cross-Border: true
+  X-Legal-Basis: adequacy
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test message for Brazil to US transfer with adequacy"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-cross-border-transfer: eq true
+  res.headers.x-legal-basis: eq adequacy
+  res.headers.x-processed-region: eq us-east-1
+}
+
+tests {
+  test("Brazil to US transfer under adequacy", function() {
+    expect(res.headers['x-cross-border-transfer']).to.equal('true');
+    expect(res.headers['x-legal-basis']).to.equal('adequacy');
+  });
+}
+
+docs {
+  # Brazil User - US Region - Cross Border - Adequacy
+  
+  Tests Brazil to US data transfer under adequacy recognition.
+  Brazil has not recognized US as having adequate data protection.
+  
+  ## Legal Basis
+  - LGPD Article 33 - Adequacy decision
+  - Currently no Brazil-US adequacy
+  - Would simplify compliance if established
+}

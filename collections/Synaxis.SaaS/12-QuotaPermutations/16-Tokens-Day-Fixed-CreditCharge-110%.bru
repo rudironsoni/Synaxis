@@ -1,0 +1,145 @@
+meta {
+  name: Tokens-Day-Fixed-CreditCharge-110%
+  type: http
+  seq: 16
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{orgId}}
+  X-Test-Quota-Type: tokens
+  X-Test-Quota-Limit: 10000000
+  X-Test-Quota-Window: day
+  X-Test-Quota-Window-Type: fixed
+  X-Test-Quota-Action: credit_charge
+  X-Test-Simulate-Token-Usage: 11000000
+  X-Test-Credit-Balance: 5000
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test request - 110% daily quota, charge credits"
+      }
+    ],
+    "max_tokens": 500
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-ratelimit-limit-tokens: eq 10000000
+  res.headers.x-credit-charged: isDefined
+  res.headers.x-credit-balance: isDefined
+}
+
+tests {
+  test("Request succeeds with credit charge", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Over-quota usage charged to credits", function() {
+    expect(res.headers['x-credit-charged']).to.be.a('string');
+    const charged = parseFloat(res.headers['x-credit-charged']);
+    expect(charged).to.be.greaterThan(0);
+  });
+  
+  test("Credit balance returned", function() {
+    const balance = parseFloat(res.headers['x-credit-balance']);
+    expect(balance).to.be.a('number');
+    expect(balance).to.be.greaterThan(0);
+  });
+  
+  test("Overage details in response", function() {
+    expect(res.headers['x-quota-overage']).to.be.a('string');
+    const overage = parseInt(res.headers['x-quota-overage']);
+    expect(overage).to.equal(1000000); // 10% over
+  });
+  
+  test("Billing metadata present", function() {
+    if (res.headers['x-charge-transaction-id']) {
+      expect(res.headers['x-charge-transaction-id']).to.match(/^txn_/);
+    }
+  });
+  
+  test("Warning about credit usage", function() {
+    expect(res.headers['x-ratelimit-warning']).to.be.a('string');
+    expect(res.headers['x-ratelimit-warning']).to.match(/credit|overage|charged/i);
+  });
+  
+  test("Response successful", function() {
+    expect(res.body.id).to.be.a('string');
+    expect(res.body.usage).to.be.an('object');
+  });
+}
+
+docs {
+  # Tokens-Day-Fixed-CreditCharge-110%
+  
+  Tests credit charging when daily token quota is exceeded.
+  
+  ## Test Configuration
+  - Metric Type: tokens
+  - Time Granularity: day
+  - Window Type: fixed
+  - Action: credit_charge
+  - Usage Level: 110% (11M/10M tokens - 10% over)
+  
+  ## Credit Charging Model
+  
+  ### How It Works
+  1. Base quota included in plan (10M tokens/day)
+  2. Usage within quota: No charge
+  3. Usage over quota: Charge credits per token
+  4. If credits available: Request succeeds
+  5. If credits depleted: Request blocked
+  
+  ### Pricing Example
+  ```
+  Base quota: 10M tokens/day (included)
+  Credit cost: $0.001 per 1K tokens over quota
+  
+  Scenario: 11M tokens used
+  - First 10M: Free (within quota)
+  - Next 1M: 1000 × $0.001 = $1.00 charged
+  ```
+  
+  ## Expected Behavior
+  - Status: 200 OK (if credits sufficient)
+  - X-Credit-Charged: Amount debited
+  - X-Credit-Balance: Remaining balance
+  - X-Quota-Overage: Tokens over quota
+  - X-RateLimit-Warning: Overage notification
+  
+  ## When to Use Credit Charging
+  
+  ✅ **Flexibility**: Handle unexpected bursts
+  ✅ **Convenience**: No request failures
+  ✅ **Upsell**: Convert free to paid users
+  ✅ **Seasonal**: Handle usage spikes
+  
+  ## Client Considerations
+  - Monitor credit balance
+  - Set up low-balance alerts
+  - Budget for overages
+  - May want to throttle before credits run out
+  
+  ## Insufficient Credits
+  If credit balance is too low:
+  - Status: 402 Payment Required
+  - Error: insufficient_credits
+  - Prompt to add credits
+}

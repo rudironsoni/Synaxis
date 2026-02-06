@@ -1,0 +1,87 @@
+meta {
+  name: Mixed-Request-Throttled-Token-OK
+  type: http
+  seq: 24
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{orgId}}
+  X-Test-Quota-Type: both
+  X-Test-Quota-Requests-Limit: 1000
+  X-Test-Quota-Tokens-Limit: 150000
+  X-Test-Simulate-Request-Usage: 1000
+  X-Test-Simulate-Token-Usage: 75000
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test request quota exhausted but token quota OK"
+      }
+    ],
+    "max_tokens": 50
+  }
+}
+
+assert {
+  res.status: eq 429
+  res.headers.x-ratelimit-remaining-requests: eq 0
+  res.headers.x-ratelimit-remaining-tokens: gt 0
+  res.body.error.code: eq rate_limit_exceeded
+}
+
+tests {
+  test("Throttled due to request quota", function() {
+    expect(res.status).to.equal(429);
+  });
+  
+  test("Request quota exhausted", function() {
+    expect(parseInt(res.headers['x-ratelimit-remaining-requests'])).to.equal(0);
+  });
+  
+  test("Token quota still has capacity", function() {
+    const tokenRemaining = parseInt(res.headers['x-ratelimit-remaining-tokens']);
+    expect(tokenRemaining).to.equal(75000);
+  });
+  
+  test("Error identifies request limit as blocker", function() {
+    expect(res.body.error.code).to.equal('rate_limit_exceeded');
+    expect(res.body.error.details.limiting_factor).to.equal('requests');
+  });
+  
+  test("Retry-After based on request window", function() {
+    const retryAfter = parseInt(res.headers['retry-after']);
+    expect(retryAfter).to.be.a('number');
+  });
+}
+
+docs {
+  # Mixed-Request-Throttled-Token-OK
+  
+  Tests scenario where request quota is exhausted but token quota has capacity.
+  
+  ## Dual Quota Blocking
+  Request denied because:
+  - ❌ Requests: 1000/1000 (100%)
+  - ✅ Tokens: 75k/150k (50%)
+  
+  The most restrictive limit determines behavior.
+  
+  ## Use Case
+  Many small requests (low tokens each) can exhaust request quota
+  while token quota remains healthy.
+}

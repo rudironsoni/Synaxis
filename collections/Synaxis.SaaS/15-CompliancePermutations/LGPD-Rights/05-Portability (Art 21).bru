@@ -1,0 +1,123 @@
+meta {
+  name: 05-Portability (Art 21)
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/v1/compliance/lgpd/portability
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: sa-east-1
+  X-Compliance-Framework: LGPD
+  X-Legal-Basis: consent
+}
+
+body:json {
+  {
+    "requestType": "portability",
+    "format": "structured",
+    "machineReadable": true,
+    "commonlyUsed": true,
+    "transferTo": "another-service-provider"
+  }
+}
+
+assert {
+  res.status: eq 202
+  res.body.portabilityId: isDefined
+  res.body.dataLocation: contains brazil
+  res.body.auditTrailId: isDefined
+}
+
+tests {
+  test("Portability request accepted", function() {
+    expect(res.status).to.equal(202);
+  });
+  
+  test("Portability ID generated", function() {
+    expect(res.body.portabilityId).to.be.a('string');
+  });
+  
+  test("Data location in Brazil", function() {
+    expect(res.body.dataLocation).to.match(/brazil|sa-east/i);
+  });
+  
+  test("Audit trail created", function() {
+    expect(res.body.auditTrailId).to.be.a('string');
+  });
+  
+  test("Format is structured", function() {
+    expect(res.body.structured).to.equal(true);
+  });
+  
+  test("Format is machine-readable", function() {
+    expect(res.body.machineReadable).to.equal(true);
+  });
+  
+  test("Format is commonly used", function() {
+    expect(res.body.commonlyUsed).to.equal(true);
+  });
+  
+  test("ANPD regulations followed", function() {
+    expect(res.body.anpdRegulationsFollowed).to.equal(true);
+  });
+}
+
+docs {
+  # LGPD Portability (Article 21)
+  
+  Article 21 - Right to portability
+  
+  ## Right
+  Data subject has right to:
+  - Request portability of personal data to another service provider
+  - Subject to commercial/industrial secrets
+  
+  ## Format Requirements
+  - Structured format
+  - Commonly used format
+  - Machine-readable format
+  - Interoperable format
+  
+  ## Scope
+  Portability applies to data:
+  - Provided by data subject
+  - Processed with consent or for contract performance
+  
+  ## ANPD Regulations
+  ANPD will issue regulations defining:
+  - Technical standards for portability
+  - Procedures for data transfer
+  - Format specifications
+  
+  ## Exceptions
+  - Commercial/industrial secrets
+  - Intellectual property rights
+  - Technical impossibility
+  
+  ## Direct Transfer
+  Subject can request direct transfer to another controller 
+  where technically feasible.
+  
+  ## Timeline
+  - 15 days to respond
+  - If cannot comply: explain reasons
+  
+  ## Verification
+  ✓ Portability request accepted
+  ✓ Data location disclosed
+  ✓ Audit trail created
+  ✓ Structured format
+  ✓ Machine-readable
+  ✓ Commonly used format
+  ✓ ANPD regulations followed
+}

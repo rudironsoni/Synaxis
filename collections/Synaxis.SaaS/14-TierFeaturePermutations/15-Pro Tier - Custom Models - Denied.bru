@@ -1,0 +1,80 @@
+meta {
+  name: Pro Tier - Custom Models - Denied
+  type: http
+  seq: 15
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/models/custom
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{proOrgId}}
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "name": "custom-gpt-4",
+    "baseModel": "gpt-4",
+    "fineTuningConfig": {
+      "dataset": "s3://datasets/training.jsonl",
+      "epochs": 3
+    }
+  }
+}
+
+assert {
+  res.status: eq 403
+  res.body.error: isDefined
+  res.body.error.code: eq FEATURE_NOT_AVAILABLE
+  res.body.error.message: contains custom model
+  res.body.error.requiredTier: eq enterprise
+  res.body.error.currentTier: eq pro
+  res.body.upgrade: isDefined
+  res.body.upgrade.contactSales: eq true
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("proOrgId"));
+}
+
+tests {
+  test("Pro tier cannot deploy custom models", function() {
+    expect(res.status).to.equal(403);
+    expect(res.body.error.code).to.equal("FEATURE_NOT_AVAILABLE");
+  });
+  
+  test("Required tier is enterprise", function() {
+    expect(res.body.error.requiredTier).to.equal("enterprise");
+  });
+  
+  test("Contact sales required", function() {
+    expect(res.body.upgrade.contactSales).to.equal(true);
+  });
+}
+
+docs {
+  # Pro Tier - Custom Models - Denied
+  
+  Tests that Pro tier organizations cannot deploy custom fine-tuned models.
+  
+  ## Expected Behavior
+  - Returns 403 Forbidden
+  - Error code: FEATURE_NOT_AVAILABLE
+  - Contact sales prompt (Enterprise-only feature)
+  
+  ## Feature: Custom Models
+  Available on: Enterprise only
+  Pro access: Standard model catalog only
+  
+  ## Upgrade Path
+  Pro → Enterprise (Contact Sales)
+}

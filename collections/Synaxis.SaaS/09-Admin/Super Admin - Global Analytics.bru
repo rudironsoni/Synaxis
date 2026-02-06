@@ -1,0 +1,61 @@
+meta {
+  name: Super Admin - Global Analytics
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/analytics/global
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Region: {{region}}
+  X-Admin-Action: view-global-analytics
+}
+
+assert {
+  res.status: eq 200
+  res.body.platform: isDefined
+  res.body.usage: isDefined
+  res.body.revenue: isDefined
+}
+
+tests {
+  test("Platform metrics present", function() {
+    expect(res.body.platform.totalOrganizations).to.be.a('number');
+    expect(res.body.platform.totalUsers).to.be.a('number');
+    expect(res.body.platform.activeUsers24h).to.be.a('number');
+  });
+  
+  test("Usage statistics", function() {
+    expect(res.body.usage.totalRequests24h).to.be.a('number');
+    expect(res.body.usage.totalTokens24h).to.be.a('number');
+  });
+  
+  test("Revenue metrics", function() {
+    expect(res.body.revenue.mrr).to.be.a('number');
+    expect(res.body.revenue.arr).to.be.a('number');
+  });
+}
+
+docs {
+  # Super Admin - Global Analytics
+  
+  Platform-wide analytics and metrics dashboard.
+  
+  ## Metrics Included
+  - Total organizations/users
+  - Active users (24h, 7d, 30d)
+  - Request volume by region
+  - Token consumption trends
+  - Revenue (MRR, ARR, churn)
+  - Error rates
+  - Model usage distribution
+  - Regional health scores
+}

@@ -1,0 +1,78 @@
+meta {
+  name: Pro Tier - Priority Support - Denied
+  type: http
+  seq: 13
+}
+
+post {
+  url: {{baseUrl}}/api/v1/support/tickets
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{proOrgId}}
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "subject": "Production Issue - Urgent",
+    "description": "Critical system failure",
+    "priority": "high",
+    "category": "technical"
+  }
+}
+
+assert {
+  res.status: eq 403
+  res.body.error: isDefined
+  res.body.error.code: eq FEATURE_NOT_AVAILABLE
+  res.body.error.message: contains priority support
+  res.body.error.requiredTier: eq enterprise
+  res.body.error.currentTier: eq pro
+  res.body.upgrade: isDefined
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("proOrgId"));
+}
+
+tests {
+  test("Pro tier cannot access priority support", function() {
+    expect(res.status).to.equal(403);
+    expect(res.body.error.code).to.equal("FEATURE_NOT_AVAILABLE");
+  });
+  
+  test("Required tier is enterprise", function() {
+    expect(res.body.error.requiredTier).to.equal("enterprise");
+  });
+  
+  test("Business support available (24h SLA)", function() {
+    expect(res.body.error.message).to.include("priority");
+  });
+}
+
+docs {
+  # Pro Tier - Priority Support - Denied
+  
+  Tests that Pro tier organizations cannot access priority support channels.
+  
+  ## Expected Behavior
+  - Returns 403 Forbidden
+  - Error code: FEATURE_NOT_AVAILABLE
+  - Business support (24h SLA) still available for Pro
+  
+  ## Feature: Priority Support
+  Available on: Enterprise only
+  SLA: Enterprise (4 hours critical, 24/7)
+  Pro SLA: 24 hours (business hours)
+  
+  ## Upgrade Path
+  Pro → Enterprise (Contact Sales)
+}

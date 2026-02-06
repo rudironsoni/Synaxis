@@ -1,0 +1,76 @@
+meta {
+  name: Update Cross-Border Consent
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/users/me/cross-border-consent
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "allowCrossBorderTransfer": true,
+    "allowedRegions": ["eu-central-1", "us-east-1"],
+    "acknowledgement": "I understand my data may be transferred to these regions"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.crossBorderConsent: isDefined
+  res.body.crossBorderConsent.allowed: eq true
+  res.body.crossBorderConsent.consentedAt: isDefined
+}
+
+tests {
+  test("Consent recorded", function() {
+    expect(res.body.crossBorderConsent.allowed).to.be.true;
+  });
+  
+  test("Allowed regions set", function() {
+    expect(res.body.crossBorderConsent.allowedRegions).to.include.members(['eu-central-1', 'us-east-1']);
+  });
+  
+  test("Audit trail created", function() {
+    expect(res.body.crossBorderConsent.consentedAt).to.be.a('string');
+    expect(res.body.crossBorderConsent.ipAddress).to.be.a('string');
+  });
+}
+
+docs {
+  # Update Cross-Border Consent
+  
+  Manages consent for cross-border data transfers (GDPR Article 49).
+  
+  ## GDPR Compliance
+  - Required for EU users accessing non-EU regions
+  - Explicit consent must be obtained
+  - Can be revoked at any time
+  - Audit trail maintained
+  
+  ## Request Body
+  - `allowCrossBorderTransfer`: Boolean consent
+  - `allowedRegions`: Specific regions approved
+  - `acknowledgement`: Confirmation text (required)
+  
+  ## Use Cases
+  - EU user wants to use US models (GPT-4 US region)
+  - Organization has multi-region deployment
+  - Compliance with data residency laws
+  
+  ## Revoking Consent
+  Set `allowCrossBorderTransfer: false` to revoke.
+  All cross-region API keys will be disabled.
+}

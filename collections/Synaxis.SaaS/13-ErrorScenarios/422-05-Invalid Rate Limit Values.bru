@@ -1,0 +1,86 @@
+meta {
+  name: 422-05-Invalid Rate Limit Values
+  type: http
+  seq: 37
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/virtual-keys
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "name": "Test Key",
+    "rateLimit": {
+      "requestsPerMinute": 100,
+      "tokensPerMinute": 50
+    }
+  }
+}
+
+assert {
+  res.status: eq 422
+  res.body.error: isDefined
+  res.body.error.code: eq INVALID_RATE_LIMIT
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 422", function() {
+    expect(res.status).to.equal(422);
+  });
+  
+  test("Error code is INVALID_RATE_LIMIT", function() {
+    expect(res.body.error.code).to.equal("INVALID_RATE_LIMIT");
+  });
+  
+  test("Error message mentions rate limit inconsistency", function() {
+    expect(res.body.error.message).to.match(/rate limit|inconsistent|conflict/i);
+  });
+  
+  test("Error details explain the conflict", function() {
+    expect(res.body.error.details).to.have.property('conflict');
+    expect(res.body.error.details.conflict).to.match(/tokens.*requests|RPM.*TPM/i);
+  });
+  
+  test("Error details include valid examples", function() {
+    expect(res.body.error.details).to.have.property('examples');
+    expect(res.body.error.details.examples).to.be.an('array');
+  });
+  
+  test("Error explains ratio requirements", function() {
+    expect(res.body.error.details).to.have.property('explanation');
+  });
+}
+
+docs {
+  # 422 Unprocessable Entity - Invalid Rate Limit Values
+  
+  Tests rate limit business rule validation.
+  
+  ## Trigger Condition
+  - POST to /virtual-keys with conflicting rate limits
+  - RPM=100 but TPM=50 (tokens should be higher)
+  
+  ## Expected Response
+  - Status: 422
+  - Error code: INVALID_RATE_LIMIT
+  - Conflict explanation and valid examples
+  
+  ## Validation
+  - Rate limit business rules enforced
+  - Clear conflict explanation
+  - Valid configuration examples
+}

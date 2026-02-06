@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: synaxis
+  labels:
+    name: synaxis
+    environment: production
+    region: us-east-1
+    app.kubernetes.io/name: synaxis
+    app.kubernetes.io/component: api
+    app.kubernetes.io/managed-by: terraform

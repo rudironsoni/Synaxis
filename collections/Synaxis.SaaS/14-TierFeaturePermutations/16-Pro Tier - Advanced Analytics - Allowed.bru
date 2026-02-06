@@ -1,0 +1,82 @@
+meta {
+  name: Pro Tier - Advanced Analytics - Allowed
+  type: http
+  seq: 16
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/analytics/advanced
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Organization-Id: {{proOrgId}}
+  X-Region: {{region}}
+}
+
+params:query {
+  metrics: cost_analysis,token_efficiency,model_performance
+  groupBy: team,user,model
+  period: 30d
+}
+
+assert {
+  res.status: eq 200
+  res.body.analytics: isDefined
+  res.body.analytics.costAnalysis: isDefined
+  res.body.analytics.tokenEfficiency: isDefined
+  res.body.analytics.modelPerformance: isDefined
+  res.body.period: eq 30d
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("proOrgId"));
+}
+
+tests {
+  test("Pro tier can access advanced analytics", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body.analytics).to.be.an('object');
+  });
+  
+  test("Cost analysis data included", function() {
+    expect(res.body.analytics.costAnalysis).to.be.an('object');
+  });
+  
+  test("Token efficiency metrics included", function() {
+    expect(res.body.analytics.tokenEfficiency).to.be.an('object');
+  });
+  
+  test("Model performance data included", function() {
+    expect(res.body.analytics.modelPerformance).to.be.an('object');
+  });
+  
+  test("Data period is 30 days for Pro", function() {
+    expect(res.body.period).to.equal("30d");
+  });
+}
+
+docs {
+  # Pro Tier - Advanced Analytics - Allowed
+  
+  Tests that Pro tier organizations can access advanced analytics dashboards.
+  
+  ## Expected Behavior
+  - Returns 200 OK
+  - Full analytics data with cost, efficiency, and performance metrics
+  - 30-day historical data (Pro tier limit)
+  
+  ## Feature: Advanced Analytics
+  Available on: Pro, Enterprise
+  Data retention: Pro (30 days), Enterprise (1 year)
+  
+  Enterprise gets additional:
+  - Custom dashboards
+  - Data export
+  - API access to raw metrics
+}

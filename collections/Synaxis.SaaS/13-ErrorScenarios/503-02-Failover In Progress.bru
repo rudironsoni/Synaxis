@@ -1,0 +1,97 @@
+meta {
+  name: 503-02-Failover In Progress
+  type: http
+  seq: 52
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+  X-Virtual-Key: {{virtualKey}}
+  X-Simulate-Error: failover-in-progress
+}
+
+body:json {
+  {
+    "model": "gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hello"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 503
+  res.body.error: isDefined
+  res.body.error.code: eq FAILOVER_IN_PROGRESS
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+  res.headers.retry-after: isDefined
+}
+
+tests {
+  test("Status code is 503", function() {
+    expect(res.status).to.equal(503);
+  });
+  
+  test("Error code is FAILOVER_IN_PROGRESS", function() {
+    expect(res.body.error.code).to.equal("FAILOVER_IN_PROGRESS");
+  });
+  
+  test("Error message mentions failover", function() {
+    expect(res.body.error.message).to.match(/failover|switching|transitioning/i);
+  });
+  
+  test("Error details include estimated completion", function() {
+    expect(res.body.error.details).to.have.property('estimatedCompletion');
+  });
+  
+  test("Error details explain failover reason", function() {
+    expect(res.body.error.details).to.have.property('reason');
+  });
+  
+  test("Retry-After header provides wait time", function() {
+    expect(res.headers['retry-after']).to.be.defined;
+    const retryAfter = parseInt(res.headers['retry-after']);
+    expect(retryAfter).to.be.greaterThan(0);
+  });
+  
+  test("Error includes status updates link", function() {
+    expect(res.body.error.details).to.have.property('statusUrl');
+  });
+}
+
+docs {
+  # 503 Service Unavailable - Failover In Progress
+  
+  Tests handling during active failover operations.
+  
+  ## Trigger Condition
+  - Request during regional/provider failover
+  - Simulated with X-Simulate-Error header
+  
+  ## Expected Response
+  - Status: 503
+  - Error code: FAILOVER_IN_PROGRESS
+  - Estimated completion, reason, status link
+  - Retry-After header
+  
+  ## Validation
+  - Failover state detection
+  - Clear failover messaging
+  - Completion estimates
+  - Retry timing guidance
+}

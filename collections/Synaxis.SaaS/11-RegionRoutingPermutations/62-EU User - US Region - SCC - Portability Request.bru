@@ -1,0 +1,56 @@
+meta {
+  name: EU User - US Region - SCC - Portability Request
+  type: http
+  seq: 62
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: eu-west-1
+  X-Processed-Region: us-east-1
+  X-Cross-Border: true
+  X-Legal-Basis: SCC
+  X-Portability-Request: pending
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test with data portability request"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-portability-format: eq JSON
+  res.headers.x-export-url: isDefined
+}
+
+tests {
+  test("Data portability request processed", function() {
+    expect(res.headers['x-portability-format']).to.equal('JSON');
+    expect(res.headers['x-export-url']).to.be.defined;
+  });
+}
+
+docs {
+  # EU to US with Portability Request
+  
+  Tests cross-border transfer with data portability request.
+  Verifies GDPR Article 20 right to data portability.
+}

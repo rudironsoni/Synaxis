@@ -1,0 +1,124 @@
+meta {
+  name: Tokens-Hour-Fixed-Allow-75%
+  type: http
+  seq: 15
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{orgId}}
+  X-Test-Quota-Type: tokens
+  X-Test-Quota-Limit: 1000000
+  X-Test-Quota-Window: hour
+  X-Test-Quota-Window-Type: fixed
+  X-Test-Quota-Action: allow
+  X-Test-Simulate-Token-Usage: 750000
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test request - 75% hourly token quota"
+      }
+    ],
+    "max_tokens": 200
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-ratelimit-limit-tokens: eq 1000000
+  res.headers.x-ratelimit-remaining-tokens: isDefined
+  res.headers.x-ratelimit-window: eq hour
+  res.headers.x-ratelimit-warning: isDefined
+}
+
+tests {
+  test("Hourly token quota at 75% succeeds", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Hourly token headers present", function() {
+    expect(res.headers['x-ratelimit-window']).to.equal('hour');
+    expect(res.headers['x-ratelimit-limit-tokens']).to.equal('1000000');
+    
+    const remaining = parseInt(res.headers['x-ratelimit-remaining-tokens']);
+    expect(remaining).to.be.closeTo(250000, 10000);
+  });
+  
+  test("Warning at 75% usage", function() {
+    expect(res.headers['x-ratelimit-warning']).to.be.a('string');
+    expect(res.headers['x-ratelimit-warning']).to.match(/75%|approaching/i);
+  });
+  
+  test("Token usage returned", function() {
+    expect(res.body.usage).to.be.an('object');
+    expect(res.body.usage.total_tokens).to.be.a('number');
+  });
+  
+  test("Reset at hour boundary", function() {
+    const reset = parseInt(res.headers['x-ratelimit-reset']);
+    const now = Math.floor(Date.now() / 1000);
+    const secondsUntilReset = reset - now;
+    
+    expect(secondsUntilReset).to.be.greaterThan(0);
+    expect(secondsUntilReset).to.be.lessThanOrEqual(3600);
+  });
+}
+
+docs {
+  # Tokens-Hour-Fixed-Allow-75%
+  
+  Tests hourly token quota at 75% usage (high but not critical).
+  
+  ## Test Configuration
+  - Metric Type: tokens
+  - Time Granularity: hour
+  - Window Type: fixed
+  - Action: allow
+  - Usage Level: 75% (750000/1000000 tokens)
+  
+  ## Hourly Token Quotas
+  
+  Common in production SaaS:
+  - Free tier: 100k tokens/hour
+  - Basic: 500k tokens/hour
+  - Pro: 1M tokens/hour
+  - Enterprise: 10M+ tokens/hour
+  
+  ## Warning Thresholds
+  
+  | Usage | Status | Action |
+  |-------|--------|--------|
+  | 0-50% | ✅ Normal | None |
+  | 50-75% | ⚠️ Elevated | Monitor |
+  | 75-90% | 🟡 High | Slow down |
+  | 90-99% | 🟠 Critical | Stop non-essential |
+  | 100%+ | 🔴 Exceeded | Throttled/blocked |
+  
+  ## At 75% Usage
+  - Request succeeds
+  - Warning header present
+  - Client should start conserving
+  - Consider lower max_tokens
+  - Prioritize important requests
+  
+  ## Strategies
+  1. **Monitoring**: Track usage trends
+  2. **Prioritization**: Critical vs nice-to-have
+  3. **Optimization**: Reduce prompt size
+  4. **Fallback**: Queue low-priority work
+}

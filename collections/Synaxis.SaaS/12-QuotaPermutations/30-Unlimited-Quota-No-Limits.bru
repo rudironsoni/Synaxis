@@ -1,0 +1,87 @@
+meta {
+  name: Unlimited-Quota-No-Limits
+  type: http
+  seq: 30
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{orgId}}
+  X-Test-Quota-Type: unlimited
+  X-Test-Plan: enterprise
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test unlimited quota"
+      }
+    ],
+    "max_tokens": 1000
+  }
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("Request succeeds with unlimited quota", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("No rate limit headers", function() {
+    // Unlimited plans may not have rate limit headers
+    if (res.headers['x-ratelimit-limit']) {
+      expect(res.headers['x-ratelimit-limit']).to.match(/unlimited|∞|-1/);
+    }
+  });
+  
+  test("Enterprise plan indicated", function() {
+    if (res.headers['x-plan-type']) {
+      expect(res.headers['x-plan-type']).to.match(/enterprise|unlimited/i);
+    }
+  });
+  
+  test("Response successful", function() {
+    expect(res.body.id).to.be.a('string');
+  });
+}
+
+docs {
+  # Unlimited-Quota-No-Limits
+  
+  Tests unlimited quota behavior (enterprise plans).
+  
+  ## Unlimited Quota
+  - No hard limits enforced
+  - Fair use policy applies
+  - May have soft limits for abuse prevention
+  - Typical for enterprise contracts
+  
+  ## Rate Limit Headers
+  May show:
+  - X-RateLimit-Limit: unlimited
+  - X-RateLimit-Limit: -1
+  - X-RateLimit-Limit: ∞
+  - Or no headers at all
+  
+  ## Still Protected By
+  - DDoS protection
+  - Abuse detection
+  - Fair use policy
+  - Burst rate limits
+}

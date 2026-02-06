@@ -1,0 +1,57 @@
+meta {
+  name: EU User - US Region - Consent - With Consent ID
+  type: http
+  seq: 39
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: eu-west-1
+  X-Processed-Region: us-east-1
+  X-Cross-Border: true
+  X-Legal-Basis: consent
+  X-Consent-ID: consent_12345678
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test with explicit consent ID"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-cross-border-transfer: eq true
+  res.headers.x-legal-basis: eq consent
+  res.headers.x-consent-validated: eq true
+}
+
+tests {
+  test("Consent ID validated", function() {
+    expect(res.headers['x-consent-validated']).to.equal('true');
+    expect(res.headers['x-consent-id']).to.equal('consent_12345678');
+  });
+}
+
+docs {
+  # EU to US Transfer with Consent ID
+  
+  Tests cross-border transfer with explicit consent ID tracking.
+  Verifies consent management integration.
+}

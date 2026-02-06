@@ -1,0 +1,68 @@
+meta {
+  name: Get Usage Report
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/usage/report?startDate=2026-02-01&endDate=2026-02-28&format=json
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Region: {{region}}
+}
+
+query {
+  startDate: 2026-02-01
+  endDate: 2026-02-28
+  format: json
+}
+
+assert {
+  res.status: eq 200
+  res.body.organizationId: eq {{orgId}}
+  res.body.period: isDefined
+  res.body.summary: isDefined
+  res.body.dailyBreakdown: isDefined
+}
+
+tests {
+  test("Report covers requested period", function() {
+    expect(res.body.period.startDate).to.equal('2026-02-01T00:00:00Z');
+    expect(res.body.period.endDate).to.equal('2026-02-28T23:59:59Z');
+  });
+  
+  test("Summary totals accurate", function() {
+    expect(res.body.summary.totalRequests).to.be.a('number');
+    expect(res.body.summary.totalTokens).to.be.a('number');
+    expect(res.body.summary.totalCost).to.be.a('number');
+  });
+  
+  test("Daily breakdown present", function() {
+    expect(res.body.dailyBreakdown).to.be.an('array');
+  });
+}
+
+docs {
+  # Get Usage Report
+  
+  Generates detailed usage report for custom date range.
+  
+  ## Query Parameters
+  - startDate: ISO date (YYYY-MM-DD)
+  - endDate: ISO date (YYYY-MM-DD)
+  - format: json/csv/pdf
+  - groupBy: day/week/month/model/apiKey
+  
+  ## Export Formats
+  - JSON: Detailed breakdown, programmatic access
+  - CSV: Spreadsheet import, Excel analysis
+  - PDF: Human-readable, executive reports
+}
+}

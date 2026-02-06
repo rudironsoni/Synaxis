@@ -1,0 +1,65 @@
+meta {
+  name: US User - EU Region - Cross Border - Consent
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: us-east-1
+  X-Processed-Region: eu-west-1
+  X-Cross-Border: true
+  X-Legal-Basis: consent
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test message for US to EU transfer with consent"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-cross-border-transfer: eq true
+  res.headers.x-legal-basis: eq consent
+  res.headers.x-processed-region: eq eu-west-1
+}
+
+tests {
+  test("US to EU transfer with consent", function() {
+    expect(res.headers['x-cross-border-transfer']).to.equal('true');
+    expect(res.headers['x-legal-basis']).to.equal('consent');
+  });
+  
+  test("Consent mechanism validated", function() {
+    expect(res.headers['x-consent-id']).to.be.defined;
+  });
+}
+
+docs {
+  # US User - EU Region - Cross Border - Consent
+  
+  Tests US to EU data transfer based on consent.
+  Less common scenario but valid when US user opts into EU processing.
+  
+  ## Legal Basis
+  - User consent for international processing
+  - May require CCPA disclosure
+  - GDPR applies once data is in EU
+}

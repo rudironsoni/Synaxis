@@ -1,0 +1,65 @@
+meta {
+  name: Free Tier - Downgrade Protection - Check
+  type: http
+  seq: 47
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/tier/downgrade-impact
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Organization-Id: {{freeOrgId}}
+  X-Region: {{region}}
+}
+
+params:query {
+  targetTier: free
+}
+
+assert {
+  res.status: eq 200
+  res.body.impact: isDefined
+  res.body.warnings: isArray
+  res.body.dataRetentionChanges: isDefined
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("freeOrgId"));
+}
+
+tests {
+  test("Can check downgrade impact", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body.impact).to.be.an('object');
+  });
+  
+  test("Warnings provided for feature loss", function() {
+    expect(res.body.warnings).to.be.an('array');
+  });
+  
+  test("Data retention changes explained", function() {
+    expect(res.body.dataRetentionChanges).to.be.an('object');
+  });
+}
+
+docs {
+  # Free Tier - Downgrade Protection - Check
+  
+  Tests downgrade impact analysis for tier changes.
+  
+  ## Expected Behavior
+  - Returns 200 OK
+  - Shows features that will be lost
+  - Data retention changes
+  - Warnings about quota reductions
+  
+  ## Downgrade Protection
+  All tiers can check downgrade impact before committing to tier change.
+}

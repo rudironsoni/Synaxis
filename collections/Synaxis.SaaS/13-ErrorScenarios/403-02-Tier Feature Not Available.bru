@@ -1,0 +1,82 @@
+meta {
+  name: 403-02-Tier Feature Not Available
+  type: http
+  seq: 20
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/sso/configure
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "provider": "okta",
+    "domain": "example.okta.com"
+  }
+}
+
+assert {
+  res.status: eq 403
+  res.body.error: isDefined
+  res.body.error.code: eq FEATURE_NOT_AVAILABLE
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 403", function() {
+    expect(res.status).to.equal(403);
+  });
+  
+  test("Error code is FEATURE_NOT_AVAILABLE", function() {
+    expect(res.body.error.code).to.equal("FEATURE_NOT_AVAILABLE");
+  });
+  
+  test("Error message mentions feature or tier", function() {
+    expect(res.body.error.message).to.match(/feature|tier|upgrade|plan/i);
+  });
+  
+  test("Error details include current tier", function() {
+    expect(res.body.error.details).to.have.property('currentTier');
+  });
+  
+  test("Error details include required tier", function() {
+    expect(res.body.error.details).to.have.property('requiredTier');
+    expect(res.body.error.details.requiredTier).to.equal('enterprise');
+  });
+  
+  test("Error includes upgrade link", function() {
+    expect(res.body.error.details).to.have.property('upgradeUrl');
+  });
+}
+
+docs {
+  # 403 Forbidden - Tier Feature Not Available
+  
+  Tests tier-based feature gating.
+  
+  ## Trigger Condition
+  - POST to /sso/configure on non-enterprise tier
+  - SSO feature requires enterprise tier
+  
+  ## Expected Response
+  - Status: 403
+  - Error code: FEATURE_NOT_AVAILABLE
+  - Current/required tier and upgrade link
+  
+  ## Validation
+  - Feature tier gating enforced
+  - Clear tier requirements
+  - Upgrade path provided
+}

@@ -1,0 +1,66 @@
+meta {
+  name: Pro Tier - Team Collaboration - Allowed
+  type: http
+  seq: 26
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/teams
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{proOrgId}}
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "name": "ML Engineering Team",
+    "description": "Team for ML model development",
+    "maxMembers": 50
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.team: isDefined
+  res.body.team.name: eq ML Engineering Team
+  res.body.team.maxMembers: eq 50
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("proOrgId"));
+}
+
+tests {
+  test("Pro tier can create teams", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body.team).to.be.an('object');
+  });
+  
+  test("Team with 50 members allowed (Pro limit)", function() {
+    expect(res.body.team.maxMembers).to.equal(50);
+  });
+}
+
+docs {
+  # Pro Tier - Team Collaboration - Allowed
+  
+  Tests that Pro tier can create teams with enhanced collaboration features.
+  
+  ## Expected Behavior
+  - Returns 200 OK
+  - Teams can have up to 50 members
+  
+  ## Team Limits
+  - Free: 5 members
+  - Pro: 50 members
+  - Enterprise: Unlimited
+}

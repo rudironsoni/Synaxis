@@ -1,0 +1,45 @@
+meta {
+  name: Super Admin - Get Org Details
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/organizations/{{orgId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Region: {{region}}
+  X-Admin-Action: view-organization
+}
+
+assert {
+  res.status: eq 200
+  res.body.id: eq {{orgId}}
+  res.body.adminMetadata: isDefined
+}
+
+tests {
+  test("Full organization details", function() {
+    expect(res.body).to.have.property('owner');
+    expect(res.body).to.have.property('teams');
+    expect(res.body).to.have.property('usage');
+    expect(res.body).to.have.property('billing');
+  });
+  
+  test("Admin-only fields present", function() {
+    expect(res.body.adminMetadata).to.be.an('object');
+  });
+}
+
+docs {
+  # Super Admin - Get Org Details
+  
+  Retrieves complete organization details with admin metadata.
+}

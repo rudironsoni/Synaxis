@@ -1,0 +1,73 @@
+meta {
+  name: Pro Tier - Rate Limits - Enhanced
+  type: http
+  seq: 32
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/rate-limits
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Organization-Id: {{proOrgId}}
+  X-Region: {{region}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.limits: isDefined
+  res.body.limits.requestsPerMinute: eq 1000
+  res.body.limits.requestsPerMonth: eq 1000000
+  res.body.tier: eq pro
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("proOrgId"));
+}
+
+tests {
+  test("Pro tier has enhanced rate limits", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body.limits).to.be.an('object');
+  });
+  
+  test("Rate limits significantly higher than free", function() {
+    expect(res.body.limits.requestsPerMinute).to.equal(1000);
+    expect(res.body.limits.requestsPerMonth).to.equal(1000000);
+  });
+  
+  test("Tier correctly identified", function() {
+    expect(res.body.tier).to.equal("pro");
+  });
+}
+
+docs {
+  # Pro Tier - Rate Limits - Enhanced
+  
+  Tests that Pro tier has significantly higher rate limits than free tier.
+  
+  ## Expected Behavior
+  - Returns 200 OK
+  - Enhanced rate limits shown
+  
+  ## Rate Limits by Tier
+  
+  Free:
+  - 10 requests/minute
+  - 1,000 requests/month
+  
+  Pro:
+  - 1,000 requests/minute
+  - 1,000,000 requests/month
+  
+  Enterprise:
+  - Custom rate limits
+  - Burst capacity
+  - Reserved throughput
+}

@@ -1,0 +1,96 @@
+meta {
+  name: Enterprise Tier - Priority Support - Allowed
+  type: http
+  seq: 21
+}
+
+post {
+  url: {{baseUrl}}/api/v1/support/tickets
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{enterpriseOrgId}}
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "subject": "Production Issue - Critical",
+    "description": "Critical system failure affecting production",
+    "priority": "critical",
+    "category": "technical",
+    "severity": "high",
+    "impactedServices": ["inference", "api-gateway"]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.ticket: isDefined
+  res.body.ticket.priority: eq critical
+  res.body.ticket.sla: eq 4h
+  res.body.ticket.assignedTo: isDefined
+  res.body.ticket.escalationPath: isDefined
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("enterpriseOrgId"));
+}
+
+tests {
+  test("Enterprise tier can create priority support tickets", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body.ticket).to.be.an('object');
+  });
+  
+  test("Critical priority accepted", function() {
+    expect(res.body.ticket.priority).to.equal("critical");
+  });
+  
+  test("4-hour SLA assigned", function() {
+    expect(res.body.ticket.sla).to.equal("4h");
+  });
+  
+  test("Ticket immediately assigned to engineer", function() {
+    expect(res.body.ticket.assignedTo).to.be.a('string');
+  });
+  
+  test("Escalation path defined", function() {
+    expect(res.body.ticket.escalationPath).to.be.an('array');
+  });
+}
+
+docs {
+  # Enterprise Tier - Priority Support - Allowed
+  
+  Tests that Enterprise tier organizations can access priority support with 4-hour SLA.
+  
+  ## Expected Behavior
+  - Returns 200 OK
+  - Priority ticket created immediately
+  - 4-hour SLA for critical issues
+  - Immediate engineer assignment
+  - 24/7 availability
+  
+  ## Feature: Priority Support
+  Available on: Enterprise only
+  
+  SLA Tiers:
+  - Critical: 4 hours
+  - High: 8 hours
+  - Medium: 24 hours
+  - Low: 48 hours
+  
+  Includes:
+  - Dedicated support engineer
+  - 24/7 on-call availability
+  - Escalation to engineering team
+  - Monthly account reviews
+}

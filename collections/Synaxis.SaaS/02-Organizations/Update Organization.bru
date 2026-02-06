@@ -1,0 +1,80 @@
+meta {
+  name: Update Organization
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "name": "Updated Organization Name",
+    "billingEmail": "updated-billing@synaxis.ai",
+    "allowedRegions": ["eu-central-1", "us-east-1", "ap-southeast-1"]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.id: eq {{orgId}}
+  res.body.name: eq Updated Organization Name
+  res.body.billingEmail: eq updated-billing@synaxis.ai
+  res.body.updatedAt: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Name updated successfully", function() {
+    expect(res.body.name).to.equal("Updated Organization Name");
+  });
+  
+  test("UpdatedAt timestamp changed", function() {
+    const now = new Date();
+    const updated = new Date(res.body.updatedAt);
+    const diff = now - updated;
+    expect(diff).to.be.lessThan(5000);
+  });
+  
+  test("Allowed regions updated", function() {
+    expect(res.body.allowedRegions).to.include.members(['eu-central-1', 'us-east-1', 'ap-southeast-1']);
+  });
+}
+
+docs {
+  # Update Organization
+  
+  Updates organization settings (admin only).
+  
+  ## Updatable Fields
+  - `name`: Display name
+  - `billingEmail`: Billing contact email
+  - `allowedRegions`: Data storage regions
+  - `address`: Billing address
+  - `taxId`: VAT/Tax ID
+  
+  ## Restricted Fields
+  Cannot update:
+  - `slug`: Immutable after creation
+  - `primaryRegion`: Contact support to migrate
+  - `plan`: Use billing API to upgrade/downgrade
+  - `ownerId`: Use transfer ownership endpoint
+  
+  ## Error Codes
+  - 401: Unauthorized
+  - 403: Forbidden (requires admin role)
+  - 404: Organization not found
+  - 422: Invalid field values
+}

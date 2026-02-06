@@ -1,0 +1,72 @@
+meta {
+  name: Enterprise Tier - Feature Toggle - Allowed
+  type: http
+  seq: 48
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/features/toggle
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{enterpriseOrgId}}
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "feature": "beta_model_access",
+    "enabled": true,
+    "rolloutPercentage": 50
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.feature: isDefined
+  res.body.feature.name: eq beta_model_access
+  res.body.feature.enabled: eq true
+  res.body.feature.rolloutPercentage: eq 50
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("enterpriseOrgId"));
+}
+
+tests {
+  test("Enterprise tier can toggle beta features", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body.feature).to.be.an('object');
+  });
+  
+  test("Feature enabled with rollout percentage", function() {
+    expect(res.body.feature.enabled).to.equal(true);
+    expect(res.body.feature.rolloutPercentage).to.equal(50);
+  });
+}
+
+docs {
+  # Enterprise Tier - Feature Toggle - Allowed
+  
+  Tests that Enterprise tier can toggle beta/experimental features.
+  
+  ## Expected Behavior
+  - Returns 200 OK
+  - Feature toggle configured
+  - Gradual rollout supported
+  
+  ## Feature: Beta Feature Access
+  Available on: Enterprise only
+  
+  Allows:
+  - Early access to new features
+  - Gradual rollout control
+  - A/B testing capabilities
+}

@@ -1,0 +1,57 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: synaxis-api-ingress
+  namespace: synaxis
+  labels:
+    app: synaxis-api
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/backend-protocol: HTTP
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: "30"
+    alb.ingress.kubernetes.io/healthcheck-timeout-seconds: "5"
+    alb.ingress.kubernetes.io/healthy-threshold-count: "2"
+    alb.ingress.kubernetes.io/unhealthy-threshold-count: "3"
+    alb.ingress.kubernetes.io/success-codes: "200"
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:sa-east-1:ACCOUNT_ID:certificate/CERT_ID"
+    alb.ingress.kubernetes.io/security-groups: synaxis-brazil-alb-sg-production
+    alb.ingress.kubernetes.io/subnets: subnet-xxx,subnet-yyy,subnet-zzz
+    alb.ingress.kubernetes.io/load-balancer-attributes: >
+      deletion_protection.enabled=true,
+      access_logs.s3.enabled=true,
+      access_logs.s3.bucket=synaxis-brazil-alb-logs-production,
+      access_logs.s3.prefix=alb
+    alb.ingress.kubernetes.io/wafv2-acl-arn: "arn:aws:wafv2:sa-east-1:ACCOUNT_ID:regional/webacl/synaxis-brazil-waf/WAF_ID"
+    alb.ingress.kubernetes.io/tags: >
+      Environment=production,
+      Region=sa-east-1,
+      ManagedBy=kubernetes,
+      Compliance=LGPD
+spec:
+  ingressClassName: alb
+  rules:
+    - host: api.synaxis.com.br
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: synaxis-api
+                port:
+                  number: 80
+    - host: synaxis.com.br
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: synaxis-api
+                port:
+                  number: 80

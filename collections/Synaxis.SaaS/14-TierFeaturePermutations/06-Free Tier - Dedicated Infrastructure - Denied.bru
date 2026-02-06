@@ -1,0 +1,79 @@
+meta {
+  name: Free Tier - Dedicated Infrastructure - Denied
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/infrastructure/dedicated
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{freeOrgId}}
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "instanceType": "dedicated",
+    "region": "us-east-1",
+    "capacityUnits": 10
+  }
+}
+
+assert {
+  res.status: eq 403
+  res.body.error: isDefined
+  res.body.error.code: eq FEATURE_NOT_AVAILABLE
+  res.body.error.message: contains dedicated infrastructure
+  res.body.error.requiredTier: eq enterprise
+  res.body.error.currentTier: eq free
+  res.body.upgrade: isDefined
+  res.body.upgrade.contactSales: eq true
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("freeOrgId"));
+}
+
+tests {
+  test("Free tier cannot provision dedicated infrastructure", function() {
+    expect(res.status).to.equal(403);
+    expect(res.body.error.code).to.equal("FEATURE_NOT_AVAILABLE");
+  });
+  
+  test("Required tier is enterprise", function() {
+    expect(res.body.error.requiredTier).to.equal("enterprise");
+  });
+  
+  test("Contact sales required", function() {
+    expect(res.body.upgrade.contactSales).to.equal(true);
+  });
+}
+
+docs {
+  # Free Tier - Dedicated Infrastructure - Denied
+  
+  Tests that free tier organizations cannot provision dedicated infrastructure.
+  
+  ## Expected Behavior
+  - Returns 403 Forbidden
+  - Error code: FEATURE_NOT_AVAILABLE
+  - Contact sales prompt (Enterprise feature)
+  
+  ## Feature: Dedicated Infrastructure
+  Available on: Enterprise only
+  - Dedicated compute instances
+  - Isolated network
+  - Custom capacity scaling
+  
+  ## Upgrade Path
+  Free → Enterprise (Contact Sales)
+}

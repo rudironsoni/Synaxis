@@ -1,0 +1,73 @@
+meta {
+  name: 400-03-Invalid Region
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: invalid-region-999
+}
+
+assert {
+  res.status: eq 400
+  res.body.error: isDefined
+  res.body.error.code: eq INVALID_REGION
+  res.body.error.message: isDefined
+  res.body.error.details: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 400", function() {
+    expect(res.status).to.equal(400);
+  });
+  
+  test("Error code is INVALID_REGION", function() {
+    expect(res.body.error.code).to.equal("INVALID_REGION");
+  });
+  
+  test("Error message mentions region", function() {
+    expect(res.body.error.message).to.match(/region|invalid/i);
+  });
+  
+  test("Error details include valid regions", function() {
+    expect(res.body.error.details).to.have.property('validRegions');
+    expect(res.body.error.details.validRegions).to.be.an('array');
+    expect(res.body.error.details.validRegions).to.include('us-east');
+  });
+  
+  test("Error details include provided region", function() {
+    expect(res.body.error.details.providedRegion).to.equal('invalid-region-999');
+  });
+}
+
+docs {
+  # 400 Bad Request - Invalid Region
+  
+  Tests region validation in X-Region header.
+  
+  ## Trigger Condition
+  - Request with X-Region: "invalid-region-999"
+  - Region not in allowed list
+  
+  ## Expected Response
+  - Status: 400
+  - Error code: INVALID_REGION
+  - List of valid regions in details
+  
+  ## Validation
+  - Region header validation enforced
+  - Helpful error with valid options
+  - Cross-region routing protection
+}

@@ -1,0 +1,60 @@
+meta {
+  name: Get Team
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/teams/{{teamId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Region: {{region}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.id: eq {{teamId}}
+  res.body.organizationId: eq {{orgId}}
+  res.body.name: isDefined
+  res.body.members: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Team belongs to correct org", function() {
+    expect(res.body.organizationId).to.equal(bru.getEnvVar("orgId"));
+  });
+  
+  test("Members list present", function() {
+    expect(res.body.members).to.be.an('array');
+    expect(res.body.members.length).to.be.greaterThan(0);
+  });
+  
+  test("Member details include role", function() {
+    res.body.members.forEach(member => {
+      expect(member).to.have.property('userId');
+      expect(member).to.have.property('role');
+      expect(member).to.have.property('joinedAt');
+    });
+  });
+}
+
+docs {
+  # Get Team
+  
+  Retrieves team details and member list.
+  
+  ## Response Includes
+  - Team metadata
+  - Member list with roles
+  - Team settings
+  - Usage statistics
+  - Permissions for current user
+}

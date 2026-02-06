@@ -1,0 +1,109 @@
+meta {
+  name: 01-Confirmation of Processing (Art 17)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/compliance/lgpd/confirmation
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Region: sa-east-1
+  X-Compliance-Framework: LGPD
+  X-Legal-Basis: consent
+}
+
+assert {
+  res.status: eq 200
+  res.body.processingConfirmed: eq true
+  res.body.dataLocation: contains brazil
+  res.body.auditTrailId: isDefined
+}
+
+tests {
+  test("Processing confirmation provided", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Processing confirmed", function() {
+    expect(res.body.processingConfirmed).to.equal(true);
+  });
+  
+  test("Data location in Brazil", function() {
+    expect(res.body.dataLocation).to.match(/brazil|sa-east/i);
+  });
+  
+  test("Audit trail created", function() {
+    expect(res.body.auditTrailId).to.be.a('string');
+  });
+  
+  test("Legal basis documented", function() {
+    expect(res.body.legalBasis).to.be.oneOf([
+      'consent',
+      'legal_obligation',
+      'contract',
+      'regulatory',
+      'legitimate_interest',
+      'credit_protection',
+      'health_protection',
+      'public_interest'
+    ]);
+  });
+  
+  test("ANPD compliance indicated", function() {
+    expect(res.body.anpdCompliant).to.equal(true);
+  });
+}
+
+docs {
+  # LGPD Confirmation of Processing (Article 17)
+  
+  Lei Geral de Proteção de Dados (LGPD) - Law 13.709/2018
+  Article 17 - Right to confirmation of processing
+  
+  ## Right
+  Data subject has right to obtain confirmation as to whether 
+  personal data concerning them is being processed.
+  
+  ## Response Requirements
+  Must inform:
+  - Yes/No confirmation
+  - Categories of data processed
+  - Legal basis for processing
+  - Purpose of processing
+  - Data location (Brazil or international)
+  
+  ## Timeline
+  - Immediate response (or as soon as reasonably possible)
+  - Must be free of charge
+  - Simplified format available
+  
+  ## LGPD Legal Bases (Art. 7)
+  1. Consent
+  2. Legal/regulatory obligation
+  3. Public administration
+  4. Research (by public bodies)
+  5. Contract execution
+  6. Legal/administrative proceedings
+  7. Health protection
+  8. Legitimate interest
+  9. Credit protection
+  10. Life/physical safety protection
+  
+  ## ANPD
+  Autoridade Nacional de Proteção de Dados (Brazilian DPA)
+  
+  ## Verification
+  ✓ Processing confirmed
+  ✓ Data location disclosed (Brazil)
+  ✓ Audit trail created
+  ✓ Legal basis documented
+  ✓ ANPD compliance
+}

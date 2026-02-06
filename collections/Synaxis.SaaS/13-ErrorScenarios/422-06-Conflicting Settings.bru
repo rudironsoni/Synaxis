@@ -1,0 +1,83 @@
+meta {
+  name: 422-06-Conflicting Settings
+  type: http
+  seq: 38
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/compliance
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "dataResidency": "eu-only",
+    "allowCrossBorderTransfer": true
+  }
+}
+
+assert {
+  res.status: eq 422
+  res.body.error: isDefined
+  res.body.error.code: eq CONFLICTING_SETTINGS
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 422", function() {
+    expect(res.status).to.equal(422);
+  });
+  
+  test("Error code is CONFLICTING_SETTINGS", function() {
+    expect(res.body.error.code).to.equal("CONFLICTING_SETTINGS");
+  });
+  
+  test("Error message mentions conflicting settings", function() {
+    expect(res.body.error.message).to.match(/conflict|incompatible|settings/i);
+  });
+  
+  test("Error details identify conflicting fields", function() {
+    expect(res.body.error.details).to.have.property('conflicts');
+    expect(res.body.error.details.conflicts).to.be.an('array');
+    expect(res.body.error.details.conflicts.length).to.be.greaterThan(0);
+  });
+  
+  test("Error explains why settings conflict", function() {
+    expect(res.body.error.details).to.have.property('explanation');
+  });
+  
+  test("Error suggests resolution", function() {
+    expect(res.body.error.details).to.have.property('suggestion');
+  });
+}
+
+docs {
+  # 422 Unprocessable Entity - Conflicting Settings
+  
+  Tests validation of mutually exclusive settings.
+  
+  ## Trigger Condition
+  - PATCH /compliance with incompatible settings
+  - dataResidency="eu-only" + allowCrossBorderTransfer=true
+  
+  ## Expected Response
+  - Status: 422
+  - Error code: CONFLICTING_SETTINGS
+  - Conflict identification and resolution guidance
+  
+  ## Validation
+  - Mutually exclusive settings detected
+  - Clear conflict explanation
+  - Resolution suggestions
+}

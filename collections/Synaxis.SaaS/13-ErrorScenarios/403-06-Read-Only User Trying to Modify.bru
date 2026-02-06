@@ -1,0 +1,82 @@
+meta {
+  name: 403-06-Read-Only User Trying to Modify
+  type: http
+  seq: 24
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/settings
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "name": "Updated Organization Name"
+  }
+}
+
+assert {
+  res.status: eq 403
+  res.body.error: isDefined
+  res.body.error.code: eq READ_ONLY_ACCESS
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 403", function() {
+    expect(res.status).to.equal(403);
+  });
+  
+  test("Error code is READ_ONLY_ACCESS", function() {
+    expect(res.body.error.code).to.equal("READ_ONLY_ACCESS");
+  });
+  
+  test("Error message mentions read-only restriction", function() {
+    expect(res.body.error.message).to.match(/read-only|read only|modify|write/i);
+  });
+  
+  test("Error details include user access level", function() {
+    expect(res.body.error.details).to.have.property('accessLevel');
+    expect(res.body.error.details.accessLevel).to.equal('read-only');
+  });
+  
+  test("Error details include required access level", function() {
+    expect(res.body.error.details).to.have.property('requiredAccessLevel');
+  });
+  
+  test("Error suggests contacting admin", function() {
+    expect(res.body.error.details).to.have.property('suggestion');
+    expect(res.body.error.details.suggestion).to.match(/admin|owner|manager/i);
+  });
+}
+
+docs {
+  # 403 Forbidden - Read-Only User Trying to Modify
+  
+  Tests read-only access enforcement.
+  
+  ## Trigger Condition
+  - PATCH request from user with read-only role
+  - User can view but cannot modify
+  
+  ## Expected Response
+  - Status: 403
+  - Error code: READ_ONLY_ACCESS
+  - Access level details and escalation guidance
+  
+  ## Validation
+  - Read-only role enforcement
+  - Write operation blocking
+  - Clear escalation path
+}

@@ -1,0 +1,103 @@
+meta {
+  name: 10-DPO Contact - Get DPO Info
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{baseUrl}}/api/v1/compliance/gdpr/dpo
+  body: none
+  auth: none
+}
+
+headers {
+  X-Region: {{region}}
+  X-Compliance-Framework: GDPR
+}
+
+assert {
+  res.status: eq 200
+  res.body.dpo: isDefined
+  res.body.dpo.name: isDefined
+  res.body.dpo.email: isDefined
+  res.body.dpo.publiclyAvailable: eq true
+}
+
+tests {
+  test("DPO information available", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("DPO name provided", function() {
+    expect(res.body.dpo.name).to.be.a('string');
+    expect(res.body.dpo.name.length).to.be.greaterThan(0);
+  });
+  
+  test("DPO email provided", function() {
+    expect(res.body.dpo.email).to.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
+  });
+  
+  test("DPO publicly available", function() {
+    expect(res.body.dpo.publiclyAvailable).to.equal(true);
+  });
+  
+  test("DPO contact details complete", function() {
+    expect(res.body.dpo.contactMethods).to.be.an('array');
+    expect(res.body.dpo.contactMethods.length).to.be.greaterThan(0);
+  });
+  
+  test("Published to supervisory authority", function() {
+    expect(res.body.dpo.publishedToSupervisoryAuthority).to.equal(true);
+  });
+  
+  test("DPO tasks described", function() {
+    expect(res.body.dpo.tasks).to.be.an('array');
+    expect(res.body.dpo.tasks).to.include('monitor_compliance');
+    expect(res.body.dpo.tasks).to.include('advice_controller');
+    expect(res.body.dpo.tasks).to.include('cooperate_supervisory_authority');
+  });
+}
+
+docs {
+  # GDPR Data Protection Officer Contact
+  
+  GDPR Article 37-39 - Data Protection Officer
+  
+  ## When DPO Required (Art. 37)
+  1. Processing by public authority/body
+  2. Core activities require regular/systematic monitoring (large scale)
+  3. Core activities consist of large-scale processing of special categories
+  
+  ## DPO Qualifications (Art. 37(5))
+  - Professional qualities
+  - Expert knowledge of data protection law/practices
+  - Ability to fulfill tasks
+  
+  ## Position (Art. 38)
+  - Involved properly and timely
+  - Resources provided
+  - Reports to highest management level
+  - No instructions regarding tasks
+  - No dismissal/penalty for performing tasks
+  - No conflict of interest
+  
+  ## Tasks (Art. 39)
+  1. Inform and advise controller/processor/employees
+  2. Monitor compliance with GDPR
+  3. Provide advice on DPIA
+  4. Cooperate with supervisory authority
+  5. Act as contact point for supervisory authority
+  6. Act as contact point for data subjects
+  
+  ## Contact Details (Art. 37(7))
+  - Publish DPO contact details
+  - Communicate to supervisory authority
+  
+  ## Verification
+  ✓ DPO name disclosed
+  ✓ DPO email provided
+  ✓ Publicly available
+  ✓ Contact methods multiple
+  ✓ Published to authority
+  ✓ Tasks described
+}

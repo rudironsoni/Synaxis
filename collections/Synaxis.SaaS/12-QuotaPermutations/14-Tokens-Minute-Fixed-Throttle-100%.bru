@@ -1,0 +1,136 @@
+meta {
+  name: Tokens-Minute-Fixed-Throttle-100%
+  type: http
+  seq: 14
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{orgId}}
+  X-Test-Quota-Type: tokens
+  X-Test-Quota-Limit: 150000
+  X-Test-Quota-Window: minute
+  X-Test-Quota-Window-Type: fixed
+  X-Test-Quota-Action: throttle
+  X-Test-Simulate-Token-Usage: 150000
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test request - 100% token quota (throttle)"
+      }
+    ],
+    "max_tokens": 100
+  }
+}
+
+assert {
+  res.status: eq 429
+  res.headers.x-ratelimit-limit-tokens: eq 150000
+  res.headers.x-ratelimit-remaining-tokens: eq 0
+  res.headers.retry-after: isDefined
+  res.body.error.code: eq token_quota_exceeded
+}
+
+tests {
+  test("Token quota throttled at 100%", function() {
+    expect(res.status).to.equal(429);
+  });
+  
+  test("Token limit exhausted", function() {
+    expect(res.headers['x-ratelimit-limit-tokens']).to.equal('150000');
+    expect(parseInt(res.headers['x-ratelimit-remaining-tokens'])).to.equal(0);
+  });
+  
+  test("Token-specific error code", function() {
+    expect(res.body.error.code).to.equal('token_quota_exceeded');
+    expect(res.body.error.message).to.match(/token|quota|limit/i);
+  });
+  
+  test("Retry-After provided", function() {
+    const retryAfter = parseInt(res.headers['retry-after']);
+    expect(retryAfter).to.be.greaterThan(0);
+    expect(retryAfter).to.be.lessThanOrEqual(60);
+  });
+  
+  test("Error includes token details", function() {
+    expect(res.body.error.details).to.be.an('object');
+    expect(res.body.error.details.limit_type).to.equal('tokens');
+    expect(res.body.error.details.tokens_limit).to.equal(150000);
+    expect(res.body.error.details.tokens_used).to.be.greaterThanOrEqual(150000);
+  });
+  
+  test("Requested tokens would exceed limit", function() {
+    // Request wants ~100 tokens but quota is 0
+    if (res.body.error.details.requested_tokens) {
+      expect(res.body.error.details.requested_tokens).to.be.a('number');
+      expect(res.body.error.details.requested_tokens).to.be.lessThan(res.body.error.details.tokens_remaining + 1000);
+    }
+  });
+}
+
+docs {
+  # Tokens-Minute-Fixed-Throttle-100%
+  
+  Tests token quota throttling at 100% usage.
+  
+  ## Test Configuration
+  - Metric Type: tokens
+  - Time Granularity: minute
+  - Window Type: fixed
+  - Action: throttle
+  - Usage Level: 100% (150000/150000 tokens)
+  
+  ## Expected Behavior
+  - Status: 429 Too Many Requests
+  - Error code: token_quota_exceeded
+  - No tokens available for new requests
+  - Must wait until window resets
+  
+  ## Token Exhaustion
+  
+  ### Scenario
+  1. App makes requests throughout minute
+  2. Total prompt + completion tokens approach limit
+  3. Next request rejected (even if small)
+  4. Must wait until next minute boundary
+  
+  ### Challenges
+  - Can't predict exactly when quota exhausts
+  - Large requests may partially complete then fail
+  - Need buffer to avoid surprises
+  
+  ## Best Practices
+  
+  ✅ **Monitor remaining tokens** after each request
+  ✅ **Reserve buffer** (don't use 100%)
+  ✅ **Use max_tokens** to limit completion size
+  ✅ **Truncate prompts** when approaching limit
+  ✅ **Implement retry logic** with backoff
+  
+  ## Client Strategy
+  ```javascript
+  const remaining = response.headers['x-ratelimit-remaining-tokens'];
+  const buffer = 5000; // Safety margin
+  
+  if (remaining < buffer) {
+    // Use smaller max_tokens
+    // Or wait for window reset
+    // Or switch to alternative model
+  }
+  ```
+}

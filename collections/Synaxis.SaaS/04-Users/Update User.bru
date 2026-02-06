@@ -1,0 +1,73 @@
+meta {
+  name: Update User
+  type: http
+  seq: 2
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/users/me
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "firstName": "Updated",
+    "lastName": "Name",
+    "phoneNumber": "+491234567890",
+    "locale": "de-DE",
+    "timezone": "Europe/Berlin",
+    "preferences": {
+      "emailNotifications": true,
+      "weeklyReports": false,
+      "marketingEmails": false
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.firstName: eq Updated
+  res.body.lastName: eq Name
+  res.body.updatedAt: isDefined
+}
+
+tests {
+  test("Name updated", function() {
+    expect(res.body.firstName).to.equal("Updated");
+    expect(res.body.lastName).to.equal("Name");
+  });
+  
+  test("Preferences saved", function() {
+    expect(res.body.preferences.emailNotifications).to.be.true;
+    expect(res.body.preferences.marketingEmails).to.be.false;
+  });
+}
+
+docs {
+  # Update User
+  
+  Updates authenticated user's profile.
+  
+  ## Updatable Fields
+  - firstName, lastName
+  - phoneNumber
+  - locale, timezone
+  - profilePhoto
+  - preferences
+  
+  ## Restricted Fields
+  Cannot update:
+  - email (use change email endpoint)
+  - password (use change password endpoint)
+  - region (immutable for compliance)
+}

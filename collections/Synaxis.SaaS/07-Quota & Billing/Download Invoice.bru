@@ -1,0 +1,36 @@
+meta {
+  name: Download Invoice
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/invoices/{{invoiceId}}/download
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Region: {{region}}
+}
+
+assert {
+  res.status: eq 200
+  res.headers.content-type: contains application/pdf
+}
+
+tests {
+  test("PDF downloaded", function() {
+    expect(res.headers['content-type']).to.include('pdf');
+  });
+}
+
+docs {
+  # Download Invoice
+  
+  Downloads invoice as PDF file.
+}

@@ -1,0 +1,91 @@
+meta {
+  name: 500-03-External Provider Error
+  type: http
+  seq: 49
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+  X-Virtual-Key: {{virtualKey}}
+  X-Simulate-Error: provider-error
+}
+
+body:json {
+  {
+    "model": "gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hello"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 500
+  res.body.error: isDefined
+  res.body.error.code: eq PROVIDER_ERROR
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 500", function() {
+    expect(res.status).to.equal(500);
+  });
+  
+  test("Error code is PROVIDER_ERROR", function() {
+    expect(res.body.error.code).to.equal("PROVIDER_ERROR");
+  });
+  
+  test("Error message mentions provider issue", function() {
+    expect(res.body.error.message).to.match(/provider|upstream|external service/i);
+  });
+  
+  test("Error details include retry guidance", function() {
+    expect(res.body.error.details).to.have.property('retryable');
+    expect(res.body.error.details.retryable).to.be.a('boolean');
+  });
+  
+  test("Error includes incident tracking", function() {
+    expect(res.body.error).to.have.property('incidentId');
+  });
+  
+  test("No provider API keys or credentials leaked", function() {
+    expect(JSON.stringify(res.body)).to.not.match(/sk-[a-zA-Z0-9]{48}|api[_-]?key/i);
+  });
+}
+
+docs {
+  # 500 Internal Server Error - External Provider Error
+  
+  Tests handling of upstream provider failures.
+  
+  ## Trigger Condition
+  - Request to /inference when provider API fails
+  - Simulated with X-Simulate-Error header
+  
+  ## Expected Response
+  - Status: 500
+  - Error code: PROVIDER_ERROR
+  - Provider-specific error with retry guidance
+  - Incident ID for tracking
+  
+  ## Validation
+  - Upstream failure handling
+  - Retry guidance provided
+  - No provider credentials leaked
+  - Clear attribution to external issue
+}

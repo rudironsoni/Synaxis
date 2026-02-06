@@ -1,0 +1,118 @@
+meta {
+  name: 17-Child Data - Parental Consent
+  type: http
+  seq: 17
+}
+
+post {
+  url: {{baseUrl}}/api/v1/compliance/gdpr/child-data/verify-consent
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+  X-Compliance-Framework: GDPR
+  X-Legal-Basis: consent
+}
+
+body:json {
+  {
+    "requestType": "child_consent_verification",
+    "childAge": 14,
+    "parentalConsentProvided": true,
+    "verificationMethod": "credit_card",
+    "parentEmail": "parent@example.com"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.consentValid: eq true
+  res.body.parentalConsentVerified: eq true
+  res.body.auditTrailId: isDefined
+}
+
+tests {
+  test("Child consent verification successful", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Parental consent verified", function() {
+    expect(res.body.parentalConsentVerified).to.equal(true);
+  });
+  
+  test("Consent is valid", function() {
+    expect(res.body.consentValid).to.equal(true);
+  });
+  
+  test("Audit trail created", function() {
+    expect(res.body.auditTrailId).to.be.a('string');
+  });
+  
+  test("Age threshold applied correctly", function() {
+    expect(res.body.ageThreshold).to.be.at.least(13);
+    expect(res.body.ageThreshold).to.be.at.most(16);
+  });
+  
+  test("Reasonable efforts to verify", function() {
+    expect(res.body.reasonableEffortsApplied).to.equal(true);
+  });
+  
+  test("Information society services check", function() {
+    expect(res.body.isInformationSocietyService).to.be.a('boolean');
+  });
+}
+
+docs {
+  # GDPR Child Data - Parental Consent
+  
+  GDPR Article 8 - Conditions applicable to child's consent
+  
+  ## Age Threshold
+  - Default: 16 years old
+  - Member States can lower to minimum 13 years
+  - Below threshold: parental consent required
+  
+  ## Scope
+  Applies ONLY to:
+  - Information society services (online services)
+  - Offered directly to child
+  - Based on consent
+  
+  Does NOT apply to:
+  - Preventive/counseling services
+  - Other legal bases (contract, legal obligation, etc.)
+  
+  ## Controller Obligations
+  Make reasonable efforts to verify parental consent, 
+  considering available technology.
+  
+  ## Verification Methods
+  - Email confirmation (low risk)
+  - Phone verification
+  - Credit card validation
+  - ID document upload
+  - Video verification
+  - Digital signature
+  
+  ## Recital 38
+  "Reasonable efforts should take into consideration available technology 
+  and the cost of implementation"
+  
+  ## Special Category Data (Art. 9)
+  Higher standard for children's special category data.
+  
+  ## Verification
+  ✓ Parental consent verified
+  ✓ Consent valid
+  ✓ Audit trail created
+  ✓ Age threshold correct (13-16)
+  ✓ Reasonable efforts applied
+  ✓ Information society service check
+}

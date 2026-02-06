@@ -1,0 +1,74 @@
+meta {
+  name: 401-08-Expired MFA Session
+  type: http
+  seq: 18
+}
+
+post {
+  url: {{baseUrl}}/api/v1/auth/mfa/verify
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "sessionToken": "expired_mfa_session_token_abc123",
+    "code": "123456"
+  }
+}
+
+assert {
+  res.status: eq 401
+  res.body.error: isDefined
+  res.body.error.code: eq MFA_SESSION_EXPIRED
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 401", function() {
+    expect(res.status).to.equal(401);
+  });
+  
+  test("Error code is MFA_SESSION_EXPIRED", function() {
+    expect(res.body.error.code).to.equal("MFA_SESSION_EXPIRED");
+  });
+  
+  test("Error message mentions session expiration", function() {
+    expect(res.body.error.message).to.match(/session|expired|timeout/i);
+  });
+  
+  test("Error details include expiry time", function() {
+    expect(res.body.error.details).to.have.property('expiredAt');
+  });
+  
+  test("Error suggests re-authentication", function() {
+    expect(res.body.error.details).to.have.property('suggestion');
+    expect(res.body.error.details.suggestion).to.match(/login again|re-authenticate/i);
+  });
+}
+
+docs {
+  # 401 Unauthorized - Expired MFA Session
+  
+  Tests MFA session timeout handling.
+  
+  ## Trigger Condition
+  - POST to /auth/mfa/verify with expired session token
+  - MFA session exceeded timeout (typically 5 minutes)
+  
+  ## Expected Response
+  - Status: 401
+  - Error code: MFA_SESSION_EXPIRED
+  - Session expiry time and re-auth guidance
+  
+  ## Validation
+  - MFA session timeout enforced
+  - Clear session expiry messaging
+  - Re-authentication guidance
+}

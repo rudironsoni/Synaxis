@@ -1,0 +1,503 @@
+[
+  {
+    "iterationIndex": 0,
+    "results": [
+      {
+        "test": {
+          "filename": "API Keys/Create API Key.yml"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://{{baseUrl}}/projects/{{projectId}}/keys",
+          "headers": {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer ********"
+          },
+          "data": "{\n  \"name\": \"Production API Key\"\n}"
+        },
+        "response": {
+          "status": "error",
+          "statusText": null,
+          "headers": null,
+          "data": null,
+          "url": null,
+          "responseTime": 0
+        },
+        "error": "getaddrinfo ENOTFOUND {{baseurl}}",
+        "status": "error",
+        "assertionResults": [],
+        "testResults": [],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.069349413,
+        "name": "Create API Key",
+        "path": "API Keys/Create API Key.yml",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "API Keys/Revoke API Key.yml"
+        },
+        "request": {
+          "method": "DELETE",
+          "url": "http://{{baseUrl}}/projects/{{projectId}}/keys/{{keyId}}",
+          "headers": {
+            "Authorization": "Bearer ********"
+          }
+        },
+        "response": {
+          "status": "error",
+          "statusText": null,
+          "headers": null,
+          "data": null,
+          "url": null,
+          "responseTime": 0
+        },
+        "error": "getaddrinfo ENOTFOUND {{baseurl}}",
+        "status": "error",
+        "assertionResults": [],
+        "testResults": [],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.003754334,
+        "name": "Revoke API Key",
+        "path": "API Keys/Revoke API Key.yml",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "API Keys/Generate API Key (Legacy).yml"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://{{baseUrl}}/apikeys",
+          "headers": {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer ********"
+          },
+          "data": "{\n  \"name\": \"Test Key\",\n  \"permissions\": [\"read\", \"write\"],\n  \"expiresInDays\": 30\n}"
+        },
+        "response": {
+          "status": "error",
+          "statusText": null,
+          "headers": null,
+          "data": null,
+          "url": null,
+          "responseTime": 0
+        },
+        "error": "getaddrinfo ENOTFOUND {{baseurl}}",
+        "status": "error",
+        "assertionResults": [],
+        "testResults": [],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.003283802,
+        "name": "Generate API Key (Legacy)",
+        "path": "API Keys/Generate API Key (Legacy).yml",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "API Keys/List API Keys.yml"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://{{baseUrl}}/apikeys?includeRevoked=false",
+          "headers": {
+            "Authorization": "Bearer ********"
+          }
+        },
+        "response": {
+          "status": "error",
+          "statusText": null,
+          "headers": null,
+          "data": null,
+          "url": null,
+          "responseTime": 0
+        },
+        "error": "getaddrinfo ENOTFOUND {{baseurl}}",
+        "status": "error",
+        "assertionResults": [],
+        "testResults": [],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.002641548,
+        "name": "List API Keys",
+        "path": "API Keys/List API Keys.yml",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "API Keys/Revoke API Key (Legacy).yml"
+        },
+        "request": {
+          "method": "DELETE",
+          "url": "http://{{baseUrl}}/apikeys/{{keyId}}",
+          "headers": {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer ********"
+          },
+          "data": "{\n  \"reason\": \"Key compromised - rotating for security\"\n}"
+        },
+        "response": {
+          "status": "error",
+          "statusText": null,
+          "headers": null,
+          "data": null,
+          "url": null,
+          "responseTime": 0
+        },
+        "error": "getaddrinfo ENOTFOUND {{baseurl}}",
+        "status": "error",
+        "assertionResults": [],
+        "testResults": [],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.002300616,
+        "name": "Revoke API Key (Legacy)",
+        "path": "API Keys/Revoke API Key (Legacy).yml",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "API Keys/Get API Key Usage.yml"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://{{baseUrl}}/apikeys/{{keyId}}/usage?from=2025-01-01&to=2025-02-04",
+          "headers": {
+            "Authorization": "Bearer ********"
+          }
+        },
+        "response": {
+          "status": "error",
+          "statusText": null,
+          "headers": null,
+          "data": null,
+          "url": null,
+          "responseTime": 0
+        },
+        "error": "getaddrinfo ENOTFOUND {{baseurl}}",
+        "status": "error",
+        "assertionResults": [],
+        "testResults": [],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.003173284,
+        "name": "Get API Key Usage",
+        "path": "API Keys/Get API Key Usage.yml",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "Authentication/Register User.yml"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://{{baseUrl}}/identity/register",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "data": "{\n  \"email\": \"test-1770282272@example.com\",\n  \"password\": \"SecurePassword123!\",\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\",\n  \"organizationName\": \"Test Organization\"\n}"
+        },
+        "response": {
+          "status": "error",
+          "statusText": null,
+          "headers": null,
+          "data": null,
+          "url": null,
+          "responseTime": 0
+        },
+        "error": "getaddrinfo ENOTFOUND {{baseurl}}",
+        "status": "error",
+        "assertionResults": [],
+        "testResults": [],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.003102597,
+        "name": "Register User",
+        "path": "Authentication/Register User.yml",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "Authentication/Login.yml"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://{{baseUrl}}/identity/login",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "data": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"SecurePassword123!\"\n}"
+        },
+        "response": {
+          "status": "error",
+          "statusText": null,
+          "headers": null,
+          "data": null,
+          "url": null,
+          "responseTime": 0
+        },
+        "error": "getaddrinfo ENOTFOUND {{baseurl}}",
+        "status": "error",
+        "assertionResults": [],
+        "testResults": [],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.002115162,
+        "name": "Login",
+        "path": "Authentication/Login.yml",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "Authentication/Dev Login.yml"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://{{baseUrl}}/auth/dev-login",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "data": "{\n  \"email\": \"dev@localhost\"\n}"
+        },
+        "response": {
+          "status": "error",
+          "statusText": null,
+          "headers": null,
+          "data": null,
+          "url": null,
+          "responseTime": 0
+        },
+        "error": "getaddrinfo ENOTFOUND {{baseurl}}",
+        "status": "error",
+        "assertionResults": [],
+        "testResults": [],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.00237657,
+        "name": "Dev Login",
+        "path": "Authentication/Dev Login.yml",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "Identity/Identity Register.yml"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://{{baseUrl}}/identity/register",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "data": "{\n  \"email\": \"test-1770282272@organization.com\",\n  \"password\": \"SecurePass123!\",\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\",\n  \"organizationName\": \"My Organization\"\n}"
+        },
+        "response": {
+          "status": "error",
+          "statusText": null,
+          "headers": null,
+          "data": null,
+          "url": null,
+          "responseTime": 0
+        },
+        "error": "getaddrinfo ENOTFOUND {{baseurl}}",
+        "status": "error",
+        "assertionResults": [],
+        "testResults": [],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.00246162,
+        "name": "Identity Register",
+        "path": "Identity/Identity Register.yml",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "Identity/Identity Login.yml"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://{{baseUrl}}/identity/login",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "data": "{\n  \"email\": \"user@organization.com\",\n  \"password\": \"SecurePass123!\"\n}"
+        },
+        "response": {
+          "status": "error",
+          "statusText": null,
+          "headers": null,
+          "data": null,
+          "url": null,
+          "responseTime": 0
+        },
+        "error": "getaddrinfo ENOTFOUND {{baseurl}}",
+        "status": "error",
+        "assertionResults": [],
+        "testResults": [],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.001804066,
+        "name": "Identity Login",
+        "path": "Identity/Identity Login.yml",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "Identity/Refresh Token.yml"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://{{baseUrl}}/identity/refresh",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "data": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+        },
+        "response": {
+          "status": "error",
+          "statusText": null,
+          "headers": null,
+          "data": null,
+          "url": null,
+          "responseTime": 0
+        },
+        "error": "getaddrinfo ENOTFOUND {{baseurl}}",
+        "status": "error",
+        "assertionResults": [],
+        "testResults": [],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.001891642,
+        "name": "Refresh Token",
+        "path": "Identity/Refresh Token.yml",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "Identity/Get Current User.yml"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://{{baseUrl}}/identity/me",
+          "headers": {
+            "Authorization": "Bearer ********"
+          }
+        },
+        "response": {
+          "status": "error",
+          "statusText": null,
+          "headers": null,
+          "data": null,
+          "url": null,
+          "responseTime": 0
+        },
+        "error": "getaddrinfo ENOTFOUND {{baseurl}}",
+        "status": "error",
+        "assertionResults": [],
+        "testResults": [],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.001668091,
+        "name": "Get Current User",
+        "path": "Identity/Get Current User.yml",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "Identity/Get Organizations.yml"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://{{baseUrl}}/identity/organizations",
+          "headers": {
+            "Authorization": "Bearer ********"
+          }
+        },
+        "response": {
+          "status": "error",
+          "statusText": null,
+          "headers": null,
+          "data": null,
+          "url": null,
+          "responseTime": 0
+        },
+        "error": "getaddrinfo ENOTFOUND {{baseurl}}",
+        "status": "error",
+        "assertionResults": [],
+        "testResults": [],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.002184397,
+        "name": "Get Organizations",
+        "path": "Identity/Get Organizations.yml",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "Identity/Switch Organization.yml"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://{{baseUrl}}/identity/organizations/{{organizationId}}/switch",
+          "headers": {
+            "Authorization": "Bearer ********"
+          }
+        },
+        "response": {
+          "status": "error",
+          "statusText": null,
+          "headers": null,
+          "data": null,
+          "url": null,
+          "responseTime": 0
+        },
+        "error": "getaddrinfo ENOTFOUND {{baseurl}}",
+        "status": "error",
+        "assertionResults": [],
+        "testResults": [],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.001495233,
+        "name": "Switch Organization",
+        "path": "Identity/Switch Organization.yml",
+        "iterationIndex": 0
+      }
+    ],
+    "summary": {
+      "totalRequests": 15,
+      "passedRequests": 0,
+      "failedRequests": 0,
+      "errorRequests": 15,
+      "skippedRequests": 0,
+      "totalAssertions": 0,
+      "passedAssertions": 0,
+      "failedAssertions": 0,
+      "totalTests": 0,
+      "passedTests": 0,
+      "failedTests": 0,
+      "totalPreRequestTests": 0,
+      "passedPreRequestTests": 0,
+      "failedPreRequestTests": 0,
+      "totalPostResponseTests": 0,
+      "passedPostResponseTests": 0,
+      "failedPostResponseTests": 0
+    }
+  }
+]

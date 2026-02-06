@@ -1,0 +1,71 @@
+meta {
+  name: Enterprise Tier - Webhook Subscriptions - Unlimited
+  type: http
+  seq: 43
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/webhooks
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{enterpriseOrgId}}
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "url": "https://customer.com/webhooks/synaxis",
+    "events": ["inference.completed", "quota.exceeded", "audit.critical"],
+    "secret": "whsec_customer_secret_123"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.webhook: isDefined
+  res.body.webhook.id: isDefined
+  res.body.webhook.status: eq active
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("enterpriseOrgId"));
+}
+
+tests {
+  test("Enterprise tier can create webhooks", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body.webhook).to.be.an('object');
+  });
+  
+  test("Webhook activated immediately", function() {
+    expect(res.body.webhook.status).to.equal("active");
+  });
+  
+  test("Multiple event types supported", function() {
+    expect(res.body.webhook.events).to.be.an('array');
+    expect(res.body.webhook.events.length).to.be.greaterThan(0);
+  });
+}
+
+docs {
+  # Enterprise Tier - Webhook Subscriptions - Unlimited
+  
+  Tests that Enterprise tier can create unlimited webhooks.
+  
+  ## Expected Behavior
+  - Returns 200 OK
+  - Webhook created and activated
+  
+  ## Webhook Limits by Tier
+  - Free: 1 webhook
+  - Pro: 5 webhooks
+  - Enterprise: Unlimited webhooks
+}
