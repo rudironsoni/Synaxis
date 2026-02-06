@@ -1,14 +1,14 @@
 services:
-  inference-gateway:
-    image: synaxis/synaxis-inferencegateway:latest
+  synaxis-api:
+    image: synaxis/synaxis-saas:latest
     restart: unless-stopped
     build:
       context: .
-      dockerfile: src/InferenceGateway/WebApi/Dockerfile
+      dockerfile: src/Synaxis.Api/Dockerfile
     ports:
       - "8080:8080"
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/health/liveness"]
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/health/live"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -16,31 +16,19 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
-      Synaxis__ControlPlane__ConnectionString: Host=postgres;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      ConnectionStrings__DefaultConnection: Host=postgres;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
       ConnectionStrings__Redis: redis:6379,password=${REDIS_PASSWORD},abortConnect=false
-      Synaxis__InferenceGateway__JwtSecret: ${JWT_SECRET:-SynaxisDefaultSecretKeyDoNotUseInProd1234567890}
-      Synaxis__InferenceGateway__Providers__Groq__Key: ${GROQ_API_KEY}
-      Synaxis__InferenceGateway__Providers__Cohere__Key: ${COHERE_API_KEY}
-      Synaxis__InferenceGateway__Providers__Cloudflare__Key: ${CLOUDFLARE_API_KEY}
-      Synaxis__InferenceGateway__Providers__Cloudflare__AccountId: ${CLOUDFLARE_ACCOUNT_ID}
-      Synaxis__InferenceGateway__Providers__Gemini__Key: ${GEMINI_API_KEY}
-      Synaxis__InferenceGateway__Providers__HuggingFace__Key: ${HUGGINGFACE_API_KEY}
-      Synaxis__InferenceGateway__Providers__OpenRouter__Key: ${OPENROUTER_API_KEY}
-      Synaxis__InferenceGateway__Providers__NVIDIA__Key: ${NVIDIA_API_KEY}
-      Synaxis__InferenceGateway__Providers__DeepSeek__Key: ${DEEPSEEK_API_KEY}
-      Synaxis__InferenceGateway__Providers__DeepSeek__Type: OpenAI
-      Synaxis__InferenceGateway__Providers__DeepSeek__Endpoint: ${DEEPSEEK_API_ENDPOINT}
-      Synaxis__InferenceGateway__Providers__OpenAI__Key: ${OPENAI_API_KEY}
-      Synaxis__InferenceGateway__Providers__OpenAI__Type: OpenAI
-      Synaxis__InferenceGateway__Providers__OpenAI__Endpoint: ${OPENAI_API_ENDPOINT}
-      Synaxis__InferenceGateway__Providers__Antigravity__ProjectId: ${ANTIGRAVITY_PROJECT_ID}
-      Synaxis__InferenceGateway__Providers__Antigravity__Endpoint: ${ANTIGRAVITY_API_ENDPOINT}
-      Synaxis__InferenceGateway__Providers__Antigravity__FallbackEndpoint: ${ANTIGRAVITY_API_ENDPOINT_FALLBACK}
-      TokenOptimization__Qdrant__Endpoint: http://qdrant:6333
-      TokenOptimization__Qdrant__ApiKey: ${QDRANT_API_KEY}
-      TokenOptimization__Qdrant__CollectionName: ${QDRANT_COLLECTION_NAME:-token_optimization}
+      Jwt__Key: ${JWT_SECRET:-SynaxisDefaultSecretKeyDoNotUseInProd1234567890}
+      Jwt__Issuer: ${JWT_ISSUER:-Synaxis}
+      Jwt__Audience: ${JWT_AUDIENCE:-SynaxisAPI}
+      Regions__EuWest1__Endpoint: ${REGION_EU_WEST_1_ENDPOINT:-https://eu-west-1.synaxis.io}
+      Regions__UsEast1__Endpoint: ${REGION_US_EAST_1_ENDPOINT:-https://us-east-1.synaxis.io}
+      Regions__SaEast1__Endpoint: ${REGION_SA_EAST_1_ENDPOINT:-https://sa-east-1.synaxis.io}
+      Qdrant__Endpoint: http://qdrant:6333
+      Qdrant__ApiKey: ${QDRANT_API_KEY}
+      Qdrant__CollectionName: ${QDRANT_COLLECTION_NAME:-synaxis_vectors}
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
-      OTEL_SERVICE_NAME: synaxis-gateway
+      OTEL_SERVICE_NAME: synaxis-api
     depends_on:
       postgres:
         condition: service_healthy
