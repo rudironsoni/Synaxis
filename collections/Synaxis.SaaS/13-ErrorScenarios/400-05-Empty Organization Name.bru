@@ -1,0 +1,82 @@
+meta {
+  name: 400-05-Empty Organization Name
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "name": "",
+    "slug": "test-org-empty-name"
+  }
+}
+
+assert {
+  res.status: eq 400
+  res.body.error: isDefined
+  res.body.error.code: eq INVALID_FIELD_VALUE
+  res.body.error.message: isDefined
+  res.body.error.details: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 400", function() {
+    expect(res.status).to.equal(400);
+  });
+  
+  test("Error code is INVALID_FIELD_VALUE", function() {
+    expect(res.body.error.code).to.equal("INVALID_FIELD_VALUE");
+  });
+  
+  test("Error message mentions empty or blank", function() {
+    expect(res.body.error.message).to.match(/empty|blank|required/i);
+  });
+  
+  test("Error details identify name field", function() {
+    expect(res.body.error.details).to.be.an('array');
+    const nameError = res.body.error.details.find(d => d.field === 'name');
+    expect(nameError).to.be.defined;
+    expect(nameError.constraint).to.match(/empty|length|required/i);
+  });
+  
+  test("Error includes validation rule", function() {
+    const nameError = res.body.error.details.find(d => d.field === 'name');
+    expect(nameError).to.have.property('constraint');
+  });
+}
+
+docs {
+  # 400 Bad Request - Empty Organization Name
+  
+  Tests validation for empty string values in required fields.
+  
+  ## Trigger Condition
+  - POST to /organizations with name: ""
+  - Field present but empty/blank
+  
+  ## Expected Response
+  - Status: 400
+  - Error code: INVALID_FIELD_VALUE
+  - Constraint details for minimum length
+  
+  ## Validation
+  - Empty string validation
+  - Minimum length enforcement
+  - Clear constraint messaging
+}

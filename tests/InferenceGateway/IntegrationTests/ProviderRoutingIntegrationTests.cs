@@ -96,15 +96,11 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         private void SeedDatabase()
         {
             // Add cost data for testing
-            var costs = new List<ModelCost>
-            {
-                new ModelCost { Provider = "provider-1", Model = "test-model", CostPerToken = 0.001m, FreeTier = true },
-                new ModelCost { Provider = "provider-2", Model = "test-model", CostPerToken = 0.002m, FreeTier = false },
-                new ModelCost { Provider = "provider-3", Model = "test-model", CostPerToken = 0.003m, FreeTier = false },
-                new ModelCost { Provider = "fallback-provider", Model = "fallback-model", CostPerToken = 0.000m, FreeTier = true }
-            };
-
-            _dbContext.ModelCosts.AddRange(costs);
+            _dbContext.ModelCosts.Add(new ModelCost { Provider = "provider-1", Model = "test-model", CostPerToken = 0.001m, FreeTier = true });
+            _dbContext.ModelCosts.Add(new ModelCost { Provider = "provider-2", Model = "test-model", CostPerToken = 0.002m, FreeTier = false });
+            _dbContext.ModelCosts.Add(new ModelCost { Provider = "provider-3", Model = "test-model", CostPerToken = 0.003m, FreeTier = false });
+            _dbContext.ModelCosts.Add(new ModelCost { Provider = "fallback-provider", Model = "fallback-model", CostPerToken = 0.000m, FreeTier = true });
+            
             _dbContext.SaveChanges();
         }
 

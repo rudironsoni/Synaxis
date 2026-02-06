@@ -1,0 +1,67 @@
+meta {
+  name: Pro Tier - SCIM Provisioning - Denied
+  type: http
+  seq: 29
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/scim/configure
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{proOrgId}}
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "enabled": true,
+    "autoProvision": true,
+    "autoDeprovision": true
+  }
+}
+
+assert {
+  res.status: eq 403
+  res.body.error: isDefined
+  res.body.error.code: eq FEATURE_NOT_AVAILABLE
+  res.body.error.message: contains SCIM
+  res.body.error.requiredTier: eq enterprise
+  res.body.error.currentTier: eq pro
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("proOrgId"));
+}
+
+tests {
+  test("Pro tier cannot configure SCIM", function() {
+    expect(res.status).to.equal(403);
+    expect(res.body.error.code).to.equal("FEATURE_NOT_AVAILABLE");
+  });
+  
+  test("Enterprise tier required", function() {
+    expect(res.body.error.requiredTier).to.equal("enterprise");
+  });
+}
+
+docs {
+  # Pro Tier - SCIM Provisioning - Denied
+  
+  Tests that Pro tier cannot configure SCIM provisioning.
+  
+  ## Expected Behavior
+  - Returns 403 Forbidden
+  - Error code: FEATURE_NOT_AVAILABLE
+  - Enterprise tier required
+  
+  ## Feature: SCIM Provisioning
+  Available on: Enterprise only
+}

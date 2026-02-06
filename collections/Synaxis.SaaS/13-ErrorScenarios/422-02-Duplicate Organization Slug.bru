@@ -1,0 +1,83 @@
+meta {
+  name: 422-02-Duplicate Organization Slug
+  type: http
+  seq: 34
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "name": "Another Test Organization",
+    "slug": "existing-org-slug"
+  }
+}
+
+assert {
+  res.status: eq 422
+  res.body.error: isDefined
+  res.body.error.code: eq DUPLICATE_SLUG
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 422", function() {
+    expect(res.status).to.equal(422);
+  });
+  
+  test("Error code is DUPLICATE_SLUG", function() {
+    expect(res.body.error.code).to.equal("DUPLICATE_SLUG");
+  });
+  
+  test("Error message mentions duplicate slug", function() {
+    expect(res.body.error.message).to.match(/slug|duplicate|already exists/i);
+  });
+  
+  test("Error details identify conflicting field", function() {
+    expect(res.body.error.details).to.have.property('field');
+    expect(res.body.error.details.field).to.equal('slug');
+  });
+  
+  test("Error suggests alternative slugs", function() {
+    expect(res.body.error.details).to.have.property('suggestions');
+    expect(res.body.error.details.suggestions).to.be.an('array');
+  });
+  
+  test("Error includes slug generation guidance", function() {
+    expect(res.body.error.details).to.have.property('format');
+  });
+}
+
+docs {
+  # 422 Unprocessable Entity - Duplicate Organization Slug
+  
+  Tests organization slug uniqueness constraint.
+  
+  ## Trigger Condition
+  - POST to /organizations with existing slug
+  - Slug already used by another organization
+  
+  ## Expected Response
+  - Status: 422
+  - Error code: DUPLICATE_SLUG
+  - Alternative slug suggestions
+  
+  ## Validation
+  - Unique slug constraint enforced
+  - Helpful alternative suggestions
+  - Slug format guidance
+}

@@ -170,16 +170,12 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             _dbContext.ModelCosts.RemoveRange(_dbContext.ModelCosts);
             
             // Seed model costs for performance testing
-            var modelCosts = new List<ModelCost>
-            {
-                new ModelCost { Provider = "groq", Model = "llama-3.1-70b-versatile", CostPerToken = 0.001m, FreeTier = true },
-                new ModelCost { Provider = "groq", Model = "mixtral-8x7b-32768", CostPerToken = 0.002m, FreeTier = true },
-                new ModelCost { Provider = "deepseek", Model = "deepseek-chat", CostPerToken = 0.0005m, FreeTier = false },
-                new ModelCost { Provider = "deepseek", Model = "deepseek-coder", CostPerToken = 0.0003m, FreeTier = false },
-                new ModelCost { Provider = "fireworks", Model = "accounts/fireworks/models/llama-v2-7b-chat", CostPerToken = 0.0015m, FreeTier = false }
-            };
+            _dbContext.ModelCosts.Add(new ModelCost { Provider = "groq", Model = "llama-3.1-70b-versatile", CostPerToken = 0.001m, FreeTier = true });
+            _dbContext.ModelCosts.Add(new ModelCost { Provider = "groq", Model = "mixtral-8x7b-32768", CostPerToken = 0.002m, FreeTier = true });
+            _dbContext.ModelCosts.Add(new ModelCost { Provider = "deepseek", Model = "deepseek-chat", CostPerToken = 0.0005m, FreeTier = false });
+            _dbContext.ModelCosts.Add(new ModelCost { Provider = "deepseek", Model = "deepseek-coder", CostPerToken = 0.0003m, FreeTier = false });
+            _dbContext.ModelCosts.Add(new ModelCost { Provider = "fireworks", Model = "accounts/fireworks/models/llama-v2-7b-chat", CostPerToken = 0.0015m, FreeTier = false });
 
-            _dbContext.ModelCosts.AddRange(modelCosts);
             _dbContext.SaveChanges();
         }
 

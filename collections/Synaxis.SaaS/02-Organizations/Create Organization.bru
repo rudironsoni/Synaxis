@@ -1,0 +1,164 @@
+meta {
+  name: Create Organization
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "name": "{{orgName}}",
+    "slug": "{{orgSlug}}",
+    "primaryRegion": "{{region}}",
+    "allowedRegions": ["eu-central-1", "us-east-1"],
+    "plan": "professional",
+    "billingEmail": "billing@synaxis.ai",
+    "taxId": "EU123456789",
+    "address": {
+      "street": "123 Tech Street",
+      "city": "Frankfurt",
+      "state": "Hesse",
+      "postalCode": "60311",
+      "country": "DE"
+    }
+  }
+}
+
+assert {
+  res.status: eq 201
+  res.body.id: isDefined
+  res.body.name: eq {{orgName}}
+  res.body.slug: eq {{orgSlug}}
+  res.body.primaryRegion: eq {{region}}
+  res.body.plan: eq professional
+  res.body.status: eq active
+  res.body.createdAt: isDefined
+  res.headers.content-type: contains application/json
+  res.headers.location: isDefined
+}
+
+script:pre-request {
+  // Generate unique slug
+  const timestamp = Date.now();
+  const uniqueSlug = `test-org-${timestamp}`;
+  bru.setVar("orgSlug", uniqueSlug);
+  bru.setVar("orgName", `Test Org ${timestamp}`);
+}
+
+script:post-response {
+  // Save organization ID for subsequent tests
+  if (res.body.id) {
+    bru.setEnvVar("orgId", res.body.id);
+  }
+  
+  // Save organization slug
+  if (res.body.slug) {
+    bru.setEnvVar("orgSlug", res.body.slug);
+  }
+}
+
+tests {
+  test("Organization ID is UUID", function() {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    expect(res.body.id).to.match(uuidRegex);
+  });
+  
+  test("Slug is lowercase", function() {
+    expect(res.body.slug).to.equal(res.body.slug.toLowerCase());
+  });
+  
+  test("Slug format is valid", function() {
+    expect(res.body.slug).to.match(/^[a-z0-9-]+$/);
+  });
+  
+  test("Primary region is valid AWS region", function() {
+    const validRegions = ['eu-central-1', 'us-east-1', 'ap-southeast-1'];
+    expect(validRegions).to.include(res.body.primaryRegion);
+  });
+  
+  test("Creator is org owner", function() {
+    expect(res.body.ownerId).to.equal(bru.getEnvVar("userId"));
+  });
+  
+  test("Default quota limits assigned", function() {
+    expect(res.body.limits).to.be.an('object');
+    expect(res.body.limits.maxTokensPerMonth).to.be.a('number');
+    expect(res.body.limits.maxApiKeys).to.be.a('number');
+    expect(res.body.limits.maxTeamMembers).to.be.a('number');
+  });
+  
+  test("Location header contains org URL", function() {
+    expect(res.headers.location).to.include('/api/v1/organizations/');
+    expect(res.headers.location).to.include(res.body.id);
+  });
+}
+
+docs {
+  # Create Organization
+  
+  Creates a new organization (tenant) with the authenticated user as owner.
+  
+  ## Request Body
+  - `name`: Organization display name (required)
+  - `slug`: URL-safe identifier (required, unique, lowercase, alphanumeric + hyphens)
+  - `primaryRegion`: AWS region for data residency (required)
+  - `allowedRegions`: List of regions where data can be stored (optional)
+  - `plan`: Subscription plan (free/professional/enterprise, default: free)
+  - `billingEmail`: Email for invoices (optional)
+  - `taxId`: VAT/Tax ID for billing (optional)
+  - `address`: Billing address (optional)
+  
+  ## Response
+  - 201 Created with organization object
+  - `Location` header contains URL to created resource
+  - User automatically assigned as organization owner
+  
+  ## Plan Limits
+  
+  ### Free Plan
+  - 100,000 tokens/month
+  - 3 API keys
+  - 5 team members
+  - Email support
+  
+  ### Professional Plan
+  - 1,000,000 tokens/month
+  - 10 API keys
+  - 20 team members
+  - Priority support
+  
+  ### Enterprise Plan
+  - Unlimited tokens
+  - Unlimited API keys
+  - Unlimited team members
+  - 24/7 phone support
+  - SLA guarantee
+  - Custom contract
+  
+  ## Data Residency
+  - `primaryRegion`: Where organization data is stored
+  - `allowedRegions`: Additional regions for data replication
+  - GDPR: EU data must stay in EU regions
+  - Cross-border transfers require explicit consent
+  
+  ## Error Codes
+  - 400: Invalid slug format
+  - 401: Unauthorized
+  - 409: Slug already taken
+  - 422: Missing required fields
+  - 429: Rate limit (max 10 orgs per user)
+}

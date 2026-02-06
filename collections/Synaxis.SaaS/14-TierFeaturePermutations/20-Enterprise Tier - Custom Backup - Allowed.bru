@@ -1,0 +1,90 @@
+meta {
+  name: Enterprise Tier - Custom Backup - Allowed
+  type: http
+  seq: 20
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/backups/configure
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{enterpriseOrgId}}
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "schedule": "0 */6 * * *",
+    "retention": "90d",
+    "destination": "s3://customer-backup-bucket/synaxis",
+    "encryption": "AES256",
+    "compressionLevel": "high",
+    "notificationEmail": "ops@customer.com"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.config: isDefined
+  res.body.config.schedule: eq 0 */6 * * *
+  res.body.config.retention: eq 90d
+  res.body.config.status: eq active
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("enterpriseOrgId"));
+}
+
+tests {
+  test("Enterprise tier can configure custom backups", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body.config).to.be.an('object');
+  });
+  
+  test("Custom schedule configured", function() {
+    expect(res.body.config.schedule).to.equal("0 */6 * * *");
+  });
+  
+  test("Custom retention period set", function() {
+    expect(res.body.config.retention).to.equal("90d");
+  });
+  
+  test("Custom destination configured", function() {
+    expect(res.body.config.destination).to.include("s3://");
+  });
+  
+  test("Backup configuration is active", function() {
+    expect(res.body.config.status).to.equal("active");
+  });
+}
+
+docs {
+  # Enterprise Tier - Custom Backup - Allowed
+  
+  Tests that Enterprise tier organizations can configure custom backup policies.
+  
+  ## Expected Behavior
+  - Returns 200 OK
+  - Custom backup configuration created
+  - Supports custom destinations (S3, GCS, Azure Blob)
+  - Flexible scheduling and retention
+  
+  ## Feature: Custom Backup Configuration
+  Available on: Enterprise only
+  
+  Enterprise features:
+  - Custom backup schedules
+  - BYOB (Bring Your Own Bucket)
+  - Encryption options
+  - Compression settings
+  - Email notifications
+  - Point-in-time recovery
+}

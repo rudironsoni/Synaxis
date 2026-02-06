@@ -1,0 +1,64 @@
+meta {
+  name: List API Keys
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/api-keys?page=1&limit=20&status=active
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Region: {{region}}
+}
+
+query {
+  page: 1
+  limit: 20
+  status: active
+}
+
+assert {
+  res.status: eq 200
+  res.body.data: isDefined
+  res.body.pagination: isDefined
+}
+
+tests {
+  test("API keys array returned", function() {
+    expect(res.body.data).to.be.an('array');
+  });
+  
+  test("Each key has metadata", function() {
+    res.body.data.forEach(key => {
+      expect(key).to.have.property('id');
+      expect(key).to.have.property('name');
+      expect(key).to.have.property('prefix');
+      expect(key).to.have.property('status');
+      expect(key.key).to.be.undefined; // Full key never returned
+    });
+  });
+}
+
+docs {
+  # List API Keys
+  
+  Lists all API keys for organization.
+  
+  ## Query Parameters
+  - status: active/revoked/expired
+  - teamId: Filter by team
+  - createdBy: Filter by creator
+  
+  ## Response
+  - Metadata only (no full keys)
+  - Usage statistics
+  - Last used timestamp
+  - Expiry dates
+}

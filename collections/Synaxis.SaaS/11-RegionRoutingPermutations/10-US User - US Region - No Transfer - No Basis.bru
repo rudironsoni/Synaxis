@@ -1,0 +1,66 @@
+meta {
+  name: US User - US Region - No Transfer - No Basis
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: us-east-1
+  X-Processed-Region: us-east-1
+  X-Cross-Border: false
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test message for US region routing"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-cross-border-transfer: eq false
+  res.headers.x-processed-region: eq us-east-1
+}
+
+tests {
+  test("No cross-border transfer for same region", function() {
+    expect(res.headers['x-cross-border-transfer']).to.equal('false');
+  });
+  
+  test("Response processed in US region", function() {
+    expect(res.headers['x-processed-region']).to.equal('us-east-1');
+  });
+  
+  test("No legal basis header required", function() {
+    expect(res.headers['x-legal-basis']).to.be.undefined;
+  });
+}
+
+docs {
+  # US User - US Region - No Transfer
+  
+  Tests routing when user and processing region are both US.
+  No international data transfer occurs.
+  
+  ## Expected Behavior
+  - Request routed to us-east-1
+  - Subject to US privacy laws (CCPA, state laws)
+  - No international transfer mechanisms needed
+}

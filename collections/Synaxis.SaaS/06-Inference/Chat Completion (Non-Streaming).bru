@@ -1,0 +1,148 @@
+meta {
+  name: Chat Completion (Non-Streaming)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "{{modelProvider}}/{{modelName}}",
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant. Respond concisely."
+      },
+      {
+        "role": "user",
+        "content": "Explain quantum computing in one sentence."
+      }
+    ],
+    "stream": false,
+    "temperature": 0.5,
+    "maxTokens": 100
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.id: isDefined
+  res.body.object: eq chat.completion
+  res.body.model: isDefined
+  res.body.choices: isDefined
+  res.body.usage: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Completion ID present", function() {
+    expect(res.body.id).to.match(/^chatcmpl-/);
+  });
+  
+  test("Model name returned", function() {
+    expect(res.body.model).to.be.a('string');
+  });
+  
+  test("Choices array has one element", function() {
+    expect(res.body.choices).to.be.an('array');
+    expect(res.body.choices.length).to.equal(1);
+  });
+  
+  test("Message content present", function() {
+    const message = res.body.choices[0].message;
+    expect(message.role).to.equal('assistant');
+    expect(message.content).to.be.a('string');
+    expect(message.content.length).to.be.greaterThan(0);
+  });
+  
+  test("Finish reason is stop", function() {
+    expect(res.body.choices[0].finish_reason).to.equal('stop');
+  });
+  
+  test("Usage statistics accurate", function() {
+    expect(res.body.usage.prompt_tokens).to.be.a('number');
+    expect(res.body.usage.completion_tokens).to.be.a('number');
+    expect(res.body.usage.total_tokens).to.equal(
+      res.body.usage.prompt_tokens + res.body.usage.completion_tokens
+    );
+  });
+  
+  test("Response within token limit", function() {
+    expect(res.body.usage.completion_tokens).to.be.lessThanOrEqual(100);
+  });
+  
+  test("Created timestamp is recent", function() {
+    const now = Math.floor(Date.now() / 1000);
+    expect(res.body.created).to.be.closeTo(now, 10);
+  });
+}
+
+docs {
+  # Chat Completion (Non-Streaming)
+  
+  Generates AI completion and returns complete response (non-streaming).
+  
+  ## Difference from Streaming
+  - Returns complete response at once
+  - Easier to parse (JSON response)
+  - Higher latency (wait for full completion)
+  - Better for batch processing
+  
+  ## Response Structure
+  ```json
+  {
+    "id": "chatcmpl-123",
+    "object": "chat.completion",
+    "created": 1234567890,
+    "model": "gpt-4",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "Quantum computing uses quantum bits..."
+        },
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 25,
+      "completion_tokens": 50,
+      "total_tokens": 75
+    }
+  }
+  ```
+  
+  ## Finish Reasons
+  - `stop`: Natural completion
+  - `length`: Hit maxTokens limit
+  - `content_filter`: Filtered by safety system
+  - `function_call`: (If using function calling)
+  
+  ## When to Use Non-Streaming
+  ✅ Batch processing
+  ✅ Short responses
+  ✅ Simpler client implementation
+  ✅ Need complete response for validation
+  
+  ## When to Use Streaming
+  ✅ Real-time chat UI
+  ✅ Long responses (better UX)
+  ✅ Progressive rendering
+  ✅ Lower perceived latency
+}

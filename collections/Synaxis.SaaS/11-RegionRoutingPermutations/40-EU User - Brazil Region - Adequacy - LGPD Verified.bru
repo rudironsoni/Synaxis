@@ -1,0 +1,56 @@
+meta {
+  name: EU User - Brazil Region - Adequacy - LGPD Verified
+  type: http
+  seq: 40
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: eu-west-1
+  X-Processed-Region: sa-east-1
+  X-Cross-Border: true
+  X-Legal-Basis: adequacy
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test EU-Brazil adequacy with LGPD"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-compliance-frameworks: contains LGPD
+  res.headers.x-compliance-frameworks: contains GDPR
+}
+
+tests {
+  test("Dual GDPR/LGPD compliance", function() {
+    const frameworks = res.headers['x-compliance-frameworks'];
+    expect(frameworks).to.include('GDPR');
+    expect(frameworks).to.include('LGPD');
+  });
+}
+
+docs {
+  # EU to Brazil with Dual Compliance
+  
+  Tests EU-Brazil adequacy with dual regulatory compliance.
+  Verifies both GDPR and LGPD requirements are met.
+}

@@ -1,0 +1,45 @@
+meta {
+  name: Export User Data (GDPR)
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/v1/users/me/data-export
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "format": "json",
+    "includeUsageData": true,
+    "includeInvoices": true
+  }
+}
+
+assert {
+  res.status: eq 202
+  res.body.exportId: isDefined
+}
+
+tests {
+  test("Export initiated", function() {
+    expect(res.body.status).to.equal('pending');
+  });
+}
+
+docs {
+  # Export User Data (GDPR)
+  
+  Same as GDPR compliance endpoint - see 08-Compliance folder for full details.
+}

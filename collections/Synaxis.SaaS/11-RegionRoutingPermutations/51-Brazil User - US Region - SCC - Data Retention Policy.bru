@@ -1,0 +1,56 @@
+meta {
+  name: Brazil User - US Region - SCC - Data Retention Policy
+  type: http
+  seq: 51
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: sa-east-1
+  X-Processed-Region: us-east-1
+  X-Cross-Border: true
+  X-Legal-Basis: SCC
+  X-Retention-Days: 90
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test with data retention policy"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-retention-policy: eq 90days
+  res.headers.x-deletion-date: isDefined
+}
+
+tests {
+  test("Retention policy applied", function() {
+    expect(res.headers['x-retention-policy']).to.equal('90days');
+    expect(res.headers['x-deletion-date']).to.be.defined;
+  });
+}
+
+docs {
+  # Brazil to US with Retention Policy
+  
+  Tests cross-border transfer with explicit data retention policy.
+  Verifies LGPD data minimization and retention compliance.
+}

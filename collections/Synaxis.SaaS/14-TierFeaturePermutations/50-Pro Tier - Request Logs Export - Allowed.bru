@@ -1,0 +1,70 @@
+meta {
+  name: Pro Tier - Request Logs Export - Allowed
+  type: http
+  seq: 50
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/logs/export
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{proOrgId}}
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "startDate": "2026-01-01",
+    "endDate": "2026-02-05",
+    "format": "json",
+    "destination": "email"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.exportJob: isDefined
+  res.body.exportJob.id: isDefined
+  res.body.exportJob.status: eq processing
+  res.body.exportJob.estimatedCompletion: isDefined
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("proOrgId"));
+}
+
+tests {
+  test("Pro tier can export request logs", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body.exportJob).to.be.an('object');
+  });
+  
+  test("Export job created", function() {
+    expect(res.body.exportJob.id).to.be.a('string');
+    expect(res.body.exportJob.status).to.equal("processing");
+  });
+}
+
+docs {
+  # Pro Tier - Request Logs Export - Allowed
+  
+  Tests that Pro tier can export request logs.
+  
+  ## Expected Behavior
+  - Returns 200 OK
+  - Export job initiated
+  - Email delivery scheduled
+  
+  ## Log Export Limits by Tier
+  - Free: Not available
+  - Pro: 30-day exports (email only)
+  - Enterprise: Full history exports (S3, email, API)
+}

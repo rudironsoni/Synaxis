@@ -1,0 +1,57 @@
+meta {
+  name: US User - Brazil Region - Adequacy - Research Purpose
+  type: http
+  seq: 69
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: us-east-1
+  X-Processed-Region: sa-east-1
+  X-Cross-Border: true
+  X-Legal-Basis: adequacy
+  X-Processing-Purpose: research
+  X-Research-Ethics-Approved: true
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test with research purpose"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-purpose-disclosed: eq research
+  res.headers.x-ethics-approval-ref: isDefined
+}
+
+tests {
+  test("Research purpose with ethics approval", function() {
+    expect(res.headers['x-purpose-disclosed']).to.equal('research');
+    expect(res.headers['x-ethics-approval-ref']).to.be.defined;
+  });
+}
+
+docs {
+  # US to Brazil for Research
+  
+  Tests cross-border transfer for research purposes.
+  Verifies ethics approval and research safeguards.
+}

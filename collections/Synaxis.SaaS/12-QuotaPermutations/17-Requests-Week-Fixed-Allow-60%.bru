@@ -1,0 +1,132 @@
+meta {
+  name: Requests-Week-Fixed-Allow-60%
+  type: http
+  seq: 17
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{orgId}}
+  X-Test-Quota-Type: requests
+  X-Test-Quota-Limit: 50000
+  X-Test-Quota-Window: week
+  X-Test-Quota-Window-Type: fixed
+  X-Test-Quota-Action: allow
+  X-Test-Simulate-Usage: 30000
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test request - 60% weekly quota"
+      }
+    ],
+    "max_tokens": 50
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-ratelimit-limit: eq 50000
+  res.headers.x-ratelimit-remaining: eq 20000
+  res.headers.x-ratelimit-window: eq week
+}
+
+tests {
+  test("Weekly quota at 60% succeeds", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Weekly rate limit headers", function() {
+    expect(res.headers['x-ratelimit-window']).to.equal('week');
+    expect(res.headers['x-ratelimit-limit']).to.equal('50000');
+    expect(parseInt(res.headers['x-ratelimit-remaining'])).to.equal(20000);
+  });
+  
+  test("Reset at week boundary", function() {
+    const reset = parseInt(res.headers['x-ratelimit-reset']);
+    const now = Math.floor(Date.now() / 1000);
+    const secondsUntilReset = reset - now;
+    
+    // Should be between 0 and 604800 seconds (7 days)
+    expect(secondsUntilReset).to.be.greaterThan(0);
+    expect(secondsUntilReset).to.be.lessThanOrEqual(604800);
+  });
+  
+  test("Week start day indicated", function() {
+    // Weeks typically start Sunday 00:00 or Monday 00:00
+    if (res.headers['x-ratelimit-week-start']) {
+      expect(res.headers['x-ratelimit-week-start']).to.match(/sunday|monday/i);
+    }
+  });
+  
+  test("Response successful", function() {
+    expect(res.body.id).to.be.a('string');
+  });
+}
+
+docs {
+  # Requests-Week-Fixed-Allow-60%
+  
+  Tests weekly quota enforcement at 60% usage.
+  
+  ## Test Configuration
+  - Metric Type: requests
+  - Time Granularity: week
+  - Window Type: fixed
+  - Action: allow
+  - Usage Level: 60% (30000/50000 requests)
+  
+  ## Weekly Windows
+  
+  ### Common Configurations
+  - Start: Sunday 00:00 UTC or Monday 00:00 UTC
+  - Duration: 7 days (604800 seconds)
+  - Reset: Next week boundary
+  
+  ### Use Cases
+  ✅ Free trials (7-day limit)
+  ✅ Subscription billing cycles
+  ✅ Development/staging environments
+  ✅ Partner integrations
+  ✅ Educational accounts
+  
+  ## Weekly vs Other Windows
+  
+  | Window | Best For | Reset Frequency |
+  |--------|----------|----------------|
+  | Minute | Real-time APIs | 60 seconds |
+  | Hour   | Interactive apps | 3600 seconds |
+  | Day    | Batch processing | 86400 seconds |
+  | Week   | Subscriptions | 604800 seconds |
+  | Month  | Enterprise SLA | ~2.6M seconds |
+  
+  ## Advantages
+  ✅ Aligns with billing cycles
+  ✅ High burst capacity
+  ✅ Suitable for irregular usage
+  ✅ Good for trial periods
+  
+  ## Disadvantages
+  ❌ Long wait if exhausted early
+  ❌ Usage patterns may be uneven
+  ❌ Hard to budget daily work
+  
+  ## Client Strategy
+  Monitor daily consumption to avoid running out mid-week:
+  - 50k/week = ~7142/day average
+  - If using >10k/day on Monday, may exhaust quota by Friday
+}

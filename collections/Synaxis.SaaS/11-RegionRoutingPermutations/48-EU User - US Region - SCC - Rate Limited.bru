@@ -1,0 +1,56 @@
+meta {
+  name: EU User - US Region - SCC - Rate Limited
+  type: http
+  seq: 48
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: eu-west-1
+  X-Processed-Region: us-east-1
+  X-Cross-Border: true
+  X-Legal-Basis: SCC
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test rate limiting with cross-border"
+      }
+    ]
+  }
+}
+
+assert {
+  res.headers.x-ratelimit-limit: isDefined
+  res.headers.x-ratelimit-remaining: isDefined
+  res.headers.x-cross-border-transfer: eq true
+}
+
+tests {
+  test("Rate limit headers with compliance", function() {
+    expect(res.headers['x-ratelimit-limit']).to.be.defined;
+    expect(res.headers['x-ratelimit-remaining']).to.be.defined;
+    expect(res.headers['x-cross-border-transfer']).to.equal('true');
+  });
+}
+
+docs {
+  # EU to US with Rate Limiting
+  
+  Tests cross-border transfer with rate limiting applied.
+  Verifies rate limit headers coexist with compliance headers.
+}

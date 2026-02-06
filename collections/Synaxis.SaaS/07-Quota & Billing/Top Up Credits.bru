@@ -1,0 +1,66 @@
+meta {
+  name: Top Up Credits
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/credits/top-up
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "amount": 100.00,
+    "currency": "USD",
+    "paymentMethodId": "pm_card_visa",
+    "autoTopUp": false
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.transactionId: isDefined
+  res.body.amount: eq 100.00
+  res.body.newBalance: isDefined
+  res.body.status: eq completed
+}
+
+tests {
+  test("Transaction successful", function() {
+    expect(res.body.status).to.equal('completed');
+  });
+  
+  test("Balance increased", function() {
+    expect(res.body.newBalance).to.be.greaterThan(res.body.previousBalance);
+  });
+}
+
+docs {
+  # Top Up Credits
+  
+  Adds credits to organization account.
+  
+  ## Request Body
+  - amount: USD amount (min $10, max $10,000)
+  - currency: USD/EUR/GBP
+  - paymentMethodId: Stripe payment method ID
+  - autoTopUp: Enable automatic top-up (optional)
+  
+  ## Auto Top-Up
+  If enabled:
+  - Triggers when balance < $10
+  - Adds specified amount automatically
+  - Email notification sent
+  - Can be disabled anytime
+}

@@ -1,0 +1,146 @@
+meta {
+  name: Export My Data (GDPR)
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/users/me/data-export
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "format": "json",
+    "includeUsageData": true,
+    "includeInvoices": true,
+    "includeAuditLogs": false
+  }
+}
+
+assert {
+  res.status: eq 202
+  res.body.exportId: isDefined
+  res.body.status: eq pending
+  res.body.estimatedCompletionTime: isDefined
+  res.headers.content-type: contains application/json
+}
+
+script:post-response {
+  if (res.body.exportId) {
+    bru.setEnvVar("dataExportId", res.body.exportId);
+  }
+}
+
+tests {
+  test("Export request accepted", function() {
+    expect(res.status).to.equal(202);
+  });
+  
+  test("Export ID is UUID", function() {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    expect(res.body.exportId).to.match(uuidRegex);
+  });
+  
+  test("Status is pending", function() {
+    expect(res.body.status).to.equal('pending');
+  });
+  
+  test("Completion time estimated", function() {
+    const completionTime = new Date(res.body.estimatedCompletionTime);
+    const now = new Date();
+    expect(completionTime.getTime()).to.be.greaterThan(now.getTime());
+  });
+  
+  test("Download URL will be provided", function() {
+    expect(res.body.message).to.include('email');
+  });
+}
+
+docs {
+  # Export My Data (GDPR)
+  
+  Requests complete export of user's personal data (GDPR Article 20).
+  
+  ## GDPR Compliance
+  This endpoint fulfills the "Right to Data Portability" under GDPR.
+  
+  ## Request Body
+  - `format`: Export format (json/csv/xml)
+  - `includeUsageData`: Include API usage logs
+  - `includeInvoices`: Include billing history
+  - `includeAuditLogs`: Include security audit logs
+  
+  ## Export Contents
+  Includes:
+  - User profile (name, email, settings)
+  - Organization memberships
+  - Team memberships
+  - API keys (metadata only, NOT the keys themselves)
+  - Usage statistics
+  - Invoices and payment history
+  - Audit logs (login history, IP addresses)
+  - Consent records
+  - Data processing agreements
+  
+  ## Process Flow
+  1. Request export (202 Accepted)
+  2. System generates export asynchronously (5-30 minutes)
+  3. Email sent with secure download link
+  4. Download link valid for 7 days
+  5. File automatically deleted after 7 days
+  
+  ## Response (202 Accepted)
+  ```json
+  {
+    "exportId": "uuid",
+    "status": "pending",
+    "requestedAt": "2026-02-05T10:00:00Z",
+    "estimatedCompletionTime": "2026-02-05T10:30:00Z",
+    "format": "json",
+    "message": "Export in progress. Download link will be sent to your email."
+  }
+  ```
+  
+  ## Check Status
+  ```
+  GET /api/v1/users/me/data-export/{exportId}
+  ```
+  
+  Returns:
+  - `pending`: Still processing
+  - `completed`: Ready for download
+  - `failed`: Error occurred
+  
+  ## Download
+  ```
+  GET /api/v1/users/me/data-export/{exportId}/download
+  ```
+  
+  Returns ZIP file with exported data.
+  
+  ## Security
+  - Export encrypted at rest (AES-256)
+  - Download link requires authentication
+  - Single-use download link (expires after use)
+  - Audit log entry created
+  
+  ## Rate Limiting
+  - Maximum 1 export per 24 hours per user
+  - Prevents abuse and DoS attacks
+  
+  ## Error Codes
+  - 401: Unauthorized
+  - 429: Too many export requests (wait 24h)
+  - 503: Export service temporarily unavailable
+}

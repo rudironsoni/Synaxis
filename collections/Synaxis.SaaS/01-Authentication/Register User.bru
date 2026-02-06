@@ -1,0 +1,99 @@
+meta {
+  name: Register User
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/auth/register
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "email": "{{email}}",
+    "password": "{{password}}",
+    "firstName": "Test",
+    "lastName": "User",
+    "acceptedTerms": true,
+    "acceptedPrivacyPolicy": true,
+    "marketingConsent": false,
+    "region": "{{region}}"
+  }
+}
+
+assert {
+  res.status: eq 201
+  res.body.id: isDefined
+  res.body.email: eq {{email}}
+  res.body.firstName: eq Test
+  res.body.lastName: eq User
+  res.body.emailVerified: eq false
+  res.body.region: eq {{region}}
+  res.body.createdAt: isDefined
+  res.headers.content-type: contains application/json
+}
+
+script:post-response {
+  if (res.body.id) {
+    bru.setEnvVar("userId", res.body.id);
+  }
+  
+  // Save verification token if returned
+  if (res.body.verificationToken) {
+    bru.setEnvVar("verificationToken", res.body.verificationToken);
+  }
+}
+
+tests {
+  test("User ID is UUID v4", function() {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    expect(res.body.id).to.match(uuidRegex);
+  });
+  
+  test("Email is lowercase", function() {
+    expect(res.body.email).to.equal(res.body.email.toLowerCase());
+  });
+  
+  test("Password not returned", function() {
+    expect(res.body.password).to.be.undefined;
+  });
+  
+  test("Created within last 5 seconds", function() {
+    const createdAt = new Date(res.body.createdAt);
+    const now = new Date();
+    const diff = now - createdAt;
+    expect(diff).to.be.lessThan(5000);
+  });
+}
+
+docs {
+  # Register User
+  
+  Creates a new user account with email/password authentication.
+  
+  ## Required Fields
+  - `email`: Valid email address (unique)
+  - `password`: Minimum 8 characters, 1 uppercase, 1 lowercase, 1 number, 1 special char
+  - `firstName`: User's first name
+  - `lastName`: User's last name
+  - `acceptedTerms`: Must be true
+  - `acceptedPrivacyPolicy`: Must be true
+  - `region`: AWS region for data residency
+  
+  ## Response
+  - Returns user object with ID
+  - Email verification required before login
+  - No sensitive data (password, tokens) in response
+  
+  ## Error Codes
+  - 400: Validation error (weak password, invalid email)
+  - 409: Email already registered
+  - 422: Missing required fields
+}

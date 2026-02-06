@@ -1,0 +1,46 @@
+meta {
+  name: Delete User (GDPR)
+  type: http
+  seq: 3
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/users/me
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "confirmation": "DELETE MY ACCOUNT",
+    "password": "{{password}}",
+    "reason": "No longer needed"
+  }
+}
+
+assert {
+  res.status: eq 202
+  res.body.deletionId: isDefined
+  res.body.scheduledDeletionDate: isDefined
+}
+
+tests {
+  test("Deletion scheduled", function() {
+    expect(res.body.status).to.equal('scheduled');
+  });
+}
+
+docs {
+  # Delete User (GDPR)
+  
+  Same as GDPR compliance endpoint - see 08-Compliance folder for full details.
+}

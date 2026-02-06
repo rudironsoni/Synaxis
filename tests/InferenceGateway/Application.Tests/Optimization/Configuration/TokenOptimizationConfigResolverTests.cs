@@ -301,7 +301,9 @@ public class TokenOptimizationConfigResolverTests : IDisposable
             UserId = userId3,
             SimilarityThreshold = 0.80
         };
-        _dbContext.UserTokenOptimizationConfigs.AddRange(userConfig1, userConfig2, userConfig3);
+        _dbContext.UserTokenOptimizationConfigs.Add(userConfig1);
+        _dbContext.UserTokenOptimizationConfigs.Add(userConfig2);
+        _dbContext.UserTokenOptimizationConfigs.Add(userConfig3);
         await _dbContext.SaveChangesAsync();
 
         // Act - Resolve concurrently

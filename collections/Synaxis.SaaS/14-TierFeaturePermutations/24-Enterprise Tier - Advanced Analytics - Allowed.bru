@@ -1,0 +1,94 @@
+meta {
+  name: Enterprise Tier - Advanced Analytics - Allowed
+  type: http
+  seq: 24
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/analytics/advanced
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Organization-Id: {{enterpriseOrgId}}
+  X-Region: {{region}}
+}
+
+params:query {
+  metrics: cost_analysis,token_efficiency,model_performance,user_behavior
+  groupBy: team,user,model,region
+  period: 1y
+  export: true
+}
+
+assert {
+  res.status: eq 200
+  res.body.analytics: isDefined
+  res.body.analytics.costAnalysis: isDefined
+  res.body.analytics.tokenEfficiency: isDefined
+  res.body.analytics.modelPerformance: isDefined
+  res.body.analytics.userBehavior: isDefined
+  res.body.period: eq 1y
+  res.body.exportUrl: isDefined
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("enterpriseOrgId"));
+}
+
+tests {
+  test("Enterprise tier can access advanced analytics", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body.analytics).to.be.an('object');
+  });
+  
+  test("Full year of data available", function() {
+    expect(res.body.period).to.equal("1y");
+  });
+  
+  test("All analytics categories included", function() {
+    expect(res.body.analytics.costAnalysis).to.be.an('object');
+    expect(res.body.analytics.tokenEfficiency).to.be.an('object');
+    expect(res.body.analytics.modelPerformance).to.be.an('object');
+    expect(res.body.analytics.userBehavior).to.be.an('object');
+  });
+  
+  test("Export functionality available", function() {
+    expect(res.body.exportUrl).to.be.a('string');
+  });
+  
+  test("Custom grouping supported", function() {
+    expect(res.body.groupBy).to.include.members(['team', 'user', 'model', 'region']);
+  });
+}
+
+docs {
+  # Enterprise Tier - Advanced Analytics - Allowed
+  
+  Tests that Enterprise tier organizations can access advanced analytics with full features.
+  
+  ## Expected Behavior
+  - Returns 200 OK
+  - Full analytics with all metrics
+  - 1-year historical data
+  - Export capability
+  - Custom dashboards
+  
+  ## Feature: Advanced Analytics
+  Available on: Pro, Enterprise
+  Data retention: Pro (30 days), Enterprise (1 year)
+  
+  Enterprise exclusive features:
+  - User behavior analytics
+  - Custom dashboards
+  - Data export (CSV, JSON)
+  - API access to raw metrics
+  - Real-time streaming
+  - Custom reporting
+  - Predictive cost modeling
+}

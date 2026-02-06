@@ -1,0 +1,72 @@
+meta {
+  name: Delete Organization
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "confirmation": "{{orgSlug}}",
+    "deleteData": true,
+    "reason": "Testing deletion"
+  }
+}
+
+assert {
+  res.status: eq 204
+}
+
+tests {
+  test("Deletion successful", function() {
+    expect(res.status).to.equal(204);
+  });
+  
+  test("No response body", function() {
+    expect(res.body).to.be.empty;
+  });
+}
+
+docs {
+  # Delete Organization
+  
+  Permanently deletes organization and all associated data (owner only).
+  
+  ## Request Body
+  - `confirmation`: Organization slug (must match exactly)
+  - `deleteData`: true to delete all data (required)
+  - `reason`: Deletion reason (optional)
+  
+  ## Cascade Deletion
+  Deletes:
+  - All teams
+  - All API keys (revoked immediately)
+  - All usage data
+  - All invoices
+  - All team memberships
+  
+  ## GDPR Compliance
+  - 30-day retention for billing compliance
+  - Personal data anonymized after 30 days
+  - Audit logs retained for 90 days
+  
+  ## Error Codes
+  - 401: Unauthorized
+  - 403: Forbidden (owner only)
+  - 404: Organization not found
+  - 422: Confirmation slug mismatch
+}

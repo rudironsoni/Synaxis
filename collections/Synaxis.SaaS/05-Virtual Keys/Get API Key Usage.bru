@@ -1,0 +1,55 @@
+meta {
+  name: Get API Key Usage
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/api-keys/{{apiKeyId}}/usage
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Region: {{region}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.apiKeyId: eq {{apiKeyId}}
+  res.body.usage: isDefined
+}
+
+tests {
+  test("Usage statistics present", function() {
+    expect(res.body.usage.totalRequests).to.be.a('number');
+    expect(res.body.usage.totalTokens).to.be.a('number');
+    expect(res.body.usage.totalCost).to.be.a('number');
+  });
+  
+  test("Breakdown by model", function() {
+    expect(res.body.usage.byModel).to.be.an('object');
+  });
+  
+  test("Time series data", function() {
+    expect(res.body.timeSeries).to.be.an('array');
+  });
+}
+
+docs {
+  # Get API Key Usage
+  
+  Retrieves detailed usage statistics for specific API key.
+  
+  ## Response Includes
+  - Total requests/tokens/cost
+  - Breakdown by model
+  - Breakdown by hour/day/week
+  - Error rate statistics
+  - Rate limit hit count
+  - Last used timestamp
+}

@@ -1,0 +1,50 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: synaxis-api
+  namespace: synaxis
+  labels:
+    app: synaxis-api
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "external"
+    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: "ip"
+    service.beta.kubernetes.io/aws-load-balancer-scheme: "internal"
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "http"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-path: "/health"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-interval: "30"
+spec:
+  type: ClusterIP
+  selector:
+    app: synaxis-api
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+    - name: metrics
+      port: 9090
+      targetPort: metrics
+      protocol: TCP
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: synaxis-api-headless
+  namespace: synaxis
+  labels:
+    app: synaxis-api
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector:
+    app: synaxis-api
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP

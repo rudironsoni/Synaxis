@@ -1,0 +1,117 @@
+meta {
+  name: 05-Right to Data Portability - JSON Export
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/v1/compliance/gdpr/portability
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+  X-Compliance-Framework: GDPR
+  X-Legal-Basis: consent
+}
+
+body:json {
+  {
+    "requestType": "portability",
+    "format": "json",
+    "structuredFormat": true,
+    "machineReadable": true,
+    "dataCategories": [
+      "profile",
+      "preferences",
+      "usage_history",
+      "content_created"
+    ],
+    "transmitTo": null
+  }
+}
+
+assert {
+  res.status: eq 202
+  res.body.portabilityId: isDefined
+  res.body.legalBasis: eq consent
+  res.body.auditTrailId: isDefined
+  res.body.format: eq json
+}
+
+script:post-response {
+  if (res.body.portabilityId) {
+    bru.setEnvVar("portabilityId", res.body.portabilityId);
+  }
+}
+
+tests {
+  test("Portability request accepted", function() {
+    expect(res.status).to.equal(202);
+  });
+  
+  test("Legal basis is consent or contract", function() {
+    expect(res.body.legalBasis).to.be.oneOf(['consent', 'contract']);
+  });
+  
+  test("Audit trail created", function() {
+    expect(res.body.auditTrailId).to.be.a('string');
+  });
+  
+  test("Format is machine-readable", function() {
+    expect(res.body.format).to.be.oneOf(['json', 'xml', 'csv']);
+  });
+  
+  test("Data is structured", function() {
+    expect(res.body.structuredFormat).to.equal(true);
+  });
+  
+  test("Commonly used format", function() {
+    expect(res.body.interoperable).to.equal(true);
+  });
+  
+  test("Direct transmission option available", function() {
+    expect(res.body.directTransmissionAvailable).to.equal(true);
+  });
+}
+
+docs {
+  # GDPR Right to Data Portability
+  
+  GDPR Article 20 - Right to data portability
+  
+  ## Scope
+  Applies only to:
+  - Data provided BY the data subject
+  - Processing based on consent OR contract
+  - Processing carried out by automated means
+  
+  ## Data Format Requirements
+  - Structured format
+  - Commonly used format
+  - Machine-readable format
+  - Interoperable format
+  
+  ## Direct Transmission
+  Subject can request direct transmission to another controller 
+  where technically feasible.
+  
+  ## Does NOT Apply To
+  - Processing for public interest/official authority
+  - Data inferred/derived by controller
+  - Manual processing
+  
+  ## Verification
+  ✓ Legal basis is consent/contract
+  ✓ Audit trail created
+  ✓ Format is machine-readable
+  ✓ Data is structured
+  ✓ Format is commonly used
+  ✓ Direct transmission supported
+}

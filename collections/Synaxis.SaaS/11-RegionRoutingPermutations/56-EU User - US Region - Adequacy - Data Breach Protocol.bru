@@ -1,0 +1,56 @@
+meta {
+  name: EU User - US Region - Adequacy - Data Breach Protocol
+  type: http
+  seq: 56
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: eu-west-1
+  X-Processed-Region: us-east-1
+  X-Cross-Border: true
+  X-Legal-Basis: adequacy
+  X-Breach-Notification-72h: enabled
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test with breach protocol configured"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-breach-protocol: eq GDPR-72h
+  res.headers.x-incident-response: eq enabled
+}
+
+tests {
+  test("Breach notification protocol active", function() {
+    expect(res.headers['x-breach-protocol']).to.equal('GDPR-72h');
+    expect(res.headers['x-incident-response']).to.equal('enabled');
+  });
+}
+
+docs {
+  # EU to US with Breach Protocol
+  
+  Tests cross-border transfer with data breach notification protocol.
+  Verifies GDPR Article 33/34 breach response readiness.
+}

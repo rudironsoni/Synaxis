@@ -1,0 +1,57 @@
+meta {
+  name: EU User - US Region - Cross Border - Invalid Basis
+  type: http
+  seq: 32
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: eu-west-1
+  X-Processed-Region: us-east-1
+  X-Cross-Border: true
+  X-Legal-Basis: invalid_basis
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test with invalid legal basis value"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("Invalid legal basis value rejected", function() {
+    expect(res.status).to.equal(400);
+    expect(res.body.error).to.include('invalid legal basis');
+  });
+}
+
+docs {
+  # EU User - US Region - Invalid Legal Basis Value
+  
+  Tests error handling for invalid legal basis values.
+  Only SCC, consent, adequacy, and contract are valid.
+  
+  ## Expected Behavior
+  - Request rejected with 400
+  - Error indicates invalid legal basis value
+}

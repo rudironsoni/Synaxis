@@ -1,0 +1,57 @@
+meta {
+  name: Brazil User - US Region - Contract - Emergency Processing
+  type: http
+  seq: 70
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: sa-east-1
+  X-Processed-Region: us-east-1
+  X-Cross-Border: true
+  X-Legal-Basis: contract
+  X-Emergency-Processing: true
+  X-Vital-Interest: user-safety
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Emergency safety-related processing"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-emergency-justified: eq true
+  res.headers.x-vital-interest: eq user-safety
+}
+
+tests {
+  test("Emergency processing documented", function() {
+    expect(res.headers['x-emergency-justified']).to.equal('true');
+    expect(res.headers['x-vital-interest']).to.equal('user-safety');
+  });
+}
+
+docs {
+  # Brazil to US Emergency Processing
+  
+  Tests cross-border transfer for emergency/vital interest purposes.
+  Verifies LGPD vital interest exception.
+}

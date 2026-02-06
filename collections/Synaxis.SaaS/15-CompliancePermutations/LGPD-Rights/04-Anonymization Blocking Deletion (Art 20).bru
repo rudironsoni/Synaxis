@@ -1,0 +1,131 @@
+meta {
+  name: 04-Anonymization Blocking Deletion (Art 20)
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/v1/compliance/lgpd/anonymization-blocking-deletion
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: sa-east-1
+  X-Compliance-Framework: LGPD
+  X-Legal-Basis: consent
+}
+
+body:json {
+  {
+    "requestType": "deletion",
+    "action": "delete",
+    "reason": "End of processing purpose",
+    "dataCategories": [
+      "profile",
+      "usage",
+      "preferences"
+    ]
+  }
+}
+
+assert {
+  res.status: eq 202
+  res.body.requestId: isDefined
+  res.body.dataLocation: contains brazil
+  res.body.auditTrailId: isDefined
+}
+
+tests {
+  test("Anonymization/blocking/deletion request accepted", function() {
+    expect(res.status).to.equal(202);
+  });
+  
+  test("Request ID generated", function() {
+    expect(res.body.requestId).to.be.a('string');
+  });
+  
+  test("Data location in Brazil", function() {
+    expect(res.body.dataLocation).to.match(/brazil|sa-east/i);
+  });
+  
+  test("Audit trail created", function() {
+    expect(res.body.auditTrailId).to.be.a('string');
+  });
+  
+  test("Action type valid", function() {
+    expect(res.body.action).to.be.oneOf(['anonymize', 'block', 'delete']);
+  });
+  
+  test("Unnecessary data to be removed", function() {
+    expect(res.body.unnecessaryDataRemoval).to.equal(true);
+  });
+  
+  test("Excessive data to be removed", function() {
+    expect(res.body.excessiveDataRemoval).to.equal(true);
+  });
+  
+  test("Non-compliant data to be removed", function() {
+    expect(res.body.nonCompliantDataRemoval).to.equal(true);
+  });
+}
+
+docs {
+  # LGPD Anonymization, Blocking, or Deletion (Article 20)
+  
+  Article 20 - Right to anonymization, blocking, or deletion
+  
+  ## Right
+  Data subject has right to:
+  - Anonymize data
+  - Block data
+  - Delete unnecessary, excessive, or non-compliant data
+  
+  ## When Data is:
+  1. Unnecessary for purpose
+  2. Excessive for purpose
+  3. Processed in non-compliance with LGPD
+  
+  ## Anonymization (Art. 5, XI)
+  Use of technical means to make data no longer attributable to an individual.
+  Anonymized data = NOT personal data (LGPD does not apply).
+  
+  ## Blocking (Art. 5, VI)
+  Suspension of processing while preserving data.
+  Use cases:
+  - Disputing accuracy
+  - Objection to processing
+  - Legal/regulatory requirement for preservation
+  
+  ## Deletion (Art. 5, X)
+  Elimination of data from database.
+  
+  ## Exceptions
+  - Legal/regulatory obligation to retain
+  - Use by public administration
+  - Audit purposes
+  - Legitimate interest (with safeguards)
+  - Consent for research
+  - Credit protection
+  
+  ## Communication
+  Must communicate action to entities with whom data shared.
+  
+  ## Timeline
+  - 15 days to respond
+  - If cannot comply: explain reasons
+  
+  ## Verification
+  ✓ Request accepted
+  ✓ Data location disclosed
+  ✓ Audit trail created
+  ✓ Action type valid
+  ✓ Unnecessary data removal
+  ✓ Excessive data removal
+  ✓ Non-compliant data removal
+}

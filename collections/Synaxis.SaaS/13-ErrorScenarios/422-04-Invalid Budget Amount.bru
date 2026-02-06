@@ -1,0 +1,84 @@
+meta {
+  name: 422-04-Invalid Budget Amount
+  type: http
+  seq: 36
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/budgets
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "amount": -100,
+    "currency": "USD",
+    "period": "monthly"
+  }
+}
+
+assert {
+  res.status: eq 422
+  res.body.error: isDefined
+  res.body.error.code: eq INVALID_BUDGET_AMOUNT
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 422", function() {
+    expect(res.status).to.equal(422);
+  });
+  
+  test("Error code is INVALID_BUDGET_AMOUNT", function() {
+    expect(res.body.error.code).to.equal("INVALID_BUDGET_AMOUNT");
+  });
+  
+  test("Error message mentions invalid amount", function() {
+    expect(res.body.error.message).to.match(/budget|amount|invalid|negative/i);
+  });
+  
+  test("Error details include validation rules", function() {
+    expect(res.body.error.details).to.have.property('constraint');
+    expect(res.body.error.details.constraint).to.match(/positive|minimum/i);
+  });
+  
+  test("Error details include min/max bounds", function() {
+    expect(res.body.error.details).to.have.property('minimum');
+  });
+  
+  test("Error includes provided value", function() {
+    expect(res.body.error.details).to.have.property('providedValue');
+    expect(res.body.error.details.providedValue).to.equal(-100);
+  });
+}
+
+docs {
+  # 422 Unprocessable Entity - Invalid Budget Amount
+  
+  Tests budget amount business rule validation.
+  
+  ## Trigger Condition
+  - POST to /budgets with negative amount
+  - Amount: -100 (violates positive constraint)
+  
+  ## Expected Response
+  - Status: 422
+  - Error code: INVALID_BUDGET_AMOUNT
+  - Constraint details and valid range
+  
+  ## Validation
+  - Business rule enforcement (positive amounts)
+  - Clear constraint messaging
+  - Valid range guidance
+}

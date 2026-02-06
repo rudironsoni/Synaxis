@@ -1,0 +1,82 @@
+meta {
+  name: Enterprise Tier - Private Endpoints - Allowed
+  type: http
+  seq: 41
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/networking/private-endpoint
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{enterpriseOrgId}}
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "provider": "aws",
+    "region": "us-east-1",
+    "vpcId": "vpc-abc123",
+    "subnetIds": ["subnet-123", "subnet-456"],
+    "serviceEndpoint": "synaxis-api"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.endpoint: isDefined
+  res.body.endpoint.id: isDefined
+  res.body.endpoint.status: eq provisioning
+  res.body.endpoint.serviceEndpoint: isDefined
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("enterpriseOrgId"));
+}
+
+tests {
+  test("Enterprise tier can create private endpoints", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body.endpoint).to.be.an('object');
+  });
+  
+  test("Private endpoint provisioning started", function() {
+    expect(res.body.endpoint.status).to.equal("provisioning");
+  });
+  
+  test("Service endpoint provided", function() {
+    expect(res.body.endpoint.serviceEndpoint).to.be.a('string');
+  });
+}
+
+docs {
+  # Enterprise Tier - Private Endpoints - Allowed
+  
+  Tests that Enterprise tier can create VPC private endpoints.
+  
+  ## Expected Behavior
+  - Returns 200 OK
+  - Private endpoint provisioning initiated
+  
+  ## Feature: Private Endpoints
+  Available on: Enterprise only
+  
+  Supported providers:
+  - AWS PrivateLink
+  - Azure Private Link
+  - GCP Private Service Connect
+  
+  Benefits:
+  - Private network connectivity
+  - No public internet exposure
+  - Reduced latency
+  - Enhanced security
+}

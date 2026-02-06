@@ -1,0 +1,50 @@
+meta {
+  name: List Teams
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/teams?page=1&limit=20
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Region: {{region}}
+}
+
+query {
+  page: 1
+  limit: 20
+}
+
+assert {
+  res.status: eq 200
+  res.body.data: isDefined
+  res.body.pagination: isDefined
+}
+
+tests {
+  test("Teams array returned", function() {
+    expect(res.body.data).to.be.an('array');
+  });
+  
+  test("Each team has required fields", function() {
+    res.body.data.forEach(team => {
+      expect(team).to.have.property('id');
+      expect(team).to.have.property('name');
+      expect(team).to.have.property('slug');
+    });
+  });
+}
+
+docs {
+  # List Teams
+  
+  Lists all teams in organization.
+}

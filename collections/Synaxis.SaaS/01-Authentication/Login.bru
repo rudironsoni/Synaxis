@@ -1,0 +1,121 @@
+meta {
+  name: Login
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/auth/login
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "email": "{{email}}",
+    "password": "{{password}}",
+    "deviceName": "Bruno API Client",
+    "deviceFingerprint": "bruno-test-device-001"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.accessToken: isDefined
+  res.body.refreshToken: isDefined
+  res.body.expiresIn: isDefined
+  res.body.tokenType: eq Bearer
+  res.body.user: isDefined
+  res.body.user.id: isDefined
+  res.body.user.email: eq {{email}}
+  res.headers.content-type: contains application/json
+}
+
+script:post-response {
+  // Save tokens for subsequent requests
+  if (res.body.accessToken) {
+    bru.setEnvVar("authToken", res.body.accessToken);
+  }
+  
+  if (res.body.refreshToken) {
+    bru.setEnvVar("refreshToken", res.body.refreshToken);
+  }
+  
+  if (res.body.user && res.body.user.id) {
+    bru.setEnvVar("userId", res.body.user.id);
+  }
+  
+  // Save token expiry time
+  if (res.body.expiresIn) {
+    const expiryTime = Date.now() + (res.body.expiresIn * 1000);
+    bru.setEnvVar("tokenExpiry", expiryTime.toString());
+  }
+}
+
+tests {
+  test("Access token is JWT", function() {
+    const jwtRegex = /^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/;
+    expect(res.body.accessToken).to.match(jwtRegex);
+  });
+  
+  test("Refresh token is JWT", function() {
+    const jwtRegex = /^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/;
+    expect(res.body.refreshToken).to.match(jwtRegex);
+  });
+  
+  test("ExpiresIn is positive integer", function() {
+    expect(res.body.expiresIn).to.be.a('number');
+    expect(res.body.expiresIn).to.be.greaterThan(0);
+  });
+  
+  test("Token type is Bearer", function() {
+    expect(res.body.tokenType).to.equal("Bearer");
+  });
+  
+  test("User object contains required fields", function() {
+    expect(res.body.user).to.have.property('id');
+    expect(res.body.user).to.have.property('email');
+    expect(res.body.user).to.have.property('firstName');
+    expect(res.body.user).to.have.property('lastName');
+  });
+  
+  test("Password not in response", function() {
+    expect(res.body.user.password).to.be.undefined;
+  });
+}
+
+docs {
+  # Login
+  
+  Authenticates user with email/password and returns JWT tokens.
+  
+  ## Request Body
+  - `email`: Registered email address
+  - `password`: User password
+  - `deviceName`: (Optional) Device identifier
+  - `deviceFingerprint`: (Optional) Unique device ID for tracking
+  
+  ## Response
+  - `accessToken`: Short-lived JWT for API authentication (15min)
+  - `refreshToken`: Long-lived JWT for token renewal (30 days)
+  - `expiresIn`: Access token lifetime in seconds
+  - `tokenType`: Always "Bearer"
+  - `user`: User profile object
+  
+  ## Security
+  - Rate limited: 5 attempts per 15 minutes per IP
+  - Failed attempts logged for security monitoring
+  - MFA required if enabled on account
+  
+  ## Error Codes
+  - 400: Invalid credentials
+  - 401: Email not verified
+  - 403: Account locked/suspended
+  - 423: MFA required (use Login with MFA endpoint)
+  - 429: Too many login attempts
+}

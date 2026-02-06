@@ -1,0 +1,87 @@
+meta {
+  name: 401-04-Revoked API Key
+  type: http
+  seq: 14
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+  X-Virtual-Key: vk_revoked_test_key_12345
+}
+
+body:json {
+  {
+    "model": "gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hello"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 401
+  res.body.error: isDefined
+  res.body.error.code: eq API_KEY_REVOKED
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 401", function() {
+    expect(res.status).to.equal(401);
+  });
+  
+  test("Error code is API_KEY_REVOKED", function() {
+    expect(res.body.error.code).to.equal("API_KEY_REVOKED");
+  });
+  
+  test("Error message mentions revocation", function() {
+    expect(res.body.error.message).to.match(/revoked|disabled|invalid/i);
+  });
+  
+  test("Error details include revocation time", function() {
+    expect(res.body.error.details).to.have.property('revokedAt');
+  });
+  
+  test("Error details include reason", function() {
+    expect(res.body.error.details).to.have.property('reason');
+  });
+  
+  test("No key value leaked", function() {
+    expect(JSON.stringify(res.body)).to.not.include('vk_revoked_test_key_12345');
+  });
+}
+
+docs {
+  # 401 Unauthorized - Revoked API Key
+  
+  Tests revoked virtual key detection.
+  
+  ## Trigger Condition
+  - POST with X-Virtual-Key that has been revoked
+  - Key exists but status is revoked
+  
+  ## Expected Response
+  - Status: 401
+  - Error code: API_KEY_REVOKED
+  - Revocation timestamp and reason
+  
+  ## Validation
+  - Revocation check active
+  - Revoked keys immediately rejected
+  - No key value leakage in errors
+}

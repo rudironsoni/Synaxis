@@ -1,0 +1,76 @@
+meta {
+  name: 403-03-Region Not Allowed
+  type: http
+  seq: 21
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/data
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: eu-west
+}
+
+assert {
+  res.status: eq 403
+  res.body.error: isDefined
+  res.body.error.code: eq REGION_NOT_ALLOWED
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 403", function() {
+    expect(res.status).to.equal(403);
+  });
+  
+  test("Error code is REGION_NOT_ALLOWED", function() {
+    expect(res.body.error.code).to.equal("REGION_NOT_ALLOWED");
+  });
+  
+  test("Error message mentions region restriction", function() {
+    expect(res.body.error.message).to.match(/region|restricted|not allowed/i);
+  });
+  
+  test("Error details include requested region", function() {
+    expect(res.body.error.details).to.have.property('requestedRegion');
+    expect(res.body.error.details.requestedRegion).to.equal('eu-west');
+  });
+  
+  test("Error details include allowed regions", function() {
+    expect(res.body.error.details).to.have.property('allowedRegions');
+    expect(res.body.error.details.allowedRegions).to.be.an('array');
+  });
+  
+  test("Error explains restriction reason", function() {
+    expect(res.body.error.details).to.have.property('reason');
+  });
+}
+
+docs {
+  # 403 Forbidden - Region Not Allowed
+  
+  Tests regional access restrictions.
+  
+  ## Trigger Condition
+  - GET from region not in organization's allowed list
+  - Organization restricted to US regions only
+  
+  ## Expected Response
+  - Status: 403
+  - Error code: REGION_NOT_ALLOWED
+  - Allowed regions list and restriction reason
+  
+  ## Validation
+  - Regional restrictions enforced
+  - Data residency compliance
+  - Clear allowed regions list
+}

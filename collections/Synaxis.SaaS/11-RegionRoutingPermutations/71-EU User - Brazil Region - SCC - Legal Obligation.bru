@@ -1,0 +1,57 @@
+meta {
+  name: EU User - Brazil Region - SCC - Legal Obligation
+  type: http
+  seq: 71
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: eu-west-1
+  X-Processed-Region: sa-east-1
+  X-Cross-Border: true
+  X-Legal-Basis: SCC
+  X-Legal-Obligation: tax-compliance
+  X-Authority-Request: BR-Tax-Auth
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Processing for legal compliance"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-legal-obligation-documented: eq true
+  res.headers.x-authority-reference: isDefined
+}
+
+tests {
+  test("Legal obligation processing justified", function() {
+    expect(res.headers['x-legal-obligation-documented']).to.equal('true');
+    expect(res.headers['x-authority-reference']).to.be.defined;
+  });
+}
+
+docs {
+  # EU to Brazil for Legal Obligation
+  
+  Tests cross-border transfer necessary for legal compliance.
+  Verifies GDPR Article 6(1)(c) legal obligation basis.
+}

@@ -1,0 +1,105 @@
+meta {
+  name: Burst-Protection-Rate-Limit
+  type: http
+  seq: 28
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{orgId}}
+  X-Test-Quota-Type: requests
+  X-Test-Quota-Limit: 1000
+  X-Test-Quota-Window: hour
+  X-Test-Burst-Limit: 50
+  X-Test-Burst-Window: minute
+  X-Test-Simulate-Burst-Usage: 50
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test burst rate limiting"
+      }
+    ],
+    "max_tokens": 10
+  }
+}
+
+assert {
+  res.status: eq 429
+  res.headers.x-ratelimit-limit: eq 1000
+  res.headers.x-burst-limit: eq 50
+  res.body.error.code: eq burst_rate_exceeded
+}
+
+tests {
+  test("Burst limit enforced", function() {
+    expect(res.status).to.equal(429);
+  });
+  
+  test("Overall hourly quota OK", function() {
+    // Only 50/1000 used in hour (5%)
+    const hourlyRemaining = parseInt(res.headers['x-ratelimit-remaining']);
+    expect(hourlyRemaining).to.equal(950);
+  });
+  
+  test("Burst limit exhausted", function() {
+    // 50/50 used in minute (100%)
+    expect(res.headers['x-burst-limit']).to.equal('50');
+    expect(parseInt(res.headers['x-burst-remaining'])).to.equal(0);
+  });
+  
+  test("Error indicates burst protection", function() {
+    expect(res.body.error.code).to.equal('burst_rate_exceeded');
+    expect(res.body.error.message).to.match(/burst|too fast|slow down/i);
+  });
+  
+  test("Short retry-after for burst", function() {
+    const retryAfter = parseInt(res.headers['retry-after']);
+    expect(retryAfter).to.be.lessThanOrEqual(60);
+  });
+}
+
+docs {
+  # Burst-Protection-Rate-Limit
+  
+  Tests burst rate limiting (nested quotas).
+  
+  ## Burst Protection
+  
+  Many systems use nested rate limits:
+  - Hourly limit: 1000 requests
+  - Burst limit: 50 requests per minute
+  
+  This prevents:
+  - Sudden traffic spikes
+  - Aggressive retry loops
+  - Accidental infinite loops
+  - Abusive behavior
+  
+  ## Example
+  ```
+  User wants to make 200 requests
+  - Can make 50 req/min
+  - Takes 4 minutes minimum
+  - Prevents 200 req in 1 second
+  ```
+  
+  ## Both Limits Enforced
+  Request must satisfy:
+  - ✅ Within hourly quota (1000)
+  - ✅ Within burst quota (50/min)
+}

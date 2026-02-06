@@ -1,0 +1,44 @@
+meta {
+  name: Super Admin - Cross-Border Transfers
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/compliance/cross-border-transfers
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Region: {{region}}
+  X-Admin-Action: view-cross-border-transfers
+}
+
+assert {
+  res.status: eq 200
+  res.body.transfers: isDefined
+  res.body.summary: isDefined
+}
+
+tests {
+  test("Transfer records returned", function() {
+    expect(res.body.transfers).to.be.an('array');
+  });
+  
+  test("Compliance summary present", function() {
+    expect(res.body.summary.totalTransfers).to.be.a('number');
+    expect(res.body.summary.consentedTransfers).to.be.a('number');
+    expect(res.body.summary.complianceRate).to.be.a('number');
+  });
+}
+
+docs {
+  # Super Admin - Cross-Border Transfers
+  
+  Monitors cross-border data transfers for GDPR compliance.
+}

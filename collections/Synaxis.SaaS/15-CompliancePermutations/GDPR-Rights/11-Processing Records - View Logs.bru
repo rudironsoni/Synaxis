@@ -1,0 +1,113 @@
+meta {
+  name: 11-Processing Records - View Logs
+  type: http
+  seq: 11
+}
+
+get {
+  url: {{baseUrl}}/api/v1/compliance/gdpr/processing-records
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Region: {{region}}
+  X-Compliance-Framework: GDPR
+  X-Legal-Basis: legal_obligation
+}
+
+assert {
+  res.status: eq 200
+  res.body.records: isArray
+  res.body.auditTrailId: isDefined
+}
+
+tests {
+  test("Processing records available", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Records list provided", function() {
+    expect(res.body.records).to.be.an('array');
+  });
+  
+  test("Each record contains required info", function() {
+    if (res.body.records.length > 0) {
+      const record = res.body.records[0];
+      expect(record.purpose).to.be.a('string');
+      expect(record.categories).to.be.an('array');
+      expect(record.recipients).to.be.an('array');
+      expect(record.retentionPeriod).to.be.a('string');
+      expect(record.technicalMeasures).to.be.an('array');
+    }
+  });
+  
+  test("Legal basis documented", function() {
+    if (res.body.records.length > 0) {
+      const record = res.body.records[0];
+      expect(record.legalBasis).to.be.oneOf([
+        'consent',
+        'contract',
+        'legal_obligation',
+        'vital_interests',
+        'public_interest',
+        'legitimate_interest'
+      ]);
+    }
+  });
+  
+  test("Data transfers documented", function() {
+    if (res.body.records.length > 0) {
+      const record = res.body.records[0];
+      if (record.internationalTransfers) {
+        expect(record.internationalTransfers).to.be.an('array');
+      }
+    }
+  });
+}
+
+docs {
+  # GDPR Processing Records
+  
+  GDPR Article 30 - Records of processing activities
+  
+  ## Controller Obligations
+  Must maintain records of:
+  1. Name and contact details (controller, representative, DPO)
+  2. Purposes of processing
+  3. Categories of data subjects
+  4. Categories of personal data
+  5. Categories of recipients (including third countries/international orgs)
+  6. International transfers (documentation of safeguards)
+  7. Retention periods (where possible)
+  8. Technical and organizational security measures (general description)
+  
+  ## Processor Obligations
+  Must maintain records of:
+  1. Name and contact details (processor, controller, representative, DPO)
+  2. Categories of processing
+  3. International transfers (documentation of safeguards)
+  4. Technical and organizational security measures (general description)
+  
+  ## Exception
+  Enterprise/organization with < 250 employees UNLESS:
+  - Processing likely to result in risk to rights/freedoms
+  - Processing not occasional
+  - Processing includes special categories or criminal data
+  
+  ## Availability
+  Records available to supervisory authority on request.
+  
+  ## Verification
+  ✓ Records available
+  ✓ Purpose documented
+  ✓ Categories listed
+  ✓ Recipients disclosed
+  ✓ Retention period specified
+  ✓ Legal basis documented
+  ✓ Technical measures described
+}

@@ -1,0 +1,84 @@
+meta {
+  name: 503-01-Regional Outage
+  type: http
+  seq: 51
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: us-west
+  X-Simulate-Error: regional-outage
+}
+
+assert {
+  res.status: eq 503
+  res.body.error: isDefined
+  res.body.error.code: eq SERVICE_UNAVAILABLE
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+  res.headers.retry-after: isDefined
+}
+
+tests {
+  test("Status code is 503", function() {
+    expect(res.status).to.equal(503);
+  });
+  
+  test("Error code is SERVICE_UNAVAILABLE", function() {
+    expect(res.body.error.code).to.equal("SERVICE_UNAVAILABLE");
+  });
+  
+  test("Error message mentions unavailability", function() {
+    expect(res.body.error.message).to.match(/unavailable|temporarily down|outage/i);
+  });
+  
+  test("Error details include affected region", function() {
+    expect(res.body.error.details).to.have.property('affectedRegion');
+    expect(res.body.error.details.affectedRegion).to.equal('us-west');
+  });
+  
+  test("Error details include alternative regions", function() {
+    expect(res.body.error.details).to.have.property('alternativeRegions');
+    expect(res.body.error.details.alternativeRegions).to.be.an('array');
+  });
+  
+  test("Retry-After header present", function() {
+    expect(res.headers['retry-after']).to.be.defined;
+  });
+  
+  test("Error includes status page link", function() {
+    expect(res.body.error.details).to.have.property('statusPageUrl');
+  });
+}
+
+docs {
+  # 503 Service Unavailable - Regional Outage
+  
+  Tests handling of regional service outages.
+  
+  ## Trigger Condition
+  - Request to region experiencing outage
+  - Simulated with X-Simulate-Error header
+  
+  ## Expected Response
+  - Status: 503
+  - Error code: SERVICE_UNAVAILABLE
+  - Affected region, alternatives, status page
+  - Retry-After header
+  
+  ## Validation
+  - Regional outage detection
+  - Alternative region suggestions
+  - Status page communication
+  - Retry guidance provided
+}

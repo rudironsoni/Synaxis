@@ -1,0 +1,52 @@
+meta {
+  name: View Privacy Settings
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/users/me/privacy
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Region: {{region}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.userId: eq {{userId}}
+  res.body.dataProcessingConsent: isDefined
+  res.body.marketingConsent: isDefined
+  res.body.crossBorderConsent: isDefined
+}
+
+tests {
+  test("All consent fields present", function() {
+    expect(res.body).to.have.property('dataProcessingConsent');
+    expect(res.body).to.have.property('marketingConsent');
+    expect(res.body).to.have.property('analyticsConsent');
+    expect(res.body).to.have.property('crossBorderConsent');
+  });
+  
+  test("Consent audit trail", function() {
+    expect(res.body.consentHistory).to.be.an('array');
+  });
+}
+
+docs {
+  # View Privacy Settings
+  
+  Retrieves user's privacy and consent settings.
+  
+  ## GDPR Compliance
+  - Shows all consent types
+  - Includes consent history
+  - Shows data retention periods
+  - Lists data processing agreements
+}

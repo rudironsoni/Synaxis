@@ -1,0 +1,91 @@
+meta {
+  name: 429-05-Concurrent Limit Exceeded
+  type: http
+  seq: 45
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+  X-Virtual-Key: {{virtualKey}}
+}
+
+body:json {
+  {
+    "model": "gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hello"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 429
+  res.body.error: isDefined
+  res.body.error.code: eq CONCURRENT_LIMIT_EXCEEDED
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+  res.headers.retry-after: isDefined
+}
+
+tests {
+  test("Status code is 429", function() {
+    expect(res.status).to.equal(429);
+  });
+  
+  test("Error code is CONCURRENT_LIMIT_EXCEEDED", function() {
+    expect(res.body.error.code).to.equal("CONCURRENT_LIMIT_EXCEEDED");
+  });
+  
+  test("Error message mentions concurrent requests", function() {
+    expect(res.body.error.message).to.match(/concurrent|parallel|simultaneous/i);
+  });
+  
+  test("Error details include concurrency limit", function() {
+    expect(res.body.error.details).to.have.property('limit');
+    expect(res.body.error.details).to.have.property('current');
+  });
+  
+  test("Error details include active request count", function() {
+    expect(res.body.error.details).to.have.property('activeRequests');
+  });
+  
+  test("Retry-After suggests short wait", function() {
+    expect(res.headers['retry-after']).to.be.defined;
+    const retryAfter = parseInt(res.headers['retry-after']);
+    expect(retryAfter).to.be.lessThan(60); // Should be seconds, not minutes
+  });
+}
+
+docs {
+  # 429 Too Many Requests - Concurrent Limit Exceeded
+  
+  Tests concurrent request limiting.
+  
+  ## Trigger Condition
+  - POST to /inference while at concurrent request limit
+  - Too many parallel requests in flight
+  
+  ## Expected Response
+  - Status: 429
+  - Error code: CONCURRENT_LIMIT_EXCEEDED
+  - Concurrency limit, active count, retry guidance
+  
+  ## Validation
+  - Concurrent request limiting enforced
+  - Real-time active request tracking
+  - Short retry window guidance
+}

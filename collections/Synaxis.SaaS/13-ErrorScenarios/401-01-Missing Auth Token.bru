@@ -1,0 +1,68 @@
+meta {
+  name: 401-01-Missing Auth Token
+  type: http
+  seq: 11
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+assert {
+  res.status: eq 401
+  res.body.error: isDefined
+  res.body.error.code: eq MISSING_AUTH_TOKEN
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 401", function() {
+    expect(res.status).to.equal(401);
+  });
+  
+  test("Error code is MISSING_AUTH_TOKEN", function() {
+    expect(res.body.error.code).to.equal("MISSING_AUTH_TOKEN");
+  });
+  
+  test("Error message mentions authentication", function() {
+    expect(res.body.error.message).to.match(/auth|token|missing/i);
+  });
+  
+  test("WWW-Authenticate header present", function() {
+    expect(res.headers['www-authenticate']).to.be.defined;
+    expect(res.headers['www-authenticate']).to.match(/Bearer/i);
+  });
+  
+  test("No sensitive data leaked", function() {
+    expect(res.body).to.not.have.property('data');
+    expect(res.body).to.not.have.property('organizations');
+  });
+}
+
+docs {
+  # 401 Unauthorized - Missing Auth Token
+  
+  Tests authentication requirement enforcement.
+  
+  ## Trigger Condition
+  - GET /organizations without Authorization header
+  - No bearer token provided
+  
+  ## Expected Response
+  - Status: 401
+  - Error code: MISSING_AUTH_TOKEN
+  - WWW-Authenticate header with Bearer realm
+  
+  ## Validation
+  - Authentication middleware active
+  - Proper WWW-Authenticate header
+  - No data leakage to unauthenticated requests
+}

@@ -1,0 +1,110 @@
+meta {
+  name: Setup MFA
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/v1/auth/mfa/setup
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "method": "totp"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.secret: isDefined
+  res.body.qrCode: isDefined
+  res.body.backupCodes: isDefined
+  res.body.method: eq totp
+  res.headers.content-type: contains application/json
+}
+
+script:post-response {
+  // Save MFA secret for verification
+  if (res.body.secret) {
+    bru.setEnvVar("mfaSecret", res.body.secret);
+  }
+  
+  // Save backup codes
+  if (res.body.backupCodes && res.body.backupCodes.length > 0) {
+    bru.setEnvVar("mfaBackupCode", res.body.backupCodes[0]);
+  }
+}
+
+tests {
+  test("Secret is base32 encoded", function() {
+    const base32Regex = /^[A-Z2-7]+=*$/;
+    expect(res.body.secret).to.match(base32Regex);
+  });
+  
+  test("QR code is data URL", function() {
+    expect(res.body.qrCode).to.match(/^data:image\/(png|svg);base64,/);
+  });
+  
+  test("Backup codes are 8 characters", function() {
+    expect(res.body.backupCodes).to.be.an('array');
+    expect(res.body.backupCodes.length).to.equal(10);
+    res.body.backupCodes.forEach(code => {
+      expect(code).to.match(/^[A-Z0-9]{8}$/);
+    });
+  });
+  
+  test("Method is TOTP", function() {
+    expect(res.body.method).to.equal("totp");
+  });
+  
+  test("Issuer name present", function() {
+    expect(res.body.issuer).to.equal("Synaxis");
+  });
+}
+
+docs {
+  # Setup MFA
+  
+  Enables Multi-Factor Authentication (TOTP) for user account.
+  
+  ## Request Body
+  - `method`: MFA method ("totp" or "sms")
+  
+  ## Response
+  - `secret`: Base32-encoded TOTP secret
+  - `qrCode`: Data URL for QR code (scan with authenticator app)
+  - `backupCodes`: 10 single-use recovery codes
+  - `method`: Enabled MFA method
+  - `issuer`: "Synaxis" (for authenticator apps)
+  
+  ## Setup Flow
+  1. Call this endpoint to get secret and QR code
+  2. Scan QR code with authenticator app (Google Authenticator, Authy, etc.)
+  3. Verify TOTP code with `/auth/mfa/verify` endpoint
+  4. MFA is now required for all logins
+  
+  ## Backup Codes
+  - Store securely (single-use only)
+  - Each code can be used once to bypass MFA
+  - Generate new codes with `/auth/mfa/regenerate-codes`
+  
+  ## Error Codes
+  - 401: Unauthorized (invalid/expired token)
+  - 409: MFA already enabled
+  
+  ## Security
+  - Recommended for all admin accounts
+  - Required for super admin access
+  - Enforced for PCI/SOC2 compliance
+}

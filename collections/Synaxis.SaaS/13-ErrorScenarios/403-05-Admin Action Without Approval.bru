@@ -1,0 +1,82 @@
+meta {
+  name: 403-05-Admin Action Without Approval
+  type: http
+  seq: 23
+}
+
+post {
+  url: {{baseUrl}}/api/v1/admin/organizations/{{orgId}}/suspend
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "reason": "Terms violation",
+    "notifyUser": true
+  }
+}
+
+assert {
+  res.status: eq 403
+  res.body.error: isDefined
+  res.body.error.code: eq APPROVAL_REQUIRED
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 403", function() {
+    expect(res.status).to.equal(403);
+  });
+  
+  test("Error code is APPROVAL_REQUIRED", function() {
+    expect(res.body.error.code).to.equal("APPROVAL_REQUIRED");
+  });
+  
+  test("Error message mentions approval requirement", function() {
+    expect(res.body.error.message).to.match(/approval|authorization|review/i);
+  });
+  
+  test("Error details include approval workflow", function() {
+    expect(res.body.error.details).to.have.property('approvalWorkflow');
+  });
+  
+  test("Error details include required approvers", function() {
+    expect(res.body.error.details).to.have.property('requiredApprovers');
+    expect(res.body.error.details.requiredApprovers).to.be.an('array');
+  });
+  
+  test("Error includes request submission link", function() {
+    expect(res.body.error.details).to.have.property('requestApprovalUrl');
+  });
+}
+
+docs {
+  # 403 Forbidden - Admin Action Without Approval
+  
+  Tests approval workflow for sensitive admin actions.
+  
+  ## Trigger Condition
+  - POST to /admin/organizations/suspend without approval
+  - Sensitive action requires multi-party approval
+  
+  ## Expected Response
+  - Status: 403
+  - Error code: APPROVAL_REQUIRED
+  - Approval workflow and required approvers
+  
+  ## Validation
+  - Approval workflow enforcement
+  - Sensitive action protection
+  - Clear approval process guidance
+}

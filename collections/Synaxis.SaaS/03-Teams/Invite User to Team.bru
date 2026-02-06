@@ -1,0 +1,77 @@
+meta {
+  name: Invite User to Team
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/teams/{{teamId}}/invitations
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "email": "newmember@synaxis.ai",
+    "role": "member",
+    "message": "Join our engineering team!"
+  }
+}
+
+assert {
+  res.status: eq 201
+  res.body.invitationId: isDefined
+  res.body.email: eq newmember@synaxis.ai
+  res.body.role: eq member
+  res.body.status: eq pending
+  res.body.expiresAt: isDefined
+}
+
+tests {
+  test("Invitation created", function() {
+    expect(res.body.invitationId).to.be.a('string');
+  });
+  
+  test("Invitation expires in 7 days", function() {
+    const expiresAt = new Date(res.body.expiresAt);
+    const now = new Date();
+    const daysDiff = (expiresAt - now) / (1000 * 60 * 60 * 24);
+    expect(daysDiff).to.be.closeTo(7, 1);
+  });
+  
+  test("Email will be sent", function() {
+    expect(res.body.emailSent).to.be.true;
+  });
+}
+
+docs {
+  # Invite User to Team
+  
+  Sends email invitation to join team.
+  
+  ## Request Body
+  - `email`: Invitee email address
+  - `role`: Team role (member/admin)
+  - `message`: Optional personal message
+  
+  ## Process
+  1. Invitation email sent
+  2. Recipient clicks link
+  3. If no account: Register first
+  4. Accept invitation
+  5. Added to team
+  
+  ## Expiry
+  - Invitations expire after 7 days
+  - Can be resent if expired
+  - Automatically revoked if email changes
+}

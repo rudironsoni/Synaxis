@@ -1,0 +1,83 @@
+meta {
+  name: 401-06-Missing API Key
+  type: http
+  seq: 16
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "model": "gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hello"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 401
+  res.body.error: isDefined
+  res.body.error.code: eq MISSING_API_KEY
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 401", function() {
+    expect(res.status).to.equal(401);
+  });
+  
+  test("Error code is MISSING_API_KEY", function() {
+    expect(res.body.error.code).to.equal("MISSING_API_KEY");
+  });
+  
+  test("Error message mentions missing key", function() {
+    expect(res.body.error.message).to.match(/missing|required|api key/i);
+  });
+  
+  test("Error details include required header", function() {
+    expect(res.body.error.details).to.have.property('requiredHeader');
+    expect(res.body.error.details.requiredHeader).to.equal('X-Virtual-Key');
+  });
+  
+  test("Error includes documentation link", function() {
+    expect(res.body.error.details).to.have.property('documentation');
+  });
+}
+
+docs {
+  # 401 Unauthorized - Missing API Key
+  
+  Tests virtual key requirement for inference.
+  
+  ## Trigger Condition
+  - POST to /inference without X-Virtual-Key header
+  - Auth token present but virtual key missing
+  
+  ## Expected Response
+  - Status: 401
+  - Error code: MISSING_API_KEY
+  - Required header name in details
+  
+  ## Validation
+  - Virtual key requirement enforced
+  - Clear header requirement messaging
+  - Documentation link provided
+}

@@ -1,0 +1,77 @@
+meta {
+  name: 400-09-Invalid Date Format
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/usage?startDate=invalid-date&endDate=2025-01-31
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+assert {
+  res.status: eq 400
+  res.body.error: isDefined
+  res.body.error.code: eq INVALID_DATE_FORMAT
+  res.body.error.message: isDefined
+  res.body.error.details: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 400", function() {
+    expect(res.status).to.equal(400);
+  });
+  
+  test("Error code is INVALID_DATE_FORMAT", function() {
+    expect(res.body.error.code).to.equal("INVALID_DATE_FORMAT");
+  });
+  
+  test("Error message mentions date format", function() {
+    expect(res.body.error.message).to.match(/date|format|invalid/i);
+  });
+  
+  test("Error details include expected format", function() {
+    expect(res.body.error.details).to.have.property('expectedFormat');
+    expect(res.body.error.details.expectedFormat).to.match(/ISO|YYYY-MM-DD/i);
+  });
+  
+  test("Error details identify invalid field", function() {
+    expect(res.body.error.details).to.have.property('field');
+    expect(res.body.error.details.field).to.equal('startDate');
+  });
+  
+  test("Error includes example format", function() {
+    expect(res.body.error.details).to.have.property('example');
+  });
+}
+
+docs {
+  # 400 Bad Request - Invalid Date Format
+  
+  Tests date format validation in query parameters.
+  
+  ## Trigger Condition
+  - GET /usage with startDate="invalid-date"
+  - Non-ISO 8601 date format
+  
+  ## Expected Response
+  - Status: 400
+  - Error code: INVALID_DATE_FORMAT
+  - Expected format and example
+  
+  ## Validation
+  - Date format validation (ISO 8601)
+  - Query parameter validation
+  - Clear format requirements
+}

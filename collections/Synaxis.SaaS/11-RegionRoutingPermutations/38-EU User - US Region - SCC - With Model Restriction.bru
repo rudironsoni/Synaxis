@@ -1,0 +1,56 @@
+meta {
+  name: EU User - US Region - SCC - With Model Restriction
+  type: http
+  seq: 38
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: eu-west-1
+  X-Processed-Region: us-east-1
+  X-Cross-Border: true
+  X-Legal-Basis: SCC
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "anthropic/claude-3-opus",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test EU to US with Claude model"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-cross-border-transfer: eq true
+  res.headers.x-legal-basis: eq SCC
+  res.headers.x-model-provider: eq anthropic
+}
+
+tests {
+  test("Model provider compliance verified", function() {
+    expect(res.headers['x-model-provider']).to.equal('anthropic');
+    expect(res.headers['x-provider-compliance']).to.include('SCC');
+  });
+}
+
+docs {
+  # EU to US Transfer with Anthropic Model
+  
+  Tests cross-border transfer with specific model provider.
+  Verifies provider-specific compliance requirements.
+}

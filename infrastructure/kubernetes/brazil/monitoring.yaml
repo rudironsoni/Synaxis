@@ -1,0 +1,77 @@
+---
+apiVersion: v1
+kind: ServiceMonitor
+metadata:
+  name: synaxis-api-monitor
+  namespace: synaxis
+  labels:
+    app: synaxis-api
+    prometheus: kube-prometheus
+spec:
+  selector:
+    matchLabels:
+      app: synaxis-api
+  endpoints:
+    - port: metrics
+      interval: 30s
+      path: /metrics
+      scheme: http
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: synaxis-grafana-dashboard
+  namespace: synaxis
+  labels:
+    grafana_dashboard: "1"
+data:
+  synaxis-api.json: |
+    {
+      "dashboard": {
+        "title": "Synaxis API - Brazil Region",
+        "tags": ["synaxis", "api", "brazil"],
+        "timezone": "America/Sao_Paulo",
+        "panels": [
+          {
+            "title": "Request Rate",
+            "targets": [
+              {
+                "expr": "rate(http_requests_total{namespace=\"synaxis\"}[5m])"
+              }
+            ]
+          },
+          {
+            "title": "Error Rate",
+            "targets": [
+              {
+                "expr": "rate(http_requests_total{namespace=\"synaxis\",status=~\"5..\"}[5m])"
+              }
+            ]
+          },
+          {
+            "title": "Response Time P99",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.99, rate(http_request_duration_seconds_bucket{namespace=\"synaxis\"}[5m]))"
+              }
+            ]
+          },
+          {
+            "title": "Pod CPU Usage",
+            "targets": [
+              {
+                "expr": "rate(container_cpu_usage_seconds_total{namespace=\"synaxis\",pod=~\"synaxis-api-.*\"}[5m])"
+              }
+            ]
+          },
+          {
+            "title": "Pod Memory Usage",
+            "targets": [
+              {
+                "expr": "container_memory_working_set_bytes{namespace=\"synaxis\",pod=~\"synaxis-api-.*\"}"
+              }
+            ]
+          }
+        ]
+      }
+    }

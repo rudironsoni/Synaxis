@@ -1,0 +1,65 @@
+meta {
+  name: Brazil User - US Region - Cross Border - Consent
+  type: http
+  seq: 21
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: sa-east-1
+  X-Processed-Region: us-east-1
+  X-Cross-Border: true
+  X-Legal-Basis: consent
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test message for Brazil to US transfer with consent"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-cross-border-transfer: eq true
+  res.headers.x-legal-basis: eq consent
+  res.headers.x-processed-region: eq us-east-1
+}
+
+tests {
+  test("Brazil to US transfer with consent", function() {
+    expect(res.headers['x-cross-border-transfer']).to.equal('true');
+    expect(res.headers['x-legal-basis']).to.equal('consent');
+  });
+  
+  test("LGPD consent requirements met", function() {
+    expect(res.headers['x-consent-id']).to.be.defined;
+  });
+}
+
+docs {
+  # Brazil User - US Region - Cross Border - Consent
+  
+  Tests Brazil to US data transfer based on explicit consent.
+  Requires specific consent for international transfer under LGPD.
+  
+  ## Legal Basis
+  - LGPD Article 33 - Specific consent
+  - Must inform about risks and destination
+  - Higher bar than standard consent
+}

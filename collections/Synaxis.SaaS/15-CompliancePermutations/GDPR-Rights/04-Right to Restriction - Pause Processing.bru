@@ -1,0 +1,113 @@
+meta {
+  name: 04-Right to Restriction - Pause Processing
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/v1/compliance/gdpr/restriction
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+  X-Compliance-Framework: GDPR
+  X-Legal-Basis: consent
+}
+
+body:json {
+  {
+    "requestType": "restriction",
+    "ground": "accuracy_contested",
+    "processingToRestrict": [
+      "marketing",
+      "profiling",
+      "analytics"
+    ],
+    "duration": "pending_verification"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.restrictionId: isDefined
+  res.body.legalBasis: eq consent
+  res.body.auditTrailId: isDefined
+  res.body.restrictionStatus: eq active
+}
+
+script:post-response {
+  if (res.body.restrictionId) {
+    bru.setEnvVar("restrictionId", res.body.restrictionId);
+  }
+}
+
+tests {
+  test("Restriction applied", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Legal basis documented", function() {
+    expect(res.body.legalBasis).to.equal('consent');
+  });
+  
+  test("Audit trail created", function() {
+    expect(res.body.auditTrailId).to.be.a('string');
+  });
+  
+  test("Restriction status is active", function() {
+    expect(res.body.restrictionStatus).to.equal('active');
+  });
+  
+  test("Processing activities restricted", function() {
+    expect(res.body.restrictedActivities).to.be.an('array');
+    expect(res.body.restrictedActivities.length).to.be.greaterThan(0);
+  });
+  
+  test("Third parties notified", function() {
+    expect(res.body.thirdPartiesNotified).to.be.an('array');
+  });
+  
+  test("Data subject informed of lifting", function() {
+    expect(res.body.liftNotificationRequired).to.equal(true);
+  });
+}
+
+docs {
+  # GDPR Right to Restriction of Processing
+  
+  GDPR Article 18 - Right to restriction of processing
+  
+  ## Grounds for Restriction
+  1. Accuracy contested (for period to verify)
+  2. Processing unlawful (subject prefers restriction over erasure)
+  3. Controller no longer needs data (but subject needs for legal claims)
+  4. Objection to processing (pending verification of grounds)
+  
+  ## Restriction Meaning
+  Personal data marked and processing limited to:
+  - Storage only
+  - Processing with data subject consent
+  - Legal claims establishment/exercise/defense
+  - Protection of rights of another person/entity
+  - Important public interest reasons (EU/Member State)
+  
+  ## Obligations
+  - Inform data subject before lifting restriction
+  - Notify recipients of restriction
+  - Inform subject of recipients (on request)
+  
+  ## Verification
+  ✓ Legal basis documented
+  ✓ Audit trail created
+  ✓ Restriction status active
+  ✓ Processing activities limited
+  ✓ Third parties notified
+  ✓ Lift notification configured
+}

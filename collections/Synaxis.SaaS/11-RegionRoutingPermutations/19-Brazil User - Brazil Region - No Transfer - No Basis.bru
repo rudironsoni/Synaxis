@@ -1,0 +1,67 @@
+meta {
+  name: Brazil User - Brazil Region - No Transfer - No Basis
+  type: http
+  seq: 19
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: sa-east-1
+  X-Processed-Region: sa-east-1
+  X-Cross-Border: false
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test message for Brazil region routing"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-cross-border-transfer: eq false
+  res.headers.x-processed-region: eq sa-east-1
+}
+
+tests {
+  test("No cross-border transfer for same region", function() {
+    expect(res.headers['x-cross-border-transfer']).to.equal('false');
+  });
+  
+  test("Response processed in Brazil region", function() {
+    expect(res.headers['x-processed-region']).to.equal('sa-east-1');
+  });
+  
+  test("LGPD compliance applicable", function() {
+    expect(res.headers['x-compliance-frameworks']).to.include('LGPD');
+  });
+}
+
+docs {
+  # Brazil User - Brazil Region - No Transfer
+  
+  Tests routing when user and processing region are both Brazil.
+  No international data transfer occurs.
+  
+  ## Expected Behavior
+  - Request routed to sa-east-1
+  - Subject to LGPD (Brazilian GDPR)
+  - No international transfer mechanisms needed
+  - Data residency in Brazil
+}

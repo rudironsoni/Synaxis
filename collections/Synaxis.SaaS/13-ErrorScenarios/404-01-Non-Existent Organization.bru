@@ -1,0 +1,71 @@
+meta {
+  name: 404-01-Non-Existent Organization
+  type: http
+  seq: 27
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations/org_nonexistent_12345
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+assert {
+  res.status: eq 404
+  res.body.error: isDefined
+  res.body.error.code: eq ORGANIZATION_NOT_FOUND
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 404", function() {
+    expect(res.status).to.equal(404);
+  });
+  
+  test("Error code is ORGANIZATION_NOT_FOUND", function() {
+    expect(res.body.error.code).to.equal("ORGANIZATION_NOT_FOUND");
+  });
+  
+  test("Error message mentions not found", function() {
+    expect(res.body.error.message).to.match(/not found|does not exist|organization/i);
+  });
+  
+  test("Error details include requested ID", function() {
+    expect(res.body.error.details).to.have.property('organizationId');
+    expect(res.body.error.details.organizationId).to.equal('org_nonexistent_12345');
+  });
+  
+  test("Error suggests listing organizations", function() {
+    expect(res.body.error.details).to.have.property('suggestion');
+  });
+}
+
+docs {
+  # 404 Not Found - Non-Existent Organization
+  
+  Tests handling of requests for non-existent organizations.
+  
+  ## Trigger Condition
+  - GET /organizations/{id} with non-existent ID
+  - Organization ID not in database
+  
+  ## Expected Response
+  - Status: 404
+  - Error code: ORGANIZATION_NOT_FOUND
+  - Requested ID and helpful suggestions
+  
+  ## Validation
+  - Proper 404 status for missing resources
+  - Resource-specific error codes
+  - Helpful navigation suggestions
+}

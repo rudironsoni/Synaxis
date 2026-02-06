@@ -1,0 +1,56 @@
+meta {
+  name: EU User - US Region - SCC - Audit Logged
+  type: http
+  seq: 49
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: eu-west-1
+  X-Processed-Region: us-east-1
+  X-Cross-Border: true
+  X-Legal-Basis: SCC
+  X-Audit-Required: true
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test with audit logging enabled"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-audit-id: isDefined
+  res.headers.x-audit-timestamp: isDefined
+}
+
+tests {
+  test("Audit trail created for transfer", function() {
+    expect(res.headers['x-audit-id']).to.be.defined;
+    expect(res.headers['x-audit-timestamp']).to.be.defined;
+  });
+}
+
+docs {
+  # EU to US with Audit Logging
+  
+  Tests cross-border transfer with comprehensive audit logging.
+  Verifies audit trail creation for compliance documentation.
+}

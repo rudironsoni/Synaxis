@@ -1,0 +1,56 @@
+meta {
+  name: EU User - US Region - Cross Border False - Mismatch Invalid
+  type: http
+  seq: 30
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: eu-west-1
+  X-Processed-Region: us-east-1
+  X-Cross-Border: false
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test cross-border flag mismatch"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("Cross-border flag mismatch rejected", function() {
+    expect(res.status).to.equal(400);
+    expect(res.body.error).to.include('cross-border flag mismatch');
+  });
+}
+
+docs {
+  # EU User - US Region - Cross-Border Flag Mismatch
+  
+  Tests error handling when cross-border flag doesn't match region difference.
+  System should detect when regions differ but cross-border is false.
+  
+  ## Expected Behavior
+  - Request rejected with 400
+  - Error indicates flag mismatch with actual regions
+}

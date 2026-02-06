@@ -1,0 +1,113 @@
+meta {
+  name: 02-Access (Art 18)
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/compliance/lgpd/access
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Region: sa-east-1
+  X-Compliance-Framework: LGPD
+  X-Legal-Basis: consent
+}
+
+assert {
+  res.status: eq 200
+  res.body.personalData: isDefined
+  res.body.dataLocation: contains brazil
+  res.body.auditTrailId: isDefined
+}
+
+tests {
+  test("Access to personal data granted", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Personal data provided", function() {
+    expect(res.body.personalData).to.be.an('object');
+  });
+  
+  test("Data location in Brazil", function() {
+    expect(res.body.dataLocation).to.match(/brazil|sa-east/i);
+  });
+  
+  test("Audit trail created", function() {
+    expect(res.body.auditTrailId).to.be.a('string');
+  });
+  
+  test("Complete data categories included", function() {
+    expect(res.body.dataCategories).to.be.an('array');
+    expect(res.body.dataCategories.length).to.be.greaterThan(0);
+  });
+  
+  test("Processing purposes disclosed", function() {
+    expect(res.body.processingPurposes).to.be.an('array');
+  });
+  
+  test("Shared with third parties disclosed", function() {
+    expect(res.body.thirdPartySharing).to.be.an('array');
+  });
+  
+  test("Free of charge", function() {
+    expect(res.body.freeOfCharge).to.equal(true);
+  });
+}
+
+docs {
+  # LGPD Access (Article 18)
+  
+  Article 18, I - Right to access personal data
+  
+  ## Right
+  Data subject has right to obtain:
+  - Access to personal data
+  - In simplified, clear, complete format
+  - Free of charge
+  - Upon request
+  
+  ## Included Information
+  - Personal data held
+  - Categories of data
+  - Processing purposes
+  - Legal basis
+  - Duration of processing
+  - Completeness/accuracy
+  - Shared with public/private entities
+  - Shared with international entities
+  - Data subject rights
+  - Possibility/refusal to provide consent
+  
+  ## Format
+  - Simplified language
+  - Clear presentation
+  - Complete information
+  - Accessible format
+  
+  ## Timeline
+  - 15 days from request (Art. 19, §1)
+  - Can extend if reasonable justification
+  - Must inform of extension
+  
+  ## Cost
+  - Free of charge for first request
+  - Subsequent requests: reasonable cost for copying/reproduction
+  
+  ## Verification
+  ✓ Access granted
+  ✓ Personal data provided
+  ✓ Data location disclosed
+  ✓ Audit trail created
+  ✓ Complete categories
+  ✓ Purposes disclosed
+  ✓ Third-party sharing disclosed
+  ✓ Free of charge
+}

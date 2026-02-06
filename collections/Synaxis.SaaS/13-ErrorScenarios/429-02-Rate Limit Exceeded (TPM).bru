@@ -1,0 +1,92 @@
+meta {
+  name: 429-02-Rate Limit Exceeded (TPM)
+  type: http
+  seq: 42
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+  X-Virtual-Key: {{virtualKey}}
+}
+
+body:json {
+  {
+    "model": "gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Very long message to exceed token limit"
+      }
+    ],
+    "max_tokens": 4000
+  }
+}
+
+assert {
+  res.status: eq 429
+  res.body.error: isDefined
+  res.body.error.code: eq RATE_LIMIT_EXCEEDED
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+  res.headers.retry-after: isDefined
+}
+
+tests {
+  test("Status code is 429", function() {
+    expect(res.status).to.equal(429);
+  });
+  
+  test("Error code is RATE_LIMIT_EXCEEDED", function() {
+    expect(res.body.error.code).to.equal("RATE_LIMIT_EXCEEDED");
+  });
+  
+  test("Error message mentions token rate limit", function() {
+    expect(res.body.error.message).to.match(/token|rate limit|tpm/i);
+  });
+  
+  test("Error details include TPM limit type", function() {
+    expect(res.body.error.details).to.have.property('limitType');
+    expect(res.body.error.details.limitType).to.equal('tokensPerMinute');
+  });
+  
+  test("Error details include token counts", function() {
+    expect(res.body.error.details).to.have.property('limit');
+    expect(res.body.error.details).to.have.property('current');
+    expect(res.body.error.details).to.have.property('requested');
+  });
+  
+  test("Retry-After header specifies wait time", function() {
+    expect(res.headers['retry-after']).to.be.defined;
+  });
+}
+
+docs {
+  # 429 Too Many Requests - Rate Limit Exceeded (TPM)
+  
+  Tests tokens-per-minute rate limiting.
+  
+  ## Trigger Condition
+  - POST to /inference after exceeding TPM limit
+  - Token usage exceeds virtual key TPM limit
+  
+  ## Expected Response
+  - Status: 429
+  - Error code: RATE_LIMIT_EXCEEDED
+  - TPM-specific details, token counts, reset time
+  
+  ## Validation
+  - TPM rate limiting enforced
+  - Token counting accuracy
+  - Reset time indication
+}

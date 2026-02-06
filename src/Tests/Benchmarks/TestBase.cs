@@ -166,4 +166,33 @@ public abstract class TestBase
             .ReturnsAsync((ModelCost?)null);
         return mock;
     }
+
+    /// <summary>
+    /// Creates a mock IRoutingScoreCalculator that returns a default score.
+    /// </summary>
+    protected Mock<IRoutingScoreCalculator> CreateMockRoutingScoreCalculator()
+    {
+        var mock = new Mock<IRoutingScoreCalculator>();
+        mock.Setup(x => x.CalculateScore(
+            It.IsAny<EnrichedCandidate>(),
+            It.IsAny<string?>(),
+            It.IsAny<string?>()))
+            .Returns(100.0);
+        mock.Setup(x => x.GetEffectiveConfigurationAsync(
+            It.IsAny<string?>(),
+            It.IsAny<string?>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new RoutingScoreConfiguration(
+                Weights: new RoutingScoreWeights(
+                    QualityScoreWeight: 0.3,
+                    QuotaRemainingWeight: 0.3,
+                    RateLimitSafetyWeight: 0.2,
+                    LatencyScoreWeight: 0.2
+                ),
+                FreeTierBonusPoints: 50,
+                MinScoreThreshold: 0.0,
+                PreferFreeByDefault: true
+            ));
+        return mock;
+    }
 }

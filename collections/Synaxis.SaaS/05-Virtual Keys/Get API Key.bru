@@ -1,0 +1,53 @@
+meta {
+  name: Get API Key
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/api-keys/{{apiKeyId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Region: {{region}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.id: eq {{apiKeyId}}
+  res.body.name: isDefined
+  res.body.prefix: isDefined
+  res.body.scopes: isDefined
+}
+
+tests {
+  test("Full key NOT returned", function() {
+    expect(res.body.key).to.be.undefined;
+  });
+  
+  test("Only prefix shown", function() {
+    expect(res.body.prefix).to.match(/^sk-[a-zA-Z0-9]{8}$/);
+  });
+  
+  test("Usage statistics included", function() {
+    expect(res.body.usage).to.be.an('object');
+    expect(res.body.usage.totalRequests).to.be.a('number');
+  });
+}
+
+docs {
+  # Get API Key
+  
+  Retrieves API key metadata (NOT the key itself).
+  
+  ## Security
+  - Full key never returned after creation
+  - Only prefix (first 11 chars) shown for identification
+  - Key cannot be retrieved, only rotated
+}

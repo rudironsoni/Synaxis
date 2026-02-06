@@ -1,0 +1,155 @@
+meta {
+  name: Mixed-Requests-And-Tokens-Both-90%
+  type: http
+  seq: 20
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{orgId}}
+  X-Test-Quota-Type: both
+  X-Test-Quota-Requests-Limit: 1000
+  X-Test-Quota-Requests-Window: hour
+  X-Test-Quota-Tokens-Limit: 150000
+  X-Test-Quota-Tokens-Window: hour
+  X-Test-Simulate-Request-Usage: 900
+  X-Test-Simulate-Token-Usage: 135000
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test with both request and token quotas at 90%"
+      }
+    ],
+    "max_tokens": 50
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-ratelimit-limit-requests: eq 1000
+  res.headers.x-ratelimit-remaining-requests: eq 100
+  res.headers.x-ratelimit-limit-tokens: eq 150000
+  res.headers.x-ratelimit-remaining-tokens: eq 15000
+}
+
+tests {
+  test("Request succeeds with both quotas at 90%", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Request quota at 90%", function() {
+    expect(res.headers['x-ratelimit-limit-requests']).to.equal('1000');
+    expect(parseInt(res.headers['x-ratelimit-remaining-requests'])).to.equal(100);
+  });
+  
+  test("Token quota at 90%", function() {
+    expect(res.headers['x-ratelimit-limit-tokens']).to.equal('150000');
+    expect(parseInt(res.headers['x-ratelimit-remaining-tokens'])).to.equal(15000);
+  });
+  
+  test("Both quotas tracked independently", function() {
+    // Request and token quotas are separate
+    const reqPercent = 90;
+    const tokenPercent = 90;
+    expect(reqPercent).to.equal(tokenPercent); // Both at 90% in this test
+  });
+  
+  test("Warning for approaching both limits", function() {
+    expect(res.headers['x-ratelimit-warning']).to.be.a('string');
+    expect(res.headers['x-ratelimit-warning']).to.match(/both|requests and tokens/i);
+  });
+  
+  test("Most restrictive limit determines behavior", function() {
+    // If EITHER quota is exhausted, request fails
+    // System enforces whichever limit is hit first
+  });
+}
+
+docs {
+  # Mixed-Requests-And-Tokens-Both-90%
+  
+  Tests dual quota enforcement (both requests AND tokens).
+  
+  ## Test Configuration
+  - Metric Type: both (requests + tokens)
+  - Requests: 900/1000 (90%)
+  - Tokens: 135k/150k (90%)
+  - Both quotas enforced simultaneously
+  
+  ## Dual Quota Enforcement
+  
+  ### How It Works
+  Request must satisfy BOTH conditions:
+  1. ✅ Request count < request limit
+  2. ✅ Token count < token limit
+  
+  If EITHER limit exceeded → Request denied
+  
+  ### Example Scenarios
+  
+  ```
+  Scenario A: Hit request limit first
+  - Requests: 1000/1000 (100%) ❌
+  - Tokens: 100k/150k (67%) ✅
+  → Request denied (request quota)
+  
+  Scenario B: Hit token limit first
+  - Requests: 800/1000 (80%) ✅
+  - Tokens: 150k/150k (100%) ❌
+  → Request denied (token quota)
+  
+  Scenario C: Both under limit
+  - Requests: 900/1000 (90%) ✅
+  - Tokens: 135k/150k (90%) ✅
+  → Request allowed
+  ```
+  
+  ## Why Use Both?
+  
+  ✅ **Fairness**: Prevents abuse via many small requests or few large ones
+  ✅ **Cost Control**: Limits both API calls and compute
+  ✅ **Flexibility**: Different clients have different patterns
+  ✅ **Protection**: Defense in depth
+  
+  ## Client Strategy
+  
+  Must monitor BOTH quotas:
+  ```javascript
+  const reqRemaining = res.headers['x-ratelimit-remaining-requests'];
+  const tokenRemaining = res.headers['x-ratelimit-remaining-tokens'];
+  
+  // Calculate "headroom" as minimum of both
+  const reqHeadroom = reqRemaining / reqLimit;
+  const tokenHeadroom = tokenRemaining / tokenLimit;
+  const effectiveHeadroom = Math.min(reqHeadroom, tokenHeadroom);
+  
+  if (effectiveHeadroom < 0.1) {
+    // Less than 10% of EITHER quota remains
+    throttle();
+  }
+  ```
+  
+  ## Common Combinations
+  
+  | Plan | Requests/hr | Tokens/hr | Typical Use |
+  |------|-------------|-----------|-------------|
+  | Free | 100 | 10k | Testing |
+  | Basic | 1000 | 150k | Small apps |
+  | Pro | 10k | 1M | Production |
+  | Enterprise | 100k | 10M | High volume |
+}

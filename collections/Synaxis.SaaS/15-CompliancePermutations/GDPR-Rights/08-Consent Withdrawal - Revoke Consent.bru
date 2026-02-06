@@ -1,0 +1,119 @@
+meta {
+  name: 08-Consent Withdrawal - Revoke Consent
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/v1/compliance/gdpr/consent/withdraw
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+  X-Compliance-Framework: GDPR
+  X-Legal-Basis: consent
+}
+
+body:json {
+  {
+    "requestType": "consent_withdrawal",
+    "consentIds": [
+      "marketing_emails",
+      "analytics_tracking",
+      "third_party_sharing"
+    ],
+    "withdrawalReason": "No longer wish to receive marketing communications"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.withdrawalId: isDefined
+  res.body.consentRevoked: eq true
+  res.body.auditTrailId: isDefined
+  res.body.processingCeased: eq true
+}
+
+script:post-response {
+  if (res.body.withdrawalId) {
+    bru.setEnvVar("consentWithdrawalId", res.body.withdrawalId);
+  }
+}
+
+tests {
+  test("Consent withdrawal processed", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Consent revoked", function() {
+    expect(res.body.consentRevoked).to.equal(true);
+  });
+  
+  test("Audit trail created", function() {
+    expect(res.body.auditTrailId).to.be.a('string');
+  });
+  
+  test("Processing ceased immediately", function() {
+    expect(res.body.processingCeased).to.equal(true);
+  });
+  
+  test("Easy to withdraw as to give", function() {
+    expect(res.body.withdrawalEaseCompliant).to.equal(true);
+  });
+  
+  test("Prior processing remains lawful", function() {
+    expect(res.body.priorProcessingLawful).to.equal(true);
+  });
+  
+  test("No detriment for withdrawal", function() {
+    expect(res.body.noDetriment).to.equal(true);
+  });
+}
+
+docs {
+  # GDPR Consent Withdrawal
+  
+  GDPR Article 7(3) - Conditions for consent - Withdrawal
+  
+  ## Right to Withdraw
+  Data subject has right to withdraw consent at any time.
+  
+  ## Requirements
+  - Must be as easy to withdraw as to give
+  - No detriment for withdrawal
+  - Clear information about right to withdraw
+  - Simple mechanism to withdraw
+  
+  ## Effect of Withdrawal
+  - Processing must cease
+  - Prior processing remains lawful
+  - Does not affect lawfulness before withdrawal
+  
+  ## Valid Consent Requirements (Art. 7)
+  1. Freely given (no coercion)
+  2. Specific (clear purpose)
+  3. Informed (full information)
+  4. Unambiguous (clear affirmative action)
+  
+  ## Burden of Proof
+  Controller must demonstrate valid consent was obtained.
+  
+  ## Children's Consent
+  - Below age 16: parental consent required (Member States can lower to 13)
+  - Controller must make reasonable efforts to verify
+  
+  ## Verification
+  ✓ Consent revoked
+  ✓ Audit trail created
+  ✓ Processing ceased
+  ✓ Easy withdrawal mechanism
+  ✓ Prior processing lawful
+  ✓ No detriment
+}

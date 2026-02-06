@@ -1,0 +1,87 @@
+meta {
+  name: 403-07-Suspended Organization
+  type: http
+  seq: 25
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+  X-Virtual-Key: {{virtualKey}}
+}
+
+body:json {
+  {
+    "model": "gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hello"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 403
+  res.body.error: isDefined
+  res.body.error.code: eq ORGANIZATION_SUSPENDED
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 403", function() {
+    expect(res.status).to.equal(403);
+  });
+  
+  test("Error code is ORGANIZATION_SUSPENDED", function() {
+    expect(res.body.error.code).to.equal("ORGANIZATION_SUSPENDED");
+  });
+  
+  test("Error message mentions suspension", function() {
+    expect(res.body.error.message).to.match(/suspend|disabled|account/i);
+  });
+  
+  test("Error details include suspension reason", function() {
+    expect(res.body.error.details).to.have.property('reason');
+  });
+  
+  test("Error details include suspension date", function() {
+    expect(res.body.error.details).to.have.property('suspendedAt');
+  });
+  
+  test("Error includes support contact", function() {
+    expect(res.body.error.details).to.have.property('supportUrl');
+  });
+}
+
+docs {
+  # 403 Forbidden - Suspended Organization
+  
+  Tests suspended organization access blocking.
+  
+  ## Trigger Condition
+  - Request from suspended organization
+  - Organization status: suspended
+  
+  ## Expected Response
+  - Status: 403
+  - Error code: ORGANIZATION_SUSPENDED
+  - Suspension reason and support contact
+  
+  ## Validation
+  - Suspension enforcement across all APIs
+  - Clear suspension messaging
+  - Support escalation path
+}

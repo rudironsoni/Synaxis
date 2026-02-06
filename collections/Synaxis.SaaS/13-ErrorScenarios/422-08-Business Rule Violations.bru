@@ -1,0 +1,82 @@
+meta {
+  name: 422-08-Business Rule Violations
+  type: http
+  seq: 40
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/teams/{{teamId}}/members
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "userId": "{{userId}}",
+    "role": "admin"
+  }
+}
+
+assert {
+  res.status: eq 422
+  res.body.error: isDefined
+  res.body.error.code: eq BUSINESS_RULE_VIOLATION
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 422", function() {
+    expect(res.status).to.equal(422);
+  });
+  
+  test("Error code is BUSINESS_RULE_VIOLATION", function() {
+    expect(res.body.error.code).to.equal("BUSINESS_RULE_VIOLATION");
+  });
+  
+  test("Error message explains business rule", function() {
+    expect(res.body.error.message).to.match(/business rule|violation|policy/i);
+  });
+  
+  test("Error details explain violated rule", function() {
+    expect(res.body.error.details).to.have.property('rule');
+    expect(res.body.error.details).to.have.property('explanation');
+  });
+  
+  test("Error includes specific violation reason", function() {
+    expect(res.body.error.details).to.have.property('reason');
+  });
+  
+  test("Error suggests corrective action", function() {
+    expect(res.body.error.details).to.have.property('suggestion');
+  });
+}
+
+docs {
+  # 422 Unprocessable Entity - Business Rule Violations
+  
+  Tests business logic constraint enforcement.
+  
+  ## Trigger Condition
+  - POST to add team member who violates business rule
+  - Example: user already in max teams, or tier limit reached
+  
+  ## Expected Response
+  - Status: 422
+  - Error code: BUSINESS_RULE_VIOLATION
+  - Rule explanation and corrective action
+  
+  ## Validation
+  - Business rules enforced beyond basic validation
+  - Clear rule violation explanation
+  - Actionable suggestions
+}

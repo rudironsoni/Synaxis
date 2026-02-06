@@ -1,0 +1,56 @@
+meta {
+  name: US User - US Region - Cross Border True - Mismatch Invalid
+  type: http
+  seq: 31
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: us-east-1
+  X-Processed-Region: us-east-1
+  X-Cross-Border: true
+  X-Legal-Basis: SCC
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test same region with cross-border true"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("Same region with cross-border true rejected", function() {
+    expect(res.status).to.equal(400);
+    expect(res.body.error).to.include('same region cannot be cross-border');
+  });
+}
+
+docs {
+  # US User - US Region - Cross-Border Flag Invalid
+  
+  Tests error handling when cross-border is true but regions are the same.
+  
+  ## Expected Behavior
+  - Request rejected with 400
+  - Error indicates same region cannot be cross-border
+}

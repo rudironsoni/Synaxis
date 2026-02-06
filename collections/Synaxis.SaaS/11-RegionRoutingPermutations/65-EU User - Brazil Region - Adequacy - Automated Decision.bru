@@ -1,0 +1,57 @@
+meta {
+  name: EU User - Brazil Region - Adequacy - Automated Decision
+  type: http
+  seq: 65
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: eu-west-1
+  X-Processed-Region: sa-east-1
+  X-Cross-Border: true
+  X-Legal-Basis: adequacy
+  X-Automated-Decision: true
+  X-Human-Review: available
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test with automated decision-making"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-automated-decision-disclosed: eq true
+  res.headers.x-human-review-option: eq available
+}
+
+tests {
+  test("Automated decision rights protected", function() {
+    expect(res.headers['x-automated-decision-disclosed']).to.equal('true');
+    expect(res.headers['x-human-review-option']).to.equal('available');
+  });
+}
+
+docs {
+  # EU to Brazil with Automated Decision
+  
+  Tests cross-border transfer with automated decision-making.
+  Verifies GDPR Article 22 and LGPD Article 20 compliance.
+}

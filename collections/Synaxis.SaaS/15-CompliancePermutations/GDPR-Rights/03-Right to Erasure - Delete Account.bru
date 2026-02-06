@@ -1,0 +1,114 @@
+meta {
+  name: 03-Right to Erasure - Delete Account
+  type: http
+  seq: 3
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/compliance/gdpr/erasure
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+  X-Compliance-Framework: GDPR
+  X-Legal-Basis: consent
+}
+
+body:json {
+  {
+    "requestType": "erasure",
+    "reason": "withdrawal_of_consent",
+    "confirmDeletion": true,
+    "exceptions": [
+      "legal_obligation",
+      "contract_fulfillment"
+    ]
+  }
+}
+
+assert {
+  res.status: eq 202
+  res.body.erasureId: isDefined
+  res.body.legalBasis: eq consent
+  res.body.auditTrailId: isDefined
+  res.body.retentionExceptions: isDefined
+}
+
+script:post-response {
+  if (res.body.erasureId) {
+    bru.setEnvVar("erasureId", res.body.erasureId);
+  }
+}
+
+tests {
+  test("Erasure request accepted", function() {
+    expect(res.status).to.equal(202);
+  });
+  
+  test("Legal basis for erasure documented", function() {
+    expect(res.body.legalBasis).to.equal('consent');
+  });
+  
+  test("Audit trail created", function() {
+    expect(res.body.auditTrailId).to.be.a('string');
+  });
+  
+  test("Retention exceptions documented", function() {
+    expect(res.body.retentionExceptions).to.be.an('array');
+  });
+  
+  test("Data deletion scheduled", function() {
+    const scheduledDeletion = new Date(res.body.scheduledDeletionDate);
+    const now = new Date();
+    expect(scheduledDeletion.getTime()).to.be.greaterThan(now.getTime());
+  });
+  
+  test("Third parties will be notified", function() {
+    expect(res.body.thirdPartyNotificationRequired).to.equal(true);
+  });
+  
+  test("Compliance with right to be forgotten", function() {
+    expect(res.body.erasureScope).to.include('personal_data');
+    expect(res.body.erasureScope).to.include('derived_data');
+  });
+}
+
+docs {
+  # GDPR Right to Erasure (Right to be Forgotten)
+  
+  GDPR Article 17 - Right to erasure ('right to be forgotten')
+  
+  ## Grounds for Erasure
+  1. Data no longer necessary for original purpose
+  2. Withdrawal of consent (no other legal ground)
+  3. Objection to processing (no overriding grounds)
+  4. Data processed unlawfully
+  5. Compliance with legal obligation
+  6. Data collected from children (info society services)
+  
+  ## Exceptions (Data Retained)
+  - Exercise of freedom of expression/information
+  - Compliance with legal obligation
+  - Public interest/public health
+  - Archiving/research/statistical purposes
+  - Legal claims establishment/exercise/defense
+  
+  ## Obligations
+  - Erase data without undue delay
+  - Notify recipients of erasure
+  - Inform other controllers if data made public
+  
+  ## Verification
+  ✓ Legal basis for erasure documented
+  ✓ Audit trail created
+  ✓ Retention exceptions identified
+  ✓ Third-party notification planned
+  ✓ Deletion scope comprehensive
+}

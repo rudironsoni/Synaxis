@@ -1,0 +1,78 @@
+meta {
+  name: 400-02-Invalid Email Format
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/auth/register
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "email": "invalid-email-format",
+    "password": "SecurePass123!",
+    "firstName": "Test",
+    "lastName": "User"
+  }
+}
+
+assert {
+  res.status: eq 400
+  res.body.error: isDefined
+  res.body.error.code: eq INVALID_EMAIL_FORMAT
+  res.body.error.message: isDefined
+  res.body.error.details: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 400", function() {
+    expect(res.status).to.equal(400);
+  });
+  
+  test("Error code is INVALID_EMAIL_FORMAT", function() {
+    expect(res.body.error.code).to.equal("INVALID_EMAIL_FORMAT");
+  });
+  
+  test("Error message mentions email format", function() {
+    expect(res.body.error.message).to.match(/email|format|invalid/i);
+  });
+  
+  test("Error details identify email field", function() {
+    expect(res.body.error.details).to.be.an('array');
+    const emailError = res.body.error.details.find(d => d.field === 'email');
+    expect(emailError).to.be.defined;
+  });
+  
+  test("No sensitive data leaked", function() {
+    expect(JSON.stringify(res.body)).to.not.include('SecurePass123!');
+  });
+}
+
+docs {
+  # 400 Bad Request - Invalid Email Format
+  
+  Tests email validation logic for registration.
+  
+  ## Trigger Condition
+  - POST to /auth/register with malformed email
+  - Email: "invalid-email-format" (missing @ and domain)
+  
+  ## Expected Response
+  - Status: 400
+  - Error code: INVALID_EMAIL_FORMAT
+  - Field-specific validation error
+  
+  ## Validation
+  - Email format validation active
+  - Clear error messaging for users
+  - No password leakage in error response
+}

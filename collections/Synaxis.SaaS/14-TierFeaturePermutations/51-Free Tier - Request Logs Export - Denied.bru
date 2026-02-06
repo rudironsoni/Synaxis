@@ -1,0 +1,68 @@
+meta {
+  name: Free Tier - Request Logs Export - Denied
+  type: http
+  seq: 51
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/logs/export
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{freeOrgId}}
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "startDate": "2026-01-01",
+    "endDate": "2026-02-05",
+    "format": "json"
+  }
+}
+
+assert {
+  res.status: eq 403
+  res.body.error: isDefined
+  res.body.error.code: eq FEATURE_NOT_AVAILABLE
+  res.body.error.message: contains log export
+  res.body.error.requiredTier: eq pro
+  res.body.error.currentTier: eq free
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("freeOrgId"));
+}
+
+tests {
+  test("Free tier cannot export logs", function() {
+    expect(res.status).to.equal(403);
+    expect(res.body.error.code).to.equal("FEATURE_NOT_AVAILABLE");
+  });
+  
+  test("Pro tier required", function() {
+    expect(res.body.error.requiredTier).to.equal("pro");
+  });
+}
+
+docs {
+  # Free Tier - Request Logs Export - Denied
+  
+  Tests that free tier cannot export request logs.
+  
+  ## Expected Behavior
+  - Returns 403 Forbidden
+  - Pro tier required
+  
+  ## Log Export by Tier
+  - Free: Not available
+  - Pro: 30-day exports (email)
+  - Enterprise: Full history (S3, email, API)
+}

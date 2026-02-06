@@ -1,0 +1,56 @@
+meta {
+  name: EU User - US Region - Cross Border True - No Basis Invalid
+  type: http
+  seq: 29
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: eu-west-1
+  X-Processed-Region: us-east-1
+  X-Cross-Border: true
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test missing legal basis for cross-border"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("Missing legal basis for cross-border rejected", function() {
+    expect(res.status).to.equal(400);
+    expect(res.body.error).to.include('legal basis required');
+  });
+}
+
+docs {
+  # EU User - US Region - Missing Legal Basis
+  
+  Tests error handling when legal basis is missing for cross-border transfer.
+  Cross-border transfers must always have a valid legal basis.
+  
+  ## Expected Behavior
+  - Request rejected with 400
+  - Error indicates legal basis required for transfer
+}

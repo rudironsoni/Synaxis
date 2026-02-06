@@ -1,0 +1,57 @@
+meta {
+  name: Brazil User - EU Region - Contract - Marketing Purpose
+  type: http
+  seq: 67
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: sa-east-1
+  X-Processed-Region: eu-west-1
+  X-Cross-Border: true
+  X-Legal-Basis: contract
+  X-Processing-Purpose: marketing
+  X-Marketing-Consent: explicit
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test with marketing purpose"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-purpose-disclosed: eq marketing
+  res.headers.x-marketing-consent-verified: eq true
+}
+
+tests {
+  test("Marketing purpose disclosed and consented", function() {
+    expect(res.headers['x-purpose-disclosed']).to.equal('marketing');
+    expect(res.headers['x-marketing-consent-verified']).to.equal('true');
+  });
+}
+
+docs {
+  # Brazil to EU for Marketing
+  
+  Tests cross-border transfer for marketing purposes.
+  Verifies explicit consent for marketing communications.
+}

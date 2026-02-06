@@ -1,0 +1,66 @@
+meta {
+  name: Pro Tier - Data Retention - Custom - Denied
+  type: http
+  seq: 40
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/data-retention
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{proOrgId}}
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "auditLogs": "2y",
+    "requestLogs": "1y"
+  }
+}
+
+assert {
+  res.status: eq 403
+  res.body.error: isDefined
+  res.body.error.code: eq FEATURE_NOT_AVAILABLE
+  res.body.error.message: contains data retention
+  res.body.error.requiredTier: eq enterprise
+  res.body.error.currentTier: eq pro
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("proOrgId"));
+}
+
+tests {
+  test("Pro tier cannot customize data retention", function() {
+    expect(res.status).to.equal(403);
+    expect(res.body.error.code).to.equal("FEATURE_NOT_AVAILABLE");
+  });
+  
+  test("Enterprise tier required", function() {
+    expect(res.body.error.requiredTier).to.equal("enterprise");
+  });
+}
+
+docs {
+  # Pro Tier - Data Retention - Custom - Denied
+  
+  Tests that Pro tier uses fixed retention periods.
+  
+  ## Expected Behavior
+  - Returns 403 Forbidden
+  - Pro uses fixed 30-day retention
+  - Custom retention requires Enterprise
+  
+  ## Feature: Custom Data Retention
+  Available on: Enterprise only
+}

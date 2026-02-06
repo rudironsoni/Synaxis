@@ -1,0 +1,71 @@
+meta {
+  name: Super Admin - System Health
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/system/health
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Region: {{region}}
+  X-Admin-Action: view-system-health
+}
+
+assert {
+  res.status: eq 200
+  res.body.overallStatus: isDefined
+  res.body.services: isDefined
+  res.body.regions: isDefined
+}
+
+tests {
+  test("Overall system status", function() {
+    expect(res.body.overallStatus).to.be.oneOf(['healthy', 'degraded', 'unhealthy']);
+  });
+  
+  test("Service health checks", function() {
+    expect(res.body.services).to.be.an('object');
+    expect(res.body.services.api).to.be.an('object');
+    expect(res.body.services.database).to.be.an('object');
+    expect(res.body.services.cache).to.be.an('object');
+  });
+  
+  test("Regional health", function() {
+    expect(res.body.regions).to.be.an('object');
+  });
+}
+
+docs {
+  # Super Admin - System Health
+  
+  Comprehensive system health monitoring.
+  
+  ## Services Monitored
+  - API gateway
+  - Authentication service
+  - Inference service
+  - Database (primary/replicas)
+  - Cache (Redis)
+  - Message queue
+  - Object storage
+  
+  ## Regional Status
+  - eu-central-1
+  - us-east-1
+  - ap-southeast-1
+  
+  ## Metrics
+  - Response times
+  - Error rates
+  - Queue depths
+  - Database lag
+  - Cache hit rates
+}

@@ -1,0 +1,85 @@
+meta {
+  name: 400-07-Invalid Model Name
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+  X-Virtual-Key: {{virtualKey}}
+}
+
+body:json {
+  {
+    "model": "nonexistent-model-xyz",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hello"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 400
+  res.body.error: isDefined
+  res.body.error.code: eq INVALID_MODEL
+  res.body.error.message: isDefined
+  res.body.error.details: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 400", function() {
+    expect(res.status).to.equal(400);
+  });
+  
+  test("Error code is INVALID_MODEL", function() {
+    expect(res.body.error.code).to.equal("INVALID_MODEL");
+  });
+  
+  test("Error message mentions model", function() {
+    expect(res.body.error.message).to.match(/model|invalid|not found/i);
+  });
+  
+  test("Error details include available models", function() {
+    expect(res.body.error.details).to.have.property('availableModels');
+    expect(res.body.error.details.availableModels).to.be.an('array');
+  });
+  
+  test("Error details include requested model", function() {
+    expect(res.body.error.details.requestedModel).to.equal('nonexistent-model-xyz');
+  });
+}
+
+docs {
+  # 400 Bad Request - Invalid Model Name
+  
+  Tests model name validation for inference requests.
+  
+  ## Trigger Condition
+  - POST to /inference/chat/completions
+  - Model: "nonexistent-model-xyz" (not in catalog)
+  
+  ## Expected Response
+  - Status: 400
+  - Error code: INVALID_MODEL
+  - List of available models
+  
+  ## Validation
+  - Model name validation
+  - Provider model catalog check
+  - Helpful list of valid models
+}

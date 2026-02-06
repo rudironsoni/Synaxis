@@ -1,0 +1,56 @@
+meta {
+  name: US User - Brazil Region - Contract - Rectification Request
+  type: http
+  seq: 63
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: us-east-1
+  X-Processed-Region: sa-east-1
+  X-Cross-Border: true
+  X-Legal-Basis: contract
+  X-Rectification-Request: pending
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test with data correction request"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-rectification-status: eq in-progress
+  res.headers.x-lgpd-article-18: eq compliant
+}
+
+tests {
+  test("Rectification request acknowledged", function() {
+    expect(res.headers['x-rectification-status']).to.equal('in-progress');
+    expect(res.headers['x-lgpd-article-18']).to.equal('compliant');
+  });
+}
+
+docs {
+  # US to Brazil with Rectification Request
+  
+  Tests cross-border transfer with data rectification request.
+  Verifies LGPD Article 18 right to correct inaccurate data.
+}

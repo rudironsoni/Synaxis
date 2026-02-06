@@ -1,0 +1,134 @@
+meta {
+  name: 19-Video Surveillance - CCTV Rights
+  type: http
+  seq: 19
+}
+
+get {
+  url: {{baseUrl}}/api/v1/compliance/gdpr/video-surveillance
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Region: {{region}}
+  X-Compliance-Framework: GDPR
+  X-Legal-Basis: legitimate_interest
+}
+
+assert {
+  res.status: eq 200
+  res.body.surveillance: isDefined
+  res.body.signagePresent: eq true
+  res.body.auditTrailId: isDefined
+}
+
+tests {
+  test("Video surveillance disclosed", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Surveillance areas documented", function() {
+    expect(res.body.surveillance).to.be.an('array');
+  });
+  
+  test("Signage present", function() {
+    expect(res.body.signagePresent).to.equal(true);
+  });
+  
+  test("Legal basis documented", function() {
+    expect(res.body.legalBasis).to.be.oneOf([
+      'legitimate_interest',
+      'legal_obligation',
+      'public_interest'
+    ]);
+  });
+  
+  test("Purpose clearly defined", function() {
+    expect(res.body.purpose).to.be.oneOf([
+      'security',
+      'safety',
+      'crime_prevention',
+      'access_control'
+    ]);
+  });
+  
+  test("Retention period specified", function() {
+    expect(res.body.retentionPeriod).to.be.a('string');
+    expect(res.body.retentionPeriodDays).to.be.a('number');
+    expect(res.body.retentionPeriodDays).to.be.at.most(30); // Typically 30 days max
+  });
+  
+  test("DPIA performed for public areas", function() {
+    if (res.body.publicAreaMonitoring) {
+      expect(res.body.dpiaPerformed).to.equal(true);
+    }
+  });
+  
+  test("Access to footage controlled", function() {
+    expect(res.body.accessControls).to.be.an('array');
+  });
+}
+
+docs {
+  # GDPR Video Surveillance (CCTV) Rights
+  
+  GDPR Article 35(3)(c) - DPIA required for systematic monitoring
+  
+  ## Legal Basis
+  Typically:
+  - Legitimate interests (security, safety) - Art. 6(1)(f)
+  - Legal obligation (certain facilities) - Art. 6(1)(c)
+  - Public interest (public authorities) - Art. 6(1)(e)
+  
+  ## Transparency Requirements
+  Must provide BEFORE or WHEN entering monitored area:
+  - Clear signage indicating surveillance
+  - Identity of controller
+  - Contact details of DPO
+  - Purpose of surveillance
+  - Legal basis
+  - Retention period
+  - Rights of data subjects
+  
+  ## Signage Requirements
+  - Visible and clearly legible
+  - Before entering monitored area
+  - Camera symbol
+  - Reference to more detailed information
+  
+  ## DPIA Required (Art. 35)
+  - Systematic monitoring of publicly accessible areas
+  - Large scale
+  - Use of new technologies (facial recognition, etc.)
+  
+  ## Proportionality
+  - Cameras should not cover areas where privacy expected (restrooms, changing rooms)
+  - Limit scope to necessary areas
+  - Consider less intrusive alternatives
+  - Appropriate retention period (typically max 30 days)
+  
+  ## Special Technologies
+  - Facial recognition: requires specific legal basis + DPIA
+  - License plate recognition: same requirements
+  - Audio recording: higher privacy expectations (consent often needed)
+  
+  ## Data Subject Rights
+  - Right of access (request footage)
+  - Right to rectification (if misidentified)
+  - Right to erasure (if unlawfully processed)
+  - Right to object
+  
+  ## Verification
+  ✓ Surveillance disclosed
+  ✓ Signage present
+  ✓ Legal basis documented
+  ✓ Purpose defined
+  ✓ Retention period specified
+  ✓ DPIA performed (if required)
+  ✓ Access controls in place
+}

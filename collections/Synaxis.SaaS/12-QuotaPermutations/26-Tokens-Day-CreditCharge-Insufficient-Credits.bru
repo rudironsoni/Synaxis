@@ -1,0 +1,102 @@
+meta {
+  name: Tokens-Day-CreditCharge-Insufficient-Credits
+  type: http
+  seq: 26
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{orgId}}
+  X-Test-Quota-Type: tokens
+  X-Test-Quota-Limit: 10000000
+  X-Test-Quota-Window: day
+  X-Test-Quota-Action: credit_charge
+  X-Test-Simulate-Token-Usage: 12000000
+  X-Test-Credit-Balance: 0.50
+  X-Test-Required-Credits: 2.00
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test overage but insufficient credits"
+      }
+    ],
+    "max_tokens": 500
+  }
+}
+
+assert {
+  res.status: eq 402
+  res.body.error.code: eq insufficient_credits
+}
+
+tests {
+  test("Payment required for insufficient credits", function() {
+    expect(res.status).to.equal(402);
+  });
+  
+  test("Insufficient credits error", function() {
+    expect(res.body.error.code).to.equal('insufficient_credits');
+    expect(res.body.error.type).to.equal('payment_required');
+  });
+  
+  test("Credit details provided", function() {
+    expect(res.body.error.details.credit_balance).to.equal(0.50);
+    expect(res.body.error.details.credits_required).to.equal(2.00);
+    expect(res.body.error.details.credit_deficit).to.equal(1.50);
+  });
+  
+  test("Top-up options provided", function() {
+    expect(res.body.error.topup_options).to.be.an('array');
+    res.body.error.topup_options.forEach(option => {
+      expect(option.amount).to.be.a('number');
+      expect(option.bonus).to.be.a('number');
+      expect(option.total_credits).to.be.a('number');
+    });
+  });
+  
+  test("Payment URL provided", function() {
+    expect(res.body.error.payment_url).to.be.a('string');
+    expect(res.body.error.payment_url).to.match(/^https?:\/\//);
+  });
+}
+
+docs {
+  # Tokens-Day-CreditCharge-Insufficient-Credits
+  
+  Tests credit charging when credit balance is insufficient.
+  
+  ## Scenario
+  - Daily quota: 10M tokens
+  - Used: 12M tokens (20% overage)
+  - Overage cost: $2.00
+  - Credit balance: $0.50
+  - Deficit: $1.50
+  
+  ## Expected Behavior
+  - Status: 402 Payment Required
+  - Error: insufficient_credits
+  - Shows credit deficit
+  - Provides top-up options
+  - Links to payment page
+  
+  ## Recovery
+  User must:
+  1. Add credits via payment_url
+  2. Purchase credit package
+  3. Or wait for quota reset
+}

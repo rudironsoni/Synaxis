@@ -17,6 +17,9 @@ public class UserOrganizationMembership : ISoftDeletable
     public int? RateLimitTpm { get; set; }
     public bool AllowAutoOptimization { get; set; } = true;
     public required string Status { get; set; } = "Active";
+    public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
     // Soft delete properties
     public DateTime? DeletedAt { get; set; }

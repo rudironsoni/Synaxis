@@ -1,0 +1,76 @@
+meta {
+  name: Regional Health
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/health/regions
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.regions: isDefined
+}
+
+tests {
+  test("All regions reporting", function() {
+    expect(res.body.regions).to.be.an('object');
+    expect(res.body.regions['eu-central-1']).to.be.an('object');
+    expect(res.body.regions['us-east-1']).to.be.an('object');
+    expect(res.body.regions['ap-southeast-1']).to.be.an('object');
+  });
+  
+  test("Each region has status", function() {
+    Object.values(res.body.regions).forEach(region => {
+      expect(region.status).to.be.oneOf(['healthy', 'degraded', 'unhealthy']);
+      expect(region.latency).to.be.a('number');
+    });
+  });
+}
+
+docs {
+  # Regional Health
+  
+  Multi-region health status and latency information.
+  
+  ## Response Structure
+  ```json
+  {
+    "regions": {
+      "eu-central-1": {
+        "status": "healthy",
+        "latency": 45,
+        "availabilityZones": ["eu-central-1a", "eu-central-1b", "eu-central-1c"],
+        "activeRequests": 1250,
+        "errorRate": 0.01
+      },
+      "us-east-1": {
+        "status": "healthy",
+        "latency": 120,
+        "availabilityZones": ["us-east-1a", "us-east-1b"],
+        "activeRequests": 3400,
+        "errorRate": 0.02
+      }
+    },
+    "recommendedRegion": "eu-central-1"
+  }
+  ```
+  
+  ## Use Cases
+  - Smart region routing
+  - Failover decisions
+  - Status page displays
+  - Load balancing
+  - Geographic optimization
+  
+  ## Recommended Region
+  Based on:
+  - Caller's geographic location
+  - Current latency
+  - Error rates
+  - Available capacity
+  - Data residency constraints
+}

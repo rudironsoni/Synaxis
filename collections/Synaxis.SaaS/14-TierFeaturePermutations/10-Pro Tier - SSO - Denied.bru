@@ -1,0 +1,80 @@
+meta {
+  name: Pro Tier - SSO - Denied
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/sso/configure
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{proOrgId}}
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "provider": "saml2",
+    "metadata": "https://idp.example.com/metadata",
+    "entityId": "synaxis-saas-{{proOrgId}}"
+  }
+}
+
+assert {
+  res.status: eq 403
+  res.body.error: isDefined
+  res.body.error.code: eq FEATURE_NOT_AVAILABLE
+  res.body.error.message: contains SSO
+  res.body.error.requiredTier: eq enterprise
+  res.body.error.currentTier: eq pro
+  res.body.upgrade: isDefined
+  res.body.upgrade.contactSales: eq true
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("proOrgId"));
+}
+
+tests {
+  test("Pro tier cannot access SSO feature", function() {
+    expect(res.status).to.equal(403);
+    expect(res.body.error.code).to.equal("FEATURE_NOT_AVAILABLE");
+  });
+  
+  test("Response includes contact sales prompt", function() {
+    expect(res.body.upgrade.contactSales).to.equal(true);
+  });
+  
+  test("Required tier is enterprise", function() {
+    expect(res.body.error.requiredTier).to.equal("enterprise");
+  });
+  
+  test("Current tier is pro", function() {
+    expect(res.body.error.currentTier).to.equal("pro");
+  });
+}
+
+docs {
+  # Pro Tier - SSO - Denied
+  
+  Tests that Pro tier organizations cannot configure Single Sign-On.
+  
+  ## Expected Behavior
+  - Returns 403 Forbidden
+  - Error code: FEATURE_NOT_AVAILABLE
+  - Includes contact sales prompt (Enterprise-only feature)
+  
+  ## Feature: SSO (SAML/OIDC)
+  Available on: Enterprise only
+  
+  ## Upgrade Path
+  Pro → Enterprise (Contact Sales)
+}

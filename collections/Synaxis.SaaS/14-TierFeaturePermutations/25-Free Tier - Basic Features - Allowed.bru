@@ -1,0 +1,64 @@
+meta {
+  name: Free Tier - Basic Features - Allowed
+  type: http
+  seq: 25
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/usage
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Organization-Id: {{freeOrgId}}
+  X-Region: {{region}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.usage: isDefined
+  res.body.limits: isDefined
+  res.body.limits.requestsPerMonth: eq 1000
+  res.body.tier: eq free
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("freeOrgId"));
+}
+
+tests {
+  test("Free tier can access basic usage metrics", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body.usage).to.be.an('object');
+  });
+  
+  test("Free tier limits enforced", function() {
+    expect(res.body.limits.requestsPerMonth).to.equal(1000);
+  });
+  
+  test("Tier correctly identified", function() {
+    expect(res.body.tier).to.equal("free");
+  });
+}
+
+docs {
+  # Free Tier - Basic Features - Allowed
+  
+  Tests that free tier can access basic (non-premium) features.
+  
+  ## Expected Behavior
+  - Returns 200 OK
+  - Basic usage metrics available
+  - Free tier limits shown
+  
+  ## Free Tier Includes
+  - Basic API access (1,000 requests/month)
+  - Standard models
+  - Community support
+  - 7-day backup retention
+}

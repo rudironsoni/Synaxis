@@ -1,0 +1,77 @@
+meta {
+  name: Pro Tier - Audit Logs - Allowed
+  type: http
+  seq: 11
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/audit-logs
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Organization-Id: {{proOrgId}}
+  X-Region: {{region}}
+}
+
+params:query {
+  startDate: 2026-01-01
+  endDate: 2026-02-05
+  limit: 100
+}
+
+assert {
+  res.status: eq 200
+  res.body.logs: isArray
+  res.body.pagination: isDefined
+  res.body.retention: eq 30d
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("proOrgId"));
+}
+
+tests {
+  test("Pro tier can access audit logs", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body.logs).to.be.an('array');
+  });
+  
+  test("Retention period is 30 days for Pro", function() {
+    expect(res.body.retention).to.equal("30d");
+  });
+  
+  test("Pagination info included", function() {
+    expect(res.body.pagination).to.be.an('object');
+  });
+  
+  test("Each log entry has required fields", function() {
+    if (res.body.logs.length > 0) {
+      const log = res.body.logs[0];
+      expect(log).to.have.property('timestamp');
+      expect(log).to.have.property('actor');
+      expect(log).to.have.property('action');
+      expect(log).to.have.property('resource');
+    }
+  });
+}
+
+docs {
+  # Pro Tier - Audit Logs - Allowed
+  
+  Tests that Pro tier organizations can access audit logs with 30-day retention.
+  
+  ## Expected Behavior
+  - Returns 200 OK
+  - Audit logs returned with pagination
+  - 30-day retention period (Pro tier limit)
+  
+  ## Feature: Audit Logs
+  Available on: Pro, Enterprise
+  Retention: Pro (30 days), Enterprise (1 year)
+}

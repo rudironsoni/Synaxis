@@ -1,0 +1,133 @@
+meta {
+  name: 10-ANPD Complaint (Art 26)
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/api/v1/compliance/lgpd/anpd-complaint
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: sa-east-1
+  X-Compliance-Framework: LGPD
+  X-Legal-Basis: legal_obligation
+}
+
+body:json {
+  {
+    "requestType": "anpd_complaint_info",
+    "complaintType": "non_compliance",
+    "description": "Request information on how to file complaint with ANPD"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.anpdContact: isDefined
+  res.body.complaintProcedure: isDefined
+  res.body.dataLocation: contains brazil
+  res.body.auditTrailId: isDefined
+}
+
+tests {
+  test("ANPD complaint information provided", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("ANPD contact information provided", function() {
+    expect(res.body.anpdContact).to.be.an('object');
+    expect(res.body.anpdContact.website).to.be.a('string');
+    expect(res.body.anpdContact.email).to.be.a('string');
+  });
+  
+  test("Complaint procedure explained", function() {
+    expect(res.body.complaintProcedure).to.be.a('string');
+  });
+  
+  test("Data location in Brazil", function() {
+    expect(res.body.dataLocation).to.match(/brazil|sa-east/i);
+  });
+  
+  test("Audit trail created", function() {
+    expect(res.body.auditTrailId).to.be.a('string');
+  });
+  
+  test("Consumer protection agencies listed", function() {
+    expect(res.body.consumerProtectionAgencies).to.be.an('array');
+  });
+  
+  test("Alternative dispute resolution available", function() {
+    expect(res.body.alternativeDisputeResolution).to.be.an('array');
+  });
+  
+  test("Timeline information provided", function() {
+    expect(res.body.complaintTimeline).to.be.a('string');
+  });
+}
+
+docs {
+  # LGPD ANPD Complaint (Article 26)
+  
+  Article 26 - Right to petition ANPD
+  
+  ## Right
+  Data subject has right to:
+  - Petition against controller to ANPD
+  - Lodge complaint with ANPD
+  - Seek remedy for violations
+  
+  ## ANPD
+  Autoridade Nacional de Proteção de Dados
+  (Brazilian Data Protection Authority)
+  
+  ## ANPD Contact
+  - Website: https://www.gov.br/anpd/pt-br
+  - Email: anpd@economia.gov.br
+  - Address: Brasília, DF, Brazil
+  
+  ## Complaint Grounds
+  - Non-compliance with LGPD
+  - Violation of data subject rights
+  - Inadequate security measures
+  - Unauthorized processing
+  - Excessive data collection
+  - Lack of transparency
+  
+  ## Complaint Process
+  1. Submit complaint to ANPD
+  2. ANPD investigates
+  3. ANPD may request information from controller
+  4. ANPD may issue recommendations/sanctions
+  5. Data subject informed of outcome
+  
+  ## ANPD Powers (Art. 55-J)
+  - Supervision
+  - Investigation
+  - Sanctions (warning, fine, etc.)
+  - Recommendations
+  - Public communication
+  
+  ## Alternative Channels
+  - Consumer protection agencies (PROCON)
+  - Public prosecutor's office
+  - Civil court
+  - Self-regulatory bodies
+  
+  ## Verification
+  ✓ ANPD info provided
+  ✓ ANPD contact info
+  ✓ Complaint procedure explained
+  ✓ Data location disclosed
+  ✓ Audit trail created
+  ✓ Consumer agencies listed
+  ✓ Alternative resolution available
+  ✓ Timeline provided
+}

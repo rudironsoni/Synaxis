@@ -1,0 +1,89 @@
+meta {
+  name: List Organizations
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations?page=1&limit=20&sort=createdAt:desc
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Region: {{region}}
+}
+
+query {
+  page: 1
+  limit: 20
+  sort: createdAt:desc
+}
+
+assert {
+  res.status: eq 200
+  res.body.data: isDefined
+  res.body.pagination: isDefined
+  res.body.pagination.page: eq 1
+  res.body.pagination.limit: eq 20
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Data is array", function() {
+    expect(res.body.data).to.be.an('array');
+  });
+  
+  test("Pagination metadata present", function() {
+    expect(res.body.pagination).to.have.property('page');
+    expect(res.body.pagination).to.have.property('limit');
+    expect(res.body.pagination).to.have.property('total');
+    expect(res.body.pagination).to.have.property('totalPages');
+  });
+  
+  test("Organizations sorted by createdAt desc", function() {
+    if (res.body.data.length > 1) {
+      const first = new Date(res.body.data[0].createdAt);
+      const second = new Date(res.body.data[1].createdAt);
+      expect(first.getTime()).to.be.greaterThanOrEqual(second.getTime());
+    }
+  });
+  
+  test("Each org has required fields", function() {
+    res.body.data.forEach(org => {
+      expect(org).to.have.property('id');
+      expect(org).to.have.property('name');
+      expect(org).to.have.property('slug');
+      expect(org).to.have.property('status');
+    });
+  });
+}
+
+docs {
+  # List Organizations
+  
+  Lists all organizations the authenticated user belongs to.
+  
+  ## Query Parameters
+  - `page`: Page number (default: 1)
+  - `limit`: Items per page (default: 20, max: 100)
+  - `sort`: Sort field and direction (e.g., createdAt:desc)
+  - `status`: Filter by status (active/suspended/deleted)
+  - `search`: Search by name or slug
+  
+  ## Response
+  - `data`: Array of organization objects
+  - `pagination`: Pagination metadata
+  
+  ## Sorting
+  Available sort fields:
+  - `createdAt`: Creation date
+  - `updatedAt`: Last update date
+  - `name`: Alphabetical
+  
+  Directions: `asc` or `desc`
+}

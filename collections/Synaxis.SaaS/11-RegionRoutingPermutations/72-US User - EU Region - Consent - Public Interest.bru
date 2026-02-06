@@ -1,0 +1,57 @@
+meta {
+  name: US User - EU Region - Consent - Public Interest
+  type: http
+  seq: 72
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: us-east-1
+  X-Processed-Region: eu-west-1
+  X-Cross-Border: true
+  X-Legal-Basis: consent
+  X-Public-Interest: environmental-protection
+  X-Task-Authority: EU-Environment-Agency
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Processing in public interest"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-public-interest-documented: eq true
+  res.headers.x-task-authority-verified: eq true
+}
+
+tests {
+  test("Public interest task justified", function() {
+    expect(res.headers['x-public-interest-documented']).to.equal('true');
+    expect(res.headers['x-task-authority-verified']).to.equal('true');
+  });
+}
+
+docs {
+  # US to EU for Public Interest
+  
+  Tests cross-border transfer for public interest tasks.
+  Verifies GDPR Article 6(1)(e) public interest basis.
+}

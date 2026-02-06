@@ -1,0 +1,140 @@
+meta {
+  name: Create API Key
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/api-keys
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "name": "{{apiKeyName}}",
+    "scopes": ["inference:read", "inference:write"],
+    "expiresIn": 90,
+    "rateLimit": 100,
+    "allowedModels": ["gpt-4", "gpt-3.5-turbo"],
+    "allowedRegions": ["eu-central-1"],
+    "metadata": {
+      "environment": "development",
+      "application": "bruno-tests"
+    }
+  }
+}
+
+assert {
+  res.status: eq 201
+  res.body.id: isDefined
+  res.body.name: eq {{apiKeyName}}
+  res.body.key: isDefined
+  res.body.prefix: isDefined
+  res.body.scopes: isDefined
+  res.body.expiresAt: isDefined
+  res.headers.content-type: contains application/json
+}
+
+script:post-response {
+  if (res.body.id) {
+    bru.setEnvVar("apiKeyId", res.body.id);
+  }
+  
+  if (res.body.key) {
+    bru.setEnvVar("apiKey", res.body.key);
+  }
+  
+  if (res.body.prefix) {
+    bru.setEnvVar("apiKeyPrefix", res.body.prefix);
+  }
+}
+
+tests {
+  test("API key format valid", function() {
+    expect(res.body.key).to.match(/^sk-[a-zA-Z0-9]{48}$/);
+  });
+  
+  test("Prefix matches key", function() {
+    expect(res.body.key).to.startWith(res.body.prefix);
+  });
+  
+  test("Key returned only once", function() {
+    // Note: This is the ONLY time the full key is returned
+    expect(res.body._warning).to.include("Store securely");
+  });
+  
+  test("Scopes assigned correctly", function() {
+    expect(res.body.scopes).to.include.members(["inference:read", "inference:write"]);
+  });
+  
+  test("Expiry date calculated", function() {
+    const expiresAt = new Date(res.body.expiresAt);
+    const now = new Date();
+    const daysUntilExpiry = (expiresAt - now) / (1000 * 60 * 60 * 24);
+    expect(daysUntilExpiry).to.be.closeTo(90, 1);
+  });
+  
+  test("Rate limit per minute set", function() {
+    expect(res.body.rateLimit).to.equal(100);
+  });
+}
+
+docs {
+  # Create API Key
+  
+  Creates a new virtual API key for programmatic access.
+  
+  ## Request Body
+  - `name`: Key display name (required)
+  - `scopes`: Permission scopes array (required)
+  - `expiresIn`: Days until expiration (optional, default: 90)
+  - `rateLimit`: Requests per minute (optional, default: 60)
+  - `allowedModels`: Restrict to specific models (optional)
+  - `allowedRegions`: Restrict to specific regions (optional)
+  - `metadata`: Custom key-value pairs (optional)
+  
+  ## Available Scopes
+  - `inference:read`: Read model info
+  - `inference:write`: Create completions
+  - `analytics:read`: View usage analytics
+  - `team:read`: View team members
+  - `team:write`: Manage team members
+  
+  ## Key Format
+  - Prefix: `sk-` (secret key)
+  - Length: 51 characters total
+  - Character set: Base62 (alphanumeric)
+  - Example: `sk-AbC123xYz456...` (48 chars after prefix)
+  
+  ## Security
+  - **CRITICAL**: Key shown only once at creation
+  - Store securely (environment variables, secrets manager)
+  - Cannot retrieve key again after creation
+  - Use key prefixes for logging/monitoring
+  
+  ## Rate Limiting
+  - Per-key rate limit enforced
+  - Independent of organization limit
+  - Burst allowance: 2x limit for 1 second
+  
+  ## Rotation
+  - Recommended: Rotate every 90 days
+  - Use `/api-keys/{id}/rotate` endpoint
+  - Old key valid for 24h grace period
+  
+  ## Error Codes
+  - 401: Unauthorized
+  - 403: Forbidden (insufficient permissions)
+  - 422: Invalid scopes or parameters
+  - 429: Organization API key limit exceeded
+}

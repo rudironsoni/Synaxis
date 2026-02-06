@@ -1,0 +1,66 @@
+meta {
+  name: Update Privacy Consent
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/users/me/privacy
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "marketingConsent": false,
+    "analyticsConsent": true,
+    "dataProcessingConsent": true,
+    "thirdPartySharing": false
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.marketingConsent: eq false
+  res.body.analyticsConsent: eq true
+  res.body.updatedAt: isDefined
+}
+
+tests {
+  test("Consent updated", function() {
+    expect(res.body.marketingConsent).to.be.false;
+  });
+  
+  test("Audit entry created", function() {
+    expect(res.body.lastConsentUpdate).to.be.a('string');
+  });
+}
+
+docs {
+  # Update Privacy Consent
+  
+  Updates user's privacy consent preferences.
+  
+  ## Consent Types
+  - dataProcessingConsent: Required for service
+  - marketingConsent: Optional marketing emails
+  - analyticsConsent: Anonymous usage analytics
+  - thirdPartySharing: Share with partners
+  - crossBorderConsent: Data transfers outside region
+  
+  ## Audit Trail
+  All consent changes logged with:
+  - Timestamp
+  - IP address
+  - User agent
+  - Previous/new values
+}

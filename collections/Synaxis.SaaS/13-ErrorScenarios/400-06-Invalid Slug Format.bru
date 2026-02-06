@@ -1,0 +1,83 @@
+meta {
+  name: 400-06-Invalid Slug Format
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "name": "Test Organization",
+    "slug": "Invalid Slug With Spaces!"
+  }
+}
+
+assert {
+  res.status: eq 400
+  res.body.error: isDefined
+  res.body.error.code: eq INVALID_SLUG_FORMAT
+  res.body.error.message: isDefined
+  res.body.error.details: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 400", function() {
+    expect(res.status).to.equal(400);
+  });
+  
+  test("Error code is INVALID_SLUG_FORMAT", function() {
+    expect(res.body.error.code).to.equal("INVALID_SLUG_FORMAT");
+  });
+  
+  test("Error message mentions slug format", function() {
+    expect(res.body.error.message).to.match(/slug|format|invalid/i);
+  });
+  
+  test("Error details include format rules", function() {
+    expect(res.body.error.details).to.have.property('format');
+    expect(res.body.error.details.format).to.match(/lowercase|alphanumeric|hyphen/i);
+  });
+  
+  test("Error details include regex pattern", function() {
+    expect(res.body.error.details).to.have.property('pattern');
+  });
+  
+  test("Error includes example", function() {
+    expect(res.body.error.details).to.have.property('example');
+  });
+}
+
+docs {
+  # 400 Bad Request - Invalid Slug Format
+  
+  Tests slug format validation (URL-safe identifier).
+  
+  ## Trigger Condition
+  - POST to /organizations with invalid slug
+  - Slug: "Invalid Slug With Spaces!" (spaces and special chars)
+  
+  ## Expected Response
+  - Status: 400
+  - Error code: INVALID_SLUG_FORMAT
+  - Format rules and pattern in details
+  
+  ## Validation
+  - Slug format enforcement (lowercase, alphanumeric, hyphens)
+  - URL-safe identifier validation
+  - Helpful format examples
+}

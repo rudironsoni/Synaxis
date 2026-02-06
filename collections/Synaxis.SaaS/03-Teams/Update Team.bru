@@ -1,0 +1,56 @@
+meta {
+  name: Update Team
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/teams/{{teamId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "name": "Updated Team Name",
+    "description": "Updated team description",
+    "settings": {
+      "requireMfa": true,
+      "allowApiKeyCreation": true,
+      "maxApiKeysPerMember": 5
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.id: eq {{teamId}}
+  res.body.name: eq Updated Team Name
+  res.body.settings.requireMfa: eq true
+}
+
+tests {
+  test("Name updated", function() {
+    expect(res.body.name).to.equal("Updated Team Name");
+  });
+  
+  test("Settings updated", function() {
+    expect(res.body.settings.requireMfa).to.be.true;
+    expect(res.body.settings.maxApiKeysPerMember).to.equal(5);
+  });
+}
+
+docs {
+  # Update Team
+  
+  Updates team settings (admin only).
+}

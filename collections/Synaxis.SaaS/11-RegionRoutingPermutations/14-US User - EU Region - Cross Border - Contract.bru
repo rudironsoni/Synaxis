@@ -1,0 +1,60 @@
+meta {
+  name: US User - EU Region - Cross Border - Contract
+  type: http
+  seq: 14
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: us-east-1
+  X-Processed-Region: eu-west-1
+  X-Cross-Border: true
+  X-Legal-Basis: contract
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test message for US to EU transfer for contract"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-cross-border-transfer: eq true
+  res.headers.x-legal-basis: eq contract
+  res.headers.x-processed-region: eq eu-west-1
+}
+
+tests {
+  test("Transfer for contract performance", function() {
+    expect(res.headers['x-cross-border-transfer']).to.equal('true');
+    expect(res.headers['x-legal-basis']).to.equal('contract');
+  });
+}
+
+docs {
+  # US User - EU Region - Cross Border - Contract
+  
+  Tests US to EU data transfer necessary for contract performance.
+  
+  ## Legal Basis
+  - Contract necessity
+  - Transfer required for service delivery
+  - Must be documented as necessary
+}

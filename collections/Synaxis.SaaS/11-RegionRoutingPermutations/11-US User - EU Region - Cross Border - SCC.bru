@@ -1,0 +1,70 @@
+meta {
+  name: US User - EU Region - Cross Border - SCC
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: us-east-1
+  X-Processed-Region: eu-west-1
+  X-Cross-Border: true
+  X-Legal-Basis: SCC
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test message for US to EU transfer with SCC"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-cross-border-transfer: eq true
+  res.headers.x-legal-basis: eq SCC
+  res.headers.x-processed-region: eq eu-west-1
+}
+
+tests {
+  test("US to EU transfer with SCC", function() {
+    expect(res.headers['x-cross-border-transfer']).to.equal('true');
+    expect(res.headers['x-legal-basis']).to.equal('SCC');
+  });
+  
+  test("Request processed in EU region", function() {
+    expect(res.headers['x-processed-region']).to.equal('eu-west-1');
+  });
+  
+  test("GDPR compliance for US data in EU", function() {
+    expect(res.headers['x-compliance-frameworks']).to.include('GDPR');
+  });
+}
+
+docs {
+  # US User - EU Region - Cross Border - SCC
+  
+  Tests US to EU data transfer using Standard Contractual Clauses.
+  While primarily a GDPR mechanism, SCCs can apply to US->EU flows
+  when US users' data is processed in EU under GDPR jurisdiction.
+  
+  ## Legal Basis
+  - Standard Contractual Clauses
+  - Data processed in EU becomes subject to GDPR
+  - May also need CCPA disclosures
+}

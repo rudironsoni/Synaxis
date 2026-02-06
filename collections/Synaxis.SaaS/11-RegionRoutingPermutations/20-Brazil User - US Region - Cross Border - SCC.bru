@@ -1,0 +1,65 @@
+meta {
+  name: Brazil User - US Region - Cross Border - SCC
+  type: http
+  seq: 20
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: sa-east-1
+  X-Processed-Region: us-east-1
+  X-Cross-Border: true
+  X-Legal-Basis: SCC
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test message for Brazil to US transfer with SCC"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-cross-border-transfer: eq true
+  res.headers.x-legal-basis: eq SCC
+  res.headers.x-processed-region: eq us-east-1
+}
+
+tests {
+  test("Brazil to US transfer with SCC", function() {
+    expect(res.headers['x-cross-border-transfer']).to.equal('true');
+    expect(res.headers['x-legal-basis']).to.equal('SCC');
+  });
+  
+  test("LGPD international transfer compliance", function() {
+    expect(res.headers['x-compliance-frameworks']).to.include('LGPD');
+  });
+}
+
+docs {
+  # Brazil User - US Region - Cross Border - SCC
+  
+  Tests Brazil to US data transfer using contractual clauses.
+  Must comply with LGPD Article 33 requirements.
+  
+  ## Legal Basis
+  - LGPD Article 33 - Standard contractual clauses
+  - ANPD (Brazilian DPA) approved mechanisms
+  - Similar to GDPR SCCs
+}

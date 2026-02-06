@@ -1,0 +1,120 @@
+meta {
+  name: 18-Employee Monitoring - Workplace Rights
+  type: http
+  seq: 18
+}
+
+get {
+  url: {{baseUrl}}/api/v1/compliance/gdpr/employee-monitoring
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Region: {{region}}
+  X-Compliance-Framework: GDPR
+  X-Legal-Basis: legitimate_interest
+}
+
+assert {
+  res.status: eq 200
+  res.body.monitoring: isDefined
+  res.body.transparencyProvided: eq true
+  res.body.auditTrailId: isDefined
+}
+
+tests {
+  test("Employee monitoring disclosed", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Monitoring activities documented", function() {
+    expect(res.body.monitoring).to.be.an('array');
+  });
+  
+  test("Transparency provided", function() {
+    expect(res.body.transparencyProvided).to.equal(true);
+  });
+  
+  test("Legitimate interest basis", function() {
+    expect(res.body.legalBasis).to.equal('legitimate_interest');
+  });
+  
+  test("Legitimate interest assessment performed", function() {
+    expect(res.body.legitimateInterestAssessment).to.be.an('object');
+    expect(res.body.legitimateInterestAssessment.purpose).to.be.a('string');
+    expect(res.body.legitimateInterestAssessment.necessity).to.be.a('string');
+    expect(res.body.legitimateInterestAssessment.balancingTest).to.be.a('string');
+  });
+  
+  test("Proportionality assessed", function() {
+    expect(res.body.proportionalityAssessed).to.equal(true);
+  });
+  
+  test("Employee rights respected", function() {
+    expect(res.body.employeeRights).to.be.an('array');
+    expect(res.body.employeeRights).to.include('access');
+    expect(res.body.employeeRights).to.include('rectification');
+    expect(res.body.employeeRights).to.include('objection');
+  });
+}
+
+docs {
+  # GDPR Employee Monitoring - Workplace Rights
+  
+  GDPR Recital 155 - Processing in employment context
+  
+  ## Legal Basis
+  Typically legitimate interests (Art. 6(1)(f)) or contract (Art. 6(1)(b)).
+  
+  ## Legitimate Interest Assessment
+  Must balance:
+  - Employer's legitimate interests (security, productivity, compliance)
+  - Employee's reasonable expectations of privacy
+  
+  ## Proportionality
+  Monitoring must be:
+  - Necessary for purpose
+  - Proportionate to aim
+  - Least intrusive means
+  
+  ## Transparency (Art. 13)
+  Must inform employees of:
+  - What is monitored (email, internet, location, video, keystrokes)
+  - Why (purpose and legal basis)
+  - How long data retained
+  - Who has access
+  - Rights (access, rectification, objection)
+  
+  ## Types of Monitoring
+  - Email monitoring
+  - Internet usage tracking
+  - Location tracking
+  - Video surveillance
+  - Keystroke logging
+  - Phone call recording
+  - Access control systems
+  
+  ## Special Considerations
+  - Works council consultation (required in many Member States)
+  - National labor laws
+  - Collective bargaining agreements
+  - Employee consent (generally invalid due to power imbalance)
+  
+  ## DPIA Required If (Art. 35)
+  - Systematic monitoring of publicly accessible areas
+  - Large-scale processing
+  - Use of new technologies
+  
+  ## Verification
+  ✓ Monitoring disclosed
+  ✓ Transparency provided
+  ✓ Legitimate interest basis
+  ✓ LIA performed
+  ✓ Proportionality assessed
+  ✓ Employee rights respected
+}

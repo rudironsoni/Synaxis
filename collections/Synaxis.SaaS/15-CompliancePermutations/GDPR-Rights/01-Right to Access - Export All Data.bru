@@ -1,0 +1,117 @@
+meta {
+  name: 01-Right to Access - Export All Data
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/compliance/gdpr/access
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+  X-Compliance-Framework: GDPR
+  X-Legal-Basis: consent
+}
+
+body:json {
+  {
+    "requestType": "access",
+    "format": "json",
+    "includeAllData": true,
+    "dataCategories": [
+      "profile",
+      "usage",
+      "billing",
+      "audit",
+      "consent"
+    ]
+  }
+}
+
+assert {
+  res.status: eq 202
+  res.body.requestId: isDefined
+  res.body.legalBasis: eq consent
+  res.body.dataLocation: isDefined
+  res.body.auditTrailId: isDefined
+  res.headers.x-compliance-framework: eq GDPR
+}
+
+script:post-response {
+  if (res.body.requestId) {
+    bru.setEnvVar("gdprAccessRequestId", res.body.requestId);
+  }
+  if (res.body.auditTrailId) {
+    bru.setEnvVar("auditTrailId", res.body.auditTrailId);
+  }
+}
+
+tests {
+  test("GDPR access request accepted", function() {
+    expect(res.status).to.equal(202);
+  });
+  
+  test("Legal basis is documented", function() {
+    expect(res.body.legalBasis).to.be.oneOf(['consent', 'contract', 'legal_obligation']);
+  });
+  
+  test("Data location is EU", function() {
+    expect(res.body.dataLocation).to.match(/^eu-/);
+  });
+  
+  test("Audit trail created", function() {
+    expect(res.body.auditTrailId).to.be.a('string');
+    expect(res.body.auditTrailId).to.have.lengthOf.at.least(36);
+  });
+  
+  test("Compliance framework header present", function() {
+    expect(res.headers['x-compliance-framework']).to.equal('GDPR');
+  });
+  
+  test("Response time within GDPR 1-month deadline", function() {
+    const estimatedCompletion = new Date(res.body.estimatedCompletionTime);
+    const oneMonthFromNow = new Date();
+    oneMonthFromNow.setMonth(oneMonthFromNow.getMonth() + 1);
+    expect(estimatedCompletion.getTime()).to.be.lessThan(oneMonthFromNow.getTime());
+  });
+}
+
+docs {
+  # GDPR Right to Access - Export All Data
+  
+  GDPR Article 15 - Right of access by the data subject
+  
+  ## Legal Basis
+  The data subject has the right to obtain confirmation as to whether 
+  personal data concerning them is being processed, and access to that data.
+  
+  ## Response Timeline
+  - Must respond within 1 month
+  - Can extend by 2 months if complex
+  - Must inform subject of extension within 1 month
+  
+  ## Data Included
+  - Purposes of processing
+  - Categories of personal data
+  - Recipients or categories of recipients
+  - Retention period
+  - Right to rectification, erasure, restriction
+  - Right to lodge complaint with supervisory authority
+  - Source of data (if not collected from subject)
+  - Existence of automated decision-making
+  
+  ## Verification
+  ✓ Legal basis documented
+  ✓ Data location in EU
+  ✓ Audit trail created
+  ✓ Consent verified
+  ✓ Response timeline compliant
+}

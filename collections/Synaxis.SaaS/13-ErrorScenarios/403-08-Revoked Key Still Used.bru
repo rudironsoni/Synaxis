@@ -1,0 +1,88 @@
+meta {
+  name: 403-08-Revoked Key Still Used
+  type: http
+  seq: 26
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+  X-Virtual-Key: vk_revoked_but_cached_key
+}
+
+body:json {
+  {
+    "model": "gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hello"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 403
+  res.body.error: isDefined
+  res.body.error.code: eq API_KEY_REVOKED
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 403", function() {
+    expect(res.status).to.equal(403);
+  });
+  
+  test("Error code is API_KEY_REVOKED", function() {
+    expect(res.body.error.code).to.equal("API_KEY_REVOKED");
+  });
+  
+  test("Error message mentions revocation", function() {
+    expect(res.body.error.message).to.match(/revoked|invalidated|cancelled/i);
+  });
+  
+  test("Error details include revocation timestamp", function() {
+    expect(res.body.error.details).to.have.property('revokedAt');
+  });
+  
+  test("Error details include revocation reason", function() {
+    expect(res.body.error.details).to.have.property('revokedReason');
+  });
+  
+  test("Error suggests creating new key", function() {
+    expect(res.body.error.details).to.have.property('suggestion');
+    expect(res.body.error.details.suggestion).to.match(/new key|regenerate/i);
+  });
+}
+
+docs {
+  # 403 Forbidden - Revoked Key Still Used
+  
+  Tests revoked API key enforcement (403 variant).
+  
+  ## Trigger Condition
+  - POST with revoked virtual key
+  - Key revoked after successful authentication
+  
+  ## Expected Response
+  - Status: 403
+  - Error code: API_KEY_REVOKED
+  - Revocation details and key regeneration guidance
+  
+  ## Validation
+  - Revocation immediately effective
+  - Clear revocation status
+  - Key regeneration guidance
+}

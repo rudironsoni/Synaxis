@@ -1,0 +1,60 @@
+meta {
+  name: US User - Brazil Region - Cross Border - Consent
+  type: http
+  seq: 16
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: us-east-1
+  X-Processed-Region: sa-east-1
+  X-Cross-Border: true
+  X-Legal-Basis: consent
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test message for US to Brazil transfer with consent"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-cross-border-transfer: eq true
+  res.headers.x-legal-basis: eq consent
+  res.headers.x-processed-region: eq sa-east-1
+}
+
+tests {
+  test("US to Brazil transfer with consent", function() {
+    expect(res.headers['x-cross-border-transfer']).to.equal('true');
+    expect(res.headers['x-legal-basis']).to.equal('consent');
+  });
+}
+
+docs {
+  # US User - Brazil Region - Cross Border - Consent
+  
+  Tests US to Brazil data transfer based on consent.
+  
+  ## Legal Basis
+  - User consent for international processing
+  - LGPD consent requirements
+  - May need CCPA/state law disclosures
+}

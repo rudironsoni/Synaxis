@@ -1,0 +1,75 @@
+meta {
+  name: 403-01-Insufficient Permissions
+  type: http
+  seq: 19
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+assert {
+  res.status: eq 403
+  res.body.error: isDefined
+  res.body.error.code: eq INSUFFICIENT_PERMISSIONS
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 403", function() {
+    expect(res.status).to.equal(403);
+  });
+  
+  test("Error code is INSUFFICIENT_PERMISSIONS", function() {
+    expect(res.body.error.code).to.equal("INSUFFICIENT_PERMISSIONS");
+  });
+  
+  test("Error message mentions permissions", function() {
+    expect(res.body.error.message).to.match(/permission|access|forbidden/i);
+  });
+  
+  test("Error details include required permission", function() {
+    expect(res.body.error.details).to.have.property('requiredPermission');
+    expect(res.body.error.details.requiredPermission).to.equal('organization:delete');
+  });
+  
+  test("Error details include user role", function() {
+    expect(res.body.error.details).to.have.property('userRole');
+  });
+  
+  test("Error suggests permission request", function() {
+    expect(res.body.error.details).to.have.property('suggestion');
+  });
+}
+
+docs {
+  # 403 Forbidden - Insufficient Permissions
+  
+  Tests role-based access control (RBAC).
+  
+  ## Trigger Condition
+  - DELETE /organizations as non-admin user
+  - User lacks organization:delete permission
+  
+  ## Expected Response
+  - Status: 403
+  - Error code: INSUFFICIENT_PERMISSIONS
+  - Required permission and user role details
+  
+  ## Validation
+  - RBAC enforcement
+  - Clear permission requirements
+  - User role identification
+}

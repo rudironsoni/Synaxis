@@ -1,0 +1,81 @@
+meta {
+  name: Zero-Quota-Block-Immediate
+  type: http
+  seq: 29
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{orgId}}
+  X-Test-Quota-Type: requests
+  X-Test-Quota-Limit: 0
+  X-Test-Quota-Window: day
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test with zero quota"
+      }
+    ],
+    "max_tokens": 10
+  }
+}
+
+assert {
+  res.status: eq 403
+  res.headers.x-ratelimit-limit: eq 0
+  res.body.error.code: eq no_quota_assigned
+}
+
+tests {
+  test("Zero quota blocks immediately", function() {
+    expect(res.status).to.equal(403);
+  });
+  
+  test("Zero limit indicated", function() {
+    expect(res.headers['x-ratelimit-limit']).to.equal('0');
+    expect(res.headers['x-ratelimit-remaining']).to.equal('0');
+  });
+  
+  test("Specific error for zero quota", function() {
+    expect(res.body.error.code).to.equal('no_quota_assigned');
+    expect(res.body.error.message).to.match(/no quota|not enabled|upgrade required/i);
+  });
+  
+  test("Upgrade required", function() {
+    expect(res.body.error.upgrade_required).to.equal(true);
+  });
+}
+
+docs {
+  # Zero-Quota-Block-Immediate
+  
+  Tests behavior when quota is set to zero.
+  
+  ## Zero Quota Use Cases
+  - Feature not included in plan
+  - Trial period expired
+  - Account suspended
+  - Waiting for upgrade
+  - Feature flag disabled
+  
+  ## Expected Behavior
+  - Status: 403 Forbidden
+  - Error: no_quota_assigned
+  - Upgrade required
+  - No retry possible
+}

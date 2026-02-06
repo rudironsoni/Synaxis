@@ -1,0 +1,143 @@
+meta {
+  name: Login with MFA
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/v1/auth/login/mfa
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "email": "{{email}}",
+    "password": "{{password}}",
+    "mfaCode": "123456",
+    "deviceName": "Bruno API Client",
+    "deviceFingerprint": "bruno-test-device-001",
+    "trustDevice": true
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.accessToken: isDefined
+  res.body.refreshToken: isDefined
+  res.body.expiresIn: isDefined
+  res.body.tokenType: eq Bearer
+  res.body.user: isDefined
+  res.body.deviceTrusted: isDefined
+  res.headers.content-type: contains application/json
+}
+
+script:pre-request {
+  // In real scenarios, MFA code comes from authenticator app
+  // For testing, we generate a TOTP code or use backup code
+  const mfaSecret = bru.getEnvVar("mfaSecret");
+  if (mfaSecret) {
+    // Generate TOTP code (requires totp-generator library)
+    // const code = generateTOTP(mfaSecret);
+    // bru.setVar("mfaCode", code);
+  } else {
+    // Use backup code for testing
+    const backupCode = bru.getEnvVar("mfaBackupCode");
+    if (backupCode) {
+      bru.setVar("mfaCode", backupCode);
+    }
+  }
+}
+
+script:post-response {
+  // Save tokens
+  if (res.body.accessToken) {
+    bru.setEnvVar("authToken", res.body.accessToken);
+  }
+  
+  if (res.body.refreshToken) {
+    bru.setEnvVar("refreshToken", res.body.refreshToken);
+  }
+  
+  if (res.body.user && res.body.user.id) {
+    bru.setEnvVar("userId", res.body.user.id);
+  }
+  
+  // Save trusted device token
+  if (res.body.deviceToken) {
+    bru.setEnvVar("deviceToken", res.body.deviceToken);
+  }
+}
+
+tests {
+  test("Access token is JWT", function() {
+    const jwtRegex = /^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/;
+    expect(res.body.accessToken).to.match(jwtRegex);
+  });
+  
+  test("MFA verified in token claims", function() {
+    // Decode JWT and check mfaVerified claim
+    const token = res.body.accessToken;
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    expect(payload.mfaVerified).to.be.true;
+  });
+  
+  test("Device trust status returned", function() {
+    expect(res.body).to.have.property('deviceTrusted');
+  });
+  
+  test("Device token returned if trusted", function() {
+    if (res.body.deviceTrusted) {
+      expect(res.body.deviceToken).to.be.a('string');
+    }
+  });
+}
+
+docs {
+  # Login with MFA
+  
+  Authenticates user with email/password + MFA code.
+  
+  ## Request Body
+  - `email`: Registered email address
+  - `password`: User password
+  - `mfaCode`: 6-digit TOTP code or 8-character backup code
+  - `deviceName`: (Optional) Device identifier
+  - `deviceFingerprint`: (Optional) Unique device ID
+  - `trustDevice`: (Optional) Skip MFA for this device for 30 days
+  
+  ## Response
+  - Same as regular login endpoint
+  - Plus `deviceTrusted` boolean
+  - Plus `deviceToken` if device trusted
+  
+  ## Device Trust
+  - If `trustDevice: true`, device token stored
+  - Next login from same device skips MFA for 30 days
+  - Device token sent as `X-Device-Token` header
+  - Revoke trusted devices in account settings
+  
+  ## Backup Codes
+  - Can be used instead of TOTP code
+  - Each code is single-use only
+  - Format: 8 uppercase alphanumeric characters
+  
+  ## Error Codes
+  - 400: Invalid credentials
+  - 401: Invalid MFA code
+  - 403: Too many failed MFA attempts (account locked)
+  - 404: User not found
+  - 422: MFA not enabled for this account
+  - 429: Rate limit exceeded
+  
+  ## Security
+  - MFA codes expire after 30 seconds (TOTP)
+  - Backup codes are single-use
+  - Failed attempts logged for monitoring
+  - Account locked after 5 failed MFA attempts
+}

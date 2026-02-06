@@ -1,0 +1,97 @@
+meta {
+  name: Enterprise Tier - Dedicated Infrastructure - Allowed
+  type: http
+  seq: 22
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/infrastructure/dedicated
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{enterpriseOrgId}}
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "instanceType": "dedicated",
+    "region": "us-east-1",
+    "capacityUnits": 50,
+    "autoScaling": {
+      "enabled": true,
+      "minUnits": 10,
+      "maxUnits": 100
+    },
+    "networkIsolation": "vpc",
+    "dedicatedSupport": true
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.deployment: isDefined
+  res.body.deployment.instanceType: eq dedicated
+  res.body.deployment.status: eq provisioning
+  res.body.deployment.estimatedReadyTime: isDefined
+}
+
+script:pre-request {
+  bru.setVar("orgId", bru.getEnvVar("enterpriseOrgId"));
+}
+
+tests {
+  test("Enterprise tier can provision dedicated infrastructure", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body.deployment).to.be.an('object');
+  });
+  
+  test("Dedicated instance type configured", function() {
+    expect(res.body.deployment.instanceType).to.equal("dedicated");
+  });
+  
+  test("Provisioning initiated", function() {
+    expect(res.body.deployment.status).to.equal("provisioning");
+  });
+  
+  test("Auto-scaling configured", function() {
+    expect(res.body.deployment.autoScaling).to.be.an('object');
+    expect(res.body.deployment.autoScaling.enabled).to.equal(true);
+  });
+  
+  test("Network isolation enabled", function() {
+    expect(res.body.deployment.networkIsolation).to.equal("vpc");
+  });
+}
+
+docs {
+  # Enterprise Tier - Dedicated Infrastructure - Allowed
+  
+  Tests that Enterprise tier organizations can provision dedicated infrastructure.
+  
+  ## Expected Behavior
+  - Returns 200 OK
+  - Dedicated infrastructure provisioning initiated
+  - Auto-scaling configuration
+  - Network isolation (VPC)
+  
+  ## Feature: Dedicated Infrastructure
+  Available on: Enterprise only
+  
+  Includes:
+  - Dedicated compute instances
+  - Isolated network (VPC)
+  - Custom capacity scaling
+  - Reserved capacity
+  - Performance guarantees
+  - Custom SLAs
+  
+  Provisioning time: 2-4 hours
+}

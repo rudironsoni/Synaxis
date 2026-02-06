@@ -1,0 +1,90 @@
+meta {
+  name: Requests-Hour-Sliding-Allow-95%
+  type: http
+  seq: 21
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{orgId}}
+  X-Test-Quota-Type: requests
+  X-Test-Quota-Limit: 1000
+  X-Test-Quota-Window: hour
+  X-Test-Quota-Window-Type: sliding
+  X-Test-Quota-Action: allow
+  X-Test-Simulate-Usage: 950
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test sliding hour window at 95%"
+      }
+    ],
+    "max_tokens": 50
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-ratelimit-limit: eq 1000
+  res.headers.x-ratelimit-remaining: eq 50
+  res.headers.x-ratelimit-window-type: eq sliding
+}
+
+tests {
+  test("Sliding hour window at 95% succeeds", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Critical warning at 95%", function() {
+    expect(res.headers['x-ratelimit-warning']).to.be.a('string');
+    expect(res.headers['x-ratelimit-warning']).to.match(/critical|95%|5%|few remaining/i);
+  });
+  
+  test("Sliding window shows gradual reset", function() {
+    expect(res.headers['x-ratelimit-window-type']).to.equal('sliding');
+    // Unlike fixed windows, capacity opens gradually as old requests expire
+  });
+  
+  test("Only 50 requests remaining", function() {
+    expect(parseInt(res.headers['x-ratelimit-remaining'])).to.equal(50);
+  });
+}
+
+docs {
+  # Requests-Hour-Sliding-Allow-95%
+  
+  Tests sliding hour window at critical 95% usage.
+  
+  ## Sliding vs Fixed at High Usage
+  
+  **Fixed Window (95%):**
+  - 950/1000 used
+  - 50 remaining until XX:00:00
+  - Sudden reset at hour boundary
+  - All 1000 available at once
+  
+  **Sliding Window (95%):**
+  - 950 requests in last 3600 seconds
+  - Capacity opens as requests age out
+  - Gradual recovery
+  - No reset spike
+  
+  ## Benefit of Sliding at High Usage
+  More predictable behavior - as each old request expires (after 3600s), 
+  one new slot becomes available.
+}

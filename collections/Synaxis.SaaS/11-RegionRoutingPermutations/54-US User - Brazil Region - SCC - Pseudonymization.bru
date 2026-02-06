@@ -1,0 +1,56 @@
+meta {
+  name: US User - Brazil Region - SCC - Pseudonymization
+  type: http
+  seq: 54
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: us-east-1
+  X-Processed-Region: sa-east-1
+  X-Cross-Border: true
+  X-Legal-Basis: SCC
+  X-Pseudonymization: enabled
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test with pseudonymization applied"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-pseudonymization-applied: eq true
+  res.headers.x-data-minimization: eq true
+}
+
+tests {
+  test("Privacy enhancing technologies applied", function() {
+    expect(res.headers['x-pseudonymization-applied']).to.equal('true');
+    expect(res.headers['x-data-minimization']).to.equal('true');
+  });
+}
+
+docs {
+  # US to Brazil with Pseudonymization
+  
+  Tests cross-border transfer with pseudonymization.
+  Verifies privacy-enhancing technologies for data protection.
+}

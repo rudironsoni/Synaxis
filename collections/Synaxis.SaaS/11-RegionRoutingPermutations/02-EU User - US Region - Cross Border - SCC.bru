@@ -1,0 +1,72 @@
+meta {
+  name: EU User - US Region - Cross Border - SCC
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: eu-west-1
+  X-Processed-Region: us-east-1
+  X-Cross-Border: true
+  X-Legal-Basis: SCC
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test message for EU to US transfer with SCC"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-cross-border-transfer: eq true
+  res.headers.x-legal-basis: eq SCC
+  res.headers.x-processed-region: eq us-east-1
+}
+
+tests {
+  test("Cross-border transfer acknowledged", function() {
+    expect(res.headers['x-cross-border-transfer']).to.equal('true');
+  });
+  
+  test("Standard Contractual Clauses applied", function() {
+    expect(res.headers['x-legal-basis']).to.equal('SCC');
+  });
+  
+  test("Request processed in US region", function() {
+    expect(res.headers['x-processed-region']).to.equal('us-east-1');
+  });
+  
+  test("Transfer compliance metadata present", function() {
+    expect(res.headers['x-transfer-timestamp']).to.be.defined;
+  });
+}
+
+docs {
+  # EU User - US Region - Cross Border - SCC
+  
+  Tests EU to US data transfer using Standard Contractual Clauses (SCC).
+  This is the primary GDPR-compliant mechanism for EU-US transfers.
+  
+  ## Legal Basis
+  - Standard Contractual Clauses (SCC/SCCs)
+  - EU Commission approved transfer mechanism
+  - Requires documented safeguards
+}

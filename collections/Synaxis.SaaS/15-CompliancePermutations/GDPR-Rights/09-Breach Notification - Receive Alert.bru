@@ -1,0 +1,107 @@
+meta {
+  name: 09-Breach Notification - Receive Alert
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{baseUrl}}/api/v1/compliance/gdpr/breach-notifications/me
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Region: {{region}}
+  X-Compliance-Framework: GDPR
+  X-Legal-Basis: legal_obligation
+}
+
+assert {
+  res.status: eq 200
+  res.body.breaches: isArray
+  res.body.auditTrailId: isDefined
+}
+
+tests {
+  test("Breach notifications retrieved", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Breach list provided", function() {
+    expect(res.body.breaches).to.be.an('array');
+  });
+  
+  test("Audit trail created", function() {
+    expect(res.body.auditTrailId).to.be.a('string');
+  });
+  
+  test("Breach details complete", function() {
+    if (res.body.breaches.length > 0) {
+      const breach = res.body.breaches[0];
+      expect(breach.nature).to.be.a('string');
+      expect(breach.categories).to.be.an('array');
+      expect(breach.affectedRecords).to.be.a('number');
+      expect(breach.consequences).to.be.a('string');
+      expect(breach.measures).to.be.an('array');
+    }
+  });
+  
+  test("Notification sent within 72 hours", function() {
+    if (res.body.breaches.length > 0) {
+      const breach = res.body.breaches[0];
+      const breachDate = new Date(breach.discoveredAt);
+      const notificationDate = new Date(breach.notifiedAt);
+      const hoursDiff = (notificationDate - breachDate) / (1000 * 60 * 60);
+      expect(hoursDiff).to.be.lessThan(72);
+    }
+  });
+  
+  test("DPO contact provided", function() {
+    expect(res.body.dpoContact).to.be.an('object');
+  });
+}
+
+docs {
+  # GDPR Breach Notification to Data Subject
+  
+  GDPR Article 34 - Communication of a personal data breach to the data subject
+  
+  ## When Required
+  If breach likely to result in HIGH RISK to rights and freedoms.
+  
+  ## Exceptions (Not Required If)
+  1. Appropriate technical/organizational protection applied (e.g., encryption)
+  2. Controller took subsequent measures ensuring high risk no longer likely
+  3. Disproportionate effort (public communication instead)
+  
+  ## Notification Content
+  Must describe in clear and plain language:
+  - Nature of personal data breach
+  - Name and contact of DPO (or contact point)
+  - Likely consequences of breach
+  - Measures taken/proposed to address breach
+  - Measures to mitigate possible adverse effects
+  
+  ## Timeline
+  - To supervisory authority: within 72 hours of discovery
+  - To data subjects: without undue delay
+  
+  ## Supervisory Authority Notification (Art. 33)
+  Required unless breach unlikely to result in risk to rights and freedoms.
+  
+  ## Documentation
+  Must document all breaches (even if not reported).
+  
+  ## Verification
+  ✓ Breach details complete
+  ✓ Nature described
+  ✓ Categories disclosed
+  ✓ Consequences explained
+  ✓ Measures documented
+  ✓ DPO contact provided
+  ✓ Timely notification
+}

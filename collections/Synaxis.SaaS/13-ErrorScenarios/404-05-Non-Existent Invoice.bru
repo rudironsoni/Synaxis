@@ -1,0 +1,72 @@
+meta {
+  name: 404-05-Non-Existent Invoice
+  type: http
+  seq: 31
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/billing/invoices/inv_notfound_999
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+assert {
+  res.status: eq 404
+  res.body.error: isDefined
+  res.body.error.code: eq INVOICE_NOT_FOUND
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 404", function() {
+    expect(res.status).to.equal(404);
+  });
+  
+  test("Error code is INVOICE_NOT_FOUND", function() {
+    expect(res.body.error.code).to.equal("INVOICE_NOT_FOUND");
+  });
+  
+  test("Error message mentions invoice not found", function() {
+    expect(res.body.error.message).to.match(/invoice|not found|does not exist/i);
+  });
+  
+  test("Error details include requested invoice ID", function() {
+    expect(res.body.error.details).to.have.property('invoiceId');
+    expect(res.body.error.details.invoiceId).to.equal('inv_notfound_999');
+  });
+  
+  test("Error suggests listing invoices", function() {
+    expect(res.body.error.details).to.have.property('suggestion');
+    expect(res.body.error.details.suggestion).to.match(/list invoices|billing history/i);
+  });
+}
+
+docs {
+  # 404 Not Found - Non-Existent Invoice
+  
+  Tests handling of requests for non-existent invoices.
+  
+  ## Trigger Condition
+  - GET /billing/invoices/{id} with invalid invoice ID
+  - Invoice not found for organization
+  
+  ## Expected Response
+  - Status: 404
+  - Error code: INVOICE_NOT_FOUND
+  - Invoice ID and listing suggestion
+  
+  ## Validation
+  - Proper 404 for missing invoices
+  - Organization-scoped lookup
+  - Helpful navigation to invoice list
+}

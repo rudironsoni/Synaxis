@@ -1,0 +1,135 @@
+meta {
+  name: Refresh Token
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/v1/auth/refresh
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "refreshToken": "{{refreshToken}}"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.accessToken: isDefined
+  res.body.refreshToken: isDefined
+  res.body.expiresIn: isDefined
+  res.body.tokenType: eq Bearer
+  res.headers.content-type: contains application/json
+}
+
+script:pre-request {
+  // Check if access token is expired
+  const tokenExpiry = bru.getEnvVar("tokenExpiry");
+  const now = Date.now();
+  
+  if (tokenExpiry && now > parseInt(tokenExpiry)) {
+    console.log("Access token expired, refreshing...");
+  } else {
+    console.log("Access token still valid, but refreshing anyway for testing");
+  }
+}
+
+script:post-response {
+  // Update tokens
+  if (res.body.accessToken) {
+    bru.setEnvVar("authToken", res.body.accessToken);
+  }
+  
+  if (res.body.refreshToken) {
+    bru.setEnvVar("refreshToken", res.body.refreshToken);
+  }
+  
+  // Update expiry time
+  if (res.body.expiresIn) {
+    const expiryTime = Date.now() + (res.body.expiresIn * 1000);
+    bru.setEnvVar("tokenExpiry", expiryTime.toString());
+  }
+}
+
+tests {
+  test("New access token is different", function() {
+    const oldToken = bru.getEnvVar("authToken");
+    expect(res.body.accessToken).to.not.equal(oldToken);
+  });
+  
+  test("New refresh token is different", function() {
+    const oldRefreshToken = bru.getEnvVar("refreshToken");
+    expect(res.body.refreshToken).to.not.equal(oldRefreshToken);
+  });
+  
+  test("Access token is JWT", function() {
+    const jwtRegex = /^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/;
+    expect(res.body.accessToken).to.match(jwtRegex);
+  });
+  
+  test("Token expiry is in the future", function() {
+    const token = res.body.accessToken;
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const expiryTime = payload.exp * 1000;
+    expect(expiryTime).to.be.greaterThan(Date.now());
+  });
+}
+
+docs {
+  # Refresh Token
+  
+  Exchanges refresh token for new access + refresh tokens.
+  
+  ## Request Body
+  - `refreshToken`: Valid refresh token from login
+  
+  ## Response
+  - `accessToken`: New short-lived JWT (15min)
+  - `refreshToken`: New long-lived JWT (30 days)
+  - `expiresIn`: Access token lifetime in seconds
+  - `tokenType`: Always "Bearer"
+  
+  ## Token Rotation
+  - Both tokens rotated on refresh (old tokens invalidated)
+  - Prevents token theft/replay attacks
+  - Implements OAuth 2.0 best practices
+  
+  ## Refresh Token Lifecycle
+  - Expires after 30 days of inactivity
+  - Extended on each refresh
+  - Invalidated on logout
+  - Revoked if suspicious activity detected
+  
+  ## Error Codes
+  - 400: Invalid refresh token
+  - 401: Refresh token expired
+  - 403: Refresh token revoked
+  - 404: User not found
+  
+  ## Usage Pattern
+  ```javascript
+  // Check token expiry before each request
+  if (Date.now() > tokenExpiry) {
+    await refreshToken();
+  }
+  
+  // Make API request with fresh access token
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${accessToken}` }
+  });
+  ```
+  
+  ## Security
+  - Refresh tokens stored securely (HttpOnly cookies recommended)
+  - Rotation prevents token fixation attacks
+  - Anomaly detection for suspicious refresh patterns
+  - Rate limited: 100 refreshes per hour per user
+}

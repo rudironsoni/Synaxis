@@ -1,0 +1,84 @@
+meta {
+  name: 503-03-Maintenance Mode
+  type: http
+  seq: 53
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+  X-Simulate-Error: maintenance-mode
+}
+
+assert {
+  res.status: eq 503
+  res.body.error: isDefined
+  res.body.error.code: eq MAINTENANCE_MODE
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+  res.headers.retry-after: isDefined
+}
+
+tests {
+  test("Status code is 503", function() {
+    expect(res.status).to.equal(503);
+  });
+  
+  test("Error code is MAINTENANCE_MODE", function() {
+    expect(res.body.error.code).to.equal("MAINTENANCE_MODE");
+  });
+  
+  test("Error message mentions maintenance", function() {
+    expect(res.body.error.message).to.match(/maintenance|scheduled|upgrade/i);
+  });
+  
+  test("Error details include maintenance window", function() {
+    expect(res.body.error.details).to.have.property('maintenanceWindow');
+    expect(res.body.error.details.maintenanceWindow).to.have.property('start');
+    expect(res.body.error.details.maintenanceWindow).to.have.property('end');
+  });
+  
+  test("Error details include expected completion", function() {
+    expect(res.body.error.details).to.have.property('expectedCompletion');
+  });
+  
+  test("Error explains maintenance reason", function() {
+    expect(res.body.error.details).to.have.property('reason');
+  });
+  
+  test("Retry-After header indicates maintenance end", function() {
+    expect(res.headers['retry-after']).to.be.defined;
+  });
+}
+
+docs {
+  # 503 Service Unavailable - Maintenance Mode
+  
+  Tests handling during scheduled maintenance.
+  
+  ## Trigger Condition
+  - Request during scheduled maintenance window
+  - Simulated with X-Simulate-Error header
+  
+  ## Expected Response
+  - Status: 503
+  - Error code: MAINTENANCE_MODE
+  - Maintenance window, completion time, reason
+  - Retry-After header
+  
+  ## Validation
+  - Maintenance mode active
+  - Clear maintenance window communication
+  - Expected completion provided
+  - Retry timing after maintenance
+}

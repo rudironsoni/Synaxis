@@ -1,0 +1,60 @@
+# AWS Region
+aws_region = "us-east-1"
+
+# Environment
+environment = "production"
+project_name = "synaxis"
+
+# VPC Configuration
+vpc_cidr                 = "10.0.0.0/16"
+availability_zones_count = 3
+private_subnet_cidrs     = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+public_subnet_cidrs      = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
+database_subnet_cidrs    = ["10.0.201.0/24", "10.0.202.0/24", "10.0.203.0/24"]
+
+# RDS Configuration
+db_instance_class            = "db.r6g.xlarge"
+db_allocated_storage         = 100
+db_max_allocated_storage     = 500
+db_name                      = "synaxis"
+db_username                  = "synaxis_admin"
+db_backup_retention_period   = 30
+
+# Redis Configuration
+redis_node_type              = "cache.r7g.large"
+redis_num_cache_nodes        = 3
+redis_parameter_group_family = "redis7"
+redis_engine_version         = "7.1"
+
+# EKS Configuration
+eks_cluster_version      = "1.28"
+eks_node_instance_types  = ["m6i.xlarge", "m6i.2xlarge"]
+eks_node_desired_size    = 6
+eks_node_min_size        = 3
+eks_node_max_size        = 15
+
+# Qdrant Configuration
+qdrant_instance_type = "m6i.2xlarge"
+qdrant_volume_size   = 500
+
+# VPC Peering Configuration
+# Uncomment and set these values after creating EU and Brazil VPCs
+# eu_vpc_id      = "vpc-xxxxxxxxxxxxx"
+# eu_vpc_cidr    = "10.1.0.0/16"
+# brazil_vpc_id  = "vpc-yyyyyyyyyyy"
+# brazil_vpc_cidr = "10.2.0.0/16"
+
+# Application Configuration
+api_replicas_min = 3
+api_replicas_max = 20
+
+# Security Configuration
+enable_deletion_protection = true
+allowed_cidr_blocks       = ["0.0.0.0/0"] # Restrict this in production
+
+# Additional Tags
+tags = {
+  Team        = "platform"
+  CostCenter  = "engineering"
+  Compliance  = "required"
+}

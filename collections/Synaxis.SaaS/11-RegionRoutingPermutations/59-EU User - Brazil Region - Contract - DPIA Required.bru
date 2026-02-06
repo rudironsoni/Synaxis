@@ -1,0 +1,56 @@
+meta {
+  name: EU User - Brazil Region - Contract - DPIA Required
+  type: http
+  seq: 59
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: eu-west-1
+  X-Processed-Region: sa-east-1
+  X-Cross-Border: true
+  X-Legal-Basis: contract
+  X-DPIA-Completed: true
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test with DPIA assessment"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-dpia-reference: isDefined
+  res.headers.x-risk-assessment: eq completed
+}
+
+tests {
+  test("Data Protection Impact Assessment completed", function() {
+    expect(res.headers['x-dpia-reference']).to.be.defined;
+    expect(res.headers['x-risk-assessment']).to.equal('completed');
+  });
+}
+
+docs {
+  # EU to Brazil with DPIA
+  
+  Tests cross-border transfer with completed DPIA.
+  Verifies GDPR Article 35 impact assessment for high-risk processing.
+}

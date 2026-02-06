@@ -1,0 +1,93 @@
+meta {
+  name: 429-06-Burst Traffic Detected
+  type: http
+  seq: 46
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+  X-Virtual-Key: {{virtualKey}}
+}
+
+body:json {
+  {
+    "model": "gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hello"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 429
+  res.body.error: isDefined
+  res.body.error.code: eq BURST_TRAFFIC_DETECTED
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+  res.headers.retry-after: isDefined
+}
+
+tests {
+  test("Status code is 429", function() {
+    expect(res.status).to.equal(429);
+  });
+  
+  test("Error code is BURST_TRAFFIC_DETECTED", function() {
+    expect(res.body.error.code).to.equal("BURST_TRAFFIC_DETECTED");
+  });
+  
+  test("Error message mentions burst or spike", function() {
+    expect(res.body.error.message).to.match(/burst|spike|sudden|traffic/i);
+  });
+  
+  test("Error details include burst threshold", function() {
+    expect(res.body.error.details).to.have.property('burstThreshold');
+  });
+  
+  test("Error details include cooldown period", function() {
+    expect(res.body.error.details).to.have.property('cooldownPeriod');
+  });
+  
+  test("Error suggests rate smoothing", function() {
+    expect(res.body.error.details).to.have.property('suggestion');
+    expect(res.body.error.details.suggestion).to.match(/smooth|distribute|spread/i);
+  });
+  
+  test("Retry-After header specifies cooldown", function() {
+    expect(res.headers['retry-after']).to.be.defined;
+  });
+}
+
+docs {
+  # 429 Too Many Requests - Burst Traffic Detected
+  
+  Tests burst traffic detection and throttling.
+  
+  ## Trigger Condition
+  - POST to /inference with sudden burst of requests
+  - Request pattern exceeds burst threshold
+  
+  ## Expected Response
+  - Status: 429
+  - Error code: BURST_TRAFFIC_DETECTED
+  - Burst threshold, cooldown period, rate smoothing guidance
+  
+  ## Validation
+  - Burst detection active
+  - Traffic smoothing enforcement
+  - Clear cooldown period indication
+}

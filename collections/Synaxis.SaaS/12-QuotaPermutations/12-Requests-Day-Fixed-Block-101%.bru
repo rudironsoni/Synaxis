@@ -1,0 +1,133 @@
+meta {
+  name: Requests-Day-Fixed-Block-101%
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{orgId}}
+  X-Test-Quota-Type: requests
+  X-Test-Quota-Limit: 10000
+  X-Test-Quota-Window: day
+  X-Test-Quota-Window-Type: fixed
+  X-Test-Quota-Action: block
+  X-Test-Simulate-Usage: 10100
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test request - 101% daily quota (block)"
+      }
+    ],
+    "max_tokens": 10
+  }
+}
+
+assert {
+  res.status: eq 403
+  res.headers.x-ratelimit-limit: eq 10000
+  res.headers.x-ratelimit-remaining: eq 0
+  res.body.error.code: eq quota_exceeded
+}
+
+tests {
+  test("Daily quota blocked at 101%", function() {
+    expect(res.status).to.equal(403);
+  });
+  
+  test("Daily limit exceeded", function() {
+    expect(res.headers['x-ratelimit-window']).to.equal('day');
+    expect(res.headers['x-ratelimit-limit']).to.equal('10000');
+    expect(parseInt(res.headers['x-ratelimit-remaining'])).to.equal(0);
+  });
+  
+  test("Block indicates severe overage", function() {
+    expect(res.body.error.code).to.equal('quota_exceeded');
+    expect(res.body.error.type).to.equal('block');
+    expect(res.body.error.details.overage).to.be.greaterThan(0);
+    expect(res.body.error.details.overage_percent).to.be.greaterThan(1);
+  });
+  
+  test("Support information provided", function() {
+    expect(res.body.error.support_url).to.be.a('string');
+    expect(res.body.error.message).to.match(/contact support|upgrade plan|blocked/i);
+  });
+  
+  test("Reset time still provided", function() {
+    const reset = parseInt(res.headers['x-ratelimit-reset']);
+    const now = Math.floor(Date.now() / 1000);
+    expect(reset).to.be.greaterThan(now);
+    
+    // Even though blocked, reset shows when window resets
+    // (block may persist beyond window)
+  });
+  
+  test("Upgrade options suggested", function() {
+    if (res.body.error.upgrade_options) {
+      expect(res.body.error.upgrade_options).to.be.an('array');
+      expect(res.body.error.upgrade_options.length).to.be.greaterThan(0);
+    }
+  });
+}
+
+docs {
+  # Requests-Day-Fixed-Block-101%
+  
+  Tests blocking when daily quota is exceeded.
+  
+  ## Test Configuration
+  - Metric Type: requests
+  - Time Granularity: day
+  - Window Type: fixed
+  - Action: block
+  - Usage Level: 101% (10100/10000 requests - 1% over)
+  
+  ## Expected Behavior
+  - Status: 403 Forbidden
+  - Error: quota_exceeded (block type)
+  - Requires support contact or plan upgrade
+  - May persist beyond window reset
+  
+  ## Why Block vs Throttle?
+  
+  **Blocked when:**
+  - Exceeded limit by significant margin
+  - Repeated violations
+  - Abuse detected
+  - Contract terms violated
+  - Free tier exhausted (upgrade required)
+  
+  **Throttled when:**
+  - Normal limit reached
+  - Temporary spike
+  - Expected behavior
+  - Auto-recovers
+  
+  ## Recovery Steps
+  1. Check error.support_url
+  2. Review error.upgrade_options
+  3. Contact support team
+  4. Wait for admin approval
+  5. Upgrade plan if offered
+  
+  ## Impact
+  - Cannot make requests until unblocked
+  - Downstream systems affected
+  - May need fallback strategy
+  - Business continuity risk
+}

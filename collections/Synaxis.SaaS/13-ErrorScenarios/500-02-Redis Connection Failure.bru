@@ -1,0 +1,77 @@
+meta {
+  name: 500-02-Redis Connection Failure
+  type: http
+  seq: 48
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/usage
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+  X-Simulate-Error: redis-connection-failure
+}
+
+assert {
+  res.status: eq 500
+  res.body.error: isDefined
+  res.body.error.code: eq INTERNAL_SERVER_ERROR
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 500", function() {
+    expect(res.status).to.equal(500);
+  });
+  
+  test("Error code is INTERNAL_SERVER_ERROR", function() {
+    expect(res.body.error.code).to.equal("INTERNAL_SERVER_ERROR");
+  });
+  
+  test("Error message is generic and safe", function() {
+    expect(res.body.error.message).to.match(/internal server error|temporary issue/i);
+    expect(res.body.error.message).to.not.match(/redis|cache|memcache/i);
+  });
+  
+  test("No cache implementation details leaked", function() {
+    expect(JSON.stringify(res.body)).to.not.match(/redis|cache|key-value|6379/i);
+  });
+  
+  test("Error includes incident tracking", function() {
+    expect(res.body.error).to.have.property('incidentId');
+  });
+  
+  test("Error includes support contact", function() {
+    expect(res.body.error).to.have.property('supportUrl');
+  });
+}
+
+docs {
+  # 500 Internal Server Error - Redis Connection Failure
+  
+  Tests handling of cache layer failures.
+  
+  ## Trigger Condition
+  - Request when Redis/cache is unavailable
+  - Simulated with X-Simulate-Error header
+  
+  ## Expected Response
+  - Status: 500
+  - Error code: INTERNAL_SERVER_ERROR
+  - Generic safe error message
+  - Incident ID and support contact
+  
+  ## Validation
+  - Graceful cache failure handling
+  - No cache infrastructure details exposed
+  - Support escalation path provided
+}

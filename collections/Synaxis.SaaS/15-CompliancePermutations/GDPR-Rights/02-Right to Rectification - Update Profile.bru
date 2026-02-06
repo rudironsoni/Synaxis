@@ -1,0 +1,104 @@
+meta {
+  name: 02-Right to Rectification - Update Profile
+  type: http
+  seq: 2
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/compliance/gdpr/rectification
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+  X-Compliance-Framework: GDPR
+  X-Legal-Basis: consent
+}
+
+body:json {
+  {
+    "requestType": "rectification",
+    "corrections": {
+      "profile.name": "Corrected Name",
+      "profile.dateOfBirth": "1990-01-15",
+      "profile.phoneNumber": "+49-30-12345678"
+    },
+    "reason": "Data inaccuracy identified by data subject"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.rectificationId: isDefined
+  res.body.legalBasis: eq consent
+  res.body.auditTrailId: isDefined
+  res.body.thirdPartiesNotified: isArray
+}
+
+script:post-response {
+  if (res.body.rectificationId) {
+    bru.setEnvVar("rectificationId", res.body.rectificationId);
+  }
+}
+
+tests {
+  test("Rectification successful", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Legal basis documented", function() {
+    expect(res.body.legalBasis).to.equal('consent');
+  });
+  
+  test("Audit trail created", function() {
+    expect(res.body.auditTrailId).to.be.a('string');
+  });
+  
+  test("Third parties notified", function() {
+    expect(res.body.thirdPartiesNotified).to.be.an('array');
+  });
+  
+  test("Rectification completed within deadline", function() {
+    const completedAt = new Date(res.body.completedAt);
+    const requestedAt = new Date(res.body.requestedAt);
+    const daysDiff = (completedAt - requestedAt) / (1000 * 60 * 60 * 24);
+    expect(daysDiff).to.be.lessThan(30); // 1 month deadline
+  });
+  
+  test("Data subject notified of changes", function() {
+    expect(res.body.notificationSent).to.equal(true);
+  });
+}
+
+docs {
+  # GDPR Right to Rectification
+  
+  GDPR Article 16 - Right to rectification
+  
+  ## Legal Basis
+  The data subject has the right to obtain rectification of inaccurate 
+  personal data without undue delay.
+  
+  ## Obligations
+  - Rectify inaccurate personal data
+  - Complete incomplete personal data
+  - Notify recipients of rectification
+  - Inform data subject of recipients (on request)
+  
+  ## Third-Party Notification
+  Controller must communicate rectification to each recipient unless 
+  impossible or involves disproportionate effort.
+  
+  ## Verification
+  ✓ Legal basis documented
+  ✓ Audit trail created
+  ✓ Third parties notified
+  ✓ Data subject informed
+  ✓ Completed without undue delay
+}

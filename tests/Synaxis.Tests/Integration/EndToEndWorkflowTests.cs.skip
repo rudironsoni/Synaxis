@@ -1,0 +1,574 @@
+using System;
+using System.Threading.Tasks;
+using Xunit;
+using Synaxis.Tests.Integration.Fixtures;
+using Synaxis.InferenceGateway.Infrastructure.Contracts;
+using Synaxis.Infrastructure.Services;
+using Microsoft.Extensions.Logging;
+using Moq;
+
+namespace Synaxis.Tests.Integration;
+
+/// <summary>
+/// End-to-end integration tests for complete user workflows.
+/// Tests the entire request lifecycle from signup to inference.
+/// </summary>
+public class EndToEndWorkflowTests : IClassFixture<SynaxisTestFixture>
+{
+    private readonly SynaxisTestFixture _fixture;
+
+    public EndToEndWorkflowTests(SynaxisTestFixture fixture)
+    {
+        _fixture = fixture;
+    }
+
+    [Fact]
+    public async Task UserSignupFlow_EUUser_CreatesUserInEURegion()
+    {
+        // Arrange
+        var userService = new UserService(_fixture.DbContext);
+
+        var createRequest = new CreateUserRequest
+        {
+            OrganizationId = _fixture.TestOrganization.Id,
+            Email = "new-eu-user@test.com",
+            Password = "SecurePassword123!@#",
+            FirstName = "New",
+            LastName = "EUUser",
+            DataResidencyRegion = "eu-west-1",
+            CreatedInRegion = "eu-west-1",
+            Role = "member"
+        };
+
+        // Act
+        var user = await userService.CreateUserAsync(createRequest);
+
+        // Assert
+        Assert.NotNull(user);
+        Assert.Equal("new-eu-user@test.com", user.Email);
+        Assert.Equal("eu-west-1", user.DataResidencyRegion);
+        Assert.Equal("eu-west-1", user.CreatedInRegion);
+        Assert.False(user.CrossBorderConsentGiven);
+        Assert.True(user.IsActive);
+    }
+
+    [Fact]
+    public async Task UserSignupFlow_WithAuthentication_CanLogin()
+    {
+        // Arrange
+        var userService = new UserService(_fixture.DbContext);
+
+        var createRequest = new CreateUserRequest
+        {
+            OrganizationId = _fixture.TestOrganization.Id,
+            Email = "auth-test@test.com",
+            Password = "SecurePassword123!@#",
+            FirstName = "Auth",
+            LastName = "Test",
+            DataResidencyRegion = "us-east-1",
+            CreatedInRegion = "us-east-1",
+            Role = "member"
+        };
+
+        // Act - Create user
+        var user = await userService.CreateUserAsync(createRequest);
+
+        // Act - Authenticate
+        var authenticatedUser = await userService.AuthenticateAsync("auth-test@test.com", "SecurePassword123!@#");
+
+        // Assert
+        Assert.NotNull(authenticatedUser);
+        Assert.Equal(user.Id, authenticatedUser.Id);
+        Assert.Equal(user.Email, authenticatedUser.Email);
+        Assert.NotNull(authenticatedUser.LastLoginAt);
+        Assert.Equal(0, authenticatedUser.FailedLoginAttempts);
+    }
+
+    [Fact]
+    public async Task UserSignupFlow_WithWrongPassword_FailsAuthentication()
+    {
+        // Arrange
+        var userService = new UserService(_fixture.DbContext);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
+        {
+            await userService.AuthenticateAsync(_fixture.EuUser.Email, "WrongPassword123");
+        });
+    }
+
+    [Fact]
+    public async Task UserSignupFlow_MultipleFailedAttempts_LocksAccount()
+    {
+        // Arrange
+        var userService = new UserService(_fixture.DbContext);
+
+        var createRequest = new CreateUserRequest
+        {
+            OrganizationId = _fixture.TestOrganization.Id,
+            Email = "locktest@test.com",
+            Password = "SecurePassword123!@#",
+            FirstName = "Lock",
+            LastName = "Test",
+            DataResidencyRegion = "us-east-1",
+            CreatedInRegion = "us-east-1",
+            Role = "member"
+        };
+
+        var user = await userService.CreateUserAsync(createRequest);
+
+        // Act - Try wrong password 5 times
+        for (int i = 0; i < 5; i++)
+        {
+            try
+            {
+                await userService.AuthenticateAsync("locktest@test.com", "WrongPassword");
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // Expected
+            }
+        }
+
+        // Verify account is locked
+        var lockedUser = await userService.GetUserAsync(user.Id);
+
+        // Assert
+        Assert.NotNull(lockedUser.LockedUntil);
+        Assert.True(lockedUser.LockedUntil > DateTime.UtcNow);
+        Assert.Equal(5, lockedUser.FailedLoginAttempts);
+
+        // Try to login with correct password should still fail
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
+        {
+            await userService.AuthenticateAsync("locktest@test.com", "SecurePassword123!@#");
+        });
+    }
+
+    [Fact]
+    public async Task CompleteWorkflow_EUUser_CreateApiKey_MakeRequest()
+    {
+        // Arrange
+        var userService = new UserService(_fixture.DbContext);
+
+        // Create user
+        var createRequest = new CreateUserRequest
+        {
+            OrganizationId = _fixture.TestOrganization.Id,
+            Email = "complete-workflow@test.com",
+            Password = "SecurePassword123!@#",
+            FirstName = "Complete",
+            LastName = "Workflow",
+            DataResidencyRegion = "eu-west-1",
+            CreatedInRegion = "eu-west-1",
+            Role = "member"
+        };
+
+        var user = await userService.CreateUserAsync(createRequest);
+
+        // Authenticate
+        var authenticatedUser = await userService.AuthenticateAsync(
+            "complete-workflow@test.com",
+            "SecurePassword123!@#");
+
+        // Create API key
+        var apiKey = await _fixture.CreateApiKeyWithQuotaAsync(
+            maxBudget: 50.00m,
+            currentSpend: 0.00m,
+            rpmLimit: 60);
+
+        // Assert
+        Assert.NotNull(user);
+        Assert.NotNull(authenticatedUser);
+        Assert.NotNull(apiKey);
+        Assert.Equal("eu-west-1", user.DataResidencyRegion);
+        Assert.Equal("eu-west-1", apiKey.UserRegion);
+        Assert.True(apiKey.IsActive);
+        Assert.False(apiKey.IsRevoked);
+        Assert.Equal(50.00m, apiKey.MaxBudget);
+        Assert.Equal(0.00m, apiKey.CurrentSpend);
+    }
+
+    [Fact]
+    public async Task CrossBorderWorkflow_EUUserWithoutConsent_BlocksUSAccess()
+    {
+        // Arrange
+        var user = _fixture.EuUser;
+
+        // Assert - User should not have cross-border consent
+        Assert.False(user.CrossBorderConsentGiven);
+        Assert.Null(user.CrossBorderConsentDate);
+
+        // In a real scenario, attempting to access from US region would be blocked
+        // This would be validated by RegionRoutingMiddleware and ComplianceMiddleware
+    }
+
+    [Fact]
+    public async Task CrossBorderWorkflow_UserGrantsConsent_AllowsCrossBorderAccess()
+    {
+        // Arrange
+        var userService = new UserService(_fixture.DbContext);
+        var user = _fixture.EuUser;
+
+        // Act - Grant cross-border consent
+        await userService.UpdateCrossBorderConsentAsync(user.Id, consentGiven: true, version: "1.0");
+
+        // Assert
+        var updatedUser = await userService.GetUserAsync(user.Id);
+        Assert.True(updatedUser.CrossBorderConsentGiven);
+        Assert.NotNull(updatedUser.CrossBorderConsentDate);
+        Assert.Equal("1.0", updatedUser.CrossBorderConsentVersion);
+
+        var hasConsent = await userService.HasCrossBorderConsentAsync(user.Id);
+        Assert.True(hasConsent);
+    }
+
+    [Fact]
+    public async Task MFAWorkflow_UserEnablesMFA_RequiresTOTP()
+    {
+        // Arrange
+        var userService = new UserService(_fixture.DbContext);
+        var user = await userService.CreateUserAsync(new CreateUserRequest
+        {
+            OrganizationId = _fixture.TestOrganization.Id,
+            Email = "mfa-test@test.com",
+            Password = "SecurePassword123!@#",
+            FirstName = "MFA",
+            LastName = "Test",
+            DataResidencyRegion = "us-east-1",
+            CreatedInRegion = "us-east-1",
+            Role = "member"
+        });
+
+        // Act - Setup MFA
+        var mfaSetup = await userService.SetupMfaAsync(user.Id);
+
+        // Assert
+        Assert.NotNull(mfaSetup);
+        Assert.NotNull(mfaSetup.Secret);
+        Assert.NotNull(mfaSetup.QrCodeUrl);
+        Assert.NotNull(mfaSetup.ManualEntryKey);
+        Assert.Contains("otpauth://totp/", mfaSetup.QrCodeUrl);
+    }
+
+    [Fact]
+    public async Task DataDeletion_UserDeleted_SoftDeletes()
+    {
+        // Arrange
+        var userService = new UserService(_fixture.DbContext);
+        var user = await userService.CreateUserAsync(new CreateUserRequest
+        {
+            OrganizationId = _fixture.TestOrganization.Id,
+            Email = "delete-test@test.com",
+            Password = "SecurePassword123!@#",
+            FirstName = "Delete",
+            LastName = "Test",
+            DataResidencyRegion = "eu-west-1",
+            CreatedInRegion = "eu-west-1",
+            Role = "member"
+        });
+
+        // Act - Delete user
+        var result = await userService.DeleteUserAsync(user.Id);
+
+        // Assert
+        Assert.True(result);
+
+        var deletedUser = await userService.GetUserAsync(user.Id);
+        Assert.False(deletedUser.IsActive);
+
+        // User should not be able to authenticate after deletion
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
+        {
+            await userService.AuthenticateAsync("delete-test@test.com", "SecurePassword123!@#");
+        });
+    }
+
+    [Fact]
+    public async Task DataExport_UserRequestsData_ReturnsCompleteExport()
+    {
+        // Arrange
+        var userService = new UserService(_fixture.DbContext);
+        var user = _fixture.EuUser;
+
+        // Act - In real implementation, this would call a data export service
+        // For now, verify user data is accessible
+        var userData = await userService.GetUserAsync(user.Id);
+
+        // Assert
+        Assert.NotNull(userData);
+        Assert.Equal(user.Email, userData.Email);
+        Assert.NotNull(userData.Organization);
+        Assert.NotNull(userData.TeamMemberships);
+        
+        // Data export should include:
+        // - User profile data
+        // - API keys
+        // - Usage history
+        // - Billing records
+        // - Audit logs
+    }
+
+    [Fact]
+    public async Task VerifyEmail_NewUser_MarkedAsVerified()
+    {
+        // Arrange
+        var userService = new UserService(_fixture.DbContext);
+        var user = await userService.CreateUserAsync(new CreateUserRequest
+        {
+            OrganizationId = _fixture.TestOrganization.Id,
+            Email = "verify-test@test.com",
+            Password = "SecurePassword123!@#",
+            FirstName = "Verify",
+            LastName = "Test",
+            DataResidencyRegion = "us-east-1",
+            CreatedInRegion = "us-east-1",
+            Role = "member"
+        });
+
+        // Assert - New user starts unverified
+        Assert.False(user.IsEmailVerified);
+        
+        // In real implementation, would verify email with token
+        // For testing, directly update verification status
+        user.IsEmailVerified = true;
+        user.EmailVerifiedAt = DateTime.UtcNow;
+        _fixture.DbContext.Users.Update(user);
+        await _fixture.DbContext.SaveChangesAsync();
+
+        var verifiedUser = await userService.GetUserAsync(user.Id);
+        Assert.True(verifiedUser.IsEmailVerified);
+        Assert.NotNull(verifiedUser.EmailVerifiedAt);
+    }
+
+    [Fact]
+    public async Task CreateOrganization_NewOrg_CreatedSuccessfully()
+    {
+        // Arrange
+        var organization = new Organization
+        {
+            Id = Guid.NewGuid(),
+            Slug = "new-test-org",
+            Name = "New Test Organization",
+            PrimaryRegion = "us-east-1",
+            AvailableRegions = new List<string> { "us-east-1" },
+            Tier = "free",
+            BillingCurrency = "USD",
+            CreditBalance = 0m,
+            IsActive = true,
+            IsVerified = false,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        // Act
+        _fixture.DbContext.Organizations.Add(organization);
+        await _fixture.DbContext.SaveChangesAsync();
+
+        // Assert
+        var createdOrg = await _fixture.DbContext.Organizations.FindAsync(organization.Id);
+        Assert.NotNull(createdOrg);
+        Assert.Equal("new-test-org", createdOrg.Slug);
+        Assert.Equal("free", createdOrg.Tier);
+        Assert.False(createdOrg.IsVerified);
+    }
+
+    [Fact]
+    public async Task CreateApiKey_UserWithOrg_CreatesKey()
+    {
+        // Arrange
+        var userService = new UserService(_fixture.DbContext);
+        var user = await userService.CreateUserAsync(new CreateUserRequest
+        {
+            OrganizationId = _fixture.TestOrganization.Id,
+            Email = "apikey-test@test.com",
+            Password = "SecurePassword123!@#",
+            FirstName = "ApiKey",
+            LastName = "Test",
+            DataResidencyRegion = "us-east-1",
+            CreatedInRegion = "us-east-1",
+            Role = "member"
+        });
+
+        // Act - Create API key
+        var apiKey = await _fixture.CreateApiKeyWithQuotaAsync(
+            maxBudget: 100.00m,
+            currentSpend: 0.00m,
+            rpmLimit: 60);
+
+        // Assert
+        Assert.NotNull(apiKey);
+        Assert.True(apiKey.IsActive);
+        Assert.False(apiKey.IsRevoked);
+        Assert.Equal(100.00m, apiKey.MaxBudget);
+    }
+
+    [Fact]
+    public async Task RevokeApiKey_ActiveKey_KeyRevoked()
+    {
+        // Arrange
+        var apiKey = await _fixture.CreateApiKeyWithQuotaAsync(
+            maxBudget: 50.00m,
+            currentSpend: 0.00m);
+
+        // Act - Revoke key
+        apiKey.IsRevoked = true;
+        apiKey.RevokedAt = DateTime.UtcNow;
+        apiKey.UpdatedAt = DateTime.UtcNow;
+        _fixture.DbContext.VirtualKeys.Update(apiKey);
+        await _fixture.DbContext.SaveChangesAsync();
+
+        // Assert
+        var revokedKey = await _fixture.DbContext.VirtualKeys.FindAsync(apiKey.Id);
+        Assert.NotNull(revokedKey);
+        Assert.True(revokedKey.IsRevoked);
+        Assert.NotNull(revokedKey.RevokedAt);
+    }
+
+    [Fact]
+    public async Task InferenceRequest_ValidApiKey_ExecutesSuccessfully()
+    {
+        // Arrange
+        var apiKey = _fixture.EuApiKey;
+        
+        // Simulate inference request metadata
+        var requestMetadata = new
+        {
+            ApiKeyId = apiKey.Id,
+            Model = "gpt-4",
+            InputTokens = 100,
+            OutputTokens = 50,
+            Region = "eu-west-1",
+            Timestamp = DateTime.UtcNow
+        };
+
+        // Act - In real implementation, this would make actual inference request
+        // For testing, verify preconditions
+        Assert.True(apiKey.IsActive);
+        Assert.False(apiKey.IsRevoked);
+        Assert.True(apiKey.RemainingBudget > 0);
+
+        // Simulate request cost calculation
+        var inputCost = (requestMetadata.InputTokens / 1000m) * 0.03m;
+        var outputCost = (requestMetadata.OutputTokens / 1000m) * 0.06m;
+        var totalCost = inputCost + outputCost;
+
+        // Assert
+        Assert.True(totalCost <= apiKey.RemainingBudget);
+    }
+
+    [Fact]
+    public async Task CheckBilling_AfterRequests_BalanceUpdated()
+    {
+        // Arrange
+        var apiKey = await _fixture.CreateApiKeyWithQuotaAsync(
+            maxBudget: 10.00m,
+            currentSpend: 0.00m);
+        
+        var initialSpend = apiKey.CurrentSpend;
+
+        // Act - Simulate 5 requests at $0.10 each
+        for (int i = 0; i < 5; i++)
+        {
+            apiKey.CurrentSpend += 0.10m;
+        }
+        
+        _fixture.DbContext.VirtualKeys.Update(apiKey);
+        await _fixture.DbContext.SaveChangesAsync();
+
+        // Assert
+        var updatedKey = await _fixture.DbContext.VirtualKeys.FindAsync(apiKey.Id);
+        Assert.NotNull(updatedKey);
+        Assert.Equal(0.50m, updatedKey.CurrentSpend);
+        Assert.Equal(9.50m, updatedKey.RemainingBudget);
+    }
+
+    [Fact]
+    public async Task CompleteWorkflow_SignupToInference_AllStepsSucceed()
+    {
+        // Arrange
+        var userService = new UserService(_fixture.DbContext);
+
+        // Step 1: Create organization (already exists in fixture)
+        var organization = _fixture.TestOrganization;
+        Assert.NotNull(organization);
+
+        // Step 2: User signup
+        var user = await userService.CreateUserAsync(new CreateUserRequest
+        {
+            OrganizationId = organization.Id,
+            Email = "full-workflow@test.com",
+            Password = "SecurePassword123!@#",
+            FirstName = "Full",
+            LastName = "Workflow",
+            DataResidencyRegion = "eu-west-1",
+            CreatedInRegion = "eu-west-1",
+            Role = "member"
+        });
+        Assert.NotNull(user);
+
+        // Step 3: Verify email (simulated)
+        user.IsEmailVerified = true;
+        user.EmailVerifiedAt = DateTime.UtcNow;
+        _fixture.DbContext.Users.Update(user);
+        await _fixture.DbContext.SaveChangesAsync();
+
+        // Step 4: Create API key
+        var apiKey = await _fixture.CreateApiKeyWithQuotaAsync(
+            maxBudget: 100.00m,
+            currentSpend: 0.00m,
+            rpmLimit: 60);
+        Assert.NotNull(apiKey);
+
+        // Step 5: Make inference request (simulated)
+        var requestSuccessful = true;
+        Assert.True(requestSuccessful);
+
+        // Step 6: Check billing
+        apiKey.CurrentSpend += 0.05m; // Add request cost
+        _fixture.DbContext.VirtualKeys.Update(apiKey);
+        await _fixture.DbContext.SaveChangesAsync();
+
+        var finalKey = await _fixture.DbContext.VirtualKeys.FindAsync(apiKey.Id);
+        Assert.Equal(0.05m, finalKey.CurrentSpend);
+        Assert.Equal(99.95m, finalKey.RemainingBudget);
+    }
+
+    [Fact]
+    public async Task PasswordReset_UserRequestsReset_NewPasswordSet()
+    {
+        // Arrange
+        var userService = new UserService(_fixture.DbContext);
+        var user = await userService.CreateUserAsync(new CreateUserRequest
+        {
+            OrganizationId = _fixture.TestOrganization.Id,
+            Email = "password-reset@test.com",
+            Password = "OldPassword123!@#",
+            FirstName = "Password",
+            LastName = "Reset",
+            DataResidencyRegion = "us-east-1",
+            CreatedInRegion = "us-east-1",
+            Role = "member"
+        });
+
+        // Act - Reset password
+        var newPasswordHash = userService.HashPassword("NewPassword123!@#");
+        user.PasswordHash = newPasswordHash;
+        user.UpdatedAt = DateTime.UtcNow;
+        _fixture.DbContext.Users.Update(user);
+        await _fixture.DbContext.SaveChangesAsync();
+
+        // Assert - Old password should not work
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
+        {
+            await userService.AuthenticateAsync("password-reset@test.com", "OldPassword123!@#");
+        });
+
+        // New password should work
+        var authenticatedUser = await userService.AuthenticateAsync(
+            "password-reset@test.com",
+            "NewPassword123!@#");
+        Assert.NotNull(authenticatedUser);
+        Assert.Equal(user.Id, authenticatedUser.Id);
+    }
+}

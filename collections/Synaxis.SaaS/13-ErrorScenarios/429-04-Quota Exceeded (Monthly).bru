@@ -1,0 +1,89 @@
+meta {
+  name: 429-04-Quota Exceeded (Monthly)
+  type: http
+  seq: 44
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+  X-Virtual-Key: {{virtualKey}}
+}
+
+body:json {
+  {
+    "model": "gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hello"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 429
+  res.body.error: isDefined
+  res.body.error.code: eq QUOTA_EXCEEDED
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 429", function() {
+    expect(res.status).to.equal(429);
+  });
+  
+  test("Error code is QUOTA_EXCEEDED", function() {
+    expect(res.body.error.code).to.equal("QUOTA_EXCEEDED");
+  });
+  
+  test("Error message mentions monthly quota", function() {
+    expect(res.body.error.message).to.match(/quota|monthly|limit exceeded/i);
+  });
+  
+  test("Error details include quota type", function() {
+    expect(res.body.error.details).to.have.property('quotaType');
+    expect(res.body.error.details.quotaType).to.equal('monthly');
+  });
+  
+  test("Error details include billing cycle info", function() {
+    expect(res.body.error.details).to.have.property('billingCycle');
+    expect(res.body.error.details).to.have.property('resetAt');
+  });
+  
+  test("Error includes upgrade or overage options", function() {
+    expect(res.body.error.details).to.have.property('upgradeUrl');
+  });
+}
+
+docs {
+  # 429 Too Many Requests - Quota Exceeded (Monthly)
+  
+  Tests monthly billing quota enforcement.
+  
+  ## Trigger Condition
+  - POST to /inference after exceeding monthly quota
+  - Organization monthly billing quota exhausted
+  
+  ## Expected Response
+  - Status: 429
+  - Error code: QUOTA_EXCEEDED
+  - Monthly quota details, billing cycle, upgrade options
+  
+  ## Validation
+  - Monthly quota enforcement
+  - Billing cycle alignment
+  - Upgrade path guidance
+}

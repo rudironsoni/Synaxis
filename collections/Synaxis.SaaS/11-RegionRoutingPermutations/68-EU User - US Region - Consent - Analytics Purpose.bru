@@ -1,0 +1,57 @@
+meta {
+  name: EU User - US Region - Consent - Analytics Purpose
+  type: http
+  seq: 68
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: eu-west-1
+  X-Processed-Region: us-east-1
+  X-Cross-Border: true
+  X-Legal-Basis: consent
+  X-Processing-Purpose: analytics
+  X-Analytics-Consent: explicit
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test with analytics purpose"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-purpose-disclosed: eq analytics
+  res.headers.x-anonymization-level: isDefined
+}
+
+tests {
+  test("Analytics purpose with appropriate safeguards", function() {
+    expect(res.headers['x-purpose-disclosed']).to.equal('analytics');
+    expect(res.headers['x-anonymization-level']).to.be.defined;
+  });
+}
+
+docs {
+  # EU to US for Analytics
+  
+  Tests cross-border transfer for analytics purposes.
+  Verifies purpose limitation and data minimization.
+}

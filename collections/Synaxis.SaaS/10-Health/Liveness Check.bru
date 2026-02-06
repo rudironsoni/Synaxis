@@ -1,0 +1,52 @@
+meta {
+  name: Liveness Check
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/health/live
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.status: eq alive
+}
+
+tests {
+  test("Service is alive", function() {
+    expect(res.body.status).to.equal('alive');
+  });
+  
+  test("Uptime tracked", function() {
+    expect(res.body.uptime).to.be.a('number');
+    expect(res.body.uptime).to.be.greaterThan(0);
+  });
+}
+
+docs {
+  # Liveness Check
+  
+  Kubernetes liveness probe - checks if service is responsive.
+  
+  ## Purpose
+  - Detects deadlocks
+  - Detects infinite loops
+  - Triggers pod restart if unhealthy
+  
+  ## Response
+  - 200: Service alive
+  - No response: Service dead (Kubernetes restarts pod)
+  
+  ## Checks
+  - HTTP server responsive
+  - Event loop not blocked
+  - No critical errors
+  
+  ## Lightweight
+  - No external dependencies checked
+  - Fast response (< 100ms)
+  - Minimal resource usage
+}

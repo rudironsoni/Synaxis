@@ -1,0 +1,116 @@
+meta {
+  name: Get Organization Limits
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/limits
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Region: {{region}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.organizationId: eq {{orgId}}
+  res.body.plan: isDefined
+  res.body.limits: isDefined
+  res.body.usage: isDefined
+  res.body.remaining: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Limits object structure valid", function() {
+    expect(res.body.limits).to.have.property('maxTokensPerMonth');
+    expect(res.body.limits).to.have.property('maxApiKeys');
+    expect(res.body.limits).to.have.property('maxTeamMembers');
+    expect(res.body.limits).to.have.property('rateLimit');
+  });
+  
+  test("Usage tracking accurate", function() {
+    expect(res.body.usage).to.have.property('tokensUsedThisMonth');
+    expect(res.body.usage).to.have.property('apiKeysCreated');
+    expect(res.body.usage).to.have.property('teamMembers');
+  });
+  
+  test("Remaining quota calculated", function() {
+    const remaining = res.body.limits.maxTokensPerMonth - res.body.usage.tokensUsedThisMonth;
+    expect(res.body.remaining.tokens).to.equal(remaining);
+  });
+  
+  test("Rate limit per minute defined", function() {
+    expect(res.body.limits.rateLimit).to.be.a('number');
+    expect(res.body.limits.rateLimit).to.be.greaterThan(0);
+  });
+  
+  test("Warnings for approaching limits", function() {
+    if (res.body.usage.tokensUsedThisMonth / res.body.limits.maxTokensPerMonth > 0.8) {
+      expect(res.body.warnings).to.be.an('array');
+      expect(res.body.warnings).to.not.be.empty;
+    }
+  });
+}
+
+docs {
+  # Get Organization Limits
+  
+  Retrieves quota limits, usage, and remaining capacity for organization.
+  
+  ## Response Structure
+  ```json
+  {
+    "organizationId": "uuid",
+    "plan": "professional",
+    "limits": {
+      "maxTokensPerMonth": 1000000,
+      "maxApiKeys": 10,
+      "maxTeamMembers": 20,
+      "maxTeams": 5,
+      "rateLimit": 60
+    },
+    "usage": {
+      "tokensUsedThisMonth": 250000,
+      "apiKeysCreated": 3,
+      "teamMembers": 8,
+      "teams": 2
+    },
+    "remaining": {
+      "tokens": 750000,
+      "apiKeys": 7,
+      "teamMembers": 12,
+      "teams": 3
+    },
+    "warnings": [
+      "80% of monthly token quota used"
+    ],
+    "resetDate": "2026-03-01T00:00:00Z"
+  }
+  ```
+  
+  ## Quota Reset
+  - Monthly quotas reset on 1st day of month (00:00 UTC)
+  - `resetDate` shows next reset timestamp
+  - Unused quota does not roll over
+  
+  ## Warnings
+  Warnings triggered at:
+  - 80% quota usage
+  - 90% quota usage
+  - 95% quota usage
+  - 100% quota exceeded
+  
+  ## Rate Limiting
+  - `rateLimit`: Requests per minute
+  - Enforced per organization
+  - 429 status if exceeded
+  - X-RateLimit-* headers in response
+}

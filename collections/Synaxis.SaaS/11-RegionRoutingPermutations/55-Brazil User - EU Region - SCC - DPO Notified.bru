@@ -1,0 +1,56 @@
+meta {
+  name: Brazil User - EU Region - SCC - DPO Notified
+  type: http
+  seq: 55
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: sa-east-1
+  X-Processed-Region: eu-west-1
+  X-Cross-Border: true
+  X-Legal-Basis: SCC
+  X-DPO-Notification: required
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test with DPO notification"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-dpo-notified: eq true
+  res.headers.x-dpo-contact: isDefined
+}
+
+tests {
+  test("Data Protection Officer notified", function() {
+    expect(res.headers['x-dpo-notified']).to.equal('true');
+    expect(res.headers['x-dpo-contact']).to.be.defined;
+  });
+}
+
+docs {
+  # Brazil to EU with DPO Notification
+  
+  Tests cross-border transfer with DPO notification requirements.
+  Verifies GDPR Article 37-39 DPO involvement.
+}

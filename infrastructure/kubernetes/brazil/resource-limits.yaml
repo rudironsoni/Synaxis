@@ -1,0 +1,57 @@
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: synaxis-api-pdb
+  namespace: synaxis
+  labels:
+    app: synaxis-api
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: synaxis-api
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: synaxis-limits
+  namespace: synaxis
+spec:
+  limits:
+    - max:
+        cpu: "4"
+        memory: "8Gi"
+      min:
+        cpu: "100m"
+        memory: "128Mi"
+      default:
+        cpu: "1"
+        memory: "2Gi"
+      defaultRequest:
+        cpu: "500m"
+        memory: "1Gi"
+      type: Container
+    - max:
+        cpu: "8"
+        memory: "16Gi"
+      min:
+        cpu: "200m"
+        memory: "256Mi"
+      type: Pod
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: synaxis-quota
+  namespace: synaxis
+spec:
+  hard:
+    requests.cpu: "40"
+    requests.memory: "80Gi"
+    limits.cpu: "80"
+    limits.memory: "160Gi"
+    persistentvolumeclaims: "10"
+    services.loadbalancers: "2"
+    count/deployments.apps: "10"
+    count/services: "10"

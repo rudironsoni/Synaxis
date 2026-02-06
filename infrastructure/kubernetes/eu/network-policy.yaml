@@ -1,0 +1,188 @@
+# Network Policies for Synaxis EU Region
+# GDPR-compliant network isolation and least privilege access
+---
+# Default deny all ingress traffic
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: synaxis-eu
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+---
+# Allow ingress to API from ALB/load balancer
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-alb-to-api
+  namespace: synaxis-eu
+  labels:
+    app: synaxis-api
+spec:
+  podSelector:
+    matchLabels:
+      app: synaxis-api
+  policyTypes:
+  - Ingress
+  ingress:
+  # Allow traffic from ALB
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: aws-load-balancer-controller
+    ports:
+    - protocol: TCP
+      port: 8080
+  # Allow traffic from within the same namespace (pod-to-pod)
+  - from:
+    - podSelector: {}
+    ports:
+    - protocol: TCP
+      port: 8080
+---
+# Allow egress from API to PostgreSQL
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-api-to-postgres
+  namespace: synaxis-eu
+  labels:
+    app: synaxis-api
+spec:
+  podSelector:
+    matchLabels:
+      app: synaxis-api
+  policyTypes:
+  - Egress
+  egress:
+  # Allow DNS resolution
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    - podSelector:
+        matchLabels:
+          k8s-app: kube-dns
+    ports:
+    - protocol: UDP
+      port: 53
+  # Allow PostgreSQL (RDS is outside cluster, so allow to VPC CIDR)
+  - to:
+    - ipBlock:
+        cidr: 10.1.0.0/16 # VPC CIDR - adjust based on your VPC
+    ports:
+    - protocol: TCP
+      port: 5432
+  # Allow Redis (ElastiCache is outside cluster)
+  - to:
+    - ipBlock:
+        cidr: 10.1.0.0/16 # VPC CIDR
+    ports:
+    - protocol: TCP
+      port: 6379
+  # Allow HTTPS for external API calls
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 169.254.169.254/32 # Block metadata service
+    ports:
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 80
+---
+# Allow egress to Kubernetes API server
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-api-to-k8s-api
+  namespace: synaxis-eu
+spec:
+  podSelector:
+    matchLabels:
+      app: synaxis-api
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - namespaceSelector: {}
+      podSelector:
+        matchLabels:
+          component: apiserver
+    ports:
+    - protocol: TCP
+      port: 443
+---
+# Allow pod-to-pod communication within namespace
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-same-namespace
+  namespace: synaxis-eu
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector: {}
+  egress:
+  - to:
+    - podSelector: {}
+---
+# Allow traffic to metrics endpoints (Prometheus)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-prometheus-scraping
+  namespace: synaxis-eu
+  labels:
+    app: synaxis-api
+spec:
+  podSelector:
+    matchLabels:
+      app: synaxis-api
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+    - podSelector:
+        matchLabels:
+          app: prometheus
+    ports:
+    - protocol: TCP
+      port: 9090
+---
+# Network policy for Qdrant vector database (if deployed in-cluster)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-api-to-qdrant
+  namespace: synaxis-eu
+spec:
+  podSelector:
+    matchLabels:
+      app: qdrant
+  policyTypes:
+  - Ingress
+  ingress:
+  # Allow from API pods only
+  - from:
+    - podSelector:
+        matchLabels:
+          app: synaxis-api
+    ports:
+    - protocol: TCP
+      port: 6333 # HTTP API
+    - protocol: TCP
+      port: 6334 # gRPC

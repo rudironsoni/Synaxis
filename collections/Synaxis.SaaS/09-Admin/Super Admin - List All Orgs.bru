@@ -1,0 +1,77 @@
+meta {
+  name: Super Admin - List All Orgs
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/organizations?page=1&limit=50&status=active
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Region: {{region}}
+  X-Admin-Action: list-organizations
+}
+
+query {
+  page: 1
+  limit: 50
+  status: active
+}
+
+assert {
+  res.status: eq 200
+  res.body.data: isDefined
+  res.body.pagination: isDefined
+}
+
+tests {
+  test("Organizations returned", function() {
+    expect(res.body.data).to.be.an('array');
+  });
+  
+  test("Admin fields included", function() {
+    if (res.body.data.length > 0) {
+      expect(res.body.data[0]).to.have.property('internalNotes');
+      expect(res.body.data[0]).to.have.property('supportTier');
+    }
+  });
+}
+
+docs {
+  # Super Admin - List All Orgs
+  
+  Lists all organizations in the system (super admin only).
+  
+  ## Permissions Required
+  - Role: super_admin
+  - Scope: admin:read
+  
+  ## Query Parameters
+  - status: active/suspended/deleted/all
+  - plan: free/professional/enterprise
+  - region: Filter by primary region
+  - search: Search by name/slug/email
+  
+  ## Response Includes
+  - All organization data
+  - Internal admin notes
+  - Support tier
+  - Health scores
+  - Compliance status
+  
+  ## Audit Logging
+  All super admin actions are logged:
+  - Action type
+  - Admin user ID
+  - Target organization
+  - Timestamp
+  - IP address
+  - Reason (if provided)
+}

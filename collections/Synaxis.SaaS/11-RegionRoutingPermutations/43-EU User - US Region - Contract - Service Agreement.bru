@@ -1,0 +1,55 @@
+meta {
+  name: EU User - US Region - Contract - Service Agreement
+  type: http
+  seq: 43
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: eu-west-1
+  X-Processed-Region: us-east-1
+  X-Cross-Border: true
+  X-Legal-Basis: contract
+  X-Contract-ID: svc_contract_789
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test contract-based transfer"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-contract-validated: eq true
+}
+
+tests {
+  test("Contract necessity validated", function() {
+    expect(res.headers['x-contract-validated']).to.equal('true');
+    expect(res.headers['x-contract-id']).to.equal('svc_contract_789');
+  });
+}
+
+docs {
+  # EU to US Contract-Based Transfer
+  
+  Tests cross-border transfer necessary for contract performance.
+  Verifies contract ID tracking and necessity validation.
+}

@@ -1,0 +1,113 @@
+meta {
+  name: Rotate API Key
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/v1/organizations/{{orgId}}/api-keys/{{apiKeyId}}/rotate
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+body:json {
+  {
+    "gracePeriodHours": 24
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.newKey: isDefined
+  res.body.oldKeyExpiresAt: isDefined
+  res.body.newKeyId: isDefined
+}
+
+script:post-response {
+  if (res.body.newKey) {
+    bru.setEnvVar("apiKey", res.body.newKey);
+  }
+  if (res.body.newKeyId) {
+    bru.setEnvVar("apiKeyId", res.body.newKeyId);
+  }
+}
+
+tests {
+  test("New key generated", function() {
+    expect(res.body.newKey).to.match(/^sk-[a-zA-Z0-9]{48}$/);
+  });
+  
+  test("New key is different", function() {
+    const oldKey = bru.getEnvVar("apiKey");
+    expect(res.body.newKey).to.not.equal(oldKey);
+  });
+  
+  test("Old key has grace period", function() {
+    const expiresAt = new Date(res.body.oldKeyExpiresAt);
+    const now = new Date();
+    const hoursDiff = (expiresAt - now) / (1000 * 60 * 60);
+    expect(hoursDiff).to.be.closeTo(24, 1);
+  });
+  
+  test("Both keys valid during grace period", function() {
+    expect(res.body.message).to.include('grace period');
+  });
+}
+
+docs {
+  # Rotate API Key
+  
+  Generates new API key while keeping old key valid for grace period.
+  
+  ## Rotation Process
+  1. New key generated
+  2. Old key remains valid for grace period (default: 24h)
+  3. Update applications to use new key
+  4. Old key automatically revoked after grace period
+  
+  ## Request Body
+  - `gracePeriodHours`: Hours old key remains valid (1-168, default: 24)
+  
+  ## Response
+  - `newKey`: New API key (ONLY time it's returned)
+  - `newKeyId`: New key ID for API calls
+  - `oldKeyId`: Old key ID (still valid)
+  - `oldKeyExpiresAt`: When old key will be revoked
+  
+  ## Best Practices
+  - Rotate keys every 90 days
+  - Use 24h grace period for production keys
+  - Test new key before grace period expires
+  - Set calendar reminder to update applications
+  
+  ## Zero-Downtime Rotation
+  ```
+  1. Call rotate endpoint → Get new key
+  2. Deploy new key to 50% of servers
+  3. Verify new key works
+  4. Deploy to remaining 50%
+  5. Old key auto-revoked after grace period
+  ```
+  
+  ## Emergency Rotation
+  If key compromised:
+  - Use 0 or 1 hour grace period
+  - Revoke old key immediately if critical
+  - Update applications ASAP
+  
+  ## Error Codes
+  - 401: Unauthorized
+  - 403: Insufficient permissions
+  - 404: API key not found
+  - 409: Rotation already in progress
+  - 429: Too many rotations (max 1 per day)
+}

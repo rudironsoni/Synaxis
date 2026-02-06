@@ -1,0 +1,71 @@
+meta {
+  name: 401-02-Invalid Token Format
+  type: http
+  seq: 12
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organizations
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: not-a-valid-jwt-token
+}
+
+headers {
+  Content-Type: application/json
+  X-Region: {{region}}
+}
+
+assert {
+  res.status: eq 401
+  res.body.error: isDefined
+  res.body.error.code: eq INVALID_TOKEN_FORMAT
+  res.body.error.message: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Status code is 401", function() {
+    expect(res.status).to.equal(401);
+  });
+  
+  test("Error code is INVALID_TOKEN_FORMAT", function() {
+    expect(res.body.error.code).to.equal("INVALID_TOKEN_FORMAT");
+  });
+  
+  test("Error message mentions token format", function() {
+    expect(res.body.error.message).to.match(/token|format|invalid|malformed/i);
+  });
+  
+  test("WWW-Authenticate header present", function() {
+    expect(res.headers['www-authenticate']).to.be.defined;
+  });
+  
+  test("Error includes expected format", function() {
+    expect(res.body.error.details).to.have.property('expectedFormat');
+    expect(res.body.error.details.expectedFormat).to.match(/JWT/i);
+  });
+}
+
+docs {
+  # 401 Unauthorized - Invalid Token Format
+  
+  Tests JWT token format validation.
+  
+  ## Trigger Condition
+  - Request with Authorization: Bearer not-a-valid-jwt-token
+  - Token doesn't match JWT structure (3 base64 segments)
+  
+  ## Expected Response
+  - Status: 401
+  - Error code: INVALID_TOKEN_FORMAT
+  - Expected format details (JWT)
+  
+  ## Validation
+  - JWT structure validation
+  - Early rejection of malformed tokens
+  - Clear format requirements
+}

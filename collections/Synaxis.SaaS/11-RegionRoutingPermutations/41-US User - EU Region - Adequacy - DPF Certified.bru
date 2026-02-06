@@ -1,0 +1,54 @@
+meta {
+  name: US User - EU Region - Adequacy - DPF Certified
+  type: http
+  seq: 41
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: us-east-1
+  X-Processed-Region: eu-west-1
+  X-Cross-Border: true
+  X-Legal-Basis: adequacy
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test US-EU with Data Privacy Framework"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-adequacy-framework: eq EU-US-DPF
+}
+
+tests {
+  test("Data Privacy Framework certification", function() {
+    expect(res.headers['x-adequacy-framework']).to.equal('EU-US-DPF');
+    expect(res.headers['x-dpf-certified']).to.equal('true');
+  });
+}
+
+docs {
+  # US to EU with Data Privacy Framework
+  
+  Tests US-EU transfer under Data Privacy Framework certification.
+  Verifies DPF certification and compliance.
+}

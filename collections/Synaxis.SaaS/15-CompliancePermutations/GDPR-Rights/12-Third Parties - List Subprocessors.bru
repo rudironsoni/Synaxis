@@ -1,0 +1,103 @@
+meta {
+  name: 12-Third Parties - List Subprocessors
+  type: http
+  seq: 12
+}
+
+get {
+  url: {{baseUrl}}/api/v1/compliance/gdpr/subprocessors
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Region: {{region}}
+  X-Compliance-Framework: GDPR
+  X-Legal-Basis: contract
+}
+
+assert {
+  res.status: eq 200
+  res.body.subprocessors: isArray
+  res.body.auditTrailId: isDefined
+}
+
+tests {
+  test("Subprocessors list available", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Subprocessors disclosed", function() {
+    expect(res.body.subprocessors).to.be.an('array');
+  });
+  
+  test("Each subprocessor details complete", function() {
+    if (res.body.subprocessors.length > 0) {
+      const subprocessor = res.body.subprocessors[0];
+      expect(subprocessor.name).to.be.a('string');
+      expect(subprocessor.location).to.be.a('string');
+      expect(subprocessor.purpose).to.be.a('string');
+      expect(subprocessor.dataCategories).to.be.an('array');
+    }
+  });
+  
+  test("Contracts in place", function() {
+    if (res.body.subprocessors.length > 0) {
+      const subprocessor = res.body.subprocessors[0];
+      expect(subprocessor.contractInPlace).to.equal(true);
+    }
+  });
+  
+  test("Same obligations imposed", function() {
+    if (res.body.subprocessors.length > 0) {
+      const subprocessor = res.body.subprocessors[0];
+      expect(subprocessor.sameObligations).to.equal(true);
+    }
+  });
+  
+  test("Objection mechanism available", function() {
+    expect(res.body.objectionMechanismAvailable).to.equal(true);
+  });
+}
+
+docs {
+  # GDPR Subprocessors Disclosure
+  
+  GDPR Article 28 - Processor
+  
+  ## Subprocessor Requirements
+  Processor must NOT engage another processor without:
+  1. Prior specific written authorization, OR
+  2. Prior general written authorization
+  
+  ## General Authorization
+  If general authorization:
+  - Processor must inform controller of changes (additions/replacements)
+  - Controller has opportunity to object
+  
+  ## Subprocessor Contract
+  Must impose SAME data protection obligations as in controller-processor contract:
+  - Appropriate technical/organizational measures
+  - Processing only on documented instructions
+  - Confidentiality obligations
+  - Assist controller (subject rights, security, breach, DPIA, consultation)
+  - Delete/return data after services end
+  - Make available information for demonstrating compliance
+  - Allow/contribute to audits
+  
+  ## Liability
+  Processor remains fully liable to controller for subprocessor's performance.
+  
+  ## Verification
+  ✓ Subprocessors disclosed
+  ✓ Names and locations provided
+  ✓ Purposes documented
+  ✓ Data categories listed
+  ✓ Contracts in place
+  ✓ Same obligations imposed
+  ✓ Objection mechanism available
+}

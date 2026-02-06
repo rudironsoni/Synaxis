@@ -1,0 +1,125 @@
+meta {
+  name: 06-Information about Sharing (Art 22)
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/v1/compliance/lgpd/sharing-information
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+headers {
+  X-Region: sa-east-1
+  X-Compliance-Framework: LGPD
+  X-Legal-Basis: consent
+}
+
+assert {
+  res.status: eq 200
+  res.body.publicEntities: isArray
+  res.body.privateEntities: isArray
+  res.body.dataLocation: contains brazil
+  res.body.auditTrailId: isDefined
+}
+
+tests {
+  test("Sharing information provided", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Public entities disclosed", function() {
+    expect(res.body.publicEntities).to.be.an('array');
+  });
+  
+  test("Private entities disclosed", function() {
+    expect(res.body.privateEntities).to.be.an('array');
+  });
+  
+  test("Data location in Brazil", function() {
+    expect(res.body.dataLocation).to.match(/brazil|sa-east/i);
+  });
+  
+  test("Audit trail created", function() {
+    expect(res.body.auditTrailId).to.be.a('string');
+  });
+  
+  test("Sharing purposes documented", function() {
+    if (res.body.publicEntities.length > 0) {
+      const entity = res.body.publicEntities[0];
+      expect(entity.purpose).to.be.a('string');
+    }
+  });
+  
+  test("Data categories shared documented", function() {
+    if (res.body.privateEntities.length > 0) {
+      const entity = res.body.privateEntities[0];
+      expect(entity.dataCategories).to.be.an('array');
+    }
+  });
+  
+  test("Consent status for each sharing", function() {
+    if (res.body.privateEntities.length > 0) {
+      const entity = res.body.privateEntities[0];
+      expect(entity.consentStatus).to.be.oneOf(['given', 'not_required', 'pending']);
+    }
+  });
+}
+
+docs {
+  # LGPD Information about Sharing (Article 22)
+  
+  Article 22 - Right to information about sharing
+  
+  ## Right
+  Data subject has right to information about:
+  - Public entities with whom controller shared data
+  - Private entities with whom controller shared data
+  
+  ## Information to Provide
+  For each entity:
+  - Name/identification
+  - Purpose of sharing
+  - Legal basis for sharing
+  - Categories of data shared
+  - Date/period of sharing
+  - Consent status (if applicable)
+  
+  ## Sharing Types
+  
+  ### Public Entities
+  - Government agencies
+  - Public administration bodies
+  - Regulatory authorities
+  - Law enforcement
+  
+  ### Private Entities
+  - Service providers
+  - Processors
+  - Joint controllers
+  - Third parties (marketing, analytics, etc.)
+  
+  ## Timeline
+  - Immediate (or as soon as reasonably possible)
+  - Must be free of charge
+  - Simplified format available
+  
+  ## Exceptions
+  - If impossible or disproportionate effort
+  - Must explain reasons
+  
+  ## Verification
+  ✓ Sharing information provided
+  ✓ Public entities disclosed
+  ✓ Private entities disclosed
+  ✓ Data location disclosed
+  ✓ Audit trail created
+  ✓ Purposes documented
+  ✓ Data categories documented
+  ✓ Consent status documented
+}

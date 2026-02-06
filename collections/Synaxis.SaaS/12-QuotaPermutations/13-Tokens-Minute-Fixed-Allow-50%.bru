@@ -1,0 +1,120 @@
+meta {
+  name: Tokens-Minute-Fixed-Allow-50%
+  type: http
+  seq: 13
+}
+
+post {
+  url: {{baseUrl}}/api/v1/inference/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  Content-Type: application/json
+  X-Organization-Id: {{orgId}}
+  X-Test-Quota-Type: tokens
+  X-Test-Quota-Limit: 150000
+  X-Test-Quota-Window: minute
+  X-Test-Quota-Window-Type: fixed
+  X-Test-Quota-Action: allow
+  X-Test-Simulate-Token-Usage: 75000
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test request - 50% token quota in minute window"
+      }
+    ],
+    "max_tokens": 100
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-ratelimit-limit-tokens: eq 150000
+  res.headers.x-ratelimit-remaining-tokens: isDefined
+  res.headers.x-ratelimit-window: eq minute
+}
+
+tests {
+  test("Token quota at 50% succeeds", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Token rate limit headers", function() {
+    expect(res.headers['x-ratelimit-limit-tokens']).to.equal('150000');
+    const remaining = parseInt(res.headers['x-ratelimit-remaining-tokens']);
+    expect(remaining).to.be.closeTo(75000, 1000); // Allow some variance
+  });
+  
+  test("Token usage tracked", function() {
+    expect(res.body.usage).to.be.an('object');
+    expect(res.body.usage.total_tokens).to.be.a('number');
+    expect(res.body.usage.prompt_tokens).to.be.a('number');
+    expect(res.body.usage.completion_tokens).to.be.a('number');
+  });
+  
+  test("Both request and token limits may be present", function() {
+    // Systems often track both requests AND tokens
+    if (res.headers['x-ratelimit-limit-requests']) {
+      expect(res.headers['x-ratelimit-remaining-requests']).to.be.a('string');
+    }
+  });
+  
+  test("Token consumption deducted after response", function() {
+    const tokensBefore = parseInt(res.headers['x-ratelimit-remaining-tokens']);
+    const tokensUsed = res.body.usage.total_tokens;
+    
+    // Remaining = limit - usage_before - this_request
+    expect(tokensBefore + tokensUsed).to.be.lessThanOrEqual(150000);
+  });
+}
+
+docs {
+  # Tokens-Minute-Fixed-Allow-50%
+  
+  Tests token-based quota enforcement at 50% usage.
+  
+  ## Test Configuration
+  - Metric Type: tokens (not requests)
+  - Time Granularity: minute
+  - Window Type: fixed
+  - Action: allow
+  - Usage Level: 50% (75000/150000 tokens)
+  
+  ## Token vs Request Quotas
+  
+  | Aspect | Request Quota | Token Quota |
+  |--------|--------------|-------------|
+  | What's counted | Number of API calls | Total tokens used |
+  | Granularity | Coarse | Fine |
+  | Predictability | High | Low (varies by request) |
+  | Fairness | Less fair | More fair |
+  
+  ## Token Counting
+  - **Prompt tokens**: Input message tokens
+  - **Completion tokens**: Generated response tokens
+  - **Total tokens**: Prompt + completion
+  - Counted AFTER request completes
+  
+  ## Why Token Quotas?
+  ✅ Fair usage (large requests cost more)
+  ✅ Better cost control
+  ✅ Prevents abuse via large contexts
+  ✅ Aligns with LLM provider billing
+  
+  ## Challenges
+  ❌ Can't predict exact token usage before request
+  ❌ May get 200 OK but use remaining tokens
+  ❌ Need to handle partial responses
+  ❌ Harder to implement client-side throttling
+}

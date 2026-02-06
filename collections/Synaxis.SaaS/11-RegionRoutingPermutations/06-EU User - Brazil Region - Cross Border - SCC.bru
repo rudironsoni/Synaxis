@@ -1,0 +1,66 @@
+meta {
+  name: EU User - Brazil Region - Cross Border - SCC
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/v1/chat/completions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  X-User-Region: eu-west-1
+  X-Processed-Region: sa-east-1
+  X-Cross-Border: true
+  X-Legal-Basis: SCC
+  X-Organization-Id: {{orgId}}
+}
+
+body:json {
+  {
+    "model": "openai/gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Test message for EU to Brazil transfer with SCC"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.headers.x-cross-border-transfer: eq true
+  res.headers.x-legal-basis: eq SCC
+  res.headers.x-processed-region: eq sa-east-1
+}
+
+tests {
+  test("EU to Brazil transfer with SCC", function() {
+    expect(res.headers['x-cross-border-transfer']).to.equal('true');
+    expect(res.headers['x-legal-basis']).to.equal('SCC');
+  });
+  
+  test("Dual compliance EU/Brazil", function() {
+    expect(res.headers['x-compliance-frameworks']).to.include('GDPR');
+    expect(res.headers['x-compliance-frameworks']).to.include('LGPD');
+  });
+}
+
+docs {
+  # EU User - Brazil Region - Cross Border - SCC
+  
+  Tests EU to Brazil data transfer using Standard Contractual Clauses.
+  Must comply with both GDPR and LGPD requirements.
+  
+  ## Legal Basis
+  - GDPR: Standard Contractual Clauses
+  - LGPD: International data transfer clauses
+  - Brazil has partial adequacy recognition from EU
+}

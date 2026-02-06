@@ -1,0 +1,38 @@
+# Synaxis EU Region Terraform Variables
+# Copy this file to terraform.tfvars and update with your values
+
+# Environment Configuration
+environment = "prod"
+aws_region  = "eu-west-1"
+
+# VPC Configuration
+vpc_cidr = "10.1.0.0/16"
+
+# RDS PostgreSQL Configuration
+db_name     = "synaxis"
+db_username = "synaxis_admin"
+db_password = "CHANGE_ME_MIN_16_CHARS!"  # Min 16 characters required
+
+db_instance_class    = "db.r6g.xlarge"
+db_allocated_storage = 100
+backup_retention_period = 30
+
+# Redis ElastiCache Configuration
+redis_node_type      = "cache.r6g.large"
+redis_num_cache_nodes = 3
+
+# EKS Configuration
+eks_cluster_version     = "1.28"
+eks_node_instance_types = ["t3.xlarge", "t3a.xlarge"]
+eks_node_desired_size   = 3
+eks_node_min_size       = 3
+eks_node_max_size       = 10
+
+# Application Load Balancer
+alb_enable_deletion_protection = true
+
+# Logging Configuration
+log_retention_days = 90
+
+# Network Configuration
+enable_vpc_flow_logs = true

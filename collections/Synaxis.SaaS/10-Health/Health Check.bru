@@ -1,0 +1,75 @@
+meta {
+  name: Health Check
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/health
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.status: eq healthy
+  res.body.timestamp: isDefined
+  res.headers.content-type: contains application/json
+}
+
+tests {
+  test("Service is healthy", function() {
+    expect(res.body.status).to.equal('healthy');
+  });
+  
+  test("Timestamp is recent", function() {
+    const timestamp = new Date(res.body.timestamp);
+    const now = new Date();
+    const diff = now - timestamp;
+    expect(diff).to.be.lessThan(5000);
+  });
+  
+  test("Version information present", function() {
+    expect(res.body.version).to.be.a('string');
+    expect(res.body.version).to.match(/^\d+\.\d+\.\d+$/);
+  });
+  
+  test("Response time acceptable", function() {
+    // Response should be fast (< 500ms)
+    expect(res.duration).to.be.lessThan(500);
+  });
+}
+
+docs {
+  # Health Check
+  
+  Basic health check endpoint for monitoring and load balancers.
+  
+  ## Response
+  ```json
+  {
+    "status": "healthy",
+    "timestamp": "2026-02-05T10:00:00Z",
+    "version": "1.0.0",
+    "region": "eu-central-1"
+  }
+  ```
+  
+  ## Status Values
+  - `healthy`: All systems operational
+  - `degraded`: Partial outage
+  - `unhealthy`: Major outage
+  
+  ## Use Cases
+  - Load balancer health checks
+  - Uptime monitoring (Pingdom, UptimeRobot)
+  - Kubernetes liveness probes
+  - Simple availability check
+  
+  ## No Authentication
+  This endpoint is public (no auth required).
+  
+  ## Rate Limiting
+  - Very high limit: 1000 requests/minute
+  - Designed for frequent polling
+}
