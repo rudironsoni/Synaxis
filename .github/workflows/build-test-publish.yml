@@ -59,6 +59,9 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore Synaxis.sln
 
+      - name: Clean build artifacts
+        run: dotnet clean Synaxis.sln --configuration Release
+
       - name: Build solution
         run: dotnet build Synaxis.sln --configuration Release --no-restore
 
