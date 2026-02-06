@@ -1,95 +1,101 @@
-namespace Synaxis.InferenceGateway.WebApi.Hubs;
+// <copyright file="SynaxisHub.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.AspNetCore.Authorization;
-
-/// <summary>
-/// SignalR hub for real-time Synaxis updates.
-/// Enables real-time notifications for provider health, cost optimization,
-/// model discovery, security alerts, and audit events.
-/// </summary>
-[Authorize]
-public class SynaxisHub : Hub
+namespace Synaxis.InferenceGateway.WebApi.Hubs
 {
-    private readonly ILogger<SynaxisHub> _logger;
-
-    public SynaxisHub(ILogger<SynaxisHub> logger)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
+    using Microsoft.AspNetCore.Authorization;
+    using Microsoft.AspNetCore.SignalR;
 
     /// <summary>
-    /// Join organization group for targeted updates.
+    /// SignalR hub for real-time Synaxis updates.
+    /// Enables real-time notifications for provider health, cost optimization,
+    /// model discovery, security alerts, and audit events.
     /// </summary>
-    /// <param name="organizationId">The organization ID to join</param>
-    public async Task JoinOrganization(string organizationId)
+    [Authorize]
+    public class SynaxisHub : Hub
     {
-        if (string.IsNullOrWhiteSpace(organizationId))
+        private readonly ILogger<SynaxisHub> _logger;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SynaxisHub"/> class.
+        /// </summary>
+        /// <param name="logger">The logger instance.</param>
+        public SynaxisHub(ILogger<SynaxisHub> logger)
         {
-            _logger.LogWarning("Connection {ConnectionId} attempted to join with empty organization ID", Context.ConnectionId);
-            throw new ArgumentException("Organization ID cannot be empty", nameof(organizationId));
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        // TODO: Validate user belongs to organization
-        // var userId = Context.User?.Identity?.Name;
-        // if (!await _authService.UserBelongsToOrganization(userId, organizationId))
-        // {
-        //     throw new UnauthorizedAccessException("User does not belong to organization");
-        // }
-
-        await Groups.AddToGroupAsync(Context.ConnectionId, organizationId);
-        _logger.LogInformation("Connection {ConnectionId} joined organization {OrganizationId}", 
-            Context.ConnectionId, organizationId);
-    }
-
-    /// <summary>
-    /// Leave organization group.
-    /// </summary>
-    /// <param name="organizationId">The organization ID to leave</param>
-    public async Task LeaveOrganization(string organizationId)
-    {
-        if (string.IsNullOrWhiteSpace(organizationId))
+        /// <summary>
+        /// Join organization group for targeted updates.
+        /// </summary>
+        /// <param name="organizationId">The organization ID to join.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        public async Task JoinOrganization(string organizationId)
         {
-            _logger.LogWarning("Connection {ConnectionId} attempted to leave with empty organization ID", Context.ConnectionId);
-            return;
+            if (string.IsNullOrWhiteSpace(organizationId))
+            {
+                this._logger.LogWarning("Connection {ConnectionId} attempted to join with empty organization ID", this.Context.ConnectionId);
+                throw new ArgumentException("Organization ID cannot be empty", nameof(organizationId));
+            }
+
+            // NOTE: Validate user belongs to organization. Implementation pending.
+            await this.Groups.AddToGroupAsync(this.Context.ConnectionId, organizationId).ConfigureAwait(false);
+            this._logger.LogInformation("Connection {ConnectionId} joined organization {OrganizationId}", this.Context.ConnectionId, organizationId);
         }
 
-        await Groups.RemoveFromGroupAsync(Context.ConnectionId, organizationId);
-        _logger.LogInformation("Connection {ConnectionId} left organization {OrganizationId}", 
-            Context.ConnectionId, organizationId);
-    }
-
-    /// <summary>
-    /// Authentication check on connection.
-    /// </summary>
-    public override async Task OnConnectedAsync()
-    {
-        var user = Context.User;
-        if (user?.Identity?.IsAuthenticated != true)
+        /// <summary>
+        /// Leave organization group.
+        /// </summary>
+        /// <param name="organizationId">The organization ID to leave.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        public async Task LeaveOrganization(string organizationId)
         {
-            _logger.LogWarning("Unauthenticated connection attempt: {ConnectionId}", Context.ConnectionId);
-            Context.Abort();
-            return;
+            if (string.IsNullOrWhiteSpace(organizationId))
+            {
+                this._logger.LogWarning("Connection {ConnectionId} attempted to leave with empty organization ID", this.Context.ConnectionId);
+                return;
+            }
+
+            await this.Groups.RemoveFromGroupAsync(this.Context.ConnectionId, organizationId).ConfigureAwait(false);
+            this._logger.LogInformation("Connection {ConnectionId} left organization {OrganizationId}", this.Context.ConnectionId, organizationId);
         }
 
-        _logger.LogInformation("Client connected: {ConnectionId}, User: {UserName}", 
-            Context.ConnectionId, user.Identity.Name);
-        await base.OnConnectedAsync();
-    }
+        /// <summary>
+        /// Authentication check on connection.
+        /// </summary>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        public override async Task OnConnectedAsync()
+        {
+            var user = this.Context.User;
+            if (user?.Identity?.IsAuthenticated != true)
+            {
+                this._logger.LogWarning("Unauthenticated connection attempt: {ConnectionId}", this.Context.ConnectionId);
+                this.Context.Abort();
+                return;
+            }
 
-    /// <summary>
-    /// Handle disconnection.
-    /// </summary>
-    public override async Task OnDisconnectedAsync(Exception? exception)
-    {
-        if (exception != null)
-        {
-            _logger.LogError(exception, "Client disconnected with error: {ConnectionId}", Context.ConnectionId);
+            this._logger.LogInformation("Client connected: {ConnectionId}, User: {UserName}", this.Context.ConnectionId, user.Identity.Name);
+            await base.OnConnectedAsync().ConfigureAwait(false);
         }
-        else
+
+        /// <summary>
+        /// Handle disconnection.
+        /// </summary>
+        /// <param name="exception">The exception that caused the disconnection, if any.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        public override async Task OnDisconnectedAsync(Exception? exception)
         {
-            _logger.LogInformation("Client disconnected: {ConnectionId}", Context.ConnectionId);
+            if (exception != null)
+            {
+                this._logger.LogError(exception, "Client disconnected with error: {ConnectionId}", this.Context.ConnectionId);
+            }
+            else
+            {
+                this._logger.LogInformation("Client disconnected: {ConnectionId}", this.Context.ConnectionId);
+            }
+
+            await base.OnDisconnectedAsync(exception).ConfigureAwait(false);
         }
-        await base.OnDisconnectedAsync(exception);
     }
 }

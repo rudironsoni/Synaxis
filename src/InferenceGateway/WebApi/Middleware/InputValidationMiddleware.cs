@@ -1,15 +1,19 @@
-namespace Synaxis.InferenceGateway.WebApi.Middleware;
+// <copyright file="InputValidationMiddleware.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using System.Net;
-
-/// <summary>
-/// Middleware for input validation at API boundary.
-/// Validates request body size and content type.
-/// </summary>
-public class InputValidationMiddleware
+namespace Synaxis.InferenceGateway.WebApi.Middleware
 {
+    using System.Net;
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.Extensions.Logging;
+
+    /// <summary>
+    /// Middleware for input validation at API boundary.
+    /// Validates request body size and content type.
+    /// </summary>
+    public class InputValidationMiddleware
+    {
     private readonly RequestDelegate _next;
     private readonly ILogger<InputValidationMiddleware> _logger;
     private readonly long _maxRequestBodySize = 10 * 1024 * 1024; // 10MB
@@ -61,4 +65,6 @@ public class InputValidationMiddleware
 
         await _next(context);
     }
+    }
+
 }

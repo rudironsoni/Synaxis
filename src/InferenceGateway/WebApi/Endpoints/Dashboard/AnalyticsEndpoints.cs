@@ -1,18 +1,25 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.EntityFrameworkCore;
-using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+// <copyright file="AnalyticsEndpoints.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
-namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard;
-
-public static class AnalyticsEndpoints
+namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
 {
+    using Microsoft.AspNetCore.Builder;
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.AspNetCore.Routing;
+    using Microsoft.EntityFrameworkCore;
+    using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
+
+    /// <summary>
+    /// Endpoints for analytics data.
+    /// </summary>
+    public static class AnalyticsEndpoints
+    {
+    /// <summary>
+    /// Maps analytics endpoints to the application route builder.
+    /// </summary>
+    /// <param name="app">The endpoint route builder.</param>
+    /// <returns>The endpoint route builder with analytics endpoints configured.</returns>
     public static IEndpointRouteBuilder MapAnalyticsEndpoints(this IEndpointRouteBuilder app)
     {
         var analyticsGroup = app.MapGroup("/api/analytics")
@@ -34,9 +41,9 @@ public static class AnalyticsEndpoints
                 .Select(g => new
                 {
                     TotalTokens = g.Sum(t => t.InputTokens + t.OutputTokens),
-                    TotalRequests = g.Count()
+                    TotalRequests = g.Count(),
                 })
-                .FirstOrDefaultAsync(ct);
+                .FirstOrDefaultAsync(ct).ConfigureAwait(false);
 
             var providerData = await dbContext.RequestLogs
                 .Where(r => r.CreatedAt >= start && r.CreatedAt <= end && r.Provider != null)
@@ -45,9 +52,9 @@ public static class AnalyticsEndpoints
                 {
                     Id = g.Key!,
                     Requests = g.Count(),
-                    Tokens = 0
+                    Tokens = 0,
                 })
-                .ToListAsync(ct);
+                .ToListAsync(ct).ConfigureAwait(false);
 
             foreach (var provider in providerData)
             {
@@ -57,8 +64,8 @@ public static class AnalyticsEndpoints
                         tu => tu.RequestId,
                         rl => rl.RequestId,
                         (tu, rl) => tu.InputTokens + tu.OutputTokens)
-                    .SumAsync(ct);
-                
+                    .SumAsync(ct).ConfigureAwait(false);
+
                 provider.Tokens = providerTokens;
             }
 
@@ -69,9 +76,9 @@ public static class AnalyticsEndpoints
                 Providers = providerData,
                 TimeRange = new TimeRangeDto
                 {
-                    Start = start.ToString("yyyy-MM-dd"),
-                    End = end.ToString("yyyy-MM-dd")
-                }
+                    Start = start.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
+                    End = end.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
+                },
             };
 
             return Results.Ok(response);
@@ -85,7 +92,7 @@ public static class AnalyticsEndpoints
             CancellationToken ct) =>
         {
             var yesterday = DateTimeOffset.UtcNow.AddDays(-1);
-            
+
             var providerStats = await dbContext.RequestLogs
                 .Where(r => r.CreatedAt >= yesterday && r.Provider != null)
                 .GroupBy(r => r.Provider)
@@ -94,9 +101,9 @@ public static class AnalyticsEndpoints
                     ProviderId = g.Key!,
                     TotalRequests = g.Count(),
                     SuccessfulRequests = g.Count(r => r.StatusCode >= 200 && r.StatusCode < 300),
-                    AverageLatency = g.Average(r => r.LatencyMs ?? 0)
+                    AverageLatency = g.Average(r => r.LatencyMs ?? 0),
                 })
-                .ToListAsync(ct);
+                .ToListAsync(ct).ConfigureAwait(false);
 
             var providers = new List<ProviderAnalyticsDto>();
 
@@ -108,7 +115,7 @@ public static class AnalyticsEndpoints
                         tu => tu.RequestId,
                         rl => rl.RequestId,
                         (tu, rl) => tu.InputTokens + tu.OutputTokens)
-                    .SumAsync(ct);
+                    .SumAsync(ct).ConfigureAwait(false);
 
                 var successRate = CalculateSuccessRate(stat.TotalRequests, stat.SuccessfulRequests);
 
@@ -118,19 +125,19 @@ public static class AnalyticsEndpoints
                     Performance = new ProviderPerformanceDto
                     {
                         AvgResponseTime = (int)Math.Round(stat.AverageLatency),
-                        SuccessRate = Math.Round(successRate, 4)
+                        SuccessRate = Math.Round(successRate, 4),
                     },
                     Usage = new ProviderDailyUsageDto
                     {
                         DailyTokens = dailyTokens,
-                        DailyRequests = stat.TotalRequests
-                    }
+                        DailyRequests = stat.TotalRequests,
+                    },
                 });
             }
 
             return Results.Ok(new ProviderAnalyticsResponseDto
             {
-                Providers = providers
+                Providers = providers,
             });
         })
         .WithTags("Analytics")
@@ -142,66 +149,150 @@ public static class AnalyticsEndpoints
 
     private static DateTimeOffset ParseEndDate(string? endDate)
     {
-        return string.IsNullOrEmpty(endDate) 
-            ? DateTimeOffset.UtcNow 
-            : DateTimeOffset.Parse(endDate);
+        return string.IsNullOrEmpty(endDate)
+            ? DateTimeOffset.UtcNow
+            : DateTimeOffset.Parse(endDate, System.Globalization.CultureInfo.InvariantCulture);
     }
 
     private static DateTimeOffset ParseStartDate(string? startDate, DateTimeOffset endDate)
     {
-        return string.IsNullOrEmpty(startDate) 
-            ? endDate.AddDays(-30) 
-            : DateTimeOffset.Parse(startDate);
+        return string.IsNullOrEmpty(startDate)
+            ? endDate.AddDays(-30)
+            : DateTimeOffset.Parse(startDate, System.Globalization.CultureInfo.InvariantCulture);
     }
 
     private static double CalculateSuccessRate(int totalRequests, int successfulRequests)
     {
-        return totalRequests > 0 
-            ? (double)successfulRequests / totalRequests 
+        return totalRequests > 0
+            ? (double)successfulRequests / totalRequests
             : 0.0;
     }
-}
-public class UsageAnalyticsDto
-{
+    }
+
+    /// <summary>
+    /// DTO for usage analytics data.
+    /// </summary>
+    public class UsageAnalyticsDto
+    {
+    /// <summary>
+    /// Gets or sets the total number of tokens used.
+    /// </summary>
     public long TotalTokens { get; set; }
+
+    /// <summary>
+    /// Gets or sets the total number of requests.
+    /// </summary>
     public int TotalRequests { get; set; }
-    public List<ProviderUsageStatsDto> Providers { get; set; } = new();
-    public TimeRangeDto TimeRange { get; set; } = new();
-}
 
-public class ProviderUsageStatsDto
-{
-    public string Id { get; set; } = "";
+    /// <summary>
+    /// Gets or sets the provider usage statistics.
+    /// </summary>
+    public ICollection<ProviderUsageStatsDto> Providers { get; set; } = new List<ProviderUsageStatsDto>();
+
+    /// <summary>
+    /// Gets or sets the time range for the analytics data.
+    /// </summary>
+    public TimeRangeDto TimeRange { get; set; } = new TimeRangeDto();
+    }
+
+    /// <summary>
+    /// DTO for provider usage statistics.
+    /// </summary>
+    public class ProviderUsageStatsDto
+    {
+    /// <summary>
+    /// Gets or sets the provider ID.
+    /// </summary>
+    public string Id { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the number of tokens used.
+    /// </summary>
     public long Tokens { get; set; }
+
+    /// <summary>
+    /// Gets or sets the number of requests.
+    /// </summary>
     public int Requests { get; set; }
-}
+    }
 
-public class TimeRangeDto
-{
-    public string Start { get; set; } = "";
-    public string End { get; set; } = "";
-}
+    /// <summary>
+    /// DTO for time range information.
+    /// </summary>
+    public class TimeRangeDto
+    {
+    /// <summary>
+    /// Gets or sets the start time.
+    /// </summary>
+    public string Start { get; set; } = string.Empty;
 
-public class ProviderAnalyticsResponseDto
-{
-    public List<ProviderAnalyticsDto> Providers { get; set; } = new();
-}
+    /// <summary>
+    /// Gets or sets the end time.
+    /// </summary>
+    public string End { get; set; } = string.Empty;
+    }
 
-public class ProviderAnalyticsDto
-{
-    public string Id { get; set; } = "";
-    public ProviderPerformanceDto Performance { get; set; } = new();
-    public ProviderDailyUsageDto Usage { get; set; } = new();
-}
+    /// <summary>
+    /// Response DTO for provider analytics.
+    /// </summary>
+    public class ProviderAnalyticsResponseDto
+    {
+    /// <summary>
+    /// Gets or sets the list of provider analytics.
+    /// </summary>
+    public ICollection<ProviderAnalyticsDto> Providers { get; set; } = new List<ProviderAnalyticsDto>();
+    }
 
-public class ProviderPerformanceDto
-{
+    /// <summary>
+    /// DTO for provider analytics data.
+    /// </summary>
+    public class ProviderAnalyticsDto
+    {
+    /// <summary>
+    /// Gets or sets the provider ID.
+    /// </summary>
+    public string Id { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the performance metrics.
+    /// </summary>
+    public ProviderPerformanceDto Performance { get; set; } = new ProviderPerformanceDto();
+
+    /// <summary>
+    /// Gets or sets the usage metrics.
+    /// </summary>
+    public ProviderDailyUsageDto Usage { get; set; } = new ProviderDailyUsageDto();
+    }
+
+    /// <summary>
+    /// DTO for provider performance metrics.
+    /// </summary>
+    public class ProviderPerformanceDto
+    {
+    /// <summary>
+    /// Gets or sets the average response time in milliseconds.
+    /// </summary>
     public int AvgResponseTime { get; set; }
-    public double SuccessRate { get; set; }
-}
 
-public class ProviderDailyUsageDto
-{
+    /// <summary>
+    /// Gets or sets the success rate percentage.
+    /// </summary>
+    public double SuccessRate { get; set; }
+    }
+
+    /// <summary>
+    /// DTO for provider daily usage metrics.
+    /// </summary>
+    public class ProviderDailyUsageDto
+    {
+    /// <summary>
+    /// Gets or sets the daily token usage.
+    /// </summary>
     public long DailyTokens { get; set; }
+
+    /// <summary>
+    /// Gets or sets the daily request count.
+    /// </summary>
     public int DailyRequests { get; set; }
+    }
 }

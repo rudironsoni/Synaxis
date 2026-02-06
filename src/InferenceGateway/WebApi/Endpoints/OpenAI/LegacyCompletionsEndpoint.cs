@@ -1,22 +1,33 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.AI;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.OpenApi;
-using Synaxis.InferenceGateway.Application.Routing;
-using Synaxis.InferenceGateway.WebApi.DTOs;
-using Synaxis.InferenceGateway.WebApi.Middleware;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.Json;
+// <copyright file="LegacyCompletionsEndpoint.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
-namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI;
-
-public static class LegacyCompletionsEndpoint
+namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
 {
-    public static void MapLegacyCompletions(this IEndpointRouteBuilder app)
+    using Microsoft.AspNetCore.Builder;
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.AspNetCore.Routing;
+    using Microsoft.Extensions.AI;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.AspNetCore.OpenApi;
+    using Synaxis.InferenceGateway.Application.Routing;
+    using Synaxis.InferenceGateway.WebApi.DTOs;
+    using Synaxis.InferenceGateway.WebApi.Middleware;
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text.Json;
+
+    /// <summary>
+    /// Legacy completions endpoint for backward compatibility with OpenAI API.
+    /// </summary>
+    public static class LegacyCompletionsEndpoint
+    {
+        /// <summary>
+        /// Maps the legacy completions endpoint.
+        /// </summary>
+        /// <param name="app">The endpoint route builder.</param>
+        public static void MapLegacyCompletions(this IEndpointRouteBuilder app)
     {
         app.MapPost("/v1/completions", async (HttpContext ctx, CompletionRequest request, IChatClient chatClient, IModelResolver resolver) =>
         {
@@ -28,7 +39,7 @@ public static class LegacyCompletionsEndpoint
             var caps = new RequiredCapabilities { Streaming = request.Stream };
             var resolution = await resolver.ResolveAsync(request.Model, EndpointKind.LegacyCompletions, caps);
 
-            ctx.Items["RoutingContext"] = new RoutingContext(request.Model, resolution.CanonicalId.ToString(), resolution.CanonicalId.Provider);
+            ctx.Items["RoutingContext"] = new RoutingContext(request.Model, resolution.canonicalId.ToString(), resolution.canonicalId.provider);
 
             if (!TryParsePrompt(request.Prompt, out var promptText, out var parseError))
             {
@@ -38,7 +49,7 @@ public static class LegacyCompletionsEndpoint
             var messages = new List<ChatMessage> { new ChatMessage(ChatRole.User, promptText) };
             var options = new ChatOptions
             {
-                ModelId = resolution.CanonicalId.ToString(),
+                ModelId = resolution.canonicalId.ToString(),
                 MaxOutputTokens = request.MaxTokens,
                 Temperature = (float?)request.Temperature
             };
@@ -53,7 +64,7 @@ public static class LegacyCompletionsEndpoint
                         id = "cmpl-" + Guid.NewGuid(),
                         @object = "text_completion",
                         created = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                        model = resolution.CanonicalId.ToString(),
+                        model = resolution.canonicalId.ToString(),
                         choices = new[]
                         {
                             new { text = update.Text, index = 0, finish_reason = update.FinishReason?.ToString().ToLowerInvariant() }
@@ -62,6 +73,7 @@ public static class LegacyCompletionsEndpoint
                     await ctx.Response.WriteAsync($"data: {JsonSerializer.Serialize(chunk)}\n\n");
                     await ctx.Response.Body.FlushAsync();
                 }
+
                 await ctx.Response.WriteAsync("data: [DONE]\n\n");
                 return Results.Empty;
             }
@@ -73,7 +85,7 @@ public static class LegacyCompletionsEndpoint
                     id = "cmpl-" + Guid.NewGuid(),
                     @object = "text_completion",
                     created = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                    model = resolution.CanonicalId.ToString(),
+                    model = resolution.canonicalId.ToString(),
                     choices = new[]
                     {
                         new { text = response.Text, index = 0, finish_reason = response.FinishReason?.ToString().ToLowerInvariant() ?? "stop" }
@@ -134,6 +146,7 @@ public static class LegacyCompletionsEndpoint
                                 return false;
                             }
                         }
+
                         promptText = string.Join("\n", parts);
                         return true;
                     case JsonValueKind.Null:
@@ -187,5 +200,6 @@ public static class LegacyCompletionsEndpoint
         // Fallback: unsupported type
         errorMessage = "Prompt must be a string or an array of strings.";
         return false;
+    }
     }
 }

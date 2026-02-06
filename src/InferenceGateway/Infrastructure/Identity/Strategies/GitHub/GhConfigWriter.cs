@@ -1,10 +1,14 @@
-using System;
-using System.IO;
-using System.Text;
-using System.Threading.Tasks;
+// <copyright file="GhConfigWriter.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
 namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
 {
+    using System;
+    using System.IO;
+    using System.Text;
+    using System.Threading.Tasks;
+
     public static class GhConfigWriter
     {
         public static async Task WriteTokenAsync(string token, string user = "synaxis-user")

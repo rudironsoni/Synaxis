@@ -1,22 +1,31 @@
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using Synaxis.InferenceGateway.Application.Interfaces;
-using System.Diagnostics;
-using System.IO;
-using System.Text;
-using System.Threading.Tasks;
+// <copyright file="AuditMiddleware.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
-namespace Synaxis.InferenceGateway.WebApi.Middleware;
-
-/// <summary>
-/// Middleware that logs all API requests for audit and compliance purposes.
-/// Captures request/response details without logging sensitive data.
-/// </summary>
-public sealed class AuditMiddleware
+namespace Synaxis.InferenceGateway.WebApi.Middleware
 {
-    private readonly RequestDelegate _next;
+    using System.Diagnostics;
+    using System.IO;
+    using System.Text;
+    using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.Extensions.Logging;
+    using Synaxis.InferenceGateway.Application.Interfaces;
+
+    /// <summary>
+    /// Middleware that logs all API requests for audit and compliance purposes.
+    /// Captures request/response details without logging sensitive data.
+    /// </summary>
+    public sealed class AuditMiddleware
+    {
+        private readonly RequestDelegate _next;
     private readonly ILogger<AuditMiddleware> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AuditMiddleware"/> class.
+    /// </summary>
+    /// <param name="next">The next middleware delegate.</param>
+    /// <param name="logger">The logger instance.</param>
     public AuditMiddleware(
         RequestDelegate next,
         ILogger<AuditMiddleware> logger)
@@ -118,13 +127,15 @@ public sealed class AuditMiddleware
         {
             return forwardedFor.Split(',')[0].Trim();
         }
-        
+
         var realIp = context.Request.Headers["X-Real-IP"].FirstOrDefault();
         if (!string.IsNullOrEmpty(realIp))
         {
             return realIp;
         }
-        
+
         return context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
     }
+    }
+
 }

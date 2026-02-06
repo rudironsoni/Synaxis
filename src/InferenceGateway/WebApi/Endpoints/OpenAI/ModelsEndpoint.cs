@@ -1,16 +1,27 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Options;
-using Synaxis.InferenceGateway.Application.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+// <copyright file="ModelsEndpoint.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
-namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI;
-
-public static class ModelsEndpoint
+namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
 {
+    using Microsoft.AspNetCore.Builder;
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.AspNetCore.Routing;
+    using Microsoft.Extensions.Options;
+    using Synaxis.InferenceGateway.Application.Configuration;
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+
+    /// <summary>
+    /// Endpoints for OpenAI-compatible models API.
+    /// </summary>
+    public static class ModelsEndpoint
+    {
+    /// <summary>
+    /// Maps model endpoints to the application.
+    /// </summary>
+    /// <param name="app">The endpoint route builder.</param>
     public static void MapModels(this IEndpointRouteBuilder app)
     {
         app.MapGet("/v1/models", (IOptions<SynaxisConfiguration> config) =>
@@ -20,7 +31,7 @@ public static class ModelsEndpoint
 
             foreach (var cm in config.Value.CanonicalModels)
             {
-                var providerConfig = config.Value.Providers.GetValueOrDefault(cm.Provider);
+                var providerConfig = config.Value.Providers.TryGetValue(cm.Provider, out var providerConfigValue) ? providerConfigValue : null;
                 models.Add(new ModelDto
                 {
                     Id = cm.Id,
@@ -78,7 +89,7 @@ public static class ModelsEndpoint
             var cm = config.Value.CanonicalModels.FirstOrDefault(x => x.Id == id);
             if (cm != null)
             {
-return Results.Json(new ModelDto
+    return Results.Json(new ModelDto
             {
                 Id = cm.Id,
                 Object = "model",
@@ -126,48 +137,139 @@ return Results.Json(new ModelDto
         .WithSummary("Retrieve model with capabilities")
         .WithDescription("Returns detailed information about a specific model including its capabilities");
     }
-}
+    }
 
-public class ModelDto
-{
-    public string Id { get; set; } = "";
-    public string Object { get; set; } = "";
+    /// <summary>
+    /// DTO for model information.
+    /// </summary>
+    public class ModelDto
+    {
+    /// <summary>
+    /// Gets or sets the model ID.
+    /// </summary>
+    public string Id { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the object type.
+    /// </summary>
+    public string Object { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the creation timestamp.
+    /// </summary>
     public long Created { get; set; }
-    public string OwnedBy { get; set; } = "";
-    public string Provider { get; set; } = "";
-    public string ModelPath { get; set; } = "";
-    public ModelCapabilitiesDto Capabilities { get; set; } = new();
-}
 
-public class ModelCapabilitiesDto
-{
+    /// <summary>
+    /// Gets or sets the model owner.
+    /// </summary>
+    public string OwnedBy { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the provider name.
+    /// </summary>
+    public string Provider { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the model path.
+    /// </summary>
+    public string ModelPath { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the model capabilities.
+    /// </summary>
+    public ModelCapabilitiesDto Capabilities { get; set; } = new ModelCapabilitiesDto();
+    }
+
+    /// <summary>
+    /// DTO for model capabilities.
+    /// </summary>
+    public class ModelCapabilitiesDto
+    {
+    /// <summary>
+    /// Gets or sets a value indicating whether streaming is supported.
+    /// </summary>
     public bool Streaming { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether tools are supported.
+    /// </summary>
     public bool Tools { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether vision is supported.
+    /// </summary>
     public bool Vision { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether structured output is supported.
+    /// </summary>
     public bool StructuredOutput { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether log probabilities are supported.
+    /// </summary>
     public bool LogProbs { get; set; }
-}
+    }
 
-public class ModelsListResponseDto
-{
-    public string Object { get; set; } = "";
-    public List<ModelDto> Data { get; set; } = new();
-    public List<ProviderSummaryDto> Providers { get; set; } = new();
-}
+    /// <summary>
+    /// Response DTO for models list.
+    /// </summary>
+    public class ModelsListResponseDto
+    {
+    /// <summary>
+    /// Gets or sets the object type.
+    /// </summary>
+    public string Object { get; set; } = string.Empty;
 
-public class ProviderSummaryDto
-{
-    public string Id { get; set; } = "";
-    public string Type { get; set; } = "";
+    /// <summary>
+    /// Gets or sets the list of models.
+    /// </summary>
+    public List<ModelDto> Data { get; set; } = new List<ModelDto>();
+
+    /// <summary>
+    /// Gets or sets the list of provider summaries.
+    /// </summary>
+    public List<ProviderSummaryDto> Providers { get; set; } = new List<ProviderSummaryDto>();
+    }
+
+    /// <summary>
+    /// DTO for provider summary information.
+    /// </summary>
+    public class ProviderSummaryDto
+    {
+    /// <summary>
+    /// Gets or sets the provider ID.
+    /// </summary>
+    public string Id { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the provider type.
+    /// </summary>
+    public string Type { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the provider is enabled.
+    /// </summary>
     public bool Enabled { get; set; }
-    public int Tier { get; set; }
-}
 
-public static class ModelJsonContext
-{
-    public static readonly System.Text.Json.JsonSerializerOptions Options = new()
+    /// <summary>
+    /// Gets or sets the provider tier.
+    /// </summary>
+    public int Tier { get; set; }
+    }
+
+    /// <summary>
+    /// JSON serialization context for model DTOs.
+    /// </summary>
+    public static class ModelJsonContext
+    {
+    /// <summary>
+    /// Gets the JSON serializer options for model DTOs.
+    /// </summary>
+    public static readonly System.Text.Json.JsonSerializerOptions Options = new ()
     {
         PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.SnakeCaseLower,
         PropertyNameCaseInsensitive = true
     };
+    }
 }

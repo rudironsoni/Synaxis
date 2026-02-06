@@ -1,20 +1,32 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Options;
-using Synaxis.InferenceGateway.Application.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using StackExchange.Redis;
+// <copyright file="ProvidersEndpoints.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
-namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard;
-
-public static class ProvidersEndpoints
+namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
 {
-    public static IEndpointRouteBuilder MapProvidersEndpoints(this IEndpointRouteBuilder app)
+    using Microsoft.AspNetCore.Builder;
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.AspNetCore.Routing;
+    using Microsoft.Extensions.Options;
+    using Synaxis.InferenceGateway.Application.Configuration;
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using StackExchange.Redis;
+
+    /// <summary>
+    /// Endpoints for provider management and monitoring.
+    /// </summary>
+    public static class ProvidersEndpoints
+    {
+        /// <summary>
+        /// Maps provider-related endpoints to the application.
+        /// </summary>
+        /// <param name="app">The endpoint route builder.</param>
+        /// <returns>The endpoint route builder for chaining.</returns>
+        public static IEndpointRouteBuilder MapProvidersEndpoints(this IEndpointRouteBuilder app)
     {
         var dashboardGroup = app.MapGroup("/api/providers")
             .RequireCors("WebApp");
@@ -41,12 +53,12 @@ public static class ProvidersEndpoints
                 {
                     var tokensKey = $"provider:{providerKey}:tokens";
                     var requestsKey = $"provider:{providerKey}:requests";
-                    
+
                     var tokensValue = db.StringGet(tokensKey);
                     var requestsValue = db.StringGet(requestsKey);
 
-                    if (tokensValue.HasValue) int.TryParse(tokensValue.ToString(), out totalTokens);
-                    if (requestsValue.HasValue) int.TryParse(requestsValue.ToString(), out requests);
+                    if (tokensValue.HasValue) int.TryParse(tokensValue.ToString(), System.Globalization.CultureInfo.InvariantCulture, out totalTokens);
+                    if (requestsValue.HasValue) int.TryParse(requestsValue.ToString(), System.Globalization.CultureInfo.InvariantCulture, out requests);
                 }
                 catch
                 {
@@ -55,13 +67,13 @@ public static class ProvidersEndpoints
 
                 // Get models for this provider
                 var models = config.Value.CanonicalModels
-                    .Where(m => m.Provider == providerKey)
+                    .Where(m => string.Equals(m.Provider, providerKey, StringComparison.Ordinal))
                     .Select(m => m.Id)
                     .ToList();
 
                 // Determine status based on configuration
-                var status = providerConfig.Enabled && !string.IsNullOrEmpty(providerConfig.Key) 
-                    ? "healthy" 
+                var status = providerConfig.Enabled && !string.IsNullOrEmpty(providerConfig.Key)
+                    ? "healthy"
                     : "unhealthy";
 
                 providers.Add(new ProviderDto
@@ -114,10 +126,10 @@ public static class ProvidersEndpoints
                     {
                         using var httpClient = httpClientFactory.CreateClient();
                         httpClient.Timeout = TimeSpan.FromSeconds(5);
-                        
+
                         var request = new HttpRequestMessage(HttpMethod.Head, endpoint);
-                        var response = await httpClient.SendAsync(request, ct);
-                        
+                        await httpClient.SendAsync(request, ct).ConfigureAwait(false);
+
                         // Accept any response (including 401, 404) as "reachable"
                         status = "healthy";
                     }
@@ -196,43 +208,113 @@ public static class ProvidersEndpoints
             _ => null
         };
     }
-}
+    }
 
-// DTOs for provider management
-public class ProvidersListResponse
-{
-    public List<ProviderDto> Providers { get; set; } = new();
-}
+    // DTOs for provider management
 
-public class ProviderDto
-{
-    public string Id { get; set; } = "";
-    public string Name { get; set; } = "";
-    public string Status { get; set; } = "";
-    public int Tier { get; set; }
-    public List<string> Models { get; set; } = new();
-    public ProviderStatsDto Usage { get; set; } = new();
-}
+    /// <summary>
+    /// Response containing a list of providers.
+    /// </summary>
+    public class ProvidersListResponse
+    {
+        /// <summary>
+        /// Gets or sets the list of providers.
+        /// </summary>
+        public List<ProviderDto> Providers { get; set; } = new List<ProviderDto>();
+    }
 
-public class ProviderStatsDto
-{
-    public int TotalTokens { get; set; }
-    public int Requests { get; set; }
-}
+    /// <summary>
+    /// Data transfer object for provider information.
+    /// </summary>
+    public class ProviderDto
+    {
+        /// <summary>
+        /// Gets or sets the provider identifier.
+        /// </summary>
+        public string Id { get; set; } = string.Empty;
 
-public class ProviderStatusResponse
-{
-    public string Status { get; set; } = "";
-    public string LastChecked { get; set; } = "";
-}
+        /// <summary>
+        /// Gets or sets the provider name.
+        /// </summary>
+        public string Name { get; set; } = string.Empty;
 
-public class ProviderConfigUpdateRequest
-{
-    public bool? Enabled { get; set; }
-    public int? Tier { get; set; }
-}
+        /// <summary>
+        /// Gets or sets the provider status.
+        /// </summary>
+        public string Status { get; set; } = string.Empty;
 
-public class ProviderConfigUpdateResponse
-{
-    public bool Success { get; set; }
+        /// <summary>
+        /// Gets or sets the provider tier priority.
+        /// </summary>
+        public int Tier { get; set; }
+
+        /// <summary>
+        /// Gets or sets the list of model identifiers supported by this provider.
+        /// </summary>
+        public List<string> Models { get; set; } = new List<string>();
+
+        /// <summary>
+        /// Gets or sets the usage statistics for this provider.
+        /// </summary>
+        public ProviderStatsDto Usage { get; set; } = new ProviderStatsDto();
+    }
+
+    /// <summary>
+    /// Statistics for provider usage.
+    /// </summary>
+    public class ProviderStatsDto
+    {
+        /// <summary>
+        /// Gets or sets the total number of tokens used.
+        /// </summary>
+        public int TotalTokens { get; set; }
+
+        /// <summary>
+        /// Gets or sets the total number of requests made.
+        /// </summary>
+        public int Requests { get; set; }
+    }
+
+    /// <summary>
+    /// Response for provider status checks.
+    /// </summary>
+    public class ProviderStatusResponse
+    {
+        /// <summary>
+        /// Gets or sets the provider status.
+        /// </summary>
+        public string Status { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the timestamp when the provider was last checked.
+        /// </summary>
+        public string LastChecked { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// Request to update provider configuration.
+    /// </summary>
+    public class ProviderConfigUpdateRequest
+    {
+        /// <summary>
+        /// Gets or sets a value indicating whether the provider is enabled.
+        /// </summary>
+        public bool? Enabled { get; set; }
+
+        /// <summary>
+        /// Gets or sets the provider tier priority.
+        /// </summary>
+        public int? Tier { get; set; }
+    }
+
+    /// <summary>
+    /// Response for provider configuration updates.
+    /// </summary>
+    public class ProviderConfigUpdateResponse
+    {
+        /// <summary>
+        /// Gets or sets a value indicating whether the update was successful.
+        /// </summary>
+        public bool Success { get; set; }
+    }
 }

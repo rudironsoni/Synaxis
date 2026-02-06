@@ -1,3 +1,7 @@
+// <copyright file="20260129134724_AddDynamicModelRegistry.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;

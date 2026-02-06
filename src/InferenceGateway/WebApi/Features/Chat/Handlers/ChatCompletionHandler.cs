@@ -1,31 +1,56 @@
-using Mediator;
-using Microsoft.Agents.AI;
-using Synaxis.InferenceGateway.WebApi.Agents;
-using Synaxis.InferenceGateway.WebApi.Features.Chat.Commands;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
+// <copyright file="ChatCompletionHandler.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
-namespace Synaxis.InferenceGateway.WebApi.Features.Chat.Handlers;
+namespace Synaxis.InferenceGateway.WebApi.Features.Chat.Handlers
+{
+    using Mediator;
+    using Microsoft.Agents.AI;
+    using Synaxis.InferenceGateway.WebApi.Agents;
+    using Synaxis.InferenceGateway.WebApi.Features.Chat.Commands;
+    using System.Collections.Generic;
+    using System.Threading;
+    using System.Threading.Tasks;
 
-public class ChatCompletionHandler : 
+    /// <summary>
+    /// Handler for chat completion requests.
+    /// </summary>
+    public class ChatCompletionHandler : 
     IRequestHandler<ChatCommand, Microsoft.Agents.AI.AgentResponse>,
     IStreamRequestHandler<ChatStreamCommand, Microsoft.Agents.AI.AgentResponseUpdate>
-{
-    private readonly RoutingAgent _agent;
-
-    public ChatCompletionHandler(RoutingAgent agent)
     {
-        _agent = agent;
+        private readonly RoutingAgent _agent;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ChatCompletionHandler"/> class.
+        /// </summary>
+        /// <param name="agent">The routing agent.</param>
+        public ChatCompletionHandler(RoutingAgent agent)
+        {
+            _agent = agent;
+        }
+
+        /// <summary>
+        /// Handles a non-streaming chat completion request.
+        /// </summary>
+        /// <param name="request">The chat command.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The agent response.</returns>
+        public async ValueTask<AgentResponse> Handle(ChatCommand request, CancellationToken cancellationToken)
+        {
+            return await _agent.RunAsync(request.Messages, cancellationToken: cancellationToken);
+        }
+
+        /// <summary>
+        /// Handles a streaming chat completion request.
+        /// </summary>
+        /// <param name="request">The chat stream command.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>An async enumerable of agent response updates.</returns>
+        public IAsyncEnumerable<AgentResponseUpdate> Handle(ChatStreamCommand request, CancellationToken cancellationToken)
+        {
+            return _agent.RunStreamingAsync(request.Messages, cancellationToken: cancellationToken);
+        }
     }
 
-    public async ValueTask<AgentResponse> Handle(ChatCommand request, CancellationToken cancellationToken)
-    {
-        return await _agent.RunAsync(request.Messages, cancellationToken: cancellationToken);
-    }
-
-    public IAsyncEnumerable<AgentResponseUpdate> Handle(ChatStreamCommand request, CancellationToken cancellationToken)
-    {
-        return _agent.RunStreamingAsync(request.Messages, cancellationToken: cancellationToken);
-    }
 }

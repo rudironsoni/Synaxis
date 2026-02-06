@@ -1,26 +1,43 @@
-using Microsoft.AspNetCore.Http;
-using System;
-using System.Threading.Tasks;
+// <copyright file="RequestIdMiddleware.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
-namespace Synaxis.InferenceGateway.WebApi.Middleware;
-
-public class RequestIdMiddleware
+namespace Synaxis.InferenceGateway.WebApi.Middleware
 {
-    private readonly RequestDelegate _next;
+    using System;
+    using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Http;
 
-    public RequestIdMiddleware(RequestDelegate next)
+    /// <summary>
+    /// Middleware that ensures every request has a unique request ID for tracking.
+    /// </summary>
+    public class RequestIdMiddleware
     {
-        _next = next;
-    }
+        private readonly RequestDelegate _next;
 
-    public async Task InvokeAsync(HttpContext context)
-    {
-        var requestId = context.Request.Headers["X-Request-ID"].FirstOrDefault()
-                     ?? context.Request.Headers["x-request-id"].FirstOrDefault()
-                     ?? context.TraceIdentifier;
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RequestIdMiddleware"/> class.
+        /// </summary>
+        /// <param name="next">The next middleware delegate.</param>
+        public RequestIdMiddleware(RequestDelegate next)
+        {
+            this._next = next;
+        }
 
-        context.Response.Headers["X-Request-ID"] = requestId;
+        /// <summary>
+        /// Invokes the middleware to assign or retrieve a request ID.
+        /// </summary>
+        /// <param name="context">The HTTP context.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        public async Task InvokeAsync(HttpContext context)
+        {
+            var requestId = context.Request.Headers["X-Request-ID"].FirstOrDefault()
+                         ?? context.Request.Headers["x-request-id"].FirstOrDefault()
+                         ?? context.TraceIdentifier;
 
-        await _next(context);
+            context.Response.Headers["X-Request-ID"] = requestId;
+
+            await this._next(context).ConfigureAwait(false);
+        }
     }
 }

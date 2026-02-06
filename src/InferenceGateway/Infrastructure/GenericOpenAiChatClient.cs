@@ -1,87 +1,92 @@
-using Microsoft.Extensions.AI;
-using OpenAI;
-using System;
-using System.ClientModel;
-using System.ClientModel.Primitives;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
+// <copyright file="GenericOpenAiChatClient.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
-namespace Synaxis.InferenceGateway.Infrastructure;
-
-public class GenericOpenAiChatClient : IChatClient
+namespace Synaxis.InferenceGateway.Infrastructure
 {
-    private readonly IChatClient _innerClient;
+    using System;
+    using System.ClientModel;
+    using System.ClientModel.Primitives;
+    using System.Collections.Generic;
+    using System.Net.Http;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Microsoft.Extensions.AI;
+    using OpenAI;
 
-    public GenericOpenAiChatClient(string apiKey, Uri endpoint, string modelId, Dictionary<string, string>? customHeaders = null, HttpClient? httpClient = null)
+    public class GenericOpenAiChatClient : IChatClient
     {
-        var options = new OpenAIClientOptions
+        private readonly IChatClient _innerClient;
+
+        public GenericOpenAiChatClient(string apiKey, Uri endpoint, string modelId, Dictionary<string, string>? customHeaders = null, HttpClient? httpClient = null)
         {
-            Endpoint = endpoint
-        };
-
-        if (httpClient != null)
-        {
-            options.Transport = new HttpClientPipelineTransport(httpClient);
-        }
-
-        if (customHeaders != null && customHeaders.Count > 0)
-        {
-            options.AddPolicy(new CustomHeaderPolicy(customHeaders), PipelinePosition.PerCall);
-        }
-
-        var openAiClient = new OpenAIClient(new ApiKeyCredential(apiKey), options);
-        _innerClient = openAiClient.GetChatClient(modelId).AsIChatClient();
-    }
-
-    public ChatClientMetadata Metadata => _innerClient.GetService<ChatClientMetadata>() ?? new ChatClientMetadata("OpenAI");
-
-    public Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
-    {
-        return _innerClient.GetResponseAsync(chatMessages, options, cancellationToken);
-    }
-
-    public IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
-    {
-        return _innerClient.GetStreamingResponseAsync(chatMessages, options, cancellationToken);
-    }
-
-    public object? GetService(Type serviceType, object? serviceKey = null)
-    {
-        return _innerClient.GetService(serviceType, serviceKey);
-    }
-
-    public void Dispose()
-    {
-        _innerClient.Dispose();
-    }
-
-    private class CustomHeaderPolicy : PipelinePolicy
-    {
-        private readonly Dictionary<string, string> _headers;
-
-        public CustomHeaderPolicy(Dictionary<string, string> headers)
-        {
-            _headers = headers;
-        }
-
-        public override void Process(PipelineMessage message, IReadOnlyList<PipelinePolicy> pipeline, int currentIndex)
-        {
-            foreach (var header in _headers)
+            var options = new OpenAIClientOptions
             {
-                message.Request.Headers.Set(header.Key, header.Value);
+                Endpoint = endpoint
+            };
+
+            if (httpClient != null)
+            {
+                options.Transport = new HttpClientPipelineTransport(httpClient);
             }
-            ProcessNext(message, pipeline, currentIndex);
+
+            if (customHeaders != null && customHeaders.Count > 0)
+            {
+                options.AddPolicy(new CustomHeaderPolicy(customHeaders), PipelinePosition.PerCall);
+            }
+
+            var openAiClient = new OpenAIClient(new ApiKeyCredential(apiKey), options);
+            _innerClient = openAiClient.GetChatClient(modelId).AsIChatClient();
         }
 
-        public override async ValueTask ProcessAsync(PipelineMessage message, IReadOnlyList<PipelinePolicy> pipeline, int currentIndex)
+        public ChatClientMetadata Metadata => _innerClient.GetService<ChatClientMetadata>() ?? new ChatClientMetadata("OpenAI");
+
+        public Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
         {
-            foreach (var header in _headers)
+            return _innerClient.GetResponseAsync(chatMessages, options, cancellationToken);
+        }
+
+        public IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
+        {
+            return _innerClient.GetStreamingResponseAsync(chatMessages, options, cancellationToken);
+        }
+
+        public object? GetService(Type serviceType, object? serviceKey = null)
+        {
+            return _innerClient.GetService(serviceType, serviceKey);
+        }
+
+        public void Dispose()
+        {
+            _innerClient.Dispose();
+        }
+
+        private class CustomHeaderPolicy : PipelinePolicy
+        {
+            private readonly Dictionary<string, string> _headers;
+
+            public CustomHeaderPolicy(Dictionary<string, string> headers)
             {
-                message.Request.Headers.Set(header.Key, header.Value);
+                _headers = headers;
             }
-            await ProcessNextAsync(message, pipeline, currentIndex).ConfigureAwait(false);
+
+            public override void Process(PipelineMessage message, IReadOnlyList<PipelinePolicy> pipeline, int currentIndex)
+            {
+                foreach (var header in _headers)
+                {
+                    message.Request.Headers.Set(header.Key, header.Value);
+                }
+                ProcessNext(message, pipeline, currentIndex);
+            }
+
+            public override async ValueTask ProcessAsync(PipelineMessage message, IReadOnlyList<PipelinePolicy> pipeline, int currentIndex)
+            {
+                foreach (var header in _headers)
+                {
+                    message.Request.Headers.Set(header.Key, header.Value);
+                }
+                await ProcessNextAsync(message, pipeline, currentIndex).ConfigureAwait(false);
+            }
         }
     }
 }

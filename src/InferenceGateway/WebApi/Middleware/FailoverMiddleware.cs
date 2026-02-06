@@ -1,20 +1,29 @@
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using Synaxis.Core.Contracts;
-using Synaxis.InferenceGateway.Application.Interfaces;
-using System.Threading.Tasks;
+// <copyright file="FailoverMiddleware.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
-namespace Synaxis.InferenceGateway.WebApi.Middleware;
-
-/// <summary>
-/// Middleware that handles regional failover scenarios.
-/// Routes to healthy regions when primary region is unavailable.
-/// </summary>
-public sealed class FailoverMiddleware
+namespace Synaxis.InferenceGateway.WebApi.Middleware
 {
+    using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.Extensions.Logging;
+    using Synaxis.Core.Contracts;
+    using Synaxis.InferenceGateway.Application.Interfaces;
+
+    /// <summary>
+    /// Middleware that handles regional failover scenarios.
+    /// Routes to healthy regions when primary region is unavailable.
+    /// </summary>
+    public sealed class FailoverMiddleware
+    {
     private readonly RequestDelegate _next;
     private readonly ILogger<FailoverMiddleware> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FailoverMiddleware"/> class.
+    /// </summary>
+    /// <param name="next">The next middleware delegate.</param>
+    /// <param name="logger">The logger instance.</param>
     public FailoverMiddleware(
         RequestDelegate next,
         ILogger<FailoverMiddleware> logger)
@@ -103,7 +112,7 @@ public sealed class FailoverMiddleware
                 if (tenantContext.UserId.HasValue)
                 {
                     var userRegion = await regionRouter.GetUserRegionAsync(tenantContext.UserId.Value);
-                    
+
                     if (userRegion != failoverRegion)
                     {
                         var requiresConsent = await regionRouter.RequiresCrossBorderConsentAsync(
@@ -163,7 +172,9 @@ public sealed class FailoverMiddleware
         {
             return forwardedFor.Split(',')[0].Trim();
         }
-        
+
         return context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
     }
+    }
+
 }
