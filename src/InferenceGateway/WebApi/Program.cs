@@ -1,50 +1,49 @@
-using System.Text.Json;
-using System.Linq;
+// <copyright file="Program.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using System.Text.Json;
 using DotNetEnv;
+using Microsoft.Agents.AI.Hosting.OpenAI;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.OpenApi;
 using Microsoft.Extensions.AI;
-using Synaxis.InferenceGateway.Application.Extensions;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using Quartz;
+using Scalar.AspNetCore;
+using Serilog;
+using StackExchange.Redis;
 using Synaxis.InferenceGateway.Application.Configuration;
-using Synaxis.InferenceGateway.Infrastructure.Extensions;
+using Synaxis.InferenceGateway.Application.ControlPlane;
+using Synaxis.InferenceGateway.Application.Extensions;
+using Synaxis.InferenceGateway.Application.RealTime;
+using Synaxis.InferenceGateway.Application.Routing;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Options;
-using Microsoft.Agents.AI.Hosting.OpenAI;
-using Microsoft.AspNetCore.OpenApi;
-using Synaxis.InferenceGateway.WebApi.Agents;
-using Synaxis.InferenceGateway.WebApi.Middleware;
-using Synaxis.InferenceGateway.WebApi.Endpoints.Antigravity;
-using Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI;
-using Synaxis.InferenceGateway.WebApi.Endpoints.Identity;
-using Synaxis.InferenceGateway.WebApi.Endpoints.Admin;
-using Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard;
-using Synaxis.InferenceGateway.WebApi.Hubs;
-using Synaxis.InferenceGateway.Application.RealTime;
-using Synaxis.InferenceGateway.Infrastructure.Security;
-using Quartz;
+using Synaxis.InferenceGateway.Infrastructure.Extensions;
 using Synaxis.InferenceGateway.Infrastructure.Jobs;
-using Synaxis.InferenceGateway.Application.Routing;
-using Synaxis.InferenceGateway.Application.ControlPlane;
-
-using Scalar.AspNetCore;
-
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.Extensions.DependencyInjection;
+using Synaxis.InferenceGateway.Infrastructure.Security;
+using Synaxis.InferenceGateway.WebApi.Agents;
+using Synaxis.InferenceGateway.WebApi.Endpoints.Admin;
+using Synaxis.InferenceGateway.WebApi.Endpoints.Antigravity;
+using Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard;
+using Synaxis.InferenceGateway.WebApi.Endpoints.Identity;
+using Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI;
 using Synaxis.InferenceGateway.WebApi.Health;
-using StackExchange.Redis;
-using Serilog;
-using OpenTelemetry.Trace;
-using OpenTelemetry.Resources;
-using System.Diagnostics;
-
-
-
-Log.Logger = new LoggerConfiguration()
+using Synaxis.InferenceGateway.WebApi.Hubs;
+using Synaxis.InferenceGateway.WebApi.Middleware;Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .CreateLogger();
 
@@ -244,14 +243,14 @@ if (string.IsNullOrWhiteSpace(jwtSecret))
         "Set a strong JWT secret in configuration or environment variable.");
 }
 
-if (jwtSecret == defaultJwtSecret && !builder.Environment.IsDevelopment())
+if (string.Equals(jwtSecret, defaultJwtSecret) && !builder.Environment.IsDevelopment())
 {
     throw new InvalidOperationException(
         "Default JWT secret detected. This is insecure for production. " +
         "Set a strong JWT secret in configuration or environment variable.");
 }
 
-if (jwtSecret == defaultJwtSecret && builder.Environment.IsDevelopment())
+if (string.Equals(jwtSecret, defaultJwtSecret) && builder.Environment.IsDevelopment())
 {
     Log.Warning("Using default JWT secret. This is insecure and should only be used in development.");
 }
@@ -288,7 +287,7 @@ builder.Services.AddAuthentication(x =>
             var path = context.HttpContext.Request.Path;
             
             // If the request is for SignalR hub and token is present
-            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs", StringComparison.Ordinal))
             {
                 context.Token = accessToken;
             }
@@ -323,7 +322,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("PublicAPI", policy =>
     {
         var allowedOrigins = builder.Configuration["Synaxis:InferenceGateway:Cors:PublicOrigins"]?.Split(',') ?? Array.Empty<string>();
-        if (allowedOrigins.Length > 0 && allowedOrigins[0] != "*")
+        if (allowedOrigins.Length > 0 && !string.Equals(allowedOrigins[0], "*"))
         {
             policy.WithOrigins(allowedOrigins)
                   .AllowAnyMethod()
@@ -435,7 +434,7 @@ app.MapHealthChecks("/health/readiness", new HealthCheckOptions
     Predicate = r => r.Tags.Contains("readiness")
 });
 
-    app.Run();
+    await app.RunAsync();
 }
 catch (Exception ex)
 {
@@ -443,7 +442,13 @@ catch (Exception ex)
 }
 finally
 {
-    Log.CloseAndFlush();
+    await Log.CloseAndFlushAsync();
 }
 
-public partial class Program { }
+/// <summary>
+/// The main program class for the Synaxis Inference Gateway web application.
+/// This partial class enables programmatic access to the application for testing and hosting scenarios.
+/// </summary>
+public static partial class Program
+{
+}

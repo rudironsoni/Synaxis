@@ -1,17 +1,22 @@
+// <copyright file="GdprComplianceProvider.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
 #nullable disable
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using Synaxis.InferenceGateway.Infrastructure.Contracts;
-using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
-using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit;
 
 namespace Synaxis.InferenceGateway.Infrastructure.Compliance
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Text.Json;
+    using System.Threading.Tasks;
+    using Microsoft.EntityFrameworkCore;
+    using Synaxis.InferenceGateway.Infrastructure.Contracts;
+    using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
+    using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit;
+
     /// <summary>
     /// GDPR (General Data Protection Regulation) compliance provider for EU data protection.
     /// Enforces 72-hour breach notification, data residency in EU, and user rights (export, erasure).
@@ -20,17 +25,17 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
     {
         private readonly SynaxisDbContext _dbContext;
         private const int BreachNotificationHoursThreshold = 72;
-        
+
         // EU regions for data residency validation
-        private static readonly HashSet<string> EuRegions = new()
+        private static readonly HashSet<string> EuRegions = new ()
         {
-            "eu-west-1", "eu-central-1", "eu-north-1", "eu-south-1"
+            "eu-west-1", "eu-central-1", "eu-north-1", "eu-south-1",
         };
-        
+
         // Adequate countries under GDPR (simplified list)
-        private static readonly HashSet<string> AdequateCountries = new()
+        private static readonly HashSet<string> AdequateCountries = new ()
         {
-            "EU", "UK", "CH", "NO", "IS", "LI", "NZ", "JP", "KR", "CA"
+            "EU", "UK", "CH", "NO", "IS", "LI", "NZ", "JP", "KR", "CA",
         };
 
         public GdprComplianceProvider(SynaxisDbContext dbContext)
@@ -39,7 +44,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
         }
 
         public string RegulationCode => "GDPR";
-        
+
         public string Region => "EU";
 
         public async Task<bool> ValidateTransferAsync(TransferContext context)
@@ -70,7 +75,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                     return true;
 
                 // Check for explicit user consent
-                if (context.UserConsentObtained && 
+                if (context.UserConsentObtained &&
                     context.LegalBasis?.Equals("consent", StringComparison.OrdinalIgnoreCase) == true)
                     return true;
 
@@ -144,7 +149,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                 {
                     m.OrganizationId,
                     m.OrganizationRole,
-                    
+
                     m.Status
                 })
                 .ToListAsync();
@@ -227,7 +232,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
         public async Task<bool> DeleteUserDataAsync(Guid userId)
         {
             using var transaction = await _dbContext.Database.BeginTransactionAsync();
-            
+
             try
             {
                 // Log the deletion request (before deletion)
@@ -248,13 +253,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                     CreatedAt = DateTime.UtcNow,
                     PartitionDate = DateTime.UtcNow.Date
                 };
-                
+
                 _dbContext.AuditLogs.Add(deletionLog);
                 await _dbContext.SaveChangesAsync();
 
                 // Delete user data (cascade will handle related records)
                 // Note: Audit logs are kept for compliance purposes (legitimate interest)
-                
+
                 // Delete group memberships
                 var groupMemberships = await _dbContext.UserGroupMemberships
                     .Where(m => m.UserId == userId)
@@ -271,7 +276,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                 var apiKeys = await _dbContext.ApiKeys
                     .Where(k => k.CreatedBy == userId)
                     .ToListAsync();
-                
+
                 foreach (var key in apiKeys)
                 {
                     key.IsActive = false;
@@ -333,7 +338,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                 throw new ArgumentNullException(nameof(context));
 
             // GDPR Article 33: Notification required within 72 hours for high-risk breaches
-            
+
             // Always notify for high-risk breaches
             if (context.RiskLevel?.Equals("high", StringComparison.OrdinalIgnoreCase) == true)
                 return true;
@@ -344,18 +349,18 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                 return true;
 
             // Check if sensitive data categories are exposed
-            var sensitiveCategories = new[] 
-            { 
-                "health_data", 
-                "biometric_data", 
-                "genetic_data", 
+            var sensitiveCategories = new[]
+            {
+                "health_data",
+                "biometric_data",
+                "genetic_data",
                 "financial_data",
                 "political_opinions",
                 "religious_beliefs",
                 "trade_union_membership"
             };
 
-            if (context.DataCategoriesExposed?.Any(cat => 
+            if (context.DataCategoriesExposed?.Any(cat =>
                 sensitiveCategories.Contains(cat, StringComparer.OrdinalIgnoreCase)) == true)
                 return true;
 
@@ -380,7 +385,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
 
             // Extract country code from region (e.g., "uk-west-1" -> "UK")
             var countryCode = region.Split('-')[0].ToUpperInvariant();
-            
+
             return AdequateCountries.Contains(countryCode);
         }
     }

@@ -1,26 +1,35 @@
-using Microsoft.Extensions.Logging;
+// <copyright file="AgentTools.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
-namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools;
-
-public class AgentTools : IAgentTools
+namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
 {
-    public IProviderTool Provider { get; }
-    public IAlertTool Alert { get; }
-    public IRoutingTool Routing { get; }
-    public IHealthTool Health { get; }
-    public IAuditTool Audit { get; }
+    using Microsoft.Extensions.Logging;
 
-    public AgentTools(
-        IProviderTool provider,
-        IAlertTool alert,
-        IRoutingTool routing,
-        IHealthTool health,
-        IAuditTool audit)
+    public class AgentTools : IAgentTools
     {
-        Provider = provider;
-        Alert = alert;
-        Routing = routing;
-        Health = health;
-        Audit = audit;
+        public IProviderTool Provider { get; }
+
+        public IAlertTool Alert { get; }
+
+        public IRoutingTool Routing { get; }
+
+        public IHealthTool Health { get; }
+
+        public IAuditTool Audit { get; }
+
+        public AgentTools(
+            IProviderTool provider,
+            IAlertTool alert,
+            IRoutingTool routing,
+            IHealthTool health,
+            IAuditTool audit)
+        {
+            Provider = provider;
+            Alert = alert;
+            Routing = routing;
+            Health = health;
+            Audit = audit;
+        }
     }
 }

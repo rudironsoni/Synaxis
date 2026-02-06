@@ -1,8 +1,13 @@
-using System.Collections.Generic;
+// <copyright file="ProviderDto.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
-namespace Synaxis.InferenceGateway.Infrastructure.External.ModelsDev.Dto;
-
-public sealed class ProviderDto
+namespace Synaxis.InferenceGateway.Infrastructure.External.ModelsDev.Dto
 {
-    public Dictionary<string, ModelDto>? models { get; set; }
+    using System.Collections.Generic;
+
+    public sealed class ProviderDto
+    {
+        public Dictionary<string, ModelDto>? models { get; set; }
+    }
 }

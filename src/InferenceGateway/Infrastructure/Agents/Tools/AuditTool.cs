@@ -1,81 +1,86 @@
-using Microsoft.Extensions.Logging;
-using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
-using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit;
+// <copyright file="AuditTool.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
-namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools;
-
-public class AuditTool : IAuditTool
+namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
 {
-    private readonly ControlPlaneDbContext _db;
-    private readonly ILogger<AuditTool> _logger;
+    using Microsoft.Extensions.Logging;
+    using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
+    using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit;
 
-    public AuditTool(ControlPlaneDbContext db, ILogger<AuditTool> logger)
+    public class AuditTool : IAuditTool
     {
-        _db = db;
-        _logger = logger;
-    }
+        private readonly ControlPlaneDbContext _db;
+        private readonly ILogger<AuditTool> _logger;
 
-    public async Task LogActionAsync(string agentName, string action, Guid? organizationId, Guid? userId, string details, string correlationId, CancellationToken ct = default)
-    {
-        try
+        public AuditTool(ControlPlaneDbContext db, ILogger<AuditTool> logger)
         {
-            var auditLog = new AuditLog
+            _db = db;
+            _logger = logger;
+        }
+
+        public async Task LogActionAsync(string agentName, string action, Guid? organizationId, Guid? userId, string details, string correlationId, CancellationToken ct = default)
+        {
+            try
             {
-                Id = Guid.NewGuid(),
-                Action = $"{agentName}:{action}",
-                UserId = userId,
-                OrganizationId = organizationId,
-                NewValues = System.Text.Json.JsonSerializer.Serialize(new
+                var auditLog = new AuditLog
                 {
-                    agent = agentName,
-                    action,
-                    details,
-                    correlationId,
-                    timestamp = DateTime.UtcNow
-                }),
-                CreatedAt = DateTime.UtcNow
-            };
+                    Id = Guid.NewGuid(),
+                    Action = $"{agentName}:{action}",
+                    UserId = userId,
+                    OrganizationId = organizationId,
+                    NewValues = System.Text.Json.JsonSerializer.Serialize(new
+                    {
+                        agent = agentName,
+                        action,
+                        details,
+                        correlationId,
+                        timestamp = DateTime.UtcNow
+                    }),
+                    CreatedAt = DateTime.UtcNow
+                };
 
-            _db.AuditLogs.Add(auditLog);
-            await _db.SaveChangesAsync(ct);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to log action to audit");
-        }
-    }
-
-    public async Task LogOptimizationAsync(Guid organizationId, string modelId, string oldProvider, string newProvider, decimal savingsPercent, string reason, CancellationToken ct = default)
-    {
-        try
-        {
-            var auditLog = new AuditLog
+                _db.AuditLogs.Add(auditLog);
+                await _db.SaveChangesAsync(ct);
+            }
+            catch (Exception ex)
             {
-                Id = Guid.NewGuid(),
-                Action = "CostOptimization:ProviderSwitch",
-                OrganizationId = organizationId,
-                NewValues = System.Text.Json.JsonSerializer.Serialize(new
-                {
-                    modelId,
-                    oldProvider,
-                    newProvider,
-                    savingsPercent,
-                    reason,
-                    timestamp = DateTime.UtcNow
-                }),
-                CreatedAt = DateTime.UtcNow
-            };
-
-            _db.AuditLogs.Add(auditLog);
-            await _db.SaveChangesAsync(ct);
-
-            _logger.LogInformation(
-                "Optimization logged: OrgId={OrgId}, Model={Model}, {Old}->{New}, Savings={Savings}%",
-                organizationId, modelId, oldProvider, newProvider, savingsPercent);
+                _logger.LogError(ex, "Failed to log action to audit");
+            }
         }
-        catch (Exception ex)
+
+        public async Task LogOptimizationAsync(Guid organizationId, string modelId, string oldProvider, string newProvider, decimal savingsPercent, string reason, CancellationToken ct = default)
         {
-            _logger.LogError(ex, "Failed to log optimization");
+            try
+            {
+                var auditLog = new AuditLog
+                {
+                    Id = Guid.NewGuid(),
+                    Action = "CostOptimization:ProviderSwitch",
+                    OrganizationId = organizationId,
+                    NewValues = System.Text.Json.JsonSerializer.Serialize(new
+                    {
+                        modelId,
+                        oldProvider,
+                        newProvider,
+                        savingsPercent,
+                        reason,
+                        timestamp = DateTime.UtcNow
+                    }),
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _db.AuditLogs.Add(auditLog);
+                await _db.SaveChangesAsync(ct);
+
+                _logger.LogInformation(
+                    "Optimization logged: OrgId={OrgId}, Model={Model}, {Old}->{New}, Savings={Savings}%",
+                    organizationId, modelId, oldProvider, newProvider, savingsPercent);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to log optimization");
+            }
         }
     }
 }

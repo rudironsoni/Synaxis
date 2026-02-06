@@ -1,20 +1,29 @@
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using Synaxis.Core.Contracts;
-using Synaxis.InferenceGateway.Application.Interfaces;
-using System.Threading.Tasks;
+// <copyright file="QuotaMiddleware.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
-namespace Synaxis.InferenceGateway.WebApi.Middleware;
-
-/// <summary>
-/// Middleware that enforces quota limits for organizations and API keys.
-/// Handles rate limiting, budget enforcement, and quota exhaustion.
-/// </summary>
-public sealed class QuotaMiddleware
+namespace Synaxis.InferenceGateway.WebApi.Middleware
 {
+    using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.Extensions.Logging;
+    using Synaxis.Core.Contracts;
+    using Synaxis.InferenceGateway.Application.Interfaces;
+
+    /// <summary>
+    /// Middleware that enforces quota limits for organizations and API keys.
+    /// Handles rate limiting, budget enforcement, and quota exhaustion.
+    /// </summary>
+    public sealed class QuotaMiddleware
+    {
     private readonly RequestDelegate _next;
     private readonly ILogger<QuotaMiddleware> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="QuotaMiddleware"/> class.
+    /// </summary>
+    /// <param name="next">The next middleware delegate.</param>
+    /// <param name="logger">The logger instance.</param>
     public QuotaMiddleware(
         RequestDelegate next,
         ILogger<QuotaMiddleware> logger)
@@ -96,19 +105,19 @@ public sealed class QuotaMiddleware
                 case QuotaAction.Throttle:
                     _logger.LogWarning(
                         "Request throttled due to rate limit. OrgId: {OrgId}, Limit: {Limit}, Current: {Current}",
-                        tenantContext.OrganizationId, 
+                        tenantContext.OrganizationId,
                         quotaResult.Details?.Limit,
                         quotaResult.Details?.CurrentUsage);
 
                     context.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-                    
+
                     // Add rate limit headers
                     if (quotaResult.Details != null)
                     {
                         context.Response.Headers["X-RateLimit-Limit"] = quotaResult.Details.Limit.ToString();
                         context.Response.Headers["X-RateLimit-Remaining"] = quotaResult.Details.Remaining.ToString();
                         context.Response.Headers["X-RateLimit-Reset"] = quotaResult.Details.WindowEnd.ToString("R");
-                        
+
                         if (quotaResult.Details.RetryAfter.HasValue)
                         {
                             context.Response.Headers["Retry-After"] = ((int)quotaResult.Details.RetryAfter.Value.TotalSeconds).ToString();
@@ -171,4 +180,6 @@ public sealed class QuotaMiddleware
             await _next(context);
         }
     }
+    }
+
 }

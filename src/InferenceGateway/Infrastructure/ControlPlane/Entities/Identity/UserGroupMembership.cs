@@ -1,18 +1,23 @@
-namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity;
+// <copyright file="UserGroupMembership.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
-/// <summary>
-/// Represents a user's membership in a group.
-/// </summary>
-public class UserGroupMembership
+namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity
 {
-    public Guid Id { get; set; }
-    public Guid UserId { get; set; }
-    public Guid GroupId { get; set; }
-    public required string GroupRole { get; set; } = "Member";
-    public bool IsPrimary { get; set; }
-    public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
+    /// <summary>
+    /// Represents a user's membership in a group.
+    /// </summary>
+    public class UserGroupMembership
+    {
+        public Guid Id { get; set; }
+        public Guid UserId { get; set; }
+        public Guid GroupId { get; set; }
+        public required string GroupRole { get; set; } = "Member";
+        public bool IsPrimary { get; set; }
+        public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
 
-    // Navigation properties
-    public SynaxisUser User { get; set; } = null!;
-    public Group Group { get; set; } = null!;
+        // Navigation properties
+        public SynaxisUser User { get; set; } = null!;
+        public Group Group { get; set; } = null!;
+    }
 }

@@ -1,10 +1,14 @@
-using System.Threading;
-using System.Threading.Tasks;
-using Synaxis.InferenceGateway.Infrastructure.Auth;
-using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
+// <copyright file="IdentityTokenProvider.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
 namespace Synaxis.InferenceGateway.Infrastructure.Identity
 {
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Synaxis.InferenceGateway.Infrastructure.Auth;
+    using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
+
     public class IdentityTokenProvider : ITokenProvider
     {
         private readonly IdentityManager _manager;
