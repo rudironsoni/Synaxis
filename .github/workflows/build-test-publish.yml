@@ -63,7 +63,7 @@ jobs:
         run: dotnet clean Synaxis.sln --configuration Release
 
       - name: Build solution
-        run: dotnet build Synaxis.sln --configuration Release --no-restore
+        run: dotnet build Synaxis.sln --configuration Release --no-restore --verbosity diagnostic > build.log 2>&1 || (tail -200 build.log && exit 1)
 
       - name: Run tests with coverage
         env:
