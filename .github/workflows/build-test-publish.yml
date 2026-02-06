@@ -47,20 +47,15 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      # Temporarily disabled caching to debug MSB3552 error
-      # - name: Cache NuGet packages
-      #   uses: actions/cache@v4
-      #   with:
-      #     path: ~/.nuget/packages
-      #     key: ${{ runner.os }}-nuget-${{ hashFiles('**/Directory.Packages.props', '**/*.csproj') }}
-      #     restore-keys: |
-      #       ${{ runner.os }}-nuget-
+      - name: Clean stale build artifacts
+        run: |
+          echo "Removing obj/ directories to clear stale resx references..."
+          find . -type d -name "obj" -exec rm -rf {} + 2>/dev/null || true
+          find . -type d -name "bin" -exec rm -rf {} + 2>/dev/null || true
+          echo "Clean complete"
 
       - name: Restore dependencies
         run: dotnet restore Synaxis.sln
-
-      - name: Clean build artifacts
-        run: dotnet clean Synaxis.sln --configuration Release
 
       - name: Build solution
         run: dotnet build Synaxis.sln --configuration Release --no-restore --verbosity diagnostic > build.log 2>&1 || (tail -200 build.log && exit 1)
