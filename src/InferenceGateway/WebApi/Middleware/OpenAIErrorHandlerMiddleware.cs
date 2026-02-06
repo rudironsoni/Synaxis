@@ -1,24 +1,42 @@
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using Synaxis.InferenceGateway.WebApi.Errors;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text.Json;
-using System.Threading.Tasks;
+// <copyright file="OpenAIErrorHandlerMiddleware.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
-public class OpenAIErrorHandlerMiddleware
+namespace Synaxis.InferenceGateway.WebApi.Middleware
 {
-    private readonly RequestDelegate _next;
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Net;
+    using System.Text.Json;
+    using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.Extensions.Logging;
+    using Synaxis.InferenceGateway.WebApi.Errors;
+    /// <summary>
+    /// Middleware that handles exceptions and converts them to OpenAI-compatible error responses.
+    /// </summary>
+    public class OpenAIErrorHandlerMiddleware
+    {
+        private readonly RequestDelegate _next;
     private readonly ILogger<OpenAIErrorHandlerMiddleware> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="OpenAIErrorHandlerMiddleware"/> class.
+    /// </summary>
+    /// <param name="next">The next middleware delegate.</param>
+    /// <param name="logger">The logger instance.</param>
     public OpenAIErrorHandlerMiddleware(RequestDelegate next, ILogger<OpenAIErrorHandlerMiddleware> logger)
     {
         _next = next;
         _logger = logger;
     }
 
+    /// <summary>
+    /// Invokes the middleware to handle exceptions.
+    /// </summary>
+    /// <param name="context">The HTTP context.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     public async Task InvokeAsync(HttpContext context)
     {
         try
@@ -171,14 +189,14 @@ public class OpenAIErrorHandlerMiddleware
             if (ex is ArgumentException or BadHttpRequestException)
             {
                 errorCode = ErrorCodes.InvalidValue;
-                errorType = ErrorCodes.GetErrorType(errorCode);
-                statusCode = ErrorCodes.GetStatusCode(errorCode);
+                errorType = ErrorCodeMappings.GetErrorType(errorCode);
+                statusCode = (int)ErrorCodeMappings.GetStatusCode(errorCode);
             }
             else
             {
                 errorCode = ErrorCodes.InternalError;
-                errorType = ErrorCodes.GetErrorType(errorCode);
-                statusCode = ErrorCodes.GetStatusCode(errorCode);
+                errorType = ErrorCodeMappings.GetErrorType(errorCode);
+                statusCode = (int)ErrorCodeMappings.GetStatusCode(errorCode);
             }
 
             _logger.LogError(ex, "Exception caught. RequestId: {RequestId}, Path: {Path}, ErrorCode: {ErrorCode}, ErrorType: {ErrorType}, ExceptionType: {ExceptionType}, Message: {ExceptionMessage}",
@@ -230,5 +248,6 @@ public class OpenAIErrorHandlerMiddleware
     {
         return context.Request.Headers["Accept"].ToString().Contains("text/event-stream")
                || context.Request.Query.ContainsKey("stream");
+    }
     }
 }

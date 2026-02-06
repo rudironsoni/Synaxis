@@ -1,14 +1,29 @@
-using Microsoft.AspNetCore.Http;
-using Synaxis.InferenceGateway.Application.Translation;
-using System.ComponentModel.DataAnnotations;
-using System.Text;
-using System.Text.Json;
+// <copyright file="OpenAIRequestParser.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
-namespace Synaxis.InferenceGateway.WebApi.Helpers;
-
-public static class OpenAIRequestParser
+namespace Synaxis.InferenceGateway.WebApi.Helpers
 {
-    public static async Task<OpenAIRequest?> ParseAsync(HttpContext? context, CancellationToken cancellationToken = default, bool allowEmptyModel = false, bool allowEmptyMessages = false)
+    using System.ComponentModel.DataAnnotations;
+    using System.Text;
+    using System.Text.Json;
+    using Microsoft.AspNetCore.Http;
+    using Synaxis.InferenceGateway.Application.Translation;
+
+    /// <summary>
+    /// Parser for OpenAI API requests.
+    /// </summary>
+    public static class OpenAIRequestParser
+    {
+        /// <summary>
+        /// Parses an OpenAI request from the HTTP context.
+        /// </summary>
+        /// <param name="context">The HTTP context.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <param name="allowEmptyModel">Whether to allow empty model field.</param>
+        /// <param name="allowEmptyMessages">Whether to allow empty messages field.</param>
+        /// <returns>The parsed OpenAI request, or null if parsing failed.</returns>
+        public static async Task<OpenAIRequest?> ParseAsync(HttpContext? context, CancellationToken cancellationToken = default, bool allowEmptyModel = false, bool allowEmptyMessages = false)
     {
         if (context == null) return null;
 
@@ -159,5 +174,6 @@ public static class OpenAIRequestParser
         }
 
         return errors;
+    }
     }
 }

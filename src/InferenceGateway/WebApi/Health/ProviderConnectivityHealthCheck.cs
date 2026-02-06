@@ -1,24 +1,42 @@
-using System.Net;
-using System.Net.Sockets;
-using System.Net.Security;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Options;
-using Synaxis.InferenceGateway.Application.Configuration;
+// <copyright file="ProviderConnectivityHealthCheck.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
-namespace Synaxis.InferenceGateway.WebApi.Health;
-
-public class ProviderConnectivityHealthCheck : IHealthCheck
+namespace Synaxis.InferenceGateway.WebApi.Health
 {
-    private readonly SynaxisConfiguration _config;
-    private readonly ILogger<ProviderConnectivityHealthCheck> _logger;
+    using System.Net;
+    using System.Net.Sockets;
+    using System.Net.Security;
+    using Microsoft.Extensions.Diagnostics.HealthChecks;
+    using Microsoft.Extensions.Options;
+    using Synaxis.InferenceGateway.Application.Configuration;
 
-    public ProviderConnectivityHealthCheck(IOptions<SynaxisConfiguration> config, ILogger<ProviderConnectivityHealthCheck> logger)
+    /// <summary>
+    /// Health check for provider connectivity.
+    /// </summary>
+    public class ProviderConnectivityHealthCheck : IHealthCheck
     {
-        _config = config.Value;
-        _logger = logger;
-    }
+        private readonly SynaxisConfiguration _config;
+        private readonly ILogger<ProviderConnectivityHealthCheck> _logger;
 
-    public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ProviderConnectivityHealthCheck"/> class.
+        /// </summary>
+        /// <param name="config">The configuration options.</param>
+        /// <param name="logger">The logger.</param>
+        public ProviderConnectivityHealthCheck(IOptions<SynaxisConfiguration> config, ILogger<ProviderConnectivityHealthCheck> logger)
+        {
+            _config = config.Value;
+            _logger = logger;
+        }
+
+        /// <summary>
+        /// Checks the health of provider connectivity.
+        /// </summary>
+        /// <param name="context">The health check context.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The health check result.</returns>
+        public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
     {
         var failures = new List<string>();
 
@@ -137,4 +155,6 @@ public class ProviderConnectivityHealthCheck : IHealthCheck
         "pollinations" => "https://pollinations.ai",
         _ => null
     };
+    }
+
 }

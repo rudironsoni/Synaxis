@@ -1,20 +1,29 @@
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using Synaxis.Core.Contracts;
-using Synaxis.InferenceGateway.Application.Interfaces;
-using System.Threading.Tasks;
+// <copyright file="ComplianceMiddleware.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
-namespace Synaxis.InferenceGateway.WebApi.Middleware;
-
-/// <summary>
-/// Middleware that enforces data protection compliance (GDPR, LGPD, CCPA).
-/// Validates processing legality and logs compliance events.
-/// </summary>
-public sealed class ComplianceMiddleware
+namespace Synaxis.InferenceGateway.WebApi.Middleware
 {
+    using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.Extensions.Logging;
+    using Synaxis.Core.Contracts;
+    using Synaxis.InferenceGateway.Application.Interfaces;
+
+    /// <summary>
+    /// Middleware that enforces data protection compliance (GDPR, LGPD, CCPA).
+    /// Validates processing legality and logs compliance events.
+    /// </summary>
+    public sealed class ComplianceMiddleware
+    {
     private readonly RequestDelegate _next;
     private readonly ILogger<ComplianceMiddleware> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ComplianceMiddleware"/> class.
+    /// </summary>
+    /// <param name="next">The next middleware delegate.</param>
+    /// <param name="logger">The logger instance.</param>
     public ComplianceMiddleware(
         RequestDelegate next,
         ILogger<ComplianceMiddleware> logger)
@@ -145,4 +154,6 @@ public sealed class ComplianceMiddleware
             await _next(context);
         }
     }
+    }
+
 }

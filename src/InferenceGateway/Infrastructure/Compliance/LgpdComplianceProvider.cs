@@ -1,17 +1,22 @@
+// <copyright file="LgpdComplianceProvider.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
 #nullable disable
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using Synaxis.InferenceGateway.Infrastructure.Contracts;
-using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
-using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit;
 
 namespace Synaxis.InferenceGateway.Infrastructure.Compliance
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Text.Json;
+    using System.Threading.Tasks;
+    using Microsoft.EntityFrameworkCore;
+    using Synaxis.InferenceGateway.Infrastructure.Contracts;
+    using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
+    using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit;
+
     /// <summary>
     /// LGPD (Lei Geral de Proteção de Dados) compliance provider for Brazilian data protection.
     /// Enforces ANPD notification, 10 legal bases validation, and Brazilian data protection rules.
@@ -19,9 +24,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
     public class LgpdComplianceProvider : IComplianceProvider
     {
         private readonly SynaxisDbContext _dbContext;
-        
+
         // Brazilian regions for data residency validation
-        private static readonly HashSet<string> BrazilianRegions = new()
+        private static readonly HashSet<string> BrazilianRegions = new ()
         {
             "sa-east-1", "br-south-1", "sa-saopaulo-1"
         };
@@ -32,7 +37,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
         }
 
         public string RegulationCode => "LGPD";
-        
+
         public string Region => "BR";
 
         public async Task<bool> ValidateTransferAsync(TransferContext context)
@@ -72,7 +77,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                     return true;
 
                 // Check for explicit user consent (must be specific)
-                if (context.UserConsentObtained && 
+                if (context.UserConsentObtained &&
                     context.LegalBasis?.Equals("consent", StringComparison.OrdinalIgnoreCase) == true)
                 {
                     return true;
@@ -149,7 +154,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                 {
                     m.OrganizationId,
                     m.OrganizationRole,
-                    
+
                     m.Status
                 })
                 .ToListAsync();
@@ -234,7 +239,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
         public async Task<bool> DeleteUserDataAsync(Guid userId)
         {
             using var transaction = await _dbContext.Database.BeginTransactionAsync();
-            
+
             try
             {
                 // Log the deletion request (before deletion) in Portuguese
@@ -255,13 +260,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                     CreatedAt = DateTime.UtcNow,
                     PartitionDate = DateTime.UtcNow.Date
                 };
-                
+
                 _dbContext.AuditLogs.Add(deletionLog);
                 await _dbContext.SaveChangesAsync();
 
                 // Delete user data (cascade will handle related records)
                 // Note: Audit logs are kept for compliance with ANPD requirements
-                
+
                 // Delete group memberships
                 var groupMemberships = await _dbContext.UserGroupMemberships
                     .Where(m => m.UserId == userId)
@@ -278,7 +283,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                 var apiKeys = await _dbContext.ApiKeys
                     .Where(k => k.CreatedBy == userId)
                     .ToListAsync();
-                
+
                 foreach (var key in apiKeys)
                 {
                     key.IsActive = false;
@@ -318,19 +323,19 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                 "public_administration",      // III - Public administration
                 "research",                   // IV - Studies and research
                 "contract",                   // V - Contract execution
-                "legal_proceedings",          // VI - Exercise of rights in legal proceedings
-                "life_protection",            // VII - Protection of life or physical safety
-                "health_protection",          // VIII - Health protection
-                "legitimate_interests",       // IX - Legitimate interests (not for sensitive data)
-                "credit_protection"           // X - Credit protection
+                "legal_proceedings", // VI - Exercise of rights in legal proceedings
+                "life_protection", // VII - Protection of life or physical safety
+                "health_protection", // VIII - Health protection
+                "legitimate_interests", // IX - Legitimate interests (not for sensitive data)
+                "credit_protection" // X - Credit protection
             };
 
             if (string.IsNullOrWhiteSpace(context.LegalBasis))
                 return false;
 
             var normalizedBasis = context.LegalBasis.ToLowerInvariant().Replace("_", "").Replace("-", "");
-            
-            return validLegalBases.Any(basis => 
+
+            return validLegalBases.Any(basis =>
                 normalizedBasis.Contains(basis.Replace("_", "").Replace("-", "")));
         }
 
@@ -348,7 +353,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                 throw new ArgumentNullException(nameof(context));
 
             // LGPD Article 48: Notification to ANPD (Brazilian Authority) required for relevant incidents
-            
+
             // Always notify ANPD for high-risk breaches
             if (context.RiskLevel?.Equals("high", StringComparison.OrdinalIgnoreCase) == true)
                 return true;
@@ -359,8 +364,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                 return true;
 
             // Check if sensitive data categories are exposed (LGPD Article 5, II)
-            var sensitiveCategories = new[] 
-            { 
+            var sensitiveCategories = new[]
+            {
                 "racial_ethnic_origin",
                 "religious_belief",
                 "political_opinion",
@@ -372,7 +377,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                 "sexual_life_data"
             };
 
-            if (context.DataCategoriesExposed?.Any(cat => 
+            if (context.DataCategoriesExposed?.Any(cat =>
                 sensitiveCategories.Contains(cat, StringComparer.OrdinalIgnoreCase)) == true)
                 return true;
 

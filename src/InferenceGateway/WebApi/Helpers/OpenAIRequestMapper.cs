@@ -1,13 +1,26 @@
-using Microsoft.Extensions.AI;
-using Synaxis.InferenceGateway.Application.Translation;
-using Synaxis.InferenceGateway.Application.Routing;
-using System.Text.Json;
-using System.Collections.Generic;
+// <copyright file="OpenAIRequestMapper.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
-namespace Synaxis.InferenceGateway.WebApi.Helpers;
-
-public static class OpenAIRequestMapper
+namespace Synaxis.InferenceGateway.WebApi.Helpers
 {
+    using System.Collections.Generic;
+    using System.Text.Json;
+    using Microsoft.Extensions.AI;
+    using Synaxis.InferenceGateway.Application.Routing;
+    using Synaxis.InferenceGateway.Application.Translation;
+
+    /// <summary>
+    /// Helper class for mapping OpenAI requests to canonical format.
+    /// </summary>
+    public static class OpenAIRequestMapper
+    {
+    /// <summary>
+    /// Converts an OpenAI request to a canonical request.
+    /// </summary>
+    /// <param name="openAIRequest">The OpenAI request.</param>
+    /// <param name="messages">The chat messages.</param>
+    /// <returns>The canonical request.</returns>
     public static CanonicalRequest ToCanonicalRequest(OpenAIRequest openAIRequest, IEnumerable<ChatMessage> messages)
     {
         var modelId = !string.IsNullOrWhiteSpace(openAIRequest.Model) ? openAIRequest.Model : "default";
@@ -16,10 +29,10 @@ public static class OpenAIRequestMapper
             EndpointKind.ChatCompletions,
             modelId,
             messages.ToList(),
-            Tools: MapTools(openAIRequest.Tools),
-            ToolChoice: openAIRequest.ToolChoice,
-            ResponseFormat: openAIRequest.ResponseFormat,
-            AdditionalOptions: new ChatOptions
+            tools: MapTools(openAIRequest.Tools),
+            toolChoice: openAIRequest.ToolChoice,
+            responseFormat: openAIRequest.ResponseFormat,
+            additionalOptions: new ChatOptions
             {
                 Temperature = (float?)openAIRequest.Temperature,
                 TopP = (float?)openAIRequest.TopP,
@@ -28,6 +41,11 @@ public static class OpenAIRequestMapper
             });
     }
 
+    /// <summary>
+    /// Converts an OpenAI request to chat messages.
+    /// </summary>
+    /// <param name="request">The OpenAI request.</param>
+    /// <returns>The chat messages.</returns>
     public static IEnumerable<ChatMessage> ToChatMessages(OpenAIRequest request)
     {
         if (request.Messages == null) return Enumerable.Empty<ChatMessage>();
@@ -86,7 +104,7 @@ public static class OpenAIRequestMapper
         return messages;
     }
 
-    private static IList<AITool>? MapTools(List<OpenAITool>? tools)
+    private static IList<AITool>? MapTools(IList<OpenAITool>? tools)
     {
         if (tools == null) return null;
         var result = new List<AITool>();
@@ -128,6 +146,8 @@ public static class OpenAIRequestMapper
                 return list;
             }
         }
+
         return null;
+    }
     }
 }

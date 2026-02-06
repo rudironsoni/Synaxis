@@ -1,12 +1,17 @@
+// <copyright file="ComplianceProviderFactory.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
 #nullable disable
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Synaxis.InferenceGateway.Infrastructure.Contracts;
-using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 
 namespace Synaxis.InferenceGateway.Infrastructure.Compliance
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using Synaxis.InferenceGateway.Infrastructure.Contracts;
+    using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
+
     /// <summary>
     /// Factory for creating and managing compliance providers based on region.
     /// Supports GDPR (EU) and LGPD (Brazil) with fallback strategy.
@@ -33,7 +38,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                 ["eu-central-1"] = gdprProvider,
                 ["eu-north-1"] = gdprProvider,
                 ["eu-south-1"] = gdprProvider,
-                
+
                 // LGPD for Brazilian regions
                 ["BR"] = lgpdProvider,
                 ["sa-east-1"] = lgpdProvider,
@@ -82,7 +87,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
             if (string.IsNullOrWhiteSpace(regulationCode))
                 return _defaultProvider;
 
-            var provider = _providers.Values.FirstOrDefault(p => 
+            var provider = _providers.Values.FirstOrDefault(p =>
                 p.RegulationCode.Equals(regulationCode, StringComparison.OrdinalIgnoreCase));
 
             return provider ?? _defaultProvider;
@@ -106,7 +111,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
         {
             if (string.IsNullOrWhiteSpace(region))
                 throw new ArgumentException("Region cannot be null or empty", nameof(region));
-            
+
             if (provider == null)
                 throw new ArgumentNullException(nameof(provider));
 

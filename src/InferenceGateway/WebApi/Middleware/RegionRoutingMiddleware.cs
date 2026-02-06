@@ -1,20 +1,29 @@
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using Synaxis.Core.Contracts;
-using Synaxis.InferenceGateway.Application.Interfaces;
-using System.Threading.Tasks;
+// <copyright file="RegionRoutingMiddleware.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
-namespace Synaxis.InferenceGateway.WebApi.Middleware;
-
-/// <summary>
-/// Middleware that routes requests to the appropriate region based on user data residency.
-/// Handles multi-region routing and failover scenarios for compliance with GDPR/LGPD.
-/// </summary>
-public sealed class RegionRoutingMiddleware
+namespace Synaxis.InferenceGateway.WebApi.Middleware
 {
+    using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.Extensions.Logging;
+    using Synaxis.Core.Contracts;
+    using Synaxis.InferenceGateway.Application.Interfaces;
+
+    /// <summary>
+    /// Middleware that routes requests to the appropriate region based on user data residency.
+    /// Handles multi-region routing and failover scenarios for compliance with GDPR/LGPD.
+    /// </summary>
+    public sealed class RegionRoutingMiddleware
+    {
     private readonly RequestDelegate _next;
     private readonly ILogger<RegionRoutingMiddleware> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RegionRoutingMiddleware"/> class.
+    /// </summary>
+    /// <param name="next">The next middleware delegate.</param>
+    /// <param name="logger">The logger instance.</param>
     public RegionRoutingMiddleware(
         RequestDelegate next,
         ILogger<RegionRoutingMiddleware> logger)
@@ -51,7 +60,7 @@ public sealed class RegionRoutingMiddleware
 
             // Get current server region from configuration
             var currentRegion = Environment.GetEnvironmentVariable("SYNAXIS_REGION") ?? "us-east-1";
-            
+
             // Determine user's data residency region
             string userRegion;
             if (tenantContext.UserId.HasValue)
@@ -82,7 +91,7 @@ public sealed class RegionRoutingMiddleware
                 if (tenantContext.UserId.HasValue)
                 {
                     var requiresConsent = await regionRouter.RequiresCrossBorderConsentAsync(
-                        tenantContext.UserId.Value, 
+                        tenantContext.UserId.Value,
                         currentRegion);
 
                     if (requiresConsent)
@@ -145,7 +154,7 @@ public sealed class RegionRoutingMiddleware
         {
             return forwardedFor.Split(',')[0].Trim();
         }
-        
+
         return context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
     }
 
@@ -167,4 +176,6 @@ public sealed class RegionRoutingMiddleware
         // Default to US
         return "us-east-1";
     }
+    }
+
 }

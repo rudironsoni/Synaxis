@@ -1,10 +1,14 @@
-using System;
-using Microsoft.Extensions.DependencyInjection;
-using Synaxis.InferenceGateway.Application.ChatClients;
-using Microsoft.Extensions.AI;
+// <copyright file="ChatClientFactory.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
 namespace Synaxis.InferenceGateway.Infrastructure.ChatClients
 {
+    using System;
+    using Microsoft.Extensions.AI;
+    using Microsoft.Extensions.DependencyInjection;
+    using Synaxis.InferenceGateway.Application.ChatClients;
+
     public class ChatClientFactory : IChatClientFactory
     {
         private readonly IServiceProvider _serviceProvider;

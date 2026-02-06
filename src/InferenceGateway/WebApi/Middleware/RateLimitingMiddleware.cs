@@ -1,16 +1,20 @@
-namespace Synaxis.InferenceGateway.WebApi.Middleware;
+// <copyright file="RateLimitingMiddleware.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Logging;
-using System.Net;
-
-/// <summary>
-/// Middleware for rate limiting requests.
-/// Implements sliding window rate limiting (100 requests per minute per IP).
-/// </summary>
-public class RateLimitingMiddleware
+namespace Synaxis.InferenceGateway.WebApi.Middleware
 {
+    using System.Net;
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.Extensions.Caching.Memory;
+    using Microsoft.Extensions.Logging;
+
+    /// <summary>
+    /// Middleware for rate limiting requests.
+    /// Implements sliding window rate limiting (100 requests per minute per IP).
+    /// </summary>
+    public class RateLimitingMiddleware
+    {
     private readonly RequestDelegate _next;
     private readonly IMemoryCache _cache;
     private readonly ILogger<RateLimitingMiddleware> _logger;
@@ -43,35 +47,35 @@ public class RateLimitingMiddleware
     {
         var clientIp = GetClientIpAddress(context);
         var cacheKey = $"ratelimit:{clientIp}";
-        
+
         var now = DateTime.UtcNow;
         var windowStart = now.Add(-_windowSize);
-        
+
         var requestTimestamps = _cache.GetOrCreate(cacheKey, entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = _windowSize;
             return new List<DateTime>();
         }) ?? new List<DateTime>();
-        
+
         lock (requestTimestamps)
         {
             requestTimestamps.RemoveAll(t => t < windowStart);
-            
+
             if (requestTimestamps.Count >= _requestsPerMinute)
             {
                 _logger.LogWarning("Rate limit exceeded for IP {ClientIp}: {Count} requests in last minute", clientIp, requestTimestamps.Count);
-                
+
                 context.Response.StatusCode = (int)HttpStatusCode.TooManyRequests;
                 context.Response.Headers.Append("X-RateLimit-Limit", _requestsPerMinute.ToString());
                 context.Response.Headers.Append("X-RateLimit-Remaining", "0");
                 context.Response.Headers.Append("X-RateLimit-Reset", requestTimestamps[0].Add(_windowSize).ToString("R"));
-                
+
                 return;
             }
-            
+
             requestTimestamps.Add(now);
         }
-        
+
         context.Response.OnStarting(() =>
         {
             lock (requestTimestamps)
@@ -83,7 +87,7 @@ public class RateLimitingMiddleware
             }
             return Task.CompletedTask;
         });
-        
+
         await _next(context);
     }
 
@@ -100,7 +104,9 @@ public class RateLimitingMiddleware
         {
             return forwardedFor.Split(',')[0].Trim();
         }
-        
+
         return context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
     }
+    }
+
 }
