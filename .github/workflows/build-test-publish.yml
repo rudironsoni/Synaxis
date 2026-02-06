@@ -110,11 +110,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Normalize image name
+        id: image
+        run: |
+          echo "name=$(echo '${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.service.image-name }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.service.image-name }}
+          images: ${{ steps.image.outputs.name }}
           tags: |
             type=raw,value=latest
             type=sha,prefix=,format=short
@@ -135,7 +140,7 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.service.image-name }}:latest
+          image-ref: ${{ steps.image.outputs.name }}:latest
           format: 'sarif'
           output: 'trivy-results-${{ matrix.service.name }}.sarif'
 
