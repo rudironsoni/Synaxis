@@ -1,25 +1,32 @@
-namespace Synaxis.InferenceGateway.Application.ControlPlane;
+// <copyright file="IProviderHealthCheckService.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
-using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
-
-/// <summary>
-/// Service for checking provider health.
-/// </summary>
-public interface IProviderHealthCheckService
+namespace Synaxis.InferenceGateway.Application.ControlPlane
 {
-    /// <summary>
-    /// Checks the health of a specific provider.
-    /// </summary>
-    /// <param name="providerKey">The provider key</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Health check result</returns>
-    Task<HealthCheckResult> CheckProviderHealthAsync(string providerKey, CancellationToken cancellationToken = default);
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
 
     /// <summary>
-    /// Runs a health check and updates the health store.
+    /// Service for checking provider health.
     /// </summary>
-    /// <param name="providerKey">The provider key</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Health check result</returns>
-    Task<HealthCheckResult> RunHealthCheckAsync(string providerKey, CancellationToken cancellationToken = default);
+    public interface IProviderHealthCheckService
+    {
+        /// <summary>
+        /// Checks the health of a specific provider.
+        /// </summary>
+        /// <param name="providerKey">The provider key.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>Health check result.</returns>
+        Task<HealthCheckResult> CheckProviderHealthAsync(string providerKey, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Runs a health check and updates the health store.
+        /// </summary>
+        /// <param name="providerKey">The provider key.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>Health check result.</returns>
+        Task<HealthCheckResult> RunHealthCheckAsync(string providerKey, CancellationToken cancellationToken = default);
+    }
 }

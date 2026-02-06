@@ -1,14 +1,18 @@
-using System;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
+// <copyright file="DeviceFlowService.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
 namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
 {
+    using System;
+    using System.Net.Http;
+    using System.Net.Http.Headers;
+    using System.Text.Json;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Microsoft.Extensions.Logging;
+    using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
+
     public class DeviceFlowService
     {
         private readonly HttpClient _http;

@@ -1,28 +1,33 @@
-using Microsoft.EntityFrameworkCore;
-using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
-using Synaxis.InferenceGateway.Application.Routing;
-using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
+// <copyright file="CostService.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
-namespace Synaxis.InferenceGateway.Infrastructure.Routing;
-
-public sealed class CostService : ICostService
+namespace Synaxis.InferenceGateway.Infrastructure.Routing
 {
-    private readonly ControlPlaneDbContext _dbContext;
+    using Microsoft.EntityFrameworkCore;
+    using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
+    using Synaxis.InferenceGateway.Application.Routing;
+    using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 
-    public CostService(ControlPlaneDbContext dbContext)
+    public sealed class CostService : ICostService
     {
-        if (dbContext is null)
+        private readonly ControlPlaneDbContext _dbContext;
+
+        public CostService(ControlPlaneDbContext dbContext)
         {
-            throw new ArgumentNullException(nameof(dbContext));
-        }
-        
-        _dbContext = dbContext;
-    }
+            if (dbContext is null)
+            {
+                throw new ArgumentNullException(nameof(dbContext));
+            }
 
-    public async Task<ModelCost?> GetCostAsync(string provider, string model, CancellationToken cancellationToken = default)
-    {
-        return await _dbContext.ModelCosts
-            .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Provider == provider && c.Model == model, cancellationToken);
+            _dbContext = dbContext;
+        }
+
+        public async Task<ModelCost?> GetCostAsync(string provider, string model, CancellationToken cancellationToken = default)
+        {
+            return await _dbContext.ModelCosts
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Provider == provider && c.Model == model, cancellationToken);
+        }
     }
 }

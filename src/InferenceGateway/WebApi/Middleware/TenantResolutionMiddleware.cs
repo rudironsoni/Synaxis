@@ -1,29 +1,33 @@
-using System.Security.Claims;
-using Microsoft.AspNetCore.Http;
-using Synaxis.InferenceGateway.Application.Interfaces;
-using Synaxis.InferenceGateway.Application.ApiKeys;
+// <copyright file="TenantResolutionMiddleware.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
-namespace Synaxis.InferenceGateway.WebApi.Middleware;
-
-/// <summary>
-/// Middleware that resolves tenant context from API key or JWT token authentication.
-/// Extracts tenant information from the Authorization header and populates ITenantContext.
-/// </summary>
-/// <remarks>
-/// Authentication Flow:
-/// 1. Check Authorization header for Bearer token
-/// 2. If token starts with "synaxis_", treat as API key:
-///    - Extract prefix from key (synaxis_xxxx...)
-///    - Query database for matching key by prefix
-///    - Validate full key using bcrypt
-///    - Set tenant context with OrganizationId, ApiKeyId
-/// 3. If token is JWT (not API key):
-///    - Extract claims from JWT (already validated by ASP.NET Core JWT middleware)
-///    - Set tenant context with OrganizationId, UserId
-/// 4. If no valid authentication found, return 401 Unauthorized
-/// </remarks>
-public sealed class TenantResolutionMiddleware
+namespace Synaxis.InferenceGateway.WebApi.Middleware
 {
+    using System.Security.Claims;
+    using Microsoft.AspNetCore.Http;
+    using Synaxis.InferenceGateway.Application.ApiKeys;
+    using Synaxis.InferenceGateway.Application.Interfaces;
+
+    /// <summary>
+    /// Middleware that resolves tenant context from API key or JWT token authentication.
+    /// Extracts tenant information from the Authorization header and populates ITenantContext.
+    /// </summary>
+    /// <remarks>
+    /// Authentication Flow:
+    /// 1. Check Authorization header for Bearer token
+    /// 2. If token starts with "synaxis_", treat as API key:
+    ///    - Extract prefix from key (synaxis_xxxx...)
+    ///    - Query database for matching key by prefix
+    ///    - Validate full key using bcrypt
+    ///    - Set tenant context with OrganizationId, ApiKeyId
+    /// 3. If token is JWT (not API key):
+    ///    - Extract claims from JWT (already validated by ASP.NET Core JWT middleware)
+    ///    - Set tenant context with OrganizationId, UserId
+    /// 4. If no valid authentication found, return 401 Unauthorized
+    /// </remarks>
+    public sealed class TenantResolutionMiddleware
+    {
     private readonly RequestDelegate _next;
     private readonly ILogger<TenantResolutionMiddleware> _logger;
     private const string BearerPrefix = "Bearer ";
@@ -283,4 +287,6 @@ public sealed class TenantResolutionMiddleware
             organizationId,
             userId);
     }
+    }
+
 }

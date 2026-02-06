@@ -1,12 +1,18 @@
-namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools;
+// <copyright file="IRoutingTool.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
-/// <summary>
-/// Tool for managing routing decisions.
-/// </summary>
-public interface IRoutingTool
+namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
 {
-    Task<bool> SwitchProviderAsync(Guid organizationId, string modelId, string fromProvider, string toProvider, string reason, CancellationToken ct = default);
-    Task<RoutingMetrics> GetRoutingMetricsAsync(Guid organizationId, string modelId, CancellationToken ct = default);
-}
+    /// <summary>
+    /// Tool for managing routing decisions.
+    /// </summary>
+    public interface IRoutingTool
+    {
+        Task<bool> SwitchProviderAsync(Guid organizationId, string modelId, string fromProvider, string toProvider, string reason, CancellationToken ct = default);
 
-public record RoutingMetrics(int TotalRequests, Dictionary<string, int> ProviderDistribution, decimal AverageCost);
+        Task<RoutingMetrics> GetRoutingMetricsAsync(Guid organizationId, string modelId, CancellationToken ct = default);
+    }
+
+    public record RoutingMetrics(int TotalRequests, IDictionary<string, int> ProviderDistribution, decimal AverageCost);
+}

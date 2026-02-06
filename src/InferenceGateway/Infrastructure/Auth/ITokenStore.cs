@@ -1,10 +1,15 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
+// <copyright file="ITokenStore.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
-namespace Synaxis.InferenceGateway.Infrastructure.Auth;
-
-public interface ITokenStore
+namespace Synaxis.InferenceGateway.Infrastructure.Auth
 {
-    Task<List<AntigravityAccount>> LoadAsync();
-    Task SaveAsync(List<AntigravityAccount> accounts);
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
+
+    public interface ITokenStore
+    {
+        Task<List<AntigravityAccount>> LoadAsync();
+        Task SaveAsync(List<AntigravityAccount> accounts);
+    }
 }

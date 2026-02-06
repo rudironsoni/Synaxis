@@ -1,13 +1,22 @@
-namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools;
+// <copyright file="IAgentTools.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
-/// <summary>
-/// Registry of tools available to agents.
-/// </summary>
-public interface IAgentTools
+namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
 {
-    IProviderTool Provider { get; }
-    IAlertTool Alert { get; }
-    IRoutingTool Routing { get; }
-    IHealthTool Health { get; }
-    IAuditTool Audit { get; }
+    /// <summary>
+    /// Registry of tools available to agents.
+    /// </summary>
+    public interface IAgentTools
+    {
+        IProviderTool Provider { get; }
+
+        IAlertTool Alert { get; }
+
+        IRoutingTool Routing { get; }
+
+        IHealthTool Health { get; }
+
+        IAuditTool Audit { get; }
+    }
 }

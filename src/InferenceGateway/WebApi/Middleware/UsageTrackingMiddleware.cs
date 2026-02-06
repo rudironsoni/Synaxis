@@ -1,15 +1,19 @@
-namespace Synaxis.InferenceGateway.WebApi.Middleware;
+// <copyright file="UsageTrackingMiddleware.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using System.Diagnostics;
-
-/// <summary>
-/// Middleware for tracking usage at request level.
-/// Ensures 100% accountability for all requests.
-/// </summary>
-public class UsageTrackingMiddleware
+namespace Synaxis.InferenceGateway.WebApi.Middleware
 {
+    using System.Diagnostics;
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.Extensions.Logging;
+
+    /// <summary>
+    /// Middleware for tracking usage at request level.
+    /// Ensures 100% accountability for all requests.
+    /// </summary>
+    public class UsageTrackingMiddleware
+    {
     private readonly RequestDelegate _next;
     private readonly ILogger<UsageTrackingMiddleware> _logger;
 
@@ -36,7 +40,7 @@ public class UsageTrackingMiddleware
     {
         var stopwatch = Stopwatch.StartNew();
         var timestamp = DateTime.UtcNow;
-        
+
         try
         {
             await _next(context);
@@ -44,7 +48,7 @@ public class UsageTrackingMiddleware
         finally
         {
             stopwatch.Stop();
-            
+
             var usageData = new UsageData(
                 context.Request.Path,
                 context.Request.Method,
@@ -53,9 +57,9 @@ public class UsageTrackingMiddleware
                 context.Response.StatusCode,
                 GetClientIpAddress(context)
             );
-            
+
             context.Items["UsageData"] = usageData;
-            
+
             _logger.LogInformation("Request tracked: {Method} {Path} - {StatusCode} in {DurationMs}ms from {ClientIp}",
                 usageData.Method, usageData.Path, usageData.StatusCode, usageData.DurationMs, usageData.ClientIp);
         }
@@ -74,19 +78,21 @@ public class UsageTrackingMiddleware
         {
             return forwardedFor.Split(',')[0].Trim();
         }
-        
+
         return context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
     }
-}
+    }
 
-/// <summary>
-/// Usage data for a single request.
-/// </summary>
-public record UsageData(
+    /// <summary>
+    /// Usage data for a single request.
+    /// </summary>
+    public record UsageData(
     string Path,
     string Method,
     DateTime Timestamp,
     long DurationMs,
     int StatusCode,
     string ClientIp
-);
+    );
+
+}

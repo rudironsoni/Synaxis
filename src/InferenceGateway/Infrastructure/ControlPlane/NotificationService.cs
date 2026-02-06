@@ -1,31 +1,36 @@
-using Synaxis.InferenceGateway.Application.ControlPlane;
-using Microsoft.Extensions.Logging;
+// <copyright file="NotificationService.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
-namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane;
-
-/// <summary>
-/// Stub implementation of notification service.
-/// In production, this should integrate with email/SMS/push notification providers.
-/// </summary>
-public class NotificationService : INotificationService
+namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
 {
-    private readonly ILogger<NotificationService> _logger;
+    using Microsoft.Extensions.Logging;
+    using Synaxis.InferenceGateway.Application.ControlPlane;
 
-    public NotificationService(ILogger<NotificationService> logger)
+    /// <summary>
+    /// Stub implementation of notification service.
+    /// In production, this should integrate with email/SMS/push notification providers.
+    /// </summary>
+    public class NotificationService : INotificationService
     {
-        _logger = logger;
-    }
+        private readonly ILogger<NotificationService> _logger;
 
-    public Task SendQuotaWarningAsync(
-        string tenantId, 
-        string userId, 
-        string providerKey, 
-        int remainingQuota, 
-        CancellationToken cancellationToken = default)
-    {
-        _logger.LogWarning(
-            "Quota warning for tenant {TenantId}, user {UserId}, provider {ProviderKey}: {RemainingQuota} remaining", 
-            tenantId, userId, providerKey, remainingQuota);
-        return Task.CompletedTask;
+        public NotificationService(ILogger<NotificationService> logger)
+        {
+            _logger = logger;
+        }
+
+        public Task SendQuotaWarningAsync(
+            string tenantId,
+            string userId,
+            string providerKey,
+            int remainingQuota,
+            CancellationToken cancellationToken = default)
+        {
+            _logger.LogWarning(
+                "Quota warning for tenant {TenantId}, user {UserId}, provider {ProviderKey}: {RemainingQuota} remaining",
+                tenantId, userId, providerKey, remainingQuota);
+            return Task.CompletedTask;
+        }
     }
 }

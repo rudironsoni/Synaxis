@@ -1,19 +1,36 @@
-using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Options;
-using Synaxis.InferenceGateway.Application.Configuration;
+// <copyright file="ConfigHealthCheck.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
-namespace Synaxis.InferenceGateway.WebApi.Health;
-
-public class ConfigHealthCheck : IHealthCheck
+namespace Synaxis.InferenceGateway.WebApi.Health
 {
-    private readonly SynaxisConfiguration _config;
+    using Microsoft.Extensions.Diagnostics.HealthChecks;
+    using Microsoft.Extensions.Options;
+    using Synaxis.InferenceGateway.Application.Configuration;
 
-    public ConfigHealthCheck(IOptions<SynaxisConfiguration> config)
+    /// <summary>
+    /// Health check for configuration validation.
+    /// </summary>
+    public class ConfigHealthCheck : IHealthCheck
     {
-        _config = config.Value;
-    }
+        private readonly SynaxisConfiguration _config;
 
-    public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ConfigHealthCheck"/> class.
+        /// </summary>
+        /// <param name="config">The configuration options.</param>
+        public ConfigHealthCheck(IOptions<SynaxisConfiguration> config)
+        {
+            _config = config.Value;
+        }
+
+        /// <summary>
+        /// Checks the health of the configuration.
+        /// </summary>
+        /// <param name="context">The health check context.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The health check result.</returns>
+        public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
     {
         if (_config.Providers == null || _config.Providers.Count == 0)
         {
@@ -41,4 +58,6 @@ public class ConfigHealthCheck : IHealthCheck
 
         return Task.FromResult(HealthCheckResult.Healthy("Configuration is consistent."));
     }
+    }
+
 }
