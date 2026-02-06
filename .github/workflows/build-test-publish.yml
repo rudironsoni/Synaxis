@@ -1,0 +1,147 @@
+name: Build, Test, and Publish
+
+on:
+  push:
+    branches:
+      - main
+    tags-ignore:
+      - '**'  # Don't run on tag pushes (tag-release.yml handles those)
+
+permissions:
+  contents: read
+  packages: write
+  security-events: write
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  REGISTRY: ghcr.io
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: synaxis
+          POSTGRES_PASSWORD: synaxis_test_pass
+          POSTGRES_DB: synaxis_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/Directory.Packages.props', '**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore dependencies
+        run: dotnet restore Synaxis.sln
+
+      - name: Build solution
+        run: dotnet build Synaxis.sln --configuration Release --no-restore
+
+      - name: Run tests with coverage
+        env:
+          ConnectionStrings__DefaultConnection: "Host=localhost;Port=5432;Database=synaxis_test;Username=synaxis;Password=synaxis_test_pass"
+        run: |
+          dotnet test Synaxis.sln \
+            --configuration Release \
+            --no-build \
+            --verbosity normal \
+            --collect:"XPlat Code Coverage" \
+            --results-directory ./coverage
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage/**/coverage.cobertura.xml
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  publish-docker:
+    name: Build and Publish Docker Images
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    
+    strategy:
+      matrix:
+        service:
+          - name: synaxis-api
+            context: .
+            dockerfile: src/Synaxis.Api/Dockerfile
+            image-name: synaxis-api
+          - name: synaxis-inference-gateway
+            context: .
+            dockerfile: src/InferenceGateway/WebApi/Dockerfile
+            image-name: synaxis-inference-gateway
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.service.image-name }}
+          tags: |
+            type=raw,value=latest
+            type=sha,prefix=,format=short
+            type=ref,event=branch
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.service.context }}
+          file: ${{ matrix.service.dockerfile }}
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.service.image-name }}:latest
+          format: 'sarif'
+          output: 'trivy-results-${{ matrix.service.name }}.sarif'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results-${{ matrix.service.name }}.sarif'
+          category: 'trivy-${{ matrix.service.name }}'
