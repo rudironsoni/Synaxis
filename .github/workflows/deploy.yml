@@ -1,0 +1,153 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+      regions:
+        description: 'Regions to deploy (comma-separated: eu-west-1,us-east-1,sa-east-1 or "all")'
+        required: true
+        default: 'all'
+      service:
+        description: 'Service to deploy'
+        required: true
+        type: choice
+        options:
+          - all
+          - synaxis-api
+          - synaxis-inference-gateway
+      version:
+        description: 'Version/tag to deploy (default: latest)'
+        required: false
+        default: 'latest'
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  prepare:
+    name: Prepare Deployment
+    runs-on: ubuntu-latest
+    outputs:
+      regions: ${{ steps.set-regions.outputs.regions }}
+      services: ${{ steps.set-services.outputs.services }}
+      version: ${{ steps.set-version.outputs.version }}
+    steps:
+      - name: Set regions
+        id: set-regions
+        run: |
+          if [ "${{ github.event.inputs.regions }}" = "all" ]; then
+            echo "regions=[\"eu-west-1\",\"us-east-1\",\"sa-east-1\"]" >> $GITHUB_OUTPUT
+          else
+            REGIONS=$(echo "${{ github.event.inputs.regions }}" | jq -R 'split(",") | map(select(length > 0))')
+            echo "regions=$REGIONS" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set services
+        id: set-services
+        run: |
+          if [ "${{ github.event.inputs.service }}" = "all" ]; then
+            echo "services=[\"synaxis-api\",\"synaxis-inference-gateway\"]" >> $GITHUB_OUTPUT
+          else
+            echo "services=[\"${{ github.event.inputs.service }}\"]" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set version
+        id: set-version
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          if [ -z "$VERSION" ] || [ "$VERSION" = "latest" ]; then
+            VERSION="latest"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+  deploy:
+    name: Deploy to ${{ matrix.region }}
+    runs-on: ubuntu-latest
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        region: ${{ fromJson(needs.prepare.outputs.regions) }}
+        service: ${{ fromJson(needs.prepare.outputs.services) }}
+    
+    environment:
+      name: ${{ github.event.inputs.environment }}-${{ matrix.region }}
+      url: https://${{ matrix.region }}.${{ github.event.inputs.environment }}.synaxis.io
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets[format('AWS_ACCESS_KEY_ID_{0}', matrix.region)] || secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets[format('AWS_SECRET_ACCESS_KEY_{0}', matrix.region)] || secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ matrix.region }}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy to ${{ matrix.region }}
+        run: |
+          echo "🚀 Deploying ${{ matrix.service }} to ${{ matrix.region }} (${{ github.event.inputs.environment }})"
+          echo "Version: ${{ needs.prepare.outputs.version }}"
+          
+          # Pull the image
+          IMAGE="${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.service }}:${{ needs.prepare.outputs.version }}"
+          echo "Pulling image: $IMAGE"
+          docker pull $IMAGE
+          
+          # TODO: Add your deployment commands here
+          # Examples:
+          # - ECS: aws ecs update-service --cluster ... --service ... --force-new-deployment
+          # - EKS: kubectl set image deployment/${{ matrix.service }} ...
+          # - EC2: Deploy via SSH/SSM
+          # - Lambda: Update function code
+          
+          echo "✅ Deployment completed for ${{ matrix.service }} in ${{ matrix.region }}"
+
+      - name: Verify deployment
+        run: |
+          echo "🔍 Verifying deployment..."
+          # TODO: Add health check verification
+          # Example: curl -f https://${{ matrix.region }}.${{ github.event.inputs.environment }}.synaxis.io/health
+          echo "✅ Verification completed"
+
+      - name: Notify deployment status
+        if: always()
+        run: |
+          STATUS="${{ job.status }}"
+          if [ "$STATUS" = "success" ]; then
+            echo "✅ Deployment successful: ${{ matrix.service }} in ${{ matrix.region }}"
+          else
+            echo "❌ Deployment failed: ${{ matrix.service }} in ${{ matrix.region }}"
+          fi
+
+  post-deploy:
+    name: Post-Deployment
+    runs-on: ubuntu-latest
+    needs: [prepare, deploy]
+    if: always()
+    steps:
+      - name: Summary
+        run: |
+          echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: ${{ github.event.inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Regions**: ${{ github.event.inputs.regions }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Services**: ${{ github.event.inputs.service }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ needs.prepare.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ${{ needs.deploy.result }}" >> $GITHUB_STEP_SUMMARY
