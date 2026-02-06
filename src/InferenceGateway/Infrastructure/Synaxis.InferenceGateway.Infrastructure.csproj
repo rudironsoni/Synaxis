@@ -36,8 +36,4 @@
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
-  <ItemGroup>
-    <!-- Explicitly exclude .resx files to prevent MSBuild from attempting to include them -->
-    <EmbeddedResource Remove="**/*.resx" />
-  </ItemGroup>
 </Project>
