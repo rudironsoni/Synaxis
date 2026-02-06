@@ -1,59 +1,64 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using Synaxis.InferenceGateway.Application.Configuration;
-using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
-using Synaxis.InferenceGateway.Application.Security;
+// <copyright file="JwtService.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
-namespace Synaxis.InferenceGateway.Infrastructure.Security;
-
-public sealed class JwtService : IJwtService
+namespace Synaxis.InferenceGateway.Infrastructure.Security
 {
-    private readonly SynaxisConfiguration _config;
+    using System.IdentityModel.Tokens.Jwt;
+    using System.Security.Claims;
+    using System.Text;
+    using Microsoft.Extensions.Options;
+    using Microsoft.IdentityModel.Tokens;
+    using Synaxis.InferenceGateway.Application.Configuration;
+    using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
+    using Synaxis.InferenceGateway.Application.Security;
 
-    public JwtService(IOptions<SynaxisConfiguration> config)
+    public sealed class JwtService : IJwtService
     {
-        if (config is null)
-        {
-            throw new ArgumentNullException(nameof(config));
-        }
-        
-        _config = config.Value;
-    }
+        private readonly SynaxisConfiguration _config;
 
-        public string GenerateToken(User user)
+        public JwtService(IOptions<SynaxisConfiguration> config)
         {
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var secret = _config.JwtSecret;
-
-            // Do not allow an empty/whitespace JWT secret. Require explicit configuration.
-            if (string.IsNullOrWhiteSpace(secret))
+            if (config is null)
             {
-                throw new InvalidOperationException("Synaxis:InferenceGateway:JwtSecret must be configured.");
+                throw new ArgumentNullException(nameof(config));
             }
 
-            var key = Encoding.ASCII.GetBytes(secret);
-        
-        var claims = new List<Claim>
-        {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email),
-            new Claim("role", user.Role.ToString()),
-            new Claim("tenantId", user.TenantId.ToString())
-        };
+            _config = config.Value;
+        }
 
-        var tokenDescriptor = new SecurityTokenDescriptor
-        {
-            Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.UtcNow.AddDays(7),
-            Issuer = _config.JwtIssuer ?? "Synaxis",
-            Audience = _config.JwtAudience ?? "Synaxis",
-            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-        };
+            public string GenerateToken(User user)
+            {
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var secret = _config.JwtSecret;
 
-        var token = tokenHandler.CreateToken(tokenDescriptor);
-        return tokenHandler.WriteToken(token);
+                // Do not allow an empty/whitespace JWT secret. Require explicit configuration.
+                if (string.IsNullOrWhiteSpace(secret))
+                {
+                    throw new InvalidOperationException("Synaxis:InferenceGateway:JwtSecret must be configured.");
+                }
+
+                var key = Encoding.ASCII.GetBytes(secret);
+
+            var claims = new List<Claim>
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                new Claim("role", user.Role.ToString()),
+                new Claim("tenantId", user.TenantId.ToString())
+            };
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.AddDays(7),
+                Issuer = _config.JwtIssuer ?? "Synaxis",
+                Audience = _config.JwtAudience ?? "Synaxis",
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
+        }
     }
 }

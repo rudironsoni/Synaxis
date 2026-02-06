@@ -1,22 +1,26 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+// <copyright file="IdentityManager.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
 namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
 {
-    public class IdentityManager : IHostedService, IDisposable
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Microsoft.Extensions.Hosting;
+    using Microsoft.Extensions.Logging;
+
+    public sealed class IdentityManager : IHostedService, IDisposable
     {
         private readonly IEnumerable<IAuthStrategy> _strategies;
         private readonly ISecureTokenStore _store;
         private readonly ILogger<IdentityManager> _logger;
-        private readonly List<IdentityAccount> _accounts = new List<IdentityAccount>();
-        private Timer? _timer;
         private readonly object _lock = new object();
         private readonly TaskCompletionSource<bool> _initialLoadComplete = new TaskCompletionSource<bool>();
+        private readonly List<IdentityAccount> _accounts = new List<IdentityAccount>();
+        private Timer? _timer;
 
         public IdentityManager(IEnumerable<IAuthStrategy> strategies, ISecureTokenStore store, ILogger<IdentityManager> logger)
         {
@@ -29,11 +33,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
             {
                 foreach (var s in _strategies)
                 {
-                    s.AccountAuthenticated += async (sender, account) =>
+                    s.AccountAuthenticated += async (sender, eventArgs) =>
                     {
                         try
                         {
-                            await AddOrUpdateAccountAsync(account!).ConfigureAwait(false);
+                            await AddOrUpdateAccountAsync(eventArgs.Account).ConfigureAwait(false);
                         }
                         catch (Exception ex)
                         {

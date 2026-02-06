@@ -1,7 +1,11 @@
-using System.Text.Json.Serialization;
+// <copyright file="OpenAiModelDto.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
 namespace Synaxis.InferenceGateway.Infrastructure.External.OpenAi.Dto
 {
+    using System.Text.Json.Serialization;
+
     public sealed class OpenAiModelDto
     {
         [JsonPropertyName("id")]

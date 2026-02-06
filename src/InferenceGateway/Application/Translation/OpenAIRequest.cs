@@ -1,109 +1,82 @@
-using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
+// <copyright file="OpenAIRequest.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
-namespace Synaxis.InferenceGateway.Application.Translation;
-
-public class OpenAIRequest
+namespace Synaxis.InferenceGateway.Application.Translation
 {
-    [JsonPropertyName("model")]
-    [Required(ErrorMessage = "Model is required")]
-    public string Model { get; set; } = string.Empty;
+    using System.Collections.Generic;
+    using System.ComponentModel.DataAnnotations;
+    using System.Text.Json.Serialization;
 
-    [JsonPropertyName("messages")]
-    [Required(ErrorMessage = "Messages are required")]
-    [MinLength(1, ErrorMessage = "At least one message is required")]
-    public List<OpenAIMessage> Messages { get; set; } = new();
+    /// <summary>
+    /// Represents an OpenAI chat completion request.
+    /// </summary>
+    public class OpenAIRequest
+    {
+        /// <summary>
+        /// Gets or sets the model identifier to use for the request.
+        /// </summary>
+        [JsonPropertyName("model")]
+        [Required(ErrorMessage = "Model is required")]
+        public string Model { get; set; } = string.Empty;
 
-    [JsonPropertyName("tools")]
-    public List<OpenAITool>? Tools { get; set; }
+        /// <summary>
+        /// Gets or sets the list of messages in the conversation.
+        /// </summary>
+        [JsonPropertyName("messages")]
+        [Required(ErrorMessage = "Messages are required")]
+        [MinLength(1, ErrorMessage = "At least one message is required")]
+        public IList<OpenAIMessage> Messages { get; set; } = new List<OpenAIMessage>();
 
-    [JsonPropertyName("tool_choice")]
-    public object? ToolChoice { get; set; }
+        /// <summary>
+        /// Gets or sets the list of tools available for the model to call.
+        /// </summary>
+        [JsonPropertyName("tools")]
+        public IList<OpenAITool>? Tools { get; set; }
 
-    [JsonPropertyName("response_format")]
-    public object? ResponseFormat { get; set; }
+        /// <summary>
+        /// Gets or sets the tool choice configuration.
+        /// </summary>
+        [JsonPropertyName("tool_choice")]
+        public object? ToolChoice { get; set; }
 
-    [JsonPropertyName("stream")]
-    public bool Stream { get; set; }
+        /// <summary>
+        /// Gets or sets the response format configuration.
+        /// </summary>
+        [JsonPropertyName("response_format")]
+        public object? ResponseFormat { get; set; }
 
-    [JsonPropertyName("temperature")]
-    [Range(0.0, 2.0, ErrorMessage = "Temperature must be between 0 and 2")]
-    public double? Temperature { get; set; }
+        /// <summary>
+        /// Gets or sets a value indicating whether to stream the response.
+        /// </summary>
+        [JsonPropertyName("stream")]
+        public bool Stream { get; set; }
 
-    [JsonPropertyName("top_p")]
-    [Range(0.0, 1.0, ErrorMessage = "TopP must be between 0 and 1")]
-    public double? TopP { get; set; }
+        /// <summary>
+        /// Gets or sets the sampling temperature between 0 and 2.
+        /// </summary>
+        [JsonPropertyName("temperature")]
+        [Range(0.0, 2.0, ErrorMessage = "Temperature must be between 0 and 2")]
+        public double? Temperature { get; set; }
 
-    [JsonPropertyName("max_tokens")]
-    [Range(1, int.MaxValue, ErrorMessage = "MaxTokens must be a positive integer")]
-    public int? MaxTokens { get; set; }
+        /// <summary>
+        /// Gets or sets the nucleus sampling parameter between 0 and 1.
+        /// </summary>
+        [JsonPropertyName("top_p")]
+        [Range(0.0, 1.0, ErrorMessage = "TopP must be between 0 and 1")]
+        public double? TopP { get; set; }
 
-    [JsonPropertyName("stop")]
-    public object? Stop { get; set; }
-}
+        /// <summary>
+        /// Gets or sets the maximum number of tokens to generate.
+        /// </summary>
+        [JsonPropertyName("max_tokens")]
+        [Range(1, int.MaxValue, ErrorMessage = "MaxTokens must be a positive integer")]
+        public int? MaxTokens { get; set; }
 
-public class OpenAIMessage
-{
-    [JsonPropertyName("role")]
-    [Required(ErrorMessage = "Message role is required")]
-    [RegularExpression("^(system|user|assistant|tool)$", ErrorMessage = "Role must be one of: system, user, assistant, tool")]
-    public string Role { get; set; } = string.Empty;
-
-    [JsonPropertyName("content")]
-    public object? Content { get; set; }
-
-    [JsonPropertyName("name")]
-    public string? Name { get; set; }
-
-    [JsonPropertyName("tool_calls")]
-    public List<OpenAIToolCall>? ToolCalls { get; set; }
-
-    [JsonPropertyName("tool_call_id")]
-    public string? ToolCallId { get; set; }
-}
-
-public class OpenAITool
-{
-    [JsonPropertyName("type")]
-    public string Type { get; set; } = "function";
-
-    [JsonPropertyName("function")]
-    public OpenAIFunction? Function { get; set; }
-}
-
-public class OpenAIFunction
-{
-    [JsonPropertyName("name")]
-    [Required(ErrorMessage = "Function name is required")]
-    public string Name { get; set; } = string.Empty;
-
-    [JsonPropertyName("description")]
-    public string? Description { get; set; }
-
-    [JsonPropertyName("parameters")]
-    public object? Parameters { get; set; }
-}
-
-public class OpenAIToolCall
-{
-    [JsonPropertyName("id")]
-    [Required(ErrorMessage = "Tool call ID is required")]
-    public string Id { get; set; } = string.Empty;
-
-    [JsonPropertyName("type")]
-    public string Type { get; set; } = "function";
-
-    [JsonPropertyName("function")]
-    public OpenAIFunctionCall? Function { get; set; }
-}
-
-public class OpenAIFunctionCall
-{
-    [JsonPropertyName("name")]
-    [Required(ErrorMessage = "Function name is required")]
-    public string Name { get; set; } = string.Empty;
-
-    [JsonPropertyName("arguments")]
-    [Required(ErrorMessage = "Function arguments are required")]
-    public string Arguments { get; set; } = string.Empty;
+        /// <summary>
+        /// Gets or sets the stop sequences where the model will stop generating.
+        /// </summary>
+        [JsonPropertyName("stop")]
+        public object? Stop { get; set; }
+    }
 }

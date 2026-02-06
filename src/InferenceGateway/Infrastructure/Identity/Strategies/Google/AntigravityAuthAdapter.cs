@@ -1,11 +1,15 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Synaxis.InferenceGateway.Infrastructure.Auth;
-using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
+// <copyright file="AntigravityAuthAdapter.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
 namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
 {
+    using System;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Synaxis.InferenceGateway.Infrastructure.Auth;
+    using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
+
     public class AntigravityAuthAdapter : IAntigravityAuthManager
     {
         private readonly IdentityManager _identityManager;

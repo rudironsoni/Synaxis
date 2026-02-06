@@ -1,147 +1,152 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
-using GitHub.Copilot.SDK;
-using Microsoft.Extensions.AI;
-using Microsoft.Extensions.Logging;
+// <copyright file="GitHubCopilotChatClient.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
-namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub;
-
-public class GitHubCopilotChatClient : IChatClient, IDisposable
+namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
 {
-    private readonly ICopilotClient _copilotClient;
-    private readonly ILogger<GitHubCopilotChatClient>? _logger;
-    private readonly ChatClientMetadata _metadata = new ChatClientMetadata("GitHubCopilot", new Uri("https://copilot.github.com/"), "copilot");
-    private readonly string _modelId = "copilot";
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading;
+    using System.Threading.Channels;
+    using System.Threading.Tasks;
+    using global::GitHub.Copilot.SDK;
+    using Microsoft.Extensions.AI;
+    using Microsoft.Extensions.Logging;
 
-    public GitHubCopilotChatClient(ICopilotClient copilotClient, ILogger<GitHubCopilotChatClient>? logger = null)
+    public class GitHubCopilotChatClient : IChatClient, IDisposable
     {
-        _copilotClient = copilotClient ?? throw new ArgumentNullException(nameof(copilotClient));
-        _logger = logger;
-    }
+        private readonly ICopilotClient _copilotClient;
+        private readonly ILogger<GitHubCopilotChatClient>? _logger;
+        private readonly ChatClientMetadata _metadata = new ChatClientMetadata("GitHubCopilot", new Uri("https://copilot.github.com/"), "copilot");
+        private readonly string _modelId = "copilot";
 
-    public ChatClientMetadata Metadata => _metadata;
-
-    public async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
-    {
-        // Aggregate streaming updates into a single response for the non-streaming API
-        var parts = new List<string>();
-        await foreach (var update in GetStreamingResponseAsync(chatMessages, options, cancellationToken))
+        public GitHubCopilotChatClient(ICopilotClient copilotClient, ILogger<GitHubCopilotChatClient>? logger = null)
         {
-            // collect text parts from updates
-            foreach (var c in update.Contents)
+            _copilotClient = copilotClient ?? throw new ArgumentNullException(nameof(copilotClient));
+            _logger = logger;
+        }
+
+        public ChatClientMetadata Metadata => _metadata;
+
+        public async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
+        {
+            // Aggregate streaming updates into a single response for the non-streaming API
+            var parts = new List<string>();
+            await foreach (var update in GetStreamingResponseAsync(chatMessages, options, cancellationToken))
             {
-                if (c is TextContent tc)
+                // collect text parts from updates
+                foreach (var c in update.Contents)
                 {
-                    parts.Add(tc.Text ?? string.Empty);
+                    if (c is TextContent tc)
+                    {
+                        parts.Add(tc.Text ?? string.Empty);
+                    }
                 }
             }
+
+            var finalText = string.Join(string.Empty, parts.Where(p => !string.IsNullOrEmpty(p)));
+            var resp = new ChatResponse(new ChatMessage(ChatRole.Assistant, finalText ?? string.Empty));
+            resp.ModelId = _modelId;
+            return resp;
         }
 
-        var finalText = string.Join(string.Empty, parts.Where(p => !string.IsNullOrEmpty(p)));
-        var resp = new ChatResponse(new ChatMessage(ChatRole.Assistant, finalText ?? string.Empty));
-        resp.ModelId = _modelId;
-        return resp;
-    }
-
-    public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
-    {
-        if (chatMessages is null) throw new ArgumentNullException(nameof(chatMessages));
-
-        // Ensure client started
-        if (_copilotClient.State != ConnectionState.Connected)
+        public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            try
-            {
-                await _copilotClient.StartAsync(cancellationToken).ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogWarning(ex, "Failed to start CopilotClient");
-            }
-        }
+            if (chatMessages is null) throw new ArgumentNullException(nameof(chatMessages));
 
-        // Always create a fresh streaming session for each call
-        var sessionConfig = new SessionConfig { Streaming = true };
-        ICopilotSession copilotSession = await _copilotClient.CreateSessionAsync(sessionConfig, cancellationToken).ConfigureAwait(false);
-
-        var channel = Channel.CreateUnbounded<ChatResponseUpdate>();
-
-        IDisposable subscription = copilotSession.On(evt =>
-        {
-            try
+            // Ensure client started
+            if (_copilotClient.State != ConnectionState.Connected)
             {
-                switch (evt)
+                try
                 {
-                    case AssistantMessageDeltaEvent deltaEvent:
-                        channel.Writer.TryWrite(ToUpdate(deltaEvent.Data?.DeltaContent ?? string.Empty, deltaEvent));
-                        break;
-                    case AssistantMessageEvent assistantMessage:
-                        channel.Writer.TryWrite(ToUpdate(assistantMessage.Data?.Content ?? string.Empty, assistantMessage));
-                        break;
-                    case AssistantUsageEvent usageEvent:
-                        // Map usage to a textual representation
-                        var usageText = $"usage: input={usageEvent.Data?.InputTokens ?? 0} output={usageEvent.Data?.OutputTokens ?? 0}";
-                        channel.Writer.TryWrite(ToUpdate(usageText, usageEvent));
-                        break;
-                    case SessionIdleEvent idleEvent:
-                        channel.Writer.TryWrite(ToUpdate(string.Empty, idleEvent));
-                        channel.Writer.TryComplete();
-                        break;
-                    case SessionErrorEvent errorEvent:
-                        channel.Writer.TryWrite(ToUpdate(errorEvent.Data?.Message ?? "Session error", errorEvent));
-                        channel.Writer.TryComplete(new InvalidOperationException(errorEvent.Data?.Message ?? "Session error"));
-                        break;
-                    default:
-                        channel.Writer.TryWrite(ToUpdate(evt?.ToString() ?? string.Empty, evt));
-                        break;
+                    await _copilotClient.StartAsync(cancellationToken).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogWarning(ex, "Failed to start CopilotClient");
                 }
             }
-            catch (Exception ex)
+
+            // Always create a fresh streaming session for each call
+            var sessionConfig = new SessionConfig { Streaming = true };
+            ICopilotSession copilotSession = await _copilotClient.CreateSessionAsync(sessionConfig, cancellationToken).ConfigureAwait(false);
+
+            var channel = Channel.CreateUnbounded<ChatResponseUpdate>();
+
+            IDisposable subscription = copilotSession.On(evt =>
             {
-                _logger?.LogDebug(ex, "Error in Copilot event handler");
+                try
+                {
+                    switch (evt)
+                    {
+                        case AssistantMessageDeltaEvent deltaEvent:
+                            channel.Writer.TryWrite(ToUpdate(deltaEvent.Data?.DeltaContent ?? string.Empty, deltaEvent));
+                            break;
+                        case AssistantMessageEvent assistantMessage:
+                            channel.Writer.TryWrite(ToUpdate(assistantMessage.Data?.Content ?? string.Empty, assistantMessage));
+                            break;
+                        case AssistantUsageEvent usageEvent:
+                            // Map usage to a textual representation
+                            var usageText = $"usage: input={usageEvent.Data?.InputTokens ?? 0} output={usageEvent.Data?.OutputTokens ?? 0}";
+                            channel.Writer.TryWrite(ToUpdate(usageText, usageEvent));
+                            break;
+                        case SessionIdleEvent idleEvent:
+                            channel.Writer.TryWrite(ToUpdate(string.Empty, idleEvent));
+                            channel.Writer.TryComplete();
+                            break;
+                        case SessionErrorEvent errorEvent:
+                            channel.Writer.TryWrite(ToUpdate(errorEvent.Data?.Message ?? "Session error", errorEvent));
+                            channel.Writer.TryComplete(new InvalidOperationException(errorEvent.Data?.Message ?? "Session error"));
+                            break;
+                        default:
+                            channel.Writer.TryWrite(ToUpdate(evt?.ToString() ?? string.Empty, evt));
+                            break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogDebug(ex, "Error in Copilot event handler");
+                }
+            });
+
+            try
+            {
+                // Build a simple text-only prompt
+                string prompt = string.Join("\n", chatMessages.Select(m => m.Text));
+                var messageOptions = new MessageOptions { Prompt = prompt };
+
+                await copilotSession.SendAsync(messageOptions, cancellationToken).ConfigureAwait(false);
+
+                await foreach (var update in channel.Reader.ReadAllAsync(cancellationToken).ConfigureAwait(false))
+                {
+                    yield return update;
+                }
             }
-        });
-
-        try
-        {
-            // Build a simple text-only prompt
-            string prompt = string.Join("\n", chatMessages.Select(m => m.Text));
-            var messageOptions = new MessageOptions { Prompt = prompt };
-
-            await copilotSession.SendAsync(messageOptions, cancellationToken).ConfigureAwait(false);
-
-            await foreach (var update in channel.Reader.ReadAllAsync(cancellationToken).ConfigureAwait(false))
+            finally
             {
-                yield return update;
+                subscription.Dispose();
+                try { await copilotSession.DisposeAsync().ConfigureAwait(false); } catch { }
             }
         }
-        finally
+
+        private static ChatResponseUpdate ToUpdate(string text, object? raw)
         {
-            subscription.Dispose();
-            try { await copilotSession.DisposeAsync().ConfigureAwait(false); } catch { }
+            var update = new ChatResponseUpdate { Role = ChatRole.Assistant };
+            var tc = new TextContent(text ?? string.Empty) { RawRepresentation = raw };
+            update.Contents.Add(tc);
+            return update;
         }
-    }
 
-    private static ChatResponseUpdate ToUpdate(string text, object? raw)
-    {
-        var update = new ChatResponseUpdate { Role = ChatRole.Assistant };
-        var tc = new TextContent(text ?? string.Empty) { RawRepresentation = raw };
-        update.Contents.Add(tc);
-        return update;
-    }
+        public object? GetService(Type serviceType, object? serviceKey = null)
+        {
+            if (serviceType == typeof(ICopilotClient)) return _copilotClient;
+            return null;
+        }
 
-    public object? GetService(Type serviceType, object? serviceKey = null)
-    {
-        if (serviceType == typeof(ICopilotClient)) return _copilotClient;
-        return null;
-    }
-
-    public void Dispose()
-    {
-        try { _copilotClient.DisposeAsync().GetAwaiter().GetResult(); } catch { }
+        public void Dispose()
+        {
+            try { _copilotClient.DisposeAsync().GetAwaiter().GetResult(); } catch { }
+        }
     }
 }

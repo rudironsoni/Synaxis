@@ -1,65 +1,132 @@
-using System.Net;
+// <copyright file="ErrorCodes.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
-namespace Synaxis.InferenceGateway.WebApi.Middleware;
-
-/// <summary>
-/// Canonical error codes for consistent error handling across the Synaxis API.
-/// Based on OpenAI error format with additional Synaxis-specific codes.
-/// </summary>
-public static class ErrorCodes
+namespace Synaxis.InferenceGateway.WebApi.Middleware
 {
+    using System.Net;
+    /// <summary>
+    /// Canonical error codes for consistent error handling across the Synaxis API.
+    /// Based on OpenAI error format with additional Synaxis-specific codes.
+    /// </summary>
+    public static class ErrorCodes
+    {
     /// <summary>
     /// Client-side validation errors (400 Bad Request)
     /// </summary>
     public const string InvalidRequestError = "invalid_request_error";
+
+    /// <summary>
+    /// Invalid value provided for a parameter.
+    /// </summary>
     public const string InvalidValue = "invalid_value";
+
+    /// <summary>
+    /// Required field is missing from the request.
+    /// </summary>
     public const string MissingRequiredField = "missing_required_field";
+
+    /// <summary>
+    /// Parameter has an invalid type.
+    /// </summary>
     public const string InvalidParameterType = "invalid_parameter_type";
+
+    /// <summary>
+    /// Request body contains invalid JSON.
+    /// </summary>
     public const string InvalidJson = "invalid_json";
 
     /// <summary>
     /// Authentication and authorization errors (401, 403)
     /// </summary>
     public const string AuthenticationError = "authentication_error";
+
+    /// <summary>
+    /// The API key provided is invalid.
+    /// </summary>
     public const string InvalidApiKey = "invalid_api_key";
+
+    /// <summary>
+    /// The API key provided has expired.
+    /// </summary>
     public const string ExpiredApiKey = "expired_api_key";
+
+    /// <summary>
+    /// Access to the resource is forbidden.
+    /// </summary>
     public const string Forbidden = "forbidden";
+
+    /// <summary>
+    /// The user has insufficient permissions for the requested operation.
+    /// </summary>
     public const string InsufficientPermissions = "insufficient_permissions";
 
     /// <summary>
     /// Resource not found errors (404)
     /// </summary>
     public const string NotFound = "not_found";
+
+    /// <summary>
+    /// The requested model was not found.
+    /// </summary>
     public const string ModelNotFound = "model_not_found";
+
+    /// <summary>
+    /// The requested provider was not found.
+    /// </summary>
     public const string ProviderNotFound = "provider_not_found";
 
     /// <summary>
     /// Rate limiting errors (429)
     /// </summary>
     public const string RateLimitExceeded = "rate_limit_exceeded";
+
+    /// <summary>
+    /// Usage quota has been exceeded.
+    /// </summary>
     public const string QuotaExceeded = "quota_exceeded";
 
     /// <summary>
     /// Upstream provider errors (502, 503, 504)
     /// </summary>
     public const string UpstreamRoutingFailure = "upstream_routing_failure";
+
+    /// <summary>
+    /// The upstream provider returned an error.
+    /// </summary>
     public const string ProviderError = "provider_error";
+
+    /// <summary>
+    /// Bad gateway error from upstream provider.
+    /// </summary>
     public const string BadGateway = "bad_gateway";
+
+    /// <summary>
+    /// The service is temporarily unavailable.
+    /// </summary>
     public const string ServiceUnavailable = "service_unavailable";
+
+    /// <summary>
+    /// The gateway timed out waiting for a response.
+    /// </summary>
     public const string GatewayTimeout = "gateway_timeout";
 
     /// <summary>
     /// Internal server errors (500)
     /// </summary>
     public const string InternalError = "internal_error";
-    public const string ServerError = "server_error";
-}
 
-/// <summary>
-/// Maps error codes to HTTP status codes for consistent error responses.
-/// </summary>
-public static class ErrorCodeMappings
-{
+    /// <summary>
+    /// An unexpected server error occurred.
+    /// </summary>
+    public const string ServerError = "server_error";
+    }
+
+    /// <summary>
+    /// Maps error codes to HTTP status codes for consistent error responses.
+    /// </summary>
+    public static class ErrorCodeMappings
+    {
     /// <summary>
     /// Gets the HTTP status code for a given error code.
     /// </summary>
@@ -159,4 +226,6 @@ public static class ErrorCodeMappings
             _ => "api_error"
         };
     }
+    }
+
 }

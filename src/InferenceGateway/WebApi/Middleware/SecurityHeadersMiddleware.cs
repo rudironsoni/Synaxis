@@ -1,13 +1,16 @@
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
+// <copyright file="SecurityHeadersMiddleware.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
-namespace Synaxis.InferenceGateway.WebApi.Middleware;
-
-/// <summary>
-/// Middleware for adding security headers to all responses.
-/// </summary>
-public class SecurityHeadersMiddleware
+namespace Synaxis.InferenceGateway.WebApi.Middleware
 {
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.Extensions.Logging;
+    /// <summary>
+    /// Middleware for adding security headers to all responses.
+    /// </summary>
+    public class SecurityHeadersMiddleware
+    {
     private readonly RequestDelegate _next;
     private readonly ILogger<SecurityHeadersMiddleware> _logger;
     private readonly bool _isDevelopment;
@@ -45,16 +48,16 @@ public class SecurityHeadersMiddleware
             {
                 // Prevent MIME type sniffing
                 response.Headers.Append("X-Content-Type-Options", "nosniff");
-                
+
                 // Prevent clickjacking attacks
                 response.Headers.Append("X-Frame-Options", "DENY");
-                
+
                 // Enable XSS filtering
                 response.Headers.Append("X-XSS-Protection", "1; mode=block");
-                
+
                 // Control referrer information
                 response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
-                
+
                 // Restrict browser features
                 response.Headers.Append("Permissions-Policy", "geolocation=(), microphone=(), camera=(), payment=(), usb=()");
 
@@ -113,4 +116,6 @@ public class SecurityHeadersMiddleware
                "form-action 'self'; " +
                "upgrade-insecure-requests;";
     }
+    }
+
 }

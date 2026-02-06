@@ -1,75 +1,78 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
+// <copyright file="ProviderTool.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
-namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools;
-
-public class ProviderTool : IProviderTool
+namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
 {
-    private readonly ControlPlaneDbContext _db;
-    private readonly ILogger<ProviderTool> _logger;
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.Logging;
+    using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 
-    public ProviderTool(ControlPlaneDbContext db, ILogger<ProviderTool> logger)
+    public class ProviderTool : IProviderTool
     {
-        _db = db;
-        _logger = logger;
-    }
+        private readonly ControlPlaneDbContext _db;
+        private readonly ILogger<ProviderTool> _logger;
 
-    public async Task<bool> UpdateProviderConfigAsync(Guid organizationId, Guid providerId, string key, object value, CancellationToken ct = default)
-    {
-        try
+        public ProviderTool(ControlPlaneDbContext db, ILogger<ProviderTool> logger)
         {
-            // This is a placeholder - actual implementation would update OrganizationProvider settings
-            _logger.LogInformation("UpdateProviderConfig: OrgId={OrgId}, ProviderId={ProviderId}, Key={Key}", 
-                organizationId, providerId, key);
-            return true;
+            _db = db;
+            _logger = logger;
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to update provider config");
-            return false;
-        }
-    }
 
-    public async Task<ProviderStatus> GetProviderStatusAsync(Guid organizationId, Guid providerId, CancellationToken ct = default)
-    {
-        try
+        public async Task<bool> UpdateProviderConfigAsync(Guid organizationId, Guid providerId, string key, object value, CancellationToken ct = default)
         {
-            // Query from Operations schema - ProviderHealthStatus
-            var healthStatus = await _db.Database.SqlQuery<ProviderHealthStatusDto>(
-                $"SELECT \"IsHealthy\", \"LastCheckedAt\" FROM operations.\"ProviderHealthStatus\" WHERE \"OrganizationProviderId\" = {providerId} ORDER BY \"LastCheckedAt\" DESC LIMIT 1"
-            ).FirstOrDefaultAsync(ct);
+            try
+            {
+                // This is a placeholder - actual implementation would update OrganizationProvider settings
+                _logger.LogInformation("UpdateProviderConfig: OrgId={OrgId}, ProviderId={ProviderId}, Key={Key}",
+                    organizationId, providerId, key);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to update provider config");
+                return false;
+            }
+        }
 
-            return new ProviderStatus(
-                true, // IsEnabled - would need to query OrganizationProvider
-                healthStatus?.IsHealthy ?? true,
-                healthStatus?.LastCheckedAt
-            );
-        }
-        catch (Exception ex)
+        public async Task<ProviderStatus> GetProviderStatusAsync(Guid organizationId, Guid providerId, CancellationToken ct = default)
         {
-            _logger.LogError(ex, "Failed to get provider status");
-            return new ProviderStatus(false, false, null);
-        }
-    }
+            try
+            {
+                // Query from Operations schema - ProviderHealthStatus
+                var healthStatus = await _db.Database.SqlQuery<ProviderHealthStatusDto>(
+                    $"SELECT \"IsHealthy\", \"LastCheckedAt\" FROM operations.\"ProviderHealthStatus\" WHERE \"OrganizationProviderId\" = {providerId} ORDER BY \"LastCheckedAt\" DESC LIMIT 1").FirstOrDefaultAsync(ct);
 
-    public async Task<List<ProviderInfo>> GetAllProvidersAsync(Guid organizationId, CancellationToken ct = default)
-    {
-        try
-        {
-            // This would query OrganizationProvider from Operations schema
-            return new List<ProviderInfo>();
+                return new ProviderStatus(
+                    true, // IsEnabled - would need to query OrganizationProvider
+                    healthStatus?.IsHealthy ?? true,
+                    healthStatus?.LastCheckedAt);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get provider status");
+                return new ProviderStatus(false, false, null);
+            }
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to get all providers");
-            return new List<ProviderInfo>();
-        }
-    }
 
-    private class ProviderHealthStatusDto
-    {
-        public bool IsHealthy { get; set; }
-        public DateTime LastCheckedAt { get; set; }
+        public async Task<List<ProviderInfo>> GetAllProvidersAsync(Guid organizationId, CancellationToken ct = default)
+        {
+            try
+            {
+                // This would query OrganizationProvider from Operations schema
+                return new List<ProviderInfo>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get all providers");
+                return new List<ProviderInfo>();
+            }
+        }
+
+        private sealed class ProviderHealthStatusDto
+        {
+            public bool IsHealthy { get; set; }
+            public DateTime LastCheckedAt { get; set; }
+        }
     }
 }

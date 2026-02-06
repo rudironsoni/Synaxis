@@ -1,16 +1,28 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Options;
-using Synaxis.InferenceGateway.Application.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+// <copyright file="ConfigurationEndpoints.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
-namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard;
-
-public static class ConfigurationEndpoints
+namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
 {
+    using Microsoft.AspNetCore.Builder;
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.AspNetCore.Routing;
+    using Microsoft.Extensions.Options;
+    using Synaxis.InferenceGateway.Application.Configuration;
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+
+    /// <summary>
+    /// Endpoints for configuration management.
+    /// </summary>
+    public static class ConfigurationEndpoints
+    {
+    /// <summary>
+    /// Maps configuration endpoints to the application.
+    /// </summary>
+    /// <param name="app">The endpoint route builder.</param>
+    /// <returns>The endpoint route builder.</returns>
     public static IEndpointRouteBuilder MapConfigurationEndpoints(this IEndpointRouteBuilder app)
     {
         var configGroup = app.MapGroup("/api/config")
@@ -21,8 +33,8 @@ public static class ConfigurationEndpoints
         {
             var models = config.Value.CanonicalModels.Select(cm =>
             {
-                var providerConfig = config.Value.Providers.GetValueOrDefault(cm.Provider);
-                
+                var providerConfig = config.Value.Providers.TryGetValue(cm.Provider, out var providerConfigValue) ? providerConfigValue : null;
+
                 return new ModelConfigDto
                 {
                     Id = cm.Id,
@@ -35,9 +47,9 @@ public static class ConfigurationEndpoints
                         Tools = cm.Tools,
                         Vision = cm.Vision,
                         StructuredOutput = cm.StructuredOutput,
-                        LogProbs = cm.LogProbs
+                        LogProbs = cm.LogProbs,
                     },
-                    Priority = providerConfig?.Tier ?? 0
+                    Priority = providerConfig?.Tier ?? 0,
                 };
             }).ToList();
 
@@ -51,13 +63,13 @@ public static class ConfigurationEndpoints
             ModelUpdateRequest request,
             IOptions<SynaxisConfiguration> config) =>
         {
-            var model = config.Value.CanonicalModels.FirstOrDefault(m => m.Id == id);
+            var model = config.Value.CanonicalModels.FirstOrDefault(m => string.Equals(m.Id, id, StringComparison.Ordinal));
             if (model == null)
             {
                 return Results.NotFound(new { error = $"Model '{id}' not found" });
             }
 
-            var providerConfig = config.Value.Providers.GetValueOrDefault(model.Provider);
+            var providerConfig = config.Value.Providers.TryGetValue(model.Provider, out var providerConfigValue) ? providerConfigValue : null;
             if (providerConfig == null)
             {
                 return Results.NotFound(new { error = $"Provider '{model.Provider}' not found for model '{id}'" });
@@ -87,7 +99,7 @@ public static class ConfigurationEndpoints
                 return Results.BadRequest(new { success = false, error = "Model name is required" });
             }
 
-            var existingModel = config.Value.CanonicalModels.FirstOrDefault(m => m.Id == request.Model);
+            var existingModel = config.Value.CanonicalModels.FirstOrDefault(m => string.Equals(m.Id, request.Model, StringComparison.Ordinal));
             if (existingModel != null)
             {
                 return Results.Conflict(new { success = false, error = $"Model '{request.Model}' already exists" });
@@ -140,61 +152,192 @@ public static class ConfigurationEndpoints
 
         return app;
     }
-}
+    }
 
-public class ModelConfigDto
-{
-    public string Id { get; set; } = "";
-    public string Provider { get; set; } = "";
-    public string ModelPath { get; set; } = "";
+    /// <summary>
+    /// DTO for model configuration.
+    /// </summary>
+    public class ModelConfigDto
+    {
+    /// <summary>
+    /// Gets or sets the model ID.
+    /// </summary>
+    public string Id { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the provider name.
+    /// </summary>
+    public string Provider { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the model path.
+    /// </summary>
+    public string ModelPath { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the model is enabled.
+    /// </summary>
     public bool Enabled { get; set; }
-    public ModelCapabilitiesDto Capabilities { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets the model capabilities.
+    /// </summary>
+    public ModelCapabilitiesDto Capabilities { get; set; } = new ModelCapabilitiesDto();
+
+    /// <summary>
+    /// Gets or sets the model priority.
+    /// </summary>
     public int Priority { get; set; }
-}
+    }
 
-public class ModelCapabilitiesDto
-{
+    /// <summary>
+    /// DTO for model capabilities.
+    /// </summary>
+    public class ModelCapabilitiesDto
+    {
+    /// <summary>
+    /// Gets or sets a value indicating whether streaming is supported.
+    /// </summary>
     public bool Streaming { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether tools are supported.
+    /// </summary>
     public bool Tools { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether vision is supported.
+    /// </summary>
     public bool Vision { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether structured output is supported.
+    /// </summary>
     public bool StructuredOutput { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether log probabilities are supported.
+    /// </summary>
     public bool LogProbs { get; set; }
-}
+    }
 
-public class ModelUpdateRequest
-{
+    /// <summary>
+    /// Request to update model configuration.
+    /// </summary>
+    public class ModelUpdateRequest
+    {
+    /// <summary>
+    /// Gets or sets a value indicating whether the model is enabled.
+    /// </summary>
     public bool? Enabled { get; set; }
+
+    /// <summary>
+    /// Gets or sets the model priority.
+    /// </summary>
     public int? Priority { get; set; }
-}
+    }
 
-public class ModelCreateRequest
-{
-    public string Model { get; set; } = "";
-}
+    /// <summary>
+    /// Request to create a new model.
+    /// </summary>
+    public class ModelCreateRequest
+    {
+    /// <summary>
+    /// Gets or sets the model name.
+    /// </summary>
+    public string Model { get; set; } = string.Empty;
+    }
 
-public class SystemSettingsDto
-{
+    /// <summary>
+    /// DTO for system settings.
+    /// </summary>
+    public class SystemSettingsDto
+    {
+    /// <summary>
+    /// Gets or sets the maximum request body size.
+    /// </summary>
     public long MaxRequestBodySize { get; set; }
-    public string JwtIssuer { get; set; } = "";
-    public string JwtAudience { get; set; } = "";
+
+    /// <summary>
+    /// Gets or sets the JWT issuer.
+    /// </summary>
+    public string JwtIssuer { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the JWT audience.
+    /// </summary>
+    public string JwtAudience { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the total number of providers.
+    /// </summary>
     public int TotalProviders { get; set; }
+
+    /// <summary>
+    /// Gets or sets the number of enabled providers.
+    /// </summary>
     public int EnabledProviders { get; set; }
+
+    /// <summary>
+    /// Gets or sets the total number of models.
+    /// </summary>
     public int TotalModels { get; set; }
+
+    /// <summary>
+    /// Gets or sets the total number of aliases.
+    /// </summary>
     public int TotalAliases { get; set; }
-}
+    }
 
-public class UserPreferencesDto
-{
+    /// <summary>
+    /// DTO for user preferences.
+    /// </summary>
+    public class UserPreferencesDto
+    {
+    /// <summary>
+    /// Gets or sets the UI theme.
+    /// </summary>
     public string Theme { get; set; } = "dark";
-    public string DefaultModel { get; set; } = "default";
-    public bool StreamingEnabled { get; set; }
-    public bool NotificationsEnabled { get; set; }
-}
 
-public class UserPreferencesUpdateRequest
-{
+    /// <summary>
+    /// Gets or sets the default model.
+    /// </summary>
+    public string DefaultModel { get; set; } = "default";
+
+    /// <summary>
+    /// Gets or sets a value indicating whether streaming is enabled.
+    /// </summary>
+    public bool StreamingEnabled { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether notifications are enabled.
+    /// </summary>
+    public bool NotificationsEnabled { get; set; }
+    }
+
+    /// <summary>
+    /// Request to update user preferences.
+    /// </summary>
+    public class UserPreferencesUpdateRequest
+    {
+    /// <summary>
+    /// Gets or sets the UI theme.
+    /// </summary>
     public string? Theme { get; set; }
+
+    /// <summary>
+    /// Gets or sets the default model.
+    /// </summary>
     public string? DefaultModel { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether streaming is enabled.
+    /// </summary>
     public bool? StreamingEnabled { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether notifications are enabled.
+    /// </summary>
     public bool? NotificationsEnabled { get; set; }
+    }
 }

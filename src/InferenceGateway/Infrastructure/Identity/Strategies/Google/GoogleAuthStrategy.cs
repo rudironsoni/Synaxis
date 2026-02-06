@@ -1,26 +1,25 @@
-using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
-using Synaxis.InferenceGateway.Application.Configuration;
+// <copyright file="GoogleAuthStrategy.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
 namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Net.Http;
+    using System.Net.Http.Headers;
+    using System.Security.Cryptography;
+    using System.Text;
+    using System.Text.Json;
+    using System.Text.Json.Serialization;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Microsoft.Extensions.Logging;
+    using Synaxis.InferenceGateway.Application.Configuration;
+    using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
+
     public class GoogleAuthStrategy : IAuthStrategy
     {
-        public event EventHandler<IdentityAccount>? AccountAuthenticated;
-        private readonly AntigravitySettings _settings;
-        private readonly IHttpClientFactory _httpClientFactory;
-        private readonly ILogger<GoogleAuthStrategy> _logger;
-
         private const string AuthorizationEndpoint = "https://accounts.google.com/o/oauth2/v2/auth";
         private const string TokenEndpoint = "https://oauth2.googleapis.com/token";
         private const string UserInfoEndpoint = "https://www.googleapis.com/oauth2/v1/userinfo?alt=json";
@@ -29,14 +28,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
         {
             "https://cloudcode-pa.googleapis.com",
             "https://daily-cloudcode-pa.sandbox.googleapis.com",
-            "https://autopush-cloudcode-pa.sandbox.googleapis.com"
+            "https://autopush-cloudcode-pa.sandbox.googleapis.com",
         };
 
         private static readonly string[] FallbackEndpoints =
         {
             "https://daily-cloudcode-pa.sandbox.googleapis.com",
             "https://autopush-cloudcode-pa.sandbox.googleapis.com",
-            "https://cloudcode-pa.googleapis.com"
+            "https://cloudcode-pa.googleapis.com",
         };
 
         private static readonly string[] Scopes = new[]
@@ -45,6 +44,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
             "https://www.googleapis.com/auth/userinfo.email",
             "https://www.googleapis.com/auth/userinfo.profile",
         };
+
+        private readonly AntigravitySettings _settings;
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly ILogger<GoogleAuthStrategy> _logger;
+
+        public event EventHandler<AccountAuthenticatedEventArgs>? AccountAuthenticated;
 
         public GoogleAuthStrategy(AntigravitySettings settings, IHttpClientFactory httpClientFactory, ILogger<GoogleAuthStrategy> logger)
         {
@@ -119,8 +124,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
                 };
                 if (token.ExpiresInSeconds.HasValue)
                     account.ExpiresAt = DateTimeOffset.UtcNow.AddSeconds(token.ExpiresInSeconds.Value);
-                
-                AccountAuthenticated?.Invoke(this, account);
+
+                AccountAuthenticated?.Invoke(this, new AccountAuthenticatedEventArgs(account));
 
                 return result;
             }

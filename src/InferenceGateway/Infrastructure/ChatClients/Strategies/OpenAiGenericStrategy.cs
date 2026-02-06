@@ -1,35 +1,40 @@
-using Microsoft.Extensions.AI;
-using Synaxis.InferenceGateway.Application.ChatClients.Strategies;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
+// <copyright file="OpenAiGenericStrategy.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
-namespace Synaxis.InferenceGateway.Infrastructure.ChatClients.Strategies;
-
-public class OpenAiGenericStrategy : IChatClientStrategy
+namespace Synaxis.InferenceGateway.Infrastructure.ChatClients.Strategies
 {
-    private static readonly HashSet<string> SupportedTypes = new() 
-    { 
-        "OpenAI", "Groq", "OpenRouter", "Pollinations", "Gemini", "Nvidia", "HuggingFace", "Cohere" 
-    };
+    using System.Collections.Generic;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Microsoft.Extensions.AI;
+    using Synaxis.InferenceGateway.Application.ChatClients.Strategies;
 
-    public bool CanHandle(string providerType) => SupportedTypes.Contains(providerType);
-
-    public async Task<ChatResponse> ExecuteAsync(
-        IChatClient client, 
-        IEnumerable<ChatMessage> messages, 
-        ChatOptions options, 
-        CancellationToken ct)
+    public class OpenAiGenericStrategy : IChatClientStrategy
     {
-        return await client.GetResponseAsync(messages, options, ct);
-    }
+        private static readonly HashSet<string> SupportedTypes = new ()
+        {
+            "OpenAI", "Groq", "OpenRouter", "Pollinations", "Gemini", "Nvidia", "HuggingFace", "Cohere"
+        };
 
-    public IAsyncEnumerable<ChatResponseUpdate> ExecuteStreamingAsync(
-        IChatClient client, 
-        IEnumerable<ChatMessage> messages, 
-        ChatOptions options, 
-        CancellationToken ct)
-    {
-        return client.GetStreamingResponseAsync(messages, options, ct);
+        public bool CanHandle(string providerType) => SupportedTypes.Contains(providerType);
+
+        public async Task<ChatResponse> ExecuteAsync(
+            IChatClient client,
+            IEnumerable<ChatMessage> messages,
+            ChatOptions options,
+            CancellationToken ct)
+        {
+            return await client.GetResponseAsync(messages, options, ct);
+        }
+
+        public IAsyncEnumerable<ChatResponseUpdate> ExecuteStreamingAsync(
+            IChatClient client,
+            IEnumerable<ChatMessage> messages,
+            ChatOptions options,
+            CancellationToken ct)
+        {
+            return client.GetStreamingResponseAsync(messages, options, ct);
+        }
     }
 }

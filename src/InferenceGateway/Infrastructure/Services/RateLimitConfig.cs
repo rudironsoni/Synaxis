@@ -1,84 +1,89 @@
-namespace Synaxis.InferenceGateway.Infrastructure.Services;
+// <copyright file="RateLimitConfig.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
-/// <summary>
-/// Configuration for hierarchical rate limiting.
-/// </summary>
-public class RateLimitConfig
+namespace Synaxis.InferenceGateway.Infrastructure.Services
 {
     /// <summary>
-    /// Gets or sets the requests per minute (RPM) limit at the user level.
+    /// Configuration for hierarchical rate limiting.
     /// </summary>
-    public int? UserRpm { get; set; }
-
-    /// <summary>
-    /// Gets or sets the tokens per minute (TPM) limit at the user level.
-    /// </summary>
-    public int? UserTpm { get; set; }
-
-    /// <summary>
-    /// Gets or sets the requests per minute (RPM) limit at the group level.
-    /// </summary>
-    public int? GroupRpm { get; set; }
-
-    /// <summary>
-    /// Gets or sets the tokens per minute (TPM) limit at the group level.
-    /// </summary>
-    public int? GroupTpm { get; set; }
-
-    /// <summary>
-    /// Gets or sets the requests per minute (RPM) limit at the organization level.
-    /// </summary>
-    public int? OrganizationRpm { get; set; }
-
-    /// <summary>
-    /// Gets or sets the tokens per minute (TPM) limit at the organization level.
-    /// </summary>
-    public int? OrganizationTpm { get; set; }
-
-    /// <summary>
-    /// Gets or sets the time window for rate limiting. Defaults to 1 minute.
-    /// </summary>
-    public TimeSpan Window { get; set; } = TimeSpan.FromMinutes(1);
-
-    /// <summary>
-    /// Creates a default configuration with no limits.
-    /// </summary>
-    public static RateLimitConfig NoLimits()
+    public class RateLimitConfig
     {
-        return new RateLimitConfig();
-    }
+        /// <summary>
+        /// Gets or sets the requests per minute (RPM) limit at the user level.
+        /// </summary>
+        public int? UserRpm { get; set; }
 
-    /// <summary>
-    /// Creates a configuration with only user-level limits.
-    /// </summary>
-    public static RateLimitConfig UserLevel(int? rpm = null, int? tpm = null)
-    {
-        return new RateLimitConfig
+        /// <summary>
+        /// Gets or sets the tokens per minute (TPM) limit at the user level.
+        /// </summary>
+        public int? UserTpm { get; set; }
+
+        /// <summary>
+        /// Gets or sets the requests per minute (RPM) limit at the group level.
+        /// </summary>
+        public int? GroupRpm { get; set; }
+
+        /// <summary>
+        /// Gets or sets the tokens per minute (TPM) limit at the group level.
+        /// </summary>
+        public int? GroupTpm { get; set; }
+
+        /// <summary>
+        /// Gets or sets the requests per minute (RPM) limit at the organization level.
+        /// </summary>
+        public int? OrganizationRpm { get; set; }
+
+        /// <summary>
+        /// Gets or sets the tokens per minute (TPM) limit at the organization level.
+        /// </summary>
+        public int? OrganizationTpm { get; set; }
+
+        /// <summary>
+        /// Gets or sets the time window for rate limiting. Defaults to 1 minute.
+        /// </summary>
+        public TimeSpan Window { get; set; } = TimeSpan.FromMinutes(1);
+
+        /// <summary>
+        /// Creates a default configuration with no limits.
+        /// </summary>
+        public static RateLimitConfig NoLimits()
         {
-            UserRpm = rpm,
-            UserTpm = tpm
-        };
-    }
+            return new RateLimitConfig();
+        }
 
-    /// <summary>
-    /// Creates a configuration with organization-level limits.
-    /// </summary>
-    public static RateLimitConfig OrganizationLevel(int? rpm = null, int? tpm = null)
-    {
-        return new RateLimitConfig
+        /// <summary>
+        /// Creates a configuration with only user-level limits.
+        /// </summary>
+        public static RateLimitConfig UserLevel(int? rpm = null, int? tpm = null)
         {
-            OrganizationRpm = rpm,
-            OrganizationTpm = tpm
-        };
-    }
+            return new RateLimitConfig
+            {
+                UserRpm = rpm,
+                UserTpm = tpm
+            };
+        }
 
-    /// <summary>
-    /// Validates the configuration and returns true if any limits are set.
-    /// </summary>
-    public bool HasLimits()
-    {
-        return UserRpm.HasValue || UserTpm.HasValue ||
-               GroupRpm.HasValue || GroupTpm.HasValue ||
-               OrganizationRpm.HasValue || OrganizationTpm.HasValue;
+        /// <summary>
+        /// Creates a configuration with organization-level limits.
+        /// </summary>
+        public static RateLimitConfig OrganizationLevel(int? rpm = null, int? tpm = null)
+        {
+            return new RateLimitConfig
+            {
+                OrganizationRpm = rpm,
+                OrganizationTpm = tpm
+            };
+        }
+
+        /// <summary>
+        /// Validates the configuration and returns true if any limits are set.
+        /// </summary>
+        public bool HasLimits()
+        {
+            return UserRpm.HasValue || UserTpm.HasValue ||
+                   GroupRpm.HasValue || GroupTpm.HasValue ||
+                   OrganizationRpm.HasValue || OrganizationTpm.HasValue;
+        }
     }
 }

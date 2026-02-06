@@ -1,16 +1,27 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
-using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
+// <copyright file="IdentityEndpoints.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
 namespace Synaxis.InferenceGateway.WebApi.Endpoints.Identity
 {
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Builder;
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.AspNetCore.Mvc;
+    using Microsoft.AspNetCore.Routing;
+    using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
+
+    /// <summary>
+    /// Endpoints for identity and authentication management.
+    /// </summary>
     public static class IdentityEndpoints
     {
+        /// <summary>
+        /// Maps identity-related endpoints to the application.
+        /// </summary>
+        /// <param name="app">The endpoint route builder.</param>
         public static void MapIdentityEndpoints(this IEndpointRouteBuilder app)
         {
             var group = app.MapGroup("/api/identity")
@@ -43,9 +54,19 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Identity
             });
         }
 
+        /// <summary>
+        /// Request model for completing authentication.
+        /// </summary>
         public class CompleteRequest
         {
+            /// <summary>
+            /// Gets or sets the authorization code.
+            /// </summary>
             public string Code { get; set; } = string.Empty;
+
+            /// <summary>
+            /// Gets or sets the state parameter for CSRF protection.
+            /// </summary>
             public string State { get; set; } = string.Empty;
         }
     }

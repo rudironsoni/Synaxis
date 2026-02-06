@@ -1,15 +1,33 @@
-using Synaxis.InferenceGateway.Application.Configuration;
-using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
+// <copyright file="EnrichedCandidate.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
 namespace Synaxis.InferenceGateway.Application.Routing;
 
-public record EnrichedCandidate(ProviderConfig Config, ModelCost? Cost, string CanonicalModelPath)
+using Synaxis.InferenceGateway.Application.Configuration;
+using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
+
+/// <summary>
+/// Represents a provider candidate enriched with cost information and model path for routing decisions.
+/// </summary>
+/// <param name="config">The provider configuration details.</param>
+/// <param name="cost">Optional cost information for the model.</param>
+/// <param name="canonicalModelPath">The canonical path identifier for the model.</param>
+public record EnrichedCandidate(ProviderConfig config, ModelCost? cost, string canonicalModelPath)
 {
-    public string Key => Config.Key!;
     /// <summary>
-    /// Determines if this candidate is a free tier provider.
+    /// Gets the unique identifier key for this provider configuration.
+    /// </summary>
+    public string Key => this.config.Key!;
+
+    /// <summary>
+    /// Gets a value indicating whether this candidate is a free tier provider.
     /// Checks both config flag (static free providers) and cost database (dynamic free tier).
     /// </summary>
-    public bool IsFree => Config.IsFree || (Cost?.FreeTier ?? false);
-    public decimal CostPerToken => Cost?.CostPerToken ?? decimal.MaxValue;
+    public bool IsFree => this.config.IsFree || (this.cost?.FreeTier ?? false);
+
+    /// <summary>
+    /// Gets the cost per token for this provider, or MaxValue if no cost information is available.
+    /// </summary>
+    public decimal CostPerToken => this.cost?.CostPerToken ?? decimal.MaxValue;
 }
