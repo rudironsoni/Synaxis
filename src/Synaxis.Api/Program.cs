@@ -13,6 +13,14 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
+// Add health checks
+builder.Services.AddHealthChecks()
+    .AddNpgSql(
+        connectionString: builder.Configuration.GetConnectionString("DefaultConnection") 
+            ?? "Host=localhost;Database=synaxis;Username=postgres;Password=postgres",
+        name: "postgres",
+        tags: new[] { "db", "postgres" });
+
 // Configure Database
 builder.Services.AddDbContext<SynaxisDbContext>(options =>
 {
@@ -89,6 +97,11 @@ app.UseAuthorization();
 
 // Add Super Admin security middleware
 app.UseMiddleware<SuperAdminSecurityMiddleware>();
+
+// Map health check endpoints
+app.MapHealthChecks("/health");
+app.MapHealthChecks("/health/ready");
+app.MapHealthChecks("/health/live");
 
 app.MapControllers();
 
