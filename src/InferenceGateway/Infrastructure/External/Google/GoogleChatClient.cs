@@ -33,18 +33,18 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.Google
 
         public GoogleChatClient(string apiKey, string modelId, HttpClient httpClient, ILogger<GoogleChatClient>? logger = null)
         {
-            _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-            _modelId = modelId ?? "default";
-            _logger = logger;
+            this._httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+            this._modelId = modelId ?? "default";
+            this._logger = logger;
             if (!string.IsNullOrEmpty(apiKey))
             {
                 _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
             }
             _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Synaxis/1.0");
-            _metadata = new ChatClientMetadata("Google.Gemini", new Uri(Endpoint), _modelId);
+            this._metadata = new ChatClientMetadata("Google.Gemini", new Uri(Endpoint), _modelId);
         }
 
-        public ChatClientMetadata Metadata => _metadata;
+        public ChatClientMetadata Metadata => this._metadata;
 
         public async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
         {
@@ -123,7 +123,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.Google
             };
         }
 
-        public void Dispose() => _httpClient.Dispose();
+        public void Dispose() => this._httpClient.Dispose();
         public object? GetService(Type serviceType, object? serviceKey = null) => null;
 
         private class OpenAiChatResponse

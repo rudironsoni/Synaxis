@@ -26,12 +26,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.AiHorde
 
         public AiHordeChatClient(HttpClient? httpClient = null, string apiKey = "0000000000")
         {
-            _httpClient = httpClient ?? new HttpClient();
-            _apiKey = apiKey;
-            _metadata = new ChatClientMetadata("AiHorde", new Uri(GenerateUrl), "aihorde");
+            this._httpClient = httpClient ?? new HttpClient();
+            this._apiKey = apiKey;
+            this._metadata = new ChatClientMetadata("AiHorde", new Uri(GenerateUrl), "aihorde");
         }
 
-        public ChatClientMetadata Metadata => _metadata;
+        public ChatClientMetadata Metadata => this._metadata;
 
         public async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
         {

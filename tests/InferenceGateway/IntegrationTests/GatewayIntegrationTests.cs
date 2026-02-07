@@ -38,7 +38,7 @@ public class GatewayIntegrationTests : IClassFixture<SynaxisWebApplicationFactor
                     ["Synaxis:InferenceGateway:CanonicalModels:1:Provider"] = "test-provider",
                     ["Synaxis:InferenceGateway:CanonicalModels:1:ModelPath"] = "no-stream",
                     ["Synaxis:InferenceGateway:CanonicalModels:1:Streaming"] = "false",
-                    
+
                     ["Synaxis:InferenceGateway:Providers:test-provider:Type"] = "mock",
                     ["Synaxis:InferenceGateway:Providers:test-provider:Tier"] = "1",
                     ["Synaxis:InferenceGateway:Providers:test-provider:Models:0"] = "test-provider/model",
@@ -176,7 +176,7 @@ public class GatewayIntegrationTests : IClassFixture<SynaxisWebApplicationFactor
         };
 
         var response = await _client.PostAsJsonAsync("/openai/v1/responses", request);
-        
+
         if (response.StatusCode == HttpStatusCode.InternalServerError)
         {
             var error = await response.Content.ReadAsStringAsync();
@@ -214,10 +214,10 @@ public class GatewayIntegrationTests : IClassFixture<SynaxisWebApplicationFactor
         };
 
         var response = await client.PostAsJsonAsync("/openai/v1/chat/completions", request);
-        
+
         // The middleware returns 400 for ArgumentException (capability mismatch)
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        
+
         var content = await response.Content.ReadAsStringAsync();
         Assert.Contains("no providers available", content.ToLowerInvariant());
     }

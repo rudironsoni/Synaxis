@@ -13,17 +13,17 @@ namespace Synaxis.InferenceGateway.WebApi.Hubs
     /// </summary>
     public class RealTimeNotifier : IRealTimeNotifier
     {
-    private readonly IHubContext<SynaxisHub> _hubContext;
-    private readonly ILogger<RealTimeNotifier> _logger;
+        private readonly IHubContext<SynaxisHub> _hubContext;
+        private readonly ILogger<RealTimeNotifier> _logger;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="RealTimeNotifier"/> class.
-    /// </summary>
-    /// <param name="hubContext">The hub context.</param>
-    /// <param name="logger">The logger instance.</param>
-    public RealTimeNotifier(
-        IHubContext<SynaxisHub> hubContext,
-        ILogger<RealTimeNotifier> logger)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RealTimeNotifier"/> class.
+        /// </summary>
+        /// <param name="hubContext">The hub context.</param>
+        /// <param name="logger">The logger instance.</param>
+        public RealTimeNotifier(
+            IHubContext<SynaxisHub> hubContext,
+            ILogger<RealTimeNotifier> logger)
         {
             this._hubContext = hubContext ?? throw new ArgumentNullException(nameof(hubContext));
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));

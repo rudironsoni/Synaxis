@@ -39,7 +39,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             // Setup dependency injection with real components
             var services = new ServiceCollection();
-            
+
             // Add logging
             services.AddLogging(builder => builder.AddXUnit(output));
 
@@ -79,7 +79,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             });
 
             var mockStore = new Mock<IControlPlaneStore>();
-            
+
             services.AddSingleton(mockHealthStore.Object);
             services.AddSingleton(mockQuotaTracker.Object);
             services.AddSingleton(mockProviderRegistry.Object);
@@ -88,7 +88,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             _serviceProvider = services.BuildServiceProvider();
             _dbContext = _serviceProvider.GetRequiredService<ControlPlaneDbContext>();
-            
+
             // Seed the database with test data
             SeedDatabase();
         }
@@ -100,7 +100,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             _dbContext.ModelCosts.Add(new ModelCost { Provider = "provider-2", Model = "test-model", CostPerToken = 0.002m, FreeTier = false });
             _dbContext.ModelCosts.Add(new ModelCost { Provider = "provider-3", Model = "test-model", CostPerToken = 0.003m, FreeTier = false });
             _dbContext.ModelCosts.Add(new ModelCost { Provider = "fallback-provider", Model = "fallback-model", CostPerToken = 0.000m, FreeTier = true });
-            
+
             _dbContext.SaveChanges();
         }
 
@@ -130,21 +130,21 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             // Assert - Should return providers sorted by: free first, then cost, then tier
             Assert.Equal(3, result.Count);
-            
+
             // Debug output to see actual results
             foreach (var candidate in result)
             {
                 _output.WriteLine($"Provider: {candidate.Key}, IsFree: {candidate.IsFree}, CostPerToken: {candidate.CostPerToken}");
             }
-            
+
             // First provider should be free tier
             Assert.Equal("provider-1", result[0].Key);
             Assert.True(result[0].IsFree, $"Expected provider-1 to be free, but IsFree was {result[0].IsFree}");
-            
+
             // Second provider should be cheapest paid
             Assert.Equal("provider-2", result[1].Key);
             Assert.Equal(0.002m, result[1].CostPerToken);
-            
+
             // Third provider should be most expensive
             Assert.Equal("provider-3", result[2].Key);
             Assert.Equal(0.003m, result[2].CostPerToken);

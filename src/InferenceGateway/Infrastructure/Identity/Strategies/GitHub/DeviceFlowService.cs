@@ -20,8 +20,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
 
         public DeviceFlowService(HttpClient http, ILogger<DeviceFlowService> logger)
         {
-            _http = http ?? throw new ArgumentNullException(nameof(http));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._http = http ?? throw new ArgumentNullException(nameof(http));
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         /// <summary>

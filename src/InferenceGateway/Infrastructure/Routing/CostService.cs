@@ -20,7 +20,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Routing
                 throw new ArgumentNullException(nameof(dbContext));
             }
 
-            _dbContext = dbContext;
+            this._dbContext = dbContext;
         }
 
         public async Task<ModelCost?> GetCostAsync(string provider, string model, CancellationToken cancellationToken = default)

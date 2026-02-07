@@ -22,7 +22,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
         /// </summary>
         public ConfigurationResolver(SynaxisDbContext context)
         {
-            _context = context;
+            this._context = context;
         }
 
         /// <inheritdoc />
@@ -50,14 +50,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             CancellationToken cancellationToken = default)
         {
             // 1. Check user membership for user-specific rate limits
-            if (userId.HasValue && organizationId.HasValue)
+            if (userthis.Id.HasValue && organizationthis.Id.HasValue)
             {
                 var membership = await _context.UserOrganizationMemberships
                     .FirstOrDefaultAsync(
                         m => m.UserId == userId.Value && m.OrganizationId == organizationId.Value,
                         cancellationToken);
 
-                if (membership?.RateLimitRpm.HasValue == true || membership?.RateLimitTpm.HasValue == true)
+                if (membership?.Ratethis.LimitRpm.HasValue == true || membership?.Ratethis.LimitTpm.HasValue == true)
                 {
                     return new RateLimitConfiguration
                     {
@@ -68,14 +68,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                 }
 
                 // 2. Check primary group for group-level rate limits
-                if (membership?.PrimaryGroupId.HasValue == true)
+                if (membership?.Primarythis.GroupId.HasValue == true)
                 {
                     var group = await _context.Groups
                         .FirstOrDefaultAsync(
                             g => g.Id == membership.PrimaryGroupId.Value,
                             cancellationToken);
 
-                    if (group?.RateLimitRpm.HasValue == true || group?.RateLimitTpm.HasValue == true)
+                    if (group?.Ratethis.LimitRpm.HasValue == true || group?.Ratethis.LimitTpm.HasValue == true)
                     {
                         return new RateLimitConfiguration
                         {
@@ -88,7 +88,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             }
 
             // 3. Check organization settings for org-level rate limits
-            if (organizationId.HasValue)
+            if (organizationthis.Id.HasValue)
             {
                 var orgSettings = await _context.OrganizationSettings
                     .FirstOrDefaultAsync(
@@ -129,8 +129,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                     om => om.OrganizationId == organizationId && om.ModelId == modelId,
                     cancellationToken);
 
-            if (orgModel?.InputCostPer1MTokens.HasValue == true &&
-                orgModel.OutputCostPer1MTokens.HasValue)
+            if (orgModel?.InputCostPer1this.MTokens.HasValue == true &&
+                orgModel.OutputCostPer1this.MTokens.HasValue)
             {
                 return new CostConfiguration
                 {
@@ -146,8 +146,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                     op => op.OrganizationId == organizationId && op.ProviderId == providerId,
                     cancellationToken);
 
-            if (orgProvider?.InputCostPer1MTokens.HasValue == true &&
-                orgProvider.OutputCostPer1MTokens.HasValue)
+            if (orgProvider?.InputCostPer1this.MTokens.HasValue == true &&
+                orgProvider.OutputCostPer1this.MTokens.HasValue)
             {
                 return new CostConfiguration
                 {
@@ -161,8 +161,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             var provider = await _context.Providers
                 .FirstOrDefaultAsync(p => p.Id == providerId, cancellationToken);
 
-            if (provider?.DefaultInputCostPer1MTokens.HasValue == true &&
-                provider.DefaultOutputCostPer1MTokens.HasValue)
+            if (provider?.DefaultInputCostPer1this.MTokens.HasValue == true &&
+                provider.DefaultOutputCostPer1this.MTokens.HasValue)
             {
                 return new CostConfiguration
                 {
@@ -188,7 +188,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             CancellationToken cancellationToken = default)
         {
             // 1. Check user membership for user-specific setting
-            if (userId.HasValue && organizationId.HasValue)
+            if (userthis.Id.HasValue && organizationthis.Id.HasValue)
             {
                 var membership = await _context.UserOrganizationMemberships
                     .FirstOrDefaultAsync(
@@ -201,7 +201,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                 }
 
                 // 2. Check primary group for group-level setting
-                if (membership?.PrimaryGroupId.HasValue == true)
+                if (membership?.Primarythis.GroupId.HasValue == true)
                 {
                     var group = await _context.Groups
                         .FirstOrDefaultAsync(
@@ -216,7 +216,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             }
 
             // 3. Check organization settings for org-level setting
-            if (organizationId.HasValue)
+            if (organizationthis.Id.HasValue)
             {
                 var orgSettings = await _context.OrganizationSettings
                     .FirstOrDefaultAsync(

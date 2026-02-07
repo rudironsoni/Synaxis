@@ -19,8 +19,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
 
         public FileTokenStore(string path, ILogger<FileTokenStore> logger)
         {
-            _path = path ?? throw new ArgumentNullException(nameof(path));
-            _logger = logger;
+            this._path = path ?? throw new ArgumentNullException(nameof(path));
+            this._logger = logger;
         }
 
         public async Task<List<AntigravityAccount>> LoadAsync()

@@ -31,7 +31,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         {
             using var dbContext = CreateInMemoryDbContext();
             var service = new CostService(dbContext);
-            
+
             Assert.NotNull(service);
         }
 
@@ -54,16 +54,16 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         {
             // Arrange
             using var dbContext = CreateInMemoryDbContext();
-            var expectedCost = new ModelCost 
-            { 
-                Provider = "Groq", 
-                Model = "llama-3.3-70b-versatile", 
+            var expectedCost = new ModelCost
+            {
+                Provider = "Groq",
+                Model = "llama-3.3-70b-versatile",
                 CostPerToken = 0.0001m,
                 FreeTier = false
             };
             dbContext.ModelCosts.Add(expectedCost);
             await dbContext.SaveChangesAsync();
-            
+
             var service = new CostService(dbContext);
 
             // Act
@@ -82,16 +82,16 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         {
             // Arrange
             using var dbContext = CreateInMemoryDbContext();
-            var freeCost = new ModelCost 
-            { 
-                Provider = "DeepSeek", 
-                Model = "deepseek-chat", 
+            var freeCost = new ModelCost
+            {
+                Provider = "DeepSeek",
+                Model = "deepseek-chat",
                 CostPerToken = 0m,
                 FreeTier = true
             };
             dbContext.ModelCosts.Add(freeCost);
             await dbContext.SaveChangesAsync();
-            
+
             var service = new CostService(dbContext);
 
             // Act
@@ -115,7 +115,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             dbContext.ModelCosts.Add(cost1);
             dbContext.ModelCosts.Add(cost2);
             await dbContext.SaveChangesAsync();
-            
+
             var service = new CostService(dbContext);
 
             // Act
@@ -137,7 +137,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             dbContext.ModelCosts.Add(cost1);
             dbContext.ModelCosts.Add(cost2);
             await dbContext.SaveChangesAsync();
-            
+
             var service = new CostService(dbContext);
 
             // Act
@@ -199,7 +199,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var cost = new ModelCost { Provider = longProvider, Model = longModel, CostPerToken = 0.0001m };
             dbContext.ModelCosts.Add(cost);
             await dbContext.SaveChangesAsync();
-            
+
             var service = new CostService(dbContext);
 
             // Act
@@ -222,7 +222,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var cost = new ModelCost { Provider = provider, Model = model, CostPerToken = 0.0001m };
             dbContext.ModelCosts.Add(cost);
             await dbContext.SaveChangesAsync();
-            
+
             var service = new CostService(dbContext);
 
             // Act
@@ -244,7 +244,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             dbContext.ModelCosts.Add(cost1);
             dbContext.ModelCosts.Add(cost2);
             await dbContext.SaveChangesAsync();
-            
+
             var service = new CostService(dbContext);
 
             // Act

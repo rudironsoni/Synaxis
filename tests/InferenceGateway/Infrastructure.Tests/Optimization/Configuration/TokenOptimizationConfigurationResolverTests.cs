@@ -23,7 +23,7 @@ public class TokenOptimizationConfigurationResolverTests : IAsyncLifetime
         _dbOptions = new DbContextOptionsBuilder<OptimizationDbContext>()
             .UseInMemoryDatabase(databaseName: $"TokenOptimizationTests_{Guid.NewGuid()}")
             .Options;
-        
+
         _dbContext = new OptimizationDbContext(_dbOptions);
         return Task.CompletedTask;
     }
@@ -112,7 +112,7 @@ public class TokenOptimizationConfigurationResolverTests : IAsyncLifetime
         // Assert
         var saved = await _dbContext.TokenOptimizationConfigurations
             .FirstOrDefaultAsync(c => c.ProviderId == "anthropic-claude");
-        
+
         Assert.NotNull(saved);
         Assert.Equal("anthropic-claude", saved.ProviderId);
         Assert.True(saved.EnablePromptCaching);
@@ -158,7 +158,7 @@ public class TokenOptimizationConfigurationResolverTests : IAsyncLifetime
         // Assert
         var saved = await _dbContext.TokenOptimizationConfigurations
             .FirstOrDefaultAsync(c => c.ProviderId == providerId);
-        
+
         Assert.NotNull(saved);
         Assert.True(saved.EnablePromptCaching);
         Assert.Equal(16000, saved.MaxContextTokens);
@@ -190,7 +190,7 @@ public class TokenOptimizationConfigurationResolverTests : IAsyncLifetime
         // Assert
         var deleted = await _dbContext.TokenOptimizationConfigurations
             .FirstOrDefaultAsync(c => c.ProviderId == providerId);
-        
+
         Assert.Null(deleted);
     }
 
@@ -341,7 +341,7 @@ public class TokenOptimizationConfigurationResolverTests : IAsyncLifetime
         // Create two separate contexts to simulate concurrent access
         var context1 = new OptimizationDbContext(_dbOptions);
         var context2 = new OptimizationDbContext(_dbOptions);
-        
+
         var resolver1 = new TokenOptimizationConfigurationResolver(context1);
         var resolver2 = new TokenOptimizationConfigurationResolver(context2);
 
@@ -368,7 +368,7 @@ public class TokenOptimizationConfigurationResolverTests : IAsyncLifetime
         // Assert - Last write wins
         var final = await _dbContext.TokenOptimizationConfigurations
             .FirstOrDefaultAsync(c => c.ProviderId == providerId);
-        
+
         Assert.NotNull(final);
         Assert.Equal(16000, final.MaxContextTokens);
 
@@ -382,7 +382,7 @@ public class TokenOptimizationConfigurationResolverTests : IAsyncLifetime
         // Arrange
         var resolver = new TokenOptimizationConfigurationResolver(_dbContext);
         var configs = new List<TokenOptimizationConfiguration>();
-        
+
         for (int i = 0; i < 100; i++)
         {
             configs.Add(new TokenOptimizationConfiguration
@@ -502,7 +502,7 @@ public class TokenOptimizationConfigurationResolver
     }
 
     public async Task<TokenOptimizationConfiguration?> GetConfigurationAsync(
-        string providerId, 
+        string providerId,
         CancellationToken cancellationToken)
     {
         return await _dbContext.TokenOptimizationConfigurations
@@ -511,7 +511,7 @@ public class TokenOptimizationConfigurationResolver
     }
 
     public async Task CreateConfigurationAsync(
-        TokenOptimizationConfiguration configuration, 
+        TokenOptimizationConfiguration configuration,
         CancellationToken cancellationToken)
     {
         await _dbContext.TokenOptimizationConfigurations.AddAsync(configuration, cancellationToken);
@@ -519,7 +519,7 @@ public class TokenOptimizationConfigurationResolver
     }
 
     public async Task UpdateConfigurationAsync(
-        TokenOptimizationConfiguration configuration, 
+        TokenOptimizationConfiguration configuration,
         CancellationToken cancellationToken)
     {
         _dbContext.TokenOptimizationConfigurations.Update(configuration);
@@ -527,12 +527,12 @@ public class TokenOptimizationConfigurationResolver
     }
 
     public async Task DeleteConfigurationAsync(
-        string providerId, 
+        string providerId,
         CancellationToken cancellationToken)
     {
         var config = await _dbContext.TokenOptimizationConfigurations
             .FirstOrDefaultAsync(c => c.ProviderId == providerId, cancellationToken);
-        
+
         if (config != null)
         {
             _dbContext.TokenOptimizationConfigurations.Remove(config);
@@ -549,7 +549,7 @@ public class TokenOptimizationConfigurationResolver
     }
 
     public async Task<List<TokenOptimizationConfiguration>> GetConfigurationsByStrategyAsync(
-        string strategy, 
+        string strategy,
         CancellationToken cancellationToken)
     {
         return await _dbContext.TokenOptimizationConfigurations

@@ -27,8 +27,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
 
         public ModelDiscoveryAgent(IServiceProvider serviceProvider, ILogger<ModelDiscoveryAgent> logger)
         {
-            _serviceProvider = serviceProvider;
-            _logger = logger;
+            this._serviceProvider = serviceProvider;
+            this._logger = logger;
         }
 
         public async Task Execute(IJobExecutionContext context)

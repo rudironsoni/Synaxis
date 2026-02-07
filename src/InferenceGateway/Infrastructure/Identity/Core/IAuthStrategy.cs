@@ -36,7 +36,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
 
         public AccountAuthenticatedEventArgs(IdentityAccount account)
         {
-            Account = account;
+            this.Account = account;
         }
     }
 

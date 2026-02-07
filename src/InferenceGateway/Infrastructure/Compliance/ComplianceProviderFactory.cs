@@ -30,7 +30,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
             var gdprProvider = new GdprComplianceProvider(dbContext);
             var lgpdProvider = new LgpdComplianceProvider(dbContext);
 
-            _providers = new Dictionary<string, IComplianceProvider>(StringComparer.OrdinalIgnoreCase)
+            this._providers = new Dictionary<string, IComplianceProvider>(StringComparer.OrdinalIgnoreCase)
             {
                 // GDPR for EU regions
                 ["EU"] = gdprProvider,
@@ -47,7 +47,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
             };
 
             // Default to GDPR as it's most stringent
-            _defaultProvider = gdprProvider;
+            this._defaultProvider = gdprProvider;
         }
 
         /// <summary>
@@ -59,7 +59,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
         public IComplianceProvider GetProvider(string region)
         {
             if (string.IsNullOrWhiteSpace(region))
-                return _defaultProvider;
+                return this._defaultProvider;
 
             // Try exact match first
             if (_providers.TryGetValue(region, out var provider))
@@ -67,14 +67,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
 
             // Try to match by region prefix (e.g., "eu-" matches GDPR, "sa-" or "br-" matches LGPD)
             if (region.StartsWith("eu-", StringComparison.OrdinalIgnoreCase))
-                return _providers["EU"];
+                return this._providers["EU"];
 
             if (region.StartsWith("sa-", StringComparison.OrdinalIgnoreCase) ||
                 region.StartsWith("br-", StringComparison.OrdinalIgnoreCase))
-                return _providers["BR"];
+                return this._providers["BR"];
 
             // Fallback to most stringent (GDPR)
-            return _defaultProvider;
+            return this._defaultProvider;
         }
 
         /// <summary>
@@ -85,7 +85,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
         public IComplianceProvider GetProviderByRegulation(string regulationCode)
         {
             if (string.IsNullOrWhiteSpace(regulationCode))
-                return _defaultProvider;
+                return this._defaultProvider;
 
             var provider = _providers.Values.FirstOrDefault(p =>
                 p.RegulationCode.Equals(regulationCode, StringComparison.OrdinalIgnoreCase));
@@ -99,7 +99,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
         /// <returns>Collection of all compliance providers</returns>
         public IEnumerable<IComplianceProvider> GetAllProviders()
         {
-            return _providers.Values.Distinct();
+            return this._providers.Values.Distinct();
         }
 
         /// <summary>
@@ -128,7 +128,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
             if (string.IsNullOrWhiteSpace(region))
                 return false;
 
-            return _providers.ContainsKey(region);
+            return this._providers.ContainsKey(region);
         }
     }
 }

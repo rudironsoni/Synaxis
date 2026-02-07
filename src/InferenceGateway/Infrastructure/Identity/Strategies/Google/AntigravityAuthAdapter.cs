@@ -16,7 +16,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
 
         public AntigravityAuthAdapter(IdentityManager identityManager)
         {
-            _identityManager = identityManager ?? throw new ArgumentNullException(nameof(identityManager));
+            this._identityManager = identityManager ?? throw new ArgumentNullException(nameof(identityManager));
         }
 
         public System.Collections.Generic.IEnumerable<AccountInfo> ListAccounts()
@@ -35,7 +35,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
         public Task CompleteAuthFlowAsync(string code, string redirectUrl, string? state = null)
         {
             // Delegate to IdentityManager's new CompleteAuth (implemented below)
-            return _identityManager.CompleteAuth("google", code, state ?? string.Empty);
+            return this._identityManager.CompleteAuth("google", code, state ?? string.Empty);
         }
 
         public async Task<string> GetTokenAsync(CancellationToken cancellationToken = default)

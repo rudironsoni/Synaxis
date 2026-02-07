@@ -8,17 +8,34 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
     using Microsoft.Extensions.Logging;
     using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 
+    /// <summary>
+    /// Tool for managing provider configurations.
+    /// </summary>
     public class ProviderTool : IProviderTool
     {
         private readonly ControlPlaneDbContext _db;
         private readonly ILogger<ProviderTool> _logger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ProviderTool"/> class.
+        /// </summary>
+        /// <param name="db">The database context.</param>
+        /// <param name="logger">The logger.</param>
         public ProviderTool(ControlPlaneDbContext db, ILogger<ProviderTool> logger)
         {
-            _db = db;
-            _logger = logger;
+            this._db = db;
+            this._logger = logger;
         }
 
+        /// <summary>
+        /// Updates a provider configuration setting.
+        /// </summary>
+        /// <param name="organizationId">The organization ID.</param>
+        /// <param name="providerId">The provider ID.</param>
+        /// <param name="key">The configuration key.</param>
+        /// <param name="value">The configuration value.</param>
+        /// <param name="ct">The cancellation token.</param>
+        /// <returns>True if successful, false otherwise.</returns>
         public async Task<bool> UpdateProviderConfigAsync(Guid organizationId, Guid providerId, string key, object value, CancellationToken ct = default)
         {
             try
@@ -35,6 +52,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
             }
         }
 
+        /// <summary>
+        /// Gets the status of a provider.
+        /// </summary>
+        /// <param name="organizationId">The organization ID.</param>
+        /// <param name="providerId">The provider ID.</param>
+        /// <param name="ct">The cancellation token.</param>
+        /// <returns>The provider status.</returns>
         public async Task<ProviderStatus> GetProviderStatusAsync(Guid organizationId, Guid providerId, CancellationToken ct = default)
         {
             try
@@ -55,6 +79,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
             }
         }
 
+        /// <summary>
+        /// Gets all providers for an organization.
+        /// </summary>
+        /// <param name="organizationId">The organization ID.</param>
+        /// <param name="ct">The cancellation token.</param>
+        /// <returns>List of provider information.</returns>
         public async Task<List<ProviderInfo>> GetAllProvidersAsync(Guid organizationId, CancellationToken ct = default)
         {
             try
