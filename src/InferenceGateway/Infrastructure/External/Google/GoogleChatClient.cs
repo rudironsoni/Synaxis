@@ -181,7 +181,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.Google
             /// Gets or sets the Choices.
             /// </summary>
             [JsonPropertyName("choices")]
-            public OpenAiChoice[] ? Choices { get; set; }
+            public OpenAiChoice[]? Choices { get; set; }
         }
 
         private sealed class OpenAiChoice

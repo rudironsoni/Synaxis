@@ -110,7 +110,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Contracts
         /// <summary>
         /// Gets or sets the data categories.
         /// </summary>
-        public string[] ? DataCategories { get; set; }
+        public string[]? DataCategories { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether encryption is used.
@@ -151,7 +151,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Contracts
         /// <summary>
         /// Gets or sets the data categories.
         /// </summary>
-        public string[] ? DataCategories { get; set; }
+        public string[]? DataCategories { get; set; }
     }
 
     /// <summary>
@@ -177,7 +177,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Contracts
         /// <summary>
         /// Gets or sets the data categories exposed.
         /// </summary>
-        public string[] ? DataCategoriesExposed { get; set; }
+        public string[]? DataCategoriesExposed { get; set; }
 
         /// <summary>
         /// Gets or sets the risk level (low, medium, high).
@@ -203,7 +203,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Contracts
         /// <summary>
         /// Gets or sets the exported data.
         /// </summary>
-        public byte[] ? Data { get; set; }
+        public byte[]? Data { get; set; }
 
         /// <summary>
         /// Gets or sets the export timestamp.

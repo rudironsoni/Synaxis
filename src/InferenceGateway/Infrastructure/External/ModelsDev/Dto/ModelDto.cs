@@ -123,13 +123,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.ModelsDev.Dto
             /// Gets or sets the Input.
             /// </summary>
             [JsonPropertyName("input")]
-            public string[] ? Input { get; set; }
+            public string[]? Input { get; set; }
 
             /// <summary>
             /// Gets or sets the Output.
             /// </summary>
             [JsonPropertyName("output")]
-            public string[] ? Output { get; set; }
+            public string[]? Output { get; set; }
         }
     }
 }
