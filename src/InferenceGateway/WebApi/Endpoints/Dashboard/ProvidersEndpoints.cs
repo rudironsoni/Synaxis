@@ -133,14 +133,14 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
                         if (!string.IsNullOrEmpty(endpoint))
                         {
 #pragma warning disable IDISP001 // Dispose created
-#pragma warning disable IDISP004 // Don't ignore created IDisposable
-                            using var httpClient = httpClientFactory.CreateClient();
-#pragma warning restore IDISP004 // Don't ignore created IDisposable
-#pragma warning restore IDISP001 // Dispose created
+                            var httpClient = httpClientFactory.CreateClient();
                             httpClient.Timeout = TimeSpan.FromSeconds(5);
 
                             var request = new HttpRequestMessage(HttpMethod.Head, endpoint);
-                            await httpClient.SendAsync(request, ct).ConfigureAwait(false);
+#pragma warning restore IDISP001
+#pragma warning disable IDISP004 // Don't ignore created IDisposable
+                            _ = await httpClient.SendAsync(request, ct).ConfigureAwait(false);
+#pragma warning restore IDISP004
 
                             // Accept any response (including 401, 404) as "reachable"
                             status = "healthy";

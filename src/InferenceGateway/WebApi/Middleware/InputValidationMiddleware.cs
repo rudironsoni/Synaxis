@@ -52,10 +52,10 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 return;
             }
 
-            if (context.Request.Method == HttpMethods.Post || context.Request.Method == HttpMethods.Put)
+            if (string.Equals(context.Request.Method, HttpMethods.Post, StringComparison.Ordinal) || string.Equals(context.Request.Method, HttpMethods.Put, StringComparison.Ordinal))
             {
                 var contentType = context.Request.ContentType;
-                if (string.IsNullOrEmpty(contentType) || !contentType.Contains("application/json"))
+                if (string.IsNullOrEmpty(contentType) || !contentType.Contains("application/json", StringComparison.OrdinalIgnoreCase))
                 {
                     this._logger.LogWarning("Invalid content type: {ContentType}", contentType);
 

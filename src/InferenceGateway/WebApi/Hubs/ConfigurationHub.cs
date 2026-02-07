@@ -28,6 +28,7 @@ namespace Synaxis.InferenceGateway.WebApi.Hubs
         /// </summary>
         /// <param name="tenantId">Optional tenant ID.</param>
         /// <param name="userId">Optional user ID.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
         public async Task SubscribeToConfigurationUpdates(string? tenantId = null, string? userId = null)
         {
             var connectionId = this.Context.ConnectionId;
@@ -56,6 +57,7 @@ namespace Synaxis.InferenceGateway.WebApi.Hubs
         /// <param name="configurationType">Type of configuration that changed.</param>
         /// <param name="tenantId">Optional tenant ID.</param>
         /// <param name="userId">Optional user ID.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
         public async Task NotifyConfigurationChanged(string configurationType, string? tenantId = null, string? userId = null)
         {
             this._logger.LogInformation("Configuration changed: {ConfigurationType} for tenant {TenantId}, user {UserId}", configurationType, tenantId, userId);
@@ -78,11 +80,12 @@ namespace Synaxis.InferenceGateway.WebApi.Hubs
         /// </summary>
         /// <param name="providerKey">The provider key.</param>
         /// <param name="status">The new status (healthy/unhealthy).</param>
-        public async Task NotifyProviderStatusChanged(string providerKey, string status)
+        /// <returns>A task representing the asynchronous operation.</returns>
+        public Task NotifyProviderStatusChanged(string providerKey, string status)
         {
             this._logger.LogInformation("Provider status changed: {ProviderKey} is now {Status}", providerKey, status);
 
-            await this.Clients.All.SendAsync("ProviderStatusChanged", providerKey, status).ConfigureAwait(false);
+            return this.Clients.All.SendAsync("ProviderStatusChanged", providerKey, status);
         }
 
         /// <summary>
@@ -92,6 +95,7 @@ namespace Synaxis.InferenceGateway.WebApi.Hubs
         /// <param name="userId">The user ID.</param>
         /// <param name="providerKey">The provider key.</param>
         /// <param name="remainingQuota">The remaining quota.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
         public async Task NotifyQuotaWarning(string tenantId, string userId, string providerKey, int remainingQuota)
         {
             this._logger.LogWarning("Quota warning for tenant {TenantId}, user {UserId}, provider {ProviderKey}: {RemainingQuota} remaining", tenantId, userId, providerKey, remainingQuota);
@@ -105,10 +109,10 @@ namespace Synaxis.InferenceGateway.WebApi.Hubs
         /// Called when a new client connects to the hub.
         /// </summary>
         /// <returns>A task representing the asynchronous operation.</returns>
-        public override async Task OnConnectedAsync()
+        public override Task OnConnectedAsync()
         {
             this._logger.LogInformation("Client connected: {ConnectionId}", this.Context.ConnectionId);
-            await base.OnConnectedAsync().ConfigureAwait(false);
+            return base.OnConnectedAsync();
         }
 
         /// <summary>
@@ -116,7 +120,7 @@ namespace Synaxis.InferenceGateway.WebApi.Hubs
         /// </summary>
         /// <param name="exception">The exception that caused the disconnect, if any.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        public override async Task OnDisconnectedAsync(Exception? exception)
+        public override Task OnDisconnectedAsync(Exception? exception)
         {
             if (exception != null)
             {
@@ -127,7 +131,7 @@ namespace Synaxis.InferenceGateway.WebApi.Hubs
                 this._logger.LogInformation("Client disconnected: {ConnectionId}", this.Context.ConnectionId);
             }
 
-            await base.OnDisconnectedAsync(exception).ConfigureAwait(false);
+            return base.OnDisconnectedAsync(exception);
         }
     }
 }

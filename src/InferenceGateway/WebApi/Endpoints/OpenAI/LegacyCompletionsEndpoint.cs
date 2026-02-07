@@ -205,7 +205,8 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
             errorMessage = "Prompt must be a string or an array of strings.";
             return false;
         }
+    }
 #pragma warning restore IDISP004 // Don't ignore created IDisposable
 #pragma warning restore MA0051 // Method too long
-    }
+
 }

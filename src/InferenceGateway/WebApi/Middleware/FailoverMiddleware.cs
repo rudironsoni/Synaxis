@@ -41,6 +41,8 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         /// <param name="healthMonitor">The health monitor.</param>
         /// <param name="regionRouter">The region router.</param>
         /// <param name="geoIPService">The GeoIP service.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+#pragma warning disable MA0051 // Method is too long
         public async Task InvokeAsync(
             HttpContext context,
             ITenantContext tenantContext,
@@ -48,12 +50,13 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             IHealthMonitor healthMonitor,
             IRegionRouter regionRouter,
             IGeoIPService geoIPService)
+#pragma warning restore MA0051
         {
             try
             {
                 // Skip failover for health checks
-                if (context.Request.Path.StartsWithSegments("/health") ||
-                    context.Request.Path.StartsWithSegments("/openapi"))
+                if (context.Request.Path.StartsWithSegments("/health", StringComparison.OrdinalIgnoreCase) ||
+                    context.Request.Path.StartsWithSegments("/openapi", StringComparison.OrdinalIgnoreCase))
                 {
                     await this._next(context).ConfigureAwait(false);
                     return;
@@ -121,7 +124,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     {
                         var userRegion = await regionRouter.GetUserRegionAsync(tenantContext.UserId.Value).ConfigureAwait(false);
 
-                        if (userRegion != failoverRegion)
+                        if (!string.Equals(userRegion, failoverRegion, StringComparison.Ordinal))
                         {
                             var requiresConsent = await regionRouter.RequiresCrossBorderConsentAsync(
                                 tenantContext.UserId.Value,

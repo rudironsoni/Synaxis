@@ -51,10 +51,12 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         /// <param name="tenantContext">The tenant context to populate.</param>
         /// <param name="apiKeyService">The API key service for validation.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
+#pragma warning disable MA0051 // Method is too long
         public async Task InvokeAsync(
             HttpContext context,
             ITenantContext tenantContext,
             IApiKeyService apiKeyService)
+#pragma warning restore MA0051
         {
             try
             {
@@ -130,11 +132,13 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         /// <param name="tenantContext">The tenant context to populate.</param>
         /// <param name="apiKeyService">The API key service for validation.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
+#pragma warning disable MA0051 // Method is too long
         private async Task HandleApiKeyAuthenticationAsync(
             HttpContext context,
             string apiKey,
             ITenantContext tenantContext,
             IApiKeyService apiKeyService)
+#pragma warning restore MA0051
         {
             try
             {
@@ -204,7 +208,9 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         /// </summary>
         /// <param name="context">The HTTP context.</param>
         /// <param name="tenantContext">The tenant context to populate.</param>
+#pragma warning disable MA0051 // Method is too long
         private void HandleJwtAuthentication(HttpContext context, ITenantContext tenantContext)
+#pragma warning restore MA0051
         {
             // JWT validation is handled by ASP.NET Core JWT middleware
             // We just need to extract the claims from the authenticated user
