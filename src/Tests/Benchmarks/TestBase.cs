@@ -1,12 +1,16 @@
-using Moq;
+// <copyright file="TestBase.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
+namespace Synaxis.Benchmarks;
+
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
+using Moq;
 using Synaxis.InferenceGateway.Application;
 using Synaxis.InferenceGateway.Application.Configuration;
 using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
 using Synaxis.InferenceGateway.Application.Routing;
-
-namespace Synaxis.Benchmarks;
 
 /// <summary>
 /// Base class for all Synaxis tests providing common mocking infrastructure and setup.
@@ -17,7 +21,8 @@ public abstract class TestBase
     /// <summary>
     /// Creates a mock ILogger for any type.
     /// </summary>
-    protected Mock<ILogger<T>> CreateMockLogger<T>() where T : class
+    protected static Mock<ILogger<T>> CreateMockLogger<T>()
+        where T : class
     {
         var mock = new Mock<ILogger<T>>();
         mock.Setup(x => x.Log(
@@ -25,7 +30,7 @@ public abstract class TestBase
             It.IsAny<EventId>(),
             It.IsAny<It.IsAnyType>(),
             It.IsAny<Exception?>(),
-            It.IsAny<Func<It.IsAnyType, Exception?, string>>()!))
+            It.IsAny<Func<It.IsAnyType, Exception?, string>>() !))
             .Verifiable();
         return mock;
     }
@@ -33,7 +38,7 @@ public abstract class TestBase
     /// <summary>
     /// Creates a mock IChatClient that returns a default response.
     /// </summary>
-    protected Mock<IChatClient> CreateMockChatClient(string responseText = "Mock response")
+    protected static Mock<IChatClient> CreateMockChatClient(string responseText = "Mock response")
     {
         var mock = new Mock<IChatClient>();
         mock.Setup(x => x.GetResponseAsync(
@@ -48,7 +53,7 @@ public abstract class TestBase
     /// <summary>
     /// Creates a mock IChatClient that returns a streaming response.
     /// </summary>
-    protected Mock<IChatClient> CreateMockStreamingChatClient(params string[] responseChunks)
+    protected static Mock<IChatClient> CreateMockStreamingChatClient(params string[] responseChunks)
     {
         var mock = new Mock<IChatClient>();
 
@@ -73,14 +78,14 @@ public abstract class TestBase
     /// <summary>
     /// Creates a mock IProviderRegistry with the specified provider configurations.
     /// </summary>
-    protected Mock<IProviderRegistry> CreateMockProviderRegistry(Dictionary<string, ProviderConfig>? providers = null)
+    protected static Mock<IProviderRegistry> CreateMockProviderRegistry(IReadOnlyDictionary<string, ProviderConfig>? providers = null)
     {
         var mock = new Mock<IProviderRegistry>();
 
-        providers ??= new Dictionary<string, ProviderConfig>
+        providers ??= new Dictionary<string, ProviderConfig>(StringComparer.Ordinal)
         {
-            ["groq"] = new ProviderConfig { Type = "groq", Tier = 0, Models = ["llama-3.1-70b-versatile"] },
-            ["openai"] = new ProviderConfig { Type = "openai", Tier = 1, Models = ["gpt-4"] },
+            ["groq"] = new ProviderConfig { Type = "groq", Tier = 0, Models = new List<string> { "llama-3.1-70b-versatile" } },
+            ["openai"] = new ProviderConfig { Type = "openai", Tier = 1, Models = new List<string> { "gpt-4" } },
         };
 
         mock.Setup(x => x.GetProvider(It.IsAny<string>()))
@@ -88,7 +93,7 @@ public abstract class TestBase
 
         mock.Setup(x => x.GetCandidates(It.IsAny<string>()))
             .Returns((string modelId) => providers
-                .Where(p => p.Value.Models.Contains(modelId) || p.Value.Models.Contains("*"))
+                .Where(p => p.Value.Models.Contains(modelId, StringComparer.Ordinal) || p.Value.Models.Contains("*", StringComparer.Ordinal))
                 .Select(p => (p.Key, p.Value.Tier)));
 
         return mock;
@@ -97,7 +102,7 @@ public abstract class TestBase
     /// <summary>
     /// Creates a mock IModelResolver that returns a default resolution.
     /// </summary>
-    protected Mock<IModelResolver> CreateMockModelResolver(string modelId = "test-model", string canonicalId = "test-canonical")
+    protected static Mock<IModelResolver> CreateMockModelResolver(string modelId = "test-model", string canonicalId = "test-canonical")
     {
         var mock = new Mock<IModelResolver>();
         mock.Setup(x => x.Resolve(
@@ -106,7 +111,7 @@ public abstract class TestBase
             .Returns(new ResolutionResult(
                 modelId,
                 new CanonicalModelId(canonicalId, canonicalId),
-                new List<ProviderConfig> { new() { Key = "test-provider" } }));
+                new List<ProviderConfig> { new () { Key = "test-provider" } }));
         mock.Setup(x => x.ResolveAsync(
             It.IsAny<string>(),
             It.IsAny<EndpointKind>(),
@@ -115,14 +120,14 @@ public abstract class TestBase
             .ReturnsAsync(new ResolutionResult(
                 modelId,
                 new CanonicalModelId(canonicalId, canonicalId),
-                new List<ProviderConfig> { new() { Key = "test-provider" } }));
+                new List<ProviderConfig> { new () { Key = "test-provider" } }));
         return mock;
     }
 
     /// <summary>
     /// Creates a mock IHealthStore that returns healthy status for all providers.
     /// </summary>
-    protected Mock<IHealthStore> CreateMockHealthStore(bool defaultHealthy = true)
+    protected static Mock<IHealthStore> CreateMockHealthStore(bool defaultHealthy = true)
     {
         var mock = new Mock<IHealthStore>();
         mock.Setup(x => x.IsHealthyAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -137,11 +142,12 @@ public abstract class TestBase
     /// <summary>
     /// Creates a mock IQuotaTracker with unlimited quota.
     /// </summary>
-    protected Mock<IQuotaTracker> CreateMockQuotaTracker()
+    protected static Mock<IQuotaTracker> CreateMockQuotaTracker()
     {
         var mock = new Mock<IQuotaTracker>();
         mock.Setup(x => x.CheckQuotaAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
+
         mock.Setup(x => x.IsHealthyAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
         mock.Setup(x => x.RecordUsageAsync(
@@ -156,7 +162,7 @@ public abstract class TestBase
     /// <summary>
     /// Creates a mock ICostService that returns zero cost.
     /// </summary>
-    protected Mock<ICostService> CreateMockCostService()
+    protected static Mock<ICostService> CreateMockCostService()
     {
         var mock = new Mock<ICostService>();
         mock.Setup(x => x.GetCostAsync(
@@ -170,7 +176,7 @@ public abstract class TestBase
     /// <summary>
     /// Creates a mock IRoutingScoreCalculator that returns a default score.
     /// </summary>
-    protected Mock<IRoutingScoreCalculator> CreateMockRoutingScoreCalculator()
+    protected static Mock<IRoutingScoreCalculator> CreateMockRoutingScoreCalculator()
     {
         var mock = new Mock<IRoutingScoreCalculator>();
         mock.Setup(x => x.CalculateScore(
@@ -187,12 +193,10 @@ public abstract class TestBase
                     qualityScoreWeight: 0.3,
                     quotaRemainingWeight: 0.3,
                     rateLimitSafetyWeight: 0.2,
-                    latencyScoreWeight: 0.2
-                ),
+                    latencyScoreWeight: 0.2),
                 freeTierBonusPoints: 50,
                 minScoreThreshold: 0.0,
-                preferFreeByDefault: true
-            ));
+                preferFreeByDefault: true));
         return mock;
     }
 }

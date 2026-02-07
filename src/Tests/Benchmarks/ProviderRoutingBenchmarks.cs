@@ -2,6 +2,8 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
+namespace Synaxis.Benchmarks;
+
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Diagnosers;
 using Microsoft.Extensions.Logging;
@@ -12,13 +14,15 @@ using Synaxis.InferenceGateway.Application.Configuration;
 using Synaxis.InferenceGateway.Application.ControlPlane;
 using Synaxis.InferenceGateway.Application.Routing;
 
-namespace Synaxis.Benchmarks;
-
 [MemoryDiagnoser]
 [SimpleJob(warmupCount: 3, iterationCount: 10)]
 
 public class ProviderRoutingBenchmarks : TestBase
 {
+    private const string SingleProviderModel = "llama-3.1-70b-versatile";
+    private const string MultipleProviderModel = "gpt-4";
+    private const string DefaultAlias = "default";
+
     private IModelResolver _modelResolver = null!;
     private ISmartRouter _smartRouter = null!;
     private IProviderRegistry _providerRegistry = null!;
@@ -26,25 +30,19 @@ public class ProviderRoutingBenchmarks : TestBase
     private IQuotaTracker _quotaTracker = null!;
     private ICostService _costService = null!;
     private IControlPlaneStore _controlPlaneStore = null!;
-    private ILogger<ModelResolver> _modelResolverLogger = null!;
     private ILogger<SmartRouter> _smartRouterLogger = null!;
     private IRoutingScoreCalculator _routingScoreCalculator = null!;
     private IOptions<SynaxisConfiguration> _configOptions = null!;
 
-    private const string SingleProviderModel = "llama-3.1-70b-versatile";
-    private const string MultipleProviderModel = "gpt-4";
-    private const string DefaultAlias = "default";
-
     [GlobalSetup]
     public void Setup()
     {
-        this._modelResolverLogger = this.CreateMockLogger<ModelResolver>().Object;
-        this._smartRouterLogger = this.CreateMockLogger<SmartRouter>().Object;
-        this._healthStore = this.CreateMockHealthStore(true).Object;
-        this._quotaTracker = this.CreateMockQuotaTracker().Object;
-        this._costService = this.CreateMockCostService().Object;
+        this._smartRouterLogger = CreateMockLogger<SmartRouter>().Object;
+        this._healthStore = CreateMockHealthStore(true).Object;
+        this._quotaTracker = CreateMockQuotaTracker().Object;
+        this._costService = CreateMockCostService().Object;
         this._controlPlaneStore = CreateMockControlPlaneStore().Object;
-        this._routingScoreCalculator = this.CreateMockRoutingScoreCalculator().Object;
+        this._routingScoreCalculator = CreateMockRoutingScoreCalculator().Object;
 
         var config = this.CreateSynaxisConfiguration(13, 10, 10);
         this._configOptions = Options.Create(config);
@@ -71,7 +69,7 @@ public class ProviderRoutingBenchmarks : TestBase
     [Arguments(5)]
     [Arguments(10)]
     [Arguments(13)]
-    public async Task<ResolutionResult> ModelResolver_ResolveAsync_SingleCanonicalModel(int providerCount)
+    public Task<ResolutionResult> ModelResolver_ResolveAsync_SingleCanonicalModel(int providerCount)
     {
         var config = this.CreateSynaxisConfiguration(providerCount, 1, 1);
         var configOptions = Options.Create(config);
@@ -83,17 +81,17 @@ public class ProviderRoutingBenchmarks : TestBase
             providers,
             controlPlaneStore);
 
-        return await resolver.ResolveAsync(
+        return resolver.ResolveAsync(
             SingleProviderModel,
             EndpointKind.ChatCompletions,
-            RequiredCapabilities.Default).ConfigureAwait(false);
+            RequiredCapabilities.Default);
     }
 
     [Benchmark]
     [Arguments(1)]
     [Arguments(5)]
     [Arguments(10)]
-    public async Task<ResolutionResult> ModelResolver_ResolveAsync_MultipleCanonicalModels(int canonicalModelCount)
+    public Task<ResolutionResult> ModelResolver_ResolveAsync_MultipleCanonicalModels(int canonicalModelCount)
     {
         var config = this.CreateSynaxisConfiguration(13, canonicalModelCount, 5);
         var configOptions = Options.Create(config);
@@ -105,10 +103,10 @@ public class ProviderRoutingBenchmarks : TestBase
             providers,
             controlPlaneStore);
 
-        return await resolver.ResolveAsync(
+        return resolver.ResolveAsync(
             MultipleProviderModel,
             EndpointKind.ChatCompletions,
-            RequiredCapabilities.Default).ConfigureAwait(false);
+            RequiredCapabilities.Default);
     }
 
     [Benchmark]
@@ -116,7 +114,7 @@ public class ProviderRoutingBenchmarks : TestBase
     [Arguments(5)]
     [Arguments(10)]
     [Arguments(13)]
-    public async Task<IList<EnrichedCandidate>> SmartRouter_GetCandidatesAsync_SingleProvider(int providerCount)
+    public Task<IList<EnrichedCandidate>> SmartRouter_GetCandidatesAsync_SingleProvider(int providerCount)
     {
         var config = this.CreateSynaxisConfiguration(providerCount, 1, 1);
         var configOptions = Options.Create(config);
@@ -136,9 +134,9 @@ public class ProviderRoutingBenchmarks : TestBase
             this._routingScoreCalculator,
             this._smartRouterLogger);
 
-        return await router.GetCandidatesAsync(
+        return router.GetCandidatesAsync(
             SingleProviderModel,
-            streaming: false).ConfigureAwait(false);
+            streaming: false);
     }
 
     [Benchmark]
@@ -146,7 +144,7 @@ public class ProviderRoutingBenchmarks : TestBase
     [Arguments(5)]
     [Arguments(10)]
     [Arguments(13)]
-    public async Task<IList<EnrichedCandidate>> SmartRouter_GetCandidatesAsync_MultipleProviders(int providerCount)
+    public Task<IList<EnrichedCandidate>> SmartRouter_GetCandidatesAsync_MultipleProviders(int providerCount)
     {
         var config = this.CreateSynaxisConfiguration(providerCount, 10, 5);
         var configOptions = Options.Create(config);
@@ -166,25 +164,25 @@ public class ProviderRoutingBenchmarks : TestBase
             this._routingScoreCalculator,
             this._smartRouterLogger);
 
-        return await router.GetCandidatesAsync(
+        return router.GetCandidatesAsync(
             MultipleProviderModel,
-            streaming: false).ConfigureAwait(false);
+            streaming: false);
     }
 
     [Benchmark]
-    public async Task<IList<EnrichedCandidate>> SmartRouter_GetCandidatesAsync_AliasResolution()
+    public Task<IList<EnrichedCandidate>> SmartRouter_GetCandidatesAsync_AliasResolution()
     {
-        return await this._smartRouter.GetCandidatesAsync(
+        return this._smartRouter.GetCandidatesAsync(
             DefaultAlias,
-            streaming: false).ConfigureAwait(false);
+            streaming: false);
     }
 
     [Benchmark]
-    public async Task<IList<EnrichedCandidate>> SmartRouter_GetCandidatesAsync_WithStreamingCapability()
+    public Task<IList<EnrichedCandidate>> SmartRouter_GetCandidatesAsync_WithStreamingCapability()
     {
-        return await this._smartRouter.GetCandidatesAsync(
+        return this._smartRouter.GetCandidatesAsync(
             SingleProviderModel,
-            streaming: true).ConfigureAwait(false);
+            streaming: true);
     }
 
     private SynaxisConfiguration CreateSynaxisConfiguration(int providerCount, int canonicalModelCount, int aliasCount)
