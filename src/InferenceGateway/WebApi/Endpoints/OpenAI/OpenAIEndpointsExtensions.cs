@@ -4,22 +4,22 @@
 
 namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
 {
-    using Microsoft.AspNetCore.Builder;
-    using Microsoft.AspNetCore.Routing;
-    using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.AspNetCore.OpenApi;
-    using Microsoft.Agents.AI.Hosting.OpenAI;
-    using Synaxis.InferenceGateway.WebApi.Agents;
-    using Synaxis.InferenceGateway.WebApi.Helpers;
     using System;
-    using System.Threading.Tasks;
-    using System.Text.Json;
     using System.Linq;
-    using Microsoft.AspNetCore.Http;
+    using System.Text.Json;
+    using System.Threading.Tasks;
     using Mediator;
+    using Microsoft.Agents.AI.Hosting.OpenAI;
+    using Microsoft.AspNetCore.Builder;
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.AspNetCore.OpenApi;
+    using Microsoft.AspNetCore.Routing;
     using Microsoft.Extensions.AI;
-    using Synaxis.InferenceGateway.WebApi.Features.Chat.Commands;
+    using Microsoft.Extensions.DependencyInjection;
+    using Synaxis.InferenceGateway.WebApi.Agents;
     using Synaxis.InferenceGateway.WebApi.DTOs.OpenAi;
+    using Synaxis.InferenceGateway.WebApi.Features.Chat.Commands;
+    using Synaxis.InferenceGateway.WebApi.Helpers;
 
     /// <summary>
     /// Extensions for mapping OpenAI-compatible endpoints.
@@ -340,7 +340,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
         /// <summary>
         /// Gets or sets the list of output choices.
         /// </summary>
-        public List<ResponseOutput> Output { get; set; } = new List<ResponseOutput>();
+        public IList<ResponseOutput> Output { get; set; } = new List<ResponseOutput>();
     }
 
     /// <summary>
@@ -361,7 +361,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
         /// <summary>
         /// Gets or sets the list of content parts.
         /// </summary>
-        public List<ResponseContent> Content { get; set; } = new List<ResponseContent>();
+        public IList<ResponseContent> Content { get; set; } = new List<ResponseContent>();
     }
 
     /// <summary>

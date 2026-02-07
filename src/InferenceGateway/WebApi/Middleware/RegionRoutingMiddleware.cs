@@ -181,5 +181,4 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             return "us-east-1";
         }
     }
-
 }

@@ -16,7 +16,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.DuckDuckGo
     using System.Threading.Tasks;
     using Microsoft.Extensions.AI;
 
-    public class DuckDuckGoChatClient : IChatClient
+    /// <summary>
+    /// Chat client implementation for DuckDuckGo AI chat.
+    /// </summary>
+    public sealed class DuckDuckGoChatClient : IChatClient
     {
         private readonly HttpClient _httpClient;
         private readonly string _modelId;
@@ -25,23 +28,54 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.DuckDuckGo
 
         private static readonly string[] SupportedModels = new[] { "gpt-4o-mini", "claude-3-haiku", "llama-3.1-70b", "o3-mini" };
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DuckDuckGoChatClient"/> class.
+        /// </summary>
+        /// <param name="httpClient">The HTTP client to use.</param>
+        /// <param name="modelId">The model identifier.</param>
         public DuckDuckGoChatClient(HttpClient httpClient, string modelId)
         {
             this._httpClient = httpClient;
             this._modelId = modelId;
+#pragma warning disable S1075 // URIs should not be hardcoded - API endpoint
             this._metadata = new ChatClientMetadata("DuckDuckGo", new Uri("https://duckduckgo.com/"), modelId);
+#pragma warning restore S1075 // URIs should not be hardcoded
         }
 
+        /// <summary>
+        /// Gets the metadata for this chat client.
+        /// </summary>
         public ChatClientMetadata Metadata => this._metadata;
 
-        public async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
+        /// <inheritdoc/>
+        public async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default)
         {
-            // Ensure we have a fresh token
-            await this.EnsureTokenAsync(cancellationToken);
+            await this.EnsureTokenAsync(cancellationToken).ConfigureAwait(false);
 
-            var requestObj = this.CreateRequest(chatMessages);
+            var requestObj = this.CreateRequest(messages);
+            using var httpRequest = this.CreateHttpRequest(requestObj);
 
-            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, "https://duckduckgo.com/duckchat/v1/chat")
+            using var response = await this._httpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false);
+            this.UpdateTokenFromResponse(response);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return new ChatResponse(new List<ChatMessage>());
+            }
+
+            var json = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            var reply = ParseReplyFromJson(json);
+
+            var chatResponse = new ChatResponse(new ChatMessage(ChatRole.Assistant, reply ?? string.Empty));
+            chatResponse.ModelId = this._modelId;
+            return chatResponse;
+        }
+
+        private HttpRequestMessage CreateHttpRequest(object requestObj)
+        {
+#pragma warning disable S1075 // URIs should not be hardcoded - API endpoint
+            var httpRequest = new HttpRequestMessage(HttpMethod.Post, "https://duckduckgo.com/duckchat/v1/chat")
+#pragma warning restore S1075 // URIs should not be hardcoded
             {
                 Content = JsonContent.Create(requestObj, options: new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }),
             };
@@ -50,61 +84,71 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.DuckDuckGo
             {
                 httpRequest.Headers.TryAddWithoutValidation("x-vqd-4", this._vqdToken);
             }
+
             httpRequest.Headers.TryAddWithoutValidation("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36");
 
-            using var response = await this._httpClient.SendAsync(httpRequest, cancellationToken);
+            return httpRequest;
+        }
 
-            // Update token from response headers for next call
+        private void UpdateTokenFromResponse(HttpResponseMessage response)
+        {
             if (response.Headers.TryGetValues("x-vqd-4", out var vals))
             {
                 this._vqdToken = vals.FirstOrDefault();
             }
+        }
 
-            if (!response.IsSuccessStatusCode)
-            {
-                // Per user preference, return an empty response instead of throwing
-                return new ChatResponse(new List<ChatMessage>());
-            }
-
-            var json = await response.Content.ReadAsStringAsync(cancellationToken);
-
-            // Attempt to parse simple response schema { reply: "..." } or { message: "..." }
-            string? reply = null;
+        private static string? ParseReplyFromJson(string json)
+        {
             try
             {
                 using var doc = JsonDocument.Parse(json);
-                if (doc.RootElement.TryGetProperty("reply", out var r)) reply = r.GetString();
-                else if (doc.RootElement.TryGetProperty("message", out var m)) reply = m.GetString();
-                else if (doc.RootElement.ValueKind == JsonValueKind.String) reply = doc.RootElement.GetString();
-                else
+                if (doc.RootElement.TryGetProperty("reply", out var r))
                 {
-                    // fallback: attempt to find first string value
-                    foreach (var prop in doc.RootElement.EnumerateObject())
+                    return r.GetString();
+                }
+
+                if (doc.RootElement.TryGetProperty("message", out var m))
+                {
+                    return m.GetString();
+                }
+
+                if (doc.RootElement.ValueKind == JsonValueKind.String)
+                {
+                    return doc.RootElement.GetString();
+                }
+
+                // Find first string property
+                using var enumerator = doc.RootElement.EnumerateObject().GetEnumerator();
+                while (enumerator.MoveNext())
+                {
+                    var prop = enumerator.Current;
+                    if (prop.Value.ValueKind == JsonValueKind.String)
                     {
-                        if (prop.Value.ValueKind == JsonValueKind.String)
-                        {
-                            reply = prop.Value.GetString();
-                            break;
-                        }
+                        return prop.Value.GetString();
                     }
                 }
-            }
-            catch { reply = null; }
 
-            var chatResponse = new ChatResponse(new ChatMessage(ChatRole.Assistant, reply ?? string.Empty));
-            chatResponse.ModelId = this._modelId;
-            return chatResponse;
+                return null;
+            }
+            catch
+            {
+                // Ignore JSON parsing errors and return null
+            }
+
+            return null;
         }
 
-        public IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
+        /// <inheritdoc/>
+        public IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default)
         {
             // DuckDuckGo streaming is not implemented; provide a simple single-message wrapper as async enumerable
-            return this.ReturnSingleAsync(chatMessages, options, cancellationToken);
+            return this.ReturnSingleAsync(messages, options, cancellationToken);
         }
 
-        private async IAsyncEnumerable<ChatResponseUpdate> ReturnSingleAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options, [EnumeratorCancellation] CancellationToken cancellationToken)
+        private async IAsyncEnumerable<ChatResponseUpdate> ReturnSingleAsync(IEnumerable<ChatMessage> messages, ChatOptions? options, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            var resp = await this.GetResponseAsync(chatMessages, options, cancellationToken);
+            var resp = await this.GetResponseAsync(messages, options, cancellationToken).ConfigureAwait(false);
             if (resp != null)
             {
                 var update = new ChatResponseUpdate { Role = ChatRole.Assistant, ModelId = this._modelId };
@@ -121,7 +165,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.DuckDuckGo
                 content = m.Text,
             }).ToList();
 
-            var model = SupportedModels.Contains(this._modelId) ? this._modelId : this._modelId;
+            var model = this._modelId;
 
             return new { model = model, messages = messages };
         }
@@ -133,15 +177,22 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.DuckDuckGo
                 return;
             }
 
-            using var response = await this._httpClient.GetAsync("https://duckduckgo.com/duckchat/v1/status", cancellationToken);
+#pragma warning disable S1075 // URIs should not be hardcoded - API endpoint
+            using var response = await this._httpClient.GetAsync("https://duckduckgo.com/duckchat/v1/status", cancellationToken).ConfigureAwait(false);
+#pragma warning restore S1075 // URIs should not be hardcoded
             if (response.Headers.TryGetValues("x-vqd-4", out var vals))
             {
                 this._vqdToken = vals.FirstOrDefault();
             }
         }
 
-        public void Dispose() => this._httpClient.Dispose();
+        /// <inheritdoc/>
+        public void Dispose()
+        {
+            // HttpClient is injected, should not be disposed here
+        }
 
+        /// <inheritdoc/>
         public object? GetService(Type serviceType, object? serviceKey = null) => null;
     }
 }

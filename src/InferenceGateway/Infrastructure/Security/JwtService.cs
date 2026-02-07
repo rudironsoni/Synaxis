@@ -13,10 +13,17 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
     using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
     using Synaxis.InferenceGateway.Application.Security;
 
+    /// <summary>
+    /// JwtService class.
+    /// </summary>
     public sealed class JwtService : IJwtService
     {
         private readonly SynaxisConfiguration _config;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="JwtService"/> class.
+        /// </summary>
+        /// <param name="config">The configuration options containing JWT settings.</param>
         public JwtService(IOptions<SynaxisConfiguration> config)
         {
             if (config is null)
@@ -27,6 +34,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
             this._config = config.Value;
         }
 
+        /// <summary>
+        /// Generates a JWT token for the specified user.
+        /// </summary>
+        /// <param name="user">The user for whom to generate the token.</param>
+        /// <returns>A JWT token string.</returns>
         public string GenerateToken(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();

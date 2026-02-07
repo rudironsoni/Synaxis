@@ -21,6 +21,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
         private readonly ILogger<AuditLogPartitionJob> _logger;
         private readonly IConfiguration _configuration;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AuditLogPartitionJob"/> class.
+        /// </summary>
+        /// <param name="dbContext">The database context for executing partition operations.</param>
+        /// <param name="logger">The logger for diagnostic messages.</param>
+        /// <param name="configuration">The configuration for retrieving retention settings.</param>
         public AuditLogPartitionJob(
             SynaxisDbContext dbContext,
             ILogger<AuditLogPartitionJob> logger,
@@ -31,6 +37,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
             this._configuration = configuration;
         }
 
+        /// <inheritdoc/>
         public async Task Execute(IJobExecutionContext context)
         {
             this._logger.LogInformation("Starting AuditLog partition maintenance job");
@@ -100,7 +107,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
 
             if (droppedPartitions.Count > 0)
             {
-                this._logger.LogInformation("Dropped {Count} old partitions: {Partitions}",
+                this._logger.LogInformation(
+                    "Dropped {Count} old partitions: {Partitions}",
                     droppedPartitions.Count,
                     string.Join(", ", droppedPartitions));
             }

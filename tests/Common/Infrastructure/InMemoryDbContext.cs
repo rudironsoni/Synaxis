@@ -29,15 +29,15 @@ public static class InMemoryDbContext
             .Options;
 
         var context = new ControlPlaneDbContext(options);
-        await context.Database.EnsureCreatedAsync();
+        await context.Database.EnsureCreatedAsync().ConfigureAwait(false);
         return context;
     }
 
     public static async Task<ControlPlaneDbContext> CreateWithDataAsync(Func<ControlPlaneDbContext, Task> seedData)
     {
-        var context = await CreateAsync();
-        await seedData(context);
-        await context.SaveChangesAsync();
+        var context = await CreateAsync().ConfigureAwait(false);
+        await seedData(context).ConfigureAwait(false);
+        await context.SaveChangesAsync().ConfigureAwait(false);
         return context;
     }
 }

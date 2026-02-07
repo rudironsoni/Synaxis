@@ -17,55 +17,112 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
     /// - platform: Tenant-agnostic provider and model catalog
     /// - identity: Multi-tenant organization, user, and group management
     /// - operations: Runtime provider configurations and API keys
-    /// - audit: System-wide audit logging
+    /// - audit: System-wide audit logging.
+    /// </summary>
+    /// <summary>
+    /// SynaxisDbContext class.
     /// </summary>
     public sealed class SynaxisDbContext : IdentityDbContext<SynaxisUser, Role, Guid>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SynaxisDbContext"/> class.
+        /// </summary>
+        /// <param name="options">The options to be used by the DbContext.</param>
         public SynaxisDbContext(DbContextOptions<SynaxisDbContext> options)
             : base(options)
         {
         }
 
         // Platform Schema (tenant-agnostic)
+
+        /// <summary>
+        /// Gets the DbSet for managing providers in the platform schema.
+        /// </summary>
         public DbSet<Provider> Providers => this.Set<Provider>();
 
+        /// <summary>
+        /// Gets the DbSet for managing models in the platform schema.
+        /// </summary>
         public DbSet<Model> Models => this.Set<Model>();
 
         // Identity Schema (multi-tenant)
+
+        /// <summary>
+        /// Gets the DbSet for managing organizations in the identity schema.
+        /// </summary>
         public DbSet<Organization> Organizations => this.Set<Organization>();
 
+        /// <summary>
+        /// Gets the DbSet for managing organization settings in the identity schema.
+        /// </summary>
         public DbSet<OrganizationSettings> OrganizationSettings => this.Set<OrganizationSettings>();
 
+        /// <summary>
+        /// Gets the DbSet for managing groups in the identity schema.
+        /// </summary>
         public DbSet<Group> Groups => this.Set<Group>();
 
+        /// <summary>
+        /// Gets the DbSet for managing user role assignments in the identity schema.
+        /// </summary>
         public DbSet<UserRole> UserRoleAssignments => this.Set<UserRole>();
 
+        /// <summary>
+        /// Gets the DbSet for managing user organization memberships in the identity schema.
+        /// </summary>
         public DbSet<UserOrganizationMembership> UserOrganizationMemberships => this.Set<UserOrganizationMembership>();
 
+        /// <summary>
+        /// Gets the DbSet for managing user group memberships in the identity schema.
+        /// </summary>
         public DbSet<UserGroupMembership> UserGroupMemberships => this.Set<UserGroupMembership>();
 
         // Operations Schema (runtime)
+
+        /// <summary>
+        /// Gets the DbSet for managing organization providers in the operations schema.
+        /// </summary>
         public DbSet<OrganizationProvider> OrganizationProviders => this.Set<OrganizationProvider>();
 
+        /// <summary>
+        /// Gets the DbSet for managing organization models in the operations schema.
+        /// </summary>
         public DbSet<OrganizationModel> OrganizationModels => this.Set<OrganizationModel>();
 
+        /// <summary>
+        /// Gets the DbSet for managing routing strategies in the operations schema.
+        /// </summary>
         public DbSet<RoutingStrategy> RoutingStrategies => this.Set<RoutingStrategy>();
 
+        /// <summary>
+        /// Gets the DbSet for managing provider health statuses in the operations schema.
+        /// </summary>
         public DbSet<ProviderHealthStatus> ProviderHealthStatuses => this.Set<ProviderHealthStatus>();
 
+        /// <summary>
+        /// Gets the DbSet for managing API keys in the operations schema.
+        /// </summary>
         public DbSet<ApiKey> ApiKeys => this.Set<ApiKey>();
 
         // Audit Schema (logs)
+
+        /// <summary>
+        /// Gets the DbSet for managing audit logs in the audit schema.
+        /// </summary>
         public DbSet<AuditLog> AuditLogs => this.Set<AuditLog>();
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        /// <summary>
+        /// Configures the entity model and database schema using the Entity Framework Fluent API.
+        /// </summary>
+        /// <param name="builder">The builder used to construct the model for this context.</param>
+        protected override void OnModelCreating(ModelBuilder builder)
         {
-            base.OnModelCreating(modelBuilder);
+            base.OnModelCreating(builder);
 
-            ConfigurePlatformSchema(modelBuilder);
-            ConfigureIdentitySchema(modelBuilder);
-            ConfigureOperationsSchema(modelBuilder);
-            ConfigureAuditSchema(modelBuilder);
+            ConfigurePlatformSchema(builder);
+            ConfigureIdentitySchema(builder);
+            ConfigureOperationsSchema(builder);
+            ConfigureAuditSchema(builder);
         }
 
         private static void ConfigurePlatformSchema(ModelBuilder modelBuilder)
@@ -73,8 +130,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
             // Provider Configuration
             modelBuilder.Entity<Provider>(entity =>
             {
-                entity.ToTable("Providers", "platform", t =>
-                    t.HasCheckConstraint("CK_Provider_ProviderType",
+                entity.ToTable(
+                    "Providers",
+                    "platform",
+                    t => t.HasCheckConstraint(
+                        "CK_Provider_ProviderType",
                         "\"ProviderType\" IN ('OpenAI', 'Anthropic', 'Google', 'Cohere', 'Azure', 'AWS', 'Cloudflare', 'Generic')"));
 
                 entity.HasKey(p => p.Id);
@@ -113,6 +173,19 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
 
         private static void ConfigureIdentitySchema(ModelBuilder modelBuilder)
         {
+            ConfigureIdentityTables(modelBuilder);
+            ConfigureOrganization(modelBuilder);
+            ConfigureOrganizationSettings(modelBuilder);
+            ConfigureGroup(modelBuilder);
+            ConfigureSynaxisUser(modelBuilder);
+            ConfigureRole(modelBuilder);
+            ConfigureUserRole(modelBuilder);
+            ConfigureUserOrganizationMembership(modelBuilder);
+            ConfigureUserGroupMembership(modelBuilder);
+        }
+
+        private static void ConfigureIdentityTables(ModelBuilder modelBuilder)
+        {
             // Rename ASP.NET Identity tables to plural and move to identity schema
             modelBuilder.Entity<SynaxisUser>().ToTable("Users", "identity");
             modelBuilder.Entity<Role>().ToTable("Roles", "identity");
@@ -121,15 +194,22 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
             modelBuilder.Entity<IdentityUserLogin<Guid>>().ToTable("UserLogins", "identity");
             modelBuilder.Entity<IdentityUserToken<Guid>>().ToTable("UserTokens", "identity");
             modelBuilder.Entity<IdentityRoleClaim<Guid>>().ToTable("RoleClaims", "identity");
+        }
 
-            // Organization Configuration
+        private static void ConfigureOrganization(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<Organization>(entity =>
             {
-                entity.ToTable("Organizations", "identity", t =>
+                entity.ToTable(
+                    "Organizations",
+                    "identity",
+                    t =>
                 {
-                    t.HasCheckConstraint("CK_Organization_Status",
+                    t.HasCheckConstraint(
+                        "CK_Organization_Status",
                         "\"Status\" IN ('Active', 'Suspended', 'PendingActivation', 'Deactivated')");
-                    t.HasCheckConstraint("CK_Organization_PlanTier",
+                    t.HasCheckConstraint(
+                        "CK_Organization_PlanTier",
                         "\"PlanTier\" IN ('Free', 'Starter', 'Professional', 'Enterprise', 'Custom')");
                 });
 
@@ -157,8 +237,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
 
                 entity.HasQueryFilter(o => o.DeletedAt == null);
             });
+        }
 
-            // OrganizationSettings Configuration
+        private static void ConfigureOrganizationSettings(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<OrganizationSettings>(entity =>
             {
                 entity.ToTable("OrganizationSettings", "identity");
@@ -169,8 +251,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                     .HasForeignKey<OrganizationSettings>(s => s.OrganizationId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
+        }
 
-            // Group Configuration
+        private static void ConfigureGroup(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<Group>(entity =>
             {
                 entity.ToTable("Groups", "identity", t => t.HasCheckConstraint("CK_Group_Status", "\"Status\" IN ('Active', 'Suspended', 'Archived')"));
@@ -193,8 +277,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
 
                 entity.HasQueryFilter(g => g.DeletedAt == null);
             });
+        }
 
-            // SynaxisUser Configuration
+        private static void ConfigureSynaxisUser(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<SynaxisUser>(entity =>
             {
                 entity.Property(u => u.FirstName).HasMaxLength(100);
@@ -206,12 +292,17 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
 
                 entity.HasQueryFilter(u => u.DeletedAt == null);
 
-                entity.ToTable("Users", "identity", t =>
-                    t.HasCheckConstraint("CK_User_Status",
+                entity.ToTable(
+                    "Users",
+                    "identity",
+                    t => t.HasCheckConstraint(
+                        "CK_User_Status",
                         "\"Status\" IN ('Active', 'Suspended', 'PendingVerification', 'Deactivated')"));
             });
+        }
 
-            // Role Configuration
+        private static void ConfigureRole(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<Role>(entity =>
             {
                 entity.Property(r => r.Description).HasMaxLength(500);
@@ -223,8 +314,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
 
                 entity.HasIndex(r => new { r.OrganizationId, r.Name }).IsUnique();
             });
+        }
 
-            // UserRole Configuration (custom table for organization-scoped roles)
+        private static void ConfigureUserRole(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<UserRole>(entity =>
             {
                 entity.ToTable("UserRoleAssignments", "identity");
@@ -245,15 +338,22 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                     .HasForeignKey(ur => ur.OrganizationId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
+        }
 
-            // UserOrganizationMembership Configuration
+        private static void ConfigureUserOrganizationMembership(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<UserOrganizationMembership>(entity =>
             {
-                entity.ToTable("UserOrganizationMemberships", "identity", t =>
+                entity.ToTable(
+                    "UserOrganizationMemberships",
+                    "identity",
+                    t =>
                 {
-                    t.HasCheckConstraint("CK_UserOrgMembership_OrganizationRole",
+                    t.HasCheckConstraint(
+                        "CK_UserOrgMembership_OrganizationRole",
                         "\"OrganizationRole\" IN ('Owner', 'Admin', 'Member', 'Guest')");
-                    t.HasCheckConstraint("CK_UserOrgMembership_Status",
+                    t.HasCheckConstraint(
+                        "CK_UserOrgMembership_Status",
                         "\"Status\" IN ('Active', 'Suspended', 'Invited', 'Rejected')");
                 });
 
@@ -283,12 +383,17 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
 
                 entity.HasQueryFilter(m => m.DeletedAt == null);
             });
+        }
 
-            // UserGroupMembership Configuration
+        private static void ConfigureUserGroupMembership(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<UserGroupMembership>(entity =>
             {
-                entity.ToTable("UserGroupMemberships", "identity", t =>
-                    t.HasCheckConstraint("CK_UserGroupMembership_GroupRole",
+                entity.ToTable(
+                    "UserGroupMemberships",
+                    "identity",
+                    t => t.HasCheckConstraint(
+                        "CK_UserGroupMembership_GroupRole",
                         "\"GroupRole\" IN ('Admin', 'Member', 'Viewer')"));
 
                 entity.HasKey(m => m.Id);
@@ -312,7 +417,15 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
 
         private static void ConfigureOperationsSchema(ModelBuilder modelBuilder)
         {
-            // OrganizationProvider Configuration
+            ConfigureOrganizationProviderEntity(modelBuilder);
+            ConfigureOrganizationModelEntity(modelBuilder);
+            ConfigureRoutingStrategyEntity(modelBuilder);
+            ConfigureProviderHealthStatusEntity(modelBuilder);
+            ConfigureApiKeyEntity(modelBuilder);
+        }
+
+        private static void ConfigureOrganizationProviderEntity(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<OrganizationProvider>(entity =>
             {
                 entity.ToTable("OrganizationProviders", "operations");
@@ -326,8 +439,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                 entity.HasIndex(op => new { op.OrganizationId, op.ProviderId }).IsUnique();
                 entity.HasIndex(op => op.IsEnabled);
             });
+        }
 
-            // OrganizationModel Configuration
+        private static void ConfigureOrganizationModelEntity(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<OrganizationModel>(entity =>
             {
                 entity.ToTable("OrganizationModels", "operations");
@@ -341,12 +456,17 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                 entity.HasIndex(om => new { om.OrganizationId, om.ModelId }).IsUnique();
                 entity.HasIndex(om => om.IsEnabled);
             });
+        }
 
-            // RoutingStrategy Configuration
+        private static void ConfigureRoutingStrategyEntity(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<RoutingStrategy>(entity =>
             {
-                entity.ToTable("RoutingStrategies", "operations", t =>
-                    t.HasCheckConstraint("CK_RoutingStrategy_StrategyType",
+                entity.ToTable(
+                    "RoutingStrategies",
+                    "operations",
+                    t => t.HasCheckConstraint(
+                        "CK_RoutingStrategy_StrategyType",
                         "\"StrategyType\" IN ('CostOptimized', 'Performance', 'Reliability', 'Custom')"));
 
                 entity.HasKey(rs => rs.Id);
@@ -360,8 +480,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                 entity.HasIndex(rs => new { rs.OrganizationId, rs.Name }).IsUnique();
                 entity.HasIndex(rs => rs.IsActive);
             });
+        }
 
-            // ProviderHealthStatus Configuration
+        private static void ConfigureProviderHealthStatusEntity(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<ProviderHealthStatus>(entity =>
             {
                 entity.ToTable("ProviderHealthStatuses", "operations");
@@ -381,8 +503,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                 entity.HasIndex(phs => phs.IsHealthy);
                 entity.HasIndex(phs => phs.LastCheckedAt);
             });
+        }
 
-            // ApiKey Configuration
+        private static void ConfigureApiKeyEntity(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<ApiKey>(entity =>
             {
                 entity.ToTable("ApiKeys", "operations");
@@ -406,8 +530,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
             // AuditLog Configuration
             modelBuilder.Entity<AuditLog>(entity =>
             {
-                entity.ToTable("AuditLogs", "audit", t =>
-                    t.HasCheckConstraint("CK_AuditLog_Action",
+                entity.ToTable(
+                    "AuditLogs",
+                    "audit",
+                    t => t.HasCheckConstraint(
+                        "CK_AuditLog_Action",
                         "\"Action\" IN ('Create', 'Update', 'Delete', 'Read', 'Login', 'Logout', 'ApiCall', 'PermissionChange', 'ConfigChange')"));
 
                 entity.HasKey(al => al.Id);

@@ -85,6 +85,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     context.Response.Headers.Append("X-RateLimit-Remaining", remaining.ToString());
                     context.Response.Headers.Append("X-RateLimit-Reset", requestTimestamps[0].Add(this._windowSize).ToString("R"));
                 }
+
                 return Task.CompletedTask;
             });
 
@@ -108,5 +109,4 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             return context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
         }
     }
-
 }

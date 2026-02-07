@@ -41,8 +41,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
             try
             {
                 // This is a placeholder - actual implementation would update OrganizationProvider settings
-                this._logger.LogInformation("UpdateProviderConfig: OrgId={OrgId}, ProviderId={ProviderId}, Key={Key}",
-                    organizationId, providerId, key);
+                this._logger.LogInformation(
+                    "UpdateProviderConfig: OrgId={OrgId}, ProviderId={ProviderId}, Key={Key}",
+                    organizationId,
+                    providerId,
+                    key);
                 return true;
             }
             catch (Exception ex)
@@ -65,7 +68,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
             {
                 // Query from Operations schema - ProviderHealthStatus
                 var healthStatus = await this._db.Database.SqlQuery<ProviderHealthStatusDto>(
-                    $"SELECT \"IsHealthy\", \"LastCheckedAt\" FROM operations.\"ProviderHealthStatus\" WHERE \"OrganizationProviderId\" = {providerId} ORDER BY \"LastCheckedAt\" DESC LIMIT 1").FirstOrDefaultAsync(ct);
+                    $"SELECT \"IsHealthy\", \"LastCheckedAt\" FROM operations.\"ProviderHealthStatus\" WHERE \"OrganizationProviderId\" = {providerId} ORDER BY \"LastCheckedAt\" DESC LIMIT 1").FirstOrDefaultAsync(ct).ConfigureAwait(false);
 
                 return new ProviderStatus(
                     true, // IsEnabled - would need to query OrganizationProvider
@@ -85,7 +88,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
         /// <param name="organizationId">The organization ID.</param>
         /// <param name="ct">The cancellation token.</param>
         /// <returns>List of provider information.</returns>
-        public async Task<List<ProviderInfo>> GetAllProvidersAsync(Guid organizationId, CancellationToken ct = default)
+        public async Task<IList<ProviderInfo>> GetAllProvidersAsync(Guid organizationId, CancellationToken ct = default)
         {
             try
             {

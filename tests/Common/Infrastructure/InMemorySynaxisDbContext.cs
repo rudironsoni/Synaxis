@@ -34,15 +34,15 @@ namespace Synaxis.Common.Tests.Infrastructure
                 .Options;
 
             var context = new SynaxisDbContext(options);
-            await context.Database.EnsureCreatedAsync();
+            await context.Database.EnsureCreatedAsync().ConfigureAwait(false);
             return context;
         }
 
         public static async Task<SynaxisDbContext> CreateWithDataAsync(Func<SynaxisDbContext, Task> seedData)
         {
-            var context = await CreateAsync();
-            await seedData(context);
-            await context.SaveChangesAsync();
+            var context = await CreateAsync().ConfigureAwait(false);
+            await seedData(context).ConfigureAwait(false);
+            await context.SaveChangesAsync().ConfigureAwait(false);
             return context;
         }
     }

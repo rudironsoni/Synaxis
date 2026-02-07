@@ -399,8 +399,8 @@ public class ConfigResolutionProperties
     public Property Resolve_SimilarityThresholdInRange()
     {
         return Prop.ForAll(
-            Arb.From(Gen.Choose(0.5, 1.0)),
-            Arb.From(Gen.Choose(0.5, 1.0)),
+            Arb.From(Gen.Choose(50, 100).Select(x => x / 100.0)),
+            Arb.From(Gen.Choose(50, 100).Select(x => x / 100.0)),
             (tenantThreshold, userThreshold) =>
             {
                 // Arrange

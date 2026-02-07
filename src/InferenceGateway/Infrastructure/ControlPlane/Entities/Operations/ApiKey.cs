@@ -9,36 +9,84 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Operatio
     /// </summary>
     public class ApiKey
     {
+        /// <summary>
+        /// Gets or sets the Id.
+        /// </summary>
         public Guid Id { get; set; }
 
+        /// <summary>
+        /// Gets or sets the OrganizationId.
+        /// </summary>
         public Guid OrganizationId { get; set; }
 
-        public required string Name { get; set; }
+        /// <summary>
+        /// Gets or sets the Name.
+        /// </summary>
+        required public string Name { get; set; }
 
-        public required string KeyHash { get; set; }
+        /// <summary>
+        /// Gets or sets the KeyHash.
+        /// </summary>
+        required public string KeyHash { get; set; }
 
-        public required string KeyPrefix { get; set; }
+        /// <summary>
+        /// Gets or sets the KeyPrefix.
+        /// </summary>
+        required public string KeyPrefix { get; set; }
 
+        /// <summary>
+        /// Gets or sets the ExpiresAt.
+        /// </summary>
         public DateTime? ExpiresAt { get; set; }
 
+        /// <summary>
+        /// Gets or sets the Scopes.
+        /// </summary>
         public string? Scopes { get; set; }
 
+        /// <summary>
+        /// Gets or sets the RateLimitRpm.
+        /// </summary>
         public int? RateLimitRpm { get; set; }
 
+        /// <summary>
+        /// Gets or sets the RateLimitTpm.
+        /// </summary>
         public int? RateLimitTpm { get; set; }
 
+        /// <summary>
+        /// Gets or sets a value indicating whether the API key is active.
+        /// </summary>
         public bool IsActive { get; set; } = true;
 
+        /// <summary>
+        /// Gets or sets the LastUsedAt.
+        /// </summary>
         public DateTime? LastUsedAt { get; set; }
 
+        /// <summary>
+        /// Gets or sets the CreatedAt.
+        /// </summary>
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        /// <summary>
+        /// Gets or sets the CreatedBy.
+        /// </summary>
         public Guid? CreatedBy { get; set; }
 
+        /// <summary>
+        /// Gets or sets the RevokedAt.
+        /// </summary>
         public DateTime? RevokedAt { get; set; }
 
+        /// <summary>
+        /// Gets or sets the RevokedBy.
+        /// </summary>
         public Guid? RevokedBy { get; set; }
 
+        /// <summary>
+        /// Gets or sets the RevocationReason.
+        /// </summary>
         public string? RevocationReason { get; set; }
 
         // Navigation properties - will be configured with cross-schema relationships

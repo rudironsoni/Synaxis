@@ -1,3 +1,7 @@
+// <copyright file="JsonSerializationBenchmarks.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Diagnosers;
 using System.Text.Json;
@@ -209,7 +213,7 @@ public class JsonSerializationBenchmarks
     {
         public string Model { get; set; } = string.Empty;
 
-        public List<ChatMessage> Messages { get; set; } = new();
+        public List<ChatMessage> Messages { get; set; } = new ();
 
         public double? Temperature { get; set; }
 
@@ -228,7 +232,7 @@ public class JsonSerializationBenchmarks
 
         public string Model { get; set; } = string.Empty;
 
-        public List<Choice> Choices { get; set; } = new();
+        public List<Choice> Choices { get; set; } = new ();
 
         public Usage? Usage { get; set; }
     }

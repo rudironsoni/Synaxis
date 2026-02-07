@@ -17,10 +17,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Data.Interfaces
     /// </para>
     /// <para>
     /// The soft delete interceptor automatically handles:
-    /// - Converting DELETE operations to UPDATE operations that set DeletedAt
-    /// - Setting DeletedBy from the current user context (if available)
-    /// - Cascading soft deletes to related entities (e.g., when an Organization is deleted)
-    /// - Applying global query filters to exclude soft-deleted entities
+    /// - Converting DELETE operations to UPDATE operations that set DeletedAt.
+    /// - Setting DeletedBy from the current user context (if available).
+    /// - Cascading soft deletes to related entities (e.g., when an Organization is deleted).
+    /// - Applying global query filters to exclude soft-deleted entities.
     /// </para>
     /// <para>
     /// To restore a soft-deleted entity, set DeletedAt and DeletedBy to null.

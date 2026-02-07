@@ -10,15 +10,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.Routing
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
     using StackExchange.Redis;
-    using Synaxis.InferenceGateway.Application.Routing;
     using Synaxis.InferenceGateway.Application.Configuration;
+    using Synaxis.InferenceGateway.Application.Routing;
 
+    /// <summary>
+    /// Redis-based quota tracker for monitoring and enforcing provider rate limits.
+    /// </summary>
     public class RedisQuotaTracker : IQuotaTracker
     {
-        private readonly IConnectionMultiplexer _redis;
-        private readonly ILogger<RedisQuotaTracker> _logger;
-        private readonly SynaxisConfiguration _config;
-
         // Lua script for atomic rate limiting check and increment with hierarchical limits
         // Supports User → Group → Organization hierarchy
         // Returns 1 if allowed, 0 if limit exceeded
@@ -109,6 +108,16 @@ namespace Synaxis.InferenceGateway.Infrastructure.Routing
     return 1
     ";
 
+        private readonly IConnectionMultiplexer _redis;
+        private readonly ILogger<RedisQuotaTracker> _logger;
+        private readonly SynaxisConfiguration _config;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RedisQuotaTracker"/> class.
+        /// </summary>
+        /// <param name="redis">The Redis connection multiplexer.</param>
+        /// <param name="logger">The logger instance.</param>
+        /// <param name="config">The Synaxis configuration options.</param>
         public RedisQuotaTracker(
             IConnectionMultiplexer redis,
             ILogger<RedisQuotaTracker> logger,
@@ -122,8 +131,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Routing
         /// <summary>
         /// Checks quota for a provider using atomic Lua script execution.
         /// Supports hierarchical limits (User → Group → Org) via Redis key structure.
-        /// Key structure: ratelimit:{organizationId}:{groupId}:{userId}:{type}
         /// </summary>
+        /// <param name="providerKey">The provider key to check quota for.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>True if within quota limits, false if exceeded.</returns>
         public async Task<bool> CheckQuotaAsync(string providerKey, CancellationToken cancellationToken = default)
         {
             try
@@ -145,7 +156,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Routing
                 var maxTpm = providerConfig.RateLimitTPM;
 
                 // If no rate limits configured, allow request
-                if (!maxthis.Rpm.HasValue && !maxthis.Tpm.HasValue)
+                if (!maxRpm.HasValue && !maxTpm.HasValue)
                 {
                     return true;
                 }
@@ -154,8 +165,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Routing
                 var result = await db.ScriptEvaluateAsync(
                     CheckQuotaLuaScript,
                     new RedisKey[] { rpmKey, tpmKey },
-                    new RedisValue[] { maxRpm ?? -1, maxTpm ?? -1 }
-                ).ConfigureAwait(false);
+                    new RedisValue[] { maxRpm ?? -1, maxTpm ?? -1 }).ConfigureAwait(false);
 
                 var allowed = (long)result == 1;
 
@@ -167,11 +177,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Routing
                     var rpmValue = currentRpm.HasValue ? (long)currentRpm : 0;
                     var tpmValue = currentTpm.HasValue ? (long)currentTpm : 0;
 
-                    if (maxthis.Rpm.HasValue && rpmValue >= maxRpm.Value)
+                    if (maxRpm.HasValue && rpmValue >= maxRpm.Value)
                     {
                         this._logger.LogWarning("Provider '{ProviderKey}' exceeded RPM limit: {CurrentRpm}/{MaxRpm}", providerKey, rpmValue, maxRpm.Value);
                     }
-                    else if (maxthis.Tpm.HasValue && tpmValue >= maxTpm.Value)
+                    else if (maxTpm.HasValue && tpmValue >= maxTpm.Value)
                     {
                         this._logger.LogWarning("Provider '{ProviderKey}' exceeded TPM limit: {CurrentTpm}/{MaxTpm}", providerKey, tpmValue, maxTpm.Value);
                     }
@@ -190,6 +200,17 @@ namespace Synaxis.InferenceGateway.Infrastructure.Routing
         /// Checks hierarchical quota limits across organization, group, and user levels.
         /// Uses atomic Lua script to check all levels and increment counters if allowed.
         /// </summary>
+        /// <param name="organizationId">The organization ID.</param>
+        /// <param name="groupId">The group ID.</param>
+        /// <param name="userId">The user ID.</param>
+        /// <param name="orgMaxRpm">Organization maximum requests per minute.</param>
+        /// <param name="orgMaxTpm">Organization maximum tokens per minute.</param>
+        /// <param name="groupMaxRpm">Group maximum requests per minute.</param>
+        /// <param name="groupMaxTpm">Group maximum tokens per minute.</param>
+        /// <param name="userMaxRpm">User maximum requests per minute.</param>
+        /// <param name="userMaxTpm">User maximum tokens per minute.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>True if within quota limits at all levels, false if exceeded.</returns>
         public async Task<bool> CheckHierarchicalQuotaAsync(
             string organizationId,
             string groupId,
@@ -219,15 +240,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Routing
                 var result = await db.ScriptEvaluateAsync(
                     CheckHierarchicalQuotaLuaScript,
                     new RedisKey[] { userRpmKey, userTpmKey, groupRpmKey, groupTpmKey, orgRpmKey, orgTpmKey },
-                    new RedisValue[] {
-                        userMaxRpm ?? -1,
-                        userMaxTpm ?? -1,
-                        groupMaxRpm ?? -1,
-                        groupMaxTpm ?? -1,
-                        orgMaxRpm ?? -1,
-                        orgMaxTpm ?? -1,
-                    }
-                ).ConfigureAwait(false);
+                    new RedisValue[] { userMaxRpm ?? -1, userMaxTpm ?? -1, groupMaxRpm ?? -1, groupMaxTpm ?? -1, orgMaxRpm ?? -1, orgMaxTpm ?? -1 }).ConfigureAwait(false);
 
                 var allowed = (long)result == 1;
 
@@ -235,25 +248,32 @@ namespace Synaxis.InferenceGateway.Infrastructure.Routing
                 {
                     this._logger.LogWarning(
                         "Hierarchical quota exceeded for Org: {OrgId}, Group: {GroupId}, User: {UserId}",
-                        organizationId, groupId, userId);
+                        organizationId,
+                        groupId,
+                        userId);
                 }
 
                 return allowed;
             }
             catch (Exception ex)
             {
-                this._logger.LogError(ex,
+                this._logger.LogError(
+                    ex,
                     "Failed to check hierarchical quota for Org: {OrgId}, Group: {GroupId}, User: {UserId}. Allowing request as fallback.",
-                    organizationId, groupId, userId);
+                    organizationId,
+                    groupId,
+                    userId);
                 return true;
             }
         }
 
+        /// <inheritdoc/>
         public Task<bool> IsHealthyAsync(string providerKey, CancellationToken cancellationToken = default)
         {
             return this.CheckQuotaAsync(providerKey, cancellationToken);
         }
 
+        /// <inheritdoc/>
         public async Task RecordUsageAsync(string providerKey, long inputTokens, long outputTokens, CancellationToken cancellationToken = default)
         {
             try

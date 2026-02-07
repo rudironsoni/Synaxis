@@ -155,5 +155,4 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             }
         }
     }
-
 }

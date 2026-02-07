@@ -7,6 +7,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.ModelsDev.Dto
     using System.Collections.Generic;
 
     // Root object is a dictionary keyed by provider id/name
+
+    /// <summary>
+    /// ModelsDevResponse class.
+    /// </summary>
     public sealed class ModelsDevResponse : Dictionary<string, ProviderDto>
     {
     }

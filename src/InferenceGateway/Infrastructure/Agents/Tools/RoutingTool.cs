@@ -12,17 +12,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
     /// </summary>
     public class RoutingTool : IRoutingTool
     {
-        private readonly ControlPlaneDbContext _db;
         private readonly ILogger<RoutingTool> _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RoutingTool"/> class.
         /// </summary>
-        /// <param name="db">The database context.</param>
         /// <param name="logger">The logger.</param>
-        public RoutingTool(ControlPlaneDbContext db, ILogger<RoutingTool> logger)
+        public RoutingTool(ILogger<RoutingTool> logger)
         {
-            this._db = db;
             this._logger = logger;
         }
 
@@ -42,7 +39,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
             {
                 this._logger.LogInformation(
                     "Switching provider for OrgId={OrgId}, Model={Model}, From={From}, To={To}, Reason={Reason}",
-                    organizationId, modelId, fromProvider, toProvider, reason);
+                    organizationId,
+                    modelId,
+                    fromProvider,
+                    toProvider,
+                    reason);
 
                 // NOTE: Update routing policy to prefer new provider
                 // This would involve updating RoutingPolicy or creating provider preferences

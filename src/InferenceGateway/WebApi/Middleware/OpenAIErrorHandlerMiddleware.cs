@@ -13,6 +13,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
     using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.Logging;
     using Synaxis.InferenceGateway.WebApi.Errors;
+
     /// <summary>
     /// Middleware that handles exceptions and converts them to OpenAI-compatible error responses.
     /// </summary>
@@ -193,6 +194,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
 
                         await context.Response.WriteAsync(JsonSerializer.Serialize(error));
                     }
+
                     return;
                 }
 

@@ -109,7 +109,7 @@ public static class TestDataFactory
         return new SynaxisConfiguration
         {
             JwtSecret = jwtSecret,
-            Providers = new Dictionary<string, ProviderConfig>
+            Providers = new Dictionary<string, ProviderConfig>(StringComparer.Ordinal)
             {
                 ["groq"] = CreateProviderConfig("groq", "groq", 0, ["llama-3.1-70b-versatile"]),
                 ["openai"] = CreateProviderConfig("openai", "openai", 1, ["gpt-4", "gpt-3.5-turbo"]),
@@ -121,12 +121,12 @@ public static class TestDataFactory
                 CreateCanonicalModel("llama-3.1-70b-versatile", "Groq"),
                 CreateCanonicalModel("deepseek-chat", "DeepSeek")
             ],
-            Aliases = new Dictionary<string, AliasConfig>
+            Aliases = new Dictionary<string, AliasConfig>(StringComparer.Ordinal)
             {
                 ["default"] = new AliasConfig
                 {
-                    Candidates = ["deepseek-chat"]
-                }
+                    Candidates = ["deepseek-chat"],
+                },
             },
         };
     }

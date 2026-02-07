@@ -9,10 +9,21 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.KiloCode
     using System.Net.Http;
     using Synaxis.InferenceGateway.Infrastructure;
 
+    /// <summary>
+    /// KiloCodeChatClient class.
+    /// </summary>
     public class KiloCodeChatClient : GenericOpenAiChatClient
     {
+#pragma warning disable S1075 // URIs should not be hardcoded - API endpoint
         private const string KiloApiUrl = "https://api.kilo.ai/api/openrouter";
+#pragma warning restore S1075 // URIs should not be hardcoded
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="KiloCodeChatClient"/> class.
+        /// </summary>
+        /// <param name="apiKey">The API key for authentication.</param>
+        /// <param name="modelId">The model identifier to use.</param>
+        /// <param name="httpClient">Optional HTTP client instance.</param>
         public KiloCodeChatClient(string apiKey, string modelId, HttpClient? httpClient = null)
             : base(apiKey, new Uri(KiloApiUrl), modelId, GetKiloHeaders(), httpClient)
         {

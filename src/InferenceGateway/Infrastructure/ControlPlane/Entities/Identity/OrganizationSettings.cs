@@ -9,35 +9,81 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity
     /// </summary>
     public class OrganizationSettings
     {
+        /// <summary>
+        /// Gets or sets the OrganizationId.
+        /// </summary>
         public Guid OrganizationId { get; set; }
 
+        /// <summary>
+        /// Gets or sets the JwtTokenLifetimeMinutes.
+        /// </summary>
         public int JwtTokenLifetimeMinutes { get; set; } = 10080;
 
+        /// <summary>
+        /// Gets or sets the MaxRequestBodySizeBytes.
+        /// </summary>
         public int MaxRequestBodySizeBytes { get; set; } = 31457280;
 
+        /// <summary>
+        /// Gets or sets the DefaultRateLimitRpm.
+        /// </summary>
         public int DefaultRateLimitRpm { get; set; } = 60;
 
+        /// <summary>
+        /// Gets or sets the DefaultRateLimitTpm.
+        /// </summary>
         public int DefaultRateLimitTpm { get; set; } = 100000;
 
+        /// <summary>
+        /// Gets or sets a value indicating whether AllowAutoOptimization is enabled.
+        /// </summary>
         public bool AllowAutoOptimization { get; set; } = true;
 
+        /// <summary>
+        /// Gets or sets a value indicating whether AllowCustomProviders is enabled.
+        /// </summary>
         public bool AllowCustomProviders { get; set; } = false;
 
+        /// <summary>
+        /// Gets or sets a value indicating whether AllowAuditLogExport is enabled.
+        /// </summary>
         public bool AllowAuditLogExport { get; set; } = false;
 
+        /// <summary>
+        /// Gets or sets the MaxUsers.
+        /// </summary>
         public int MaxUsers { get; set; } = 10;
 
+        /// <summary>
+        /// Gets or sets the MaxGroups.
+        /// </summary>
         public int MaxGroups { get; set; } = 5;
 
+        /// <summary>
+        /// Gets or sets the MonthlyTokenQuota.
+        /// </summary>
         public long? MonthlyTokenQuota { get; set; }
 
+        /// <summary>
+        /// Gets or sets the AuditLogRetentionDays.
+        /// </summary>
         public int AuditLogRetentionDays { get; set; } = 90;
 
+        /// <summary>
+        /// Gets or sets the UpdatedAt.
+        /// </summary>
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+        /// <summary>
+        /// Gets or sets the UpdatedBy.
+        /// </summary>
         public Guid UpdatedBy { get; set; }
 
         // Navigation properties
+
+        /// <summary>
+        /// Gets or sets the Organization.
+        /// </summary>
         public Organization Organization { get; set; } = null!;
     }
 }

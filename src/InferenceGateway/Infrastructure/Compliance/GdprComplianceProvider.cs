@@ -23,30 +23,38 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
     /// </summary>
     public class GdprComplianceProvider : IComplianceProvider
     {
-        private readonly SynaxisDbContext _dbContext;
         private const int BreachNotificationHoursThreshold = 72;
 
         // EU regions for data residency validation
-        private static readonly HashSet<string> EuRegions = new()
+        private static readonly HashSet<string> EuRegions = new ()
         {
             "eu-west-1", "eu-central-1", "eu-north-1", "eu-south-1",
         };
 
         // Adequate countries under GDPR (simplified list)
-        private static readonly HashSet<string> AdequateCountries = new()
+        private static readonly HashSet<string> AdequateCountries = new ()
         {
             "EU", "UK", "CH", "NO", "IS", "LI", "NZ", "JP", "KR", "CA",
         };
 
+        private readonly SynaxisDbContext _dbContext;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="GdprComplianceProvider"/> class.
+        /// </summary>
+        /// <param name="dbContext">The database context.</param>
         public GdprComplianceProvider(SynaxisDbContext dbContext)
         {
             this._dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         }
 
+        /// <inheritdoc/>
         public string RegulationCode => "GDPR";
 
+        /// <inheritdoc/>
         public string Region => "EU";
 
+        /// <inheritdoc/>
         public async Task<bool> ValidateTransferAsync(TransferContext context)
         {
             if (context == null)
@@ -55,16 +63,16 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
             }
 
             // 1. Check if transfer is within EU (no restrictions)
-            if (this.IsWithinEu(context.FromRegion) && this.IsWithinEu(context.ToRegion))
+            if (IsWithinEu(context.FromRegion) && IsWithinEu(context.ToRegion))
             {
                 return true;
             }
 
             // 2. Transfer FROM EU to outside EU requires special safeguards
-            if (this.IsWithinEu(context.FromRegion) && !this.IsWithinEu(context.ToRegion))
+            if (IsWithinEu(context.FromRegion) && !IsWithinEu(context.ToRegion))
             {
                 // Check if destination is an adequate country (no additional requirements)
-                if (this.IsAdequateCountry(context.ToRegion))
+                if (IsAdequateCountry(context.ToRegion))
                 {
                     return true;
                 }
@@ -101,7 +109,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
             return true;
         }
 
-        public async Task LogTransferAsync(TransferContext context)
+        /// <inheritdoc/>
+        public Task LogTransferAsync(TransferContext context)
         {
             if (context == null)
             {
@@ -131,28 +140,17 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
             };
 
             this._dbContext.AuditLogs.Add(auditLog);
-            await this._dbContext.SaveChangesAsync().ConfigureAwait(false);
+            return this._dbContext.SaveChangesAsync();
         }
 
+        /// <inheritdoc/>
         public async Task<DataExport> ExportUserDataAsync(Guid userId)
         {
             // Collect all user data from various tables
             var userData = new Dictionary<string, object>();
 
             // Get user profile
-            var user = await this._dbContext.Users
-                .Where(u => u.Id == userId)
-                .Select(u => new
-                {
-                    u.Id,
-                    u.Email,
-                    u.FirstName,
-                    u.LastName,
-                    u.PhoneNumber,
-                    u.Status,
-                })
-                .FirstOrDefaultAsync().ConfigureAwait(false);
-
+            var user = await this.GetUserProfileAsync(userId).ConfigureAwait(false);
             if (user == null)
             {
                 throw new InvalidOperationException($"User {userId} not found");
@@ -160,63 +158,17 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
 
             userData["profile"] = user;
 
-            // Get organization memberships
-            var memberships = await this._dbContext.UserOrganizationMemberships
-                .Where(m => m.UserId == userId)
-                .Select(m => new
-                {
-                    m.OrganizationId,
-                    m.OrganizationRole,
-
-                    m.Status,
-                })
-                .ToListAsync().ConfigureAwait(false);
-
+            // Get all related data
+            var memberships = await this.GetOrganizationMembershipsAsync(userId).ConfigureAwait(false);
             userData["organization_memberships"] = memberships;
 
-            // Get group memberships
-            var groupMemberships = await this._dbContext.UserGroupMemberships
-                .Where(m => m.UserId == userId)
-                .Select(m => new
-                {
-                    m.GroupId,
-                    m.GroupRole,
-                    m.JoinedAt,
-                })
-                .ToListAsync().ConfigureAwait(false);
-
+            var groupMemberships = await this.GetGroupMembershipsAsync(userId).ConfigureAwait(false);
             userData["group_memberships"] = groupMemberships;
 
-            // Get API keys created by user
-            var apiKeys = await this._dbContext.ApiKeys
-                .Where(k => k.CreatedBy == userId)
-                .Select(k => new
-                {
-                    k.Id,
-                    k.Name,
-                    k.KeyPrefix,
-                    k.CreatedAt,
-                    k.ExpiresAt,
-                    k.IsActive,
-                })
-                .ToListAsync().ConfigureAwait(false);
-
+            var apiKeys = await this.GetUserApiKeysAsync(userId).ConfigureAwait(false);
             userData["api_keys"] = apiKeys;
 
-            // Get audit logs for this user
-            var auditLogs = await this._dbContext.AuditLogs
-                .Where(a => a.UserId == userId)
-                .OrderByDescending(a => a.CreatedAt)
-                .Take(1000) // Limit to last 1000 entries
-                .Select(a => new
-                {
-                    a.Action,
-                    a.EntityType,
-                    a.EntityId,
-                    a.CreatedAt,
-                })
-                .ToListAsync().ConfigureAwait(false);
-
+            var auditLogs = await this.GetUserAuditLogsAsync(userId).ConfigureAwait(false);
             userData["audit_logs"] = auditLogs;
 
             // Serialize to JSON
@@ -241,12 +193,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                         memberships = memberships.Count,
                         group_memberships = groupMemberships.Count,
                         api_keys = apiKeys.Count,
-                        audit_logs = auditLogs.Count
-                    }
+                        audit_logs = auditLogs.Count,
+                    },
                 },
             };
         }
 
+        /// <inheritdoc/>
         public async Task<bool> DeleteUserDataAsync(Guid userId)
         {
             using var transaction = await this._dbContext.Database.BeginTransactionAsync().ConfigureAwait(false);
@@ -254,60 +207,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
             try
             {
                 // Log the deletion request (before deletion)
-                var deletionLog = new AuditLog
-                {
-                    Id = Guid.NewGuid(),
-                    UserId = userId,
-                    Action = "data_erasure",
-                    EntityType = "user",
-                    EntityId = userId.ToString(),
-                    NewValues = JsonSerializer.Serialize(new
-                    {
-                        regulation = "GDPR",
-                        right = "right_to_erasure",
-                        article = "Article 17",
-                        timestamp = DateTime.UtcNow,
-                    }),
-                    CreatedAt = DateTime.UtcNow,
-                    PartitionDate = DateTime.UtcNow.Date,
-                };
-
-                this._dbContext.AuditLogs.Add(deletionLog);
-                await this._dbContext.SaveChangesAsync().ConfigureAwait(false);
+                await this.LogDataErasureAsync(userId).ConfigureAwait(false);
 
                 // Delete user data (cascade will handle related records)
                 // Note: Audit logs are kept for compliance purposes (legitimate interest)
-
-                // Delete group memberships
-                var groupMemberships = await this._dbContext.UserGroupMemberships
-                    .Where(m => m.UserId == userId)
-                    .ToListAsync().ConfigureAwait(false);
-                this._dbContext.UserGroupMemberships.RemoveRange(groupMemberships);
-
-                // Delete organization memberships
-                var orgMemberships = await this._dbContext.UserOrganizationMemberships
-                    .Where(m => m.UserId == userId)
-                    .ToListAsync().ConfigureAwait(false);
-                this._dbContext.UserOrganizationMemberships.RemoveRange(orgMemberships);
-
-                // Revoke API keys
-                var apiKeys = await this._dbContext.ApiKeys
-                    .Where(k => k.CreatedBy == userId)
-                    .ToListAsync().ConfigureAwait(false);
-
-                foreach (var key in apiKeys)
-                {
-                    key.IsActive = false;
-                    key.RevokedAt = DateTime.UtcNow;
-                    key.RevocationReason = "User data erasure request (GDPR Article 17)";
-                }
-
-                // Delete user account
-                var user = await this._dbContext.Users.FindAsync(userId).ConfigureAwait(false);
-                if (user != null)
-                {
-                    this._dbContext.Users.Remove(user);
-                }
+                await this.DeleteUserMembershipsAsync(userId).ConfigureAwait(false);
+                await this.RevokeUserApiKeysAsync(userId).ConfigureAwait(false);
+                await this.DeleteUserAccountAsync(userId).ConfigureAwait(false);
 
                 await this._dbContext.SaveChangesAsync().ConfigureAwait(false);
                 await transaction.CommitAsync().ConfigureAwait(false);
@@ -321,6 +227,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
             }
         }
 
+        /// <inheritdoc/>
         public async Task<bool> IsProcessingAllowedAsync(ProcessingContext context)
         {
             if (context == null)
@@ -347,6 +254,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
             return validLegalBases.Contains(context.LegalBasis.ToLowerInvariant());
         }
 
+        /// <inheritdoc/>
         public int? GetDataRetentionDays()
         {
             // GDPR doesn't specify exact retention period - depends on legal basis and purpose
@@ -354,6 +262,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
             return null;
         }
 
+        /// <inheritdoc/>
         public async Task<bool> IsBreachNotificationRequiredAsync(BreachContext context)
         {
             if (context == null)
@@ -398,7 +307,151 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
             return false;
         }
 
-        private bool IsWithinEu(string region)
+        private async Task<object> GetUserProfileAsync(Guid userId)
+        {
+            return await this._dbContext.Users
+                .Where(u => u.Id == userId)
+                .Select(u => new
+                {
+                    u.Id,
+                    u.Email,
+                    u.FirstName,
+                    u.LastName,
+                    u.PhoneNumber,
+                    u.Status,
+                })
+                .FirstOrDefaultAsync().ConfigureAwait(false);
+        }
+
+        private async Task<List<object>> GetOrganizationMembershipsAsync(Guid userId)
+        {
+            var memberships = await this._dbContext.UserOrganizationMemberships
+                .Where(m => m.UserId == userId)
+                .Select(m => new
+                {
+                    m.OrganizationId,
+                    m.OrganizationRole,
+                    m.Status,
+                })
+                .ToListAsync().ConfigureAwait(false);
+
+            return memberships.Cast<object>().ToList();
+        }
+
+        private async Task<List<object>> GetGroupMembershipsAsync(Guid userId)
+        {
+            var groupMemberships = await this._dbContext.UserGroupMemberships
+                .Where(m => m.UserId == userId)
+                .Select(m => new
+                {
+                    m.GroupId,
+                    m.GroupRole,
+                    m.JoinedAt,
+                })
+                .ToListAsync().ConfigureAwait(false);
+
+            return groupMemberships.Cast<object>().ToList();
+        }
+
+        private async Task<List<object>> GetUserApiKeysAsync(Guid userId)
+        {
+            var apiKeys = await this._dbContext.ApiKeys
+                .Where(k => k.CreatedBy == userId)
+                .Select(k => new
+                {
+                    k.Id,
+                    k.Name,
+                    k.KeyPrefix,
+                    k.CreatedAt,
+                    k.ExpiresAt,
+                    k.IsActive,
+                })
+                .ToListAsync().ConfigureAwait(false);
+
+            return apiKeys.Cast<object>().ToList();
+        }
+
+        private async Task<List<object>> GetUserAuditLogsAsync(Guid userId)
+        {
+            var auditLogs = await this._dbContext.AuditLogs
+                .Where(a => a.UserId == userId)
+                .OrderByDescending(a => a.CreatedAt)
+                .Take(1000) // Limit to last 1000 entries
+                .Select(a => new
+                {
+                    a.Action,
+                    a.EntityType,
+                    a.EntityId,
+                    a.CreatedAt,
+                })
+                .ToListAsync().ConfigureAwait(false);
+
+            return auditLogs.Cast<object>().ToList();
+        }
+
+        private Task LogDataErasureAsync(Guid userId)
+        {
+            var deletionLog = new AuditLog
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                Action = "data_erasure",
+                EntityType = "user",
+                EntityId = userId.ToString(),
+                NewValues = JsonSerializer.Serialize(new
+                {
+                    regulation = "GDPR",
+                    right = "right_to_erasure",
+                    article = "Article 17",
+                    timestamp = DateTime.UtcNow,
+                }),
+                CreatedAt = DateTime.UtcNow,
+                PartitionDate = DateTime.UtcNow.Date,
+            };
+
+            this._dbContext.AuditLogs.Add(deletionLog);
+            return this._dbContext.SaveChangesAsync();
+        }
+
+        private async Task DeleteUserMembershipsAsync(Guid userId)
+        {
+            // Delete group memberships
+            var groupMemberships = await this._dbContext.UserGroupMemberships
+                .Where(m => m.UserId == userId)
+                .ToListAsync().ConfigureAwait(false);
+            this._dbContext.UserGroupMemberships.RemoveRange(groupMemberships);
+
+            // Delete organization memberships
+            var orgMemberships = await this._dbContext.UserOrganizationMemberships
+                .Where(m => m.UserId == userId)
+                .ToListAsync().ConfigureAwait(false);
+            this._dbContext.UserOrganizationMemberships.RemoveRange(orgMemberships);
+        }
+
+        private async Task RevokeUserApiKeysAsync(Guid userId)
+        {
+            var apiKeys = await this._dbContext.ApiKeys
+                .Where(k => k.CreatedBy == userId)
+                .ToListAsync().ConfigureAwait(false);
+
+            foreach (var key in apiKeys)
+            {
+                key.IsActive = false;
+                key.RevokedAt = DateTime.UtcNow;
+                key.RevocationReason = "User data erasure request (GDPR Article 17)";
+            }
+        }
+
+        private async Task DeleteUserAccountAsync(Guid userId)
+        {
+            var user = await this._dbContext.Users.FindAsync(userId).ConfigureAwait(false);
+            if (user != null)
+            {
+                this._dbContext.Users.Remove(user);
+            }
+        }
+
+        private static bool IsWithinEu(string region)
         {
             if (string.IsNullOrWhiteSpace(region))
             {
@@ -410,7 +463,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                    EuRegions.Contains(region.ToLowerInvariant());
         }
 
-        private bool IsAdequateCountry(string region)
+        private static bool IsAdequateCountry(string region)
         {
             if (string.IsNullOrWhiteSpace(region))
             {

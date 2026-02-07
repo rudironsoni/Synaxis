@@ -14,20 +14,24 @@ namespace Synaxis.InferenceGateway.Infrastructure.Middleware
     /// </summary>
     public class ApiKeyMiddleware
     {
-        private readonly RequestDelegate _next;
         private const string ApiKeyPrefix = "Bearer synaxis_build_";
+        private readonly RequestDelegate _next;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ApiKeyMiddleware"/> class.
         /// </summary>
+        /// <param name="next">The next middleware delegate in the pipeline.</param>
         public ApiKeyMiddleware(RequestDelegate next)
         {
             this._next = next;
         }
 
         /// <summary>
-        /// Invokes the middleware.
+        /// Invokes the middleware to process HTTP requests and validate API keys.
         /// </summary>
+        /// <param name="context">The HTTP context for the current request.</param>
+        /// <param name="apiKeyService">The service used to validate API keys.</param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         public async Task InvokeAsync(HttpContext context, IApiKeyService apiKeyService)
         {
             // Check if Authorization header contains an API key
@@ -85,8 +89,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Middleware
     public static class ApiKeyMiddlewareExtensions
     {
         /// <summary>
-        /// Adds the API key middleware to the pipeline.
+        /// Adds the API key middleware to the application request pipeline.
         /// </summary>
+        /// <param name="builder">The application builder.</param>
+        /// <returns>The application builder with API key middleware configured.</returns>
         public static IApplicationBuilder UseApiKeyAuthentication(this IApplicationBuilder builder)
         {
             return builder.UseMiddleware<ApiKeyMiddleware>();

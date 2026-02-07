@@ -10,8 +10,17 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
     using Microsoft.Extensions.Logging;
     using Synaxis.InferenceGateway.Application.ControlPlane;
 
+    /// <summary>
+    /// ControlPlaneExtensions class.
+    /// </summary>
     public static class ControlPlaneExtensions
     {
+        /// <summary>
+        /// Adds control plane services to the service collection.
+        /// </summary>
+        /// <param name="services">The service collection.</param>
+        /// <param name="configuration">The configuration.</param>
+        /// <returns>The service collection for chaining.</returns>
         public static IServiceCollection AddControlPlane(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddDbContext<ControlPlaneDbContext>((sp, builder) =>
@@ -21,16 +30,20 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                 var options = new ControlPlaneOptions();
                 config.GetSection("Synaxis:ControlPlane").Bind(options);
 
-                logger.LogInformation("ControlPlane configuration - UseInMemory: {UseInMemory}, ConnectionString present: {HasConnectionString}",
-                    options.UseInMemory, !string.IsNullOrWhiteSpace(options.ConnectionString));
+                logger.LogInformation(
+                    "ControlPlane configuration - UseInMemory: {UseInMemory}, ConnectionString present: {HasConnectionString}",
+                    options.UseInMemory,
+                    !string.IsNullOrWhiteSpace(options.ConnectionString));
 
                 if (!string.IsNullOrWhiteSpace(options.ConnectionString))
                 {
                     // Mask password for logging
+#pragma warning disable MA0009 // Add timeout to regex - Simple pattern with no backtracking risk
                     var connStrMasked = System.Text.RegularExpressions.Regex.Replace(
                         options.ConnectionString,
                         @"Password=([^;]+)",
                         "Password=***");
+#pragma warning restore MA0009
                     logger.LogInformation("Using PostgreSQL with connection string: {ConnectionString}", connStrMasked);
                 }
 

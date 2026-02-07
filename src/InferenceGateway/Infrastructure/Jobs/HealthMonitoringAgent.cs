@@ -24,12 +24,18 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<HealthMonitoringAgent> _logger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HealthMonitoringAgent"/> class.
+        /// </summary>
+        /// <param name="serviceProvider">The service provider for dependency injection.</param>
+        /// <param name="logger">The logger instance for logging operations.</param>
         public HealthMonitoringAgent(IServiceProvider serviceProvider, ILogger<HealthMonitoringAgent> logger)
         {
             this._serviceProvider = serviceProvider;
             this._logger = logger;
         }
 
+        /// <inheritdoc/>
         public async Task Execute(IJobExecutionContext context)
         {
             var correlationId = Guid.NewGuid().ToString("N")[..8];
@@ -43,10 +49,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
 
             try
             {
-                // Get all organizations and their enabled providers
-                var orgProviders = await db.Database.SqlQuery<OrgProviderDto>(
-                    $"SELECT \"Id\", \"OrganizationId\", \"IsEnabled\", \"HealthCheckEnabled\" FROM operations.\"OrganizationProviders\" WHERE \"IsEnabled\" = true AND \"HealthCheckEnabled\" = true"
-                ).ToListAsync(context.CancellationToken);
+                var orgProviders = await GetEnabledProvidersAsync(db, context.CancellationToken).ConfigureAwait(false);
 
                 this._logger.LogInformation("[HealthMonitoring][{CorrelationId}] Checking {Count} providers", correlationId, orgProviders.Count);
 
@@ -57,85 +60,32 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                 {
                     try
                     {
-                        // Check current health status
-                        var health = await healthTool.CheckHealthAsync(provider.OrganizationId, provider.Id, context.CancellationToken);
-
-                        // Skip if in cooldown
-                        if (health.IsInCooldown && health.CooldownUntil > DateTime.UtcNow)
+                        var result = await this.CheckProviderHealthAsync(provider, healthTool, alertTool, auditTool, correlationId, context.CancellationToken).ConfigureAwait(false);
+                        if (result.Checked)
                         {
-                            this._logger.LogDebug("[HealthMonitoring][{CorrelationId}] Provider {ProviderId} in cooldown until {Until}",
-                                correlationId, provider.Id, health.CooldownUntil);
-                            continue;
+                            checkedCount++;
                         }
 
-                        // Perform actual health check (simplified - just check if provider exists)
-                        // In real implementation, this would make test API call to provider
-                        bool isHealthy = await this.PerformHealthCheckAsync(provider.Id, context.CancellationToken);
-
-                        if (!isHealthy)
+                        if (result.Unhealthy)
                         {
-                            int consecutiveFailures = health.ConsecutiveFailures + 1;
-                            await healthTool.MarkUnhealthyAsync(
-                                provider.OrganizationId,
-                                provider.Id,
-                                "Health check failed",
-                                consecutiveFailures,
-                                context.CancellationToken);
-
                             unhealthyCount++;
-
-                            // Send alert on first failure or every 5th failure
-                            if (consecutiveFailures == 1 || consecutiveFailures % 5 == 0)
-                            {
-                                await alertTool.SendAdminAlertAsync(
-                                    "Provider Health Alert",
-                                    $"Provider {provider.Id} has failed {consecutiveFailures} consecutive health checks",
-                                    consecutiveFailures >= 5 ? AlertSeverity.Critical : AlertSeverity.Warning,
-                                    context.CancellationToken);
-                            }
-
-                            await auditTool.LogActionAsync(
-                                "HealthMonitoring",
-                                "ProviderUnhealthy",
-                                provider.OrganizationId,
-                                null,
-                                $"Provider {provider.Id} marked unhealthy, consecutive failures: {consecutiveFailures}",
-                                correlationId,
-                                context.CancellationToken);
                         }
-                        else if (!health.IsHealthy)
-                        {
-                            // Provider recovered
-                            await healthTool.MarkHealthyAsync(provider.OrganizationId, provider.Id, context.CancellationToken);
-
-                            await alertTool.SendAdminAlertAsync(
-                                "Provider Recovered",
-                                $"Provider {provider.Id} is now healthy after {health.ConsecutiveFailures} failures",
-                                AlertSeverity.Info,
-                                context.CancellationToken);
-
-                            await auditTool.LogActionAsync(
-                                "HealthMonitoring",
-                                "ProviderRecovered",
-                                provider.OrganizationId,
-                                null,
-                                $"Provider {provider.Id} recovered after {health.ConsecutiveFailures} failures",
-                                correlationId,
-                                context.CancellationToken);
-                        }
-
-                        checkedCount++;
                     }
                     catch (Exception ex)
                     {
-                        this._logger.LogError(ex, "[HealthMonitoring][{CorrelationId}] Error checking provider {ProviderId}",
-                            correlationId, provider.Id);
+                        this._logger.LogError(
+                            ex,
+                            "[HealthMonitoring][{CorrelationId}] Error checking provider {ProviderId}",
+                            correlationId,
+                            provider.Id);
                     }
                 }
 
                 this._logger.LogInformation(
                     "[HealthMonitoring][{CorrelationId}] Completed: Checked={Checked}, Unhealthy={Unhealthy}",
-                    correlationId, checkedCount, unhealthyCount);
+                    correlationId,
+                    checkedCount,
+                    unhealthyCount);
             }
             catch (Exception ex)
             {
@@ -143,24 +93,154 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
             }
         }
 
-        private async Task<bool> PerformHealthCheckAsync(Guid providerId, CancellationToken ct)
+        private static Task<List<OrgProviderDto>> GetEnabledProvidersAsync(ControlPlaneDbContext db, CancellationToken ct)
+        {
+            return db.Database.SqlQuery<OrgProviderDto>(
+                $"SELECT \"Id\", \"OrganizationId\", \"IsEnabled\", \"HealthCheckEnabled\" FROM operations.\"OrganizationProviders\" WHERE \"IsEnabled\" = true AND \"HealthCheckEnabled\" = true").ToListAsync(ct);
+        }
+
+        private async Task<CheckResult> CheckProviderHealthAsync(
+            OrgProviderDto provider,
+            IHealthTool healthTool,
+            IAlertTool alertTool,
+            IAuditTool auditTool,
+            string correlationId,
+            CancellationToken ct)
+        {
+            var health = await healthTool.CheckHealthAsync(provider.OrganizationId, provider.Id, ct).ConfigureAwait(false);
+
+            if (health.isInCooldown && health.cooldownUntil > DateTime.UtcNow)
+            {
+                this._logger.LogDebug(
+                    "[HealthMonitoring][{CorrelationId}] Provider {ProviderId} in cooldown until {Until}",
+                    correlationId,
+                    provider.Id,
+                    health.cooldownUntil);
+                return new CheckResult { Checked = false, Unhealthy = false };
+            }
+
+            bool isHealthy = await PerformHealthCheckAsync(ct).ConfigureAwait(false);
+
+            if (!isHealthy)
+            {
+                await HandleUnhealthyProviderAsync(provider, health, healthTool, alertTool, auditTool, correlationId, ct).ConfigureAwait(false);
+                return new CheckResult { Checked = true, Unhealthy = true };
+            }
+
+            if (!health.isHealthy)
+            {
+                await HandleProviderRecoveryAsync(provider, health, healthTool, alertTool, auditTool, correlationId, ct).ConfigureAwait(false);
+            }
+
+            return new CheckResult { Checked = true, Unhealthy = false };
+        }
+
+        private static async Task HandleUnhealthyProviderAsync(
+            OrgProviderDto provider,
+            Agents.Tools.HealthCheckResult health,
+            IHealthTool healthTool,
+            IAlertTool alertTool,
+            IAuditTool auditTool,
+            string correlationId,
+            CancellationToken ct)
+        {
+            int consecutiveFailures = health.consecutiveFailures + 1;
+            await healthTool.MarkUnhealthyAsync(
+                provider.OrganizationId,
+                provider.Id,
+                "Health check failed",
+                consecutiveFailures,
+                ct).ConfigureAwait(false);
+
+            if (consecutiveFailures == 1 || consecutiveFailures % 5 == 0)
+            {
+                await alertTool.SendAdminAlertAsync(
+                    "Provider Health Alert",
+                    $"Provider {provider.Id} has failed {consecutiveFailures} consecutive health checks",
+                    consecutiveFailures >= 5 ? AlertSeverity.Critical : AlertSeverity.Warning,
+                    ct).ConfigureAwait(false);
+            }
+
+            await auditTool.LogActionAsync(
+                "HealthMonitoring",
+                "ProviderUnhealthy",
+                provider.OrganizationId,
+                null,
+                $"Provider {provider.Id} marked unhealthy, consecutive failures: {consecutiveFailures}",
+                correlationId,
+                ct).ConfigureAwait(false);
+        }
+
+        private static async Task HandleProviderRecoveryAsync(
+            OrgProviderDto provider,
+            Agents.Tools.HealthCheckResult health,
+            IHealthTool healthTool,
+            IAlertTool alertTool,
+            IAuditTool auditTool,
+            string correlationId,
+            CancellationToken ct)
+        {
+            await healthTool.MarkHealthyAsync(provider.OrganizationId, provider.Id, ct).ConfigureAwait(false);
+
+            await alertTool.SendAdminAlertAsync(
+                "Provider Recovered",
+                $"Provider {provider.Id} is now healthy after {health.consecutiveFailures} failures",
+                AlertSeverity.Info,
+                ct).ConfigureAwait(false);
+
+            await auditTool.LogActionAsync(
+                "HealthMonitoring",
+                "ProviderRecovered",
+                provider.OrganizationId,
+                null,
+                $"Provider {provider.Id} recovered after {health.consecutiveFailures} failures",
+                correlationId,
+                ct).ConfigureAwait(false);
+        }
+
+        private static async Task<bool> PerformHealthCheckAsync(CancellationToken ct)
         {
             // NOTE: Implement actual health check
             // - Make test API call to provider
             // - Check response time
             // - Verify authentication
-            await Task.Delay(10, ct); // Simulate check
+            await Task.Delay(10, ct).ConfigureAwait(false); // Simulate check
             return true; // For now, assume healthy
         }
 
-        private class OrgProviderDto
+        private sealed class CheckResult
         {
+            /// <summary>
+            /// Gets or sets a value indicating whether the check was performed.
+            /// </summary>
+            public bool Checked { get; set; }
+
+            /// <summary>
+            /// Gets or sets a value indicating whether the provider is unhealthy.
+            /// </summary>
+            public bool Unhealthy { get; set; }
+        }
+
+        private sealed class OrgProviderDto
+        {
+            /// <summary>
+            /// Gets or sets the Id.
+            /// </summary>
             public Guid Id { get; set; }
 
+            /// <summary>
+            /// Gets or sets the OrganizationId.
+            /// </summary>
             public Guid OrganizationId { get; set; }
 
+            /// <summary>
+            /// Gets or sets a value indicating whether the provider is enabled.
+            /// </summary>
             public bool IsEnabled { get; set; }
 
+            /// <summary>
+            /// Gets or sets a value indicating whether health check is enabled.
+            /// </summary>
             public bool HealthCheckEnabled { get; set; }
         }
     }
