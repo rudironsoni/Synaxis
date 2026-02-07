@@ -83,15 +83,15 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                             Object = "chat.completion.chunk",
                             Created = created,
                             Model = request.Model ?? "default",
-                        Choices = new List<ChatCompletionChunkChoice>
-                        {
-                        new ChatCompletionChunkChoice
-                        {
-                            Index = 0,
-                            Delta = new ChatCompletionChunkDelta { Content = content },
-                            FinishReason = null,
-                        },
-                        },
+                            Choices = new List<ChatCompletionChunkChoice>
+                            {
+                                new ChatCompletionChunkChoice
+                                {
+                                    Index = 0,
+                                    Delta = new ChatCompletionChunkDelta { Content = content },
+                                    FinishReason = null,
+                                },
+                            },
                         };
                         await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(chunk)}\n\n", ct).ConfigureAwait(false);
                         await context.Response.Body.FlushAsync(ct).ConfigureAwait(false);
@@ -103,15 +103,15 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                         Object = "chat.completion.chunk",
                         Created = created,
                         Model = request.Model ?? "default",
-                    Choices = new List<ChatCompletionChunkChoice>
-                    {
-                    new ChatCompletionChunkChoice
-                    {
-                        Index = 0,
-                        Delta = new ChatCompletionChunkDelta(),
-                        FinishReason = "stop",
-                    },
-                    },
+                        Choices = new List<ChatCompletionChunkChoice>
+                        {
+                            new ChatCompletionChunkChoice
+                            {
+                                Index = 0,
+                                Delta = new ChatCompletionChunkDelta(),
+                                FinishReason = "stop",
+                            },
+                        },
                     };
                     await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(finalChunk)}\n\n", ct).ConfigureAwait(false);
                     await context.Response.WriteAsync("data: [DONE]\n\n", ct).ConfigureAwait(false);
@@ -124,7 +124,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                     var response = await mediator.Send(new ChatCommand(request, messages), ct).ConfigureAwait(false);
 
                     var message = response.Messages.FirstOrDefault();
-                    var content = message?.Text ?? "";
+                    var content = message?.Text ?? string.Empty;
                     var role = message?.Role.Value ?? "assistant";
 
                     var openAIResponse = new ChatCompletionResponse
@@ -135,16 +135,16 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                         Model = request.Model ?? "default",
                         Choices = new List<ChatCompletionChoice>
                         {
-                        new ChatCompletionChoice
-                        {
-                            Index = 0,
-                            Message = new ChatCompletionMessageDto
+                            new ChatCompletionChoice
                             {
-                                Role = role,
-                                Content = content,
+                                Index = 0,
+                                Message = new ChatCompletionMessageDto
+                                {
+                                    Role = role,
+                                    Content = content,
+                                },
+                                FinishReason = "stop",
                             },
-                            FinishReason = "stop",
-                        },
                         },
                         Usage = new ChatCompletionUsage
                         {
@@ -232,7 +232,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                     var response = await mediator.Send(new ChatCommand(request, messages ?? Enumerable.Empty<ChatMessage>()), ct).ConfigureAwait(false);
 
                     var message = response.Messages.FirstOrDefault();
-                    var content = message?.Text ?? "";
+                    var content = message?.Text ?? string.Empty;
 
                     var openAIResponse = new ResponseCompletion
                     {
@@ -242,19 +242,19 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                         Model = request.Model ?? "default",
                         Output = new List<ResponseOutput>
                         {
-                        new ResponseOutput
-                        {
-                            Type = "message",
-                            Role = "assistant",
-                            Content = new List<ResponseContent>
+                            new ResponseOutput
                             {
-                                new ResponseContent
+                                Type = "message",
+                                Role = "assistant",
+                                Content = new List<ResponseContent>
                                 {
-                                    Type = "output_text",
-                                    Text = content,
+                                    new ResponseContent
+                                    {
+                                        Type = "output_text",
+                                        Text = content,
+                                    },
                                 },
                             },
-                        },
                         },
                     };
 
@@ -269,8 +269,8 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
             group.MapLegacyCompletions();
             group.MapModels();
         }
-#pragma warning restore MA0051 // Method too long
     }
+#pragma warning restore MA0051 // Method too long
 
     /// <summary>
     /// Streaming response chunk for chat completions.

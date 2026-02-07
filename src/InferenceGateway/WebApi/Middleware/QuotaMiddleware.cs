@@ -4,6 +4,7 @@
 
 namespace Synaxis.InferenceGateway.WebApi.Middleware
 {
+    using System.Globalization;
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.Logging;
@@ -38,17 +39,20 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         /// <param name="context">The HTTP context.</param>
         /// <param name="tenantContext">The tenant context.</param>
         /// <param name="quotaService">The quota service.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+#pragma warning disable MA0051 // Method is too long
         public async Task InvokeAsync(
             HttpContext context,
             ITenantContext tenantContext,
             IQuotaService quotaService)
+#pragma warning restore MA0051
         {
             try
             {
                 // Skip quota checks for health and public endpoints
-                if (context.Request.Path.StartsWithSegments("/health") ||
-                    context.Request.Path.StartsWithSegments("/openapi") ||
-                    context.Request.Path.StartsWithSegments("/identity"))
+                if (context.Request.Path.StartsWithSegments("/health", StringComparison.OrdinalIgnoreCase) ||
+                    context.Request.Path.StartsWithSegments("/openapi", StringComparison.OrdinalIgnoreCase) ||
+                    context.Request.Path.StartsWithSegments("/identity", StringComparison.OrdinalIgnoreCase))
                 {
                     await this._next(context).ConfigureAwait(false);
                     return;
@@ -118,13 +122,13 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                         // Add rate limit headers
                         if (quotaResult.Details != null)
                         {
-                            context.Response.Headers["X-RateLimit-Limit"] = quotaResult.Details.Limit.ToString();
-                            context.Response.Headers["X-RateLimit-Remaining"] = quotaResult.Details.Remaining.ToString();
-                            context.Response.Headers["X-RateLimit-Reset"] = quotaResult.Details.WindowEnd.ToString("R");
+                            context.Response.Headers["X-RateLimit-Limit"] = quotaResult.Details.Limit.ToString(CultureInfo.InvariantCulture);
+                            context.Response.Headers["X-RateLimit-Remaining"] = quotaResult.Details.Remaining.ToString(CultureInfo.InvariantCulture);
+                            context.Response.Headers["X-RateLimit-Reset"] = quotaResult.Details.WindowEnd.ToString("R", CultureInfo.InvariantCulture);
 
                             if (quotaResult.Details.RetryAfter.HasValue)
                             {
-                                context.Response.Headers["Retry-After"] = ((int)quotaResult.Details.RetryAfter.Value.TotalSeconds).ToString();
+                                context.Response.Headers["Retry-After"] = ((int)quotaResult.Details.RetryAfter.Value.TotalSeconds).ToString(CultureInfo.InvariantCulture);
                             }
                         }
 
@@ -149,7 +153,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                         // Add credit charge header
                         context.Response.OnStarting(() =>
                         {
-                            context.Response.Headers["X-Credit-Charge"] = quotaResult.CreditCharge?.ToString("F4") ?? "0";
+                            context.Response.Headers["X-Credit-Charge"] = quotaResult.CreditCharge?.ToString("F4", CultureInfo.InvariantCulture) ?? "0";
                             return Task.CompletedTask;
                         });
                         break;

@@ -23,7 +23,9 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
         /// <param name="allowEmptyModel">Whether to allow empty model field.</param>
         /// <param name="allowEmptyMessages">Whether to allow empty messages field.</param>
         /// <returns>The parsed OpenAI request, or null if parsing failed.</returns>
+#pragma warning disable MA0051 // Method is too long
         public static async Task<OpenAIRequest?> ParseAsync(HttpContext? context, CancellationToken cancellationToken = default, bool allowEmptyModel = false, bool allowEmptyMessages = false)
+#pragma warning restore MA0051
         {
             if (context == null)
             {
@@ -31,13 +33,13 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
             }
 
             // Resolve configured max request body size from DI. Fall back to 10 MB if not available.
-            long MaxBodySize = 10L * 1024 * 1024; // 10 MB default
+            long maxBodySize = 10L * 1024 * 1024; // 10 MB default
             try
             {
                 var opts = context.RequestServices.GetService(typeof(Microsoft.Extensions.Options.IOptions<Synaxis.InferenceGateway.Application.Configuration.SynaxisConfiguration>)) as Microsoft.Extensions.Options.IOptions<Synaxis.InferenceGateway.Application.Configuration.SynaxisConfiguration>;
                 if (opts?.Value != null)
                 {
-                    MaxBodySize = opts.Value.MaxRequestBodySize;
+                    maxBodySize = opts.Value.MaxRequestBodySize;
                 }
             }
             catch
@@ -47,9 +49,9 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
 
             // If the client provided a Content-Length header, enforce it immediately.
             var contentLength = context.Request.ContentLength;
-            if (contentLength.HasValue && contentLength.Value > MaxBodySize)
+            if (contentLength.HasValue && contentLength.Value > maxBodySize)
             {
-                throw new BadHttpRequestException($"Request body too large. Limit is {MaxBodySize} bytes.");
+                throw new BadHttpRequestException($"Request body too large. Limit is {maxBodySize} bytes.");
             }
 
             // Enable buffering so we can read and then rewind for downstream middleware.
@@ -75,14 +77,14 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
                 while ((bytesRead = await context.Request.Body.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken).ConfigureAwait(false)) > 0)
                 {
                     totalRead += bytesRead;
-                    if (totalRead > MaxBodySize)
+                    if (totalRead > maxBodySize)
                     {
                         // Reset position for downstream just in case, then reject.
                         context.Request.Body.Position = 0;
-                        throw new BadHttpRequestException($"Request body too large. Limit is {MaxBodySize} bytes.");
+                        throw new BadHttpRequestException($"Request body too large. Limit is {maxBodySize} bytes.");
                     }
 
-                    ms.Write(buffer, 0, bytesRead);
+                    await ms.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken).ConfigureAwait(false);
                 }
 
                 ms.Position = 0;
@@ -102,26 +104,21 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
             {
                 var request = JsonSerializer.Deserialize<OpenAIRequest>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-                if (request != null)
+                if (request != null && !string.Equals(body.Trim(), "{}", StringComparison.Ordinal))
                 {
-                    // Special case: if the body is an empty JSON object "{}", allow it to pass validation
-                    // and return the request with empty Model and Messages.
-                    if (body.Trim() != "{}")
+                    // Handle special cases based on endpoint requirements
+                    bool isEmptyModel = string.IsNullOrEmpty(request.Model);
+                    bool isMissingMessages = request.Messages == null || request.Messages.Count == 0;
+
+                    bool shouldSkipValidation = (isEmptyModel && allowEmptyModel) || (isMissingMessages && allowEmptyMessages);
+
+                    if (!shouldSkipValidation)
                     {
-                        // Handle special cases based on endpoint requirements
-                        bool isEmptyModel = string.IsNullOrEmpty(request.Model);
-                        bool isMissingMessages = request.Messages == null || request.Messages.Count == 0;
-
-                        bool shouldSkipValidation = (isEmptyModel && allowEmptyModel) || (isMissingMessages && allowEmptyMessages);
-
-                        if (!shouldSkipValidation)
+                        var validationErrors = ValidateRequest(request);
+                        if (validationErrors.Count > 0)
                         {
-                            var validationErrors = ValidateRequest(request);
-                            if (validationErrors.Count > 0)
-                            {
-                                var errorMessage = string.Join("; ", validationErrors);
-                                throw new BadHttpRequestException($"Invalid request: {errorMessage}");
-                            }
+                            var errorMessage = string.Join("; ", validationErrors);
+                            throw new BadHttpRequestException($"Invalid request: {errorMessage}");
                         }
                     }
                 }
@@ -144,14 +141,11 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
 
             if (!Validator.TryValidateObject(request, validationContext, validationResults, validateAllProperties: true))
             {
-                foreach (var result in validationResults)
+                foreach (var result in validationResults.Where(result => result != null))
                 {
-                    if (result != null)
-                    {
-                        var fieldName = string.Join(", ", result.MemberNames);
-                        var errorMessage = result.ErrorMessage ?? "Validation failed";
-                        errors.Add(!string.IsNullOrEmpty(fieldName) ? $"{fieldName}: {errorMessage}" : errorMessage);
-                    }
+                    var fieldName = string.Join(", ", result!.MemberNames);
+                    var errorMessage = result.ErrorMessage ?? "Validation failed";
+                    errors.Add(!string.IsNullOrEmpty(fieldName) ? $"{fieldName}: {errorMessage}" : errorMessage);
                 }
             }
 
@@ -166,14 +160,11 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
 
                     if (!Validator.TryValidateObject(message, messageContext, messageResults, validateAllProperties: true))
                     {
-                        foreach (var result in messageResults)
+                        foreach (var result in messageResults.Where(result => result != null))
                         {
-                            if (result != null)
-                            {
-                                var fieldName = string.Join(", ", result.MemberNames);
-                                var errorMessage = result.ErrorMessage ?? "Validation failed";
-                                errors.Add($"messages[{i}].{fieldName}: {errorMessage}");
-                            }
+                            var fieldName = string.Join(", ", result!.MemberNames);
+                            var errorMessage = result.ErrorMessage ?? "Validation failed";
+                            errors.Add($"messages[{i}].{fieldName}: {errorMessage}");
                         }
                     }
                 }

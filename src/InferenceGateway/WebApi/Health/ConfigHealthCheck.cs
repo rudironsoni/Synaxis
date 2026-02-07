@@ -37,22 +37,18 @@ namespace Synaxis.InferenceGateway.WebApi.Health
                 return Task.FromResult(HealthCheckResult.Unhealthy("No providers configured."));
             }
 
-            foreach (var model in this._config.CanonicalModels)
+            var invalidModel = this._config.CanonicalModels.FirstOrDefault(m => !this._config.Providers.ContainsKey(m.Provider));
+            if (invalidModel != null)
             {
-                if (!this._config.Providers.ContainsKey(model.Provider))
-                {
-                    return Task.FromResult(HealthCheckResult.Unhealthy($"Canonical model '{model.Id}' references unknown provider '{model.Provider}'."));
-                }
+                return Task.FromResult(HealthCheckResult.Unhealthy($"Canonical model '{invalidModel.Id}' references unknown provider '{invalidModel.Provider}'."));
             }
 
             foreach (var alias in this._config.Aliases)
             {
-                foreach (var candidate in alias.Value.Candidates)
+                var invalidCandidate = alias.Value.Candidates.FirstOrDefault(candidate => !this._config.CanonicalModels.Any(m => string.Equals(m.Id, candidate, StringComparison.Ordinal)));
+                if (invalidCandidate != null)
                 {
-                    if (!this._config.CanonicalModels.Any(m => m.Id == candidate))
-                    {
-                        return Task.FromResult(HealthCheckResult.Unhealthy($"Alias '{alias.Key}' references unknown canonical model '{candidate}'."));
-                    }
+                    return Task.FromResult(HealthCheckResult.Unhealthy($"Alias '{alias.Key}' references unknown canonical model '{invalidCandidate}'."));
                 }
             }
 

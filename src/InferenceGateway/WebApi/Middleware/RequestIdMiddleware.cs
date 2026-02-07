@@ -29,7 +29,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         /// </summary>
         /// <param name="context">The HTTP context.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        public async Task InvokeAsync(HttpContext context)
+        public Task InvokeAsync(HttpContext context)
         {
             var requestId = context.Request.Headers["X-Request-ID"].FirstOrDefault()
                          ?? context.Request.Headers["x-request-id"].FirstOrDefault()
@@ -37,7 +37,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
 
             context.Response.Headers["X-Request-ID"] = requestId;
 
-            await this._next(context).ConfigureAwait(false);
+            return this._next(context);
         }
     }
 }

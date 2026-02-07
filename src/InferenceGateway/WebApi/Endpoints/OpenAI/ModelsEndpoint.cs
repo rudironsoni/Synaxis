@@ -22,6 +22,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
         /// Maps model endpoints to the application.
         /// </summary>
         /// <param name="app">The endpoint route builder.</param>
+#pragma warning disable MA0051 // Method too long
         public static void MapModels(this IEndpointRouteBuilder app)
         {
             app.MapGet("/v1/models", (IOptions<SynaxisConfiguration> config) =>
@@ -50,19 +51,16 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                     });
                 }
 
-                foreach (var alias in config.Value.Aliases)
+                models.AddRange(config.Value.Aliases.Select(alias => new ModelDto
                 {
-                    models.Add(new ModelDto
-                    {
-                        Id = alias.Key,
-                        Object = "model",
-                        Created = now,
-                        OwnedBy = "synaxis",
-                        Provider = "synaxis",
-                        ModelPath = alias.Key,
-                        Capabilities = new ModelCapabilitiesDto(),
-                    });
-                }
+                    Id = alias.Key,
+                    Object = "model",
+                    Created = now,
+                    OwnedBy = "synaxis",
+                    Provider = "synaxis",
+                    ModelPath = alias.Key,
+                    Capabilities = new ModelCapabilitiesDto(),
+                }));
 
                 var response = new ModelsListResponseDto
                 {
@@ -88,37 +86,41 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                 var cm = config.Value.CanonicalModels.FirstOrDefault(x => string.Equals(x.Id, id, StringComparison.Ordinal));
                 if (cm != null)
                 {
-                    return Results.Json(new ModelDto
-                    {
-                        Id = cm.Id,
-                        Object = "model",
-                        Created = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                        OwnedBy = cm.Provider,
-                        Provider = cm.Provider,
-                        ModelPath = cm.ModelPath,
-                        Capabilities = new ModelCapabilitiesDto
+                    return Results.Json(
+                        new ModelDto
                         {
-                            Streaming = cm.Streaming,
-                            Tools = cm.Tools,
-                            Vision = cm.Vision,
-                            StructuredOutput = cm.StructuredOutput,
-                            LogProbs = cm.LogProbs,
+                            Id = cm.Id,
+                            Object = "model",
+                            Created = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                            OwnedBy = cm.Provider,
+                            Provider = cm.Provider,
+                            ModelPath = cm.ModelPath,
+                            Capabilities = new ModelCapabilitiesDto
+                            {
+                                Streaming = cm.Streaming,
+                                Tools = cm.Tools,
+                                Vision = cm.Vision,
+                                StructuredOutput = cm.StructuredOutput,
+                                LogProbs = cm.LogProbs,
+                            },
                         },
-                    }, ModelJsonContext.Options);
+                        ModelJsonContext.Options);
                 }
 
                 if (config.Value.Aliases.ContainsKey(id))
                 {
-                    return Results.Json(new ModelDto
-                    {
-                        Id = id,
-                        Object = "model",
-                        Created = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                        OwnedBy = "synaxis",
-                        Provider = "synaxis",
-                        ModelPath = id,
-                        Capabilities = new ModelCapabilitiesDto(),
-                    }, ModelJsonContext.Options);
+                    return Results.Json(
+                        new ModelDto
+                        {
+                            Id = id,
+                            Object = "model",
+                            Created = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                            OwnedBy = "synaxis",
+                            Provider = "synaxis",
+                            ModelPath = id,
+                            Capabilities = new ModelCapabilitiesDto(),
+                        },
+                        ModelJsonContext.Options);
                 }
 
                 return Results.Json(
@@ -140,6 +142,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
             .WithDescription("Returns detailed information about a specific model including its capabilities");
         }
     }
+#pragma warning restore MA0051 // Method too long
 
     /// <summary>
     /// DTO for model information.

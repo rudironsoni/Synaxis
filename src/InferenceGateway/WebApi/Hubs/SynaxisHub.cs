@@ -84,7 +84,7 @@ namespace Synaxis.InferenceGateway.WebApi.Hubs
         /// </summary>
         /// <param name="exception">The exception that caused the disconnection, if any.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        public override async Task OnDisconnectedAsync(Exception? exception)
+        public override Task OnDisconnectedAsync(Exception? exception)
         {
             if (exception != null)
             {
@@ -95,7 +95,7 @@ namespace Synaxis.InferenceGateway.WebApi.Hubs
                 this._logger.LogInformation("Client disconnected: {ConnectionId}", this.Context.ConnectionId);
             }
 
-            await base.OnDisconnectedAsync(exception).ConfigureAwait(false);
+            return base.OnDisconnectedAsync(exception);
         }
     }
 }
