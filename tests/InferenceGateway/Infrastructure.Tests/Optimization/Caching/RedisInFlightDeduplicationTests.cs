@@ -1,11 +1,12 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Moq;
-using StackExchange.Redis;
-using Xunit;
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Optimization.Caching;
+
+using Moq;
+using StackExchange.Redis;
+using System.Threading.Tasks;
+using System.Threading;
+using System;
+using Xunit;
 
 /// <summary>
 /// Unit tests for IInFlightDeduplication Redis implementation
@@ -66,7 +67,7 @@ public class RedisInFlightDeduplicationTests
         Func<Task<string>> operation = async () =>
         {
             executed = true;
-            await Task.Delay(10);
+            await Task.Delay(10).ConfigureAwait(false);
             return "Result from operation";
         };
 
@@ -93,6 +94,7 @@ public class RedisInFlightDeduplicationTests
     }
 
     [Fact]
+#pragma warning disable MA0051 // Method is too long
     public async Task ExecuteWithDeduplication_ConcurrentCalls_Deduplicates()
     {
         // Arrange
@@ -143,7 +145,7 @@ public class RedisInFlightDeduplicationTests
         Func<Task<string>> operation = async () =>
         {
             Interlocked.Increment(ref executionCount);
-            await Task.Delay(100); // Simulate work
+            await Task.Delay(100).ConfigureAwait(false); // Simulate work
             return "Result from operation";
         };
 
@@ -158,12 +160,13 @@ public class RedisInFlightDeduplicationTests
                 this._cancellationToken);
         }
 
-        var results = await Task.WhenAll(tasks);
+        var results = await Task.WhenAll(tasks).ConfigureAwait(false);
 
         // Assert - Only one execution should occur
         Assert.Equal(1, executionCount);
         Assert.All(results, r => Assert.NotNull(r));
     }
+#pragma warning restore MA0051 // Method is too long
 
     [Fact]
     public async Task ExecuteWithDeduplication_LockTimeout_ExecutesFallback()
@@ -196,7 +199,7 @@ public class RedisInFlightDeduplicationTests
         Func<Task<string>> operation = async () =>
         {
             executed = true;
-            await Task.Delay(10);
+            await Task.Delay(10).ConfigureAwait(false);
             return "Fallback result";
         };
 
@@ -213,6 +216,7 @@ public class RedisInFlightDeduplicationTests
     }
 
     [Fact]
+#pragma warning disable MA0051 // Method is too long
     public async Task ExecuteWithDeduplication_Success_StoresResult()
     {
         // Arrange
@@ -220,7 +224,6 @@ public class RedisInFlightDeduplicationTests
         var lockKey = $"inflight:{requestHash}";
         var resultKey = $"result:{requestHash}";
         var lockTimeout = TimeSpan.FromSeconds(30);
-        var resultTtl = TimeSpan.FromMinutes(5);
 
         this._mockDatabase
             .Setup(db => db.StringSetAsync(
@@ -248,7 +251,11 @@ public class RedisInFlightDeduplicationTests
                 When.Always,
                 CommandFlags.None))
             .Callback<RedisKey, RedisValue, TimeSpan?, bool, When, CommandFlags>(
-                (k, v, t, b, w, f) => { storedResult = v; storedTtl = t; })
+                (k, v, t, b, w, f) =>
+                {
+                    storedResult = v;
+                    storedTtl = t;
+                })
             .ReturnsAsync(true);
 
         this._mockDatabase
@@ -259,7 +266,7 @@ public class RedisInFlightDeduplicationTests
 
         Func<Task<string>> operation = async () =>
         {
-            await Task.Delay(10);
+            await Task.Delay(10).ConfigureAwait(false);
             return "Operation result";
         };
 
@@ -273,7 +280,7 @@ public class RedisInFlightDeduplicationTests
         // Assert
         Assert.Equal("Operation result", result);
         Assert.False(storedResult.IsNull);
-        Assert.Contains("Operation result", storedResult.ToString());
+        Assert.Contains("Operation result", storedResult.ToString(), StringComparison.Ordinal);
 
         this._mockDatabase.Verify(
             db => db.StringSetAsync(
@@ -285,6 +292,7 @@ public class RedisInFlightDeduplicationTests
                 CommandFlags.None),
             Times.Once);
     }
+#pragma warning restore MA0051 // Method is too long
 
     [Fact]
     public async Task ExecuteWithDeduplication_Failure_ReleasesLock()
@@ -319,7 +327,7 @@ public class RedisInFlightDeduplicationTests
 
         Func<Task<string>> operation = async () =>
         {
-            await Task.Delay(10);
+            await Task.Delay(10).ConfigureAwait(false);
             throw new InvalidOperationException("Operation failed");
         };
 
@@ -330,8 +338,8 @@ public class RedisInFlightDeduplicationTests
                 requestHash,
                 operation,
                 lockTimeout,
-                this._cancellationToken);
-        });
+                this._cancellationToken).ConfigureAwait(false);
+        }).ConfigureAwait(false);
 
         // Assert - Lock should be released even on failure
         Assert.True(lockReleased);
@@ -370,7 +378,7 @@ public class RedisInFlightDeduplicationTests
 
         var service = new RedisInFlightDeduplication(this._mockRedis.Object);
 
-        Func<Task<string>> operation = () => throw new ArgumentException("Invalid argument");
+        Func<Task<string>> operation = () => throw new ArgumentException("Invalid argument", nameof(operation));
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<ArgumentException>(async () =>
@@ -379,8 +387,8 @@ public class RedisInFlightDeduplicationTests
                 requestHash,
                 operation,
                 lockTimeout,
-                this._cancellationToken);
-        });
+                this._cancellationToken).ConfigureAwait(false);
+        }).ConfigureAwait(false);
 
         Assert.Equal("Invalid argument", exception.Message);
     }
@@ -399,7 +407,7 @@ public class RedisInFlightDeduplicationTests
         var service = new RedisInFlightDeduplication(this._mockRedis.Object);
 
         // Act
-        var result = await service.IsInFlightAsync(requestHash, this._cancellationToken);
+        var result = await service.IsInFlightAsync(requestHash, this._cancellationToken).ConfigureAwait(false);
 
         // Assert
         Assert.True(result);
@@ -423,7 +431,7 @@ public class RedisInFlightDeduplicationTests
         var service = new RedisInFlightDeduplication(this._mockRedis.Object);
 
         // Act
-        var result = await service.IsInFlightAsync(requestHash, this._cancellationToken);
+        var result = await service.IsInFlightAsync(requestHash, this._cancellationToken).ConfigureAwait(false);
 
         // Assert
         Assert.False(result);
@@ -456,7 +464,7 @@ public class RedisInFlightDeduplicationTests
         Func<Task<string>> operation = async () =>
         {
             executed = true;
-            await Task.Delay(10);
+            await Task.Delay(10).ConfigureAwait(false);
             return "Direct execution result";
         };
 
@@ -512,25 +520,25 @@ public class RedisInFlightDeduplication : IInFlightDeduplication
             var resultKey = $"result:{requestHash}";
 
             // Try to acquire lock
-            var lockAcquired = await db.StringSetAsync(lockKey, "locked", lockTimeout, when: When.NotExists);
+            var lockAcquired = await db.StringSetAsync(lockKey, "locked", lockTimeout, when: When.NotExists).ConfigureAwait(false);
 
             if (lockAcquired)
             {
                 try
                 {
                     // We got the lock - execute the operation
-                    var result = await operation();
+                    var result = await operation().ConfigureAwait(false);
 
                     // Store the result for other waiters
                     var serialized = System.Text.Json.JsonSerializer.Serialize(result);
-                    await db.StringSetAsync(resultKey, serialized, TimeSpan.FromMinutes(5));
+                    await db.StringSetAsync(resultKey, serialized, TimeSpan.FromMinutes(5)).ConfigureAwait(false);
 
                     return result;
                 }
                 finally
                 {
                     // Always release the lock
-                    await db.KeyDeleteAsync(lockKey);
+                    await db.KeyDeleteAsync(lockKey).ConfigureAwait(false);
                 }
             }
             else
@@ -540,23 +548,23 @@ public class RedisInFlightDeduplication : IInFlightDeduplication
 
                 while (DateTime.UtcNow < deadline)
                 {
-                    var cachedResult = await db.StringGetAsync(resultKey);
+                    var cachedResult = await db.StringGetAsync(resultKey).ConfigureAwait(false);
                     if (cachedResult.HasValue)
                     {
                         return System.Text.Json.JsonSerializer.Deserialize<T>(cachedResult.ToString())!;
                     }
 
-                    await Task.Delay(100, cancellationToken); // Poll interval
+                    await Task.Delay(100, cancellationToken).ConfigureAwait(false); // Poll interval
                 }
 
                 // Timeout - execute as fallback
-                return await operation();
+                return await operation().ConfigureAwait(false);
             }
         }
         catch (RedisException)
         {
             // Fail open - execute directly if Redis is unavailable
-            return await operation();
+            return await operation().ConfigureAwait(false);
         }
     }
 
@@ -564,6 +572,6 @@ public class RedisInFlightDeduplication : IInFlightDeduplication
     {
         var db = this._redis.GetDatabase();
         var lockKey = $"inflight:{requestHash}";
-        return await db.KeyExistsAsync(lockKey);
+        return await db.KeyExistsAsync(lockKey).ConfigureAwait(false);
     }
 }

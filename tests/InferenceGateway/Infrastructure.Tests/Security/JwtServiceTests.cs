@@ -1,15 +1,3 @@
-using System;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
-using System.Security.Claims;
-using System.Text;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using Moq;
-using Synaxis.InferenceGateway.Application.Configuration;
-using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
-using Synaxis.InferenceGateway.Infrastructure.Security;
-using Xunit;
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
 {
@@ -18,6 +6,18 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
         private readonly Mock<IOptions<SynaxisConfiguration>> _mockConfig;
         private readonly JwtService _jwtService;
         private readonly SynaxisConfiguration _config;
+    using Microsoft.Extensions.Options;
+    using Microsoft.IdentityModel.Tokens;
+    using Moq;
+    using Synaxis.InferenceGateway.Application.Configuration;
+    using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
+    using Synaxis.InferenceGateway.Infrastructure.Security;
+    using System.IdentityModel.Tokens.Jwt;
+    using System.Linq;
+    using System.Security.Claims;
+    using System.Text;
+    using System;
+    using Xunit;
 
         public JwtServiceTests()
         {

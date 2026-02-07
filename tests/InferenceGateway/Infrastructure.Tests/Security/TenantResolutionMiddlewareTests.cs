@@ -1,15 +1,16 @@
-using System.Security.Claims;
+
+namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security;
+
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Synaxis.InferenceGateway.Application.ApiKeys;
 using Synaxis.InferenceGateway.Application.ApiKeys.Models;
+using Synaxis.InferenceGateway.Application.ApiKeys;
 using Synaxis.InferenceGateway.Application.Interfaces;
 using Synaxis.InferenceGateway.WebApi.Middleware;
+using System.Security.Claims;
 using Xunit;
-
-namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security;
 
 /// <summary>
 /// Unit tests for TenantResolutionMiddleware.
@@ -79,7 +80,7 @@ public class TenantResolutionMiddlewareTests
             });
 
         // Act
-        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object).ConfigureAwait(false);
 
         // Assert
         this._mockTenantContext.Verify(t => t.SetApiKeyContext(
@@ -109,7 +110,7 @@ public class TenantResolutionMiddlewareTests
             });
 
         // Act
-        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object).ConfigureAwait(false);
 
         // Assert
         this._httpContext.Response.StatusCode.Should().Be(StatusCodes.Status401Unauthorized);
@@ -138,7 +139,7 @@ public class TenantResolutionMiddlewareTests
             });
 
         // Act
-        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object).ConfigureAwait(false);
 
         // Assert
         this._httpContext.Response.StatusCode.Should().Be(StatusCodes.Status401Unauthorized);
@@ -165,7 +166,7 @@ public class TenantResolutionMiddlewareTests
             });
 
         // Act
-        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object).ConfigureAwait(false);
 
         // Assert
         this._mockApiKeyService.Verify(s => s.ValidateApiKeyAsync(
@@ -198,7 +199,7 @@ public class TenantResolutionMiddlewareTests
         this._httpContext.User = new ClaimsPrincipal(identity);
 
         // Act
-        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object).ConfigureAwait(false);
 
         // Assert
         this._mockTenantContext.Verify(t => t.SetJwtContext(
@@ -228,7 +229,7 @@ public class TenantResolutionMiddlewareTests
         this._httpContext.User = new ClaimsPrincipal(identity);
 
         // Act
-        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object).ConfigureAwait(false);
 
         // Assert
         this._httpContext.Response.StatusCode.Should().Be(StatusCodes.Status401Unauthorized);
@@ -253,7 +254,7 @@ public class TenantResolutionMiddlewareTests
         this._httpContext.User = new ClaimsPrincipal(identity);
 
         // Act
-        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object).ConfigureAwait(false);
 
         // Assert
         this._httpContext.Response.StatusCode.Should().Be(StatusCodes.Status401Unauthorized);
@@ -279,7 +280,7 @@ public class TenantResolutionMiddlewareTests
         this._httpContext.User = new ClaimsPrincipal(identity);
 
         // Act
-        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object).ConfigureAwait(false);
 
         // Assert
         this._httpContext.Response.StatusCode.Should().Be(StatusCodes.Status401Unauthorized);
@@ -305,7 +306,7 @@ public class TenantResolutionMiddlewareTests
         this._httpContext.User = new ClaimsPrincipal(identity);
 
         // Act
-        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object).ConfigureAwait(false);
 
         // Assert
         this._mockTenantContext.Verify(t => t.SetJwtContext(
@@ -335,7 +336,7 @@ public class TenantResolutionMiddlewareTests
         this._httpContext.User = new ClaimsPrincipal(identity);
 
         // Act
-        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object).ConfigureAwait(false);
 
         // Assert
         this._mockTenantContext.Verify(t => t.SetJwtContext(
@@ -356,7 +357,7 @@ public class TenantResolutionMiddlewareTests
         this._httpContext.User = new ClaimsPrincipal(new ClaimsIdentity());
 
         // Act
-        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object).ConfigureAwait(false);
 
         // Assert
         this._httpContext.Response.StatusCode.Should().Be(StatusCodes.Status401Unauthorized);
@@ -373,7 +374,7 @@ public class TenantResolutionMiddlewareTests
         // No Authorization header set
 
         // Act
-        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object).ConfigureAwait(false);
 
         // Assert
         this._mockNext.Verify(n => n(this._httpContext), Times.Once);
@@ -387,7 +388,7 @@ public class TenantResolutionMiddlewareTests
         this._httpContext.Request.Headers["Authorization"] = "";
 
         // Act
-        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object).ConfigureAwait(false);
 
         // Assert
         this._mockNext.Verify(n => n(this._httpContext), Times.Once);
@@ -400,7 +401,7 @@ public class TenantResolutionMiddlewareTests
         this._httpContext.Request.Headers["Authorization"] = "Basic dXNlcjpwYXNz";
 
         // Act
-        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object).ConfigureAwait(false);
 
         // Assert
         this._httpContext.Response.StatusCode.Should().Be(StatusCodes.Status401Unauthorized);
@@ -428,7 +429,7 @@ public class TenantResolutionMiddlewareTests
             });
 
         // Act
-        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object).ConfigureAwait(false);
 
         // Assert
         this._httpContext.Response.StatusCode.Should().Be(StatusCodes.Status200OK);
@@ -455,7 +456,7 @@ public class TenantResolutionMiddlewareTests
             });
 
         // Act
-        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object).ConfigureAwait(false);
 
         // Assert
         this._httpContext.Response.StatusCode.Should().Be(StatusCodes.Status200OK);
@@ -477,7 +478,7 @@ public class TenantResolutionMiddlewareTests
             .ThrowsAsync(new Exception("Database connection failed"));
 
         // Act
-        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object).ConfigureAwait(false);
 
         // Assert
         this._httpContext.Response.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
@@ -502,7 +503,7 @@ public class TenantResolutionMiddlewareTests
             });
 
         // Act
-        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object).ConfigureAwait(false);
 
         // Assert
         this._httpContext.Response.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
@@ -526,7 +527,7 @@ public class TenantResolutionMiddlewareTests
             });
 
         // Act
-        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object).ConfigureAwait(false);
 
         // Assert
         this._httpContext.Response.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);

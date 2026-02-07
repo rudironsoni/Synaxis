@@ -1,18 +1,19 @@
-using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Net.Http;
-using System.Text;
-using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.AI;
-using Moq;
-using Moq.Protected;
-using Synaxis.InferenceGateway.Infrastructure;
-using Xunit;
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests;
+
+using Microsoft.Extensions.AI;
+using Moq.Protected;
+using Moq;
+using Synaxis.InferenceGateway.Infrastructure;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Net;
+using System.Text.Json;
+using System.Text;
+using System.Threading.Tasks;
+using System.Threading;
+using System;
+using Xunit;
 
 public class PollinationsChatClientTests
 {
@@ -68,7 +69,7 @@ public class PollinationsChatClientTests
         var client = new PollinationsChatClient(httpClient, TestModelId);
 
         // Act
-        var result = await client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") });
+        var result = await client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") }).ConfigureAwait(false);
 
         // Assert
         Assert.Equal(responseText, result.Messages[0].Text);
@@ -100,10 +101,10 @@ public class PollinationsChatClientTests
         var options = new ChatOptions { Temperature = 0.7f };
 
         // Act
-        await client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") }, options);
+        await client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") }, options).ConfigureAwait(false);
 
         // Assert
-        var content = await capturedRequest.Content!.ReadAsStringAsync();
+        var content = await capturedRequest.Content!.ReadAsStringAsync().ConfigureAwait(false);
         var json = JsonSerializer.Deserialize<JsonElement>(content);
         Assert.False(json.GetProperty("stream").GetBoolean());
         Assert.Equal("openai", json.GetProperty("model").GetString()); // gpt-4o-mini maps to openai
@@ -165,7 +166,7 @@ public class PollinationsChatClientTests
         };
 
         // Act
-        var result = await client.GetResponseAsync(messages);
+        var result = await client.GetResponseAsync(messages).ConfigureAwait(false);
 
         // Assert
         Assert.Equal(responseText, result.Messages[0].Text);
@@ -193,7 +194,7 @@ public class PollinationsChatClientTests
         var client = new PollinationsChatClient(httpClient, TestModelId);
 
         // Act
-        var result = await client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") });
+        var result = await client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") }).ConfigureAwait(false);
 
         // Assert
         Assert.Equal("", result.Messages[0].Text);
@@ -265,7 +266,7 @@ public class PollinationsChatClientTests
         }
 
         // Assert
-        var content = await capturedRequest.Content!.ReadAsStringAsync();
+        var content = await capturedRequest.Content!.ReadAsStringAsync().ConfigureAwait(false);
         var json = JsonSerializer.Deserialize<JsonElement>(content);
         Assert.True(json.GetProperty("stream").GetBoolean());
         Assert.Equal("openai", json.GetProperty("model").GetString());

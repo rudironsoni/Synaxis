@@ -1,22 +1,22 @@
-using System;
-using System.IO;
-using System.Net;
-using System.Net.Http;
-using System.Text;
-using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using Moq;
-using Xunit;
-using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
-using Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub;
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitHub
 {
     public class GitHubAuthStrategyTests : IDisposable
     {
         private readonly string? _origHome;
+    using Microsoft.Extensions.Logging;
+    using Moq;
+    using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
+    using Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub;
+    using System.IO;
+    using System.Net.Http;
+    using System.Net;
+    using System.Text.Json;
+    using System.Text;
+    using System.Threading.Tasks;
+    using System.Threading;
+    using System;
+    using Xunit;
 
         public GitHubAuthStrategyTests()
         {
@@ -56,14 +56,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             IdentityAccount? emitted = null;
             strat.AccountAuthenticated += (_, acc) => emitted = acc.Account;
 
-            var res = await strat.InitiateFlowAsync(CancellationToken.None);
+            var res = await strat.InitiateFlowAsync(CancellationToken.None).ConfigureAwait(false);
 
             Assert.Equal("Pending", res.Status);
             Assert.Equal(devicePayload.user_code, res.UserCode);
             Assert.Equal(devicePayload.verification_uri, res.VerificationUri);
 
             // Give a small delay to allow background polling to run and invoke callback
-            await Task.Delay(50);
+            await Task.Delay(50).ConfigureAwait(false);
             Assert.NotNull(emitted);
             Assert.Equal("github", emitted!.Provider);
         }
@@ -77,7 +77,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
 
             var strat = new GitHubAuthStrategy(client, mockDevice.Object, logger.Object);
 
-            var res = await strat.InitiateFlowAsync(CancellationToken.None);
+            var res = await strat.InitiateFlowAsync(CancellationToken.None).ConfigureAwait(false);
 
             Assert.Equal("Error", res.Status);
             Assert.NotNull(res.Message);
@@ -94,7 +94,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             var strat = new GitHubAuthStrategy(client, mockDevice.Object, logger.Object);
 
             var account = new IdentityAccount { Provider = "github", Id = "1", RefreshToken = "old-rt" };
-            var tr = await strat.RefreshTokenAsync(account, CancellationToken.None);
+            var tr = await strat.RefreshTokenAsync(account, CancellationToken.None).ConfigureAwait(false);
 
             Assert.Equal("at-1", tr.AccessToken);
             Assert.Equal("rt-1", tr.RefreshToken);
@@ -114,7 +114,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
 
             var account = new IdentityAccount { Provider = "github", Id = "1", RefreshToken = "rt" };
 
-            await Assert.ThrowsAsync<HttpRequestException>(() => strat.RefreshTokenAsync(account, CancellationToken.None));
+            await Assert.ThrowsAsync<HttpRequestException>(() => strat.RefreshTokenAsync(account, CancellationToken.None)).ConfigureAwait(false);
         }
 
         [Fact]
@@ -141,14 +141,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             IdentityAccount? emitted = null;
             strat.AccountAuthenticated += (_, acc) => emitted = acc.Account;
 
-            var res = await strat.InitiateFlowAsync(CancellationToken.None);
+            var res = await strat.InitiateFlowAsync(CancellationToken.None).ConfigureAwait(false);
             Assert.Equal("Pending", res.Status);
 
             Assert.NotNull(capturedCallback);
 
             // Simulate device flow returning a token
             var token = new TokenResponse { AccessToken = "access-1", RefreshToken = "refresh-1", ExpiresInSeconds = 3600 };
-            await capturedCallback!(token);
+            await capturedCallback!(token).ConfigureAwait(false);
 
             // AccountAuthenticated should have been invoked
             Assert.NotNull(emitted);
@@ -159,8 +159,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             // Ensure GH config file was written to the temp HOME
             var cfgPath = Path.Combine(tmp, ".config", "gh", "hosts.yml");
             Assert.True(File.Exists(cfgPath));
-            var contents = await File.ReadAllTextAsync(cfgPath);
-            Assert.Contains("oauth_token: access-1", contents);
+            var contents = await File.ReadAllTextAsync(cfgPath).ConfigureAwait(false);
+            Assert.Contains("oauth_token: access-1", contents, StringComparison.Ordinal);
 
             // cleanup
             try { Directory.Delete(tmp, true); } catch { }

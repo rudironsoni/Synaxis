@@ -1,16 +1,17 @@
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
-using System.Threading.Tasks;
+
+namespace Synaxis.InferenceGateway.Infrastructure.Tests.External.DuckDuckGo;
+
+using Microsoft.Extensions.AI;
 using RichardSzalay.MockHttp;
 using Synaxis.InferenceGateway.Infrastructure.External.DuckDuckGo;
 using Synaxis.InferenceGateway.Infrastructure;
-using Microsoft.Extensions.AI;
-using Xunit;
 using System.Collections.Generic;
-
-namespace Synaxis.InferenceGateway.Infrastructure.Tests.External.DuckDuckGo;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Net.Http;
+using System.Net;
+using System.Threading.Tasks;
+using Xunit;
 
 public class DuckDuckGoChatClientTests
 {
@@ -46,7 +47,7 @@ public class DuckDuckGoChatClientTests
         var client = new HttpClient(mock);
         var ddg = new DuckDuckGoChatClient(client, "gpt-4o-mini");
 
-        var response = await ddg.GetResponseAsync(new List<Microsoft.Extensions.AI.ChatMessage> { new Microsoft.Extensions.AI.ChatMessage(Microsoft.Extensions.AI.ChatRole.User, "hi") });
+        var response = await ddg.GetResponseAsync(new List<Microsoft.Extensions.AI.ChatMessage> { new Microsoft.Extensions.AI.ChatMessage(Microsoft.Extensions.AI.ChatRole.User, "hi") }).ConfigureAwait(false);
 
         Assert.Single(response.Messages);
         Assert.Equal("hello from ddg", response.Messages[0].Text);
@@ -65,7 +66,7 @@ public class DuckDuckGoChatClientTests
         var client = new HttpClient(mock);
         var ddg = new DuckDuckGoChatClient(client, "gpt-4o-mini");
 
-        var response = await ddg.GetResponseAsync(new List<Microsoft.Extensions.AI.ChatMessage> { new Microsoft.Extensions.AI.ChatMessage(Microsoft.Extensions.AI.ChatRole.User, "hi") });
+        var response = await ddg.GetResponseAsync(new List<Microsoft.Extensions.AI.ChatMessage> { new Microsoft.Extensions.AI.ChatMessage(Microsoft.Extensions.AI.ChatRole.User, "hi") }).ConfigureAwait(false);
 
         Assert.Empty(response.Messages);
     }

@@ -1,15 +1,16 @@
-using System.Security.Claims;
+
+namespace Synaxis.InferenceGateway.Infrastructure.Tests.Data;
+
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Moq;
-using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Operations;
+using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 using Synaxis.InferenceGateway.Infrastructure.Data.Interceptors;
+using System.Security.Claims;
 using Xunit;
-
-namespace Synaxis.InferenceGateway.Infrastructure.Tests.Data;
 
 /// <summary>
 /// Unit tests for SoftDeleteInterceptor.
@@ -42,7 +43,7 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
-        await this._dbContext.DisposeAsync();
+        await this._dbContext.DisposeAsync().ConfigureAwait(false);
     }
 
     #region Constructor Tests
@@ -81,12 +82,12 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             PlanTier = "Free",
         };
 
-        await this._dbContext.Organizations.AddAsync(organization);
-        await this._dbContext.SaveChangesAsync();
+        await this._dbContext.Organizations.AddAsync(organization).ConfigureAwait(false);
+        await this._dbContext.SaveChangesAsync().ConfigureAwait(false);
 
         // Act
         this._dbContext.Organizations.Remove(organization);
-        await this._dbContext.SaveChangesAsync();
+        await this._dbContext.SaveChangesAsync().ConfigureAwait(false);
 
         // Assert
         var deletedOrg = await this._dbContext.Organizations
@@ -121,13 +122,13 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             Status = "Active",
         };
 
-        await this._dbContext.Organizations.AddAsync(organization);
-        await this._dbContext.Groups.AddAsync(group);
-        await this._dbContext.SaveChangesAsync();
+        await this._dbContext.Organizations.AddAsync(organization).ConfigureAwait(false);
+        await this._dbContext.Groups.AddAsync(group).ConfigureAwait(false);
+        await this._dbContext.SaveChangesAsync().ConfigureAwait(false);
 
         // Act
         this._dbContext.Groups.Remove(group);
-        await this._dbContext.SaveChangesAsync();
+        await this._dbContext.SaveChangesAsync().ConfigureAwait(false);
 
         // Assert
         var deletedGroup = await this._dbContext.Groups
@@ -158,12 +159,12 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             PlanTier = "Free",
         };
 
-        await this._dbContext.Organizations.AddAsync(organization);
-        await this._dbContext.SaveChangesAsync();
+        await this._dbContext.Organizations.AddAsync(organization).ConfigureAwait(false);
+        await this._dbContext.SaveChangesAsync().ConfigureAwait(false);
 
         // Act
         this._dbContext.Organizations.Remove(organization);
-        await this._dbContext.SaveChangesAsync();
+        await this._dbContext.SaveChangesAsync().ConfigureAwait(false);
 
         // Assert
         var deletedOrg = await this._dbContext.Organizations
@@ -190,12 +191,12 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             PlanTier = "Free",
         };
 
-        await this._dbContext.Organizations.AddAsync(organization);
-        await this._dbContext.SaveChangesAsync();
+        await this._dbContext.Organizations.AddAsync(organization).ConfigureAwait(false);
+        await this._dbContext.SaveChangesAsync().ConfigureAwait(false);
 
         // Act
         this._dbContext.Organizations.Remove(organization);
-        await this._dbContext.SaveChangesAsync();
+        await this._dbContext.SaveChangesAsync().ConfigureAwait(false);
 
         // Assert
         var deletedOrg = await this._dbContext.Organizations
@@ -225,12 +226,12 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             PlanTier = "Free",
         };
 
-        await this._dbContext.Organizations.AddAsync(organization);
-        await this._dbContext.SaveChangesAsync();
+        await this._dbContext.Organizations.AddAsync(organization).ConfigureAwait(false);
+        await this._dbContext.SaveChangesAsync().ConfigureAwait(false);
 
         // Act
         this._dbContext.Organizations.Remove(organization);
-        await this._dbContext.SaveChangesAsync();
+        await this._dbContext.SaveChangesAsync().ConfigureAwait(false);
 
         // Assert
         var deletedOrg = await this._dbContext.Organizations
@@ -257,8 +258,8 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             PlanTier = "Free",
         };
 
-        await this._dbContext.Organizations.AddAsync(organization);
-        await this._dbContext.SaveChangesAsync();
+        await this._dbContext.Organizations.AddAsync(organization).ConfigureAwait(false);
+        await this._dbContext.SaveChangesAsync().ConfigureAwait(false);
 
         // For this test, we're checking that soft-deletable entities work correctly
         // Non-soft-deletable entities would be hard deleted by EF Core normally
@@ -267,7 +268,7 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
 
         // Act
         this._dbContext.Organizations.Remove(organization);
-        await this._dbContext.SaveChangesAsync();
+        await this._dbContext.SaveChangesAsync().ConfigureAwait(false);
 
         // Assert - Organization should be soft deleted
         var deletedOrg = await this._dbContext.Organizations
@@ -314,14 +315,14 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             Status = "Active",
         };
 
-        await this._dbContext.Organizations.AddAsync(organization);
-        await this._dbContext.Groups.AddAsync(group1);
-        await this._dbContext.Groups.AddAsync(group2);
-        await this._dbContext.SaveChangesAsync();
+        await this._dbContext.Organizations.AddAsync(organization).ConfigureAwait(false);
+        await this._dbContext.Groups.AddAsync(group1).ConfigureAwait(false);
+        await this._dbContext.Groups.AddAsync(group2).ConfigureAwait(false);
+        await this._dbContext.SaveChangesAsync().ConfigureAwait(false);
 
         // Act
         this._dbContext.Organizations.Remove(organization);
-        await this._dbContext.SaveChangesAsync();
+        await this._dbContext.SaveChangesAsync().ConfigureAwait(false);
 
         // Assert
         var deletedGroups = await this._dbContext.Groups
@@ -367,14 +368,14 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             IsActive = true,
         };
 
-        await this._dbContext.Organizations.AddAsync(organization);
-        await this._dbContext.ApiKeys.AddAsync(apiKey1);
-        await this._dbContext.ApiKeys.AddAsync(apiKey2);
-        await this._dbContext.SaveChangesAsync();
+        await this._dbContext.Organizations.AddAsync(organization).ConfigureAwait(false);
+        await this._dbContext.ApiKeys.AddAsync(apiKey1).ConfigureAwait(false);
+        await this._dbContext.ApiKeys.AddAsync(apiKey2).ConfigureAwait(false);
+        await this._dbContext.SaveChangesAsync().ConfigureAwait(false);
 
         // Act
         this._dbContext.Organizations.Remove(organization);
-        await this._dbContext.SaveChangesAsync();
+        await this._dbContext.SaveChangesAsync().ConfigureAwait(false);
 
         // Assert
         var revokedKeys = await this._dbContext.ApiKeys
@@ -416,13 +417,13 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             IsActive = true,
         };
 
-        await this._dbContext.Organizations.AddAsync(organization);
-        await this._dbContext.ApiKeys.AddAsync(apiKey);
-        await this._dbContext.SaveChangesAsync();
+        await this._dbContext.Organizations.AddAsync(organization).ConfigureAwait(false);
+        await this._dbContext.ApiKeys.AddAsync(apiKey).ConfigureAwait(false);
+        await this._dbContext.SaveChangesAsync().ConfigureAwait(false);
 
         // Act
         this._dbContext.Organizations.Remove(organization);
-        await this._dbContext.SaveChangesAsync();
+        await this._dbContext.SaveChangesAsync().ConfigureAwait(false);
 
         // Assert
         var revokedKey = await this._dbContext.ApiKeys
@@ -458,16 +459,16 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             RevocationReason = "Original reason",
         };
 
-        await this._dbContext.Organizations.AddAsync(organization);
-        await this._dbContext.ApiKeys.AddAsync(apiKey);
-        await this._dbContext.SaveChangesAsync();
+        await this._dbContext.Organizations.AddAsync(organization).ConfigureAwait(false);
+        await this._dbContext.ApiKeys.AddAsync(apiKey).ConfigureAwait(false);
+        await this._dbContext.SaveChangesAsync().ConfigureAwait(false);
 
         // Act
         this._dbContext.Organizations.Remove(organization);
-        await this._dbContext.SaveChangesAsync();
+        await this._dbContext.SaveChangesAsync().ConfigureAwait(false);
 
         // Assert
-        var key = await this._dbContext.ApiKeys.FirstAsync(k => k.Id == apiKey.Id);
+        var key = await this._dbContext.ApiKeys.FirstAsync(k => k.Id == apiKey.Id).ConfigureAwait(false);
         key.RevokedAt.Should().Be(originalRevocationTime); // Should preserve original
         key.RevocationReason.Should().Be("Original reason"); // Should preserve original
     }
@@ -514,15 +515,15 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             Status = "Active",
         };
 
-        await this._dbContext.Organizations.AddAsync(org1);
-        await this._dbContext.Organizations.AddAsync(org2);
-        await this._dbContext.Groups.AddAsync(group1);
-        await this._dbContext.Groups.AddAsync(group2);
-        await this._dbContext.SaveChangesAsync();
+        await this._dbContext.Organizations.AddAsync(org1).ConfigureAwait(false);
+        await this._dbContext.Organizations.AddAsync(org2).ConfigureAwait(false);
+        await this._dbContext.Groups.AddAsync(group1).ConfigureAwait(false);
+        await this._dbContext.Groups.AddAsync(group2).ConfigureAwait(false);
+        await this._dbContext.SaveChangesAsync().ConfigureAwait(false);
 
         // Act
         this._dbContext.Organizations.RemoveRange(org1, org2);
-        await this._dbContext.SaveChangesAsync();
+        await this._dbContext.SaveChangesAsync().ConfigureAwait(false);
 
         // Assert
         var allGroups = await this._dbContext.Groups
@@ -556,16 +557,16 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             Status = "Active",
         };
 
-        await this._dbContext.Organizations.AddAsync(organization);
-        await this._dbContext.Groups.AddAsync(group);
-        await this._dbContext.SaveChangesAsync();
+        await this._dbContext.Organizations.AddAsync(organization).ConfigureAwait(false);
+        await this._dbContext.Groups.AddAsync(group).ConfigureAwait(false);
+        await this._dbContext.SaveChangesAsync().ConfigureAwait(false);
 
         // Act - Delete only the group, not the organization
         this._dbContext.Groups.Remove(group);
-        await this._dbContext.SaveChangesAsync();
+        await this._dbContext.SaveChangesAsync().ConfigureAwait(false);
 
         // Assert - Organization should not be affected
-        var org = await this._dbContext.Organizations.FindAsync(organization.Id);
+        var org = await this._dbContext.Organizations.FindAsync(organization.Id).ConfigureAwait(false);
         org.Should().NotBeNull();
         org!.DeletedAt.Should().BeNull();
 
@@ -604,15 +605,15 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             PlanTier = "Free",
         };
 
-        await this._dbContext.Organizations.AddAsync(org1);
-        await this._dbContext.Organizations.AddAsync(org2);
-        await this._dbContext.SaveChangesAsync();
+        await this._dbContext.Organizations.AddAsync(org1).ConfigureAwait(false);
+        await this._dbContext.Organizations.AddAsync(org2).ConfigureAwait(false);
+        await this._dbContext.SaveChangesAsync().ConfigureAwait(false);
 
         this._dbContext.Organizations.Remove(org2);
-        await this._dbContext.SaveChangesAsync();
+        await this._dbContext.SaveChangesAsync().ConfigureAwait(false);
 
         // Act
-        var activeOrgs = await this._dbContext.Organizations.ToListAsync();
+        var activeOrgs = await this._dbContext.Organizations.ToListAsync().ConfigureAwait(false);
 
         // Assert
         activeOrgs.Should().HaveCount(1);
@@ -644,12 +645,12 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             PlanTier = "Free",
         };
 
-        await this._dbContext.Organizations.AddAsync(org1);
-        await this._dbContext.Organizations.AddAsync(org2);
-        await this._dbContext.SaveChangesAsync();
+        await this._dbContext.Organizations.AddAsync(org1).ConfigureAwait(false);
+        await this._dbContext.Organizations.AddAsync(org2).ConfigureAwait(false);
+        await this._dbContext.SaveChangesAsync().ConfigureAwait(false);
 
         this._dbContext.Organizations.Remove(org2);
-        await this._dbContext.SaveChangesAsync();
+        await this._dbContext.SaveChangesAsync().ConfigureAwait(false);
 
         // Act
         var allOrgs = await this._dbContext.Organizations

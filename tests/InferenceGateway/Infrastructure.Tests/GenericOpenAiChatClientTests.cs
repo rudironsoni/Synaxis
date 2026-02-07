@@ -1,10 +1,11 @@
-using System;
-using System.Collections.Generic;
-using Microsoft.Extensions.AI;
-using Synaxis.InferenceGateway.Infrastructure;
-using Xunit;
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests;
+
+using Microsoft.Extensions.AI;
+using Synaxis.InferenceGateway.Infrastructure;
+using System.Collections.Generic;
+using System;
+using Xunit;
 
 public class GenericOpenAiChatClientTests
 {

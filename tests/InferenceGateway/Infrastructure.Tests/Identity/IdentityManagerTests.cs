@@ -1,11 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using Moq;
-using Xunit;
-using Microsoft.Extensions.Logging;
-using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
 {
@@ -17,6 +9,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
             var mockStrat = new Mock<IAuthStrategy>();
             mockStrat.Setup(s => s.InitiateFlowAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new AuthResult { Status = "Pending" });
+    using Microsoft.Extensions.Logging;
+    using Moq;
+    using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
+    using System.Threading;
+    using System;
+    using Xunit;
 
             var mockStore = new Mock<ISecureTokenStore>();
             mockStore.Setup(s => s.LoadAsync()).ReturnsAsync(new List<IdentityAccount>());
@@ -29,7 +29,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
             // Use the runtime type name of the mock object so FindStrategyForProvider will match
             var providerName = mockStrat.Object.GetType().Name;
 
-            var res = await manager.StartAuth(providerName);
+            var res = await manager.StartAuth(providerName).ConfigureAwait(false);
 
             Assert.NotNull(res);
             mockStrat.Verify(s => s.InitiateFlowAsync(It.IsAny<CancellationToken>()), Times.Once);
@@ -56,9 +56,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
                 ExpiresAt = DateTimeOffset.UtcNow.AddHours(1),
             };
 
-            await manager.AddOrUpdateAccountAsync(acc);
+            await manager.AddOrUpdateAccountAsync(acc).ConfigureAwait(false);
 
-            var token = await manager.GetToken("TestProvider");
+            var token = await manager.GetToken("TestProvider").ConfigureAwait(false);
 
             Assert.Equal("token-123", token);
         }
@@ -95,9 +95,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
 
             var manager = new IdentityManager(new[] { mockStrat.Object }, mockStore.Object, logger.Object);
 
-            await manager.WaitForInitialLoadAsync();
+            await manager.WaitForInitialLoadAsync().ConfigureAwait(false);
 
-            var token = await manager.GetToken(acc.Provider);
+            var token = await manager.GetToken(acc.Provider).ConfigureAwait(false);
 
             Assert.Equal("new-token", token);
             mockStrat.Verify(s => s.RefreshTokenAsync(It.IsAny<IdentityAccount>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -132,9 +132,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
                 ExpiresAt = DateTimeOffset.UtcNow.AddMinutes(-5), // expired
             };
 
-            await manager.AddOrUpdateAccountAsync(account);
+            await manager.AddOrUpdateAccountAsync(account).ConfigureAwait(false);
 
-            var token = await manager.GetToken("TestProvider");
+            var token = await manager.GetToken("TestProvider").ConfigureAwait(false);
 
             Assert.Equal("new-access-token", token);
             mockStrat.Verify(s => s.RefreshTokenAsync(It.IsAny<IdentityAccount>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -153,7 +153,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
 
             var manager = new IdentityManager(new[] { mockStrat.Object }, mockStore.Object, logger.Object);
 
-            await manager.WaitForInitialLoadAsync();
+            await manager.WaitForInitialLoadAsync().ConfigureAwait(false);
 
             var account = new IdentityAccount
             {
@@ -164,9 +164,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
                 ExpiresAt = DateTimeOffset.UtcNow.AddHours(-1),
             };
 
-            await manager.AddOrUpdateAccountAsync(account);
+            await manager.AddOrUpdateAccountAsync(account).ConfigureAwait(false);
 
-            var token = await manager.GetToken("TestProvider");
+            var token = await manager.GetToken("TestProvider").ConfigureAwait(false);
 
             // When refresh fails, it should return the old token
             Assert.Equal("old-token", token);
@@ -175,7 +175,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
                 x => x.Log(
                     LogLevel.Error,
                     It.IsAny<EventId>(),
-                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Failed refreshing token")),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Failed refreshing token", StringComparison.Ordinal)),
                     It.IsAny<Exception>(),
                     It.Is<Func<It.IsAnyType, Exception?, string>>((v, t) => true)),
                 Times.Once);
@@ -205,9 +205,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
                 Email = "test@example.com",
             };
 
-            await manager.AddOrUpdateAccountAsync(account);
+            await manager.AddOrUpdateAccountAsync(account).ConfigureAwait(false);
 
-            var token = await manager.GetToken("TestProvider");
+            var token = await manager.GetToken("TestProvider").ConfigureAwait(false);
 
             Assert.Equal("test-token", token);
         }
@@ -221,7 +221,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
 
             var manager = new IdentityManager(new[] { mockStrat.Object }, mockStore.Object, logger.Object);
 
-            var token = await manager.GetToken("NonExistentProvider");
+            var token = await manager.GetToken("NonExistentProvider").ConfigureAwait(false);
 
             Assert.Null(token);
         }
@@ -245,7 +245,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
                 Email = "new@example.com",
             };
 
-            await manager.AddOrUpdateAccountAsync(account);
+            await manager.AddOrUpdateAccountAsync(account).ConfigureAwait(false);
 
             mockStore.Verify(s => s.SaveAsync(It.IsAny<IList<IdentityAccount>>()), Times.AtLeastOnce);
         }
@@ -268,9 +268,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
 
             var manager = new IdentityManager(new[] { mockStrat.Object }, mockStore.Object, logger.Object);
 
-            await manager.WaitForInitialLoadAsync();
+            await manager.WaitForInitialLoadAsync().ConfigureAwait(false);
 
-            var tokenBefore = await manager.GetToken("TestProvider");
+            var tokenBefore = await manager.GetToken("TestProvider").ConfigureAwait(false);
             Assert.Equal("existing-token", tokenBefore);
 
             var newAccount = new IdentityAccount
@@ -280,9 +280,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
                 AccessToken = "",
             };
 
-            await manager.AddOrUpdateAccountAsync(newAccount);
+            await manager.AddOrUpdateAccountAsync(newAccount).ConfigureAwait(false);
 
-            var tokenAfter = await manager.GetToken("TestProvider");
+            var tokenAfter = await manager.GetToken("TestProvider").ConfigureAwait(false);
             Assert.Equal("", tokenAfter);
         }
 
@@ -305,7 +305,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
             var manager = new IdentityManager(new[] { mockStrat.Object }, mockStore.Object, logger.Object);
 
             var providerName = mockStrat.Object.GetType().Name;
-            var result = await manager.CompleteAuth(providerName, "auth-code", "state");
+            var result = await manager.CompleteAuth(providerName, "auth-code", "state").ConfigureAwait(false);
 
             Assert.NotNull(result);
             Assert.Equal("Success", result.Status);

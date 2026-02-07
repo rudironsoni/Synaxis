@@ -1,9 +1,3 @@
-using System;
-using System.Net.Http;
-using System.Reflection;
-using Microsoft.Extensions.AI;
-using RichardSzalay.MockHttp;
-using Xunit;
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.External.KiloCode
 {
@@ -15,6 +9,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.External.KiloCode
             // Arrange
             var apiKey = "test-key";
             var modelId = "glm-4.7";
+    using Microsoft.Extensions.AI;
+    using RichardSzalay.MockHttp;
+    using System.Net.Http;
+    using System.Reflection;
+    using System;
+    using Xunit;
 
             var mockHttp = new MockHttpMessageHandler();
             var client = mockHttp.ToHttpClient();

@@ -1,10 +1,11 @@
+
+namespace Synaxis.InferenceGateway.Infrastructure.Tests.ControlPlane;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Synaxis.InferenceGateway.Application.ControlPlane;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
-
-namespace Synaxis.InferenceGateway.Infrastructure.Tests.ControlPlane;
 
 public class ControlPlaneExtensionsTests
 {
@@ -26,7 +27,7 @@ public class ControlPlaneExtensionsTests
 
         var dbContext = serviceProvider.GetRequiredService<ControlPlaneDbContext>();
         Assert.NotNull(dbContext);
-        Assert.Contains("InMemory", dbContext.Database.ProviderName ?? "");
+        Assert.Contains("InMemory", dbContext.Database.ProviderName ?? "", StringComparison.Ordinal);
     }
 
     [Fact]
@@ -48,7 +49,7 @@ public class ControlPlaneExtensionsTests
 
         var dbContext = serviceProvider.GetRequiredService<ControlPlaneDbContext>();
         Assert.NotNull(dbContext);
-        Assert.Contains("Npgsql", dbContext.Database.ProviderName ?? "");
+        Assert.Contains("Npgsql", dbContext.Database.ProviderName ?? "", StringComparison.Ordinal);
     }
 
     [Fact]
@@ -93,6 +94,6 @@ public class ControlPlaneExtensionsTests
 
         var dbContext = serviceProvider.GetRequiredService<ControlPlaneDbContext>();
         Assert.NotNull(dbContext);
-        Assert.Contains("InMemory", dbContext.Database.ProviderName ?? "");
+        Assert.Contains("InMemory", dbContext.Database.ProviderName ?? "", StringComparison.Ordinal);
     }
 }

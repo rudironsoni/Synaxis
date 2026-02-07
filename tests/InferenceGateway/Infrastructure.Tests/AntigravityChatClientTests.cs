@@ -1,18 +1,19 @@
-using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Net.Http;
-using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.AI;
-using Moq;
-using Moq.Protected;
-using Synaxis.InferenceGateway.Infrastructure;
-using Synaxis.InferenceGateway.Infrastructure.Auth;
-using Xunit;
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests;
+
+using Microsoft.Extensions.AI;
+using Moq.Protected;
+using Moq;
+using Synaxis.InferenceGateway.Infrastructure.Auth;
+using Synaxis.InferenceGateway.Infrastructure;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Net;
+using System.Text.Json;
+using System.Threading.Tasks;
+using System.Threading;
+using System;
+using Xunit;
 
 public class AntigravityChatClientTests
 {
@@ -82,7 +83,7 @@ public class AntigravityChatClientTests
         };
 
         // Act
-        var result = await client.GetResponseAsync(messages);
+        var result = await client.GetResponseAsync(messages).ConfigureAwait(false);
 
         // Assert
         Assert.NotNull(result);
@@ -95,7 +96,7 @@ public class AntigravityChatClientTests
         Assert.Equal("https://cloudcode-pa.googleapis.com/v1/chat/completions", capturedRequest!.RequestUri?.ToString());
         Assert.Equal("Bearer", capturedRequest.Headers.Authorization?.Scheme);
         Assert.Equal(this._fakeToken, capturedRequest.Headers.Authorization?.Parameter);
-        Assert.Contains("antigravity/1.11.5", capturedRequest.Headers.UserAgent.ToString());
+        Assert.Contains("antigravity/1.11.5", capturedRequest.Headers.UserAgent.ToString(, StringComparison.Ordinal));
 
         Assert.NotNull(requestBody);
         var doc = JsonDocument.Parse(requestBody);

@@ -1,15 +1,16 @@
-using System.Collections.Generic;
-using System.Net;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.AI;
-using Moq;
-using Moq.Protected;
-using Synaxis.InferenceGateway.Infrastructure;
-using Xunit;
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests;
+
+using Microsoft.Extensions.AI;
+using Moq.Protected;
+using Moq;
+using Synaxis.InferenceGateway.Infrastructure;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Net;
+using System.Threading.Tasks;
+using System.Threading;
+using Xunit;
 
 public class CohereChatClientTests
 {
@@ -36,7 +37,7 @@ public class CohereChatClientTests
         var client = new CohereChatClient(httpClient, "command-r", "fake-key");
 
         // Act
-        var result = await client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") });
+        var result = await client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") }).ConfigureAwait(false);
 
         // Assert
         Assert.Equal("Hello from Cohere", result.Messages[0].Text);

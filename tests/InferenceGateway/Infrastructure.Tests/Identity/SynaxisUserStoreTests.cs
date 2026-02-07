@@ -1,11 +1,12 @@
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
-using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity;
-using Synaxis.InferenceGateway.Infrastructure.Identity;
-using Xunit;
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity;
+
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity;
+using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
+using Synaxis.InferenceGateway.Infrastructure.Identity;
+using Xunit;
 
 /// <summary>
 /// Unit tests for SynaxisUserStore.
@@ -64,10 +65,10 @@ public class SynaxisUserStoreTests : IDisposable
         this._context.Users.Add(user);
         this._context.Organizations.Add(org);
         this._context.UserOrganizationMemberships.Add(membership);
-        await this._context.SaveChangesAsync();
+        await this._context.SaveChangesAsync().ConfigureAwait(false);
 
         // Act
-        var result = await this._store.FindByEmailInOrganizationAsync("test@example.com", orgId);
+        var result = await this._store.FindByEmailInOrganizationAsync("test@example.com", orgId).ConfigureAwait(false);
 
         // Assert
         Assert.NotNull(result);
@@ -113,10 +114,10 @@ public class SynaxisUserStoreTests : IDisposable
         this._context.Users.Add(user);
         this._context.Organizations.Add(org);
         this._context.UserOrganizationMemberships.Add(membership);
-        await this._context.SaveChangesAsync();
+        await this._context.SaveChangesAsync().ConfigureAwait(false);
 
         // Act
-        var result = await this._store.FindByEmailInOrganizationAsync("deleted@example.com", orgId);
+        var result = await this._store.FindByEmailInOrganizationAsync("deleted@example.com", orgId).ConfigureAwait(false);
 
         // Assert - should be null because user is soft deleted
         Assert.Null(result);
@@ -181,15 +182,15 @@ public class SynaxisUserStoreTests : IDisposable
         this._context.Organizations.Add(org2);
         this._context.UserOrganizationMemberships.Add(membership1);
         this._context.UserOrganizationMemberships.Add(membership2);
-        await this._context.SaveChangesAsync();
+        await this._context.SaveChangesAsync().ConfigureAwait(false);
 
         // Act
-        var result = await this._store.GetOrganizationsAsync(userId);
+        var result = await this._store.GetOrganizationsAsync(userId).ConfigureAwait(false);
 
         // Assert
         Assert.Equal(2, result.Count);
-        Assert.Contains(result, o => o.Id == org1Id);
-        Assert.Contains(result, o => o.Id == org2Id);
+        Assert.Contains(result, o => o.Id == org1Id, StringComparison.Ordinal);
+        Assert.Contains(result, o => o.Id == org2Id, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -208,10 +209,10 @@ public class SynaxisUserStoreTests : IDisposable
         };
 
         this._context.Users.Add(user);
-        await this._context.SaveChangesAsync();
+        await this._context.SaveChangesAsync().ConfigureAwait(false);
 
         // Act
-        var result = await this._store.FindByIdAsync(userId.ToString());
+        var result = await this._store.FindByIdAsync(userId.ToString()).ConfigureAwait(false);
 
         // Assert
         Assert.Null(result);

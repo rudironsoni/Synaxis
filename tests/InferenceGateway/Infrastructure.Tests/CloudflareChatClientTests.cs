@@ -1,19 +1,20 @@
-using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Net.Http;
-using System.Text;
-using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.AI;
-using Microsoft.Extensions.Logging;
-using Moq;
-using Moq.Protected;
-using Synaxis.InferenceGateway.Infrastructure;
-using Xunit;
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests;
+
+using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging;
+using Moq.Protected;
+using Moq;
+using Synaxis.InferenceGateway.Infrastructure;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Net;
+using System.Text.Json;
+using System.Text;
+using System.Threading.Tasks;
+using System.Threading;
+using System;
+using Xunit;
 
 public class CloudflareChatClientTests
 {
@@ -86,7 +87,7 @@ public class CloudflareChatClientTests
         var client = new CloudflareChatClient(httpClient, TestAccountId, TestModelId, TestApiKey);
 
         // Act
-        var result = await client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") });
+        var result = await client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") }).ConfigureAwait(false);
 
         // Assert
         Assert.Equal("Hello from Cloudflare", result.Messages[0].Text);
@@ -118,10 +119,10 @@ public class CloudflareChatClientTests
         var options = new ChatOptions { Temperature = 0.7f }; // MaxTokens not supported by Cloudflare
 
         // Act
-        await client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") }, options);
+        await client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") }, options).ConfigureAwait(false);
 
         // Assert
-        var content = await capturedRequest.Content!.ReadAsStringAsync();
+        var content = await capturedRequest.Content!.ReadAsStringAsync().ConfigureAwait(false);
         var json = JsonSerializer.Deserialize<JsonElement>(content);
         Assert.False(json.GetProperty("stream").GetBoolean());
     }
@@ -181,7 +182,7 @@ public class CloudflareChatClientTests
         };
 
         // Act
-        var result = await client.GetResponseAsync(messages);
+        var result = await client.GetResponseAsync(messages).ConfigureAwait(false);
 
         // Assert
         Assert.Equal("Response to multiple messages", result.Messages[0].Text);
@@ -209,7 +210,7 @@ public class CloudflareChatClientTests
         var client = new CloudflareChatClient(httpClient, TestAccountId, TestModelId, TestApiKey);
 
         // Act
-        var result = await client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") });
+        var result = await client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") }).ConfigureAwait(false);
 
         // Assert
         Assert.Equal("", result.Messages[0].Text);

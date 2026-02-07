@@ -1,15 +1,16 @@
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Json;
-using System.Text.Json.Serialization;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.AI;
-using Xunit;
-using Moq;
-using Moq.Protected;
 
 namespace Synaxis.InferenceGateway.Infrastructure.External.AiHorde.Tests;
+
+using Microsoft.Extensions.AI;
+using Moq.Protected;
+using Moq;
+using System.Net.Http.Json;
+using System.Net.Http;
+using System.Net;
+using System.Text.Json.Serialization;
+using System.Threading.Tasks;
+using System.Threading;
+using Xunit;
 
 public class AiHordeChatClientTests
 {
@@ -50,7 +51,7 @@ public class AiHordeChatClientTests
         var client = new HttpClient(handler.Object);
         var ai = new AiHordeChatClient(client);
 
-        var resp = await ai.GetResponseAsync(new[] { new ChatMessage(ChatRole.User, "Hi") });
+        var resp = await ai.GetResponseAsync(new[] { new ChatMessage(ChatRole.User, "Hi") }).ConfigureAwait(false);
 
         Assert.Single(resp.Messages);
         Assert.Equal("Hello", resp.Messages[0].Text);
@@ -82,14 +83,14 @@ public class AiHordeChatClientTests
         var enumerator = stream.GetAsyncEnumerator();
         try
         {
-            Assert.True(await enumerator.MoveNextAsync());
+            Assert.True(await enumerator.MoveNextAsync()).ConfigureAwait(false);
             var update = enumerator.Current;
             Assert.Single(update.Contents);
             Assert.Equal("StreamingText", ((TextContent)update.Contents[0]).Text);
         }
         finally
         {
-            await enumerator.DisposeAsync();
+            await enumerator.DisposeAsync().ConfigureAwait(false);
         }
     }
 }

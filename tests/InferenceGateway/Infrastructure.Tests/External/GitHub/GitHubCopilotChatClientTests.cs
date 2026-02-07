@@ -1,13 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using GitHub.Copilot.SDK;
-using Microsoft.Extensions.AI;
-using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
-using Xunit;
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.External.GitHub
 {
@@ -17,6 +7,16 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.External.GitHub
         public async Task GetResponseAsync_CreatesSessionSendsAndReturnsResponse()
         {
             var copilotMock = new Mock<Synaxis.InferenceGateway.Infrastructure.External.GitHub.ICopilotClient>();
+    using GitHub.Copilot.SDK;
+    using Microsoft.Extensions.AI;
+    using Microsoft.Extensions.Logging.Abstractions;
+    using Moq;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading.Tasks;
+    using System.Threading;
+    using System;
+    using Xunit;
 
             var sessionMock = new Mock<Synaxis.InferenceGateway.Infrastructure.External.GitHub.ICopilotSession>();
 
@@ -44,9 +44,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.External.GitHub
 
             var client = new Synaxis.InferenceGateway.Infrastructure.External.GitHub.GitHubCopilotChatClient(copilotMock.Object, NullLogger<Synaxis.InferenceGateway.Infrastructure.External.GitHub.GitHubCopilotChatClient>.Instance);
 
-            var resp = await client.GetResponseAsync(new[] { new ChatMessage(ChatRole.User, "hi") });
+            var resp = await client.GetResponseAsync(new[] { new ChatMessage(ChatRole.User, "hi") }).ConfigureAwait(false);
 
-            Assert.Contains("hello", resp.Messages.First().Text);
+            Assert.Contains("hello", resp.Messages.First(, StringComparison.Ordinal).Text);
             copilotMock.Verify(c => c.CreateSessionAsync(It.IsAny<global::GitHub.Copilot.SDK.SessionConfig>(), It.IsAny<CancellationToken>()), Times.Once);
             sessionMock.Verify(s => s.SendAsync(It.IsAny<global::GitHub.Copilot.SDK.MessageOptions>(), It.IsAny<CancellationToken>()), Times.Once);
         }
@@ -90,9 +90,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.External.GitHub
 
             // Expect 4 updates: delta, assistant message, usage text, and empty on idle (may be empty string)
             Assert.True(list.Count >= 3);
-            Assert.Contains(list, u => u.Contents.Any(c => c is TextContent tc && tc.Text.Contains("d1")));
-            Assert.Contains(list, u => u.Contents.Any(c => c is TextContent tc && tc.Text.Contains("m1")));
-            Assert.Contains(list, u => u.Contents.Any(c => c is TextContent tc && tc.Text.Contains("usage:")));
+            Assert.Contains(list, u => u.Contents.Any(c => c is TextContent tc && tc.Text.Contains("d1", StringComparison.Ordinal)));
+            Assert.Contains(list, u => u.Contents.Any(c => c is TextContent tc && tc.Text.Contains("m1", StringComparison.Ordinal)));
+            Assert.Contains(list, u => u.Contents.Any(c => c is TextContent tc && tc.Text.Contains("usage:", StringComparison.Ordinal)));
 
             copilotMock.Verify(c => c.CreateSessionAsync(It.IsAny<global::GitHub.Copilot.SDK.SessionConfig>(), It.IsAny<CancellationToken>()), Times.Once);
             sessionMock.Verify(s => s.SendAsync(It.IsAny<global::GitHub.Copilot.SDK.MessageOptions>(), It.IsAny<CancellationToken>()), Times.Once);

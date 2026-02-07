@@ -1,18 +1,18 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.DataProtection;
-using Moq;
-using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
-using Xunit;
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
 {
     public class EncryptedFileTokenStoreTests : IDisposable
     {
         private readonly string _tmpPath;
+    using Microsoft.AspNetCore.DataProtection;
+    using Moq;
+    using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Text;
+    using System.Threading.Tasks;
+    using System;
+    using Xunit;
 
         public EncryptedFileTokenStoreTests()
         {
@@ -42,11 +42,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
                 new IdentityAccount { Id = "1", Provider = "P", AccessToken = "t" },
             };
 
-            await store.SaveAsync(accounts);
+            await store.SaveAsync(accounts).ConfigureAwait(false);
 
             // Reload using a new store with the same provider to verify roundtrip
             var loader = new EncryptedFileTokenStore(provider, this._tmpPath);
-            var loaded = await loader.LoadAsync();
+            var loaded = await loader.LoadAsync().ConfigureAwait(false);
             Assert.NotNull(loaded);
             Assert.Single(loaded);
             Assert.Equal("1", loaded[0].Id);
@@ -63,11 +63,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
             });
             var protector = provider.CreateProtector("Synaxis.Identity.TokenStore.v1");
             var protectedContent = protector.Protect(sample);
-            await File.WriteAllTextAsync(this._tmpPath, protectedContent);
+            await File.WriteAllTextAsync(this._tmpPath, protectedContent).ConfigureAwait(false);
 
             var store = new EncryptedFileTokenStore(provider, this._tmpPath);
 
-            var loaded = await store.LoadAsync();
+            var loaded = await store.LoadAsync().ConfigureAwait(false);
             Assert.NotNull(loaded);
             Assert.Single(loaded);
             Assert.Equal("1", loaded[0].Id);
