@@ -2,12 +2,12 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
+namespace Synaxis.Benchmarks;
+
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Diagnosers;
 using Microsoft.Extensions.Configuration;
 using Synaxis.InferenceGateway.Application.Configuration;
-
-namespace Synaxis.Benchmarks;
 
 [MemoryDiagnoser]
 [SimpleJob(warmupCount: 3, iterationCount: 10)]
@@ -22,10 +22,10 @@ public class ConfigurationLoadingBenchmarks
     [GlobalSetup]
     public void Setup()
     {
-        this._smallConfig = this.CreateConfiguration(1, 1, 1);
-        this._mediumConfig = this.CreateConfiguration(5, 5, 5);
-        this._largeConfig = this.CreateConfiguration(13, 10, 10);
-        this._configWithEnvVars = this.CreateConfigurationWithEnvironmentVariables(13, 10, 10);
+        this._smallConfig = CreateConfiguration(1, 1, 1);
+        this._mediumConfig = CreateConfiguration(5, 5, 5);
+        this._largeConfig = CreateConfiguration(13, 10, 10);
+        this._configWithEnvVars = CreateConfigurationWithEnvironmentVariables(13, 10, 10);
     }
 
     [Benchmark]
@@ -92,17 +92,16 @@ public class ConfigurationLoadingBenchmarks
         return keys;
     }
 
-    private IConfiguration CreateConfiguration(int providerCount, int canonicalModelCount, int aliasCount)
+    private static IConfiguration CreateConfiguration(int providerCount, int canonicalModelCount, int aliasCount)
     {
         var builder = new ConfigurationBuilder();
 
-        var configData = new Dictionary<string, string?>
+        var configData = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase)
         {
             ["Synaxis:InferenceGateway:JwtSecret"] = "test-jwt-secret",
             ["Synaxis:InferenceGateway:JwtIssuer"] = "test-issuer",
             ["Synaxis:InferenceGateway:JwtAudience"] = "test-audience",
             ["Synaxis:InferenceGateway:MasterKey"] = "test-master-key",
-            ["Synaxis:InferenceGateway:MaxRequestBodySize"] = "31457280",
         };
 
         for (int i = 0; i < providerCount; i++)
@@ -111,7 +110,7 @@ public class ConfigurationLoadingBenchmarks
             configData[$"Synaxis:InferenceGateway:Providers:{providerKey}:Enabled"] = "true";
             configData[$"Synaxis:InferenceGateway:Providers:{providerKey}:Key"] = $"api-key-{i}";
             configData[$"Synaxis:InferenceGateway:Providers:{providerKey}:Type"] = "openai";
-            configData[$"Synaxis:InferenceGateway:Providers:{providerKey}:Tier"] = (i % 3).ToString();
+            configData[$"Synaxis:InferenceGateway:Providers:{providerKey}:Tier"] = (i % 3).ToString(System.Globalization.CultureInfo.InvariantCulture);
             configData[$"Synaxis:InferenceGateway:Providers:{providerKey}:Models:0"] = $"model-{i}";
         }
 
@@ -137,11 +136,11 @@ public class ConfigurationLoadingBenchmarks
         return builder.Build();
     }
 
-    private IConfiguration CreateConfigurationWithEnvironmentVariables(int providerCount, int canonicalModelCount, int aliasCount)
+    private static IConfiguration CreateConfigurationWithEnvironmentVariables(int providerCount, int canonicalModelCount, int aliasCount)
     {
         var builder = new ConfigurationBuilder();
 
-        var configData = new Dictionary<string, string?>
+        var configData = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase)
         {
             ["Synaxis:InferenceGateway:JwtSecret"] = "test-jwt-secret",
             ["Synaxis:InferenceGateway:JwtIssuer"] = "test-issuer",
@@ -155,7 +154,7 @@ public class ConfigurationLoadingBenchmarks
             configData[$"Synaxis:InferenceGateway:Providers:{providerKey}:Enabled"] = "true";
             configData[$"Synaxis:InferenceGateway:Providers:{providerKey}:Key"] = $"api-key-{i}";
             configData[$"Synaxis:InferenceGateway:Providers:{providerKey}:Type"] = "openai";
-            configData[$"Synaxis:InferenceGateway:Providers:{providerKey}:Tier"] = (i % 3).ToString();
+            configData[$"Synaxis:InferenceGateway:Providers:{providerKey}:Tier"] = (i % 3).ToString(System.Globalization.CultureInfo.InvariantCulture);
             configData[$"Synaxis:InferenceGateway:Providers:{providerKey}:Models:0"] = $"model-{i}";
         }
 
@@ -179,7 +178,7 @@ public class ConfigurationLoadingBenchmarks
 
         builder.AddInMemoryCollection(configData);
 
-        var envVars = new Dictionary<string, string?>
+        var envVars = new Dictionary<string, string?>(StringComparer.Ordinal)
         {
             ["SYNAXIS__INFERENCEGATEWAY__PROVIDERS__PROVIDER-0__KEY"] = "env-api-key-0",
             ["SYNAXIS__INFERENCEGATEWAY__PROVIDERS__PROVIDER-1__KEY"] = "env-api-key-1",
