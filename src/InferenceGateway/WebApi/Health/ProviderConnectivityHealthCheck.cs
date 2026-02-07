@@ -147,6 +147,7 @@ namespace Synaxis.InferenceGateway.WebApi.Health
             using var httpClient = new HttpClient { Timeout = TimeSpan.FromMilliseconds(500) };
             var request = new HttpRequestMessage(HttpMethod.Head, uri);
             var response = await httpClient.SendAsync(request, httpCts.Token);
+
             // We don't strictly require 200 OK, just that the server responded.
             // Many APIs return 401/404 on HEAD without tokens, which is fine for connectivity.
         }
