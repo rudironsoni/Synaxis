@@ -24,7 +24,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
     {
         public string Email { get; set; } = string.Empty;
         public string ProjectId { get; set; } = string.Empty;
-        public TokenResponse Token { get; set; } = new();
+        public TokenResponse Token { get; set; } = new ();
     }
 
     /// <summary>
@@ -63,8 +63,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
             "https://cloudcode-pa.googleapis.com"
         };
 
-        private List<AntigravityAccount> _accounts = new();
-        private readonly SemaphoreSlim _authLock = new(1, 1);
+        private List<AntigravityAccount> _accounts = new ();
+        private readonly SemaphoreSlim _authLock = new (1, 1);
         private int _requestCount = 0;
 
         // New constructor that accepts a token store

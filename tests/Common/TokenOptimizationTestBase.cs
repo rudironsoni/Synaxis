@@ -90,10 +90,10 @@ public class SemanticCacheResult
     public float[]? QueryEmbedding { get; init; }
 
     public static SemanticCacheResult Hit(string response, float similarityScore)
-        => new() { IsHit = true, Response = response, SimilarityScore = similarityScore };
+        => new () { IsHit = true, Response = response, SimilarityScore = similarityScore };
 
     public static SemanticCacheResult Miss(float[]? embedding)
-        => new() { IsHit = false, QueryEmbedding = embedding };
+        => new () { IsHit = false, QueryEmbedding = embedding };
 }
 
 /// <summary>

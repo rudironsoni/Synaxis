@@ -12,13 +12,13 @@ public static class TestDataFactory
     /// Creates a user chat message with optional custom text.
     /// </summary>
     public static ChatMessage CreateUserMessage(string text = "Test query")
-        => new(ChatRole.User, text);
+        => new (ChatRole.User, text);
 
     /// <summary>
     /// Creates an assistant chat message with optional custom text.
     /// </summary>
     public static ChatMessage CreateAssistantMessage(string text = "Test response")
-        => new(ChatRole.Assistant, text);
+        => new (ChatRole.Assistant, text);
 
     /// <summary>
     /// Creates chat options with default settings.
@@ -26,7 +26,7 @@ public static class TestDataFactory
     public static ChatOptions CreateChatOptions(
         string model = "gpt-4",
         float? temperature = 0.7f)
-        => new() { ModelId = model, Temperature = temperature };
+        => new () { ModelId = model, Temperature = temperature };
 
     /// <summary>
     /// Creates a token optimization configuration with sensible defaults.

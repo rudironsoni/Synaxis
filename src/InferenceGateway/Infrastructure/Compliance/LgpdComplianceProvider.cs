@@ -26,7 +26,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
         private readonly SynaxisDbContext _dbContext;
 
         // Brazilian regions for data residency validation
-        private static readonly HashSet<string> BrazilianRegions = new()
+        private static readonly HashSet<string> BrazilianRegions = new ()
         {
             "sa-east-1", "br-south-1", "sa-saopaulo-1"
         };
