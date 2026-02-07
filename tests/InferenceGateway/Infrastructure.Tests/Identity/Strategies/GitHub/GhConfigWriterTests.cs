@@ -37,11 +37,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
         public async Task WriteTokenAsync_CreatesNewFile_WhenFileDoesNotExist()
         {
             var token = "ghp_testtoken123";
-            await GhConfigWriter.WriteTokenAsync(token);
+            await GhConfigWriter.WriteTokenAsync(token).ConfigureAwait(false);
 
             var configPath = this.GetConfigPath();
             Assert.True(File.Exists(configPath));
-            var content = await File.ReadAllTextAsync(configPath);
+            var content = await File.ReadAllTextAsync(configPath).ConfigureAwait(false);
             Assert.Contains("github.com:", content);
             Assert.Contains($"oauth_token: {token}", content);
         }
@@ -51,9 +51,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
         {
             var token = "ghp_testtoken456";
             var customUser = "custom-user";
-            await GhConfigWriter.WriteTokenAsync(token, customUser);
+            await GhConfigWriter.WriteTokenAsync(token, customUser).ConfigureAwait(false);
 
-            var content = await File.ReadAllTextAsync(this.GetConfigPath());
+            var content = await File.ReadAllTextAsync(this.GetConfigPath().ConfigureAwait(false)).ConfigureAwait(false);
             Assert.Contains($"user: {customUser}", content);
         }
 
@@ -66,11 +66,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             Directory.CreateDirectory(Path.GetDirectoryName(configPath)!);
             await File.WriteAllTextAsync(configPath, $@"github.com:
   user: old-user
-  oauth_token: {oldToken}");
+  oauth_token: {oldToken}").ConfigureAwait(false);
 
-            await GhConfigWriter.WriteTokenAsync(newToken);
+            await GhConfigWriter.WriteTokenAsync(newToken).ConfigureAwait(false);
 
-            var content = await File.ReadAllTextAsync(configPath);
+            var content = await File.ReadAllTextAsync(configPath).ConfigureAwait(false);
             Assert.Contains($"oauth_token: {newToken}", content);
             Assert.DoesNotContain(oldToken, content);
         }
@@ -83,11 +83,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             Directory.CreateDirectory(Path.GetDirectoryName(configPath)!);
             await File.WriteAllTextAsync(configPath, @"enterprise.github.com:
   user: enterprise-user
-  oauth_token: ghp_enterprisetoken");
+  oauth_token: ghp_enterprisetoken").ConfigureAwait(false);
 
-            await GhConfigWriter.WriteTokenAsync(githubToken);
+            await GhConfigWriter.WriteTokenAsync(githubToken).ConfigureAwait(false);
 
-            var content = await File.ReadAllTextAsync(configPath);
+            var content = await File.ReadAllTextAsync(configPath).ConfigureAwait(false);
             Assert.Contains("enterprise.github.com:", content);
             Assert.Contains("ghp_enterprisetoken", content);
             Assert.Contains($"oauth_token: {githubToken}", content);
@@ -99,11 +99,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             var token = "ghp_testtoken789";
             var configPath = this.GetConfigPath();
             Directory.CreateDirectory(Path.GetDirectoryName(configPath)!);
-            await File.WriteAllTextAsync(configPath, "   ");
+            await File.WriteAllTextAsync(configPath, "   ").ConfigureAwait(false);
 
-            await GhConfigWriter.WriteTokenAsync(token);
+            await GhConfigWriter.WriteTokenAsync(token).ConfigureAwait(false);
 
-            var content = await File.ReadAllTextAsync(configPath);
+            var content = await File.ReadAllTextAsync(configPath).ConfigureAwait(false);
             Assert.Contains("github.com:", content);
             Assert.Contains($"oauth_token: {token}", content);
         }
@@ -116,11 +116,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             Directory.CreateDirectory(Path.GetDirectoryName(configPath)!);
             await File.WriteAllTextAsync(configPath, @"gitlab.com:
   user: gitlab-user
-  oauth_token: glp_token123");
+  oauth_token: glp_token123").ConfigureAwait(false);
 
-            await GhConfigWriter.WriteTokenAsync(token);
+            await GhConfigWriter.WriteTokenAsync(token).ConfigureAwait(false);
 
-            var content = await File.ReadAllTextAsync(configPath);
+            var content = await File.ReadAllTextAsync(configPath).ConfigureAwait(false);
             Assert.Contains("gitlab.com:", content);
             Assert.Contains("github.com:", content);
             Assert.Contains($"oauth_token: {token}", content);
@@ -132,11 +132,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             var token = "ghp_testtokendef";
             var configPath = this.GetConfigPath();
             Directory.CreateDirectory(Path.GetDirectoryName(configPath)!);
-            await File.WriteAllTextAsync(configPath, "github.com:\r\n  user: test\r\n  oauth_token: old");
+            await File.WriteAllTextAsync(configPath, "github.com:\r\n  user: test\r\n  oauth_token: old").ConfigureAwait(false);
 
-            await GhConfigWriter.WriteTokenAsync(token);
+            await GhConfigWriter.WriteTokenAsync(token).ConfigureAwait(false);
 
-            var content = await File.ReadAllTextAsync(configPath);
+            var content = await File.ReadAllTextAsync(configPath).ConfigureAwait(false);
             Assert.Contains($"oauth_token: {token}", content);
         }
 
@@ -147,7 +147,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             var configDir = Path.Combine(this._tempHome, ".config", "gh");
             Assert.False(Directory.Exists(configDir));
 
-            await GhConfigWriter.WriteTokenAsync(token);
+            await GhConfigWriter.WriteTokenAsync(token).ConfigureAwait(false);
 
             Assert.True(Directory.Exists(configDir));
             Assert.True(File.Exists(Path.Combine(configDir, "hosts.yml")));
@@ -157,9 +157,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
         public async Task WriteTokenAsync_HandlesSpecialCharactersInToken()
         {
             var token = "ghp_special=token-with_underscores.and+dots";
-            await GhConfigWriter.WriteTokenAsync(token);
+            await GhConfigWriter.WriteTokenAsync(token).ConfigureAwait(false);
 
-            var content = await File.ReadAllTextAsync(this.GetConfigPath());
+            var content = await File.ReadAllTextAsync(this.GetConfigPath().ConfigureAwait(false)).ConfigureAwait(false);
             Assert.Contains($"oauth_token: {token}", content);
         }
 
@@ -173,11 +173,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             Directory.CreateDirectory(Path.GetDirectoryName(configPath)!);
             await File.WriteAllTextAsync(configPath, $@"github.com:
   user: {oldUser}
-  oauth_token: ghp_oldtoken");
+  oauth_token: ghp_oldtoken").ConfigureAwait(false);
 
-            await GhConfigWriter.WriteTokenAsync(newToken, newUser);
+            await GhConfigWriter.WriteTokenAsync(newToken, newUser).ConfigureAwait(false);
 
-            var content = await File.ReadAllTextAsync(configPath);
+            var content = await File.ReadAllTextAsync(configPath).ConfigureAwait(false);
             Assert.Contains($"user: {newUser}", content);
             Assert.Contains($"oauth_token: {newToken}", content);
             Assert.DoesNotContain(oldUser, content);

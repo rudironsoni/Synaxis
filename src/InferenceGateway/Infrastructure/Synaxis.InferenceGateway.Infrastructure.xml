@@ -5541,6 +5541,21 @@
             <param name="memberships">The user's organization memberships.</param>
             <returns>The user information DTO.</returns>
         </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.IdentityService.MapToUserInfoBasic(Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.SynaxisUser)">
+            <summary>
+            Maps a SynaxisUser to a basic UserInfo DTO without memberships.
+            </summary>
+            <param name="user">The user entity.</param>
+            <returns>The user information DTO.</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.IdentityService.MapToOrganizationInfo(Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.Organization,System.String)">
+            <summary>
+            Maps an Organization to an OrganizationInfo DTO.
+            </summary>
+            <param name="organization">The organization entity.</param>
+            <param name="role">The user's role in the organization.</param>
+            <returns>The organization information DTO.</returns>
+        </member>
         <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.IdentityService.GenerateSlug(System.String)">
             <summary>
             Generates a URL-friendly slug from a name.

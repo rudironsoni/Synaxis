@@ -46,7 +46,7 @@ public class DuckDuckGoChatClientTests
         var client = new HttpClient(mock);
         var ddg = new DuckDuckGoChatClient(client, "gpt-4o-mini");
 
-        var response = await ddg.GetResponseAsync(new List<Microsoft.Extensions.AI.ChatMessage> { new Microsoft.Extensions.AI.ChatMessage(Microsoft.Extensions.AI.ChatRole.User, "hi") });
+        var response = await ddg.GetResponseAsync(new List<Microsoft.Extensions.AI.ChatMessage> { new Microsoft.Extensions.AI.ChatMessage(Microsoft.Extensions.AI.ChatRole.User, "hi") }).ConfigureAwait(false);
 
         Assert.Single(response.Messages);
         Assert.Equal("hello from ddg", response.Messages[0].Text);
@@ -65,7 +65,7 @@ public class DuckDuckGoChatClientTests
         var client = new HttpClient(mock);
         var ddg = new DuckDuckGoChatClient(client, "gpt-4o-mini");
 
-        var response = await ddg.GetResponseAsync(new List<Microsoft.Extensions.AI.ChatMessage> { new Microsoft.Extensions.AI.ChatMessage(Microsoft.Extensions.AI.ChatRole.User, "hi") });
+        var response = await ddg.GetResponseAsync(new List<Microsoft.Extensions.AI.ChatMessage> { new Microsoft.Extensions.AI.ChatMessage(Microsoft.Extensions.AI.ChatRole.User, "hi") }).ConfigureAwait(false);
 
         Assert.Empty(response.Messages);
     }

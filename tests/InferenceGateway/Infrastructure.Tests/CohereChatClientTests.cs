@@ -36,7 +36,7 @@ public class CohereChatClientTests
         var client = new CohereChatClient(httpClient, "command-r", "fake-key");
 
         // Act
-        var result = await client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") });
+        var result = await client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") }).ConfigureAwait(false);
 
         // Assert
         Assert.Equal("Hello from Cohere", result.Messages[0].Text);

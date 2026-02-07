@@ -446,6 +446,12 @@ finally
 /// The main program class for the Synaxis Inference Gateway web application.
 /// This partial class enables programmatic access to the application for testing and hosting scenarios.
 /// </summary>
-internal static partial class Program
+public partial class Program
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Program"/> class.
+    /// </summary>
+    protected Program()
+    {
+    }
 }

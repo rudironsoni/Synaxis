@@ -21,7 +21,7 @@ public class CopilotSdkClientTests
 
         var client = new Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSdkClient(adapterMock.Object);
 
-        var res = await client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "hi") });
+        var res = await client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "hi") }).ConfigureAwait(false);
 
         Assert.Equal("ok", res.Messages.First().Text);
         adapterMock.Verify(a => a.GetResponseAsync(It.IsAny<IEnumerable<ChatMessage>>(), It.IsAny<ChatOptions?>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -35,7 +35,7 @@ public class CopilotSdkClientTests
         async IAsyncEnumerable<ChatResponseUpdate> GetUpdates()
         {
             yield return new ChatResponseUpdate { Role = ChatRole.Assistant };
-            await Task.Delay(1);
+            await Task.Delay(1).ConfigureAwait(false);
             yield return new ChatResponseUpdate { Role = ChatRole.Assistant };
         }
 
@@ -47,7 +47,7 @@ public class CopilotSdkClientTests
         var list = new List<ChatResponseUpdate>();
         await foreach (var u in client.GetStreamingResponseAsync(new[] { new ChatMessage(ChatRole.User, "hi") }))
         {
-            list.Add(u);
+            list.Add(u).ConfigureAwait(false);
         }
 
         Assert.Equal(2, list.Count);

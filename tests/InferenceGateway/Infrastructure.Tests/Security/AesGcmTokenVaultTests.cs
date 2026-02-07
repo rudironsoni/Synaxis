@@ -101,10 +101,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             };
 
             dbContext.Tenants.Add(tenant);
-            await dbContext.SaveChangesAsync();
+            await dbContext.SaveChangesAsync().ConfigureAwait(false);
 
             // Act
-            var encrypted = await tokenVault.EncryptAsync(tenantId, plaintext);
+            var encrypted = await tokenVault.EncryptAsync(tenantId, plaintext).ConfigureAwait(false);
 
             // Assert
             Assert.NotNull(encrypted);
@@ -128,7 +128,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
-                tokenVault.EncryptAsync(tenantId, plaintext));
+                tokenVault.EncryptAsync(tenantId, plaintext)).ConfigureAwait(false);
             Assert.StartsWith("Tenant not found", exception.Message);
             Assert.Equal("tenantId", exception.ParamName);
         }
@@ -152,13 +152,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             };
 
             dbContext.Tenants.Add(tenant);
-            await dbContext.SaveChangesAsync();
+            await dbContext.SaveChangesAsync().ConfigureAwait(false);
 
             // First encrypt some data
-            var encrypted = await tokenVault.EncryptAsync(tenantId, originalPlaintext);
+            var encrypted = await tokenVault.EncryptAsync(tenantId, originalPlaintext).ConfigureAwait(false);
 
             // Act
-            var decrypted = await tokenVault.DecryptAsync(tenantId, encrypted);
+            var decrypted = await tokenVault.DecryptAsync(tenantId, encrypted).ConfigureAwait(false);
 
             // Assert
             Assert.Equal(originalPlaintext, decrypted);
@@ -177,7 +177,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
-                tokenVault.DecryptAsync(tenantId, ciphertext));
+                tokenVault.DecryptAsync(tenantId, ciphertext)).ConfigureAwait(false);
             Assert.StartsWith("Tenant not found", exception.Message);
             Assert.Equal("tenantId", exception.ParamName);
         }
@@ -201,11 +201,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             };
 
             dbContext.Tenants.Add(tenant);
-            await dbContext.SaveChangesAsync();
+            await dbContext.SaveChangesAsync().ConfigureAwait(false);
 
             // Act & Assert
             await Assert.ThrowsAsync<ArgumentException>(() =>
-                tokenVault.DecryptAsync(tenantId, invalidCiphertext));
+                tokenVault.DecryptAsync(tenantId, invalidCiphertext)).ConfigureAwait(false);
         }
 
         [Fact]
@@ -229,26 +229,26 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             };
 
             dbContext.Tenants.Add(tenant);
-            await dbContext.SaveChangesAsync();
+            await dbContext.SaveChangesAsync().ConfigureAwait(false);
 
             // Now create OAuth accounts using the tenant that exists
             var oauthAccount = new OAuthAccount
             {
                 Id = Guid.NewGuid(),
                 TenantId = tenantId,
-                AccessTokenEncrypted = await tokenVault.EncryptAsync(tenantId, "access-token"),
-                RefreshTokenEncrypted = await tokenVault.EncryptAsync(tenantId, "refresh-token"),
-            };
+                AccessTokenEncrypted = await tokenVault.EncryptAsync(tenantId, "access-token").ConfigureAwait(false),
+                RefreshTokenEncrypted = await tokenVault.EncryptAsync(tenantId, "refresh-token").ConfigureAwait(false),
+            }.ConfigureAwait(false);
 
             dbContext.OAuthAccounts.Add(oauthAccount);
-            await dbContext.SaveChangesAsync();
+            await dbContext.SaveChangesAsync().ConfigureAwait(false);
 
             // Act
-            await tokenVault.RotateKeyAsync(tenantId, newKeyBase64);
+            await tokenVault.RotateKeyAsync(tenantId, newKeyBase64).ConfigureAwait(false);
 
             // Assert
             // Reload tenant from database to check updated values
-            var updatedTenant = await dbContext.Tenants.FindAsync(tenantId);
+            var updatedTenant = await dbContext.Tenants.FindAsync(tenantId).ConfigureAwait(false);
             Assert.NotNull(updatedTenant);
             Assert.NotNull(updatedTenant.EncryptedByokKey);
             Assert.NotEmpty(updatedTenant.EncryptedByokKey);
@@ -269,7 +269,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
-                tokenVault.RotateKeyAsync(tenantId, newKeyBase64));
+                tokenVault.RotateKeyAsync(tenantId, newKeyBase64)).ConfigureAwait(false);
             Assert.StartsWith("Tenant not found", exception.Message);
             Assert.Equal("tenantId", exception.ParamName);
         }
@@ -295,11 +295,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             };
 
             dbContext.Tenants.Add(tenant);
-            await dbContext.SaveChangesAsync();
+            await dbContext.SaveChangesAsync().ConfigureAwait(false);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
-                tokenVault.RotateKeyAsync(tenantId, invalidKeyBase64));
+                tokenVault.RotateKeyAsync(tenantId, invalidKeyBase64)).ConfigureAwait(false);
             Assert.StartsWith("Key must be 32 bytes", exception.Message);
             Assert.Equal("newKeyBase64", exception.ParamName);
         }

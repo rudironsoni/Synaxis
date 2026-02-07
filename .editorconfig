@@ -108,6 +108,10 @@ dotnet_diagnostic.SA1649.severity = none
 [src/InferenceGateway/WebApi/**/*.cs]
 dotnet_diagnostic.SA1516.severity = none
 
+# Suppress SA1011 for Infrastructure project (conflicts with SA1018 for nullable array types)
+[src/InferenceGateway/Infrastructure/**/*.cs]
+dotnet_diagnostic.SA1011.severity = none
+
 # SA1018: Nullable type symbols should not be preceded by a space
 # Disabled to allow SA1011 compliance for nullable array types (e.g., string[] ?)
 dotnet_diagnostic.SA1018.severity = none

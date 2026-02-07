@@ -86,7 +86,7 @@ public class CloudflareChatClientTests
         var client = new CloudflareChatClient(httpClient, TestAccountId, TestModelId, TestApiKey);
 
         // Act
-        var result = await client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") });
+        var result = await client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") }).ConfigureAwait(false);
 
         // Assert
         Assert.Equal("Hello from Cloudflare", result.Messages[0].Text);
@@ -118,10 +118,10 @@ public class CloudflareChatClientTests
         var options = new ChatOptions { Temperature = 0.7f }; // MaxTokens not supported by Cloudflare
 
         // Act
-        await client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") }, options);
+        await client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") }, options).ConfigureAwait(false);
 
         // Assert
-        var content = await capturedRequest.Content!.ReadAsStringAsync();
+        var content = await capturedRequest.Content!.ReadAsStringAsync().ConfigureAwait(false);
         var json = JsonSerializer.Deserialize<JsonElement>(content);
         Assert.False(json.GetProperty("stream").GetBoolean());
     }
@@ -148,7 +148,7 @@ public class CloudflareChatClientTests
 
         // Act & Assert
         await Assert.ThrowsAsync<HttpRequestException>(() =>
-            client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") }));
+            client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") })).ConfigureAwait(false);
     }
 
     [Fact]
@@ -181,7 +181,7 @@ public class CloudflareChatClientTests
         };
 
         // Act
-        var result = await client.GetResponseAsync(messages);
+        var result = await client.GetResponseAsync(messages).ConfigureAwait(false);
 
         // Assert
         Assert.Equal("Response to multiple messages", result.Messages[0].Text);
@@ -209,7 +209,7 @@ public class CloudflareChatClientTests
         var client = new CloudflareChatClient(httpClient, TestAccountId, TestModelId, TestApiKey);
 
         // Act
-        var result = await client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") });
+        var result = await client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") }).ConfigureAwait(false);
 
         // Assert
         Assert.Equal("", result.Messages[0].Text);
@@ -240,7 +240,7 @@ public class CloudflareChatClientTests
         var updates = new List<ChatResponseUpdate>();
         await foreach (var update in client.GetStreamingResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") }))
         {
-            updates.Add(update);
+            updates.Add(update).ConfigureAwait(false);
         }
 
         // Assert
@@ -274,7 +274,7 @@ public class CloudflareChatClientTests
         var updates = new List<ChatResponseUpdate>();
         await foreach (var update in client.GetStreamingResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") }))
         {
-            updates.Add(update);
+            updates.Add(update).ConfigureAwait(false);
         }
 
         // Assert
@@ -307,7 +307,7 @@ public class CloudflareChatClientTests
         var updates = new List<ChatResponseUpdate>();
         await foreach (var update in client.GetStreamingResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") }))
         {
-            updates.Add(update);
+            updates.Add(update).ConfigureAwait(false);
         }
 
         // Assert
@@ -340,7 +340,7 @@ public class CloudflareChatClientTests
         var updates = new List<ChatResponseUpdate>();
         await foreach (var update in client.GetStreamingResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") }))
         {
-            updates.Add(update);
+            updates.Add(update).ConfigureAwait(false);
         }
 
         // Assert

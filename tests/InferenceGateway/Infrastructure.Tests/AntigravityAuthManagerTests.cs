@@ -42,7 +42,7 @@ public class AntigravityAuthManagerTests : IDisposable
             new () { Email = "user1@test.com", Token = new () { AccessToken = "token1", ExpiresInSeconds = 3600, IssuedUtc = DateTime.UtcNow } },
             new () { Email = "user2@test.com", Token = new () { AccessToken = "token2", ExpiresInSeconds = 3600, IssuedUtc = DateTime.UtcNow } },
         };
-        await File.WriteAllTextAsync(this._tempAuthPath, System.Text.Json.JsonSerializer.Serialize(accounts));
+        await File.WriteAllTextAsync(this._tempAuthPath, System.Text.Json.JsonSerializer.Serialize(accounts).ConfigureAwait(false)).ConfigureAwait(false);
         var httpClientFactory = CreateHttpClientFactory(() => new HttpResponseMessage(HttpStatusCode.OK)
         {
             Content = new StringContent("{}"),
@@ -53,15 +53,15 @@ public class AntigravityAuthManagerTests : IDisposable
         // Act
         // Force load by calling GetTokenAsync. 
         // Since tokens are valid, it should just return the first one and not hit Google.
-        var token = await manager.GetTokenAsync();
+        var token = await manager.GetTokenAsync().ConfigureAwait(false);
         var list = manager.ListAccounts().ToList();
 
         // Assert
         // The manager implements round robin logic. 
         // We verify that accounts are loaded correctly from disk.
         Assert.Equal(2, list.Count);
-        Assert.Contains(list, a => a.Email == "user1@test.com");
-        Assert.Contains(list, a => a.Email == "user2@test.com");
+        Assert.Contains(list, a => a.email == "user1@test.com");
+        Assert.Contains(list, a => a.email == "user2@test.com");
     }
 
     [Fact]
@@ -72,7 +72,7 @@ public class AntigravityAuthManagerTests : IDisposable
         try
         {
             // Empty file
-            await File.WriteAllTextAsync(this._tempAuthPath, "[]");
+            await File.WriteAllTextAsync(this._tempAuthPath, "[]").ConfigureAwait(false);
             var httpClientFactory = CreateHttpClientFactory(() => new HttpResponseMessage(HttpStatusCode.BadRequest)
             {
                 Content = new StringContent("{\"error\":\"invalid_grant\"}"),
@@ -87,10 +87,10 @@ public class AntigravityAuthManagerTests : IDisposable
             // This will throw because we can't refresh against real Google API without a valid refresh token and network.
             // So we expect an Exception, but we verify the account was added to the list.
 
-            await Assert.ThrowsAnyAsync<Exception>(() => manager.GetTokenAsync());
+            await Assert.ThrowsAnyAsync<Exception>(() => manager.GetTokenAsync()).ConfigureAwait(false);
 
             var list = manager.ListAccounts().ToList();
-            Assert.Contains(list, a => a.Email == "env-var-user@system");
+            Assert.Contains(list, a => a.email == "env-var-user@system");
         }
         finally
         {

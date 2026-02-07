@@ -56,7 +56,7 @@ public class SecurityConfigurationValidatorTests
         // Assert
         result.IsValid.Should().BeFalse();
         result.HasErrors.Should().BeTrue();
-        result.Errors.Should().Contain(e => e.Contains("JWT Secret is not configured"));
+        result.Errors.Should().Contain(e => e.Contains("JWT Secret is not configured", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -78,7 +78,7 @@ public class SecurityConfigurationValidatorTests
         // Assert
         result.IsValid.Should().BeFalse();
         result.HasErrors.Should().BeTrue();
-        result.Errors.Should().Contain(e => e.Contains("at least 32 characters"));
+        result.Errors.Should().Contain(e => e.Contains("at least 32 characters", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -100,7 +100,7 @@ public class SecurityConfigurationValidatorTests
         // Assert
         result.IsValid.Should().BeTrue();
         result.HasWarnings.Should().BeTrue();
-        result.Warnings.Should().Contain(w => w.Contains("Default JWT secret"));
+        result.Warnings.Should().Contain(w => w.Contains("Default JWT secret", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -122,7 +122,7 @@ public class SecurityConfigurationValidatorTests
         // Assert
         result.IsValid.Should().BeFalse();
         result.HasErrors.Should().BeTrue();
-        result.Errors.Should().Contain(e => e.Contains("Default JWT secret detected"));
+        result.Errors.Should().Contain(e => e.Contains("Default JWT secret detected", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -144,7 +144,7 @@ public class SecurityConfigurationValidatorTests
         // Assert
         result.IsValid.Should().BeTrue();
         result.HasWarnings.Should().BeTrue();
-        result.Warnings.Should().Contain(w => w.Contains("weak patterns"));
+        result.Warnings.Should().Contain(w => w.Contains("weak patterns", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -167,7 +167,7 @@ public class SecurityConfigurationValidatorTests
         // Assert
         result.IsValid.Should().BeTrue();
         result.HasWarnings.Should().BeTrue();
-        result.Warnings.Should().Contain(w => w.Contains("No rate limiting configured"));
+        result.Warnings.Should().Contain(w => w.Contains("No rate limiting configured", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -190,7 +190,7 @@ public class SecurityConfigurationValidatorTests
         // Assert
         result.IsValid.Should().BeFalse();
         result.HasErrors.Should().BeTrue();
-        result.Errors.Should().Contain(e => e.Contains("Wildcard (*) CORS origin"));
+        result.Errors.Should().Contain(e => e.Contains("Wildcard (*) CORS origin", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -239,6 +239,6 @@ public class SecurityConfigurationValidatorTests
         // Assert
         result.IsValid.Should().BeTrue();
         result.HasWarnings.Should().BeTrue();
-        result.Warnings.Should().Contain(w => w.Contains("weak patterns"));
+        result.Warnings.Should().Contain(w => w.Contains("weak patterns", StringComparison.Ordinal));
     }
 }

@@ -40,7 +40,7 @@ public class RedisSessionStoreTests
         var store = new RedisSessionStore(this._mockRedis.Object);
 
         // Act
-        var result = await store.GetProviderAffinityAsync(sessionId, this._cancellationToken);
+        var result = await store.GetProviderAffinityAsync(sessionId, this._cancellationToken).ConfigureAwait(false);
 
         // Assert
         Assert.NotNull(result);
@@ -65,7 +65,7 @@ public class RedisSessionStoreTests
         var store = new RedisSessionStore(this._mockRedis.Object);
 
         // Act
-        var result = await store.GetProviderAffinityAsync(sessionId, this._cancellationToken);
+        var result = await store.GetProviderAffinityAsync(sessionId, this._cancellationToken).ConfigureAwait(false);
 
         // Assert
         Assert.Null(result);
@@ -91,7 +91,7 @@ public class RedisSessionStoreTests
         var store = new RedisSessionStore(this._mockRedis.Object);
 
         // Act
-        await store.SetProviderAffinityAsync(sessionId, providerId, ttl, this._cancellationToken);
+        await store.SetProviderAffinityAsync(sessionId, providerId, ttl, this._cancellationToken).ConfigureAwait(false);
 
         // Assert
         this._mockDatabase.Verify(
@@ -114,7 +114,7 @@ public class RedisSessionStoreTests
         var store = new RedisSessionStore(this._mockRedis.Object);
 
         // Act
-        var result = await store.GetLastActivityAsync(sessionId, this._cancellationToken);
+        var result = await store.GetLastActivityAsync(sessionId, this._cancellationToken).ConfigureAwait(false);
 
         // Assert
         Assert.NotNull(result);
@@ -148,7 +148,7 @@ public class RedisSessionStoreTests
         var store = new RedisSessionStore(this._mockRedis.Object);
 
         // Act
-        await store.UpdateLastActivityAsync(sessionId, timestamp, ttl, this._cancellationToken);
+        await store.UpdateLastActivityAsync(sessionId, timestamp, ttl, this._cancellationToken).ConfigureAwait(false);
 
         // Assert
         this._mockDatabase.Verify(
@@ -176,7 +176,7 @@ public class RedisSessionStoreTests
         var store = new RedisSessionStore(this._mockRedis.Object);
 
         // Act
-        var result = await store.SessionExistsAsync(sessionId, this._cancellationToken);
+        var result = await store.SessionExistsAsync(sessionId, this._cancellationToken).ConfigureAwait(false);
 
         // Assert
         Assert.True(result);
@@ -200,7 +200,7 @@ public class RedisSessionStoreTests
         var store = new RedisSessionStore(this._mockRedis.Object);
 
         // Act
-        var result = await store.SessionExistsAsync(sessionId, this._cancellationToken);
+        var result = await store.SessionExistsAsync(sessionId, this._cancellationToken).ConfigureAwait(false);
 
         // Assert
         Assert.False(result);
@@ -244,7 +244,7 @@ public class RedisSessionStoreTests
         var store = new RedisSessionStore(this._mockRedis.Object);
 
         // Act
-        var result = await store.GetActiveSessionsAsync(this._cancellationToken);
+        var result = await store.GetActiveSessionsAsync(this._cancellationToken).ConfigureAwait(false);
 
         // Assert
         Assert.NotNull(result);
@@ -268,7 +268,7 @@ public class RedisSessionStoreTests
         var store = new RedisSessionStore(this._mockRedis.Object);
 
         // Act
-        var result = await store.GetProviderAffinityAsync(sessionId, this._cancellationToken);
+        var result = await store.GetProviderAffinityAsync(sessionId, this._cancellationToken).ConfigureAwait(false);
 
         // Assert - Should fail open and return null rather than throwing
         Assert.Null(result);
@@ -303,8 +303,8 @@ public class RedisSessionStoreTests
             getTasks[i] = store.GetProviderAffinityAsync(sessionId, this._cancellationToken);
         }
 
-        await Task.WhenAll(setTasks);
-        var results = await Task.WhenAll(getTasks);
+        await Task.WhenAll(setTasks).ConfigureAwait(false);
+        var results = await Task.WhenAll(getTasks).ConfigureAwait(false);
 
         // Assert
         Assert.All(results, r => Assert.Equal(providerId, r));
@@ -355,7 +355,7 @@ public class RedisSessionStore : ISessionStore
         {
             var db = this._redis.GetDatabase();
             var key = $"session:{sessionId}:affinity";
-            var value = await db.StringGetAsync(key);
+            var value = await db.StringGetAsync(key).ConfigureAwait(false);
             return value.HasValue ? value.ToString() : null;
         }
         catch (RedisException)
@@ -369,14 +369,14 @@ public class RedisSessionStore : ISessionStore
     {
         var db = this._redis.GetDatabase();
         var key = $"session:{sessionId}:affinity";
-        await db.StringSetAsync(key, providerId, ttl);
+        await db.StringSetAsync(key, providerId, ttl).ConfigureAwait(false);
     }
 
     public async Task<DateTimeOffset?> GetLastActivityAsync(string sessionId, CancellationToken cancellationToken)
     {
         var db = this._redis.GetDatabase();
         var key = $"session:{sessionId}:lastactivity";
-        var value = await db.StringGetAsync(key);
+        var value = await db.StringGetAsync(key).ConfigureAwait(false);
 
         if (value.HasValue && long.TryParse(value.ToString(), out var unixTimestamp))
         {
@@ -390,14 +390,14 @@ public class RedisSessionStore : ISessionStore
     {
         var db = this._redis.GetDatabase();
         var key = $"session:{sessionId}:lastactivity";
-        await db.StringSetAsync(key, timestamp.ToUnixTimeSeconds(), ttl);
+        await db.StringSetAsync(key, timestamp.ToUnixTimeSeconds().ConfigureAwait(false), ttl).ConfigureAwait(false);
     }
 
     public async Task<bool> SessionExistsAsync(string sessionId, CancellationToken cancellationToken)
     {
         var db = this._redis.GetDatabase();
         var key = $"session:{sessionId}:affinity";
-        return await db.KeyExistsAsync(key);
+        return await db.KeyExistsAsync(key).ConfigureAwait(false);
     }
 
     public async Task<List<string>> GetActiveSessionsAsync(CancellationToken cancellationToken)
@@ -412,7 +412,7 @@ public class RedisSessionStore : ISessionStore
 
             await foreach (var key in keys)
             {
-                var keyStr = key.ToString();
+                var keyStr = key.ToString().ConfigureAwait(false);
                 // Extract session ID from "session:{sessionId}:affinity"
                 var parts = keyStr.Split(':');
                 if (parts.Length == 3)
@@ -435,6 +435,6 @@ internal static class AsyncEnumerableExtensions
         {
             yield return item;
         }
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 }

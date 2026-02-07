@@ -13,16 +13,20 @@ namespace Synaxis.InferenceGateway.WebApi.Features.Chat.Commands
     /// <summary>
     /// Command for non-streaming chat completion.
     /// </summary>
-    /// <param name="request">The OpenAI request.</param>
-    /// <param name="messages">The chat messages.</param>
-    public record ChatCommand(OpenAIRequest request, IEnumerable<ChatMessage> messages)
+    /// <param name="Request">The OpenAI request.</param>
+    /// <param name="Messages">The chat messages.</param>
+#pragma warning disable SA1313 // Parameter names should begin with lower-case letter
+    public record ChatCommand(OpenAIRequest Request, IEnumerable<ChatMessage> Messages)
     : IRequest<Microsoft.Agents.AI.AgentResponse>;
+#pragma warning restore SA1313 // Parameter names should begin with lower-case letter
 
     /// <summary>
     /// Command for streaming chat completion.
     /// </summary>
-    /// <param name="request">The OpenAI request.</param>
-    /// <param name="messages">The chat messages.</param>
-    public record ChatStreamCommand(OpenAIRequest request, IEnumerable<ChatMessage> messages)
+    /// <param name="Request">The OpenAI request.</param>
+    /// <param name="Messages">The chat messages.</param>
+#pragma warning disable SA1313 // Parameter names should begin with lower-case letter
+    public record ChatStreamCommand(OpenAIRequest Request, IEnumerable<ChatMessage> Messages)
     : IStreamRequest<Microsoft.Agents.AI.AgentResponseUpdate>;
+#pragma warning restore SA1313 // Parameter names should begin with lower-case letter
 }

@@ -23,9 +23,9 @@ public class DeviationRegistryTests
             Status = DeviationStatus.Open,
         };
 
-        await registry.RegisterAsync(entry);
+        await registry.RegisterAsync(entry).ConfigureAwait(false);
 
-        var items = await registry.ListAsync(tenantId);
+        var items = await registry.ListAsync(tenantId).ConfigureAwait(false);
 
         Assert.Single(items);
         Assert.Equal("/v1/chat/completions", items[0].Endpoint);
@@ -48,10 +48,10 @@ public class DeviationRegistryTests
             Status = DeviationStatus.Open,
         };
 
-        await registry.RegisterAsync(entry);
-        await registry.UpdateStatusAsync(entry.Id, DeviationStatus.Mitigated);
+        await registry.RegisterAsync(entry).ConfigureAwait(false);
+        await registry.UpdateStatusAsync(entry.Id, DeviationStatus.Mitigated).ConfigureAwait(false);
 
-        var items = await registry.ListAsync(tenantId);
+        var items = await registry.ListAsync(tenantId).ConfigureAwait(false);
 
         Assert.Single(items);
         Assert.Equal(DeviationStatus.Mitigated, items[0].Status);

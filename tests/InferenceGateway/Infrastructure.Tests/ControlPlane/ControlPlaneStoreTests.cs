@@ -21,10 +21,10 @@ public class ControlPlaneStoreTests
             TargetModel = "gpt-4",
         };
 
-        await dbContext.ModelAliases.AddAsync(alias);
-        await dbContext.SaveChangesAsync();
+        await dbContext.ModelAliases.AddAsync(alias).ConfigureAwait(false);
+        await dbContext.SaveChangesAsync().ConfigureAwait(false);
 
-        var result = await store.GetAliasAsync(tenantId, "my-alias");
+        var result = await store.GetAliasAsync(tenantId, "my-alias").ConfigureAwait(false);
 
         Assert.NotNull(result);
         Assert.Equal(alias.Id, result.Id);
@@ -39,7 +39,7 @@ public class ControlPlaneStoreTests
         var dbContext = BuildDbContext();
         var store = new ControlPlaneStore(dbContext);
 
-        var result = await store.GetAliasAsync(tenantId, "non-existent-alias");
+        var result = await store.GetAliasAsync(tenantId, "non-existent-alias").ConfigureAwait(false);
 
         Assert.Null(result);
     }
@@ -59,10 +59,10 @@ public class ControlPlaneStoreTests
             OrderedModelsJson = "[\"gpt-4\", \"gpt-3.5-turbo\"]",
         };
 
-        await dbContext.ModelCombos.AddAsync(combo);
-        await dbContext.SaveChangesAsync();
+        await dbContext.ModelCombos.AddAsync(combo).ConfigureAwait(false);
+        await dbContext.SaveChangesAsync().ConfigureAwait(false);
 
-        var result = await store.GetComboAsync(tenantId, "my-combo");
+        var result = await store.GetComboAsync(tenantId, "my-combo").ConfigureAwait(false);
 
         Assert.NotNull(result);
         Assert.Equal(combo.Id, result.Id);
@@ -77,7 +77,7 @@ public class ControlPlaneStoreTests
         var dbContext = BuildDbContext();
         var store = new ControlPlaneStore(dbContext);
 
-        var result = await store.GetComboAsync(tenantId, "non-existent-combo");
+        var result = await store.GetComboAsync(tenantId, "non-existent-combo").ConfigureAwait(false);
 
         Assert.Null(result);
     }
@@ -134,10 +134,10 @@ public class ControlPlaneStoreTests
 
         globalModel.ProviderModels = new List<ProviderModel> { providerModel1, providerModel2 };
 
-        await dbContext.GlobalModels.AddAsync(globalModel);
-        await dbContext.SaveChangesAsync();
+        await dbContext.GlobalModels.AddAsync(globalModel).ConfigureAwait(false);
+        await dbContext.SaveChangesAsync().ConfigureAwait(false);
 
-        var result = await store.GetGlobalModelAsync("gpt-4");
+        var result = await store.GetGlobalModelAsync("gpt-4").ConfigureAwait(false);
 
         Assert.NotNull(result);
         Assert.Equal("gpt-4", result.Id);
@@ -155,7 +155,7 @@ public class ControlPlaneStoreTests
         var dbContext = BuildDbContext();
         var store = new ControlPlaneStore(dbContext);
 
-        var result = await store.GetGlobalModelAsync("non-existent-model");
+        var result = await store.GetGlobalModelAsync("non-existent-model").ConfigureAwait(false);
 
         Assert.Null(result);
     }
@@ -177,12 +177,12 @@ public class ControlPlaneStoreTests
             TargetModel = "llama-2",
         };
 
-        await dbContextForSeeding.ModelAliases.AddAsync(alias);
-        await dbContextForSeeding.SaveChangesAsync();
+        await dbContextForSeeding.ModelAliases.AddAsync(alias).ConfigureAwait(false);
+        await dbContextForSeeding.SaveChangesAsync().ConfigureAwait(false);
 
         var dbContextForQuery = new ControlPlaneDbContext(options);
         var store = new ControlPlaneStore(dbContextForQuery);
-        var result = await store.GetAliasAsync(tenantId, "perf-test-alias");
+        var result = await store.GetAliasAsync(tenantId, "perf-test-alias").ConfigureAwait(false);
 
         Assert.NotNull(result);
         var trackedEntry = dbContextForQuery.ChangeTracker.Entries()
@@ -227,10 +227,10 @@ public class ControlPlaneStoreTests
 
         globalModel.ProviderModels = new List<ProviderModel> { providerModel };
 
-        await dbContext.GlobalModels.AddAsync(globalModel);
-        await dbContext.SaveChangesAsync();
+        await dbContext.GlobalModels.AddAsync(globalModel).ConfigureAwait(false);
+        await dbContext.SaveChangesAsync().ConfigureAwait(false);
 
-        var result = await store.GetGlobalModelAsync("llama-3.3-70b");
+        var result = await store.GetGlobalModelAsync("llama-3.3-70b").ConfigureAwait(false);
 
         Assert.NotNull(result);
         Assert.NotNull(result.ProviderModels);

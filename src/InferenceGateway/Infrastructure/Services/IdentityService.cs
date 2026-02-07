@@ -128,6 +128,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                 result.Success = true;
                 result.UserId = user.Id;
                 result.OrganizationId = organization.Id;
+                result.User = this.MapToUserInfoBasic(user);
+                result.Organization = this.MapToOrganizationInfo(organization, "Owner");
                 return result;
             }
             catch (Exception)
@@ -582,6 +584,39 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                 CurrentOrganization = organizations.FirstOrDefault(),
                 Organizations = organizations,
             });
+        }
+
+        /// <summary>
+        /// Maps a SynaxisUser to a basic UserInfo DTO without memberships.
+        /// </summary>
+        /// <param name="user">The user entity.</param>
+        /// <returns>The user information DTO.</returns>
+        private UserInfo MapToUserInfoBasic(SynaxisUser user)
+        {
+            return new UserInfo
+            {
+                Id = user.Id,
+                Email = user.Email!,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+            };
+        }
+
+        /// <summary>
+        /// Maps an Organization to an OrganizationInfo DTO.
+        /// </summary>
+        /// <param name="organization">The organization entity.</param>
+        /// <param name="role">The user's role in the organization.</param>
+        /// <returns>The organization information DTO.</returns>
+        private OrganizationInfo MapToOrganizationInfo(Organization organization, string role)
+        {
+            return new OrganizationInfo
+            {
+                Id = organization.Id,
+                DisplayName = organization.DisplayName,
+                Slug = organization.Slug,
+                Role = role,
+            };
         }
 
         /// <summary>

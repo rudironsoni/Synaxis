@@ -49,10 +49,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Auth
                 new AntigravityAccount { Email = "a@x.com", ProjectId = "p1", Token = new Google.Apis.Auth.OAuth2.Responses.TokenResponse { AccessToken = "t1" } },
             };
 
-            await store.SaveAsync(accounts);
+            await store.SaveAsync(accounts).ConfigureAwait(false);
 
             Assert.True(File.Exists(this._tmpPath));
-            var content = await File.ReadAllTextAsync(this._tmpPath);
+            var content = await File.ReadAllTextAsync(this._tmpPath).ConfigureAwait(false);
             var deserialized = JsonSerializer.Deserialize<List<AntigravityAccount>>(content);
             Assert.NotNull(deserialized);
             Assert.Single(deserialized);
@@ -70,10 +70,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Auth
                 new AntigravityAccount { Email = "b@x.com", ProjectId = "p2", Token = new Google.Apis.Auth.OAuth2.Responses.TokenResponse { AccessToken = "t2" } },
             };
             var json = JsonSerializer.Serialize(accounts);
-            await File.WriteAllTextAsync(this._tmpPath, json);
+            await File.WriteAllTextAsync(this._tmpPath, json).ConfigureAwait(false);
 
             var store = new FileTokenStore(this._tmpPath, logger);
-            var loaded = await store.LoadAsync();
+            var loaded = await store.LoadAsync().ConfigureAwait(false);
 
             Assert.NotNull(loaded);
             Assert.Single(loaded);
@@ -91,7 +91,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Auth
             }
 
             var store = new FileTokenStore(this._tmpPath, logger);
-            var loaded = await store.LoadAsync();
+            var loaded = await store.LoadAsync().ConfigureAwait(false);
             Assert.NotNull(loaded);
             Assert.Empty(loaded);
         }
@@ -102,10 +102,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Auth
             var loggerMock = new Mock<ILogger<FileTokenStore>>();
             // Write invalid JSON to force JsonSerializer.Deserialize to throw
             Directory.CreateDirectory(this._tmpDir);
-            await File.WriteAllTextAsync(this._tmpPath, "{ invalid json");
+            await File.WriteAllTextAsync(this._tmpPath, "{ invalid json").ConfigureAwait(false);
 
             var store = new FileTokenStore(this._tmpPath, loggerMock.Object);
-            var loaded = await store.LoadAsync();
+            var loaded = await store.LoadAsync().ConfigureAwait(false);
 
             Assert.NotNull(loaded);
             Assert.Empty(loaded);
@@ -124,11 +124,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Auth
 
             var store = new FileTokenStore(this._tmpPath, logger);
             var accounts = new List<AntigravityAccount>();
-            await store.SaveAsync(accounts);
+            await store.SaveAsync(accounts).ConfigureAwait(false);
 
             Assert.True(Directory.Exists(this._tmpDir));
             Assert.True(File.Exists(this._tmpPath));
-            var content = await File.ReadAllTextAsync(this._tmpPath);
+            var content = await File.ReadAllTextAsync(this._tmpPath).ConfigureAwait(false);
             // empty list serializes to []
             Assert.Equal("[]", content);
         }
@@ -140,9 +140,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Auth
             var store = new FileTokenStore(this._tmpPath, logger);
 
             var accounts = new List<AntigravityAccount>();
-            await store.SaveAsync(accounts);
+            await store.SaveAsync(accounts).ConfigureAwait(false);
 
-            var loaded = await store.LoadAsync();
+            var loaded = await store.LoadAsync().ConfigureAwait(false);
             Assert.NotNull(loaded);
             Assert.Empty(loaded);
         }

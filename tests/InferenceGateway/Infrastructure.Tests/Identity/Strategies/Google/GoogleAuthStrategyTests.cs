@@ -29,7 +29,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.Goog
 
             var strat = new GoogleAuthStrategy(settings, httpFactory.Object, logger.Object);
 
-            var res = await strat.InitiateFlowAsync(CancellationToken.None);
+            var res = await strat.InitiateFlowAsync(CancellationToken.None).ConfigureAwait(false);
 
             Assert.Equal("Pending", res.Status);
             Assert.NotNull(res.VerificationUri);
@@ -80,13 +80,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.Goog
             strat.AccountAuthenticated += (_, acc) => emitted = acc.Account;
 
             // We need a valid PKCE state value. Call InitiateFlowAsync to get a state value embedded in the URL.
-            var init = await strat.InitiateFlowAsync(CancellationToken.None);
+            var init = await strat.InitiateFlowAsync(CancellationToken.None).ConfigureAwait(false);
             // Extract state param from URL
             var uri = new Uri(init.VerificationUri!);
             var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
             var state = query["state"]!;
 
-            var result = await strat.CompleteFlowAsync("auth-code-xyz", state, CancellationToken.None);
+            var result = await strat.CompleteFlowAsync("auth-code-xyz", state, CancellationToken.None).ConfigureAwait(false);
 
             Assert.Equal("Completed", result.Status);
             Assert.Equal("user@example.com", result.Message);
@@ -113,7 +113,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.Goog
             var strat = new GoogleAuthStrategy(settings, httpFactory.Object, logger.Object);
 
             var acc = new IdentityAccount { Provider = "google", Id = "user@example.com", RefreshToken = "old-rt" };
-            var tr = await strat.RefreshTokenAsync(acc, CancellationToken.None);
+            var tr = await strat.RefreshTokenAsync(acc, CancellationToken.None).ConfigureAwait(false);
 
             Assert.Equal("new-at", tr.AccessToken);
             Assert.Equal("new-rt", tr.RefreshToken);
@@ -134,7 +134,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.Goog
 
             var acc = new IdentityAccount { Provider = "google", Id = "user@example.com", RefreshToken = "old-rt" };
 
-            await Assert.ThrowsAsync<InvalidOperationException>(() => strat.RefreshTokenAsync(acc, CancellationToken.None));
+            await Assert.ThrowsAsync<InvalidOperationException>(() => strat.RefreshTokenAsync(acc, CancellationToken.None)).ConfigureAwait(false);
         }
 
         [Fact]
@@ -151,12 +151,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.Goog
 
             var strat = new GoogleAuthStrategy(settings, httpFactory.Object, logger.Object);
 
-            var init = await strat.InitiateFlowAsync(CancellationToken.None);
+            var init = await strat.InitiateFlowAsync(CancellationToken.None).ConfigureAwait(false);
             var uri = new Uri(init.VerificationUri!);
             var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
             var state = query["state"]!;
 
-            var res = await strat.CompleteFlowAsync("auth-code", state, CancellationToken.None);
+            var res = await strat.CompleteFlowAsync("auth-code", state, CancellationToken.None).ConfigureAwait(false);
 
             Assert.Equal("Error", res.Status);
             Assert.Contains("missing tokens", res.Message, StringComparison.OrdinalIgnoreCase);
@@ -182,12 +182,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.Goog
             var seq = 0;
             httpFactory.Setup(f => f.CreateClient(It.IsAny<string>())).Returns(() => { seq++; return seq == 1 ? tokenClient : badClient; });
 
-            var init = await strat.InitiateFlowAsync(CancellationToken.None);
+            var init = await strat.InitiateFlowAsync(CancellationToken.None).ConfigureAwait(false);
             var uri = new Uri(init.VerificationUri!);
             var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
             var state = query["state"]!;
 
-            var res = await strat.CompleteFlowAsync("auth-code", state, CancellationToken.None);
+            var res = await strat.CompleteFlowAsync("auth-code", state, CancellationToken.None).ConfigureAwait(false);
 
             Assert.Equal("Completed", res.Status);
             Assert.Null(res.Message);

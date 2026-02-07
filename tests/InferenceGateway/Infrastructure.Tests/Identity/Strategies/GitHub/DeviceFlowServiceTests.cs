@@ -30,10 +30,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             {
                 receivedToken = token;
                 onSuccessCalled = true;
-                await Task.CompletedTask;
+                await Task.CompletedTask.ConfigureAwait(false);
             }, CancellationToken.None);
 
-            await Task.Delay(100);
+            await Task.Delay(100).ConfigureAwait(false);
 
             Assert.True(onSuccessCalled);
             Assert.NotNull(receivedToken);
@@ -78,10 +78,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             {
                 receivedToken = token;
                 onSuccessCalled = true;
-                await Task.CompletedTask;
+                await Task.CompletedTask.ConfigureAwait(false);
             }, CancellationToken.None);
 
-            await Task.Delay(2500);
+            await Task.Delay(2500).ConfigureAwait(false);
 
             Assert.True(onSuccessCalled);
             Assert.NotNull(receivedToken);
@@ -124,10 +124,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             {
                 receivedToken = token;
                 onSuccessCalled = true;
-                await Task.CompletedTask;
+                await Task.CompletedTask.ConfigureAwait(false);
             }, CancellationToken.None);
 
-            await Task.Delay(8000);
+            await Task.Delay(8000).ConfigureAwait(false);
 
             Assert.True(onSuccessCalled);
             Assert.NotNull(receivedToken);
@@ -150,10 +150,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             {
                 receivedToken = token;
                 onSuccessCalled = true;
-                await Task.CompletedTask;
+                await Task.CompletedTask.ConfigureAwait(false);
             }, CancellationToken.None);
 
-            await Task.Delay(100);
+            await Task.Delay(100).ConfigureAwait(false);
 
             Assert.False(onSuccessCalled);
             Assert.Null(receivedToken);
@@ -175,10 +175,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             {
                 receivedToken = token;
                 onSuccessCalled = true;
-                await Task.CompletedTask;
+                await Task.CompletedTask.ConfigureAwait(false);
             }, CancellationToken.None);
 
-            await Task.Delay(100);
+            await Task.Delay(100).ConfigureAwait(false);
 
             Assert.False(onSuccessCalled);
             Assert.Null(receivedToken);
@@ -202,10 +202,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             {
                 receivedToken = token;
                 onSuccessCalled = true;
-                await Task.CompletedTask;
+                await Task.CompletedTask.ConfigureAwait(false);
             }, CancellationToken.None);
 
-            await Task.Delay(100);
+            await Task.Delay(100).ConfigureAwait(false);
 
             Assert.False(onSuccessCalled);
             Assert.Null(receivedToken);
@@ -226,10 +226,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             {
                 receivedToken = token;
                 onSuccessCalled = true;
-                await Task.CompletedTask;
+                await Task.CompletedTask.ConfigureAwait(false);
             }, CancellationToken.None);
 
-            await Task.Delay(100);
+            await Task.Delay(100).ConfigureAwait(false);
 
             Assert.False(onSuccessCalled);
             Assert.Null(receivedToken);

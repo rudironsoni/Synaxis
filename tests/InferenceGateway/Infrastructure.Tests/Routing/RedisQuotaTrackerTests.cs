@@ -49,7 +49,7 @@ public class RedisQuotaTrackerTests
         var tracker = new RedisQuotaTracker(this._mockRedis.Object, this._mockLogger.Object, this._mockConfig.Object);
 
         // Act
-        var result = await tracker.CheckQuotaAsync("NonExistent");
+        var result = await tracker.CheckQuotaAsync("NonExistent").ConfigureAwait(false);
 
         // Assert
         result.Should().BeTrue();
@@ -69,7 +69,7 @@ public class RedisQuotaTrackerTests
     //     var tracker = new RedisQuotaTracker(_mockRedis.Object, _mockLogger.Object, _mockConfig.Object);
     //
     //     // Act
-    //     var result = await tracker.CheckQuotaAsync("NoLimit");
+    //     var result = await tracker.CheckQuotaAsync("NoLimit").ConfigureAwait(false);
     //
     //     // Assert
     //     result.Should().BeTrue();
@@ -90,7 +90,7 @@ public class RedisQuotaTrackerTests
         var tracker = new RedisQuotaTracker(this._mockRedis.Object, this._mockLogger.Object, this._mockConfig.Object);
 
         // Act
-        var result = await tracker.CheckQuotaAsync("Groq");
+        var result = await tracker.CheckQuotaAsync("Groq").ConfigureAwait(false);
 
         // Assert
         result.Should().BeTrue();
@@ -115,7 +115,7 @@ public class RedisQuotaTrackerTests
         var tracker = new RedisQuotaTracker(this._mockRedis.Object, this._mockLogger.Object, this._mockConfig.Object);
 
         // Act
-        var result = await tracker.CheckQuotaAsync("Groq");
+        var result = await tracker.CheckQuotaAsync("Groq").ConfigureAwait(false);
 
         // Assert
         result.Should().BeFalse();
@@ -136,7 +136,7 @@ public class RedisQuotaTrackerTests
         var tracker = new RedisQuotaTracker(this._mockRedis.Object, this._mockLogger.Object, this._mockConfig.Object);
 
         // Act
-        var result = await tracker.CheckQuotaAsync("Groq");
+        var result = await tracker.CheckQuotaAsync("Groq").ConfigureAwait(false);
 
         // Assert
         result.Should().BeTrue();
@@ -149,12 +149,12 @@ public class RedisQuotaTrackerTests
         var tracker = new RedisQuotaTracker(this._mockRedis.Object, this._mockLogger.Object, this._mockConfig.Object);
 
         // Act
-        await tracker.RecordUsageAsync("Groq", 100, 50);
+        await tracker.RecordUsageAsync("Groq", 100, 50).ConfigureAwait(false);
 
         // Assert
         this._mockDatabase.Verify(
             db => db.StringIncrementAsync(
-                It.Is<RedisKey>(k => k.ToString().Contains("tpm")),
+                It.Is<RedisKey>(k => k.ToString().Contains("tpm", StringComparison.Ordinal)),
                 150,
                 It.IsAny<CommandFlags>()),
             Times.Once);
@@ -167,12 +167,12 @@ public class RedisQuotaTrackerTests
         var tracker = new RedisQuotaTracker(this._mockRedis.Object, this._mockLogger.Object, this._mockConfig.Object);
 
         // Act
-        await tracker.RecordUsageAsync("Groq", 100, 50);
+        await tracker.RecordUsageAsync("Groq", 100, 50).ConfigureAwait(false);
 
         // Assert
         this._mockDatabase.Verify(
             db => db.KeyExpireAsync(
-                It.Is<RedisKey>(k => k.ToString().Contains("tpm")),
+                It.Is<RedisKey>(k => k.ToString().Contains("tpm", StringComparison.Ordinal)),
                 TimeSpan.FromMinutes(1),
                 It.IsAny<ExpireWhen>(),
                 It.IsAny<CommandFlags>()),
@@ -198,7 +198,7 @@ public class RedisQuotaTrackerTests
             "org1", "group1", "user1",
             orgMaxRpm: 1000, orgMaxTpm: 100000,
             groupMaxRpm: 500, groupMaxTpm: 50000,
-            userMaxRpm: 100, userMaxTpm: 10000);
+            userMaxRpm: 100, userMaxTpm: 10000).ConfigureAwait(false);
 
         // Assert
         result.Should().BeTrue();
@@ -223,7 +223,7 @@ public class RedisQuotaTrackerTests
             "org1", "group1", "user1",
             orgMaxRpm: 1000, orgMaxTpm: 100000,
             groupMaxRpm: 500, groupMaxTpm: 50000,
-            userMaxRpm: 100, userMaxTpm: 10000);
+            userMaxRpm: 100, userMaxTpm: 10000).ConfigureAwait(false);
 
         // Assert
         result.Should().BeFalse();
@@ -252,7 +252,7 @@ public class RedisQuotaTrackerTests
         // Act
         await tracker.CheckHierarchicalQuotaAsync(
             "org1", "group1", "user1",
-            userMaxRpm: 100);
+            userMaxRpm: 100).ConfigureAwait(false);
 
         // Assert
         capturedKeys.Should().NotBeNull();
@@ -279,7 +279,7 @@ public class RedisQuotaTrackerTests
         // Act
         var result = await tracker.CheckHierarchicalQuotaAsync(
             "org1", "group1", "user1",
-            userMaxRpm: 100);
+            userMaxRpm: 100).ConfigureAwait(false);
 
         // Assert
         result.Should().BeTrue();

@@ -82,7 +82,7 @@ public class AntigravityChatClientTests
         };
 
         // Act
-        var result = await client.GetResponseAsync(messages);
+        var result = await client.GetResponseAsync(messages).ConfigureAwait(false);
 
         // Assert
         Assert.NotNull(result);
@@ -142,7 +142,7 @@ data: [DONE]
         var parts = new List<string>();
         await foreach (var update in client.GetStreamingResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") }))
         {
-            parts.Add(update.Text);
+            parts.Add(update.Text).ConfigureAwait(false);
         }
 
         // Assert

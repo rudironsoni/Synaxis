@@ -71,7 +71,7 @@ public class RedisRateLimitingServiceTests
             .ReturnsAsync(RedisResult.Create(luaResult));
 
         // Act
-        var result = await this._service.CheckRateLimitAsync(key, limit, window);
+        var result = await this._service.CheckRateLimitAsync(key, limit, window).ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();
@@ -101,7 +101,7 @@ public class RedisRateLimitingServiceTests
             .ReturnsAsync(RedisResult.Create(luaResult));
 
         // Act
-        var result = await this._service.CheckRateLimitAsync(key, limit, window);
+        var result = await this._service.CheckRateLimitAsync(key, limit, window).ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();
@@ -133,7 +133,7 @@ public class RedisRateLimitingServiceTests
             .ReturnsAsync(RedisResult.Create(luaResult));
 
         // Act
-        var result = await this._service.CheckRateLimitAsync(key, limit, window, increment);
+        var result = await this._service.CheckRateLimitAsync(key, limit, window, increment).ConfigureAwait(false);
 
         // Assert
         result.IsAllowed.Should().BeTrue();
@@ -144,25 +144,25 @@ public class RedisRateLimitingServiceTests
     public async Task CheckRateLimitAsync_WithNullOrEmptyKey_ShouldThrowArgumentException()
     {
         // Act & Assert
-        var act1 = async () => await this._service.CheckRateLimitAsync(null!, 100, TimeSpan.FromMinutes(1));
-        await act1.Should().ThrowAsync<ArgumentException>().WithParameterName("key");
+        var act1 = async () => await this._service.CheckRateLimitAsync(null!, 100, TimeSpan.FromMinutes(1).ConfigureAwait(false)).ConfigureAwait(false);
+        await act1.Should().ThrowAsync<ArgumentException>().WithParameterName("key").ConfigureAwait(false);
 
-        var act2 = async () => await this._service.CheckRateLimitAsync("", 100, TimeSpan.FromMinutes(1));
-        await act2.Should().ThrowAsync<ArgumentException>().WithParameterName("key");
+        var act2 = async () => await this._service.CheckRateLimitAsync("", 100, TimeSpan.FromMinutes(1).ConfigureAwait(false)).ConfigureAwait(false);
+        await act2.Should().ThrowAsync<ArgumentException>().WithParameterName("key").ConfigureAwait(false);
 
-        var act3 = async () => await this._service.CheckRateLimitAsync("   ", 100, TimeSpan.FromMinutes(1));
-        await act3.Should().ThrowAsync<ArgumentException>().WithParameterName("key");
+        var act3 = async () => await this._service.CheckRateLimitAsync("   ", 100, TimeSpan.FromMinutes(1).ConfigureAwait(false)).ConfigureAwait(false);
+        await act3.Should().ThrowAsync<ArgumentException>().WithParameterName("key").ConfigureAwait(false);
     }
 
     [Fact]
     public async Task CheckRateLimitAsync_WithZeroOrNegativeLimit_ShouldThrowArgumentException()
     {
         // Act & Assert
-        var act1 = async () => await this._service.CheckRateLimitAsync("key", 0, TimeSpan.FromMinutes(1));
-        await act1.Should().ThrowAsync<ArgumentException>().WithParameterName("limit");
+        var act1 = async () => await this._service.CheckRateLimitAsync("key", 0, TimeSpan.FromMinutes(1).ConfigureAwait(false)).ConfigureAwait(false);
+        await act1.Should().ThrowAsync<ArgumentException>().WithParameterName("limit").ConfigureAwait(false);
 
-        var act2 = async () => await this._service.CheckRateLimitAsync("key", -10, TimeSpan.FromMinutes(1));
-        await act2.Should().ThrowAsync<ArgumentException>().WithParameterName("limit");
+        var act2 = async () => await this._service.CheckRateLimitAsync("key", -10, TimeSpan.FromMinutes(1).ConfigureAwait(false)).ConfigureAwait(false);
+        await act2.Should().ThrowAsync<ArgumentException>().WithParameterName("limit").ConfigureAwait(false);
     }
 
     [Fact]
@@ -182,7 +182,7 @@ public class RedisRateLimitingServiceTests
             .ThrowsAsync(new RedisConnectionException(ConnectionFailureType.UnableToConnect, "Connection failed"));
 
         // Act
-        var result = await this._service.CheckRateLimitAsync(key, limit, window);
+        var result = await this._service.CheckRateLimitAsync(key, limit, window).ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();
@@ -202,15 +202,15 @@ public class RedisRateLimitingServiceTests
         var luaResult = new RedisValue[] { 1, 60 };
         this._mockDatabase
             .Setup(db => db.ScriptEvaluateAsync(
-                It.Is<string>(script => script.Contains("redis.call('GET', key)") &&
-                                        script.Contains("redis.call('INCRBY', key, increment)")),
+                It.Is<string>(script => script.Contains("redis.call('GET', key)", StringComparison.Ordinal) &&
+                                        script.Contains("redis.call('INCRBY', key, increment)", StringComparison.Ordinal)),
                 It.IsAny<RedisKey[]>(),
                 It.IsAny<RedisValue[]>(),
                 It.IsAny<CommandFlags>()))
             .ReturnsAsync(RedisResult.Create(luaResult));
 
         // Act
-        await this._service.CheckRateLimitAsync(key, limit, window);
+        await this._service.CheckRateLimitAsync(key, limit, window).ConfigureAwait(false);
 
         // Assert
         this._mockDatabase.Verify(db => db.ScriptEvaluateAsync(
@@ -255,7 +255,7 @@ public class RedisRateLimitingServiceTests
 
         // Act
         var result = await this._service.CheckHierarchicalRateLimitAsync(
-            userId, groupId, organizationId, config);
+            userId, groupId, organizationId, config).ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();
@@ -301,7 +301,7 @@ public class RedisRateLimitingServiceTests
 
         // Act
         var result = await this._service.CheckHierarchicalRateLimitAsync(
-            userId, groupId, organizationId, config);
+            userId, groupId, organizationId, config).ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();
@@ -347,7 +347,7 @@ public class RedisRateLimitingServiceTests
 
         // Act
         var result = await this._service.CheckHierarchicalRateLimitAsync(
-            userId, groupId, organizationId, config);
+            userId, groupId, organizationId, config).ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();
@@ -391,7 +391,7 @@ public class RedisRateLimitingServiceTests
 
         // Act
         var result = await this._service.CheckHierarchicalRateLimitAsync(
-            userId, groupId, organizationId, config);
+            userId, groupId, organizationId, config).ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();
@@ -411,7 +411,7 @@ public class RedisRateLimitingServiceTests
 
         // Act
         var result = await this._service.CheckHierarchicalRateLimitAsync(
-            userId, groupId, organizationId, config);
+            userId, groupId, organizationId, config).ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();
@@ -450,7 +450,7 @@ public class RedisRateLimitingServiceTests
 
         // Act
         var result = await this._service.CheckHierarchicalRateLimitAsync(
-            userId, groupId, organizationId, config);
+            userId, groupId, organizationId, config).ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();
@@ -459,7 +459,7 @@ public class RedisRateLimitingServiceTests
         // Should only check User and Organization (not Group)
         this._mockDatabase.Verify(db => db.ScriptEvaluateAsync(
             It.IsAny<string>(),
-            It.Is<RedisKey[]>(keys => keys.Any(k => k.ToString().Contains(":group:"))),
+            It.Is<RedisKey[]>(keys => keys.Any(k => k.ToString().Contains(":group:", StringComparison.Ordinal))),
             It.IsAny<RedisValue[]>(),
             It.IsAny<CommandFlags>()), Times.Never);
     }
@@ -489,7 +489,7 @@ public class RedisRateLimitingServiceTests
 
         // Act
         await this._service.CheckHierarchicalRateLimitAsync(
-            userId, groupId, organizationId, config);
+            userId, groupId, organizationId, config).ConfigureAwait(false);
 
         // Assert
         capturedKeys.Should().NotBeEmpty();
@@ -505,8 +505,8 @@ public class RedisRateLimitingServiceTests
 
         // Act & Assert
         var act = async () => await this._service.CheckHierarchicalRateLimitAsync(
-            userId, null, organizationId, null!);
-        await act.Should().ThrowAsync<ArgumentNullException>().WithParameterName("config");
+            userId, null, organizationId, null!).ConfigureAwait(false);
+        await act.Should().ThrowAsync<ArgumentNullException>().WithParameterName("config").ConfigureAwait(false);
     }
 
     [Fact]
@@ -540,7 +540,7 @@ public class RedisRateLimitingServiceTests
 
         // Act
         await this._service.CheckHierarchicalRateLimitAsync(
-            userId, groupId, organizationId, config);
+            userId, groupId, organizationId, config).ConfigureAwait(false);
 
         // Assert - All checks should execute within a short time window (parallel execution)
         executionTimes.Should().HaveCount(6); // 3 levels * 2 types (RPM + TPM)
@@ -570,7 +570,7 @@ public class RedisRateLimitingServiceTests
             .ReturnsAsync(RedisResult.Create(luaResult));
 
         // Act
-        var result = await this._service.IncrementTokenUsageAsync(key, tokenCount, window);
+        var result = await this._service.IncrementTokenUsageAsync(key, tokenCount, window).ConfigureAwait(false);
 
         // Assert
         result.Should().Be(5500);
@@ -585,19 +585,19 @@ public class RedisRateLimitingServiceTests
     public async Task IncrementTokenUsageAsync_WithNullOrEmptyKey_ShouldThrowArgumentException()
     {
         // Act & Assert
-        var act1 = async () => await this._service.IncrementTokenUsageAsync(null!, 100, TimeSpan.FromMinutes(1));
-        await act1.Should().ThrowAsync<ArgumentException>().WithParameterName("key");
+        var act1 = async () => await this._service.IncrementTokenUsageAsync(null!, 100, TimeSpan.FromMinutes(1).ConfigureAwait(false)).ConfigureAwait(false);
+        await act1.Should().ThrowAsync<ArgumentException>().WithParameterName("key").ConfigureAwait(false);
 
-        var act2 = async () => await this._service.IncrementTokenUsageAsync("", 100, TimeSpan.FromMinutes(1));
-        await act2.Should().ThrowAsync<ArgumentException>().WithParameterName("key");
+        var act2 = async () => await this._service.IncrementTokenUsageAsync("", 100, TimeSpan.FromMinutes(1).ConfigureAwait(false)).ConfigureAwait(false);
+        await act2.Should().ThrowAsync<ArgumentException>().WithParameterName("key").ConfigureAwait(false);
     }
 
     [Fact]
     public async Task IncrementTokenUsageAsync_WithNegativeTokenCount_ShouldThrowArgumentException()
     {
         // Act & Assert
-        var act = async () => await this._service.IncrementTokenUsageAsync("key", -10, TimeSpan.FromMinutes(1));
-        await act.Should().ThrowAsync<ArgumentException>().WithParameterName("tokenCount");
+        var act = async () => await this._service.IncrementTokenUsageAsync("key", -10, TimeSpan.FromMinutes(1).ConfigureAwait(false)).ConfigureAwait(false);
+        await act.Should().ThrowAsync<ArgumentException>().WithParameterName("tokenCount").ConfigureAwait(false);
     }
 
     [Fact]
@@ -617,7 +617,7 @@ public class RedisRateLimitingServiceTests
             .ThrowsAsync(new RedisException("Connection failed"));
 
         // Act
-        var result = await this._service.IncrementTokenUsageAsync(key, tokenCount, window);
+        var result = await this._service.IncrementTokenUsageAsync(key, tokenCount, window).ConfigureAwait(false);
 
         // Assert
         result.Should().Be(0); // Graceful degradation
@@ -634,14 +634,14 @@ public class RedisRateLimitingServiceTests
         var luaResult = new RedisValue[] { 500, 60 };
         this._mockDatabase
             .Setup(db => db.ScriptEvaluateAsync(
-                It.Is<string>(script => script.Contains("redis.call('INCRBY', key, tokens)")),
+                It.Is<string>(script => script.Contains("redis.call('INCRBY', key, tokens)", StringComparison.Ordinal)),
                 It.IsAny<RedisKey[]>(),
                 It.IsAny<RedisValue[]>(),
                 It.IsAny<CommandFlags>()))
             .ReturnsAsync(RedisResult.Create(luaResult));
 
         // Act
-        await this._service.IncrementTokenUsageAsync(key, tokenCount, window);
+        await this._service.IncrementTokenUsageAsync(key, tokenCount, window).ConfigureAwait(false);
 
         // Assert
         this._mockDatabase.Verify(db => db.ScriptEvaluateAsync(
@@ -676,7 +676,7 @@ public class RedisRateLimitingServiceTests
 
         // Act
         await this._service.IncrementHierarchicalTokenUsageAsync(
-            userId, groupId, organizationId, tokenCount, window);
+            userId, groupId, organizationId, tokenCount, window).ConfigureAwait(false);
 
         // Assert
         this._mockDatabase.Verify(db => db.ScriptEvaluateAsync(
@@ -707,7 +707,7 @@ public class RedisRateLimitingServiceTests
 
         // Act
         await this._service.IncrementHierarchicalTokenUsageAsync(
-            userId, groupId, organizationId, tokenCount, window);
+            userId, groupId, organizationId, tokenCount, window).ConfigureAwait(false);
 
         // Assert
         this._mockDatabase.Verify(db => db.ScriptEvaluateAsync(
@@ -731,7 +731,7 @@ public class RedisRateLimitingServiceTests
             .ReturnsAsync((RedisValue)75);
 
         // Act
-        var result = await this._service.GetCurrentUsageAsync(key);
+        var result = await this._service.GetCurrentUsageAsync(key).ConfigureAwait(false);
 
         // Assert
         result.Should().Be(75);
@@ -747,7 +747,7 @@ public class RedisRateLimitingServiceTests
             .ReturnsAsync(RedisValue.Null);
 
         // Act
-        var result = await this._service.GetCurrentUsageAsync(key);
+        var result = await this._service.GetCurrentUsageAsync(key).ConfigureAwait(false);
 
         // Assert
         result.Should().Be(0);
@@ -763,7 +763,7 @@ public class RedisRateLimitingServiceTests
             .ThrowsAsync(new RedisException("Connection failed"));
 
         // Act
-        var result = await this._service.GetCurrentUsageAsync(key);
+        var result = await this._service.GetCurrentUsageAsync(key).ConfigureAwait(false);
 
         // Assert
         result.Should().Be(0);
@@ -783,7 +783,7 @@ public class RedisRateLimitingServiceTests
             .ReturnsAsync(true);
 
         // Act
-        var result = await this._service.ResetRateLimitAsync(key);
+        var result = await this._service.ResetRateLimitAsync(key).ConfigureAwait(false);
 
         // Assert
         result.Should().BeTrue();
@@ -800,7 +800,7 @@ public class RedisRateLimitingServiceTests
             .ReturnsAsync(false);
 
         // Act
-        var result = await this._service.ResetRateLimitAsync(key);
+        var result = await this._service.ResetRateLimitAsync(key).ConfigureAwait(false);
 
         // Assert
         result.Should().BeFalse();
@@ -816,7 +816,7 @@ public class RedisRateLimitingServiceTests
             .ThrowsAsync(new RedisException("Connection failed"));
 
         // Act
-        var result = await this._service.ResetRateLimitAsync(key);
+        var result = await this._service.ResetRateLimitAsync(key).ConfigureAwait(false);
 
         // Assert
         result.Should().BeFalse();

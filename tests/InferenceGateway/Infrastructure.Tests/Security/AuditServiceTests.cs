@@ -35,10 +35,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             var auditService = new AuditService(dbContext);
 
             // Act
-            await auditService.LogAsync(tenantId, userId, action, payload);
+            await auditService.LogAsync(tenantId, userId, action, payload).ConfigureAwait(false);
 
             // Assert
-            var logs = await dbContext.AuditLogs.ToListAsync();
+            var logs = await dbContext.AuditLogs.ToListAsync().ConfigureAwait(false);
             Assert.Single(logs);
             var log = logs[0];
             Assert.Equal(tenantId, log.OrganizationId);
@@ -60,10 +60,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             var auditService = new AuditService(dbContext);
 
             // Act
-            await auditService.LogAsync(tenantId, userId, action, payload);
+            await auditService.LogAsync(tenantId, userId, action, payload).ConfigureAwait(false);
 
             // Assert
-            var logs = await dbContext.AuditLogs.ToListAsync();
+            var logs = await dbContext.AuditLogs.ToListAsync().ConfigureAwait(false);
             Assert.Single(logs);
             var log = logs[0];
 
@@ -96,10 +96,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             var auditService = new AuditService(dbContext);
 
             // Act
-            await auditService.LogAsync(tenantId, userId, action, payload);
+            await auditService.LogAsync(tenantId, userId, action, payload).ConfigureAwait(false);
 
             // Assert
-            var logs = await dbContext.AuditLogs.ToListAsync();
+            var logs = await dbContext.AuditLogs.ToListAsync().ConfigureAwait(false);
             Assert.Single(logs);
             var log = logs[0];
             Assert.Null(log.NewValues);
@@ -118,10 +118,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             var auditService = new AuditService(dbContext);
 
             // Act
-            await auditService.LogAsync(tenantId, userId, action, payload);
+            await auditService.LogAsync(tenantId, userId, action, payload).ConfigureAwait(false);
 
             // Assert
-            var logs = await dbContext.AuditLogs.ToListAsync();
+            var logs = await dbContext.AuditLogs.ToListAsync().ConfigureAwait(false);
             Assert.Single(logs);
             var log = logs[0];
             Assert.Null(log.UserId);

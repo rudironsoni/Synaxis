@@ -28,6 +28,16 @@ namespace Synaxis.InferenceGateway.Application.Identity.Models
         public Guid? OrganizationId { get; set; }
 
         /// <summary>
+        /// Gets or sets the created user information.
+        /// </summary>
+        public UserInfo? User { get; set; }
+
+        /// <summary>
+        /// Gets or sets the created organization information.
+        /// </summary>
+        public OrganizationInfo? Organization { get; set; }
+
+        /// <summary>
         /// Gets or sets the error messages if operation failed.
         /// </summary>
         public IList<string> Errors { get; set; } = new List<string>();

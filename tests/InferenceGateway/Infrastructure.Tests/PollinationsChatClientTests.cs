@@ -68,7 +68,7 @@ public class PollinationsChatClientTests
         var client = new PollinationsChatClient(httpClient, TestModelId);
 
         // Act
-        var result = await client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") });
+        var result = await client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") }).ConfigureAwait(false);
 
         // Assert
         Assert.Equal(responseText, result.Messages[0].Text);
@@ -100,10 +100,10 @@ public class PollinationsChatClientTests
         var options = new ChatOptions { Temperature = 0.7f };
 
         // Act
-        await client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") }, options);
+        await client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") }, options).ConfigureAwait(false);
 
         // Assert
-        var content = await capturedRequest.Content!.ReadAsStringAsync();
+        var content = await capturedRequest.Content!.ReadAsStringAsync().ConfigureAwait(false);
         var json = JsonSerializer.Deserialize<JsonElement>(content);
         Assert.False(json.GetProperty("stream").GetBoolean());
         Assert.Equal("openai", json.GetProperty("model").GetString()); // gpt-4o-mini maps to openai
@@ -132,7 +132,7 @@ public class PollinationsChatClientTests
 
         // Act & Assert
         await Assert.ThrowsAsync<HttpRequestException>(() =>
-            client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") }));
+            client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") })).ConfigureAwait(false);
     }
 
     [Fact]
@@ -165,7 +165,7 @@ public class PollinationsChatClientTests
         };
 
         // Act
-        var result = await client.GetResponseAsync(messages);
+        var result = await client.GetResponseAsync(messages).ConfigureAwait(false);
 
         // Assert
         Assert.Equal(responseText, result.Messages[0].Text);
@@ -193,7 +193,7 @@ public class PollinationsChatClientTests
         var client = new PollinationsChatClient(httpClient, TestModelId);
 
         // Act
-        var result = await client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") });
+        var result = await client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") }).ConfigureAwait(false);
 
         // Assert
         Assert.Equal("", result.Messages[0].Text);
@@ -224,7 +224,7 @@ public class PollinationsChatClientTests
         var updates = new List<ChatResponseUpdate>();
         await foreach (var update in client.GetStreamingResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") }))
         {
-            updates.Add(update);
+            updates.Add(update).ConfigureAwait(false);
         }
 
         // Assert
@@ -261,11 +261,11 @@ public class PollinationsChatClientTests
         var updates = new List<ChatResponseUpdate>();
         await foreach (var update in client.GetStreamingResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") }, options))
         {
-            updates.Add(update);
+            updates.Add(update).ConfigureAwait(false);
         }
 
         // Assert
-        var content = await capturedRequest.Content!.ReadAsStringAsync();
+        var content = await capturedRequest.Content!.ReadAsStringAsync().ConfigureAwait(false);
         var json = JsonSerializer.Deserialize<JsonElement>(content);
         Assert.True(json.GetProperty("stream").GetBoolean());
         Assert.Equal("openai", json.GetProperty("model").GetString());
@@ -296,7 +296,7 @@ public class PollinationsChatClientTests
         var updates = new List<ChatResponseUpdate>();
         await foreach (var update in client.GetStreamingResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") }))
         {
-            updates.Add(update);
+            updates.Add(update).ConfigureAwait(false);
         }
 
         // Assert
@@ -331,7 +331,7 @@ public class PollinationsChatClientTests
             {
                 // Should throw before yielding any updates
             }
-        });
+        }).ConfigureAwait(false);
     }
 
     [Fact]

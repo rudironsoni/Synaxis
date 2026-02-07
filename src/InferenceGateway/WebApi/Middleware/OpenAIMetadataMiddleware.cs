@@ -34,9 +34,9 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             {
                 if (context.Items.TryGetValue("RoutingContext", out var value) && value is RoutingContext rc)
                 {
-                    context.Response.Headers["x-gateway-model-requested"] = rc.requestedModel;
-                    context.Response.Headers["x-gateway-model-resolved"] = rc.resolvedCanonicalId;
-                    context.Response.Headers["x-gateway-provider"] = rc.provider;
+                    context.Response.Headers["x-gateway-model-requested"] = rc.RequestedModel;
+                    context.Response.Headers["x-gateway-model-resolved"] = rc.ResolvedCanonicalId;
+                    context.Response.Headers["x-gateway-provider"] = rc.Provider;
                 }
                 else
                 {
