@@ -415,7 +415,7 @@ public class OpenAIErrorHandlerMiddlewareTests
         return string.Empty;
     }
 
-    private static readonly JsonSerializerOptions _jsonOptions = new ()
+    private static readonly JsonSerializerOptions _jsonOptions = new()
     {
         PropertyNameCaseInsensitive = true,
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower

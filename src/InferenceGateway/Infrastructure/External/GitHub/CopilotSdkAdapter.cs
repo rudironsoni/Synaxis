@@ -27,7 +27,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
     {
         private readonly object _client;
         private readonly ILogger<CopilotSdkAdapter>? _logger;
-        private readonly SemaphoreSlim _startLock = new (1, 1);
+        private readonly SemaphoreSlim _startLock = new(1, 1);
         private bool _started;
         private readonly ChatClientMetadata _metadata = new ChatClientMetadata("GitHubCopilot", new Uri("https://copilot.github.com/"), "copilot");
         private readonly string _modelId = "copilot";

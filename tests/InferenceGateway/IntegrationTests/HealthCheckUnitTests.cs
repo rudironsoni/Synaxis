@@ -155,7 +155,7 @@ public class HealthCheckUnitTests
     private sealed class LocalHttpServer : IAsyncDisposable
     {
         private readonly TcpListener _listener;
-        private readonly CancellationTokenSource _cts = new ();
+        private readonly CancellationTokenSource _cts = new();
         private Task _acceptTask;
 
         private LocalHttpServer(TcpListener listener)

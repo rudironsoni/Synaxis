@@ -7,13 +7,13 @@ namespace Synaxis.Common.Tests.Factories;
 public static class TestDataFactory
 {
     public static ChatMessage CreateUserMessage(string content = "Hello, world!")
-        => new (ChatRole.User, content);
+        => new(ChatRole.User, content);
 
     public static ChatMessage CreateAssistantMessage(string content = "Mock response")
-        => new (ChatRole.Assistant, content);
+        => new(ChatRole.Assistant, content);
 
     public static ChatMessage CreateSystemMessage(string content = "You are a helpful assistant")
-        => new (ChatRole.System, content);
+        => new(ChatRole.System, content);
 
     public static List<ChatMessage> CreateConversation(params string[] userMessages)
     {

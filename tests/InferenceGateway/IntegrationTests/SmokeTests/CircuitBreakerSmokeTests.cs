@@ -238,7 +238,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
     public class CircuitBreakerState
     {
         private const int FailureThreshold = 3;
-        private readonly Dictionary<string, ProviderState> _providerStates = new ();
+        private readonly Dictionary<string, ProviderState> _providerStates = new();
 
         public bool IsOpen(string provider)
         {
