@@ -5,6 +5,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- Suppress SA1516 for generated code that cannot be fixed -->
+    <NoWarn>$(NoWarn);SA1516</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="AspNetCore.HealthChecks.Redis" />
