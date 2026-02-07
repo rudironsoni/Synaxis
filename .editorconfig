@@ -72,6 +72,19 @@ dotnet_diagnostic.SA1200.severity = none
 dotnet_diagnostic.SA1137.severity = none
 dotnet_diagnostic.SA1413.severity = none
 
+# Generated files (obj directory) - suppress all StyleCop analyzers for auto-generated files
+[**/obj/**/*.cs]
+dotnet_analyzer_diagnostic.category-StyleCop.severity = none
+dotnet_diagnostic.SA1516.severity = none
+
+# Specific generated file that causes SA1516
+[**/GlobalUsings.g.cs]
+dotnet_diagnostic.SA1516.severity = none
+
+# All .g.cs generated files
+[**/*.g.cs]
+dotnet_diagnostic.SA1516.severity = none
+
 # InferenceGateway - suppress SA1402 for all files with multiple DTOs/models
 [src/InferenceGateway/**/*.cs]
 dotnet_diagnostic.SA1402.severity = none
@@ -91,6 +104,12 @@ dotnet_diagnostic.MA0002.severity = suggestion
 [src/InferenceGateway/**/*.cs]
 dotnet_diagnostic.SA1649.severity = none
 
+# Suppress SA1516 for WebApi project (generated code only, but suppression for generated files not working)
+[src/InferenceGateway/WebApi/**/*.cs]
+dotnet_diagnostic.SA1516.severity = none
+
 # SA1018: Nullable type symbols should not be preceded by a space
 # Disabled to allow SA1011 compliance for nullable array types (e.g., string[] ?)
 dotnet_diagnostic.SA1018.severity = none
+
+
