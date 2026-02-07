@@ -35,6 +35,10 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         /// <summary>
         /// Invokes the middleware to determine routing region.
         /// </summary>
+        /// <param name="context">The HTTP context.</param>
+        /// <param name="tenantContext">The tenant context.</param>
+        /// <param name="regionRouter">The region router.</param>
+        /// <param name="geoIPService">The GeoIP service.</param>
         public async Task InvokeAsync(
             HttpContext context,
             ITenantContext tenantContext,
@@ -47,14 +51,14 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 if (context.Request.Path.StartsWithSegments("/health") ||
                     context.Request.Path.StartsWithSegments("/openapi"))
                 {
-                    await this._next(context);
+                    await this._next(context).ConfigureAwait(false);
                     return;
                 }
 
                 // Only route if tenant context is established
                 if (tenantContext.OrganizationId == null)
                 {
-                    await this._next(context);
+                    await this._next(context).ConfigureAwait(false);
                     return;
                 }
 
@@ -65,40 +69,44 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 string userRegion;
                 if (tenantContext.UserId.HasValue)
                 {
-                    userRegion = await regionRouter.GetUserRegionAsync(tenantContext.UserId.Value);
+                    userRegion = await regionRouter.GetUserRegionAsync(tenantContext.UserId.Value).ConfigureAwait(false);
                 }
                 else
                 {
                     // For API key requests, detect region from IP if not specified
                     var clientIp = GetClientIpAddress(context);
-                    var geoLocation = await geoIPService.GetLocationAsync(clientIp);
+                    var geoLocation = await geoIPService.GetLocationAsync(clientIp).ConfigureAwait(false);
                     userRegion = MapCountryToRegion(geoLocation.CountryCode);
                 }
 
                 // Store routing info in context
                 context.Items["UserRegion"] = userRegion;
                 context.Items["CurrentRegion"] = currentRegion;
-                context.Items["IsCrossBorder"] = await regionRouter.IsCrossBorderAsync(currentRegion, userRegion);
+                context.Items["IsCrossBorder"] = await regionRouter.IsCrossBorderAsync(currentRegion, userRegion).ConfigureAwait(false);
 
                 // Check if cross-border routing is required
                 if (currentRegion != userRegion)
                 {
                     this._logger.LogInformation(
                         "Cross-region request detected. Current: {CurrentRegion}, User: {UserRegion}, OrgId: {OrgId}",
-                        currentRegion, userRegion, tenantContext.OrganizationId);
+                        currentRegion,
+                        userRegion,
+                        tenantContext.OrganizationId);
 
                     // Check if consent is required
                     if (tenantContext.UserId.HasValue)
                     {
                         var requiresConsent = await regionRouter.RequiresCrossBorderConsentAsync(
                             tenantContext.UserId.Value,
-                            currentRegion);
+                            currentRegion).ConfigureAwait(false);
 
                         if (requiresConsent)
                         {
                             this._logger.LogWarning(
                                 "Cross-border transfer requires consent. UserId: {UserId}, From: {From}, To: {To}",
-                                tenantContext.UserId.Value, userRegion, currentRegion);
+                                tenantContext.UserId.Value,
+                                userRegion,
+                                currentRegion);
 
                             context.Response.StatusCode = StatusCodes.Status451UnavailableForLegalReasons;
                             await context.Response.WriteAsJsonAsync(new
@@ -109,9 +117,9 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                                     type = "consent_required",
                                     code = "CROSS_BORDER_CONSENT_REQUIRED",
                                     user_region = userRegion,
-                                    current_region = currentRegion
+                                    current_region = currentRegion,
                                 },
-                            });
+                            }).ConfigureAwait(false);
                             return;
                         }
                     }
@@ -126,7 +134,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                         LegalBasis = "SCC", // Standard Contractual Clauses
                         Purpose = "inference_request",
                         DataCategories = new[] { "api_request", "model_inference" },
-                    });
+                    }).ConfigureAwait(false);
                 }
 
                 // Add region headers for debugging
@@ -138,12 +146,12 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     return Task.CompletedTask;
                 });
 
-                await this._next(context);
+                await this._next(context).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 this._logger.LogError(ex, "Error occurred during region routing");
-                await this._next(context);
+                await this._next(context).ConfigureAwait(false);
             }
         }
 
