@@ -60,8 +60,8 @@ public class AntigravityAuthManagerTests : IDisposable
         // The manager implements round robin logic. 
         // We verify that accounts are loaded correctly from disk.
         Assert.Equal(2, list.Count);
-        Assert.Contains(list, a => a.Email == "user1@test.com");
-        Assert.Contains(list, a => a.Email == "user2@test.com");
+        Assert.Contains(list, a => a.email == "user1@test.com");
+        Assert.Contains(list, a => a.email == "user2@test.com");
     }
 
     [Fact]
@@ -90,7 +90,7 @@ public class AntigravityAuthManagerTests : IDisposable
             await Assert.ThrowsAnyAsync<Exception>(() => manager.GetTokenAsync());
 
             var list = manager.ListAccounts().ToList();
-            Assert.Contains(list, a => a.Email == "env-var-user@system");
+            Assert.Contains(list, a => a.email == "env-var-user@system");
         }
         finally
         {
