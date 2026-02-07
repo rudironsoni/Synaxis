@@ -18,8 +18,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
     using Synaxis.InferenceGateway.Application.Configuration;
     using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
 
+    /// <summary>
+    /// GoogleAuthStrategy class.
+    /// </summary>
     public class GoogleAuthStrategy : IAuthStrategy
     {
+#pragma warning disable S1075 // URIs should not be hardcoded - OAuth endpoints
         private const string AuthorizationEndpoint = "https://accounts.google.com/o/oauth2/v2/auth";
         private const string TokenEndpoint = "https://oauth2.googleapis.com/token";
         private const string UserInfoEndpoint = "https://www.googleapis.com/oauth2/v1/userinfo?alt=json";
@@ -44,13 +48,23 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
             "https://www.googleapis.com/auth/userinfo.email",
             "https://www.googleapis.com/auth/userinfo.profile",
         };
+#pragma warning restore S1075 // URIs should not be hardcoded
 
         private readonly AntigravitySettings _settings;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<GoogleAuthStrategy> _logger;
 
+        /// <summary>
+        /// Occurs when an account has been successfully authenticated.
+        /// </summary>
         public event EventHandler<AccountAuthenticatedEventArgs>? AccountAuthenticated;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="GoogleAuthStrategy"/> class.
+        /// </summary>
+        /// <param name="settings">The Antigravity settings.</param>
+        /// <param name="httpClientFactory">The HTTP client factory.</param>
+        /// <param name="logger">The logger instance.</param>
         public GoogleAuthStrategy(AntigravitySettings settings, IHttpClientFactory httpClientFactory, ILogger<GoogleAuthStrategy> logger)
         {
             this._settings = settings ?? throw new ArgumentNullException(nameof(settings));
@@ -58,6 +72,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
+        /// <inheritdoc/>
         public Task<AuthResult> InitiateFlowAsync(CancellationToken ct)
         {
             try
@@ -89,6 +104,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
             }
         }
 
+        /// <inheritdoc/>
         public async Task<AuthResult> CompleteFlowAsync(string code, string state, CancellationToken ct)
         {
             try
@@ -129,7 +145,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
                     RefreshToken = token.RefreshToken,
                     Properties = new Dictionary<string, string> { ["ProjectId"] = projectId },
                 };
-                if (token.ExpiresInthis.Seconds.HasValue)
+                if (token.ExpiresInSeconds.HasValue)
                 {
                     account.ExpiresAt = DateTimeOffset.UtcNow.AddSeconds(token.ExpiresInSeconds.Value);
                 }
@@ -145,6 +161,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
             }
         }
 
+        /// <inheritdoc/>
         public async Task<TokenResponse> RefreshTokenAsync(IdentityAccount account, CancellationToken ct)
         {
             if (string.IsNullOrWhiteSpace(account.RefreshToken))
@@ -254,7 +271,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
                     using var request = new HttpRequestMessage(HttpMethod.Post, url);
                     foreach (var header in loadHeaders)
                     {
-                        if (header.Key == "Authorization")
+                        if (string.Equals(header.Key, "Authorization", StringComparison.Ordinal))
                         {
                             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
                         }
@@ -333,7 +350,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
         private static byte[] Base64UrlDecode(string input)
         {
             var normalized = input.Replace('-', '+').Replace('_', '/');
-            var padded = normalized.PadRight(normalized.Length + (4 - normalized.Length % 4) % 4, '=');
+            var padded = normalized.PadRight(normalized.Length + ((4 - (normalized.Length % 4)) % 4), '=');
             return Convert.FromBase64String(padded);
         }
 
@@ -355,30 +372,57 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
                     }
                 }
             }
-            catch (JsonException) { }
+            catch (JsonException)
+            {
+                // Intentionally empty - return empty string if JSON parsing fails
+            }
 
             return string.Empty;
         }
 
         private sealed class PkceState
         {
-            [JsonPropertyName("verifier")] public string Verifier { get; set; } = string.Empty;
+            /// <summary>
+            /// Gets or sets the Verifier.
+            /// </summary>
+            [JsonPropertyName("verifier")]
+            public string Verifier { get; set; } = string.Empty;
 
-            [JsonPropertyName("projectId")] public string? ProjectId { get; set; }
+            /// <summary>
+            /// Gets or sets the ProjectId.
+            /// </summary>
+            [JsonPropertyName("projectId")]
+            public string? ProjectId { get; set; }
         }
 
         private sealed class TokenPayload
         {
-            [JsonPropertyName("access_token")] public string AccessToken { get; set; } = string.Empty;
+            /// <summary>
+            /// Gets or sets the AccessToken.
+            /// </summary>
+            [JsonPropertyName("access_token")]
+            public string AccessToken { get; set; } = string.Empty;
 
-            [JsonPropertyName("expires_in")] public int ExpiresIn { get; set; }
+            /// <summary>
+            /// Gets or sets the ExpiresIn.
+            /// </summary>
+            [JsonPropertyName("expires_in")]
+            public int ExpiresIn { get; set; }
 
-            [JsonPropertyName("refresh_token")] public string? RefreshToken { get; set; }
+            /// <summary>
+            /// Gets or sets the RefreshToken.
+            /// </summary>
+            [JsonPropertyName("refresh_token")]
+            public string? RefreshToken { get; set; }
         }
 
         private sealed class UserInfoPayload
         {
-            [JsonPropertyName("email")] public string? Email { get; set; }
+            /// <summary>
+            /// Gets or sets the Email.
+            /// </summary>
+            [JsonPropertyName("email")]
+            public string? Email { get; set; }
         }
     }
 }

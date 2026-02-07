@@ -66,9 +66,9 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
                 };
 
                 var content = msg.Content?.ToString() ?? "";
+
                 // Note: This is a simplification. Real OpenAI messages can have array content (multimodal).
                 // Assuming string for now as per current project usage patterns or we'd need deeper parsing.
-
                 var chatMessage = new ChatMessage(role, content);
                 if (!string.IsNullOrEmpty(msg.Name))
                 {
@@ -104,6 +104,7 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
 
                 messages.Add(chatMessage);
             }
+
             return messages;
         }
 
@@ -129,6 +130,7 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
                     result.Add(function);
                 }
             }
+
             return result.Count > 0 ? result : null;
         }
 
@@ -150,6 +152,7 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
                             list.Add(item.GetString()!);
                         }
                     }
+
                     return list;
                 }
             }

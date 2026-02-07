@@ -59,5 +59,4 @@ namespace Synaxis.InferenceGateway.WebApi.Health
             return Task.FromResult(HealthCheckResult.Healthy("Configuration is consistent."));
         }
     }
-
 }

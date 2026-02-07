@@ -1,0 +1,99 @@
+// <copyright file="GenericOpenAiChatClient.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
+namespace Synaxis.InferenceGateway.Infrastructure
+{
+    using System;
+    using System.ClientModel;
+    using System.ClientModel.Primitives;
+    using System.Collections.Generic;
+    using System.Net.Http;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Microsoft.Extensions.AI;
+    using OpenAI;
+
+    /// <summary>
+    /// GenericOpenAiChatClient class.
+    /// </summary>
+    public class GenericOpenAiChatClient : IChatClient
+    {
+        private readonly IChatClient _innerClient;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="GenericOpenAiChatClient"/> class.
+        /// </summary>
+        public GenericOpenAiChatClient(string apiKey, Uri endpoint, string modelId, Dictionary<string, string>? customHeaders = null, HttpClient? httpClient = null)
+        {
+            var options = new OpenAIClientOptions
+            {
+                Endpoint = endpoint,
+            };
+
+            if (httpClient != null)
+            {
+                options.Transport = new HttpClientPipelineTransport(httpClient);
+            }
+
+            if (customHeaders != null && customHeaders.Count > 0)
+            {
+                options.AddPolicy(new CustomHeaderPolicy(customHeaders), PipelinePosition.PerCall);
+            }
+
+            var openAiClient = new OpenAIClient(new ApiKeyCredential(apiKey), options);
+            this._innerClient = openAiClient.GetChatClient(modelId).AsIChatClient();
+        }
+
+        public ChatClientMetadata Metadata => this._innerClient.GetService<ChatClientMetadata>() ?? new ChatClientMetadata("OpenAI");
+
+        /// <inheritdoc/>
+        public Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default)
+        {
+            return this._innerClient.GetResponseAsync(messages, options, cancellationToken);
+        }
+
+        public IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default)
+        {
+            return this._innerClient.GetStreamingResponseAsync(messages, options, cancellationToken);
+        }
+
+        public object? GetService(Type serviceType, object? serviceKey = null)
+        {
+            return this._innerClient.GetService(serviceType, serviceKey);
+        }
+
+        public void Dispose()
+        {
+            this._innerClient.Dispose();
+        }
+
+        private class CustomHeaderPolicy : PipelinePolicy
+        {
+            private readonly Dictionary<string, string> _headers;
+
+            public CustomHeaderPolicy(Dictionary<string, string> headers)
+            {
+                this._headers = headers;
+            }
+
+            public override void Process(PipelineMessage message, IReadOnlyList<PipelinePolicy> pipeline, int currentIndex)
+            {
+                foreach (var header in this._headers)
+                {
+                    message.Request.Headers.Set(header.Key, header.Value);
+                }
+                ProcessNext(message, pipeline, currentIndex);
+            }
+
+            public override async ValueTask ProcessAsync(PipelineMessage message, IReadOnlyList<PipelinePolicy> pipeline, int currentIndex)
+            {
+                foreach (var header in this._headers)
+                {
+                    message.Request.Headers.Set(header.Key, header.Value);
+                }
+                await ProcessNextAsync(message, pipeline, currentIndex).ConfigureAwait(false);
+            }
+        }
+    }
+}

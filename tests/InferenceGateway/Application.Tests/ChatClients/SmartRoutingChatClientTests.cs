@@ -24,6 +24,7 @@ public class SmartRoutingChatClientTests : TestBase
     private readonly Mock<ResiliencePipelineProvider<string>> _pipelineProviderMock;
     private readonly Mock<IEnumerable<IChatClientStrategy>> _strategiesMock;
     private readonly ActivitySource _activitySource;
+    private readonly Mock<IFallbackOrchestrator> _fallbackOrchestratorMock;
     private readonly Mock<ILogger<SmartRoutingChatClient>> _loggerMock;
     private readonly SmartRoutingChatClient _client;
 
@@ -36,7 +37,8 @@ public class SmartRoutingChatClientTests : TestBase
         this._pipelineProviderMock = new Mock<ResiliencePipelineProvider<string>>();
         this._strategiesMock = new Mock<IEnumerable<IChatClientStrategy>>();
         this._activitySource = new ActivitySource("Test");
-        this._loggerMock = this.CreateMockLogger<SmartRoutingChatClient>();
+        this._fallbackOrchestratorMock = new Mock<IFallbackOrchestrator>();
+        this._loggerMock = TestBase.CreateMockLogger<SmartRoutingChatClient>();
 
         // Setup pipeline provider to return a pipeline with retry support
         var pipeline = new ResiliencePipelineBuilder()
@@ -58,6 +60,7 @@ public class SmartRoutingChatClientTests : TestBase
             this._pipelineProviderMock.Object,
             this._strategiesMock.Object,
             this._activitySource,
+            this._fallbackOrchestratorMock.Object,
             this._loggerMock.Object);
     }
 
@@ -72,7 +75,7 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = this.CreateMockChatClient();
+        var mockChatClient = TestBase.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
 
         this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
@@ -113,8 +116,8 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "llama-3.1-70b-versatile");
 
-        var mockChatClient1 = this.CreateMockChatClient();
-        var mockChatClient2 = this.CreateMockChatClient("Fallback response");
+        var mockChatClient1 = TestBase.CreateMockChatClient();
+        var mockChatClient2 = TestBase.CreateMockChatClient("Fallback response");
         var mockStrategy = new Mock<IChatClientStrategy>();
 
         this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
@@ -156,7 +159,7 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = this.CreateMockChatClient();
+        var mockChatClient = TestBase.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
 
         this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
@@ -187,7 +190,7 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = this.CreateMockChatClient();
+        var mockChatClient = TestBase.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
 
         this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
@@ -209,6 +212,7 @@ public class SmartRoutingChatClientTests : TestBase
             this._pipelineProviderMock.Object,
             strategiesList,
             this._activitySource,
+            this._fallbackOrchestratorMock.Object,
             this._loggerMock.Object);
 
         mockStrategy.Setup(x => x.CanHandle("openai"))
@@ -238,7 +242,7 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = this.CreateMockChatClient();
+        var mockChatClient = TestBase.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
 
         this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
@@ -270,7 +274,7 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = this.CreateMockStreamingChatClient("Hello", " there!");
+        var mockChatClient = TestBase.CreateMockStreamingChatClient("Hello", " there!");
         var mockStrategy = new Mock<IChatClientStrategy>();
 
         this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", true, It.IsAny<CancellationToken>()))
@@ -315,8 +319,8 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "llama-3.1-70b-versatile");
 
-        var mockChatClient1 = this.CreateMockStreamingChatClient();
-        var mockChatClient2 = this.CreateMockStreamingChatClient("Fallback", " response");
+        var mockChatClient1 = TestBase.CreateMockStreamingChatClient();
+        var mockChatClient2 = TestBase.CreateMockStreamingChatClient("Fallback", " response");
         var mockStrategy = new Mock<IChatClientStrategy>();
 
         this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", true, It.IsAny<CancellationToken>()))
@@ -381,7 +385,7 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = this.CreateMockChatClient();
+        var mockChatClient = TestBase.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
         var callCount = 0;
 
@@ -432,6 +436,7 @@ public class SmartRoutingChatClientTests : TestBase
             this._pipelineProviderMock.Object,
             this._strategiesMock.Object,
             this._activitySource,
+            this._fallbackOrchestratorMock.Object,
             this._loggerMock.Object));
     }
 
@@ -450,6 +455,7 @@ public class SmartRoutingChatClientTests : TestBase
             this._pipelineProviderMock.Object,
             this._strategiesMock.Object,
             this._activitySource,
+            this._fallbackOrchestratorMock.Object,
             this._loggerMock.Object));
     }
 
@@ -468,6 +474,7 @@ public class SmartRoutingChatClientTests : TestBase
             this._pipelineProviderMock.Object,
             this._strategiesMock.Object,
             this._activitySource,
+            this._fallbackOrchestratorMock.Object,
             this._loggerMock.Object));
     }
 
@@ -486,6 +493,7 @@ public class SmartRoutingChatClientTests : TestBase
             this._pipelineProviderMock.Object,
             this._strategiesMock.Object,
             this._activitySource,
+            this._fallbackOrchestratorMock.Object,
             this._loggerMock.Object));
     }
 
@@ -504,6 +512,7 @@ public class SmartRoutingChatClientTests : TestBase
             pipelineProvider,
             this._strategiesMock.Object,
             this._activitySource,
+            this._fallbackOrchestratorMock.Object,
             this._loggerMock.Object));
     }
 
@@ -522,6 +531,7 @@ public class SmartRoutingChatClientTests : TestBase
             this._pipelineProviderMock.Object,
             strategies,
             this._activitySource,
+            this._fallbackOrchestratorMock.Object,
             this._loggerMock.Object));
     }
 
@@ -540,6 +550,26 @@ public class SmartRoutingChatClientTests : TestBase
             this._pipelineProviderMock.Object,
             this._strategiesMock.Object,
             activitySource,
+            this._fallbackOrchestratorMock.Object,
+            this._loggerMock.Object));
+    }
+
+    [Fact]
+    public void Constructor_WithNullFallbackOrchestrator_ThrowsArgumentNullException()
+    {
+        // Arrange
+        IFallbackOrchestrator fallbackOrchestrator = null!;
+
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => new SmartRoutingChatClient(
+            this._chatClientFactoryMock.Object,
+            this._smartRouterMock.Object,
+            this._healthStoreMock.Object,
+            this._quotaTrackerMock.Object,
+            this._pipelineProviderMock.Object,
+            this._strategiesMock.Object,
+            this._activitySource,
+            fallbackOrchestrator,
             this._loggerMock.Object));
     }
 
@@ -558,6 +588,7 @@ public class SmartRoutingChatClientTests : TestBase
             this._pipelineProviderMock.Object,
             this._strategiesMock.Object,
             this._activitySource,
+            this._fallbackOrchestratorMock.Object,
             logger));
     }
 
@@ -603,7 +634,7 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = this.CreateMockChatClient();
+        var mockChatClient = TestBase.CreateMockChatClient();
 
         this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<EnrichedCandidate> { candidate });
@@ -631,7 +662,7 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = this.CreateMockChatClient();
+        var mockChatClient = TestBase.CreateMockChatClient();
         var mockStrategy1 = new Mock<IChatClientStrategy>();
         var mockStrategy2 = new Mock<IChatClientStrategy>();
 
@@ -651,6 +682,7 @@ public class SmartRoutingChatClientTests : TestBase
             this._pipelineProviderMock.Object,
             strategiesList,
             this._activitySource,
+            this._fallbackOrchestratorMock.Object,
             this._loggerMock.Object);
 
         mockStrategy1.Setup(x => x.CanHandle("openai"))
@@ -703,7 +735,7 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = this.CreateMockChatClient();
+        var mockChatClient = TestBase.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
 
         this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
@@ -722,6 +754,7 @@ public class SmartRoutingChatClientTests : TestBase
             this._pipelineProviderMock.Object,
             strategiesList,
             this._activitySource,
+            this._fallbackOrchestratorMock.Object,
             this._loggerMock.Object);
 
         mockStrategy.Setup(x => x.CanHandle("openai"))
@@ -751,7 +784,7 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = this.CreateMockChatClient();
+        var mockChatClient = TestBase.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
 
         this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
@@ -772,6 +805,7 @@ public class SmartRoutingChatClientTests : TestBase
             this._pipelineProviderMock.Object,
             strategiesList,
             this._activitySource,
+            this._fallbackOrchestratorMock.Object,
             this._loggerMock.Object);
 
         mockStrategy.Setup(x => x.CanHandle("openai"))
@@ -807,7 +841,7 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "default");
 
-        var mockChatClient = this.CreateMockChatClient();
+        var mockChatClient = TestBase.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
 
         this._smartRouterMock.Setup(x => x.GetCandidatesAsync("default", false, It.IsAny<CancellationToken>()))
@@ -826,6 +860,7 @@ public class SmartRoutingChatClientTests : TestBase
             this._pipelineProviderMock.Object,
             strategiesList,
             this._activitySource,
+            this._fallbackOrchestratorMock.Object,
             this._loggerMock.Object);
 
         mockStrategy.Setup(x => x.CanHandle("openai"))
@@ -852,7 +887,7 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = this.CreateMockChatClient();
+        var mockChatClient = TestBase.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
 
         this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
@@ -871,6 +906,7 @@ public class SmartRoutingChatClientTests : TestBase
             this._pipelineProviderMock.Object,
             strategiesList,
             this._activitySource,
+            this._fallbackOrchestratorMock.Object,
             this._loggerMock.Object);
 
         var response = new ChatResponse(new ChatMessage(ChatRole.Assistant, "Hello there!"));
@@ -919,9 +955,9 @@ public class SmartRoutingChatClientTests : TestBase
         this._quotaTrackerMock.Setup(x => x.IsHealthyAsync("groq", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
         this._chatClientFactoryMock.Setup(x => x.GetClient("openai"))
-            .Returns(this.CreateMockChatClient().Object);
+            .Returns(TestBase.CreateMockChatClient().Object);
         this._chatClientFactoryMock.Setup(x => x.GetClient("groq"))
-            .Returns(this.CreateMockChatClient().Object);
+            .Returns(TestBase.CreateMockChatClient().Object);
         this._strategiesMock.Setup(x => x.GetEnumerator())
             .Returns(new List<IChatClientStrategy> { mockStrategy.Object }.GetEnumerator());
         mockStrategy.Setup(x => x.CanHandle(It.IsAny<string>()))
@@ -990,7 +1026,7 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = this.CreateMockChatClient();
+        var mockChatClient = TestBase.CreateMockChatClient();
 
         this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", true, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<EnrichedCandidate> { candidate });
@@ -1050,7 +1086,7 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4-turbo");
 
-        var mockChatClient = this.CreateMockChatClient();
+        var mockChatClient = TestBase.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
 
         this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", true, It.IsAny<CancellationToken>()))
@@ -1091,7 +1127,7 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = this.CreateMockChatClient();
+        var mockChatClient = TestBase.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
 
         this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", true, It.IsAny<CancellationToken>()))
@@ -1142,7 +1178,7 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "default");
 
-        var mockChatClient = this.CreateMockChatClient();
+        var mockChatClient = TestBase.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
 
         this._smartRouterMock.Setup(x => x.GetCandidatesAsync("default", true, It.IsAny<CancellationToken>()))
@@ -1186,7 +1222,7 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = this.CreateMockChatClient();
+        var mockChatClient = TestBase.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
         var exception = new Exception("Rate limited");
         exception.Data["StatusCode"] = 429;
@@ -1221,7 +1257,7 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = this.CreateMockChatClient();
+        var mockChatClient = TestBase.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
         var exception = new Exception("Unauthorized");
         exception.Data["StatusCode"] = 401;
@@ -1256,7 +1292,7 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = this.CreateMockChatClient();
+        var mockChatClient = TestBase.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
         var exception = new Exception("Bad Request");
         exception.Data["StatusCode"] = 400;
@@ -1290,7 +1326,7 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = this.CreateMockChatClient();
+        var mockChatClient = TestBase.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
         var exception = new Exception("Not Found");
         exception.Data["StatusCode"] = 404;
@@ -1324,7 +1360,7 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = this.CreateMockChatClient();
+        var mockChatClient = TestBase.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
         var exception = new Exception("Server Error");
         exception.Data["StatusCode"] = 500;
@@ -1359,7 +1395,7 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = this.CreateMockChatClient();
+        var mockChatClient = TestBase.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
 
         this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
@@ -1392,7 +1428,7 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = this.CreateMockChatClient();
+        var mockChatClient = TestBase.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
         var innerException = new Exception("Inner error with 429");
         var outerException = new Exception("Outer error", innerException);

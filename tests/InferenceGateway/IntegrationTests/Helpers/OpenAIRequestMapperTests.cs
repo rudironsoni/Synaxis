@@ -27,13 +27,13 @@ public class OpenAIRequestMapperTests
         var result = OpenAIRequestMapper.ToCanonicalRequest(openAIRequest, messages);
 
         Assert.NotNull(result);
-        Assert.Equal(EndpointKind.ChatCompletions, result.Endpoint);
-        Assert.Equal("gpt-4", result.Model);
-        Assert.Single(result.Messages);
-        Assert.NotNull(result.AdditionalOptions);
-        Assert.Equal(0.7f, result.AdditionalOptions!.Temperature);
-        Assert.Equal(0.9f, result.AdditionalOptions.TopP);
-        Assert.Equal(100, result.AdditionalOptions.MaxOutputTokens);
+        Assert.Equal(EndpointKind.ChatCompletions, result.endpoint);
+        Assert.Equal("gpt-4", result.model);
+        Assert.Single(result.messages);
+        Assert.NotNull(result.additionalOptions);
+        Assert.Equal(0.7f, result.additionalOptions!.Temperature);
+        Assert.Equal(0.9f, result.additionalOptions.TopP);
+        Assert.Equal(100, result.additionalOptions.MaxOutputTokens);
     }
 
     [Fact]
@@ -48,7 +48,7 @@ public class OpenAIRequestMapperTests
 
         var result = OpenAIRequestMapper.ToCanonicalRequest(openAIRequest, messages);
 
-        Assert.Equal("default", result.Model);
+        Assert.Equal("default", result.model);
     }
 
     [Fact]
@@ -63,7 +63,7 @@ public class OpenAIRequestMapperTests
 
         var result = OpenAIRequestMapper.ToCanonicalRequest(openAIRequest, messages);
 
-        Assert.Equal("default", result.Model);
+        Assert.Equal("default", result.model);
     }
 
     [Fact]
@@ -78,7 +78,7 @@ public class OpenAIRequestMapperTests
 
         var result = OpenAIRequestMapper.ToCanonicalRequest(openAIRequest, messages);
 
-        Assert.Equal("default", result.Model);
+        Assert.Equal("default", result.model);
     }
 
     [Fact]
@@ -117,8 +117,8 @@ public class OpenAIRequestMapperTests
 
         var result = OpenAIRequestMapper.ToCanonicalRequest(openAIRequest, messages);
 
-        Assert.NotNull(result.Tools);
-        Assert.Single(result.Tools);
+        Assert.NotNull(result.tools);
+        Assert.Single(result.tools);
     }
 
     [Fact]
@@ -135,7 +135,7 @@ public class OpenAIRequestMapperTests
 
         var result = OpenAIRequestMapper.ToCanonicalRequest(openAIRequest, messages);
 
-        Assert.Equal(toolChoice, result.ToolChoice);
+        Assert.Equal(toolChoice, result.toolChoice);
     }
 
     [Fact]
@@ -152,7 +152,7 @@ public class OpenAIRequestMapperTests
 
         var result = OpenAIRequestMapper.ToCanonicalRequest(openAIRequest, messages);
 
-        Assert.Equal(responseFormat, result.ResponseFormat);
+        Assert.Equal(responseFormat, result.responseFormat);
     }
 
     [Fact]
@@ -171,11 +171,11 @@ public class OpenAIRequestMapperTests
 
         var result = OpenAIRequestMapper.ToCanonicalRequest(openAIRequest, messages);
 
-        Assert.NotNull(result.AdditionalOptions);
-        Assert.Null(result.AdditionalOptions!.Temperature);
-        Assert.Null(result.AdditionalOptions.TopP);
-        Assert.Null(result.AdditionalOptions.MaxOutputTokens);
-        Assert.Null(result.AdditionalOptions.StopSequences);
+        Assert.NotNull(result.additionalOptions);
+        Assert.Null(result.additionalOptions!.Temperature);
+        Assert.Null(result.additionalOptions.TopP);
+        Assert.Null(result.additionalOptions.MaxOutputTokens);
+        Assert.Null(result.additionalOptions.StopSequences);
     }
 
     [Fact]
@@ -192,9 +192,9 @@ public class OpenAIRequestMapperTests
 
         var result = OpenAIRequestMapper.ToCanonicalRequest(openAIRequest, messages);
 
-        Assert.NotNull(result.AdditionalOptions!.StopSequences);
-        Assert.Single(result.AdditionalOptions.StopSequences);
-        Assert.Equal("STOP", result.AdditionalOptions.StopSequences[0]);
+        Assert.NotNull(result.additionalOptions!.StopSequences);
+        Assert.Single(result.additionalOptions.StopSequences);
+        Assert.Equal("STOP", result.additionalOptions.StopSequences[0]);
     }
 
     [Fact]
@@ -211,10 +211,10 @@ public class OpenAIRequestMapperTests
 
         var result = OpenAIRequestMapper.ToCanonicalRequest(openAIRequest, messages);
 
-        Assert.NotNull(result.AdditionalOptions!.StopSequences);
-        Assert.Equal(2, result.AdditionalOptions.StopSequences.Count);
-        Assert.Equal("STOP", result.AdditionalOptions.StopSequences[0]);
-        Assert.Equal("END", result.AdditionalOptions.StopSequences[1]);
+        Assert.NotNull(result.additionalOptions!.StopSequences);
+        Assert.Equal(2, result.additionalOptions.StopSequences.Count);
+        Assert.Equal("STOP", result.additionalOptions.StopSequences[0]);
+        Assert.Equal("END", result.additionalOptions.StopSequences[1]);
     }
 
     #endregion

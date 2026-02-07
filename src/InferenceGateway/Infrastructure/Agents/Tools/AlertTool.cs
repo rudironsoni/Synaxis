@@ -30,11 +30,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
         /// <param name="severity">The alert severity.</param>
         /// <param name="ct">The cancellation token.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-        public async Task SendAdminAlertAsync(string subject, string message, AlertSeverity severity, CancellationToken ct = default)
+        public Task SendAdminAlertAsync(string subject, string message, AlertSeverity severity, CancellationToken ct = default)
         {
             // NOTE: Implement actual alert mechanism (email, Slack, etc.)
             this._logger.LogWarning("[ADMIN ALERT][{Severity}] {Subject}: {Message}", severity, subject, message);
-            await Task.CompletedTask.ConfigureAwait(false);
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -45,12 +45,15 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
         /// <param name="message">The notification message.</param>
         /// <param name="ct">The cancellation token.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-        public async Task SendNotificationAsync(Guid? userId, Guid? organizationId, string message, CancellationToken ct = default)
+        public Task SendNotificationAsync(Guid? userId, Guid? organizationId, string message, CancellationToken ct = default)
         {
             // NOTE: Implement actual notification mechanism
-            this._logger.LogInformation("[NOTIFICATION] UserId={UserId}, OrgId={OrgId}, Message={Message}",
-                userId, organizationId, message);
-            await Task.CompletedTask.ConfigureAwait(false);
+            this._logger.LogInformation(
+                "[NOTIFICATION] UserId={UserId}, OrgId={OrgId}, Message={Message}",
+                userId,
+                organizationId,
+                message);
+            return Task.CompletedTask;
         }
     }
 }

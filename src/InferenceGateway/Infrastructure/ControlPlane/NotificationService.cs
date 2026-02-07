@@ -11,15 +11,23 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
     /// Stub implementation of notification service.
     /// In production, this should integrate with email/SMS/push notification providers.
     /// </summary>
+    /// <summary>
+    /// NotificationService class.
+    /// </summary>
     public class NotificationService : INotificationService
     {
         private readonly ILogger<NotificationService> _logger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NotificationService"/> class.
+        /// </summary>
+        /// <param name="logger">Logger instance for notification service.</param>
         public NotificationService(ILogger<NotificationService> logger)
         {
             this._logger = logger;
         }
 
+        /// <inheritdoc/>
         public Task SendQuotaWarningAsync(
             string tenantId,
             string userId,
@@ -29,7 +37,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
         {
             this._logger.LogWarning(
                 "Quota warning for tenant {TenantId}, user {UserId}, provider {ProviderKey}: {RemainingQuota} remaining",
-                tenantId, userId, providerKey, remainingQuota);
+                tenantId,
+                userId,
+                providerKey,
+                remainingQuota);
             return Task.CompletedTask;
         }
     }

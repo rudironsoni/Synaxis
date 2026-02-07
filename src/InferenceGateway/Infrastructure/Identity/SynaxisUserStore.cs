@@ -14,6 +14,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity
     /// Custom UserStore for Synaxis that extends ASP.NET Core Identity
     /// with organization-specific functionality and soft delete support.
     /// </summary>
+    /// <summary>
+    /// SynaxisUserStore class.
+    /// </summary>
     public class SynaxisUserStore : UserStore<SynaxisUser, Role, SynaxisDbContext, Guid>
     {
         /// <summary>
@@ -36,7 +39,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity
         /// <param name="organizationId">The organization ID to scope the search.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>The user if found, otherwise null.</returns>
-        public async Task<SynaxisUser?> FindByEmailInOrganizationAsync(
+        public Task<SynaxisUser?> FindByEmailInOrganizationAsync(
             string email,
             Guid organizationId,
             CancellationToken cancellationToken = default)
@@ -44,14 +47,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity
             cancellationToken.ThrowIfCancellationRequested();
             this.ThrowIfDisposed();
 
-            var normalizedEmail = this.NormalizeEmail(email);
+            var normalizedEmail = NormalizeEmail(email);
 
-            return await this.Users
+            return this.Users
                 .Where(u => u.NormalizedEmail == normalizedEmail && u.DeletedAt == null)
                 .Where(u => u.OrganizationMemberships.Any(m =>
                     m.OrganizationId == organizationId &&
                     m.Status == "Active"))
-                .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+                .FirstOrDefaultAsync(cancellationToken);
         }
 
         /// <summary>
@@ -78,6 +81,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity
         /// <summary>
         /// Finds a user by ID, respecting soft delete.
         /// </summary>
+        /// <param name="userId">The user ID to search for.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>The user if found, otherwise null.</returns>
         public override async Task<SynaxisUser?> FindByIdAsync(
             string userId,
             CancellationToken cancellationToken = default)
@@ -98,36 +104,45 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity
         /// <summary>
         /// Finds a user by email, respecting soft delete.
         /// </summary>
-        public override async Task<SynaxisUser?> FindByEmailAsync(
+        /// <param name="normalizedEmail">The normalized email address to search for.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>The user if found, otherwise null.</returns>
+        public override Task<SynaxisUser?> FindByEmailAsync(
             string normalizedEmail,
             CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
             this.ThrowIfDisposed();
 
-            return await this.Users
+            return this.Users
                 .Where(u => u.NormalizedEmail == normalizedEmail && u.DeletedAt == null)
-                .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+                .FirstOrDefaultAsync(cancellationToken);
         }
 
         /// <summary>
         /// Finds a user by username, respecting soft delete.
         /// </summary>
-        public override async Task<SynaxisUser?> FindByNameAsync(
+        /// <param name="normalizedUserName">The normalized username to search for.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>The user if found, otherwise null.</returns>
+        public override Task<SynaxisUser?> FindByNameAsync(
             string normalizedUserName,
             CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
             this.ThrowIfDisposed();
 
-            return await this.Users
+            return this.Users
                 .Where(u => u.NormalizedUserName == normalizedUserName && u.DeletedAt == null)
-                .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+                .FirstOrDefaultAsync(cancellationToken);
         }
 
         /// <summary>
         /// Gets users in a specific role, respecting soft delete.
         /// </summary>
+        /// <param name="normalizedRoleName">The normalized role name.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>A list of users in the specified role.</returns>
         public override async Task<IList<SynaxisUser>> GetUsersInRoleAsync(
             string normalizedRoleName,
             CancellationToken cancellationToken = default)
@@ -154,7 +169,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity
         /// <summary>
         /// Normalizes an email address.
         /// </summary>
-        private string? NormalizeEmail(string? email)
+        /// <param name="email">The email address to normalize.</param>
+        /// <returns>The normalized email address.</returns>
+        private static string? NormalizeEmail(string? email)
         {
             return email?.ToUpperInvariant();
         }

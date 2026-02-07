@@ -4,14 +4,14 @@
 
 namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Routing;
     using Microsoft.Extensions.Options;
     using Synaxis.InferenceGateway.Application.Configuration;
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
 
     /// <summary>
     /// Endpoints for OpenAI-compatible models API.
@@ -31,7 +31,6 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
 
                 foreach (var cm in config.Value.CanonicalModels)
                 {
-                    var providerConfig = config.Value.Providers.TryGetValue(cm.Provider, out var providerConfigValue) ? providerConfigValue : null;
                     models.Add(new ModelDto
                     {
                         Id = cm.Id,
@@ -86,7 +85,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
 
             app.MapGet("/v1/models/{**id}", (string id, IOptions<SynaxisConfiguration> config) =>
             {
-                var cm = config.Value.CanonicalModels.FirstOrDefault(x => x.Id == id);
+                var cm = config.Value.CanonicalModels.FirstOrDefault(x => string.Equals(x.Id, id, StringComparison.Ordinal));
                 if (cm != null)
                 {
                     return Results.Json(new ModelDto
@@ -122,16 +121,19 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                     }, ModelJsonContext.Options);
                 }
 
-                return Results.Json(new
-                {
-                    error = new
+                return Results.Json(
+                    new
                     {
-                        message = $"The model '{id}' does not exist",
-                        type = "invalid_request_error",
-                        param = "model",
-                        code = "model_not_found"
+                        error = new
+                        {
+                            message = $"The model '{id}' does not exist",
+                            type = "invalid_request_error",
+                            param = "model",
+                            code = "model_not_found"
+                        },
                     },
-                }, ModelJsonContext.Options, statusCode: 404);
+                    ModelJsonContext.Options,
+                    statusCode: 404);
             })
             .WithTags("Models")
             .WithSummary("Retrieve model with capabilities")
@@ -224,12 +226,12 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
         /// <summary>
         /// Gets or sets the list of models.
         /// </summary>
-        public List<ModelDto> Data { get; set; } = new List<ModelDto>();
+        public IList<ModelDto> Data { get; set; } = new List<ModelDto>();
 
         /// <summary>
         /// Gets or sets the list of provider summaries.
         /// </summary>
-        public List<ProviderSummaryDto> Providers { get; set; } = new List<ProviderSummaryDto>();
+        public IList<ProviderSummaryDto> Providers { get; set; } = new List<ProviderSummaryDto>();
     }
 
     /// <summary>

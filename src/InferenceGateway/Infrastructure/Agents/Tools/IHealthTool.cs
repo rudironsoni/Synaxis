@@ -51,10 +51,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
     /// <summary>
     /// Represents the result of a health check.
     /// </summary>
-    /// <param name="IsHealthy">Whether the provider is healthy.</param>
-    /// <param name="HealthScore">The health score.</param>
-    /// <param name="ConsecutiveFailures">The number of consecutive failures.</param>
-    /// <param name="IsInCooldown">Whether the provider is in cooldown.</param>
-    /// <param name="CooldownUntil">The cooldown end time.</param>
-    public record HealthCheckResult(bool IsHealthy, decimal HealthScore, int ConsecutiveFailures, bool IsInCooldown, DateTime? CooldownUntil);
+    /// <param name="isHealthy">Whether the provider is healthy.</param>
+    /// <param name="healthScore">The health score.</param>
+    /// <param name="consecutiveFailures">The number of consecutive failures.</param>
+    /// <param name="isInCooldown">Whether the provider is in cooldown.</param>
+    /// <param name="cooldownUntil">The cooldown end time.</param>
+    public record HealthCheckResult(bool isHealthy, decimal healthScore, int consecutiveFailures, bool isInCooldown, DateTime? cooldownUntil);
 }

@@ -47,6 +47,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
         /// <summary>
         /// Creates a default configuration with no limits.
         /// </summary>
+        /// <returns>A rate limit configuration with no limits set.</returns>
         public static RateLimitConfig NoLimits()
         {
             return new RateLimitConfig();
@@ -55,6 +56,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
         /// <summary>
         /// Creates a configuration with only user-level limits.
         /// </summary>
+        /// <param name="rpm">Requests per minute limit.</param>
+        /// <param name="tpm">Tokens per minute limit.</param>
+        /// <returns>A rate limit configuration with user-level limits.</returns>
         public static RateLimitConfig UserLevel(int? rpm = null, int? tpm = null)
         {
             return new RateLimitConfig
@@ -67,6 +71,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
         /// <summary>
         /// Creates a configuration with organization-level limits.
         /// </summary>
+        /// <param name="rpm">Requests per minute limit.</param>
+        /// <param name="tpm">Tokens per minute limit.</param>
+        /// <returns>A rate limit configuration with organization-level limits.</returns>
         public static RateLimitConfig OrganizationLevel(int? rpm = null, int? tpm = null)
         {
             return new RateLimitConfig
@@ -79,6 +86,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
         /// <summary>
         /// Validates the configuration and returns true if any limits are set.
         /// </summary>
+        /// <returns>True if any limit is configured, false otherwise.</returns>
         public bool HasLimits()
         {
             return this.UserRpm.HasValue || this.UserTpm.HasValue ||

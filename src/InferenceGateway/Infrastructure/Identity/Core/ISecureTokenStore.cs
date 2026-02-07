@@ -7,10 +7,22 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
+    /// <summary>
+    /// Secure token store interface.
+    /// </summary>
     public interface ISecureTokenStore
     {
-        Task SaveAsync(List<IdentityAccount> accounts);
+        /// <summary>
+        /// Saves the accounts.
+        /// </summary>
+        /// <param name="accounts">The accounts to save.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        Task SaveAsync(IList<IdentityAccount> accounts);
 
-        Task<List<IdentityAccount>> LoadAsync();
+        /// <summary>
+        /// Loads the accounts.
+        /// </summary>
+        /// <returns>The loaded accounts.</returns>
+        Task<IList<IdentityAccount>> LoadAsync();
     }
 }

@@ -13,17 +13,33 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
     using Microsoft.Extensions.Logging;
     using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
 
+    /// <summary>
+    /// GitHubAuthStrategy class.
+    /// </summary>
     public class GitHubAuthStrategy : IAuthStrategy
     {
+        /// <summary>
+        /// Occurs when an account is successfully authenticated.
+        /// </summary>
         public event EventHandler<AccountAuthenticatedEventArgs>? AccountAuthenticated;
 
+        /// <summary>
+        /// The GitHub OAuth application client ID.
+        /// </summary>
         public const string ClientId = "178c6fc778ccc68e1d6a";
 
         private readonly HttpClient _http;
         private readonly DeviceFlowService _deviceFlowService;
+
         // IdentityManager removed to avoid circular dependency. Will raise event when account authenticated.
         private readonly ILogger<GitHubAuthStrategy> _logger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="GitHubAuthStrategy"/> class.
+        /// </summary>
+        /// <param name="http">The HTTP client.</param>
+        /// <param name="deviceFlowService">The device flow service.</param>
+        /// <param name="logger">The logger.</param>
         public GitHubAuthStrategy(HttpClient http, DeviceFlowService deviceFlowService, ILogger<GitHubAuthStrategy> logger)
         {
             this._http = http ?? throw new ArgumentNullException(nameof(http));
@@ -31,9 +47,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
+        /// <inheritdoc/>
         public async Task<AuthResult> InitiateFlowAsync(CancellationToken ct)
         {
+#pragma warning disable S1075 // URIs should not be hardcoded - OAuth endpoint
             var url = "https://github.com/login/device/code";
+#pragma warning restore S1075 // URIs should not be hardcoded
             using var req = new HttpRequestMessage(HttpMethod.Post, url);
             req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             var body = new System.Collections.Generic.Dictionary<string, string>
@@ -76,14 +95,20 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
             }
         }
 
+        /// <inheritdoc/>
         public Task<AuthResult> CompleteFlowAsync(string code, string state, CancellationToken ct)
         {
+#pragma warning disable MA0025 // Not yet implemented
             throw new NotImplementedException();
+#pragma warning restore MA0025
         }
 
+        /// <inheritdoc/>
         public async Task<TokenResponse> RefreshTokenAsync(IdentityAccount account, CancellationToken ct)
         {
+#pragma warning disable S1075 // URIs should not be hardcoded - OAuth endpoint
             var url = "https://github.com/login/oauth/access_token";
+#pragma warning restore S1075 // URIs should not be hardcoded
             using var req = new HttpRequestMessage(HttpMethod.Post, url);
             req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             var body = new System.Collections.Generic.Dictionary<string, string>
@@ -122,7 +147,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
             catch (Exception ex)
             {
                 this._logger.LogError(ex, "Failed to refresh GitHub token: {Text}", txt);
-                throw;
+                throw new InvalidOperationException($"Failed to refresh GitHub token: {ex.Message}", ex);
             }
         }
 
@@ -139,7 +164,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
                     RefreshToken = token.RefreshToken,
                 };
 
-                if (token.ExpiresInthis.Seconds.HasValue)
+                if (token.ExpiresInSeconds.HasValue)
                 {
                     acc.ExpiresAt = DateTimeOffset.UtcNow.AddSeconds(token.ExpiresInSeconds.Value);
                 }

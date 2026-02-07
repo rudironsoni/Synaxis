@@ -6,6 +6,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
 {
     using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.Logging;
+
     /// <summary>
     /// Middleware for adding security headers to all responses.
     /// </summary>
@@ -117,5 +118,4 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                    "upgrade-insecure-requests;";
         }
     }
-
 }

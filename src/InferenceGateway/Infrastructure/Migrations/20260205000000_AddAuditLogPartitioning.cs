@@ -10,8 +10,17 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
     /// Migration to convert AuditLogs table to PostgreSQL native declarative partitioning.
     /// Implements monthly range partitioning for efficient data retention management.
     /// </summary>
+    /// <summary>
+    /// AddAuditLogPartitioning class.
+    /// </summary>
     public partial class AddAuditLogPartitioning : Migration
     {
+        /// <summary>
+        /// Applies the migration to convert AuditLogs table to partitioned table.
+        /// Creates partition functions, migrates existing data, and sets up monthly partitioning.
+        /// </summary>
+        /// <param name="migrationBuilder">The migration builder instance.</param>
+#pragma warning disable MA0051 // Method is too long - Migrations are inherently complex
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             // Step 1: Drop existing indexes that will be recreated on parent table
@@ -181,6 +190,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
             ");
         }
 
+#pragma warning restore MA0051 // Method is too long
+
+        /// <summary>
+        /// Reverts the migration by dropping partitioned table and restoring from backup.
+        /// Removes partition management functions.
+        /// </summary>
+        /// <param name="migrationBuilder">The migration builder instance.</param>
+#pragma warning disable MA0051 // Method is too long - Migrations are inherently complex
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             // Restore from backup if it exists
@@ -197,3 +214,4 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
         }
     }
 }
+#pragma warning restore MA0051 // Method is too long

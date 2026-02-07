@@ -5,14 +5,21 @@
 namespace Synaxis.InferenceGateway.Infrastructure.Security
 {
     using System.Text.Json;
-    using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit;
     using Synaxis.InferenceGateway.Application.Security;
     using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
+    using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit;
 
+    /// <summary>
+    /// AuditService class.
+    /// </summary>
     public sealed class AuditService : IAuditService
     {
         private readonly ControlPlaneDbContext _dbContext;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AuditService"/> class.
+        /// </summary>
+        /// <param name="dbContext">The dbContext.</param>
         public AuditService(ControlPlaneDbContext dbContext)
         {
             if (dbContext is null)
@@ -23,7 +30,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
             this._dbContext = dbContext;
         }
 
-        public async Task LogAsync(Guid tenantId, Guid? userId, string action, object? payload, CancellationToken cancellationToken = default)
+        /// <inheritdoc/>
+        public Task LogAsync(Guid tenantId, Guid? userId, string action, object? payload, CancellationToken cancellationToken = default)
         {
             var log = new AuditLog
             {
@@ -36,7 +44,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
             };
 
             this._dbContext.AuditLogs.Add(log);
-            await this._dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return this._dbContext.SaveChangesAsync(cancellationToken);
         }
     }
 }

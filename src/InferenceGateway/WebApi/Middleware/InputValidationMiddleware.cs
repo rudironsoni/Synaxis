@@ -66,5 +66,4 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             await this._next(context);
         }
     }
-
 }
