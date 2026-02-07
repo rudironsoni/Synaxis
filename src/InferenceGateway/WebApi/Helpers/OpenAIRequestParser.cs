@@ -62,7 +62,7 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
             {
                 // Content-Length is known and already checked against the limit above.
                 using var reader = new StreamReader(context.Request.Body, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, leaveOpen: true);
-                body = await reader.ReadToEndAsync(cancellationToken);
+                body = await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
             }
             else
             {
@@ -72,7 +72,7 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
                 int bytesRead;
                 long totalRead = 0;
 
-                while ((bytesRead = await context.Request.Body.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken)) > 0)
+                while ((bytesRead = await context.Request.Body.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken).ConfigureAwait(false)) > 0)
                 {
                     totalRead += bytesRead;
                     if (totalRead > MaxBodySize)
@@ -87,7 +87,7 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
 
                 ms.Position = 0;
                 using var reader = new StreamReader(ms, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
-                body = await reader.ReadToEndAsync(cancellationToken);
+                body = await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
             }
 
             // Reset the request body position so subsequent middleware can read it.

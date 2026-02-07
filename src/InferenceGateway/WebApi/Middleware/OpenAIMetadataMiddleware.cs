@@ -54,7 +54,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 return Task.CompletedTask;
             });
 
-            await this._next(context);
+            await this._next(context).ConfigureAwait(false);
         }
     }
 }

@@ -35,6 +35,9 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         /// <summary>
         /// Invokes the middleware to validate compliance.
         /// </summary>
+        /// <param name="context">The HTTP context.</param>
+        /// <param name="tenantContext">The tenant context.</param>
+        /// <param name="complianceProvider">The compliance provider.</param>
         public async Task InvokeAsync(
             HttpContext context,
             ITenantContext tenantContext,
@@ -46,14 +49,14 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 if (context.Request.Path.StartsWithSegments("/health") ||
                     context.Request.Path.StartsWithSegments("/openapi"))
                 {
-                    await this._next(context);
+                    await this._next(context).ConfigureAwait(false);
                     return;
                 }
 
                 // Only validate if tenant context is established
                 if (tenantContext.OrganizationId == null)
                 {
-                    await this._next(context);
+                    await this._next(context).ConfigureAwait(false);
                     return;
                 }
 
@@ -78,13 +81,15 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                         UserConsentObtained = tenantContext.UserId.HasValue,
                     };
 
-                    var isAllowed = await complianceProvider.ValidateTransferAsync(transferContext);
+                    var isAllowed = await complianceProvider.ValidateTransferAsync(transferContext).ConfigureAwait(false);
 
                     if (!isAllowed)
                     {
                         this._logger.LogWarning(
                             "Compliance validation failed for cross-border transfer. OrgId: {OrgId}, From: {From}, To: {To}",
-                            tenantContext.OrganizationId, userRegion, currentRegion);
+                            tenantContext.OrganizationId,
+                            userRegion,
+                            currentRegion);
 
                         context.Response.StatusCode = StatusCodes.Status451UnavailableForLegalReasons;
                         await context.Response.WriteAsJsonAsync(new
@@ -94,14 +99,14 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                                 message = "Request violates data protection regulations",
                                 type = "compliance_error",
                                 code = "DATA_PROTECTION_VIOLATION",
-                                regulation = complianceProvider.RegulationCode
+                                regulation = complianceProvider.RegulationCode,
                             },
-                        });
+                        }).ConfigureAwait(false);
                         return;
                     }
 
                     // Log the transfer for audit trail
-                    await complianceProvider.LogTransferAsync(transferContext);
+                    await complianceProvider.LogTransferAsync(transferContext).ConfigureAwait(false);
                 }
 
                 // Validate processing is allowed
@@ -116,13 +121,14 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                         DataCategories = new[] { "api_request", "model_inference" },
                     };
 
-                    var isProcessingAllowed = await complianceProvider.IsProcessingAllowedAsync(processingContext);
+                    var isProcessingAllowed = await complianceProvider.IsProcessingAllowedAsync(processingContext).ConfigureAwait(false);
 
                     if (!isProcessingAllowed)
                     {
                         this._logger.LogWarning(
                             "Processing not allowed by compliance provider. UserId: {UserId}, OrgId: {OrgId}",
-                            tenantContext.UserId, tenantContext.OrganizationId);
+                            tenantContext.UserId,
+                            tenantContext.OrganizationId);
 
                         context.Response.StatusCode = StatusCodes.Status403Forbidden;
                         await context.Response.WriteAsJsonAsync(new
@@ -131,9 +137,9 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                             {
                                 message = "Data processing not permitted under applicable regulations",
                                 type = "compliance_error",
-                                code = "PROCESSING_NOT_PERMITTED"
+                                code = "PROCESSING_NOT_PERMITTED",
                             },
-                        });
+                        }).ConfigureAwait(false);
                         return;
                     }
                 }
@@ -146,12 +152,12 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     return Task.CompletedTask;
                 });
 
-                await this._next(context);
+                await this._next(context).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 this._logger.LogError(ex, "Error occurred during compliance validation");
-                await this._next(context);
+                await this._next(context).ConfigureAwait(false);
             }
         }
     }

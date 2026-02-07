@@ -31,7 +31,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints
 
         /// <summary>
         /// Generates a new API key for the current user's organization.
-        /// POST /apikeys
+        /// POST /apikeys.
         /// </summary>
         /// <param name="request">The API key generation request.</param>
         /// <returns>The generated API key.</returns>
@@ -55,7 +55,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints
 
         /// <summary>
         /// Lists all API keys for the current user's organization.
-        /// GET /apikeys
+        /// GET /apikeys.
         /// </summary>
         /// <param name="includeRevoked">Whether to include revoked keys.</param>
         /// <returns>The list of API keys.</returns>
@@ -76,7 +76,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints
 
         /// <summary>
         /// Revokes an API key.
-        /// DELETE /apikeys/{id}
+        /// DELETE /apikeys/{id}.
         /// </summary>
         /// <param name="id">The API key ID.</param>
         /// <param name="request">The revocation request.</param>
@@ -100,7 +100,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints
 
         /// <summary>
         /// Gets usage statistics for an API key.
-        /// GET /apikeys/{id}/usage
+        /// GET /apikeys/{id}/usage.
         /// </summary>
         /// <param name="id">The API key ID.</param>
         /// <param name="from">Start date for statistics.</param>

@@ -85,7 +85,7 @@ namespace Synaxis.InferenceGateway.WebApi.Health
                 {
                     try
                     {
-                        await this.CheckConnectivityAsync(name, endpoint, cancellationToken);
+                        await this.CheckConnectivityAsync(name, endpoint, cancellationToken).ConfigureAwait(false);
                         reachable = true;
                         break;
                     }
@@ -123,14 +123,14 @@ namespace Synaxis.InferenceGateway.WebApi.Health
             // 1. DNS (500ms)
             using var dnsCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
             dnsCts.CancelAfter(TimeSpan.FromMilliseconds(500));
-            var addresses = await Dns.GetHostAddressesAsync(host, dnsCts.Token);
+            var addresses = await Dns.GetHostAddressesAsync(host, dnsCts.Token).ConfigureAwait(false);
             var ip = addresses.First(a => a.AddressFamily == AddressFamily.InterNetwork || a.AddressFamily == AddressFamily.InterNetworkV6);
 
             // 2. TCP (800ms)
             using var tcpClient = new TcpClient();
             using var tcpCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
             tcpCts.CancelAfter(TimeSpan.FromMilliseconds(800));
-            await tcpClient.ConnectAsync(ip, port, tcpCts.Token);
+            await tcpClient.ConnectAsync(ip, port, tcpCts.Token).ConfigureAwait(false);
 
             // 3. TLS (1200ms) - only if https
             if (uri.Scheme == "https")
@@ -138,7 +138,7 @@ namespace Synaxis.InferenceGateway.WebApi.Health
                 using var tlsCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
                 tlsCts.CancelAfter(TimeSpan.FromMilliseconds(1200));
                 using var sslStream = new SslStream(tcpClient.GetStream(), false);
-                await sslStream.AuthenticateAsClientAsync(new SslClientAuthenticationOptions { TargetHost = host }, tlsCts.Token);
+                await sslStream.AuthenticateAsClientAsync(new SslClientAuthenticationOptions { TargetHost = host }, tlsCts.Token).ConfigureAwait(false);
             }
 
             // 4. HTTP HEAD (500ms)
@@ -146,7 +146,7 @@ namespace Synaxis.InferenceGateway.WebApi.Health
             httpCts.CancelAfter(TimeSpan.FromMilliseconds(500));
             using var httpClient = new HttpClient { Timeout = TimeSpan.FromMilliseconds(500) };
             var request = new HttpRequestMessage(HttpMethod.Head, uri);
-            var response = await httpClient.SendAsync(request, httpCts.Token);
+            var response = await httpClient.SendAsync(request, httpCts.Token).ConfigureAwait(false);
 
             // We don't strictly require 200 OK, just that the server responded.
             // Many APIs return 401/404 on HEAD without tokens, which is fine for connectivity.

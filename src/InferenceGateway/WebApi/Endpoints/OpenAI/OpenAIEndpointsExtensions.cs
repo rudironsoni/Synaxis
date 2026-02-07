@@ -47,7 +47,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
             group.MapPost("/v1/chat/completions", async (HttpContext context, IMediator mediator, CancellationToken ct) =>
             {
                 // 1. Parse Request
-                var request = await OpenAIRequestParser.ParseAsync(context, ct, allowEmptyModel: false, allowEmptyMessages: false);
+                var request = await OpenAIRequestParser.ParseAsync(context, ct, allowEmptyModel: false, allowEmptyMessages: false).ConfigureAwait(false);
                 if (request == null)
                 {
                     return Results.BadRequest("Invalid request body");
@@ -68,7 +68,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
 
                     var stream = mediator.CreateStream(new ChatStreamCommand(request, messages), ct);
 
-                    await foreach (var update in stream)
+                    await foreach (var update in stream.ConfigureAwait(false))
                     {
                         var content = update.Text;
 
@@ -83,18 +83,18 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                             Object = "chat.completion.chunk",
                             Created = created,
                             Model = request.Model ?? "default",
-                            Choices = new List<ChatCompletionChunkChoice>
-                            {
-                            new ChatCompletionChunkChoice
-                            {
-                                Index = 0,
-                                Delta = new ChatCompletionChunkDelta { Content = content },
-                                FinishReason = null
-                            }
-                            },
+                        Choices = new List<ChatCompletionChunkChoice>
+                        {
+                        new ChatCompletionChunkChoice
+                        {
+                            Index = 0,
+                            Delta = new ChatCompletionChunkDelta { Content = content },
+                            FinishReason = null,
+                        },
+                        },
                         };
-                        await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(chunk)}\n\n", ct);
-                        await context.Response.Body.FlushAsync(ct);
+                        await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(chunk)}\n\n", ct).ConfigureAwait(false);
+                        await context.Response.Body.FlushAsync(ct).ConfigureAwait(false);
                     }
 
                     var finalChunk = new ChatCompletionChunk
@@ -103,25 +103,25 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                         Object = "chat.completion.chunk",
                         Created = created,
                         Model = request.Model ?? "default",
-                        Choices = new List<ChatCompletionChunkChoice>
-                        {
-                        new ChatCompletionChunkChoice
-                        {
-                            Index = 0,
-                            Delta = new ChatCompletionChunkDelta(),
-                            FinishReason = "stop"
-                        }
-                        },
+                    Choices = new List<ChatCompletionChunkChoice>
+                    {
+                    new ChatCompletionChunkChoice
+                    {
+                        Index = 0,
+                        Delta = new ChatCompletionChunkDelta(),
+                        FinishReason = "stop",
+                    },
+                    },
                     };
-                    await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(finalChunk)}\n\n", ct);
-                    await context.Response.WriteAsync("data: [DONE]\n\n", ct);
+                    await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(finalChunk)}\n\n", ct).ConfigureAwait(false);
+                    await context.Response.WriteAsync("data: [DONE]\n\n", ct).ConfigureAwait(false);
 
                     return Results.Empty;
                 }
                 else
                 {
                     // 4. Handle Non-Streaming
-                    var response = await mediator.Send(new ChatCommand(request, messages), ct);
+                    var response = await mediator.Send(new ChatCommand(request, messages), ct).ConfigureAwait(false);
 
                     var message = response.Messages.FirstOrDefault();
                     var content = message?.Text ?? "";
@@ -143,14 +143,14 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                                 Role = role,
                                 Content = content,
                             },
-                            FinishReason = "stop"
+                            FinishReason = "stop",
                         },
                         },
                         Usage = new ChatCompletionUsage
                         {
                             PromptTokens = 0,
                             CompletionTokens = 0,
-                            TotalTokens = 0
+                            TotalTokens = 0,
                         },
                     };
 
@@ -170,7 +170,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
             // Responses
             group.MapPost("/v1/responses", async (HttpContext context, IMediator mediator, CancellationToken ct) =>
             {
-                var request = await OpenAIRequestParser.ParseAsync(context, ct, allowEmptyModel: true, allowEmptyMessages: true);
+                var request = await OpenAIRequestParser.ParseAsync(context, ct, allowEmptyModel: true, allowEmptyMessages: true).ConfigureAwait(false);
 
                 if (request == null)
                 {
@@ -193,7 +193,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
 
                     var stream = mediator.CreateStream(new ChatStreamCommand(request, messages ?? Enumerable.Empty<ChatMessage>()), ct);
 
-                    await foreach (var update in stream)
+                    await foreach (var update in stream.ConfigureAwait(false))
                     {
                         var content = update.Text;
 
@@ -210,8 +210,8 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                             Model = request.Model ?? "default",
                             Delta = new ResponseDelta { Content = content },
                         };
-                        await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(chunk, ModelJsonContext.Options)}\n\n", ct);
-                        await context.Response.Body.FlushAsync(ct);
+                        await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(chunk, ModelJsonContext.Options)}\n\n", ct).ConfigureAwait(false);
+                        await context.Response.Body.FlushAsync(ct).ConfigureAwait(false);
                     }
 
                     var finalChunk = new ResponseStreamChunk
@@ -222,14 +222,14 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                         Model = request.Model ?? "default",
                         Delta = new ResponseDelta(),
                     };
-                    await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(finalChunk, ModelJsonContext.Options)}\n\n", ct);
-                    await context.Response.WriteAsync("data: [DONE]\n\n", ct);
+                    await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(finalChunk, ModelJsonContext.Options)}\n\n", ct).ConfigureAwait(false);
+                    await context.Response.WriteAsync("data: [DONE]\n\n", ct).ConfigureAwait(false);
 
                     return Results.Empty;
                 }
                 else
                 {
-                    var response = await mediator.Send(new ChatCommand(request, messages ?? Enumerable.Empty<ChatMessage>()), ct);
+                    var response = await mediator.Send(new ChatCommand(request, messages ?? Enumerable.Empty<ChatMessage>()), ct).ConfigureAwait(false);
 
                     var message = response.Messages.FirstOrDefault();
                     var content = message?.Text ?? "";
@@ -251,10 +251,10 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                                 new ResponseContent
                                 {
                                     Type = "output_text",
-                                    Text = content
-                                }
-                            }
-                        }
+                                    Text = content,
+                                },
+                            },
+                        },
                         },
                     };
 
