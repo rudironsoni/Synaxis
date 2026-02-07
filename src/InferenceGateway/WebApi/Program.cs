@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+
 using DotNetEnv;
 using Microsoft.Agents.AI.Hosting.OpenAI;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -25,6 +26,7 @@ using Quartz;
 using Scalar.AspNetCore;
 using Serilog;
 using StackExchange.Redis;
+
 using Synaxis.InferenceGateway.Application.Configuration;
 using Synaxis.InferenceGateway.Application.ControlPlane;
 using Synaxis.InferenceGateway.Application.Extensions;

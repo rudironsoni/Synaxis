@@ -38,7 +38,9 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         /// </summary>
         /// <param name="context">The HTTP context.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
+#pragma warning disable MA0051 // Method is too long
         public async Task InvokeAsync(HttpContext context)
+#pragma warning restore MA0051
         {
             try
             {
@@ -82,10 +84,20 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
 
                     foreach (var inner in flat.InnerExceptions)
                     {
-                        // Provider name: try Data["ProviderName"], then Source, then exception type name
-                        string provider = inner.Data.Contains("ProviderName") && inner.Data["ProviderName"] is string p && !string.IsNullOrEmpty(p)
-                            ? p
-                            : (!string.IsNullOrEmpty(inner.Source) ? inner.Source : inner.GetType().Name);
+                        // Provider name: determine from Data, Source, or exception type
+                        string provider;
+                        if (inner.Data.Contains("ProviderName") && inner.Data["ProviderName"] is string p && !string.IsNullOrEmpty(p))
+                        {
+                            provider = p;
+                        }
+                        else if (!string.IsNullOrEmpty(inner.Source))
+                        {
+                            provider = inner.Source;
+                        }
+                        else
+                        {
+                            provider = inner.GetType().Name;
+                        }
 
                         // Try to extract a status code from common exception types or reflection as fallback
                         int status = 500;
@@ -130,7 +142,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                         statusCodes.Add(status);
 
                         // Clean up message: remove newlines for summary
-                        var cleanMsg = inner.Message?.Replace("\r", "")?.Replace("\n", " ") ?? "Unknown error";
+                        var cleanMsg = inner.Message?.Replace("\r", string.Empty)?.Replace("\n", " ") ?? "Unknown error";
                         if (cleanMsg.Length > 100)
                         {
                             cleanMsg = cleanMsg.Substring(0, 97) + "...";

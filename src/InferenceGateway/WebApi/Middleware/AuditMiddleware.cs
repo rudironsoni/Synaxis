@@ -39,13 +39,16 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         /// </summary>
         /// <param name="context">The HTTP context.</param>
         /// <param name="tenantContext">The tenant context.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+#pragma warning disable MA0051 // Method is too long
         public async Task InvokeAsync(
             HttpContext context,
             ITenantContext tenantContext)
+#pragma warning restore MA0051
         {
             // Skip audit logging for health checks and static resources
-            if (context.Request.Path.StartsWithSegments("/health") ||
-                context.Request.Path.StartsWithSegments("/openapi") ||
+            if (context.Request.Path.StartsWithSegments("/health", StringComparison.Ordinal) ||
+                context.Request.Path.StartsWithSegments("/openapi", StringComparison.Ordinal) ||
                 context.Request.Path.Value?.Contains("swagger", StringComparison.OrdinalIgnoreCase) == true)
             {
                 await this._next(context).ConfigureAwait(false);
@@ -60,7 +63,6 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             var requestPath = context.Request.Path;
             var requestQuery = context.Request.QueryString.ToString();
             var clientIp = GetClientIpAddress(context);
-            var userAgent = context.Request.Headers["User-Agent"].ToString();
 
             // Log request start
             this._logger.LogInformation(
@@ -86,20 +88,26 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
 
                 // Get response details
                 var statusCode = context.Response.StatusCode;
-                var contentType = context.Response.ContentType;
                 var responseSize = responseBodyStream.Length;
 
                 // Log request completion
-                var logLevel = statusCode >= 500 ? LogLevel.Error :
-                              statusCode >= 400 ? LogLevel.Warning :
-                              LogLevel.Information;
+                LogLevel logLevel;
+                if (statusCode >= 500)
+                {
+                    logLevel = LogLevel.Error;
+                }
+                else if (statusCode >= 400)
+                {
+                    logLevel = LogLevel.Warning;
+                }
+                else
+                {
+                    logLevel = LogLevel.Information;
+                }
 
                 this._logger.Log(
                     logLevel,
-                    "API Request Completed: {RequestId} {Method} {Path} -> {StatusCode} in {Duration}ms | " +
-                    "OrgId: {OrgId} | UserId: {UserId} | ApiKeyId: {ApiKeyId} | " +
-                    "Region: {UserRegion} | CrossBorder: {CrossBorder} | " +
-                    "Size: {ResponseSize} bytes",
+                    "API Request Completed: {RequestId} {Method} {Path} -> {StatusCode} in {Duration}ms | OrgId: {OrgId} | UserId: {UserId} | ApiKeyId: {ApiKeyId} | Region: {UserRegion} | CrossBorder: {CrossBorder} | Size: {ResponseSize} bytes",
                     requestId,
                     requestMethod,
                     requestPath,
@@ -122,16 +130,15 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
 
                 this._logger.LogError(
                     ex,
-                    "API Request Failed: {RequestId} {Method} {Path} after {Duration}ms | " +
-                    "OrgId: {OrgId} | Error: {ErrorMessage}",
+                    "API Request Failed: {RequestId} {Method} {Path} after {Duration}ms | OrgId: {OrgId}",
                     requestId,
                     requestMethod,
                     requestPath,
                     stopwatch.ElapsedMilliseconds,
-                    tenantContext.OrganizationId,
-                    ex.Message);
+                    tenantContext.OrganizationId);
 
-                throw;
+                // Re-throw with contextual information
+                throw new InvalidOperationException($"API request {requestId} failed after {stopwatch.ElapsedMilliseconds}ms", ex);
             }
             finally
             {

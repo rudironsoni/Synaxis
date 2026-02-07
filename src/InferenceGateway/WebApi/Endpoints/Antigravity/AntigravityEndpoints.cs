@@ -21,6 +21,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Antigravity
         /// Maps Antigravity endpoints to the application.
         /// </summary>
         /// <param name="app">The endpoint route builder.</param>
+#pragma warning disable MA0051 // Method too long
         public static void MapAntigravityEndpoints(this IEndpointRouteBuilder app)
         {
             app.MapGet("/oauth/antigravity/callback", async (IAntigravityAuthManager authManager, HttpRequest request) =>
@@ -59,7 +60,9 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Antigravity
 
             group.MapPost("/auth/start", (IAntigravityAuthManager authManager, [FromBody] StartAuthRequest request) =>
             {
+#pragma warning disable S1075 // URIs should not be hardcoded
                 const string defaultRedirectUrl = "http://localhost:51121/oauth/antigravity/callback";
+#pragma warning restore S1075 // URIs should not be hardcoded
                 var redirectUrl = string.IsNullOrWhiteSpace(request.RedirectUrl) ? defaultRedirectUrl : request.RedirectUrl;
                 var url = authManager.StartAuthFlow(redirectUrl);
                 return Results.Ok(new
@@ -91,10 +94,13 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Antigravity
             })
             .WithName("CompleteAntigravityAuth");
         }
+#pragma warning restore MA0051 // Method too long
 
         private static (string Code, string State, string RedirectUrl) ResolveAuthCompletion(CompleteAuthRequest request)
         {
+#pragma warning disable S1075 // URIs should not be hardcoded
             const string defaultRedirectUrl = "http://localhost:51121/oauth/antigravity/callback";
+#pragma warning restore S1075 // URIs should not be hardcoded
             var code = request.Code;
             var state = request.State;
             var redirectUrl = request.RedirectUrl;
