@@ -40,17 +40,17 @@ public class AntigravityAuthManagerTests : IDisposable
             new() { Email = "user2@test.com", Token = new() { AccessToken = "token2", ExpiresInSeconds = 3600, IssuedUtc = DateTime.UtcNow } }
         };
         await File.WriteAllTextAsync(_tempAuthPath, System.Text.Json.JsonSerializer.Serialize(accounts));
-            var httpClientFactory = CreateHttpClientFactory(() => new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent("{}")
-            });
-            var settings = new AntigravitySettings { ClientId = "test-client", ClientSecret = "test-secret" };
-            var manager = new AntigravityAuthManager("proj", _tempAuthPath, settings, _loggerMock.Object, httpClientFactory);
+        var httpClientFactory = CreateHttpClientFactory(() => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent("{}")
+        });
+        var settings = new AntigravitySettings { ClientId = "test-client", ClientSecret = "test-secret" };
+        var manager = new AntigravityAuthManager("proj", _tempAuthPath, settings, _loggerMock.Object, httpClientFactory);
 
         // Act
         // Force load by calling GetTokenAsync. 
         // Since tokens are valid, it should just return the first one and not hit Google.
-        var token = await manager.GetTokenAsync(); 
+        var token = await manager.GetTokenAsync();
         var list = manager.ListAccounts().ToList();
 
         // Assert
@@ -66,7 +66,7 @@ public class AntigravityAuthManagerTests : IDisposable
     {
         // Arrange
         Environment.SetEnvironmentVariable("ANTIGRAVITY_REFRESH_TOKEN", "env-token");
-        try 
+        try
         {
             // Empty file
             await File.WriteAllTextAsync(_tempAuthPath, "[]");
@@ -83,7 +83,7 @@ public class AntigravityAuthManagerTests : IDisposable
             // So it will try to Refresh. 
             // This will throw because we can't refresh against real Google API without a valid refresh token and network.
             // So we expect an Exception, but we verify the account was added to the list.
-            
+
             await Assert.ThrowsAnyAsync<Exception>(() => manager.GetTokenAsync());
 
             var list = manager.ListAccounts().ToList();

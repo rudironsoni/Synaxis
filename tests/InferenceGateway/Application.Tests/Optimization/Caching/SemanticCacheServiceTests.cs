@@ -29,7 +29,7 @@ public class SemanticCacheServiceTests
         var sessionId = "session-123";
         var model = "gpt-4";
         var temperature = 0.7;
-        
+
         var expectedResponse = new CacheResult
         {
             IsHit = true,
@@ -52,7 +52,7 @@ public class SemanticCacheServiceTests
         Assert.Equal("The capital of France is Paris.", result.Response);
         Assert.Equal(1.0, result.SimilarityScore);
         Assert.True(result.CachedAt < DateTimeOffset.UtcNow);
-        
+
         _mockCacheService.Verify(
             x => x.TryGetCachedAsync(query, sessionId, model, temperature, _cancellationToken),
             Times.Once);
@@ -66,7 +66,7 @@ public class SemanticCacheServiceTests
         var sessionId = "session-123";
         var model = "gpt-4";
         var temperature = 0.7;
-        
+
         var expectedResponse = new CacheResult
         {
             IsHit = true,
@@ -89,7 +89,7 @@ public class SemanticCacheServiceTests
         Assert.Equal("The capital of France is Paris.", result.Response);
         Assert.True(result.SimilarityScore >= 0.8); // Above semantic threshold
         Assert.True(result.SimilarityScore < 1.0);
-        
+
         _mockCacheService.Verify(
             x => x.TryGetCachedAsync(query, sessionId, model, temperature, _cancellationToken),
             Times.Once);
@@ -104,7 +104,7 @@ public class SemanticCacheServiceTests
         var sessionId2 = "session-456";
         var model = "gpt-4";
         var temperature = 0.7;
-        
+
         var missResponse = new CacheResult
         {
             IsHit = false,
@@ -127,7 +127,7 @@ public class SemanticCacheServiceTests
         Assert.Null(result.Response);
         Assert.Equal(0.0, result.SimilarityScore);
         Assert.NotNull(result.QueryEmbedding);
-        
+
         _mockCacheService.Verify(
             x => x.TryGetCachedAsync(query, sessionId2, model, temperature, _cancellationToken),
             Times.Once);
@@ -142,7 +142,7 @@ public class SemanticCacheServiceTests
         var model1 = "gpt-4";
         var model2 = "gpt-3.5-turbo";
         var temperature = 0.7;
-        
+
         var missResponse = new CacheResult
         {
             IsHit = false,
@@ -163,7 +163,7 @@ public class SemanticCacheServiceTests
         Assert.NotNull(result);
         Assert.False(result.IsHit);
         Assert.Null(result.Response);
-        
+
         _mockCacheService.Verify(
             x => x.TryGetCachedAsync(query, sessionId, model2, temperature, _cancellationToken),
             Times.Once);
@@ -178,7 +178,7 @@ public class SemanticCacheServiceTests
         var model = "gpt-4";
         var temperature1 = 0.7;
         var temperature2 = 0.0;
-        
+
         var missResponse = new CacheResult
         {
             IsHit = false,
@@ -199,7 +199,7 @@ public class SemanticCacheServiceTests
         Assert.NotNull(result);
         Assert.False(result.IsHit);
         Assert.Null(result.Response);
-        
+
         _mockCacheService.Verify(
             x => x.TryGetCachedAsync(query, sessionId, model, temperature2, _cancellationToken),
             Times.Once);
@@ -213,7 +213,7 @@ public class SemanticCacheServiceTests
         var sessionId = "session-123";
         var model = "gpt-4";
         var temperature = 0.7;
-        
+
         var missResponse = new CacheResult
         {
             IsHit = false,
@@ -237,7 +237,7 @@ public class SemanticCacheServiceTests
         Assert.NotNull(result.QueryEmbedding);
         Assert.NotEmpty(result.QueryEmbedding);
         Assert.Equal(5, result.QueryEmbedding.Length);
-        
+
         _mockCacheService.Verify(
             x => x.TryGetCachedAsync(query, sessionId, model, temperature, _cancellationToken),
             Times.Once);
@@ -282,18 +282,18 @@ public class SemanticCacheServiceTests
         // Mock should not be called for error responses
         _mockCacheService
             .Setup(x => x.StoreAsync(
-                It.IsAny<string>(), 
-                It.Is<string>(r => r.StartsWith("Error:")), 
-                It.IsAny<string>(), 
-                It.IsAny<string>(), 
-                It.IsAny<double>(), 
-                It.IsAny<float[]>(), 
+                It.IsAny<string>(),
+                It.Is<string>(r => r.StartsWith("Error:")),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<double>(),
+                It.IsAny<float[]>(),
                 It.IsAny<CancellationToken>()))
             .Throws(new InvalidOperationException("Should not store error responses"));
 
         // Act & Assert - Should not call StoreAsync for error responses
         // In actual implementation, the service should filter out error responses
-        
+
         // Verify that storing error responses would throw
         await Assert.ThrowsAsync<InvalidOperationException>(async () =>
         {
@@ -318,7 +318,7 @@ public class SemanticCacheServiceTests
 
         // Assert
         Assert.Equal(5, invalidatedCount);
-        
+
         _mockCacheService.Verify(
             x => x.InvalidateSessionAsync(sessionId, _cancellationToken),
             Times.Once);
@@ -332,7 +332,7 @@ public class SemanticCacheServiceTests
         var sessionId = "session-123";
         var model = "gpt-4";
         var temperature = 0.7;
-        
+
         var hitResponse = new CacheResult
         {
             IsHit = true,
@@ -363,7 +363,7 @@ public class SemanticCacheServiceTests
             Assert.True(r.IsHit);
             Assert.Equal("The capital of France is Paris.", r.Response);
         });
-        
+
         _mockCacheService.Verify(
             x => x.TryGetCachedAsync(query, sessionId, model, temperature, _cancellationToken),
             Times.Exactly(10));
@@ -398,7 +398,7 @@ public class SemanticCacheServiceTests
         var sessionId = "session-123";
         var model = "gpt-4";
         var temperature = 0.7;
-        
+
         var missResponse = new CacheResult
         {
             IsHit = false,
@@ -504,22 +504,22 @@ public class CacheResult
 public interface ISemanticCacheService
 {
     Task<CacheResult> TryGetCachedAsync(
-        string query, 
-        string sessionId, 
-        string model, 
-        double temperature, 
+        string query,
+        string sessionId,
+        string model,
+        double temperature,
         CancellationToken cancellationToken);
 
     Task StoreAsync(
-        string query, 
-        string response, 
-        string sessionId, 
-        string model, 
-        double temperature, 
-        float[]? embedding, 
+        string query,
+        string response,
+        string sessionId,
+        string model,
+        double temperature,
+        float[]? embedding,
         CancellationToken cancellationToken);
 
     Task<int> InvalidateSessionAsync(
-        string sessionId, 
+        string sessionId,
         CancellationToken cancellationToken);
 }

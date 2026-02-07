@@ -35,7 +35,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var mockConfig = new Mock<IOptions<SynaxisConfiguration>>();
             mockConfig.Setup(x => x.Value).Returns(config);
             var jwtService = new JwtService(mockConfig.Object);
-            
+
             var user = new User
             {
                 Id = Guid.NewGuid(),
@@ -63,7 +63,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var mockConfig = new Mock<IOptions<SynaxisConfiguration>>();
             mockConfig.Setup(x => x.Value).Returns(config);
             var jwtService = new JwtService(mockConfig.Object);
-            
+
             var userId = Guid.NewGuid();
             var tenantId = Guid.NewGuid();
             var user = new User
@@ -97,7 +97,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var mockConfig = new Mock<IOptions<SynaxisConfiguration>>();
             mockConfig.Setup(x => x.Value).Returns(config);
             var jwtService = new JwtService(mockConfig.Object);
-            
+
             var user = new User
             {
                 Id = Guid.NewGuid(),
@@ -113,7 +113,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             var expectedExpiration = DateTime.UtcNow.AddDays(7);
             var actualExpiration = jwtToken.ValidTo;
-            
+
             var timeDiff = Math.Abs((actualExpiration - expectedExpiration).TotalSeconds);
             Assert.True(timeDiff < 10, $"Expiration time difference too large: {timeDiff} seconds");
         }
@@ -130,7 +130,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var mockConfig = new Mock<IOptions<SynaxisConfiguration>>();
             mockConfig.Setup(x => x.Value).Returns(config);
             var jwtService = new JwtService(mockConfig.Object);
-            
+
             var user = new User
             {
                 Id = Guid.NewGuid(),
@@ -160,7 +160,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var mockConfig = new Mock<IOptions<SynaxisConfiguration>>();
             mockConfig.Setup(x => x.Value).Returns(config);
             var jwtService = new JwtService(mockConfig.Object);
-            
+
             var user = new User
             {
                 Id = Guid.NewGuid(),
@@ -190,7 +190,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var mockConfig = new Mock<IOptions<SynaxisConfiguration>>();
             mockConfig.Setup(x => x.Value).Returns(config);
             var jwtService = new JwtService(mockConfig.Object);
-            
+
             var user = new User
             {
                 Id = Guid.NewGuid(),
@@ -219,7 +219,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var mockConfig = new Mock<IOptions<SynaxisConfiguration>>();
             mockConfig.Setup(x => x.Value).Returns(config);
             var jwtService = new JwtService(mockConfig.Object);
-            
+
             var user = new User
             {
                 Id = Guid.NewGuid(),
@@ -228,9 +228,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 TenantId = Guid.NewGuid()
             };
 
-            var exception = Assert.Throws<InvalidOperationException>(() => 
+            var exception = Assert.Throws<InvalidOperationException>(() =>
                 jwtService.GenerateToken(user));
-            
+
             Assert.Contains("Synaxis:InferenceGateway:JwtSecret must be configured", exception.Message);
         }
 
@@ -246,7 +246,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var mockConfig = new Mock<IOptions<SynaxisConfiguration>>();
             mockConfig.Setup(x => x.Value).Returns(config);
             var jwtService = new JwtService(mockConfig.Object);
-            
+
             var user = new User
             {
                 Id = Guid.NewGuid(),
@@ -255,9 +255,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 TenantId = Guid.NewGuid()
             };
 
-            var exception = Assert.Throws<InvalidOperationException>(() => 
+            var exception = Assert.Throws<InvalidOperationException>(() =>
                 jwtService.GenerateToken(user));
-            
+
             Assert.Contains("Synaxis:InferenceGateway:JwtSecret must be configured", exception.Message);
         }
 
@@ -273,7 +273,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var mockConfig = new Mock<IOptions<SynaxisConfiguration>>();
             mockConfig.Setup(x => x.Value).Returns(config);
             var jwtService = new JwtService(mockConfig.Object);
-            
+
             var user = new User
             {
                 Id = Guid.NewGuid(),
@@ -302,7 +302,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var mockConfig = new Mock<IOptions<SynaxisConfiguration>>();
             mockConfig.Setup(x => x.Value).Returns(config);
             var jwtService = new JwtService(mockConfig.Object);
-            
+
             var user1 = new User
             {
                 Id = Guid.NewGuid(),
@@ -323,11 +323,11 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var token2 = jwtService.GenerateToken(user2);
 
             Assert.NotEqual(token1, token2);
-            
+
             var tokenHandler = new JwtSecurityTokenHandler();
             var jwtToken1 = tokenHandler.ReadJwtToken(token1);
             var jwtToken2 = tokenHandler.ReadJwtToken(token2);
-            
+
             Assert.NotEqual(
                 jwtToken1.Claims.First(c => c.Type == JwtRegisteredClaimNames.Sub).Value,
                 jwtToken2.Claims.First(c => c.Type == JwtRegisteredClaimNames.Sub).Value
@@ -346,7 +346,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var mockConfig = new Mock<IOptions<SynaxisConfiguration>>();
             mockConfig.Setup(x => x.Value).Returns(config);
             var jwtService = new JwtService(mockConfig.Object);
-            
+
             var roles = new[] { UserRole.Owner, UserRole.Admin, UserRole.Developer, UserRole.Readonly };
 
             foreach (var role in roles)

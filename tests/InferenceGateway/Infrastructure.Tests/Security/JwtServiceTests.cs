@@ -78,7 +78,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             };
 
             var principal = tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
-            
+
             Assert.NotNull(principal.Identity);
             Assert.True(principal.Identity.IsAuthenticated);
             Assert.NotEmpty(principal.Claims);
@@ -190,7 +190,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             // Arrange
             _config.JwtIssuer = null;
             _config.JwtAudience = null;
-            
+
             var user = new User
             {
                 Id = Guid.NewGuid(),

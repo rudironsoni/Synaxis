@@ -40,7 +40,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             // Setup dependency injection with real components
             var services = new ServiceCollection();
-            
+
             // Add logging
             services.AddLogging(builder => builder.AddXUnit(output));
 
@@ -149,7 +149,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             // Add SmartRouter with real dependencies
             services.AddScoped<SmartRouter>();
-            
+
             // Add ModelResolver with mocked dependencies
             services.AddScoped<IModelResolver>(provider => new ModelResolver(
                 provider.GetRequiredService<IOptions<SynaxisConfiguration>>(),
@@ -159,7 +159,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             _serviceProvider = services.BuildServiceProvider();
             _dbContext = _serviceProvider.GetRequiredService<ControlPlaneDbContext>();
-            
+
             // Seed database with test data
             SeedDatabase();
         }
@@ -168,7 +168,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         {
             // Clear existing data to avoid duplicate key issues
             _dbContext.ModelCosts.RemoveRange(_dbContext.ModelCosts);
-            
+
             // Seed model costs for performance testing
             _dbContext.ModelCosts.Add(new ModelCost { Provider = "groq", Model = "llama-3.1-70b-versatile", CostPerToken = 0.001m, FreeTier = true });
             _dbContext.ModelCosts.Add(new ModelCost { Provider = "groq", Model = "mixtral-8x7b-32768", CostPerToken = 0.002m, FreeTier = true });
@@ -203,10 +203,10 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             // Assert
             Assert.All(results, result => Assert.NotEmpty(result));
-            
+
             var totalTime = stopwatch.ElapsedMilliseconds;
             var averageTimePerRequest = (double)totalTime / concurrentRequests;
-            
+
             _output.WriteLine($"Concurrent Requests: {concurrentRequests}");
             _output.WriteLine($"Total Time: {totalTime}ms");
             _output.WriteLine($"Average Time Per Request: {averageTimePerRequest:F2}ms");
@@ -233,7 +233,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             foreach (var batchSize in batchSizes)
             {
                 var stopwatch = Stopwatch.StartNew();
-            var tasks = new List<Task<List<EnrichedCandidate>>>();
+                var tasks = new List<Task<List<EnrichedCandidate>>>();
 
                 // Execute batch
                 for (int i = 0; i < batchSize; i++)
@@ -253,7 +253,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             // Assert - Check for reasonable scaling
             var firstBatch = results[batchSizes[0]];
             var lastBatch = results[batchSizes[2]];
-            
+
             // Throughput may degrade with larger batches due to overhead - adjust expectation
             var throughputRatio = lastBatch.throughput / firstBatch.throughput;
             Assert.True(throughputRatio > 0.2, $"Throughput degraded significantly: {throughputRatio:F2}");
@@ -294,10 +294,10 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             // Assert
             Assert.Equal(totalRequests, results.Length);
             Assert.All(results, result => Assert.NotEmpty(result));
-            
+
             var totalTime = stopwatch.ElapsedMilliseconds;
             var throughput = totalRequests / (totalTime / 1000.0);
-            
+
             _output.WriteLine($"Mixed Model Requests: {totalRequests}");
             _output.WriteLine($"Total Time: {totalTime}ms");
             _output.WriteLine($"Throughput: {throughput:F2} requests/second");
@@ -330,10 +330,10 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             // Assert
             Assert.All(results, result => Assert.NotNull(result));
-            
+
             var totalTime = stopwatch.ElapsedMilliseconds;
             var throughput = concurrentDbQueries / (totalTime / 1000.0);
-            
+
             _output.WriteLine($"Concurrent DB Queries: {concurrentDbQueries}");
             _output.WriteLine($"Total Time: {totalTime}ms");
             _output.WriteLine($"Throughput: {throughput:F2} queries/second");
@@ -385,7 +385,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             for (int i = 0; i < iterations; i++)
             {
                 await smartRouter.GetCandidatesAsync(modelId, streaming, cancellationToken);
-                
+
                 // Force garbage collection periodically
                 if (i % 100 == 0)
                 {
@@ -400,7 +400,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             // Assert
             var memoryIncrease = finalMemory - initialMemory;
             var memoryIncreasePerRequest = (double)memoryIncrease / iterations;
-            
+
             _output.WriteLine($"Iterations: {iterations}");
             _output.WriteLine($"Initial Memory: {initialMemory / 1024} KB");
             _output.WriteLine($"Final Memory: {finalMemory / 1024} KB");

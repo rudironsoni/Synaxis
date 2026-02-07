@@ -22,7 +22,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                 BaseAddress = new Uri("http://localhost")
             };
         }
-        
+
         /// <summary>
         /// Creates an HttpClient with custom mock responses.
         /// </summary>
@@ -36,7 +36,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                 BaseAddress = new Uri("http://localhost")
             };
         }
-        
+
         /// <summary>
         /// Creates a test configuration that enables mock mode.
         /// This can be used to conditionally use mocks in CI environments.
@@ -53,7 +53,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                 EnableCircuitBreaker = false // Not needed for mocks
             };
         }
-        
+
         /// <summary>
         /// Gets the current environment-based configuration.
         /// In CI, defaults to mock mode; in development, can be configured.
@@ -66,11 +66,11 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                 "false" or "0" => false,
                 _ => true // Default to mocks for stability
             };
-            
+
             return CreateTestConfiguration(useMocks);
         }
     }
-    
+
     /// <summary>
     /// Configuration for smoke test execution.
     /// </summary>
@@ -80,17 +80,17 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
         /// Whether to use mock providers instead of real ones.
         /// </summary>
         public bool UseMocks { get; set; } = true;
-        
+
         /// <summary>
         /// Whether to enable detailed logging during test execution.
         /// </summary>
         public bool EnableDetailedLogging { get; set; } = false;
-        
+
         /// <summary>
         /// Default timeout for test requests in milliseconds.
         /// </summary>
         public int DefaultTimeoutMs { get; set; } = 30000;
-        
+
         /// <summary>
         /// Whether to enable circuit breaker logic for real providers.
         /// This would only apply when UseMocks is false.

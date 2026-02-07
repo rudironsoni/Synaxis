@@ -383,7 +383,7 @@ public class GoogleAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
         var userId = user.Id;
         var userToUpdate = await dbContext.Users.FindAsync(userId);
         Assert.NotNull(userToUpdate);
-        
+
         userToUpdate.Email = updatedEmail;
         dbContext.Users.Update(userToUpdate);
         await dbContext.SaveChangesAsync();

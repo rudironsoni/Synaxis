@@ -24,7 +24,7 @@ public class RedisInfrastructureIntegrationTests : IAsyncLifetime
     public RedisInfrastructureIntegrationTests(ITestOutputHelper output)
     {
         _output = output ?? throw new ArgumentNullException(nameof(output));
-        
+
         _redis = new RedisBuilder()
             .WithImage("redis:7-alpine")
             .WithPortBinding(6379, true)
@@ -174,7 +174,7 @@ public class RedisInfrastructureIntegrationTests : IAsyncLifetime
             else
                 return 0
             end";
-        
+
         var released = await _database.ScriptEvaluateAsync(
             script,
             new RedisKey[] { lockKey },

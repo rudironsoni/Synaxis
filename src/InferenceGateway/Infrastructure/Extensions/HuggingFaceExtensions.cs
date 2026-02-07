@@ -1,17 +1,22 @@
-using Microsoft.Extensions.AI;
-using Microsoft.Extensions.DependencyInjection;
+// <copyright file="HuggingFaceExtensions.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
-namespace Synaxis.InferenceGateway.Infrastructure.Extensions;
-
-public static class HuggingFaceExtensions
+namespace Synaxis.InferenceGateway.Infrastructure.Extensions
 {
-    public static IServiceCollection AddHuggingFaceClient(this IServiceCollection services, string serviceKey, string apiKey, string modelId)
-    {
-        services.AddKeyedSingleton<IChatClient>(serviceKey, (_, _) => new GenericOpenAiChatClient(
-            apiKey,
-            new Uri("https://router.huggingface.co/v1/"),
-            modelId));
+    using Microsoft.Extensions.AI;
+    using Microsoft.Extensions.DependencyInjection;
 
-        return services;
+    public static class HuggingFaceExtensions
+    {
+        public static IServiceCollection AddHuggingFaceClient(this IServiceCollection services, string serviceKey, string apiKey, string modelId)
+        {
+            services.AddKeyedSingleton<IChatClient>(serviceKey, (_, _) => new GenericOpenAiChatClient(
+                apiKey,
+                new Uri("https://router.huggingface.co/v1/"),
+                modelId));
+
+            return services;
+        }
     }
 }

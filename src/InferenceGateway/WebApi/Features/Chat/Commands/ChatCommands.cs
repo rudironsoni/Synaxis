@@ -1,15 +1,29 @@
-using Mediator;
-using Microsoft.Extensions.AI;
-using Synaxis.InferenceGateway.Application.Translation;
-using System.Collections.Generic;
-using Microsoft.Agents.AI;
+// <copyright file="ChatCommands.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
-namespace Synaxis.InferenceGateway.WebApi.Features.Chat.Commands;
+namespace Synaxis.InferenceGateway.WebApi.Features.Chat.Commands
+{
+    using System.Collections.Generic;
+    using Mediator;
+    using Microsoft.Agents.AI;
+    using Microsoft.Extensions.AI;
+    using Synaxis.InferenceGateway.Application.Translation;
 
-// Command for non-streaming chat completion
-public record ChatCommand(OpenAIRequest Request, IEnumerable<ChatMessage> Messages) 
+    /// <summary>
+    /// Command for non-streaming chat completion.
+    /// </summary>
+    /// <param name="Request">The OpenAI request.</param>
+    /// <param name="Messages">The chat messages.</param>
+    public record ChatCommand(OpenAIRequest Request, IEnumerable<ChatMessage> Messages)
     : IRequest<Microsoft.Agents.AI.AgentResponse>;
 
-// Command for streaming chat completion
-public record ChatStreamCommand(OpenAIRequest Request, IEnumerable<ChatMessage> Messages) 
+    /// <summary>
+    /// Command for streaming chat completion.
+    /// </summary>
+    /// <param name="Request">The OpenAI request.</param>
+    /// <param name="Messages">The chat messages.</param>
+    public record ChatStreamCommand(OpenAIRequest Request, IEnumerable<ChatMessage> Messages)
     : IStreamRequest<Microsoft.Agents.AI.AgentResponseUpdate>;
+
+}

@@ -34,7 +34,7 @@ public class RedisConversationStoreTests
         // Arrange
         var sessionId = "session-123";
         var key = $"conversation:{sessionId}:messages";
-        
+
         var messages = new List<ConversationMessage>
         {
             new() { Role = "user", Content = "Hello", Timestamp = DateTimeOffset.UtcNow.AddMinutes(-10) },
@@ -43,7 +43,7 @@ public class RedisConversationStoreTests
         };
 
         var redisValues = messages.Select(m => (RedisValue)JsonSerializer.Serialize(m)).ToArray();
-        
+
         _mockDatabase
             .Setup(db => db.ListRangeAsync(key, 0, -1, It.IsAny<CommandFlags>()))
             .ReturnsAsync(redisValues);
@@ -59,7 +59,7 @@ public class RedisConversationStoreTests
         Assert.Equal("Hello", result[0].Content);
         Assert.Equal("Hi there!", result[1].Content);
         Assert.Equal("How are you?", result[2].Content);
-        
+
         _mockDatabase.Verify(
             db => db.ListRangeAsync(key, 0, -1, It.IsAny<CommandFlags>()),
             Times.Once);
@@ -71,7 +71,7 @@ public class RedisConversationStoreTests
         // Arrange
         var sessionId = "session-nonexistent";
         var key = $"conversation:{sessionId}:messages";
-        
+
         _mockDatabase
             .Setup(db => db.ListRangeAsync(key, 0, -1, It.IsAny<CommandFlags>()))
             .ReturnsAsync(Array.Empty<RedisValue>());
@@ -84,7 +84,7 @@ public class RedisConversationStoreTests
         // Assert
         Assert.NotNull(result);
         Assert.Empty(result);
-        
+
         _mockDatabase.Verify(
             db => db.ListRangeAsync(key, 0, -1, It.IsAny<CommandFlags>()),
             Times.Once);
@@ -97,7 +97,7 @@ public class RedisConversationStoreTests
         var sessionId = "session-123";
         var key = $"conversation:{sessionId}:messages";
         var ttl = TimeSpan.FromHours(24);
-        
+
         var message = new ConversationMessage
         {
             Role = "user",
@@ -107,12 +107,12 @@ public class RedisConversationStoreTests
 
         _mockDatabase
             .Setup(db => db.ListRightPushAsync(
-                key, 
-                It.IsAny<RedisValue>(), 
-                When.Always, 
+                key,
+                It.IsAny<RedisValue>(),
+                When.Always,
                 CommandFlags.None))
             .ReturnsAsync(1);
-        
+
         _mockDatabase
             .Setup(db => db.KeyExpireAsync(key, ttl, ExpireWhen.Always, CommandFlags.None))
             .ReturnsAsync(true);
@@ -125,12 +125,12 @@ public class RedisConversationStoreTests
         // Assert
         _mockDatabase.Verify(
             db => db.ListRightPushAsync(
-                key, 
-                It.Is<RedisValue>(v => v.ToString().Contains("New message")), 
-                When.Always, 
+                key,
+                It.Is<RedisValue>(v => v.ToString().Contains("New message")),
+                When.Always,
                 CommandFlags.None),
             Times.Once);
-        
+
         _mockDatabase.Verify(
             db => db.KeyExpireAsync(key, ttl, ExpireWhen.Always, CommandFlags.None),
             Times.Once);
@@ -144,7 +144,7 @@ public class RedisConversationStoreTests
         var providerStrategy = "sliding-window";
         var maxTokens = 1000;
         var key = $"conversation:{sessionId}:messages";
-        
+
         var messages = new List<ConversationMessage>();
         for (int i = 0; i < 20; i++)
         {
@@ -157,7 +157,7 @@ public class RedisConversationStoreTests
         }
 
         var redisValues = messages.Select(m => (RedisValue)JsonSerializer.Serialize(m)).ToArray();
-        
+
         _mockDatabase
             .Setup(db => db.ListRangeAsync(key, 0, -1, It.IsAny<CommandFlags>()))
             .ReturnsAsync(redisValues);
@@ -166,9 +166,9 @@ public class RedisConversationStoreTests
 
         // Act
         var result = await store.GetCompressedForProviderAsync(
-            sessionId, 
-            providerStrategy, 
-            maxTokens, 
+            sessionId,
+            providerStrategy,
+            maxTokens,
             _cancellationToken);
 
         // Assert
@@ -176,7 +176,7 @@ public class RedisConversationStoreTests
         // With sliding window strategy, should return most recent messages within token limit
         Assert.True(result.Count <= messages.Count);
         Assert.True(result.Count > 0);
-        
+
         _mockDatabase.Verify(
             db => db.ListRangeAsync(key, 0, -1, It.IsAny<CommandFlags>()),
             Times.Once);
@@ -189,12 +189,12 @@ public class RedisConversationStoreTests
         var sessionId = "session-123";
         var messageKey = $"conversation:{sessionId}:messages";
         var metadataKey = $"conversation:{sessionId}:metadata";
-        
+
         _mockDatabase
             .Setup(db => db.KeyDeleteAsync(
-                It.Is<RedisKey[]>(keys => 
-                    keys.Any(k => k.ToString() == messageKey) && 
-                    keys.Any(k => k.ToString() == metadataKey)), 
+                It.Is<RedisKey[]>(keys =>
+                    keys.Any(k => k.ToString() == messageKey) &&
+                    keys.Any(k => k.ToString() == metadataKey)),
                 It.IsAny<CommandFlags>()))
             .ReturnsAsync(2);
 
@@ -206,9 +206,9 @@ public class RedisConversationStoreTests
         // Assert
         _mockDatabase.Verify(
             db => db.KeyDeleteAsync(
-                It.Is<RedisKey[]>(keys => 
-                    keys.Any(k => k.ToString() == messageKey) && 
-                    keys.Any(k => k.ToString() == metadataKey)), 
+                It.Is<RedisKey[]>(keys =>
+                    keys.Any(k => k.ToString() == messageKey) &&
+                    keys.Any(k => k.ToString() == metadataKey)),
                 It.IsAny<CommandFlags>()),
             Times.Once);
     }
@@ -219,7 +219,7 @@ public class RedisConversationStoreTests
         // Arrange
         var sessionId = "session-large";
         var key = $"conversation:{sessionId}:messages";
-        
+
         // Create a large conversation (100 messages)
         var messages = new List<ConversationMessage>();
         for (int i = 0; i < 100; i++)
@@ -233,7 +233,7 @@ public class RedisConversationStoreTests
         }
 
         var redisValues = messages.Select(m => (RedisValue)JsonSerializer.Serialize(m)).ToArray();
-        
+
         _mockDatabase
             .Setup(db => db.ListRangeAsync(key, 0, -1, It.IsAny<CommandFlags>()))
             .ReturnsAsync(redisValues);
@@ -256,7 +256,7 @@ public class RedisConversationStoreTests
         // Arrange
         var sessionId = "session-123";
         var key = $"conversation:{sessionId}:messages";
-        
+
         _mockDatabase
             .Setup(db => db.ListRangeAsync(key, 0, -1, It.IsAny<CommandFlags>()))
             .ThrowsAsync(new RedisConnectionException(ConnectionFailureType.UnableToConnect, "Connection failed"));
@@ -278,7 +278,7 @@ public class RedisConversationStoreTests
         var sessionId = "session-serialize";
         var key = $"conversation:{sessionId}:messages";
         var ttl = TimeSpan.FromHours(24);
-        
+
         var originalMessage = new ConversationMessage
         {
             Role = "user",
@@ -292,20 +292,20 @@ public class RedisConversationStoreTests
         };
 
         RedisValue capturedValue = RedisValue.Null;
-        
+
         _mockDatabase
             .Setup(db => db.ListRightPushAsync(
-                key, 
-                It.IsAny<RedisValue>(), 
-                When.Always, 
+                key,
+                It.IsAny<RedisValue>(),
+                When.Always,
                 CommandFlags.None))
             .Callback<RedisKey, RedisValue, When, CommandFlags>((k, v, w, f) => capturedValue = v)
             .ReturnsAsync(1);
-        
+
         _mockDatabase
             .Setup(db => db.KeyExpireAsync(key, ttl, ExpireWhen.Always, CommandFlags.None))
             .ReturnsAsync(true);
-        
+
         _mockDatabase
             .Setup(db => db.ListRangeAsync(key, 0, -1, It.IsAny<CommandFlags>()))
             .ReturnsAsync(() => new[] { capturedValue });
@@ -319,7 +319,7 @@ public class RedisConversationStoreTests
         // Assert
         Assert.NotNull(result);
         Assert.Single(result);
-        
+
         var retrievedMessage = result[0];
         Assert.Equal(originalMessage.Role, retrievedMessage.Role);
         Assert.Equal(originalMessage.Content, retrievedMessage.Content);
@@ -359,7 +359,7 @@ public class RedisConversationStore : IConversationStore
             var db = _redis.GetDatabase();
             var key = $"conversation:{sessionId}:messages";
             var values = await db.ListRangeAsync(key);
-            
+
             var messages = new List<ConversationMessage>();
             foreach (var value in values)
             {
@@ -372,7 +372,7 @@ public class RedisConversationStore : IConversationStore
                     }
                 }
             }
-            
+
             return messages;
         }
         catch (RedisException)
@@ -387,19 +387,19 @@ public class RedisConversationStore : IConversationStore
         var db = _redis.GetDatabase();
         var key = $"conversation:{sessionId}:messages";
         var serialized = JsonSerializer.Serialize(message);
-        
+
         await db.ListRightPushAsync(key, serialized);
         await db.KeyExpireAsync(key, ttl);
     }
 
     public async Task<List<ConversationMessage>> GetCompressedForProviderAsync(
-        string sessionId, 
-        string strategy, 
-        int maxTokens, 
+        string sessionId,
+        string strategy,
+        int maxTokens,
         CancellationToken cancellationToken)
     {
         var fullHistory = await GetFullHistoryAsync(sessionId, cancellationToken);
-        
+
         // Simple sliding window compression for testing
         // In production, this would use actual token counting and sophisticated strategies
         if (strategy == "sliding-window")
@@ -409,7 +409,7 @@ public class RedisConversationStore : IConversationStore
             var maxMessages = Math.Min(maxTokens / 4, fullHistory.Count);
             return fullHistory.Skip(Math.Max(0, fullHistory.Count - maxMessages)).ToList();
         }
-        
+
         return fullHistory;
     }
 
@@ -421,7 +421,7 @@ public class RedisConversationStore : IConversationStore
             $"conversation:{sessionId}:messages",
             $"conversation:{sessionId}:metadata"
         };
-        
+
         await db.KeyDeleteAsync(keys);
     }
 }

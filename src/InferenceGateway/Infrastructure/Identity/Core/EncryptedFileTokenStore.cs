@@ -1,12 +1,16 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text.Json;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.DataProtection;
+// <copyright file="EncryptedFileTokenStore.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
 namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Text.Json;
+    using System.Threading.Tasks;
+    using Microsoft.AspNetCore.DataProtection;
+
     public class EncryptedFileTokenStore : ISecureTokenStore
     {
         private readonly string _path;
@@ -14,8 +18,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
 
         public EncryptedFileTokenStore(IDataProtectionProvider provider, string path)
         {
-            _protector = provider.CreateProtector("Synaxis.Identity.TokenStore.v1");
-            _path = path;
+            this._protector = provider.CreateProtector("Synaxis.Identity.TokenStore.v1");
+            this._path = path;
         }
 
         public async Task<List<IdentityAccount>> LoadAsync()

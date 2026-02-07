@@ -1,67 +1,72 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Synaxis.InferenceGateway.Application.ControlPlane;
+// <copyright file="ControlPlaneExtensions.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
-namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane;
-
-public static class ControlPlaneExtensions
+namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
 {
-    public static IServiceCollection AddControlPlane(this IServiceCollection services, IConfiguration configuration)
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
+    using Synaxis.InferenceGateway.Application.ControlPlane;
+
+    public static class ControlPlaneExtensions
     {
-        services.AddDbContext<ControlPlaneDbContext>((sp, builder) =>
+        public static IServiceCollection AddControlPlane(this IServiceCollection services, IConfiguration configuration)
         {
-            var config = sp.GetRequiredService<IConfiguration>();
-            var logger = sp.GetRequiredService<ILogger<ControlPlaneDbContext>>();
-            var options = new ControlPlaneOptions();
-            config.GetSection("Synaxis:ControlPlane").Bind(options);
-
-            logger.LogInformation("ControlPlane configuration - UseInMemory: {UseInMemory}, ConnectionString present: {HasConnectionString}", 
-                options.UseInMemory, !string.IsNullOrWhiteSpace(options.ConnectionString));
-            
-            if (!string.IsNullOrWhiteSpace(options.ConnectionString))
+            services.AddDbContext<ControlPlaneDbContext>((sp, builder) =>
             {
-                // Mask password for logging
-                var connStrMasked = System.Text.RegularExpressions.Regex.Replace(
-                    options.ConnectionString, 
-                    @"Password=([^;]+)", 
-                    "Password=***");
-                logger.LogInformation("Using PostgreSQL with connection string: {ConnectionString}", connStrMasked);
-            }
+                var config = sp.GetRequiredService<IConfiguration>();
+                var logger = sp.GetRequiredService<ILogger<ControlPlaneDbContext>>();
+                var options = new ControlPlaneOptions();
+                config.GetSection("Synaxis:ControlPlane").Bind(options);
 
-            if (options.UseInMemory || string.IsNullOrWhiteSpace(options.ConnectionString))
+                logger.LogInformation("ControlPlane configuration - UseInMemory: {UseInMemory}, ConnectionString present: {HasConnectionString}",
+                    options.UseInMemory, !string.IsNullOrWhiteSpace(options.ConnectionString));
+
+                if (!string.IsNullOrWhiteSpace(options.ConnectionString))
+                {
+                    // Mask password for logging
+                    var connStrMasked = System.Text.RegularExpressions.Regex.Replace(
+                        options.ConnectionString,
+                        @"Password=([^;]+)",
+                        "Password=***");
+                    logger.LogInformation("Using PostgreSQL with connection string: {ConnectionString}", connStrMasked);
+                }
+
+                if (options.UseInMemory || string.IsNullOrWhiteSpace(options.ConnectionString))
+                {
+                    logger.LogWarning("Using in-memory database for ControlPlane");
+                    builder.UseInMemoryDatabase("SynaxisControlPlane");
+                }
+                else
+                {
+                    builder.UseNpgsql(options.ConnectionString);
+                }
+            });
+
+            // Register SynaxisDbContext for Identity
+            services.AddDbContext<SynaxisDbContext>((sp, builder) =>
             {
-                logger.LogWarning("Using in-memory database for ControlPlane");
-                builder.UseInMemoryDatabase("SynaxisControlPlane");
-            }
-            else
-            {
-                builder.UseNpgsql(options.ConnectionString);
-            }
-        });
+                var config = sp.GetRequiredService<IConfiguration>();
+                var logger = sp.GetRequiredService<ILogger<SynaxisDbContext>>();
+                var options = new ControlPlaneOptions();
+                config.GetSection("Synaxis:ControlPlane").Bind(options);
 
-        // Register SynaxisDbContext for Identity
-        services.AddDbContext<SynaxisDbContext>((sp, builder) =>
-        {
-            var config = sp.GetRequiredService<IConfiguration>();
-            var logger = sp.GetRequiredService<ILogger<SynaxisDbContext>>();
-            var options = new ControlPlaneOptions();
-            config.GetSection("Synaxis:ControlPlane").Bind(options);
+                if (options.UseInMemory || string.IsNullOrWhiteSpace(options.ConnectionString))
+                {
+                    logger.LogWarning("Using in-memory database for Identity");
+                    builder.UseInMemoryDatabase("SynaxisIdentity");
+                }
+                else
+                {
+                    builder.UseNpgsql(options.ConnectionString);
+                }
+            });
 
-            if (options.UseInMemory || string.IsNullOrWhiteSpace(options.ConnectionString))
-            {
-                logger.LogWarning("Using in-memory database for Identity");
-                builder.UseInMemoryDatabase("SynaxisIdentity");
-            }
-            else
-            {
-                builder.UseNpgsql(options.ConnectionString);
-            }
-        });
+            services.AddScoped<IDeviationRegistry, DeviationRegistry>();
 
-        services.AddScoped<IDeviationRegistry, DeviationRegistry>();
-
-        return services;
+            return services;
+        }
     }
 }

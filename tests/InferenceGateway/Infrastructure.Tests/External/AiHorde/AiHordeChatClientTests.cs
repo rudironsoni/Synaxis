@@ -50,7 +50,7 @@ public class AiHordeChatClientTests
         var client = new HttpClient(handler.Object);
         var ai = new AiHordeChatClient(client);
 
-        var resp = await ai.GetResponseAsync(new [] { new ChatMessage(ChatRole.User, "Hi") });
+        var resp = await ai.GetResponseAsync(new[] { new ChatMessage(ChatRole.User, "Hi") });
 
         Assert.Single(resp.Messages);
         Assert.Equal("Hello", resp.Messages[0].Text);
@@ -78,7 +78,7 @@ public class AiHordeChatClientTests
         var client = new HttpClient(handler.Object);
         var ai = new AiHordeChatClient(client);
 
-        var stream = ai.GetStreamingResponseAsync(new [] { new ChatMessage(ChatRole.User, "Hi") });
+        var stream = ai.GetStreamingResponseAsync(new[] { new ChatMessage(ChatRole.User, "Hi") });
         var enumerator = stream.GetAsyncEnumerator();
         try
         {

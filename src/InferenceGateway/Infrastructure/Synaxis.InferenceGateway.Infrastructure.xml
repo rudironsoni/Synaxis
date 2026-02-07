@@ -1,0 +1,1784 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Synaxis.InferenceGateway.Infrastructure</name>
+    </assembly>
+    <members>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.AgentTools">
+            <summary>
+            Registry of tools available to agents.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.AgentTools.Provider">
+            <summary>
+            Gets the provider tool.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.AgentTools.Alert">
+            <summary>
+            Gets the alert tool.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.AgentTools.Routing">
+            <summary>
+            Gets the routing tool.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.AgentTools.Health">
+            <summary>
+            Gets the health tool.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.AgentTools.Audit">
+            <summary>
+            Gets the audit tool.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.AgentTools.#ctor(Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IProviderTool,Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IAlertTool,Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IRoutingTool,Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IHealthTool,Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IAuditTool)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.AgentTools"/> class.
+            </summary>
+            <param name="provider">The provider tool.</param>
+            <param name="alert">The alert tool.</param>
+            <param name="routing">The routing tool.</param>
+            <param name="health">The health tool.</param>
+            <param name="audit">The audit tool.</param>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.AlertTool">
+            <summary>
+            Tool for sending alerts and notifications.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.AlertTool.#ctor(Microsoft.Extensions.Logging.ILogger{Synaxis.InferenceGateway.Infrastructure.Agents.Tools.AlertTool})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.AlertTool"/> class.
+            </summary>
+            <param name="logger">The logger.</param>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.AlertTool.SendAdminAlertAsync(System.String,System.String,Synaxis.InferenceGateway.Infrastructure.Agents.Tools.AlertSeverity,System.Threading.CancellationToken)">
+            <summary>
+            Sends an admin alert.
+            </summary>
+            <param name="subject">The alert subject.</param>
+            <param name="message">The alert message.</param>
+            <param name="severity">The alert severity.</param>
+            <param name="ct">The cancellation token.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the asynchronous operation.</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.AlertTool.SendNotificationAsync(System.Nullable{System.Guid},System.Nullable{System.Guid},System.String,System.Threading.CancellationToken)">
+            <summary>
+            Sends a notification to a user or organization.
+            </summary>
+            <param name="userId">The user ID.</param>
+            <param name="organizationId">The organization ID.</param>
+            <param name="message">The notification message.</param>
+            <param name="ct">The cancellation token.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the asynchronous operation.</returns>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.AuditTool">
+            <summary>
+            Tool for logging agent actions and optimizations.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.AuditTool.#ctor(Synaxis.InferenceGateway.Infrastructure.ControlPlane.ControlPlaneDbContext,Microsoft.Extensions.Logging.ILogger{Synaxis.InferenceGateway.Infrastructure.Agents.Tools.AuditTool})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.AuditTool"/> class.
+            </summary>
+            <param name="db">The database context.</param>
+            <param name="logger">The logger.</param>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.AuditTool.LogActionAsync(System.String,System.String,System.Nullable{System.Guid},System.Nullable{System.Guid},System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Logs an agent action to the audit log.
+            </summary>
+            <param name="agentName">The agent name.</param>
+            <param name="action">The action performed.</param>
+            <param name="organizationId">The organization ID.</param>
+            <param name="userId">The user ID.</param>
+            <param name="details">Action details.</param>
+            <param name="correlationId">The correlation ID.</param>
+            <param name="ct">The cancellation token.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the asynchronous operation.</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.AuditTool.LogOptimizationAsync(System.Guid,System.String,System.String,System.String,System.Decimal,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Logs a cost optimization action.
+            </summary>
+            <param name="organizationId">The organization ID.</param>
+            <param name="modelId">The model ID.</param>
+            <param name="oldProvider">The old provider.</param>
+            <param name="newProvider">The new provider.</param>
+            <param name="savingsPercent">The savings percentage.</param>
+            <param name="reason">The optimization reason.</param>
+            <param name="ct">The cancellation token.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the asynchronous operation.</returns>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.HealthTool">
+            <summary>
+            Tool for managing provider health status.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.HealthTool.#ctor(Synaxis.InferenceGateway.Infrastructure.ControlPlane.ControlPlaneDbContext,Microsoft.Extensions.Logging.ILogger{Synaxis.InferenceGateway.Infrastructure.Agents.Tools.HealthTool})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.HealthTool"/> class.
+            </summary>
+            <param name="db">The database context.</param>
+            <param name="logger">The logger.</param>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.HealthTool.CheckHealthAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            Checks the health status of a provider.
+            </summary>
+            <param name="organizationId">The organization ID.</param>
+            <param name="providerId">The provider ID.</param>
+            <param name="ct">The cancellation token.</param>
+            <returns>The health check result.</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.HealthTool.MarkUnhealthyAsync(System.Guid,System.Guid,System.String,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Marks a provider as unhealthy.
+            </summary>
+            <param name="organizationId">The organization ID.</param>
+            <param name="providerId">The provider ID.</param>
+            <param name="reason">The reason for marking unhealthy.</param>
+            <param name="consecutiveFailures">The number of consecutive failures.</param>
+            <param name="ct">The cancellation token.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the asynchronous operation.</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.HealthTool.MarkHealthyAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            Marks a provider as healthy.
+            </summary>
+            <param name="organizationId">The organization ID.</param>
+            <param name="providerId">The provider ID.</param>
+            <param name="ct">The cancellation token.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the asynchronous operation.</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.HealthTool.ResetHealthAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            Resets the health status of a provider.
+            </summary>
+            <param name="organizationId">The organization ID.</param>
+            <param name="providerId">The provider ID.</param>
+            <param name="ct">The cancellation token.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the asynchronous operation.</returns>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IAgentTools">
+            <summary>
+            Registry of tools available to agents.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IAgentTools.Provider">
+            <summary>
+            Gets the provider tool.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IAgentTools.Alert">
+            <summary>
+            Gets the alert tool.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IAgentTools.Routing">
+            <summary>
+            Gets the routing tool.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IAgentTools.Health">
+            <summary>
+            Gets the health tool.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IAgentTools.Audit">
+            <summary>
+            Gets the audit tool.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IAlertTool">
+            <summary>
+            Tool for sending alerts and notifications.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IAlertTool.SendAdminAlertAsync(System.String,System.String,Synaxis.InferenceGateway.Infrastructure.Agents.Tools.AlertSeverity,System.Threading.CancellationToken)">
+            <summary>
+            Sends an admin alert.
+            </summary>
+            <param name="subject">The alert subject.</param>
+            <param name="message">The alert message.</param>
+            <param name="severity">The alert severity.</param>
+            <param name="ct">The cancellation token.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the asynchronous operation.</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IAlertTool.SendNotificationAsync(System.Nullable{System.Guid},System.Nullable{System.Guid},System.String,System.Threading.CancellationToken)">
+            <summary>
+            Sends a notification to a user or organization.
+            </summary>
+            <param name="userId">The user ID.</param>
+            <param name="organizationId">The organization ID.</param>
+            <param name="message">The notification message.</param>
+            <param name="ct">The cancellation token.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the asynchronous operation.</returns>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.AlertSeverity">
+            <summary>
+            Alert severity levels.
+            </summary>
+        </member>
+        <member name="F:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.AlertSeverity.Info">
+            <summary>
+            Informational alert.
+            </summary>
+        </member>
+        <member name="F:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.AlertSeverity.Warning">
+            <summary>
+            Warning alert.
+            </summary>
+        </member>
+        <member name="F:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.AlertSeverity.Critical">
+            <summary>
+            Critical alert.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IAuditTool">
+            <summary>
+            Tool for logging agent actions and optimizations.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IAuditTool.LogActionAsync(System.String,System.String,System.Nullable{System.Guid},System.Nullable{System.Guid},System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Logs an agent action to the audit log.
+            </summary>
+            <param name="agentName">The agent name.</param>
+            <param name="action">The action performed.</param>
+            <param name="organizationId">The organization ID.</param>
+            <param name="userId">The user ID.</param>
+            <param name="details">Action details.</param>
+            <param name="correlationId">The correlation ID.</param>
+            <param name="ct">The cancellation token.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the asynchronous operation.</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IAuditTool.LogOptimizationAsync(System.Guid,System.String,System.String,System.String,System.Decimal,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Logs a cost optimization action.
+            </summary>
+            <param name="organizationId">The organization ID.</param>
+            <param name="modelId">The model ID.</param>
+            <param name="oldProvider">The old provider.</param>
+            <param name="newProvider">The new provider.</param>
+            <param name="savingsPercent">The savings percentage.</param>
+            <param name="reason">The optimization reason.</param>
+            <param name="ct">The cancellation token.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the asynchronous operation.</returns>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IHealthTool">
+            <summary>
+            Tool for managing provider health status.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IHealthTool.CheckHealthAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            Checks the health status of a provider.
+            </summary>
+            <param name="organizationId">The organization ID.</param>
+            <param name="providerId">The provider ID.</param>
+            <param name="ct">The cancellation token.</param>
+            <returns>The health check result.</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IHealthTool.MarkUnhealthyAsync(System.Guid,System.Guid,System.String,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Marks a provider as unhealthy.
+            </summary>
+            <param name="organizationId">The organization ID.</param>
+            <param name="providerId">The provider ID.</param>
+            <param name="reason">The reason for marking unhealthy.</param>
+            <param name="consecutiveFailures">The number of consecutive failures.</param>
+            <param name="ct">The cancellation token.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the asynchronous operation.</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IHealthTool.MarkHealthyAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            Marks a provider as healthy.
+            </summary>
+            <param name="organizationId">The organization ID.</param>
+            <param name="providerId">The provider ID.</param>
+            <param name="ct">The cancellation token.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the asynchronous operation.</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IHealthTool.ResetHealthAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            Resets the health status of a provider.
+            </summary>
+            <param name="organizationId">The organization ID.</param>
+            <param name="providerId">The provider ID.</param>
+            <param name="ct">The cancellation token.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the asynchronous operation.</returns>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.HealthCheckResult">
+            <summary>
+            Represents the result of a health check.
+            </summary>
+            <param name="IsHealthy">Whether the provider is healthy.</param>
+            <param name="HealthScore">The health score.</param>
+            <param name="ConsecutiveFailures">The number of consecutive failures.</param>
+            <param name="IsInCooldown">Whether the provider is in cooldown.</param>
+            <param name="CooldownUntil">The cooldown end time.</param>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.HealthCheckResult.#ctor(System.Boolean,System.Decimal,System.Int32,System.Boolean,System.Nullable{System.DateTime})">
+            <summary>
+            Represents the result of a health check.
+            </summary>
+            <param name="IsHealthy">Whether the provider is healthy.</param>
+            <param name="HealthScore">The health score.</param>
+            <param name="ConsecutiveFailures">The number of consecutive failures.</param>
+            <param name="IsInCooldown">Whether the provider is in cooldown.</param>
+            <param name="CooldownUntil">The cooldown end time.</param>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.HealthCheckResult.IsHealthy">
+            <summary>Whether the provider is healthy.</summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.HealthCheckResult.HealthScore">
+            <summary>The health score.</summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.HealthCheckResult.ConsecutiveFailures">
+            <summary>The number of consecutive failures.</summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.HealthCheckResult.IsInCooldown">
+            <summary>Whether the provider is in cooldown.</summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.HealthCheckResult.CooldownUntil">
+            <summary>The cooldown end time.</summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IProviderTool">
+            <summary>
+            Tool for managing provider configurations.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IProviderTool.UpdateProviderConfigAsync(System.Guid,System.Guid,System.String,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Updates a provider configuration setting.
+            </summary>
+            <param name="organizationId">The organization ID.</param>
+            <param name="providerId">The provider ID.</param>
+            <param name="key">The configuration key.</param>
+            <param name="value">The configuration value.</param>
+            <param name="ct">The cancellation token.</param>
+            <returns>True if successful, false otherwise.</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IProviderTool.GetProviderStatusAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            Gets the status of a provider.
+            </summary>
+            <param name="organizationId">The organization ID.</param>
+            <param name="providerId">The provider ID.</param>
+            <param name="ct">The cancellation token.</param>
+            <returns>The provider status.</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IProviderTool.GetAllProvidersAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            Gets all providers for an organization.
+            </summary>
+            <param name="organizationId">The organization ID.</param>
+            <param name="ct">The cancellation token.</param>
+            <returns>List of provider information.</returns>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderStatus">
+            <summary>
+            Represents provider status information.
+            </summary>
+            <param name="IsEnabled">Whether the provider is enabled.</param>
+            <param name="IsHealthy">Whether the provider is healthy.</param>
+            <param name="LastChecked">The last check timestamp.</param>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderStatus.#ctor(System.Boolean,System.Boolean,System.Nullable{System.DateTime})">
+            <summary>
+            Represents provider status information.
+            </summary>
+            <param name="IsEnabled">Whether the provider is enabled.</param>
+            <param name="IsHealthy">Whether the provider is healthy.</param>
+            <param name="LastChecked">The last check timestamp.</param>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderStatus.IsEnabled">
+            <summary>Whether the provider is enabled.</summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderStatus.IsHealthy">
+            <summary>Whether the provider is healthy.</summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderStatus.LastChecked">
+            <summary>The last check timestamp.</summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderInfo">
+            <summary>
+            Represents provider information.
+            </summary>
+            <param name="Id">The provider ID.</param>
+            <param name="Name">The provider name.</param>
+            <param name="IsEnabled">Whether the provider is enabled.</param>
+            <param name="InputCost">The input cost per token.</param>
+            <param name="OutputCost">The output cost per token.</param>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderInfo.#ctor(System.Guid,System.String,System.Boolean,System.Nullable{System.Decimal},System.Nullable{System.Decimal})">
+            <summary>
+            Represents provider information.
+            </summary>
+            <param name="Id">The provider ID.</param>
+            <param name="Name">The provider name.</param>
+            <param name="IsEnabled">Whether the provider is enabled.</param>
+            <param name="InputCost">The input cost per token.</param>
+            <param name="OutputCost">The output cost per token.</param>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderInfo.Id">
+            <summary>The provider ID.</summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderInfo.Name">
+            <summary>The provider name.</summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderInfo.IsEnabled">
+            <summary>Whether the provider is enabled.</summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderInfo.InputCost">
+            <summary>The input cost per token.</summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderInfo.OutputCost">
+            <summary>The output cost per token.</summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IRoutingTool">
+            <summary>
+            Tool for managing routing decisions.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IRoutingTool.SwitchProviderAsync(System.Guid,System.String,System.String,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Switches the provider for a model.
+            </summary>
+            <param name="organizationId">The organization ID.</param>
+            <param name="modelId">The model ID.</param>
+            <param name="fromProvider">The current provider.</param>
+            <param name="toProvider">The target provider.</param>
+            <param name="reason">The reason for the switch.</param>
+            <param name="ct">The cancellation token.</param>
+            <returns>True if successful, false otherwise.</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IRoutingTool.GetRoutingMetricsAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Gets routing metrics for a model.
+            </summary>
+            <param name="organizationId">The organization ID.</param>
+            <param name="modelId">The model ID.</param>
+            <param name="ct">The cancellation token.</param>
+            <returns>The routing metrics.</returns>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.RoutingMetrics">
+            <summary>
+            Represents routing metrics for a model.
+            </summary>
+            <param name="TotalRequests">The total number of requests.</param>
+            <param name="ProviderDistribution">Distribution of requests across providers.</param>
+            <param name="AverageCost">The average cost per request.</param>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.RoutingMetrics.#ctor(System.Int32,System.Collections.Generic.IDictionary{System.String,System.Int32},System.Decimal)">
+            <summary>
+            Represents routing metrics for a model.
+            </summary>
+            <param name="TotalRequests">The total number of requests.</param>
+            <param name="ProviderDistribution">Distribution of requests across providers.</param>
+            <param name="AverageCost">The average cost per request.</param>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.RoutingMetrics.TotalRequests">
+            <summary>The total number of requests.</summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.RoutingMetrics.ProviderDistribution">
+            <summary>Distribution of requests across providers.</summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.RoutingMetrics.AverageCost">
+            <summary>The average cost per request.</summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderTool">
+            <summary>
+            Tool for managing provider configurations.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderTool.#ctor(Synaxis.InferenceGateway.Infrastructure.ControlPlane.ControlPlaneDbContext,Microsoft.Extensions.Logging.ILogger{Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderTool})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderTool"/> class.
+            </summary>
+            <param name="db">The database context.</param>
+            <param name="logger">The logger.</param>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderTool.UpdateProviderConfigAsync(System.Guid,System.Guid,System.String,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Updates a provider configuration setting.
+            </summary>
+            <param name="organizationId">The organization ID.</param>
+            <param name="providerId">The provider ID.</param>
+            <param name="key">The configuration key.</param>
+            <param name="value">The configuration value.</param>
+            <param name="ct">The cancellation token.</param>
+            <returns>True if successful, false otherwise.</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderTool.GetProviderStatusAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            Gets the status of a provider.
+            </summary>
+            <param name="organizationId">The organization ID.</param>
+            <param name="providerId">The provider ID.</param>
+            <param name="ct">The cancellation token.</param>
+            <returns>The provider status.</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderTool.GetAllProvidersAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            Gets all providers for an organization.
+            </summary>
+            <param name="organizationId">The organization ID.</param>
+            <param name="ct">The cancellation token.</param>
+            <returns>List of provider information.</returns>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.RoutingTool">
+            <summary>
+            Tool for managing routing decisions.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.RoutingTool.#ctor(Synaxis.InferenceGateway.Infrastructure.ControlPlane.ControlPlaneDbContext,Microsoft.Extensions.Logging.ILogger{Synaxis.InferenceGateway.Infrastructure.Agents.Tools.RoutingTool})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.RoutingTool"/> class.
+            </summary>
+            <param name="db">The database context.</param>
+            <param name="logger">The logger.</param>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.RoutingTool.SwitchProviderAsync(System.Guid,System.String,System.String,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Switches the provider for a model.
+            </summary>
+            <param name="organizationId">The organization ID.</param>
+            <param name="modelId">The model ID.</param>
+            <param name="fromProvider">The current provider.</param>
+            <param name="toProvider">The target provider.</param>
+            <param name="reason">The reason for the switch.</param>
+            <param name="ct">The cancellation token.</param>
+            <returns>True if successful, false otherwise.</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.RoutingTool.GetRoutingMetricsAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Gets routing metrics for a model.
+            </summary>
+            <param name="organizationId">The organization ID.</param>
+            <param name="modelId">The model ID.</param>
+            <param name="ct">The cancellation token.</param>
+            <returns>The routing metrics.</returns>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.AntigravityChatClient">
+            <summary>
+            A robust, upstream-compatible client for Google's Antigravity Gateway.
+            Implements strict protocol compliance including the wrapper object and custom headers.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.AntigravityJsonContext.Boolean">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.AntigravityJsonContext.Single">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.AntigravityJsonContext.AntigravityRequest">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.AntigravityJsonContext.AntigravityResponse">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.AntigravityJsonContext.AntigravityResponseWrapper">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.AntigravityJsonContext.Candidate">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.AntigravityJsonContext.Content">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.AntigravityJsonContext.GenerationConfig">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.AntigravityJsonContext.Part">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.AntigravityJsonContext.RequestPayload">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.AntigravityJsonContext.SystemInstruction">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.AntigravityJsonContext.ThinkingConfig">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.AntigravityJsonContext.IListString">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.AntigravityJsonContext.ListCandidate">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.AntigravityJsonContext.ListContent">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.AntigravityJsonContext.ListPart">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.AntigravityJsonContext.Int32">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.AntigravityJsonContext.String">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.AntigravityJsonContext.Default">
+            <summary>
+            The default <see cref="T:System.Text.Json.Serialization.JsonSerializerContext"/> associated with a default <see cref="T:System.Text.Json.JsonSerializerOptions"/> instance.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.AntigravityJsonContext.GeneratedSerializerOptions">
+            <summary>
+            The source-generated options associated with this context.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.AntigravityJsonContext.#ctor">
+            <inheritdoc/>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.AntigravityJsonContext.#ctor(System.Text.Json.JsonSerializerOptions)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.AntigravityJsonContext.GetTypeInfo(System.Type)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Auth.AntigravityAuthManager">
+            <summary>
+            Manages authentication for Antigravity, supporting multiple accounts, load balancing, and headless flows.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Auth.ITokenProvider">
+            <summary>
+            Interface for providing authentication tokens for chat clients.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Auth.ITokenProvider.GetTokenAsync(System.Threading.CancellationToken)">
+            <summary>
+            Gets a valid access token.
+            </summary>
+            <param name="cancellationToken">Cancellation token.</param>
+            <returns>A valid access token string.</returns>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Compliance.ComplianceProviderFactory">
+            <summary>
+            Factory for creating and managing compliance providers based on region.
+            Supports GDPR (EU) and LGPD (Brazil) with fallback strategy.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Compliance.ComplianceProviderFactory.GetProvider(System.String)">
+            <summary>
+            Gets a compliance provider for the specified region.
+            Returns the appropriate provider or defaults to GDPR if no specific provider exists.
+            </summary>
+            <param name="region">The region code (e.g., "eu-west-1", "sa-east-1")</param>
+            <returns>The compliance provider for the region</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Compliance.ComplianceProviderFactory.GetProviderByRegulation(System.String)">
+            <summary>
+            Gets a compliance provider by regulation code.
+            </summary>
+            <param name="regulationCode">The regulation code (e.g., "GDPR", "LGPD")</param>
+            <returns>The compliance provider for the regulation</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Compliance.ComplianceProviderFactory.GetAllProviders">
+            <summary>
+            Gets all registered compliance providers.
+            </summary>
+            <returns>Collection of all compliance providers</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Compliance.ComplianceProviderFactory.RegisterProvider(System.String,Synaxis.InferenceGateway.Infrastructure.Contracts.IComplianceProvider)">
+            <summary>
+            Registers a custom compliance provider for a specific region.
+            </summary>
+            <param name="region">The region code</param>
+            <param name="provider">The compliance provider</param>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Compliance.ComplianceProviderFactory.HasProvider(System.String)">
+            <summary>
+            Checks if a provider is registered for a specific region.
+            </summary>
+            <param name="region">The region code</param>
+            <returns>True if a provider is registered, false otherwise</returns>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Compliance.GdprComplianceProvider">
+            <summary>
+            GDPR (General Data Protection Regulation) compliance provider for EU data protection.
+            Enforces 72-hour breach notification, data residency in EU, and user rights (export, erasure).
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Compliance.LgpdComplianceProvider">
+            <summary>
+            LGPD (Lei Geral de Proteção de Dados) compliance provider for Brazilian data protection.
+            Enforces ANPD notification, 10 legal bases validation, and Brazilian data protection rules.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Contracts.IComplianceProvider">
+            <summary>
+            Provides compliance validation for data protection regulations (GDPR, LGPD, etc.)
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Contracts.IComplianceProvider.RegulationCode">
+            <summary>
+            Regulation code: GDPR, LGPD, CCPA, etc.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Contracts.IComplianceProvider.Region">
+            <summary>
+            Region this regulation applies to
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Contracts.IComplianceProvider.ValidateTransferAsync(Synaxis.InferenceGateway.Infrastructure.Contracts.TransferContext)">
+            <summary>
+            Validate if a cross-border transfer is compliant
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Contracts.IComplianceProvider.LogTransferAsync(Synaxis.InferenceGateway.Infrastructure.Contracts.TransferContext)">
+            <summary>
+            Log a cross-border transfer for audit purposes
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Contracts.IComplianceProvider.ExportUserDataAsync(System.Guid)">
+            <summary>
+            Export all data for a user (data portability)
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Contracts.IComplianceProvider.DeleteUserDataAsync(System.Guid)">
+            <summary>
+            Delete all data for a user (right to erasure)
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Contracts.IComplianceProvider.IsProcessingAllowedAsync(Synaxis.InferenceGateway.Infrastructure.Contracts.ProcessingContext)">
+            <summary>
+            Check if processing is allowed under this regulation
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Contracts.IComplianceProvider.GetDataRetentionDays">
+            <summary>
+            Get retention period for this regulation
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Contracts.IComplianceProvider.IsBreachNotificationRequiredAsync(Synaxis.InferenceGateway.Infrastructure.Contracts.BreachContext)">
+            <summary>
+            Check if breach notification is required
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.ControlPlaneDbContextFactory">
+            <summary>
+            Design-time factory for creating ControlPlaneDbContext during EF Core migrations.
+            This enables 'dotnet ef migrations' commands to work without a running application.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit.AuditLog">
+            <summary>
+            Represents an audit log entry for tracking all system activities.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.Group">
+            <summary>
+            Represents a group within an organization.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.Organization">
+            <summary>
+            Represents an organization (tenant) in the identity schema.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.OrganizationSettings">
+            <summary>
+            Represents settings for an organization.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.Role">
+            <summary>
+            Represents a role in the system, extending ASP.NET Core Identity.
+            Can be system-wide or organization-specific.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.SynaxisUser">
+            <summary>
+            Represents a user in the system, extending ASP.NET Core Identity.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.UserGroupMembership">
+            <summary>
+            Represents a user's membership in a group.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.UserOrganizationMembership">
+            <summary>
+            Represents a user's membership in an organization.
+            Implements soft delete to support cascade deletion when organization is soft deleted.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.UserRole">
+            <summary>
+            Represents a user-role assignment within an organization.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Operations.ApiKey">
+            <summary>
+            Represents an API key for programmatic access.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Operations.OrganizationModel">
+            <summary>
+            Represents an organization's model configuration.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Operations.OrganizationProvider">
+            <summary>
+            Represents an organization's provider configuration.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Operations.ProviderHealthStatus">
+            <summary>
+            Represents the health status of a provider for an organization.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Operations.RoutingStrategy">
+            <summary>
+            Represents a routing strategy for model selection.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Platform.Model">
+            <summary>
+            Represents an AI model in the platform schema (tenant-agnostic).
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Platform.Provider">
+            <summary>
+            Represents an AI provider in the platform schema (tenant-agnostic).
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.AddModelCosts">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.AddModelCosts.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.AddModelCosts.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.AddModelCosts.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.AddDynamicModelRegistry">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.AddDynamicModelRegistry.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.AddDynamicModelRegistry.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.AddDynamicModelRegistry.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.AddUserPasswordAndApiKeyUser">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.AddUserPasswordAndApiKeyUser.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.AddUserPasswordAndApiKeyUser.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.AddUserPasswordAndApiKeyUser.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.AddEnterpriseMultiTenantSchema">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.AddEnterpriseMultiTenantSchema.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.AddEnterpriseMultiTenantSchema.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.AddEnterpriseMultiTenantSchema.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.NotificationService">
+            <summary>
+            Stub implementation of notification service.
+            In production, this should integrate with email/SMS/push notification providers.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.SynaxisDbContext">
+            <summary>
+            Multi-tenant DbContext for Synaxis with four separate schemas:
+            - platform: Tenant-agnostic provider and model catalog
+            - identity: Multi-tenant organization, user, and group management
+            - operations: Runtime provider configurations and API keys
+            - audit: System-wide audit logging
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.SynaxisDbContextFactory">
+            <summary>
+            Design-time factory for creating SynaxisDbContext during EF Core migrations.
+            This enables 'dotnet ef migrations' commands to work without a running application.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.SynaxisDbSeeder">
+            <summary>
+            Seeds initial data for the Synaxis database:
+            - Platform providers (OpenAI, Anthropic, Google, etc.)
+            - Platform models for each provider
+            - System roles (SystemAdmin, OrganizationOwner, OrganizationAdmin, Member, Guest)
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Data.Interceptors.SoftDeleteInterceptor">
+            <summary>
+            EF Core interceptor that implements soft deletion for entities implementing <see cref="T:Synaxis.InferenceGateway.Infrastructure.Data.Interfaces.ISoftDeletable"/>.
+            </summary>
+            <remarks>
+            <para>
+            This interceptor intercepts SaveChanges operations and converts DELETE operations into UPDATE
+            operations that set the DeletedAt timestamp and optional DeletedBy user identifier.
+            This preserves data for audit trails and enables data recovery without breaking referential integrity.
+            </para>
+            <para>
+            Key features:
+            - Automatically converts entity deletions to soft deletes (sets DeletedAt to DateTime.UtcNow)
+            - Sets DeletedBy from current user context (if available via IHttpContextAccessor)
+            - Supports cascade soft delete for Organization entities:
+              - When an Organization is soft deleted, automatically soft deletes all related Groups,
+                UserOrganizationMemberships, and ApiKeys
+            - Works in conjunction with global query filters (configured in DbContext.OnModelCreating)
+              that exclude soft-deleted entities from normal queries
+            </para>
+            <para>
+            Usage:
+            Register in DI container and configure with DbContext:
+            <code>
+            services.AddScoped&lt;SoftDeleteInterceptor&gt;();
+            services.AddDbContext&lt;AppDbContext&gt;((serviceProvider, options) =&gt;
+            {
+                var interceptor = serviceProvider.GetRequiredService&lt;SoftDeleteInterceptor&gt;();
+                options.UseNpgsql(connectionString).AddInterceptors(interceptor);
+            });
+            </code>
+            </para>
+            <para>
+            Global query filters should be configured in DbContext:
+            <code>
+            modelBuilder.Entity&lt;MyEntity&gt;().HasQueryFilter(e =&gt; e.DeletedAt == null);
+            </code>
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Data.Interceptors.SoftDeleteInterceptor.#ctor(Microsoft.AspNetCore.Http.IHttpContextAccessor)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Synaxis.InferenceGateway.Infrastructure.Data.Interceptors.SoftDeleteInterceptor"/> class.
+            </summary>
+            <param name="httpContextAccessor">
+            Optional HTTP context accessor for retrieving current user information.
+            If provided, DeletedBy will be set to the current user's ID when available.
+            </param>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Data.Interceptors.SoftDeleteInterceptor.SavingChangesAsync(Microsoft.EntityFrameworkCore.Diagnostics.DbContextEventData,Microsoft.EntityFrameworkCore.Diagnostics.InterceptionResult{System.Int32},System.Threading.CancellationToken)">
+            <summary>
+            Intercepts the asynchronous SaveChanges operation to handle soft deletion.
+            </summary>
+            <param name="eventData">Context information for the save operation.</param>
+            <param name="result">The current result of the interceptor chain.</param>
+            <param name="cancellationToken">Cancellation token to observe while waiting.</param>
+            <returns>
+            A task representing the asynchronous operation, with an <see cref="T:Microsoft.EntityFrameworkCore.Diagnostics.InterceptionResult`1"/>
+            containing the number of entities affected.
+            </returns>
+            <exception cref="T:System.InvalidOperationException">
+            Thrown if DbContext is not available in the event data.
+            </exception>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Data.Interceptors.SoftDeleteInterceptor.SavingChanges(Microsoft.EntityFrameworkCore.Diagnostics.DbContextEventData,Microsoft.EntityFrameworkCore.Diagnostics.InterceptionResult{System.Int32})">
+            <summary>
+            Intercepts the synchronous SaveChanges operation to handle soft deletion.
+            </summary>
+            <param name="eventData">Context information for the save operation.</param>
+            <param name="result">The current result of the interceptor chain.</param>
+            <returns>
+            An <see cref="T:Microsoft.EntityFrameworkCore.Diagnostics.InterceptionResult`1"/> containing the number of entities affected.
+            </returns>
+            <exception cref="T:System.InvalidOperationException">
+            Thrown if DbContext is not available in the event data.
+            </exception>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Data.Interceptors.SoftDeleteInterceptor.ProcessSoftDelete(Microsoft.EntityFrameworkCore.DbContext)">
+            <summary>
+            Processes soft delete for all tracked entities marked for deletion.
+            </summary>
+            <param name="context">The DbContext containing the tracked entities.</param>
+            <remarks>
+            This method:
+            1. Retrieves the current user ID from HTTP context (if available)
+            2. Finds all entities in Deleted state that implement ISoftDeletable
+            3. Converts DELETE to UPDATE by changing EntityState to Modified
+            4. Sets DeletedAt to DateTime.UtcNow and DeletedBy to current user ID
+            5. For Organization entities, cascades soft delete to related entities
+            </remarks>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Data.Interceptors.SoftDeleteInterceptor.CascadeSoftDeleteForOrganization(Microsoft.EntityFrameworkCore.DbContext,System.Guid,System.Nullable{System.Guid},System.DateTime)">
+             <summary>
+             Cascades soft delete to all entities related to an Organization.
+             </summary>
+             <param name="context">The DbContext containing the entities.</param>
+             <param name="organizationId">The ID of the organization being soft deleted.</param>
+             <param name="userId">The ID of the user performing the deletion, or null if not available.</param>
+             <param name="deletedAt">The timestamp to use for DeletedAt.</param>
+             <remarks>
+             When an Organization is soft deleted, this method automatically soft deletes:
+             - All Groups in the organization
+             - All UserOrganizationMemberships
+             - All ApiKeys associated with the organization
+            
+             This maintains data consistency and ensures that all organization-related data
+             is properly marked as deleted together.
+             </remarks>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Data.Interceptors.SoftDeleteInterceptor.GetCurrentUserId">
+             <summary>
+             Retrieves the current user's ID from the HTTP context.
+             </summary>
+             <returns>
+             The current user's ID as a Guid if authentication information is available,
+             otherwise null.
+             </returns>
+             <remarks>
+             This method attempts to extract the user ID from the "sub" claim (subject claim)
+             in the current HTTP context's user principal. This is commonly used in JWT-based
+             authentication where the "sub" claim contains the user's unique identifier.
+            
+             If the HTTP context is not available, the user is not authenticated, or the
+             claim cannot be parsed as a Guid, this method returns null.
+             </remarks>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Data.Interfaces.ISoftDeletable">
+            <summary>
+            Marker interface for entities that support soft deletion.
+            Entities implementing this interface will not be physically deleted from the database.
+            Instead, they will be marked as deleted with a timestamp and optional user identifier.
+            </summary>
+            <remarks>
+            <para>
+            Soft deletion allows for data recovery and maintains referential integrity by keeping
+            deleted records in the database with a DeletedAt timestamp set. A global query filter
+            automatically excludes soft-deleted entities from normal queries.
+            </para>
+            <para>
+            The soft delete interceptor automatically handles:
+            - Converting DELETE operations to UPDATE operations that set DeletedAt
+            - Setting DeletedBy from the current user context (if available)
+            - Cascading soft deletes to related entities (e.g., when an Organization is deleted)
+            - Applying global query filters to exclude soft-deleted entities
+            </para>
+            <para>
+            To restore a soft-deleted entity, set DeletedAt and DeletedBy to null.
+            </para>
+            </remarks>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Data.Interfaces.ISoftDeletable.DeletedAt">
+            <summary>
+            Gets or sets the timestamp when the entity was soft deleted.
+            When this value is not null, the entity is considered deleted and will be excluded
+            from normal queries by the global query filter.
+            </summary>
+            <value>
+            The UTC date and time when the entity was deleted, or null if the entity is not deleted.
+            </value>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Data.Interfaces.ISoftDeletable.DeletedBy">
+            <summary>
+            Gets or sets the unique identifier of the user who soft deleted the entity.
+            This property is optional and may be null if the deletion was performed by
+            a system process or if user context is not available.
+            </summary>
+            <value>
+            The ID of the user who deleted the entity, or null if not tracked.
+            </value>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSdkAdapter">
+             <summary>
+             Minimal concrete adapter for the GitHub Copilot SDK.
+             The implementation attempts to start the CopilotClient lazily and exposes
+             a small, test-friendly surface required by CopilotSdkClient.
+            
+             Note: The SDK surface varies across versions; to remain resilient we use
+             light-weight reflection for optional calls but still expose the underlying
+             CopilotClient via GetService so callers can use advanced features when
+             available.
+             </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.External.GitHub.ICopilotSdkAdapter">
+            <summary>
+            Adapter interface used by CopilotSdkClient to allow easy testing and to separate the
+            concrete GitHub.Copilot.SDK usage. A real implementation should wrap the SDK and
+            translate messages to/from its types.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSdkClient">
+            <summary>
+            IChatClient implementation backed by a GitHub Copilot local SDK adapter.
+            The concrete SDK wiring should be provided via an ICopilotSdkAdapter instance.
+            This keeps the production wiring (which may require a running local agent process)
+            out of the tests and allows graceful lifecycle management.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Identity.Core.IdentityManager.WaitForInitialLoadAsync(System.Threading.CancellationToken)">
+            <summary>
+            Waits for the initial account loading to complete.
+            This is primarily used in tests to ensure background loading is finished.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub.DeviceFlowService.StartPollingAsync(System.String,System.Int32,System.Func{Synaxis.InferenceGateway.Infrastructure.Identity.Core.TokenResponse,System.Threading.Tasks.Task},System.Threading.CancellationToken)">
+            <summary>
+            Start polling GitHub token endpoint for the device flow. Calls onSuccess when token received.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Identity.SynaxisRoleStore">
+            <summary>
+            Custom RoleStore for Synaxis that extends ASP.NET Core Identity
+            with support for system roles and organization-specific roles.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Identity.SynaxisRoleStore.#ctor(Synaxis.InferenceGateway.Infrastructure.ControlPlane.SynaxisDbContext,Microsoft.AspNetCore.Identity.IdentityErrorDescriber)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Synaxis.InferenceGateway.Infrastructure.Identity.SynaxisRoleStore"/> class.
+            </summary>
+            <param name="context">The database context.</param>
+            <param name="describer">The error describer.</param>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Identity.SynaxisRoleStore.GetRolesByOrganizationAsync(System.Nullable{System.Guid},System.Threading.CancellationToken)">
+            <summary>
+            Gets all roles for a specific organization, including system roles.
+            System roles have OrganizationId = null.
+            </summary>
+            <param name="organizationId">The organization ID to filter by. Null returns only system roles.</param>
+            <param name="cancellationToken">Cancellation token.</param>
+            <returns>A collection of roles.</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Identity.SynaxisRoleStore.GetSystemRolesAsync(System.Threading.CancellationToken)">
+            <summary>
+            Gets all system roles (OrganizationId = null, IsSystemRole = true).
+            </summary>
+            <param name="cancellationToken">Cancellation token.</param>
+            <returns>A collection of system roles.</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Identity.SynaxisRoleStore.GetOrganizationSpecificRolesAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            Gets all organization-specific roles for a given organization.
+            </summary>
+            <param name="organizationId">The organization ID.</param>
+            <param name="cancellationToken">Cancellation token.</param>
+            <returns>A collection of organization-specific roles.</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Identity.SynaxisRoleStore.FindByNameInOrganizationAsync(System.String,System.Nullable{System.Guid},System.Threading.CancellationToken)">
+            <summary>
+            Finds a role by name within a specific organization context.
+            Searches both system roles and organization-specific roles.
+            </summary>
+            <param name="normalizedRoleName">The normalized role name.</param>
+            <param name="organizationId">The organization ID. Null searches only system roles.</param>
+            <param name="cancellationToken">Cancellation token.</param>
+            <returns>The role if found, otherwise null.</returns>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Identity.SynaxisUserStore">
+            <summary>
+            Custom UserStore for Synaxis that extends ASP.NET Core Identity
+            with organization-specific functionality and soft delete support.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Identity.SynaxisUserStore.#ctor(Synaxis.InferenceGateway.Infrastructure.ControlPlane.SynaxisDbContext,Microsoft.AspNetCore.Identity.IdentityErrorDescriber)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Synaxis.InferenceGateway.Infrastructure.Identity.SynaxisUserStore"/> class.
+            </summary>
+            <param name="context">The database context.</param>
+            <param name="describer">The error describer.</param>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Identity.SynaxisUserStore.FindByEmailInOrganizationAsync(System.String,System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            Finds a user by email within a specific organization.
+            Respects soft delete (excludes deleted users).
+            </summary>
+            <param name="email">The email address to search for.</param>
+            <param name="organizationId">The organization ID to scope the search.</param>
+            <param name="cancellationToken">Cancellation token.</param>
+            <returns>The user if found, otherwise null.</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Identity.SynaxisUserStore.GetOrganizationsAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            Gets all organizations that a user belongs to.
+            </summary>
+            <param name="userId">The user ID.</param>
+            <param name="cancellationToken">Cancellation token.</param>
+            <returns>A collection of organizations.</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Identity.SynaxisUserStore.FindByIdAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Finds a user by ID, respecting soft delete.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Identity.SynaxisUserStore.FindByEmailAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Finds a user by email, respecting soft delete.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Identity.SynaxisUserStore.FindByNameAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Finds a user by username, respecting soft delete.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Identity.SynaxisUserStore.GetUsersInRoleAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Gets users in a specific role, respecting soft delete.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Identity.SynaxisUserStore.NormalizeEmail(System.String)">
+            <summary>
+            Normalizes an email address.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Jobs.AuditLogPartitionJob">
+            <summary>
+            Quartz job for managing AuditLog table partitions.
+            Creates new partitions for upcoming months and cleans up old partitions beyond retention period.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Jobs.CostOptimizationAgent">
+            <summary>
+            Cost Optimization Agent (ULTRA MISER MODE) - Runs every 15 minutes.
+            Priority 1: Find free alternatives ($0 cost)
+            Priority 2: Find cheaper paid alternatives (>20% savings)
+            Never: Free → Paid
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Jobs.HealthMonitoringAgent">
+            <summary>
+            Health Monitoring Agent - Checks provider health every 2 minutes.
+            Updates ProviderHealthStatus and sends alerts for unhealthy providers.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Jobs.ModelDiscoveryAgent">
+            <summary>
+            Model Discovery Agent - Runs daily at 2 AM.
+            Discovers new models from configured providers and adds them to the platform.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Jobs.SecurityAuditAgent">
+            <summary>
+            Security Audit Agent - Runs every 6 hours.
+            Audits security configuration and access patterns.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Middleware.ApiKeyMiddleware">
+            <summary>
+            Middleware for authenticating requests via API key.
+            Checks the Authorization header for API keys and validates them.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Middleware.ApiKeyMiddleware.#ctor(Microsoft.AspNetCore.Http.RequestDelegate)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Synaxis.InferenceGateway.Infrastructure.Middleware.ApiKeyMiddleware"/> class.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Middleware.ApiKeyMiddleware.InvokeAsync(Microsoft.AspNetCore.Http.HttpContext,Synaxis.InferenceGateway.Application.ApiKeys.IApiKeyService)">
+            <summary>
+            Invokes the middleware.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Middleware.ApiKeyMiddlewareExtensions">
+            <summary>
+            Extension methods for registering the API key middleware.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Middleware.ApiKeyMiddlewareExtensions.UseApiKeyAuthentication(Microsoft.AspNetCore.Builder.IApplicationBuilder)">
+            <summary>
+            Adds the API key middleware to the pipeline.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Migrations.InitialMultiTenantSchema">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Migrations.InitialMultiTenantSchema.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Migrations.InitialMultiTenantSchema.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Migrations.InitialMultiTenantSchema.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Migrations.AddAuditLogPartitioning">
+            <summary>
+            Migration to convert AuditLogs table to PostgreSQL native declarative partitioning.
+            Implements monthly range partitioning for efficient data retention management.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Migrations.AddUserOrganizationMembershipSoftDelete">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Migrations.AddUserOrganizationMembershipSoftDelete.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Migrations.AddUserOrganizationMembershipSoftDelete.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Migrations.AddUserOrganizationMembershipSoftDelete.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Routing.RedisQuotaTracker.CheckQuotaAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Checks quota for a provider using atomic Lua script execution.
+            Supports hierarchical limits (User → Group → Org) via Redis key structure.
+            Key structure: ratelimit:{organizationId}:{groupId}:{userId}:{type}
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Routing.RedisQuotaTracker.CheckHierarchicalQuotaAsync(System.String,System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.Int32},System.Nullable{System.Int32},System.Nullable{System.Int32},System.Nullable{System.Int32},System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <summary>
+            Checks hierarchical quota limits across organization, group, and user levels.
+            Uses atomic Lua script to check all levels and increment counters if allowed.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Security.SecurityConfigurationValidator">
+            <summary>
+            Validates critical security configurations at startup.
+            Fails gracefully if misconfigured, providing clear error messages.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Security.SecurityConfigurationValidator.Validate">
+            <summary>
+            Validates all security settings and returns validation results.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Security.SecurityValidationResult">
+            <summary>
+            Result of security configuration validation.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Services.ApiKeyService">
+            <summary>
+            Implementation of the API key service for managing programmatic access with bcrypt hashing.
+            </summary>
+            <remarks>
+            API Key Format: synaxis_{43-char-base62-id}_{43-char-base62-secret}
+            - ID Part: 32 bytes (256 bits) of entropy encoded as base62 (~43 characters)
+            - Secret Part: 32 bytes (256 bits) of entropy encoded as base62 (~43 characters)
+            - Prefix Format: synaxis_{first-8-chars-of-id}
+            - Hash: bcrypt with work factor 12
+            </remarks>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.ApiKeyService.#ctor(Synaxis.InferenceGateway.Infrastructure.ControlPlane.SynaxisDbContext)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Synaxis.InferenceGateway.Infrastructure.Services.ApiKeyService"/> class.
+            </summary>
+            <param name="context">The database context.</param>
+            <exception cref="T:System.ArgumentNullException">Thrown when context is null.</exception>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.ApiKeyService.GenerateApiKeyAsync(Synaxis.InferenceGateway.Application.ApiKeys.Models.GenerateApiKeyRequest,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.ApiKeyService.ValidateApiKeyAsync(System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.ApiKeyService.RevokeApiKeyAsync(System.Guid,System.String,System.Nullable{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.ApiKeyService.ListApiKeysAsync(System.Guid,System.Boolean,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.ApiKeyService.GetApiKeyUsageAsync(System.Guid,System.DateTime,System.DateTime,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.ApiKeyService.UpdateLastUsedAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.ApiKeyService.GenerateSecureRandomBytes(System.Int32)">
+            <summary>
+            Generates cryptographically secure random bytes.
+            </summary>
+            <param name="length">The number of bytes to generate.</param>
+            <returns>A byte array with the specified length of random data.</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.ApiKeyService.EncodeBase62(System.Byte[])">
+            <summary>
+            Encodes bytes to base62 string.
+            </summary>
+            <param name="data">The byte array to encode.</param>
+            <returns>A base62 encoded string.</returns>
+            <remarks>
+            Base62 uses characters 0-9, A-Z, a-z for compact, URL-safe encoding.
+            32 bytes (256 bits) encodes to approximately 43 base62 characters.
+            </remarks>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.ApiKeyService.HashApiKeyWithBcrypt(System.String)">
+            <summary>
+            Hashes an API key using bcrypt with work factor 12.
+            </summary>
+            <param name="apiKey">The API key to hash.</param>
+            <returns>The bcrypt hash string.</returns>
+            <remarks>
+            Work factor 12 provides a good balance between security and performance.
+            Each increment doubles the computation time.
+            </remarks>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.ApiKeyService.VerifyApiKeyWithBcrypt(System.String,System.String)">
+            <summary>
+            Verifies an API key against a bcrypt hash.
+            </summary>
+            <param name="apiKey">The API key to verify.</param>
+            <param name="hash">The bcrypt hash to verify against.</param>
+            <returns>True if the key matches the hash, false otherwise.</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.ApiKeyService.ExtractKeyPrefix(System.String)">
+            <summary>
+            Extracts the key prefix from the key ID part.
+            </summary>
+            <param name="keyIdBase62">The base62-encoded key ID.</param>
+            <returns>The prefix in format "synaxis_{first-8-chars-of-id}".</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.ApiKeyService.IsValidKeyFormat(System.String)">
+            <summary>
+            Validates the API key format.
+            </summary>
+            <param name="apiKey">The API key to validate.</param>
+            <returns>True if the format is valid, false otherwise.</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.ApiKeyService.MapToApiKeyInfo(Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Operations.ApiKey)">
+            <summary>
+            Maps an ApiKey entity to ApiKeyInfo DTO.
+            </summary>
+            <param name="apiKey">The API key entity.</param>
+            <returns>The API key information DTO.</returns>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Services.ConfigurationResolver">
+            <summary>
+            Implementation of hierarchical configuration resolution service.
+            Resolves settings in order: User → Group → Organization → Global.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.ConfigurationResolver.#ctor(Synaxis.InferenceGateway.Infrastructure.ControlPlane.SynaxisDbContext)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Synaxis.InferenceGateway.Infrastructure.Services.ConfigurationResolver"/> class.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.ConfigurationResolver.GetSettingAsync``1(System.String,System.Nullable{System.Guid},System.Nullable{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.ConfigurationResolver.GetRateLimitsAsync(System.Nullable{System.Guid},System.Nullable{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.ConfigurationResolver.GetEffectiveCostPer1MTokensAsync(System.Guid,System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.ConfigurationResolver.ShouldAutoOptimizeAsync(System.Nullable{System.Guid},System.Nullable{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Services.IdentityService">
+            <summary>
+            Implementation of the identity service for user management and authentication.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.IdentityService.#ctor(Microsoft.AspNetCore.Identity.UserManager{Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.SynaxisUser},Microsoft.AspNetCore.Identity.SignInManager{Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.SynaxisUser},Synaxis.InferenceGateway.Infrastructure.ControlPlane.SynaxisDbContext,Microsoft.Extensions.Configuration.IConfiguration)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Synaxis.InferenceGateway.Infrastructure.Services.IdentityService"/> class.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.IdentityService.RegisterUserAsync(Synaxis.InferenceGateway.Application.Identity.Models.RegisterRequest,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.IdentityService.RegisterOrganizationAsync(Synaxis.InferenceGateway.Application.Identity.Models.RegisterRequest,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.IdentityService.LoginAsync(Synaxis.InferenceGateway.Application.Identity.Models.LoginRequest,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.IdentityService.RefreshTokenAsync(System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.IdentityService.GetUserInfoAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.IdentityService.AssignUserToOrganizationAsync(System.Guid,System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.IdentityService.AssignUserToGroupAsync(System.Guid,System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Services.RateLimitConfig">
+            <summary>
+            Configuration for hierarchical rate limiting.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Services.RateLimitConfig.UserRpm">
+            <summary>
+            Gets or sets the requests per minute (RPM) limit at the user level.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Services.RateLimitConfig.UserTpm">
+            <summary>
+            Gets or sets the tokens per minute (TPM) limit at the user level.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Services.RateLimitConfig.GroupRpm">
+            <summary>
+            Gets or sets the requests per minute (RPM) limit at the group level.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Services.RateLimitConfig.GroupTpm">
+            <summary>
+            Gets or sets the tokens per minute (TPM) limit at the group level.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Services.RateLimitConfig.OrganizationRpm">
+            <summary>
+            Gets or sets the requests per minute (RPM) limit at the organization level.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Services.RateLimitConfig.OrganizationTpm">
+            <summary>
+            Gets or sets the tokens per minute (TPM) limit at the organization level.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Services.RateLimitConfig.Window">
+            <summary>
+            Gets or sets the time window for rate limiting. Defaults to 1 minute.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.RateLimitConfig.NoLimits">
+            <summary>
+            Creates a default configuration with no limits.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.RateLimitConfig.UserLevel(System.Nullable{System.Int32},System.Nullable{System.Int32})">
+            <summary>
+            Creates a configuration with only user-level limits.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.RateLimitConfig.OrganizationLevel(System.Nullable{System.Int32},System.Nullable{System.Int32})">
+            <summary>
+            Creates a configuration with organization-level limits.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.RateLimitConfig.HasLimits">
+            <summary>
+            Validates the configuration and returns true if any limits are set.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Services.RateLimitResult">
+            <summary>
+            Represents the result of a rate limit check.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Services.RateLimitResult.IsAllowed">
+            <summary>
+            Gets or sets a value indicating whether the request is allowed.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Services.RateLimitResult.Current">
+            <summary>
+            Gets or sets the current usage count.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Services.RateLimitResult.Limit">
+            <summary>
+            Gets or sets the rate limit.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Services.RateLimitResult.ResetAfter">
+            <summary>
+            Gets or sets the number of seconds until the limit resets.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Services.RateLimitResult.Remaining">
+            <summary>
+            Gets or sets the remaining requests/tokens available.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Services.RateLimitResult.LimitedBy">
+            <summary>
+            Gets or sets the scope that triggered the rate limit (User, Group, or Organization).
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Services.RateLimitResult.LimitType">
+            <summary>
+            Gets or sets the rate limit type (RPM or TPM).
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.RateLimitResult.Allowed(System.Int64,System.Int64,System.Int64,System.String)">
+            <summary>
+            Creates a success result indicating the request is allowed.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.RateLimitResult.Denied(System.Int64,System.Int64,System.Int64,System.String,System.String)">
+            <summary>
+            Creates a failure result indicating the rate limit has been exceeded.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.RateLimitResult.ToHeaders">
+            <summary>
+            Gets the X-RateLimit headers for HTTP responses.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Services.RedisRateLimitingService">
+            <summary>
+            Redis-based rate limiting service with atomic Lua script operations.
+            Supports hierarchical rate limiting (User → Group → Organization) for both RPM and TPM.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.RedisRateLimitingService.#ctor(StackExchange.Redis.IConnectionMultiplexer,Microsoft.Extensions.Logging.ILogger{Synaxis.InferenceGateway.Infrastructure.Services.RedisRateLimitingService})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Synaxis.InferenceGateway.Infrastructure.Services.RedisRateLimitingService"/> class.
+            </summary>
+            <param name="redis">The Redis connection multiplexer.</param>
+            <param name="logger">The logger instance.</param>
+            <exception cref="T:System.ArgumentNullException">Thrown when redis or logger is null.</exception>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.RedisRateLimitingService.CheckRateLimitAsync(System.String,System.Int32,System.TimeSpan,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Checks rate limit for a single key using atomic Lua script.
+            </summary>
+            <param name="key">The rate limit key.</param>
+            <param name="limit">The maximum number of requests/tokens allowed.</param>
+            <param name="window">The time window for rate limiting.</param>
+            <param name="increment">The amount to increment (default is 1 for request counting).</param>
+            <param name="cancellationToken">Cancellation token.</param>
+            <returns>A <see cref="T:Synaxis.InferenceGateway.Infrastructure.Services.RateLimitResult"/> indicating whether the request is allowed.</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.RedisRateLimitingService.CheckHierarchicalRateLimitAsync(System.Guid,System.Nullable{System.Guid},System.Guid,Synaxis.InferenceGateway.Infrastructure.Services.RateLimitConfig,System.Threading.CancellationToken)">
+            <summary>
+            Checks hierarchical rate limits: User → Group → Organization.
+            Each level is checked independently, and the most restrictive limit applies.
+            </summary>
+            <param name="userId">The user ID.</param>
+            <param name="groupId">The optional group ID.</param>
+            <param name="organizationId">The organization ID.</param>
+            <param name="config">The rate limit configuration with limits for each level.</param>
+            <param name="cancellationToken">Cancellation token.</param>
+            <returns>A <see cref="T:Synaxis.InferenceGateway.Infrastructure.Services.RateLimitResult"/> from the most restrictive level that denies the request, or allowed if all pass.</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.RedisRateLimitingService.IncrementTokenUsageAsync(System.String,System.Int32,System.TimeSpan,System.Threading.CancellationToken)">
+            <summary>
+            Increments token usage after a request completes.
+            This is separate from the pre-request check to handle actual token counts.
+            </summary>
+            <param name="key">The rate limit key (should match the key used in CheckRateLimitAsync).</param>
+            <param name="tokenCount">The number of tokens to add.</param>
+            <param name="window">The time window for rate limiting.</param>
+            <param name="cancellationToken">Cancellation token.</param>
+            <returns>The updated token count.</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.RedisRateLimitingService.IncrementHierarchicalTokenUsageAsync(System.Guid,System.Nullable{System.Guid},System.Guid,System.Int32,System.TimeSpan,System.Threading.CancellationToken)">
+            <summary>
+            Increments token usage for all hierarchical levels after a request completes.
+            </summary>
+            <param name="userId">The user ID.</param>
+            <param name="groupId">The optional group ID.</param>
+            <param name="organizationId">The organization ID.</param>
+            <param name="tokenCount">The number of tokens to add.</param>
+            <param name="window">The time window for rate limiting.</param>
+            <param name="cancellationToken">Cancellation token.</param>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.RedisRateLimitingService.GetCurrentUsageAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Gets current usage for a specific rate limit key.
+            </summary>
+            <param name="key">The rate limit key.</param>
+            <param name="cancellationToken">Cancellation token.</param>
+            <returns>The current usage count, or 0 if not found.</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.RedisRateLimitingService.ResetRateLimitAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Resets rate limit for a specific key (useful for testing or manual overrides).
+            </summary>
+            <param name="key">The rate limit key to reset.</param>
+            <param name="cancellationToken">Cancellation token.</param>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.RedisRateLimitingService.BuildKey(System.String,System.String,System.String)">
+            <summary>
+            Builds a Redis key for rate limiting with proper namespacing.
+            </summary>
+            <param name="scope">The scope (user, group, org).</param>
+            <param name="id">The identifier.</param>
+            <param name="type">The type (rpm or tpm).</param>
+            <returns>A properly formatted Redis key.</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.RedisRateLimitingService.CheckWithMetadataAsync(System.String,System.Int32,System.TimeSpan,System.String,System.String,System.Threading.CancellationToken,System.Int32)">
+            <summary>
+            Helper method to check rate limit and attach metadata.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Services.TenantContext">
+            <summary>
+            Implementation of tenant context that stores request-scoped tenant information.
+            This is registered as scoped service and populated by TenantResolutionMiddleware.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Services.TenantContext.OrganizationId">
+            <inheritdoc/>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Services.TenantContext.UserId">
+            <inheritdoc/>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Services.TenantContext.ApiKeyId">
+            <inheritdoc/>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Services.TenantContext.IsApiKeyAuthenticated">
+            <inheritdoc/>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Services.TenantContext.IsJwtAuthenticated">
+            <inheritdoc/>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Services.TenantContext.Scopes">
+            <inheritdoc/>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Services.TenantContext.RateLimitRpm">
+            <inheritdoc/>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Services.TenantContext.RateLimitTpm">
+            <inheritdoc/>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.TenantContext.SetApiKeyContext(System.Guid,System.Guid,System.String[],System.Nullable{System.Int32},System.Nullable{System.Int32})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.TenantContext.SetJwtContext(System.Guid,System.Guid,System.String[])">
+            <inheritdoc/>
+        </member>
+    </members>
+</doc>

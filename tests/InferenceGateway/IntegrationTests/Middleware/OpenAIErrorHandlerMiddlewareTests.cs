@@ -54,9 +54,9 @@ public class OpenAIErrorHandlerMiddlewareTests
 
         var responseBody = await GetResponseBody(context);
         Assert.False(string.IsNullOrEmpty(responseBody), "Response body should not be empty");
-        
+
         var errorResponse = JsonSerializer.Deserialize<ErrorResponse>(responseBody, _jsonOptions);
-        
+
         Assert.NotNull(errorResponse);
         Assert.NotNull(errorResponse.Error);
         Assert.Equal("Invalid parameter", errorResponse.Error.Message);
@@ -81,7 +81,7 @@ public class OpenAIErrorHandlerMiddlewareTests
 
         var responseBody = await GetResponseBody(context);
         var errorResponse = JsonSerializer.Deserialize<ErrorResponse>(responseBody, _jsonOptions);
-        
+
         Assert.NotNull(errorResponse);
         Assert.NotNull(errorResponse.Error);
         Assert.Equal("Something went wrong", errorResponse.Error.Message);
@@ -107,7 +107,7 @@ public class OpenAIErrorHandlerMiddlewareTests
 
         var responseBody = await GetResponseBody(context);
         var errorResponse = JsonSerializer.Deserialize<AggregateErrorResponse>(responseBody, _jsonOptions);
-        
+
         Assert.NotNull(errorResponse);
         Assert.NotNull(errorResponse.Error);
         Assert.Contains("Routing failed", errorResponse.Error.Message);

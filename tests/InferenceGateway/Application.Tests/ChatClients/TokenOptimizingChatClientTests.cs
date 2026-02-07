@@ -72,11 +72,11 @@ public class TokenOptimizingChatClientTests : TestBase
         // Assert
         Assert.NotNull(result);
         Assert.Equal("Inner client response", result.Messages.First().Text);
-        
+
         _innerClientMock.Verify(
             x => x.GetResponseAsync(messages, options, It.IsAny<CancellationToken>()),
             Times.Once);
-        
+
         _cacheServiceMock.Verify(
             x => x.TryGetCachedAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<double>(), It.IsAny<CancellationToken>()),
             Times.Never);
@@ -88,7 +88,7 @@ public class TokenOptimizingChatClientTests : TestBase
         // Arrange
         var messages = new[] { new ChatMessage(ChatRole.User, "What is 2+2?") };
         var options = new ChatOptions { ModelId = "gpt-4", Temperature = 0.0 };
-        
+
         var cachedResult = new CacheResult
         {
             IsHit = true,
@@ -124,7 +124,7 @@ public class TokenOptimizingChatClientTests : TestBase
         Assert.NotNull(result);
         Assert.Equal("4", result.Messages.First().Text);
         Assert.True(result.AdditionalProperties?.ContainsKey("cache_hit"));
-        
+
         _innerClientMock.Verify(
             x => x.GetResponseAsync(It.IsAny<IEnumerable<ChatMessage>>(), It.IsAny<ChatOptions>(), It.IsAny<CancellationToken>()),
             Times.Never);
@@ -136,7 +136,7 @@ public class TokenOptimizingChatClientTests : TestBase
         // Arrange
         var messages = new[] { new ChatMessage(ChatRole.User, "Hello") };
         var options = new ChatOptions { ModelId = "gpt-4" };
-        
+
         var cacheMissResult = new CacheResult
         {
             IsHit = false,
@@ -167,7 +167,7 @@ public class TokenOptimizingChatClientTests : TestBase
         // Assert
         Assert.NotNull(result);
         Assert.Equal("Inner client response", result.Messages.First().Text);
-        
+
         _innerClientMock.Verify(
             x => x.GetResponseAsync(messages, options, It.IsAny<CancellationToken>()),
             Times.Once);
@@ -236,8 +236,8 @@ public class TokenOptimizingChatClientTests : TestBase
 
         _conversationStoreMock
             .Setup(x => x.CompressHistoryAsync(It.IsAny<IEnumerable<ChatMessage>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] 
-            { 
+            .ReturnsAsync(new[]
+            {
                 new ChatMessage(ChatRole.System, "Compressed conversation history"),
                 messages[^1] // Keep last message
             });
@@ -247,7 +247,7 @@ public class TokenOptimizingChatClientTests : TestBase
 
         // Assert
         Assert.NotNull(result);
-        
+
         _conversationStoreMock.Verify(
             x => x.CompressHistoryAsync(It.IsAny<IEnumerable<ChatMessage>>(), It.IsAny<CancellationToken>()),
             Times.Once);
@@ -284,7 +284,7 @@ public class TokenOptimizingChatClientTests : TestBase
         Assert.NotNull(result);
         Assert.Equal("Deduplicated response", result.Messages.First().Text);
         Assert.True(result.AdditionalProperties?.ContainsKey("deduplicated"));
-        
+
         _innerClientMock.Verify(
             x => x.GetResponseAsync(It.IsAny<IEnumerable<ChatMessage>>(), It.IsAny<ChatOptions>(), It.IsAny<CancellationToken>()),
             Times.Never);
@@ -318,7 +318,7 @@ public class TokenOptimizingChatClientTests : TestBase
             .ThrowsAsync(new Exception("API Error"));
 
         // Act & Assert
-        await Assert.ThrowsAsync<Exception>(async () => 
+        await Assert.ThrowsAsync<Exception>(async () =>
             await _client.GetResponseAsync(messages, options));
 
         _cacheServiceMock.Verify(
@@ -346,7 +346,7 @@ public class TokenOptimizingChatClientTests : TestBase
 
         // Assert
         Assert.NotNull(result);
-        
+
         _conversationStoreMock.Verify(
             x => x.AddMessageAsync("session-123", It.IsAny<ChatMessage>(), It.IsAny<CancellationToken>()),
             Times.AtLeastOnce);
@@ -388,7 +388,7 @@ public class TokenOptimizingChatClientTests : TestBase
 
         // Assert
         Assert.NotNull(result);
-        
+
         _sessionStoreMock.Verify(
             x => x.SetPreferredProviderAsync("session-123", "openai", It.IsAny<CancellationToken>()),
             Times.Once);
@@ -431,7 +431,7 @@ public class TokenOptimizingChatClientTests : TestBase
 
         // Assert
         Assert.Equal(2, results.Count);
-        
+
         // Streaming should not check cache
         _cacheServiceMock.Verify(
             x => x.TryGetCachedAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<double>(), It.IsAny<CancellationToken>()),
@@ -483,7 +483,7 @@ public class TokenOptimizingChatClientTests : TestBase
 
         // Assert
         Assert.NotEmpty(results);
-        
+
         _sessionStoreMock.Verify(
             x => x.GetPreferredProviderAsync("session-123", It.IsAny<CancellationToken>()),
             Times.Once);
@@ -526,7 +526,7 @@ public class TokenOptimizingChatClientTests : TestBase
 
         // Assert
         Assert.NotEmpty(results);
-        
+
         _conversationStoreMock.Verify(
             x => x.AddMessageAsync("session-123", It.IsAny<ChatMessage>(), It.IsAny<CancellationToken>()),
             Times.AtLeastOnce);
@@ -749,12 +749,12 @@ public class TokenOptimizingChatClient : IChatClient
     }
 
     public ChatClientMetadata Metadata => _innerClient.Metadata;
-    
+
     public object? GetService(Type serviceType, object? serviceKey = null)
     {
         return _innerClient.GetService(serviceType, serviceKey);
     }
-    
+
     public void Dispose() => _innerClient.Dispose();
 }
 

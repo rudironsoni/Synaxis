@@ -14,14 +14,14 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
         private readonly Dictionary<string, ChatCompletionResponse> _chatResponses;
         private readonly Dictionary<string, LegacyCompletionResponse> _legacyResponses;
         private readonly List<ModelInfo> _availableModels;
-        
+
         public MockProviderResponses()
         {
             _chatResponses = CreateChatResponses();
             _legacyResponses = CreateLegacyResponses();
             _availableModels = CreateAvailableModels();
         }
-        
+
         public ChatCompletionResponse GetChatCompletionResponse(string model)
         {
             // Return specific model response if exists, otherwise return generic response
@@ -37,11 +37,11 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                     Usage = response.Usage
                 };
             }
-            
+
             // Return generic mock response
             return CreateGenericChatResponse(model);
         }
-        
+
         public LegacyCompletionResponse GetLegacyCompletionResponse(string model)
         {
             // Return specific model response if exists, otherwise return generic response
@@ -57,11 +57,11 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                     Usage = response.Usage
                 };
             }
-            
+
             // Return generic mock response
             return CreateGenericLegacyResponse(model);
         }
-        
+
         public object GetAvailableModels()
         {
             return new
@@ -70,12 +70,12 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                 data = _availableModels
             };
         }
-        
+
         private static string GenerateId()
         {
             return Guid.NewGuid().ToString("N")[..8];
         }
-        
+
         private static ChatCompletionResponse CreateGenericChatResponse(string model)
         {
             return new ChatCompletionResponse
@@ -105,7 +105,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                 }
             };
         }
-        
+
         private static LegacyCompletionResponse CreateGenericLegacyResponse(string model)
         {
             return new LegacyCompletionResponse
@@ -131,7 +131,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                 }
             };
         }
-        
+
         private Dictionary<string, ChatCompletionResponse> CreateChatResponses()
         {
             return new Dictionary<string, ChatCompletionResponse>
@@ -217,7 +217,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                 }
             };
         }
-        
+
         private Dictionary<string, LegacyCompletionResponse> CreateLegacyResponses()
         {
             return new Dictionary<string, LegacyCompletionResponse>
@@ -268,7 +268,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                 }
             };
         }
-        
+
         private List<ModelInfo> CreateAvailableModels()
         {
             return new List<ModelInfo>
@@ -304,7 +304,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
             };
         }
     }
-    
+
     // DTOs for mock responses
     public class ChatCompletionResponse
     {
@@ -315,27 +315,27 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
         public List<ChatCompletionChoice> Choices { get; set; } = new();
         public ChatCompletionUsage? Usage { get; set; }
     }
-    
+
     public class ChatCompletionChoice
     {
         public int Index { get; set; }
         public ChatCompletionMessageDto Message { get; set; } = new();
         public string FinishReason { get; set; } = string.Empty;
     }
-    
+
     public class ChatCompletionMessageDto
     {
         public string Role { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
     }
-    
+
     public class ChatCompletionUsage
     {
         public int PromptTokens { get; set; }
         public int CompletionTokens { get; set; }
         public int TotalTokens { get; set; }
     }
-    
+
     public class LegacyCompletionResponse
     {
         public string Id { get; set; } = string.Empty;
@@ -345,21 +345,21 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
         public List<LegacyCompletionChoice> Choices { get; set; } = new();
         public LegacyUsage? Usage { get; set; }
     }
-    
+
     public class LegacyCompletionChoice
     {
         public int Index { get; set; }
         public string Text { get; set; } = string.Empty;
         public string FinishReason { get; set; } = string.Empty;
     }
-    
+
     public class LegacyUsage
     {
         public int PromptTokens { get; set; }
         public int CompletionTokens { get; set; }
         public int TotalTokens { get; set; }
     }
-    
+
     public class ModelInfo
     {
         public string Id { get; set; } = string.Empty;

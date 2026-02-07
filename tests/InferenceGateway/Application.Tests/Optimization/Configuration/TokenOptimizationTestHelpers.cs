@@ -111,7 +111,7 @@ public class TokenOptimizationConfigurationResolver : ITokenOptimizationConfigur
         // Apply tenant overrides
         var tenantConfig = await context.TenantTokenOptimizationConfigs
             .FirstOrDefaultAsync(t => t.TenantId == tenantId);
-        
+
         if (tenantConfig != null)
         {
             ApplyTenantOverrides(config, tenantConfig);
@@ -120,7 +120,7 @@ public class TokenOptimizationConfigurationResolver : ITokenOptimizationConfigur
         // Apply user overrides (highest priority)
         var userConfig = await context.UserTokenOptimizationConfigs
             .FirstOrDefaultAsync(u => u.UserId == userId);
-        
+
         if (userConfig != null)
         {
             ApplyUserOverrides(config, userConfig);
@@ -136,7 +136,7 @@ public class TokenOptimizationConfigurationResolver : ITokenOptimizationConfigur
         var config = CloneConfig(_systemDefaults);
         var tenantConfig = await context.TenantTokenOptimizationConfigs
             .FirstOrDefaultAsync(t => t.TenantId == tenantId);
-        
+
         if (tenantConfig != null)
         {
             ApplyTenantOverrides(config, tenantConfig);
@@ -152,7 +152,7 @@ public class TokenOptimizationConfigurationResolver : ITokenOptimizationConfigur
         var config = CloneConfig(_systemDefaults);
         var userConfig = await context.UserTokenOptimizationConfigs
             .FirstOrDefaultAsync(u => u.UserId == userId);
-        
+
         if (userConfig != null)
         {
             ApplyUserOverrides(config, userConfig);
@@ -170,13 +170,13 @@ public class TokenOptimizationConfigurationResolver : ITokenOptimizationConfigur
     {
         if (tenantConfig.SimilarityThreshold.HasValue)
             config.SimilarityThreshold = tenantConfig.SimilarityThreshold.Value;
-        
+
         if (tenantConfig.CacheTtlSeconds.HasValue)
             config.CacheTtlSeconds = tenantConfig.CacheTtlSeconds.Value;
-        
+
         if (!string.IsNullOrEmpty(tenantConfig.CompressionStrategy))
             config.CompressionStrategy = tenantConfig.CompressionStrategy;
-        
+
         if (tenantConfig.EnableCaching.HasValue)
             config.EnableCaching = tenantConfig.EnableCaching.Value;
     }
@@ -185,10 +185,10 @@ public class TokenOptimizationConfigurationResolver : ITokenOptimizationConfigur
     {
         if (userConfig.SimilarityThreshold.HasValue)
             config.SimilarityThreshold = userConfig.SimilarityThreshold.Value;
-        
+
         if (userConfig.CacheTtlSeconds.HasValue)
             config.CacheTtlSeconds = userConfig.CacheTtlSeconds.Value;
-        
+
         if (userConfig.EnableCaching.HasValue)
             config.EnableCaching = userConfig.EnableCaching.Value;
     }
@@ -233,7 +233,7 @@ public class TokenOptimizationConfigValidator : ITokenOptimizationConfigValidato
         }
 
         // Validate CacheTtlSeconds range
-        if (config.CacheTtlSeconds.HasValue && 
+        if (config.CacheTtlSeconds.HasValue &&
             (config.CacheTtlSeconds < 60 || config.CacheTtlSeconds > 86400))
         {
             errors.Add("CacheTtlSeconds must be between 60 and 86400");
@@ -241,8 +241,8 @@ public class TokenOptimizationConfigValidator : ITokenOptimizationConfigValidato
 
         // Validate CompressionStrategy
         if (!string.IsNullOrEmpty(config.CompressionStrategy) &&
-            config.CompressionStrategy != "gzip" && 
-            config.CompressionStrategy != "brotli" && 
+            config.CompressionStrategy != "gzip" &&
+            config.CompressionStrategy != "brotli" &&
             config.CompressionStrategy != "none")
         {
             errors.Add("CompressionStrategy must be one of: gzip, brotli, none");

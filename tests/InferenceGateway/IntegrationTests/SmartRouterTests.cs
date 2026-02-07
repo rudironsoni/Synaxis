@@ -35,7 +35,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             _mockHealthStore = new Mock<IHealthStore>();
             _mockQuotaTracker = new Mock<IQuotaTracker>();
             _mockLogger = new Mock<ILogger<SmartRouter>>();
-            
+
             _smartRouter = new SmartRouter(
                 _mockModelResolver.Object,
                 _mockCostService.Object,
@@ -53,8 +53,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var streaming = false;
             var cancellationToken = CancellationToken.None;
 
-            var resolutionResult = new ResolutionResult(modelId, 
-                new CanonicalModelId(modelId, modelId), 
+            var resolutionResult = new ResolutionResult(modelId,
+                new CanonicalModelId(modelId, modelId),
                 new List<ProviderConfig>());
 
             _mockModelResolver
@@ -62,9 +62,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 .ReturnsAsync(resolutionResult);
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() => 
+            var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
                 _smartRouter.GetCandidatesAsync(modelId, streaming, cancellationToken));
-            
+
             Assert.Contains("No providers available for model 'unknown-model'", exception.Message);
             _mockLogger.Verify(
                 x => x.Log(
@@ -90,8 +90,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 new ProviderConfig { Key = "unhealthy-provider", Tier = 1 }
             };
 
-            var resolutionResult = new ResolutionResult(modelId, 
-                new CanonicalModelId(modelId, modelId), 
+            var resolutionResult = new ResolutionResult(modelId,
+                new CanonicalModelId(modelId, modelId),
                 candidates);
 
             _mockModelResolver
@@ -108,7 +108,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             _mockQuotaTracker
                 .Setup(x => x.CheckQuotaAsync(It.IsAny<string>(), cancellationToken))
                 .ReturnsAsync(true);
-            
+
             _mockCostService
                 .Setup(x => x.GetCostAsync(It.IsAny<string>(), modelId, cancellationToken))
                 .ReturnsAsync(new ModelCost { Provider = "healthy-provider", Model = modelId, CostPerToken = 0.001m });
@@ -143,8 +143,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 new ProviderConfig { Key = "exceeded-quota-provider", Tier = 1 }
             };
 
-            var resolutionResult = new ResolutionResult(modelId, 
-                new CanonicalModelId(modelId, modelId), 
+            var resolutionResult = new ResolutionResult(modelId,
+                new CanonicalModelId(modelId, modelId),
                 candidates);
 
             _mockModelResolver
@@ -154,7 +154,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             _mockHealthStore
                 .Setup(x => x.IsHealthyAsync(It.IsAny<string>(), cancellationToken))
                 .ReturnsAsync(true);
-            
+
             _mockQuotaTracker
                 .Setup(x => x.CheckQuotaAsync("within-quota-provider", cancellationToken))
                 .ReturnsAsync(true);
@@ -198,8 +198,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 new ProviderConfig { Key = "paid-tier2", Tier = 2 }
             };
 
-            var resolutionResult = new ResolutionResult(modelId, 
-                new CanonicalModelId(modelId, modelId), 
+            var resolutionResult = new ResolutionResult(modelId,
+                new CanonicalModelId(modelId, modelId),
                 candidates);
 
             _mockModelResolver
@@ -231,19 +231,19 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             // Assert - should be sorted: free first (by cost), then paid (by cost), then by tier
             Assert.Equal(4, result.Count);
-            
+
             // First two should be free providers
             Assert.True(result[0].IsFree);
             Assert.True(result[1].IsFree);
-            
+
             // Within free providers, ordered by tier
             Assert.Equal(1, result[0].Config.Tier);
             Assert.Equal(2, result[1].Config.Tier);
-            
+
             // Last two should be paid providers
             Assert.False(result[2].IsFree);
             Assert.False(result[3].IsFree);
-            
+
             // Paid providers ordered by cost
             Assert.Equal(0.001m, result[2].CostPerToken);
             Assert.Equal(0.002m, result[3].CostPerToken);
@@ -257,8 +257,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var streaming = true;
             var cancellationToken = CancellationToken.None;
 
-            var resolutionResult = new ResolutionResult(modelId, 
-                new CanonicalModelId(modelId, modelId), 
+            var resolutionResult = new ResolutionResult(modelId,
+                new CanonicalModelId(modelId, modelId),
                 new List<ProviderConfig>());
 
             _mockModelResolver
@@ -266,14 +266,14 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 .ReturnsAsync(resolutionResult);
 
             // Act
-            await Assert.ThrowsAsync<ArgumentException>(() => 
+            await Assert.ThrowsAsync<ArgumentException>(() =>
                 _smartRouter.GetCandidatesAsync(modelId, streaming, cancellationToken));
 
             // Assert - Verify that capabilities were passed through
             _mockModelResolver.Verify(
                 x => x.ResolveAsync(
-                    modelId, 
-                    EndpointKind.ChatCompletions, 
+                    modelId,
+                    EndpointKind.ChatCompletions,
                     It.Is<RequiredCapabilities>(caps => caps.Streaming == true)),
                 Times.Once);
         }
@@ -291,8 +291,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 new ProviderConfig { Key = "provider-without-cost", Tier = 0 }
             };
 
-            var resolutionResult = new ResolutionResult(modelId, 
-                new CanonicalModelId(modelId, modelId), 
+            var resolutionResult = new ResolutionResult(modelId,
+                new CanonicalModelId(modelId, modelId),
                 candidates);
 
             _mockModelResolver

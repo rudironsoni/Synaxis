@@ -1,17 +1,21 @@
-using System;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
+// <copyright file="GitHubAuthStrategy.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
 namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
 {
+    using System;
+    using System.Net.Http;
+    using System.Net.Http.Headers;
+    using System.Text.Json;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Microsoft.Extensions.Logging;
+    using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
+
     public class GitHubAuthStrategy : IAuthStrategy
     {
-        public event EventHandler<IdentityAccount>? AccountAuthenticated;
+        public event EventHandler<AccountAuthenticatedEventArgs>? AccountAuthenticated;
         public const string ClientId = "178c6fc778ccc68e1d6a";
 
         private readonly HttpClient _http;
@@ -21,9 +25,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
 
         public GitHubAuthStrategy(HttpClient http, DeviceFlowService deviceFlowService, ILogger<GitHubAuthStrategy> logger)
         {
-            _http = http ?? throw new ArgumentNullException(nameof(http));
-            _deviceFlowService = deviceFlowService ?? throw new ArgumentNullException(nameof(deviceFlowService));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._http = http ?? throw new ArgumentNullException(nameof(http));
+            this._deviceFlowService = deviceFlowService ?? throw new ArgumentNullException(nameof(deviceFlowService));
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async Task<AuthResult> InitiateFlowAsync(CancellationToken ct)
@@ -119,13 +123,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
                     RefreshToken = token.RefreshToken
                 };
 
-                if (token.ExpiresInSeconds.HasValue)
+                if (token.ExpiresInthis.Seconds.HasValue)
                     acc.ExpiresAt = DateTimeOffset.UtcNow.AddSeconds(token.ExpiresInSeconds.Value);
 
                 // Notify subscribers that an account was authenticated
                 try
                 {
-                    AccountAuthenticated?.Invoke(this, acc);
+                    AccountAuthenticated?.Invoke(this, new AccountAuthenticatedEventArgs(acc));
                 }
                 catch (Exception ex)
                 {

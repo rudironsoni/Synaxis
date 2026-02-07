@@ -51,13 +51,13 @@ public abstract class TestBase
     protected Mock<IChatClient> CreateMockStreamingChatClient(params string[] responseChunks)
     {
         var mock = new Mock<IChatClient>();
-        
+
         mock.Setup(x => x.GetStreamingResponseAsync(
             It.IsAny<IEnumerable<ChatMessage>>(),
             It.IsAny<ChatOptions?>(),
             It.IsAny<CancellationToken>()))
             .Returns(GenerateStreamingResponse(responseChunks));
-        
+
         return mock;
     }
 
@@ -76,7 +76,7 @@ public abstract class TestBase
     protected Mock<IProviderRegistry> CreateMockProviderRegistry(Dictionary<string, ProviderConfig>? providers = null)
     {
         var mock = new Mock<IProviderRegistry>();
-        
+
         providers ??= new Dictionary<string, ProviderConfig>
         {
             ["groq"] = new ProviderConfig { Type = "groq", Tier = 0, Models = ["llama-3.1-70b-versatile"] },
@@ -145,9 +145,9 @@ public abstract class TestBase
         mock.Setup(x => x.IsHealthyAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
         mock.Setup(x => x.RecordUsageAsync(
-            It.IsAny<string>(), 
-            It.IsAny<long>(), 
-            It.IsAny<long>(), 
+            It.IsAny<string>(),
+            It.IsAny<long>(),
+            It.IsAny<long>(),
             It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
         return mock;

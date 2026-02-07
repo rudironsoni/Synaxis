@@ -105,10 +105,10 @@ public class ApiKeyServiceTests : IAsyncLifetime
         var storedKey = await _dbContext.ApiKeys.FindAsync(response.Id);
         storedKey.Should().NotBeNull();
         storedKey!.KeyHash.Should().NotBeNullOrEmpty();
-        
+
         // BCrypt hashes start with $2a$, $2b$, or $2y$
         storedKey.KeyHash.Should().MatchRegex(@"^\$2[aby]\$\d{2}\$");
-        
+
         // BCrypt hash should be different from the plain key
         storedKey.KeyHash.Should().NotBe(response.ApiKey);
     }
@@ -131,7 +131,7 @@ public class ApiKeyServiceTests : IAsyncLifetime
         storedKey.Should().NotBeNull();
         storedKey!.KeyPrefix.Should().Be(response.Prefix);
         storedKey.KeyPrefix.Should().StartWith("synaxis_");
-        
+
         // Prefix should be extractable from the full key
         response.ApiKey.Should().StartWith("synaxis_");
     }
@@ -296,7 +296,7 @@ public class ApiKeyServiceTests : IAsyncLifetime
             Name = "Test API Key"
         };
         var generated = await _apiKeyService.GenerateApiKeyAsync(request);
-        
+
         // Manually deactivate the key
         var key = await _dbContext.ApiKeys.FindAsync(generated.Id);
         key!.IsActive = false;
@@ -336,7 +336,7 @@ public class ApiKeyServiceTests : IAsyncLifetime
             Name = "Test API Key"
         };
         var generated = await _apiKeyService.GenerateApiKeyAsync(request);
-        
+
         // Create a key with same prefix but different secret
         var wrongKey = generated.ApiKey.Substring(0, generated.Prefix.Length + 1) + "wrongsecretpart";
 
@@ -430,7 +430,7 @@ public class ApiKeyServiceTests : IAsyncLifetime
             Name = "Test API Key"
         };
         var generated = await _apiKeyService.GenerateApiKeyAsync(request);
-        
+
         // Revoke once
         await _apiKeyService.RevokeApiKeyAsync(generated.Id, "First revocation");
 
@@ -441,7 +441,7 @@ public class ApiKeyServiceTests : IAsyncLifetime
 
         // Assert
         result.Should().BeFalse();
-        
+
         var key = await _dbContext.ApiKeys.FindAsync(generated.Id);
         key!.RevocationReason.Should().Be("First revocation"); // Original reason preserved
     }
@@ -481,13 +481,13 @@ public class ApiKeyServiceTests : IAsyncLifetime
     {
         // Arrange
         var orgId = Guid.NewGuid();
-        
+
         await _apiKeyService.GenerateApiKeyAsync(new GenerateApiKeyRequest
         {
             OrganizationId = orgId,
             Name = "Key 1"
         });
-        
+
         await _apiKeyService.GenerateApiKeyAsync(new GenerateApiKeyRequest
         {
             OrganizationId = orgId,
@@ -507,19 +507,19 @@ public class ApiKeyServiceTests : IAsyncLifetime
     {
         // Arrange
         var orgId = Guid.NewGuid();
-        
+
         var key1 = await _apiKeyService.GenerateApiKeyAsync(new GenerateApiKeyRequest
         {
             OrganizationId = orgId,
             Name = "Active Key"
         });
-        
+
         var key2 = await _apiKeyService.GenerateApiKeyAsync(new GenerateApiKeyRequest
         {
             OrganizationId = orgId,
             Name = "Revoked Key"
         });
-        
+
         await _apiKeyService.RevokeApiKeyAsync(key2.Id, "Test");
 
         // Act
@@ -535,19 +535,19 @@ public class ApiKeyServiceTests : IAsyncLifetime
     {
         // Arrange
         var orgId = Guid.NewGuid();
-        
+
         var key1 = await _apiKeyService.GenerateApiKeyAsync(new GenerateApiKeyRequest
         {
             OrganizationId = orgId,
             Name = "Active Key"
         });
-        
+
         var key2 = await _apiKeyService.GenerateApiKeyAsync(new GenerateApiKeyRequest
         {
             OrganizationId = orgId,
             Name = "Revoked Key"
         });
-        
+
         await _apiKeyService.RevokeApiKeyAsync(key2.Id, "Test");
 
         // Act
@@ -562,7 +562,7 @@ public class ApiKeyServiceTests : IAsyncLifetime
     {
         // Arrange
         var orgId = Guid.NewGuid();
-        
+
         await _apiKeyService.GenerateApiKeyAsync(new GenerateApiKeyRequest
         {
             OrganizationId = orgId,
@@ -592,7 +592,7 @@ public class ApiKeyServiceTests : IAsyncLifetime
             Name = "Test API Key"
         };
         var generated = await _apiKeyService.GenerateApiKeyAsync(request);
-        
+
         var beforeUpdate = DateTime.UtcNow;
         await Task.Delay(100); // Small delay to ensure timestamp difference
 

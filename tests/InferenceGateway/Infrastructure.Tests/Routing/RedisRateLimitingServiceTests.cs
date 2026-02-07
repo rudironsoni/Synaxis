@@ -126,8 +126,8 @@ public class RedisRateLimitingServiceTests
             .Setup(db => db.ScriptEvaluateAsync(
                 It.IsAny<string>(),
                 It.Is<RedisKey[]>(keys => keys[0] == key),
-                It.Is<RedisValue[]>(args => (int)args[0] == limit && 
-                                            (int)args[1] == 60 && 
+                It.Is<RedisValue[]>(args => (int)args[0] == limit &&
+                                            (int)args[1] == 60 &&
                                             (int)args[2] == increment),
                 It.IsAny<CommandFlags>()))
             .ReturnsAsync(RedisResult.Create(luaResult));
@@ -202,7 +202,7 @@ public class RedisRateLimitingServiceTests
         var luaResult = new RedisValue[] { 1, 60 };
         _mockDatabase
             .Setup(db => db.ScriptEvaluateAsync(
-                It.Is<string>(script => script.Contains("redis.call('GET', key)") && 
+                It.Is<string>(script => script.Contains("redis.call('GET', key)") &&
                                         script.Contains("redis.call('INCRBY', key, increment)")),
                 It.IsAny<RedisKey[]>(),
                 It.IsAny<RedisValue[]>(),
@@ -449,7 +449,7 @@ public class RedisRateLimitingServiceTests
         // Assert
         result.Should().NotBeNull();
         result.IsAllowed.Should().BeTrue();
-        
+
         // Should only check User and Organization (not Group)
         _mockDatabase.Verify(db => db.ScriptEvaluateAsync(
             It.IsAny<string>(),

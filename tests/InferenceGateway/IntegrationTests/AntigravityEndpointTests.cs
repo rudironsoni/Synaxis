@@ -22,16 +22,16 @@ public class AntigravityEndpointTests : IClassFixture<SynaxisWebApplicationFacto
     {
         _factory = factory;
         _factory.OutputHelper = output;
-        
+
         // We need to override the IAntigravityAuthManager to avoid real file I/O or Google calls during integration tests
         _client = _factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureTestServices(services =>
             {
                 var mockAuth = new Mock<IAntigravityAuthManager>();
-                mockAuth.Setup(x => x.ListAccounts()).Returns(new List<AccountInfo> 
-                { 
-                    new AccountInfo("test@example.com", true) 
+                mockAuth.Setup(x => x.ListAccounts()).Returns(new List<AccountInfo>
+                {
+                    new AccountInfo("test@example.com", true)
                 });
                 mockAuth.Setup(x => x.StartAuthFlow(It.IsAny<string>())).Returns("https://accounts.google.com/o/oauth2/auth?mock=true");
                 mockAuth.Setup(x => x.CompleteAuthFlowAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>())).Returns(Task.CompletedTask);
@@ -70,7 +70,7 @@ public class AntigravityEndpointTests : IClassFixture<SynaxisWebApplicationFacto
         var request = new { Code = "123", State = "state-abc", RedirectUrl = "http://localhost/cb" };
         var response = await _client.PostAsJsonAsync("/antigravity/auth/complete", request);
         response.EnsureSuccessStatusCode();
-        
+
         var result = await response.Content.ReadFromJsonAsync<JsonElement>();
         Assert.Equal("Authentication successful. Account added.", result.GetProperty("message").GetString());
     }

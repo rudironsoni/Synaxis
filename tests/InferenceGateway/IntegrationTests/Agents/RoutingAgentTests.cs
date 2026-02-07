@@ -42,8 +42,8 @@ public class RoutingAgentTests
         // Arrange
         var messages = new List<ChatMessage> { new(ChatRole.User, "hello") };
         var modelId = "requested-model";
-        var openAIRequest = new OpenAIRequest 
-        { 
+        var openAIRequest = new OpenAIRequest
+        {
             Model = modelId,
             Messages = new List<OpenAIMessage> { new OpenAIMessage { Role = "user", Content = "hello" } }
         };

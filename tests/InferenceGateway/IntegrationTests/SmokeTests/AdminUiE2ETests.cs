@@ -61,7 +61,7 @@ public class AdminUiE2ETests : IAsyncLifetime
     public async Task DisposeAsync()
     {
         if (!_serverAvailable) return;
-        
+
         await _context.CloseAsync();
         await _browser.CloseAsync();
         _playwright.Dispose();

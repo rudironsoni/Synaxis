@@ -1,12 +1,44 @@
-namespace Synaxis.InferenceGateway.Application.ControlPlane.Entities;
+// <copyright file="RoutingPolicy.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
-public sealed class RoutingPolicy
+namespace Synaxis.InferenceGateway.Application.ControlPlane.Entities
 {
-    public Guid Id { get; set; }
-    public Guid TenantId { get; set; }
-    public string PolicyJson { get; set; } = "{}";
-    public int Version { get; set; }
-    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+    using System;
 
-    public Tenant? Tenant { get; set; }
+    /// <summary>
+    /// Represents a routing policy configuration.
+    /// </summary>
+    public sealed class RoutingPolicy
+    {
+        /// <summary>
+        /// Gets or sets the routing policy ID.
+        /// </summary>
+        public Guid Id { get; set; }
+
+        /// <summary>
+        /// Gets or sets the tenant ID.
+        /// </summary>
+        public Guid TenantId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the policy JSON.
+        /// </summary>
+        public string PolicyJson { get; set; } = "{}";
+
+        /// <summary>
+        /// Gets or sets the version.
+        /// </summary>
+        public int Version { get; set; }
+
+        /// <summary>
+        /// Gets or sets the creation timestamp.
+        /// </summary>
+        public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+
+        /// <summary>
+        /// Gets or sets the tenant navigation property.
+        /// </summary>
+        public Tenant? Tenant { get; set; }
+    }
 }

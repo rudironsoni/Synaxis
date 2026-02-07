@@ -1,35 +1,54 @@
-using Microsoft.Agents.AI;
-using AgentsAI = Microsoft.Agents.AI;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.AI;
-using Microsoft.Extensions.Logging;
-using Synaxis.InferenceGateway.Application.Translation;
-using Synaxis.InferenceGateway.WebApi.Helpers;
-using Synaxis.InferenceGateway.WebApi.Middleware;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
+// <copyright file="RoutingService.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
 namespace Synaxis.InferenceGateway.WebApi.Agents
 {
-    // Scoped service that contains the routing logic and relies on constructor injection
+    using System.Collections.Generic;
+    using System.Runtime.CompilerServices;
+    using System.Text.Json;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Microsoft.Agents.AI;
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.Extensions.AI;
+    using Microsoft.Extensions.Logging;
+    using Synaxis.InferenceGateway.Application.Translation;
+    using Synaxis.InferenceGateway.WebApi.Helpers;
+    using Synaxis.InferenceGateway.WebApi.Middleware;
+    using AgentsAI = Microsoft.Agents.AI;
+
+    /// <summary>
+    /// Scoped service that contains the routing logic and relies on constructor injection.
+    /// </summary>
     public class RoutingService
     {
         private readonly IChatClient _chatClient;
         private readonly ITranslationPipeline _translator;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly ILogger<RoutingService> _logger;
 
-        public RoutingService(IChatClient chatClient, ITranslationPipeline translator, IHttpContextAccessor httpContextAccessor, ILogger<RoutingService> logger)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RoutingService"/> class.
+        /// </summary>
+        /// <param name="chatClient">The chat client.</param>
+        /// <param name="translator">The translation pipeline.</param>
+        /// <param name="httpContextAccessor">The HTTP context accessor.</param>
+        public RoutingService(IChatClient chatClient, ITranslationPipeline translator, IHttpContextAccessor httpContextAccessor)
         {
             _chatClient = chatClient;
             _translator = translator;
             _httpContextAccessor = httpContextAccessor;
-            _logger = logger;
         }
 
+        /// <summary>
+        /// Handles the request asynchronously.
+        /// </summary>
+        /// <param name="openAIRequest">The OpenAI request.</param>
+        /// <param name="messages">The chat messages.</param>
+        /// <param name="thread">The agent thread.</param>
+        /// <param name="options">The agent run options.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The agent response.</returns>
         public async Task<AgentsAI.AgentResponse> HandleAsync(OpenAIRequest openAIRequest, IEnumerable<ChatMessage> messages, AgentsAI.AgentThread? thread = null, AgentsAI.AgentRunOptions? options = null, CancellationToken cancellationToken = default)
         {
             var httpContext = _httpContextAccessor.HttpContext;
@@ -43,10 +62,10 @@ namespace Synaxis.InferenceGateway.WebApi.Agents
             var translatedRequest = _translator.TranslateRequest(canonicalRequest);
 
             // 4. Prepare Options
-            var chatOptions = new ChatOptions { ModelId = translatedRequest.Model };
+            var chatOptions = new ChatOptions { ModelId = translatedRequest.model };
 
             // 5. Execute
-            var response = await _chatClient.GetResponseAsync(translatedRequest.Messages, chatOptions, cancellationToken);
+            var response = await _chatClient.GetResponseAsync(translatedRequest.messages, chatOptions, cancellationToken);
 
             // 6. Translate Response
             var message = response.Messages.FirstOrDefault() ?? new ChatMessage(ChatRole.Assistant, "");
@@ -58,10 +77,10 @@ namespace Synaxis.InferenceGateway.WebApi.Agents
             LogRoutingContext(httpContext, openAIRequest.Model, response.AdditionalProperties);
 
             // 8. Build Agent Response
-            var agentMessage = new ChatMessage(ChatRole.Assistant, translatedResponse.Content);
-            if (translatedResponse.ToolCalls != null)
+            var agentMessage = new ChatMessage(ChatRole.Assistant, translatedResponse.content);
+            if (translatedResponse.toolCalls != null)
             {
-                foreach (var toolCall in translatedResponse.ToolCalls)
+                foreach (var toolCall in translatedResponse.toolCalls)
                 {
                     agentMessage.Contents.Add(toolCall);
                 }
@@ -70,15 +89,24 @@ namespace Synaxis.InferenceGateway.WebApi.Agents
             return new AgentsAI.AgentResponse(agentMessage);
         }
 
+        /// <summary>
+        /// Handles the streaming request asynchronously.
+        /// </summary>
+        /// <param name="openAIRequest">The OpenAI request.</param>
+        /// <param name="messages">The chat messages.</param>
+        /// <param name="thread">The agent thread.</param>
+        /// <param name="options">The agent run options.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The agent response updates.</returns>
         public async IAsyncEnumerable<AgentsAI.AgentResponseUpdate> HandleStreamingAsync(OpenAIRequest openAIRequest, IEnumerable<ChatMessage> messages, AgentsAI.AgentThread? thread = null, AgentsAI.AgentRunOptions? options = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             var httpContext = _httpContextAccessor.HttpContext;
 
             var canonicalRequest = OpenAIRequestMapper.ToCanonicalRequest(openAIRequest, messages);
             var translatedRequest = _translator.TranslateRequest(canonicalRequest);
-            var chatOptions = new ChatOptions { ModelId = translatedRequest.Model };
+            var chatOptions = new ChatOptions { ModelId = translatedRequest.model };
 
-            await foreach (var update in _chatClient.GetStreamingResponseAsync(translatedRequest.Messages, chatOptions, cancellationToken))
+            await foreach (var update in _chatClient.GetStreamingResponseAsync(translatedRequest.messages, chatOptions, cancellationToken))
             {
                 var translatedUpdate = _translator.TranslateUpdate(update);
                 yield return new AgentsAI.AgentResponseUpdate(translatedUpdate);

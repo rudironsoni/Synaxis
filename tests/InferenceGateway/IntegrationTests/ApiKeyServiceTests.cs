@@ -35,15 +35,15 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             Assert.NotEqual(key1, key2); // Should be unique
             Assert.StartsWith("sk-synaxis-", key1);
             Assert.StartsWith("sk-synaxis-", key2);
-            
+
             // Should be 32 bytes + prefix = 32 + 11 characters = 43 characters for hex
             Assert.Equal(43, key1.Length); // "sk-synaxis-" (11) + 32 hex chars = 43
             Assert.Equal(43, key2.Length);
-            
+
             // Remaining characters should be lowercase hex
             var hexPart = key1.Substring(11);
             Assert.All(hexPart, c => Assert.True(
-                (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f'), 
+                (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f'),
                 $"Character '{c}' is not valid hex"));
         }
 
@@ -52,7 +52,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         {
             // Arrange
             var key = "sk-synaxis-test-key-123456789";
-            
+
             // Act
             var hash1 = _apiKeyService.HashKey(key);
             var hash2 = _apiKeyService.HashKey(key);
@@ -147,10 +147,10 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             // Assert - Always should start with sk-synaxis- and be followed by valid lowercase hex
             Assert.StartsWith("sk-synaxis-", key);
             Assert.Equal(43, key.Length);
-            
+
             var hexPart = key.Substring(11);
             Assert.All(hexPart, c => Assert.True(
-                (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f'), 
+                (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f'),
                 $"Character '{c}' is not valid hex"));
         }
 
@@ -159,7 +159,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         {
             // Arrange
             var key = "sk-synaxis-test-key";
-            
+
             // Act
             var hash = _apiKeyService.HashKey(key);
             var expectedHash = Convert.ToBase64String(SHA256.HashData(Encoding.UTF8.GetBytes(key)));
@@ -179,13 +179,13 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             // Test multiple validations to ensure constant-time comparison behavior
             // This verifies the constant-time comparison is used for security
-            
+
             // Act & Assert
             Assert.True(_apiKeyService.ValidateKey(key1, hash1));
             Assert.False(_apiKeyService.ValidateKey(key2, hash1));
             Assert.False(_apiKeyService.ValidateKey(key1, hash2));
             Assert.True(_apiKeyService.ValidateKey(key2, hash2));
-            
+
             // Test boundary conditions
             var shortKey = "sk-short";
             var shortHash = _apiKeyService.HashKey(shortKey);
@@ -221,13 +221,13 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             {
                 Assert.StartsWith("sk-synaxis-", keys[i]);
                 Assert.Equal(43, keys[i].Length);
-                
+
                 // All keys should be unique
                 for (int j = i + 1; j < 10; j++)
                 {
                     Assert.NotEqual(keys[i], keys[j]);
                 }
-                
+
                 // Each key should hash to something and validate correctly
                 var hash = _apiKeyService.HashKey(keys[i]);
                 Assert.True(_apiKeyService.ValidateKey(keys[i], hash));

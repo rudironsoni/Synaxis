@@ -47,7 +47,7 @@ public class ApiErrorHandlingTests : IClassFixture<SynaxisWebApplicationFactory>
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadAsStringAsync();
         Assert.False(string.IsNullOrEmpty(content));
-        
+
         // Verify it's valid JSON
         var json = JsonDocument.Parse(content);
         Assert.True(json.RootElement.TryGetProperty("data", out _));
@@ -74,7 +74,7 @@ public class ApiErrorHandlingTests : IClassFixture<SynaxisWebApplicationFactory>
 
         // Assert - Malformed JSON returns 400 or 500 depending on middleware
         Assert.True(
-            response.StatusCode == HttpStatusCode.BadRequest || 
+            response.StatusCode == HttpStatusCode.BadRequest ||
             response.StatusCode == HttpStatusCode.InternalServerError,
             $"Expected 400 or 500 but got {(int)response.StatusCode}");
     }
@@ -90,7 +90,7 @@ public class ApiErrorHandlingTests : IClassFixture<SynaxisWebApplicationFactory>
 
         // Assert
         Assert.True(
-            response.StatusCode == HttpStatusCode.BadRequest || 
+            response.StatusCode == HttpStatusCode.BadRequest ||
             response.StatusCode == HttpStatusCode.UnsupportedMediaType,
             $"Expected 400 or 415 but got {(int)response.StatusCode}");
     }

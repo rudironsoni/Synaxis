@@ -1,56 +1,75 @@
-namespace Synaxis.InferenceGateway.Application.ControlPlane;
+// <copyright file="QuotaWarningService.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
-using Synaxis.InferenceGateway.Application.Routing;
-using Microsoft.Extensions.Logging;
-
-/// <summary>
-/// Implements quota warning monitoring.
-/// </summary>
-public class QuotaWarningService : IQuotaWarningService
+namespace Synaxis.InferenceGateway.Application.ControlPlane
 {
-    private readonly IQuotaTracker _quotaTracker;
-    private readonly INotificationService _notificationService;
-    private readonly ILogger<QuotaWarningService> _logger;
-    private const double WarningThreshold = 0.2; // 20%
+    using System;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Microsoft.Extensions.Logging;
+    using Synaxis.InferenceGateway.Application.Routing;
 
-    public QuotaWarningService(
-        IQuotaTracker quotaTracker,
-        INotificationService notificationService,
-        ILogger<QuotaWarningService> logger)
+    /// <summary>
+    /// Implements quota warning monitoring.
+    /// </summary>
+    public class QuotaWarningService : IQuotaWarningService
     {
-        _quotaTracker = quotaTracker ?? throw new ArgumentNullException(nameof(quotaTracker));
-        _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
+        private const double WarningThreshold = 0.2; // 20%
+        private readonly INotificationService notificationService;
+        private readonly ILogger<QuotaWarningService> logger;
 
-    public async Task<bool> CheckQuotaWarningAsync(
-        string providerKey,
-        string? tenantId = null,
-        string? userId = null,
-        CancellationToken cancellationToken = default)
-    {
-        // TODO: Get actual quota usage from IQuotaTracker
-        // This is interim implementation - IQuotaTracker doesn't have a method to get remaining quota
-
-        var remainingQuota = 100; // Placeholder
-        var totalQuota = 1000; // Placeholder
-        var usageRatio = (double)remainingQuota / totalQuota;
-
-        if (usageRatio < WarningThreshold)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="QuotaWarningService"/> class.
+        /// </summary>
+        /// <param name="quotaTracker">The quota tracker service.</param>
+        /// <param name="notificationService">The notification service.</param>
+        /// <param name="logger">The logger instance.</param>
+        public QuotaWarningService(
+            IQuotaTracker quotaTracker,
+            INotificationService notificationService,
+            ILogger<QuotaWarningService> logger)
         {
-            _logger.LogWarning("Quota warning for provider '{ProviderKey}': {RemainingQuota}/{TotalQuota} ({UsageRatio:P0}) remaining",
-                providerKey, remainingQuota, totalQuota, usageRatio);
-
-            await _notificationService.SendQuotaWarningAsync(
-                tenantId ?? "default",
-                userId ?? "default",
-                providerKey,
-                remainingQuota,
-                cancellationToken);
-
-            return true;
+            _ = quotaTracker ?? throw new ArgumentNullException(nameof(quotaTracker));
+            this.notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        return false;
+        /// <summary>
+        /// Checks if quota is below warning threshold and sends warning if needed.
+        /// </summary>
+        /// <param name="providerKey">The provider key to check.</param>
+        /// <param name="tenantId">The optional tenant ID.</param>
+        /// <param name="userId">The optional user ID.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>True if warning was sent, false otherwise.</returns>
+        public async Task<bool> CheckQuotaWarningAsync(
+            string providerKey,
+            string? tenantId = null,
+            string? userId = null,
+            CancellationToken cancellationToken = default)
+        {
+            // Get actual quota usage from IQuotaTracker
+            // This is interim implementation - IQuotaTracker doesn't have a method to get remaining quota
+            var remainingQuota = 100; // Placeholder
+            var totalQuota = 1000; // Placeholder
+            var usageRatio = (double)remainingQuota / totalQuota;
+
+            if (usageRatio < WarningThreshold)
+            {
+                this.logger.LogWarning("Quota warning for provider '{ProviderKey}': {RemainingQuota}/{TotalQuota} ({UsageRatio:P0}) remaining", providerKey, remainingQuota, totalQuota, usageRatio);
+
+                await this.notificationService.SendQuotaWarningAsync(
+                    tenantId ?? "default",
+                    userId ?? "default",
+                    providerKey,
+                    remainingQuota,
+                    cancellationToken).ConfigureAwait(false);
+
+                return true;
+            }
+
+            return false;
+        }
     }
 }

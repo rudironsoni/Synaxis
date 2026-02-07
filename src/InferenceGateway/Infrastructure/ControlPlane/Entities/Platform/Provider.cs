@@ -1,25 +1,30 @@
-namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Platform;
+// <copyright file="Provider.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
-/// <summary>
-/// Represents an AI provider in the platform schema (tenant-agnostic).
-/// </summary>
-public class Provider
+namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Platform
 {
-    public Guid Id { get; set; }
-    public required string Key { get; set; }
-    public required string DisplayName { get; set; }
-    public required string ProviderType { get; set; }
-    public string? BaseEndpoint { get; set; }
-    public string? DefaultApiKeyEnvironmentVariable { get; set; }
-    public bool SupportsStreaming { get; set; }
-    public bool SupportsTools { get; set; }
-    public bool SupportsVision { get; set; }
-    public decimal? DefaultInputCostPer1MTokens { get; set; }
-    public decimal? DefaultOutputCostPer1MTokens { get; set; }
-    public bool IsFreeTier { get; set; }
-    public bool IsActive { get; set; } = true;
-    public bool IsPublic { get; set; } = true;
+    /// <summary>
+    /// Represents an AI provider in the platform schema (tenant-agnostic).
+    /// </summary>
+    public class Provider
+    {
+        public Guid Id { get; set; }
+        public required string Key { get; set; }
+        public required string DisplayName { get; set; }
+        public required string ProviderType { get; set; }
+        public string? BaseEndpoint { get; set; }
+        public string? DefaultApiKeyEnvironmentVariable { get; set; }
+        public bool SupportsStreaming { get; set; }
+        public bool SupportsTools { get; set; }
+        public bool SupportsVision { get; set; }
+        public decimal? DefaultInputCostPer1MTokens { get; set; }
+        public decimal? DefaultOutputCostPer1MTokens { get; set; }
+        public bool IsFreeTier { get; set; }
+        public bool IsActive { get; set; } = true;
+        public bool IsPublic { get; set; } = true;
 
-    // Navigation properties
-    public ICollection<Model> Models { get; set; } = new List<Model>();
+        // Navigation properties
+        public ICollection<Model> Models { get; set; } = new List<Model>();
+    }
 }

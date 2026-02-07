@@ -1,41 +1,38 @@
-# Synaxis – Because Paying for AI Is for People With Self-Respect
+# Synaxis – Enterprise AI Gateway
 
 <p align="center">
-  <img src="https://img.shields.io/badge/.NET%2010-the%20future%20is%20free(ish)-blue?style=for-the-badge" alt=".NET 10">
-  <img src="https://img.shields.io/badge/mindset-ULTRA%20MISER%20MODE™-orange?style=for-the-badge" alt="Ultra Miser Mode">
-  <img src="https://img.shields.io/badge/spending%20money-never-brightgreen?style=for-the-badge" alt="Zero Spend Energy">
+  <img src="https://img.shields.io/badge/.NET%2010-Enterprise%20Ready-blue?style=for-the-badge" alt=".NET 10">
+  <img src="https://img.shields.io/badge/Architecture-Clean%20%26%20Scalable-success?style=for-the-badge" alt="Clean Architecture">
+  <img src="https://badge/badge/tests-1%2C050%2B%20Passing-brightgreen?style=for-the-badge" alt="1050+ Tests">
 </p>
 
-**Synaxis** — the dignified art project of routing prompts through every free inference crumb on the internet before anyone dares ask you for a credit card.
+**Synaxis** is a production-grade AI inference gateway that unifies multiple LLM providers behind a single, OpenAI-compatible API. Built for organizations that demand reliability, observability, and cost efficiency without compromising on developer experience.
 
-This isn't just software.
-It's **ULTRA MISER MODE™**: a lifestyle choice. A philosophy. A quiet rebellion against subscription fatigue.
-A lovingly architected reminder that tokens should be free, and if they're not, we'll just rotate until they are.
+Think of it as your AI traffic controller—intelligently routing requests, managing failover, and keeping your applications running smoothly while your finance team sleeps soundly.
 
-## The Core Gag (aka Why This Exists)
+## Why Synaxis?
 
-> Craving Claude-3.5 / GPT-4o / Llama-405B quality but your wallet is practicing minimalism?
-> Welcome home, fellow connoisseur of other people's free tiers.
+Modern AI applications face a familiar challenge: balancing performance, cost, and reliability across a fragmented landscape of providers. Synaxis solves this with:
 
-ULTRA MISER MODE™ exists for:
+- **Unified API Interface** – One OpenAI-compatible `/v1` endpoint for all providers
+- **Intelligent Routing** – Priority-based failover with automatic provider rotation
+- **Real-time Streaming** – Server-Sent Events (SSE) for responsive, production-grade UX
+- **Enterprise Security** – JWT validation, rate limiting, and comprehensive input validation
+- **Operational Visibility** – Admin Web UI for monitoring, configuration, and health checks
+- **Multi-Provider Support** – Groq, Cloudflare Workers AI, Together AI, DeepInfra, Fireworks, Cohere, Lepton, and more
 
-- People who flinch at $5 the way normal humans flinch at spiders
-- Devs whose monthly burn rate is measured in leftover API credits
-- Anyone who has ever whispered "just one more prompt" while watching Groq's counter tick toward zero
-- broke geniuses, caffeine addicts, and professional quota evaders worldwide
+*And yes, it happens to be excellent at minimizing API spend. Call it fiscal responsibility with a sense of humor.*
 
-## Features (87% of which exist purely to provide free usage)
+## Features
 
-- One beautiful OpenAI-compatible `/v1` endpoint (so you don't have to touch your client code ever again)
-- **Real-time streaming responses** with Server-Sent Events (SSE) for that premium, instant-gratification feeling
-- **Admin Web UI** for provider configuration, health monitoring, and system management
-- **Comprehensive security hardening** with JWT validation, rate limiting, input validation, and security headers
-- **Intelligent error handling** with graceful degradation and automatic retry logic
-- Automatic, merciless rotation when any provider inevitably says "you've had enough generosity for today"
-- Failover choreography so smooth it almost feels ethical
-- Priority-based routing (burn the highest-quota ones first, obviously)
-- Natively supports Groq, Cloudflare Workers AI, Together AI, DeepInfra, Fireworks, Cohere, Lepton, and whatever sad little free tier appears next Tuesday
-- Zero euros spent until the heat death of the universe (or until someone actually sponsors this chaos)
+- OpenAI-compatible `/v1/chat/completions` and `/v1/models` endpoints
+- **Streaming responses** via Server-Sent Events (SSE)
+- **Admin Web UI** for provider configuration and system management
+- **Security hardening** with JWT auth, rate limiting, and security headers
+- **Graceful degradation** with intelligent retry and failover logic
+- **Priority-based routing** to optimize quota utilization across providers
+- **Comprehensive provider ecosystem** supporting major inference platforms
+- Clean Architecture with CQRS pattern for maintainability and testability
 
 ## Quick Start
 
@@ -44,34 +41,29 @@ ULTRA MISER MODE™ exists for:
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 - [Docker](https://docs.docker.com/get-docker/)
 
-### 1. Installation – Costs: €0.00 (electricity not included)
+### Installation
 
 ```bash
-# Clone before the guilt sets in
+# Clone the repository
 git clone https://github.com/rudironsoni/Synaxis.git
 cd Synaxis
 
-# Restore packages on someone else's electricity bill
+# Restore dependencies
 dotnet restore
 
-# Build — because even misers deserve snappy startup
+# Build the solution
 dotnet build
 ```
 
-### 2. Configuring Your Miser Empire
+### Configuration
 
-Update `src/InferenceGateway/WebApi/appsettings.json` with your provider keys.
-For Docker, copy `.env.example` to `.env` and fill in the placeholders.
-
-See [Configuration Guide](docs/CONFIGURATION.md) for detailed provider setup.
-
-Quick configuration example:
+Update `src/InferenceGateway/WebApi/appsettings.json` with your provider credentials:
 
 ```json
 {
   "Synaxis": {
     "InferenceGateway": {
-      "JwtSecret": "REPLACE_WITH_JWT_SECRET",
+      "JwtSecret": "YOUR_JWT_SECRET",
       "Providers": {
         "Groq": {
           "Enabled": true,
@@ -117,27 +109,25 @@ Quick configuration example:
 }
 ```
 
-### 3. Running the Beast (While Mentally Thanking Providers for Their Charity)
+For Docker deployment, copy `.env.example` to `.env` and configure your environment variables.
+
+See [Configuration Guide](docs/CONFIGURATION.md) for detailed setup instructions.
+
+### Running the Application
 
 ```bash
-# Normal person way
+# Development mode
 dotnet run --project src/InferenceGateway/WebApi
 
-# Miser-optimized (skip build if you're feeling extra cheap)
+# Production mode
 dotnet run --project src/InferenceGateway/WebApi --configuration Release
 ```
 
-Then point any OpenAI client to:
-
-```
-http://localhost:5000/v1/chat/completions
-```
-
-And bask in the warm glow of 16k tokens costing literally nothing.
+The API will be available at `http://localhost:5000/v1/chat/completions`
 
 ## Usage
 
-Send an OpenAI-compatible request to the gateway:
+### Basic Request
 
 ```bash
 curl http://localhost:5000/v1/chat/completions \
@@ -150,9 +140,7 @@ curl http://localhost:5000/v1/chat/completions \
   }'
 ```
 
-### Streaming Support
-
-Enable real-time streaming with `stream: true`:
+### Streaming Request
 
 ```bash
 curl http://localhost:5000/v1/chat/completions \
@@ -161,94 +149,94 @@ curl http://localhost:5000/v1/chat/completions \
     "model": "llama-3.3-70b-versatile",
     "stream": true,
     "messages": [
-      { "role": "user", "content": "Tell me a story about AI..." }
+      { "role": "user", "content": "Tell me about AI infrastructure..." }
     ]
   }'
 ```
 
-Synaxis routes requests based on the `model` parameter. Streaming responses use Server-Sent Events (SSE) with `data: {json}` frames followed by `data: [DONE]`.
+Streaming responses use Server-Sent Events (SSE) with `data: {json}` frames followed by `data: [DONE]`.
 
 See [API Documentation](docs/API.md) for complete endpoint reference.
 
-## Docker Compose (Dev)
+## Docker Compose
 
 ```bash
-# Create your env file
+# Create environment file
 cp .env.example .env
 
-# Start dependencies + API + WebApp (pgAdmin is in the dev profile)
+# Start with dev profile (includes pgAdmin)
 docker compose --profile dev up --build
 ```
 
-Default ports:
-- **Web API:** http://localhost:8080
-- **Web App (Admin UI):** http://localhost:8080/admin
-- **Postgres:** localhost:5432
-- **Redis:** localhost:6379
-- **pgAdmin:** http://localhost:5050
+### Default Endpoints
+
+| Service | URL |
+|---------|-----|
+| Web API | http://localhost:8080 |
+| Admin UI | http://localhost:8080/admin |
+| Postgres | localhost:5432 |
+| Redis | localhost:6379 |
+| pgAdmin | http://localhost:5050 |
 
 ### API Endpoints
 
-#### Core OpenAI-Compatible Endpoints
-- **Chat Completions:** `http://localhost:8080/v1/chat/completions`
-- **Streaming:** `http://localhost:8080/v1/chat/completions` (with `stream: true`)
-- **Models Listing:** `http://localhost:8080/v1/models`
+**OpenAI-Compatible:**
+- `POST /v1/chat/completions` – Chat completions
+- `GET /v1/models` – List available models
 
-#### Admin API Endpoints (JWT Required)
-- **Provider Management:** `http://localhost:8080/admin/providers`
-- **Health Monitoring:** `http://localhost:8080/admin/health`
+**Admin (JWT Required):**
+- `GET/POST /admin/providers` – Provider management
+- `GET /admin/health` – System health
 
-#### Health & Monitoring
-- **Liveness Check:** `http://localhost:8080/health/liveness`
-- **Readiness Check:** `http://localhost:8080/health/readiness`
+**Health Checks:**
+- `GET /health/liveness` – Liveness probe
+- `GET /health/readiness` – Readiness probe
 
 ## Documentation
 
 ### Core Documentation
 
-- **[Architecture Overview](docs/ARCHITECTURE.md)** — Clean Architecture deep dive, CQRS pipeline, and tiered routing
-- **[API Reference](docs/API.md)** — Complete OpenAI-compatible endpoint documentation
-- **[Configuration Guide](docs/CONFIGURATION.md)** — Provider setup, environment variables, and Docker configuration
-- **[Deployment Guide](docs/DEPLOYMENT.md)** — Production deployment, Docker Compose, and infrastructure setup
-- **[Security Guide](docs/SECURITY.md)** — Authentication, authorization, rate limiting, and security best practices
-- **[Testing Guide](docs/TESTING.md)** — Test infrastructure, running tests, and writing new tests
-- **[Contributing Guide](docs/CONTRIBUTING.md)** — Development setup, PR process, and code standards
+- **[Architecture Overview](docs/ARCHITECTURE.md)** – Clean Architecture, CQRS, and routing strategy
+- **[API Reference](docs/API.md)** – Complete OpenAI-compatible endpoint documentation
+- **[Configuration Guide](docs/CONFIGURATION.md)** – Provider setup and environment configuration
+- **[Deployment Guide](docs/DEPLOYMENT.md)** – Production deployment and infrastructure
+- **[Security Guide](docs/SECURITY.md)** – Authentication, authorization, and security practices
+- **[Testing Guide](docs/TESTING.md)** – Test infrastructure and development practices
+- **[Contributing Guide](docs/CONTRIBUTING.md)** – Development workflow and standards
 
-### Reference Documentation
+### Reference
 
-- **[Providers](docs/reference/providers.md)** — Provider-specific details, capabilities, and limitations
-- **[Models](docs/reference/models.md)** — Supported models, feature matrix, and context windows
-- **[Errors](docs/reference/errors.md)** — Error codes, troubleshooting, and debugging
+- **[Providers](docs/reference/providers.md)** – Provider-specific details and capabilities
+- **[Models](docs/reference/models.md)** – Supported models and feature matrix
+- **[Errors](docs/reference/errors.md)** – Error codes and troubleshooting
 
-### Architecture Decisions (ADRs)
+### Architecture Decisions
 
-- **[ADR-001: Stream-Native CQRS](docs/adr/001-stream-native-cqrs.md)** — Why we built streaming into the core
-- **[ADR-002: Tiered Routing Strategy](docs/adr/002-tiered-routing-strategy.md)** — Routing algorithm and failover design
-- **[ADR-003: Authentication Architecture](docs/adr/003-authentication-architecture.md)** — OAuth and JWT implementation decisions
+- **[ADR-001: Stream-Native CQRS](docs/adr/001-stream-native-cqrs.md)**
+- **[ADR-002: Tiered Routing Strategy](docs/adr/002-tiered-routing-strategy.md)**
+- **[ADR-003: Authentication Architecture](docs/adr/003-authentication-architecture.md)**
 
-### Operational Guides
+### Operations
 
-- **[Troubleshooting](docs/ops/troubleshooting.md)** — Common issues and solutions
-- **[Monitoring](docs/ops/monitoring.md)** — Health checks, metrics, and observability
-- **[Performance](docs/ops/performance.md)** — Benchmarks, optimization tips, and profiling
+- **[Troubleshooting](docs/ops/troubleshooting.md)**
+- **[Monitoring](docs/ops/monitoring.md)**
+- **[Performance](docs/ops/performance.md)**
 
 ## Admin Web UI
 
-Synaxis includes a beautiful React-based admin interface for managing your AI provider ecosystem:
+Synaxis includes a React-based administration interface for managing your AI provider ecosystem:
 
-### Access the Admin UI
+1. Start the application (see Docker Compose section)
+2. Navigate to `http://localhost:8080/admin`
+3. Authenticate with your JWT token
 
-1. **Start the application** (see Docker Compose section above)
-2. **Navigate to** `http://localhost:8080/admin`
-3. **Authenticate** using your JWT token
+### Features
 
-### Admin Features
+- **Provider Management** – Configure API keys, endpoints, tiers, and models
+- **Health Monitoring** – Real-time status of Redis, database, and providers
+- **Access Control** – JWT-based authentication with role-based permissions
 
-- **Provider Configuration** — Configure API keys, endpoints, tiers, and model availability
-- **Health Monitoring Dashboard** — Monitor Redis, database, and provider status in real-time
-- **Authentication & Security** — JWT-based access with role-based permissions
-
-## Testing & Quality
+## Quality Assurance
 
 Synaxis maintains comprehensive test coverage:
 
@@ -268,26 +256,20 @@ cd src/Synaxis.WebApp/ClientApp && npm test
 npm run test:e2e
 ```
 
-See [Testing Guide](docs/TESTING.md) for detailed test documentation.
+## What's New
 
-## Recent Updates
-
-- **Streaming Support** — Real-time SSE streaming for chat completions
-- **Admin Web UI** — React-based interface for provider management
-- **Security Hardening** — JWT validation, rate limiting, and security headers
-- **Comprehensive Testing** — 635 backend + 415 frontend tests
-- **Documentation Suite** — Complete documentation with ULTRA MISER MODE™ personality
+- **Streaming Support** – Real-time SSE streaming for chat completions
+- **Admin Web UI** – React-based management interface
+- **Security Hardening** – JWT validation, rate limiting, and security headers
+- **Comprehensive Testing** – 635 backend + 415 frontend tests
+- **Documentation Suite** – Complete technical documentation
 
 ## License
 
-MIT — because monetizing a free-tier proxy would be performance art, not software.
-
-**ULTRA MISER MODE™** — not a feature. A way of life. Built with spite, clean architecture pride, and the tears of expired API keys.
-
-Enjoy (or hoard — we don't judge).
+MIT – See [LICENSE](LICENSE) for details.
 
 ---
 
 <p align="center">
-  <em>Proud .NET 10 energy all the way.</em>
+  <em>Built with .NET 10, Clean Architecture principles, and a healthy respect for infrastructure budgets.</em>
 </p>

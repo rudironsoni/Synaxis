@@ -112,7 +112,7 @@ public class ProviderRoutingBenchmarks : TestBase
     [Arguments(5)]
     [Arguments(10)]
     [Arguments(13)]
-    public async Task<List<EnrichedCandidate>> SmartRouter_GetCandidatesAsync_SingleProvider(int providerCount)
+    public async Task<IList<EnrichedCandidate>> SmartRouter_GetCandidatesAsync_SingleProvider(int providerCount)
     {
         var config = CreateSynaxisConfiguration(providerCount, 1, 1);
         var configOptions = Options.Create(config);
@@ -142,7 +142,7 @@ public class ProviderRoutingBenchmarks : TestBase
     [Arguments(5)]
     [Arguments(10)]
     [Arguments(13)]
-    public async Task<List<EnrichedCandidate>> SmartRouter_GetCandidatesAsync_MultipleProviders(int providerCount)
+    public async Task<IList<EnrichedCandidate>> SmartRouter_GetCandidatesAsync_MultipleProviders(int providerCount)
     {
         var config = CreateSynaxisConfiguration(providerCount, 10, 5);
         var configOptions = Options.Create(config);
@@ -168,7 +168,7 @@ public class ProviderRoutingBenchmarks : TestBase
     }
 
     [Benchmark]
-    public async Task<List<EnrichedCandidate>> SmartRouter_GetCandidatesAsync_AliasResolution()
+    public async Task<IList<EnrichedCandidate>> SmartRouter_GetCandidatesAsync_AliasResolution()
     {
         return await _smartRouter.GetCandidatesAsync(
             DefaultAlias,
@@ -176,7 +176,7 @@ public class ProviderRoutingBenchmarks : TestBase
     }
 
     [Benchmark]
-    public async Task<List<EnrichedCandidate>> SmartRouter_GetCandidatesAsync_WithStreamingCapability()
+    public async Task<IList<EnrichedCandidate>> SmartRouter_GetCandidatesAsync_WithStreamingCapability()
     {
         return await _smartRouter.GetCandidatesAsync(
             SingleProviderModel,

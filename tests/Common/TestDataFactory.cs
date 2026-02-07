@@ -13,21 +13,21 @@ public static class TestDataFactory
     /// </summary>
     public static ChatMessage CreateUserMessage(string text = "Test query")
         => new(ChatRole.User, text);
-    
+
     /// <summary>
     /// Creates an assistant chat message with optional custom text.
     /// </summary>
     public static ChatMessage CreateAssistantMessage(string text = "Test response")
         => new(ChatRole.Assistant, text);
-    
+
     /// <summary>
     /// Creates chat options with default settings.
     /// </summary>
     public static ChatOptions CreateChatOptions(
-        string model = "gpt-4", 
+        string model = "gpt-4",
         float? temperature = 0.7f)
         => new() { ModelId = model, Temperature = temperature };
-    
+
     /// <summary>
     /// Creates a token optimization configuration with sensible defaults.
     /// Use the configure action to override specific settings.
@@ -51,7 +51,7 @@ public static class TestDataFactory
         configure?.Invoke(config);
         return config;
     }
-    
+
     /// <summary>
     /// Creates a conversation with alternating user and assistant messages.
     /// </summary>
@@ -64,7 +64,7 @@ public static class TestDataFactory
                 $"Message {i}: {Guid.NewGuid()}");
         }
     }
-    
+
     /// <summary>
     /// Creates a test embedding with the specified dimensions.
     /// Returns a float array suitable for embedding operations.

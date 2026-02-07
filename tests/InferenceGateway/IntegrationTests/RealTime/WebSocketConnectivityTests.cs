@@ -13,7 +13,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.RealTime
     {
         private HubConnection? _connection;
         private const string HubUrl = "http://localhost:5000/hubs/synaxis";
-        
+
         public async Task InitializeAsync()
         {
             // Setup can be done here if needed
@@ -33,7 +33,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.RealTime
         {
             // Arrange
             var token = Environment.GetEnvironmentVariable("TEST_JWT_TOKEN") ?? "test-token";
-            
+
             _connection = new HubConnectionBuilder()
                 .WithUrl(HubUrl, options =>
                 {
@@ -54,7 +54,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.RealTime
             // Arrange
             var token = Environment.GetEnvironmentVariable("TEST_JWT_TOKEN") ?? "test-token";
             var organizationId = Guid.NewGuid().ToString();
-            
+
             _connection = new HubConnectionBuilder()
                 .WithUrl(HubUrl, options =>
                 {
@@ -78,7 +78,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.RealTime
             var token = Environment.GetEnvironmentVariable("TEST_JWT_TOKEN") ?? "test-token";
             var organizationId = Guid.NewGuid().ToString();
             var tcs = new TaskCompletionSource<bool>();
-            
+
             _connection = new HubConnectionBuilder()
                 .WithUrl(HubUrl, options =>
                 {
@@ -111,7 +111,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.RealTime
         {
             // Arrange
             var token = Environment.GetEnvironmentVariable("TEST_JWT_TOKEN") ?? "test-token";
-            
+
             _connection = new HubConnectionBuilder()
                 .WithUrl(HubUrl, options =>
                 {

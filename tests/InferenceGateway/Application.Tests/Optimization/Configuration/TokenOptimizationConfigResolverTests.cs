@@ -54,7 +54,7 @@ public class TokenOptimizationConfigResolverTests : IDisposable
         // Arrange
         var tenantId = Guid.NewGuid();
         var userId = Guid.NewGuid();
-        
+
         // Seed tenant configuration
         var tenantConfig = new TenantTokenOptimizationConfig
         {
@@ -82,7 +82,7 @@ public class TokenOptimizationConfigResolverTests : IDisposable
         // Arrange
         var tenantId = Guid.NewGuid();
         var userId = Guid.NewGuid();
-        
+
         // Seed user configuration
         var userConfig = new UserTokenOptimizationConfig
         {
@@ -108,7 +108,7 @@ public class TokenOptimizationConfigResolverTests : IDisposable
         // Arrange
         var tenantId = Guid.NewGuid();
         var userId = Guid.NewGuid();
-        
+
         // Seed tenant configuration
         var tenantConfig = new TenantTokenOptimizationConfig
         {
@@ -145,7 +145,7 @@ public class TokenOptimizationConfigResolverTests : IDisposable
         // Arrange
         var tenantId = Guid.NewGuid();
         var userId = Guid.NewGuid();
-        
+
         // Seed tenant configuration with some values
         var tenantConfig = new TenantTokenOptimizationConfig
         {
@@ -184,7 +184,7 @@ public class TokenOptimizationConfigResolverTests : IDisposable
     {
         // Arrange
         var tenantId = Guid.NewGuid();
-        
+
         var tenantConfig = new TenantTokenOptimizationConfig
         {
             TenantId = tenantId,
@@ -208,7 +208,7 @@ public class TokenOptimizationConfigResolverTests : IDisposable
     {
         // Arrange
         var userId = Guid.NewGuid();
-        
+
         var userConfig = new UserTokenOptimizationConfig
         {
             UserId = userId,
@@ -248,7 +248,7 @@ public class TokenOptimizationConfigResolverTests : IDisposable
         // Arrange
         var tenantId = Guid.NewGuid();
         var userId = Guid.NewGuid();
-        
+
         // Seed tenant configuration (should not be able to override system-only settings)
         var tenantConfig = new TenantTokenOptimizationConfig
         {
@@ -277,7 +277,7 @@ public class TokenOptimizationConfigResolverTests : IDisposable
         var userId1 = Guid.NewGuid();
         var userId2 = Guid.NewGuid();
         var userId3 = Guid.NewGuid();
-        
+
         // Seed configurations
         var tenantConfig = new TenantTokenOptimizationConfig
         {

@@ -24,7 +24,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             // Arrange
             ControlPlaneDbContext nullDbContext = null!;
             var mockConfig = CreateMockConfig(TestMasterKey);
-            
+
             // Act & Assert
             // The constructor doesn't explicitly check for null dbContext, so it won't throw
             // An exception will only be thrown when trying to use the service
@@ -38,7 +38,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             // Arrange
             using var dbContext = BuildDbContext();
             IOptions<SynaxisConfiguration> nullConfig = null!;
-            
+
             // Act & Assert
             Assert.Throws<NullReferenceException>(() => new AesGcmTokenVault(dbContext, nullConfig!));
         }
@@ -49,9 +49,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             // Arrange
             using var dbContext = BuildDbContext();
             var mockConfig = CreateMockConfig("");
-            
+
             // Act & Assert
-            var exception = Assert.Throws<InvalidOperationException>(() => 
+            var exception = Assert.Throws<InvalidOperationException>(() =>
                 new AesGcmTokenVault(dbContext, mockConfig));
             Assert.Equal("Synaxis:InferenceGateway:MasterKey must be configured.", exception.Message);
         }
@@ -62,9 +62,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             // Arrange
             using var dbContext = BuildDbContext();
             var mockConfig = CreateMockConfig(null);
-            
+
             // Act & Assert
-            var exception = Assert.Throws<InvalidOperationException>(() => 
+            var exception = Assert.Throws<InvalidOperationException>(() =>
                 new AesGcmTokenVault(dbContext, mockConfig));
             Assert.Equal("Synaxis:InferenceGateway:MasterKey must be configured.", exception.Message);
         }
@@ -75,9 +75,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             // Arrange
             using var dbContext = BuildDbContext();
             var mockConfig = CreateMockConfig("   ");
-            
+
             // Act & Assert
-            var exception = Assert.Throws<InvalidOperationException>(() => 
+            var exception = Assert.Throws<InvalidOperationException>(() =>
                 new AesGcmTokenVault(dbContext, mockConfig));
             Assert.Equal("Synaxis:InferenceGateway:MasterKey must be configured.", exception.Message);
         }
@@ -88,18 +88,18 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             // Arrange
             var tenantId = Guid.NewGuid();
             var plaintext = "test-secret-token-value";
-            
+
             using var dbContext = BuildDbContext();
             var mockConfig = CreateMockConfig(TestMasterKey);
             var tokenVault = new AesGcmTokenVault(dbContext, mockConfig);
-            
+
             // Add tenant to database
             var tenant = new Tenant
             {
                 Id = tenantId,
                 EncryptedByokKey = Array.Empty<byte>() // Use master key fallback
             };
-            
+
             dbContext.Tenants.Add(tenant);
             await dbContext.SaveChangesAsync();
 
@@ -121,13 +121,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             // Arrange
             var tenantId = Guid.NewGuid();
             var plaintext = "test-secret-token-value";
-            
+
             using var dbContext = BuildDbContext();
             var mockConfig = CreateMockConfig(TestMasterKey);
             var tokenVault = new AesGcmTokenVault(dbContext, mockConfig);
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() => 
+            var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
                 tokenVault.EncryptAsync(tenantId, plaintext));
             Assert.StartsWith("Tenant not found", exception.Message);
             Assert.Equal("tenantId", exception.ParamName);
@@ -139,18 +139,18 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             // Arrange
             var tenantId = Guid.NewGuid();
             var originalPlaintext = "test-secret-token-value";
-            
+
             using var dbContext = BuildDbContext();
             var mockConfig = CreateMockConfig(TestMasterKey);
             var tokenVault = new AesGcmTokenVault(dbContext, mockConfig);
-            
+
             // Add tenant to database
             var tenant = new Tenant
             {
                 Id = tenantId,
                 EncryptedByokKey = Array.Empty<byte>() // Use master key fallback
             };
-            
+
             dbContext.Tenants.Add(tenant);
             await dbContext.SaveChangesAsync();
 
@@ -170,13 +170,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             // Arrange
             var tenantId = Guid.NewGuid();
             var ciphertext = new byte[] { 1, 2, 3, 4, 5 }; // Dummy data
-            
+
             using var dbContext = BuildDbContext();
             var mockConfig = CreateMockConfig(TestMasterKey);
             var tokenVault = new AesGcmTokenVault(dbContext, mockConfig);
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() => 
+            var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
                 tokenVault.DecryptAsync(tenantId, ciphertext));
             Assert.StartsWith("Tenant not found", exception.Message);
             Assert.Equal("tenantId", exception.ParamName);
@@ -188,23 +188,23 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             // Arrange
             var tenantId = Guid.NewGuid();
             var invalidCiphertext = new byte[] { 1, 2, 3 }; // Too short
-            
+
             using var dbContext = BuildDbContext();
             var mockConfig = CreateMockConfig(TestMasterKey);
             var tokenVault = new AesGcmTokenVault(dbContext, mockConfig);
-            
+
             // Add tenant to database
             var tenant = new Tenant
             {
                 Id = tenantId,
                 EncryptedByokKey = Array.Empty<byte>() // Use master key fallback
             };
-            
+
             dbContext.Tenants.Add(tenant);
             await dbContext.SaveChangesAsync();
 
             // Act & Assert
-            await Assert.ThrowsAsync<ArgumentException>(() => 
+            await Assert.ThrowsAsync<ArgumentException>(() =>
                 tokenVault.DecryptAsync(tenantId, invalidCiphertext));
         }
 
@@ -216,21 +216,21 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             var newKey = new byte[32];
             RandomNumberGenerator.Fill(newKey);
             var newKeyBase64 = Convert.ToBase64String(newKey);
-            
+
             using var dbContext = BuildDbContext();
             var mockConfig = CreateMockConfig(TestMasterKey);
             var tokenVault = new AesGcmTokenVault(dbContext, mockConfig);
-            
+
             // Add tenant to database first
             var tenant = new Tenant
             {
                 Id = tenantId,
                 EncryptedByokKey = Array.Empty<byte>() // Use master key fallback
             };
-            
+
             dbContext.Tenants.Add(tenant);
             await dbContext.SaveChangesAsync();
-            
+
             // Now create OAuth accounts using the tenant that exists
             var oauthAccount = new OAuthAccount
             {
@@ -239,7 +239,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
                 AccessTokenEncrypted = await tokenVault.EncryptAsync(tenantId, "access-token"),
                 RefreshTokenEncrypted = await tokenVault.EncryptAsync(tenantId, "refresh-token")
             };
-            
+
             dbContext.OAuthAccounts.Add(oauthAccount);
             await dbContext.SaveChangesAsync();
 
@@ -262,13 +262,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             var newKey = new byte[32];
             RandomNumberGenerator.Fill(newKey);
             var newKeyBase64 = Convert.ToBase64String(newKey);
-            
+
             using var dbContext = BuildDbContext();
             var mockConfig = CreateMockConfig(TestMasterKey);
             var tokenVault = new AesGcmTokenVault(dbContext, mockConfig);
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() => 
+            var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
                 tokenVault.RotateKeyAsync(tenantId, newKeyBase64));
             Assert.StartsWith("Tenant not found", exception.Message);
             Assert.Equal("tenantId", exception.ParamName);
@@ -282,23 +282,23 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             var invalidKey = new byte[16]; // Wrong size
             RandomNumberGenerator.Fill(invalidKey);
             var invalidKeyBase64 = Convert.ToBase64String(invalidKey);
-            
+
             using var dbContext = BuildDbContext();
             var mockConfig = CreateMockConfig(TestMasterKey);
             var tokenVault = new AesGcmTokenVault(dbContext, mockConfig);
-            
+
             // Add tenant to database
             var tenant = new Tenant
             {
                 Id = tenantId,
                 EncryptedByokKey = Array.Empty<byte>()
             };
-            
+
             dbContext.Tenants.Add(tenant);
             await dbContext.SaveChangesAsync();
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() => 
+            var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
                 tokenVault.RotateKeyAsync(tenantId, invalidKeyBase64));
             Assert.StartsWith("Key must be 32 bytes", exception.Message);
             Assert.Equal("newKeyBase64", exception.ParamName);
@@ -348,7 +348,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             {
                 MasterKey = masterKey
             };
-            
+
             var mockConfig = new Mock<IOptions<SynaxisConfiguration>>();
             mockConfig.Setup(c => c.Value).Returns(config);
             return mockConfig.Object;

@@ -27,12 +27,12 @@ public static class TestContainerFactory
         //     .WithImage("qdrant/qdrant:latest")
         //     .WithPortBinding(6333, true)
         //     .Build();
-        
+
         throw new NotImplementedException(
             "Testcontainers.Qdrant package is required. " +
             "Install via: dotnet add package Testcontainers.Qdrant");
     }
-    
+
     /// <summary>
     /// Creates a Redis container for testing session storage and in-flight deduplication.
     /// Example usage:
@@ -50,12 +50,12 @@ public static class TestContainerFactory
         //     .WithImage("redis:7-alpine")
         //     .WithPortBinding(6379, true)
         //     .Build();
-        
+
         throw new NotImplementedException(
             "Testcontainers.Redis package is required. " +
             "Install via: dotnet add package Testcontainers.Redis");
     }
-    
+
     /// <summary>
     /// Creates a PostgreSQL container for testing configuration storage.
     /// Example usage:
@@ -75,7 +75,7 @@ public static class TestContainerFactory
         //     .WithUsername("test")
         //     .WithPassword("test")
         //     .Build();
-        
+
         throw new NotImplementedException(
             "Testcontainers.PostgreSql package is required. " +
             "Install via: dotnet add package Testcontainers.PostgreSql");

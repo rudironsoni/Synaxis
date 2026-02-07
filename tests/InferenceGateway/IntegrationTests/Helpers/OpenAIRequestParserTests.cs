@@ -112,7 +112,7 @@ public class OpenAIRequestParserTests
         // Act & Assert
         var exception = await Assert.ThrowsAsync<BadHttpRequestException>(
             () => OpenAIRequestParser.ParseAsync(context));
-        
+
         Assert.Contains("Role must be one of: system, user, assistant, tool", exception.Message);
     }
 
@@ -451,7 +451,7 @@ public class OpenAIRequestParserTests
         // Act & Assert
         var exception = await Assert.ThrowsAsync<BadHttpRequestException>(
             () => OpenAIRequestParser.ParseAsync(context));
-        
+
         Assert.Contains("At least one message is required", exception.Message);
     }
 
@@ -465,7 +465,7 @@ public class OpenAIRequestParserTests
         // Act & Assert
         var exception = await Assert.ThrowsAsync<BadHttpRequestException>(
             () => OpenAIRequestParser.ParseAsync(context));
-        
+
         Assert.Contains("Messages are required", exception.Message);
     }
 
@@ -756,7 +756,7 @@ public class OpenAIRequestParserTests
         // Act & Assert
         var exception = await Assert.ThrowsAsync<BadHttpRequestException>(
             () => OpenAIRequestParser.ParseAsync(context));
-        
+
         Assert.Contains("MaxTokens must be a positive integer", exception.Message);
     }
 

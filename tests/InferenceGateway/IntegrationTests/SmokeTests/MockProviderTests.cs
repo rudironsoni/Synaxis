@@ -30,7 +30,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
             {
                 BaseAddress = new System.Uri("http://localhost")
             };
-            
+
             var requestPayload = new
             {
                 model = "llama-3.1-70b-versatile",
@@ -46,7 +46,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
             // Assert
             _output.WriteLine($"Status Code: {response.StatusCode}");
             _output.WriteLine($"Response: {content}");
-            
+
             Assert.True(response.IsSuccessStatusCode, "Mock should return success status");
             Assert.Contains("\"choices\"", content, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("\"OK\"", content, StringComparison.OrdinalIgnoreCase);
@@ -61,7 +61,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
             {
                 BaseAddress = new System.Uri("http://localhost")
             };
-            
+
             var requestPayload = new
             {
                 model = "deepseek-chat",
@@ -77,7 +77,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
             // Assert
             _output.WriteLine($"Status Code: {response.StatusCode}");
             _output.WriteLine($"Response: {content}");
-            
+
             Assert.True(response.IsSuccessStatusCode, "Mock should return success status");
             Assert.Contains("\"text\"", content, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("\"OK\"", content, StringComparison.OrdinalIgnoreCase);
@@ -101,7 +101,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
             // Assert
             _output.WriteLine($"Status Code: {response.StatusCode}");
             _output.WriteLine($"Response: {content}");
-            
+
             Assert.True(response.IsSuccessStatusCode, "Mock should return success status");
             Assert.Contains("\"data\"", content, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("llama-3.1-70b-versatile", content, StringComparison.OrdinalIgnoreCase);
@@ -116,7 +116,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
             {
                 BaseAddress = new System.Uri("http://localhost")
             };
-            
+
             var requestPayload = new
             {
                 model = "gpt-4o",
@@ -131,7 +131,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
             // Assert
             _output.WriteLine($"Status Code: {response.StatusCode}");
             _output.WriteLine($"Content-Type: {response.Content.Headers.ContentType}");
-            
+
             Assert.True(response.IsSuccessStatusCode, "Mock should return success status");
             Assert.Equal("text/event-stream", response.Content.Headers.ContentType?.MediaType);
         }

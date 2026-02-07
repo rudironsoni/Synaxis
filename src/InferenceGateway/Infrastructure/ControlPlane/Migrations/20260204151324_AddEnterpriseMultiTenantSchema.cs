@@ -1,4 +1,8 @@
-﻿using System;
+// <copyright file="20260204151324_AddEnterpriseMultiTenantSchema.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable

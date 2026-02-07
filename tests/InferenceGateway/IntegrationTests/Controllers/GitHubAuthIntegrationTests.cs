@@ -40,7 +40,7 @@ public class GitHubAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
             .Protected()
             .Setup<Task<HttpResponseMessage>>(
                 "SendAsync",
-                ItExpr.Is<HttpRequestMessage>(req => 
+                ItExpr.Is<HttpRequestMessage>(req =>
                     req.RequestUri!.AbsoluteUri.Contains("github.com/login/device/code")),
                 ItExpr.IsAny<CancellationToken>())
             .ReturnsAsync(new HttpResponseMessage
@@ -55,7 +55,7 @@ public class GitHubAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
         // Act & Assert: GitHub auth endpoint should be called
         // This test verifies the basic device flow initiation works
         _output.WriteLine("GitHub device flow initiation test passed");
-        
+
         // GitHub auth should be callable (endpoint exists)
         Assert.True(true, "GitHub auth infrastructure is properly configured");
     }

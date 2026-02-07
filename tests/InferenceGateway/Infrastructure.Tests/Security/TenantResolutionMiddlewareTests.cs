@@ -63,7 +63,7 @@ public class TenantResolutionMiddlewareTests
         var orgId = Guid.NewGuid();
         var apiKeyId = Guid.NewGuid();
         var apiKey = "synaxis_build_testkey1234567890_abcdefghijklmnop";
-        
+
         _httpContext.Request.Headers["Authorization"] = $"Bearer {apiKey}";
 
         _mockApiKeyService
@@ -151,7 +151,7 @@ public class TenantResolutionMiddlewareTests
         var orgId = Guid.NewGuid();
         var apiKeyId = Guid.NewGuid();
         var apiKey = "synaxis_build_testprefix1234567890_secretpart123456";
-        
+
         _httpContext.Request.Headers["Authorization"] = $"Bearer {apiKey}";
 
         _mockApiKeyService
@@ -184,7 +184,7 @@ public class TenantResolutionMiddlewareTests
         var orgId = Guid.NewGuid();
         var userId = Guid.NewGuid();
         var jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U";
-        
+
         _httpContext.Request.Headers["Authorization"] = $"Bearer {jwtToken}";
 
         // Set up authenticated user with claims
@@ -216,7 +216,7 @@ public class TenantResolutionMiddlewareTests
         // Arrange
         var userId = Guid.NewGuid();
         var jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U";
-        
+
         _httpContext.Request.Headers["Authorization"] = $"Bearer {jwtToken}";
 
         // Set up authenticated user without organization_id claim
@@ -241,7 +241,7 @@ public class TenantResolutionMiddlewareTests
         // Arrange
         var orgId = Guid.NewGuid();
         var jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U";
-        
+
         _httpContext.Request.Headers["Authorization"] = $"Bearer {jwtToken}";
 
         // Set up authenticated user without user_id claim
@@ -266,7 +266,7 @@ public class TenantResolutionMiddlewareTests
         // Arrange
         var userId = Guid.NewGuid();
         var jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U";
-        
+
         _httpContext.Request.Headers["Authorization"] = $"Bearer {jwtToken}";
 
         // Set up authenticated user with invalid organization_id
@@ -292,7 +292,7 @@ public class TenantResolutionMiddlewareTests
         var orgId = Guid.NewGuid();
         var userId = Guid.NewGuid();
         var jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U";
-        
+
         _httpContext.Request.Headers["Authorization"] = $"Bearer {jwtToken}";
 
         // Use alternative claim names: "sub" and "org_id"
@@ -323,7 +323,7 @@ public class TenantResolutionMiddlewareTests
         var orgId = Guid.NewGuid();
         var userId = Guid.NewGuid();
         var jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U";
-        
+
         _httpContext.Request.Headers["Authorization"] = $"Bearer {jwtToken}";
 
         var claims = new[]
@@ -349,7 +349,7 @@ public class TenantResolutionMiddlewareTests
     {
         // Arrange
         var jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U";
-        
+
         _httpContext.Request.Headers["Authorization"] = $"Bearer {jwtToken}";
 
         // User is not authenticated
@@ -414,7 +414,7 @@ public class TenantResolutionMiddlewareTests
         var orgId = Guid.NewGuid();
         var apiKeyId = Guid.NewGuid();
         var apiKey = "synaxis_build_testkey";
-        
+
         _httpContext.Request.Headers["Authorization"] = $"bearer {apiKey}"; // lowercase
 
         _mockApiKeyService
@@ -441,7 +441,7 @@ public class TenantResolutionMiddlewareTests
         var orgId = Guid.NewGuid();
         var apiKeyId = Guid.NewGuid();
         var apiKey = "synaxis_build_testkey";
-        
+
         _httpContext.Request.Headers["Authorization"] = $"Bearer   {apiKey}  "; // extra spaces
 
         _mockApiKeyService

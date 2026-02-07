@@ -22,7 +22,7 @@ public class SemanticCacheIntegrationTests : IAsyncLifetime
     public SemanticCacheIntegrationTests(ITestOutputHelper output)
     {
         _output = output ?? throw new ArgumentNullException(nameof(output));
-        
+
         _qdrant = new QdrantBuilder()
             .WithImage("qdrant/qdrant:latest")
             .WithPortBinding(6333, true)
@@ -74,7 +74,7 @@ public class SemanticCacheIntegrationTests : IAsyncLifetime
         var sessionId = "session-similar";
         var model = "gpt-4";
         var temperature = 0.7;
-        
+
         var originalEmbedding = GenerateTestEmbedding(384, seed: 42);
         // Similar embedding (slightly different but close)
         var similarEmbedding = GenerateTestEmbedding(384, seed: 42, noise: 0.1f);
@@ -176,7 +176,7 @@ public class SemanticCacheIntegrationTests : IAsyncLifetime
         var sessionId = "session-invalidate";
         var model = "gpt-4";
         var temperature = 0.7;
-        
+
         // Store multiple entries in the session
         await StoreInCacheAsync("Query 1", "Response 1", sessionId, model, temperature, GenerateTestEmbedding(384, seed: 1));
         await StoreInCacheAsync("Query 2", "Response 2", sessionId, model, temperature, GenerateTestEmbedding(384, seed: 2));
@@ -209,11 +209,11 @@ public class SemanticCacheIntegrationTests : IAsyncLifetime
             tasks.Add(Task.Run(async () =>
             {
                 await StoreInCacheAsync(
-                    $"Query {index}", 
-                    $"Response {index}", 
-                    sessionId, 
-                    model, 
-                    temperature, 
+                    $"Query {index}",
+                    $"Response {index}",
+                    sessionId,
+                    model,
+                    temperature,
                     GenerateTestEmbedding(384, seed: index));
             }));
         }
@@ -225,17 +225,17 @@ public class SemanticCacheIntegrationTests : IAsyncLifetime
         var retrieveTasks = Enumerable.Range(0, 10).Select(async i =>
         {
             var result = await RetrieveFromCacheAsync(
-                $"Query {i}", 
-                sessionId, 
-                model, 
-                temperature, 
+                $"Query {i}",
+                sessionId,
+                model,
+                temperature,
                 GenerateTestEmbedding(384, seed: i));
             return result.IsHit;
         });
 
         var results = await Task.WhenAll(retrieveTasks);
         var hitCount = results.Count(x => x);
-        
+
         Assert.True(hitCount >= 8, $"Expected most entries to be cached, got {hitCount}/10");
     }
 
@@ -266,7 +266,7 @@ public class SemanticCacheIntegrationTests : IAsyncLifetime
     {
         var random = new Random(seed);
         var embedding = new float[dimension];
-        
+
         for (int i = 0; i < dimension; i++)
         {
             var baseValue = (float)Math.Sin(i * 0.1 + seed);
@@ -297,7 +297,7 @@ public class SemanticCacheIntegrationTests : IAsyncLifetime
         // Simulated retrieve operation - in actual implementation would call the semantic cache service
         // For this integration test, we're testing that the Qdrant container is operational
         await Task.Delay(10); // Simulate retrieval latency
-        
+
         // Placeholder return - actual implementation would query Qdrant
         return new CacheResult
         {
