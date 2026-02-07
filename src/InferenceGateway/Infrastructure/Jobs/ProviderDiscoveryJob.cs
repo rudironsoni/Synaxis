@@ -24,8 +24,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
 
         public ProviderDiscoveryJob(IServiceProvider provider, ILogger<ProviderDiscoveryJob> logger)
         {
-            _provider = provider;
-            _logger = logger;
+            this._provider = provider;
+            this._logger = logger;
         }
 
         private static string GetEffectiveBaseUrl(ProviderConfig config, string providerKey)

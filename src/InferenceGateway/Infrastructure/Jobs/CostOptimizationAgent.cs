@@ -29,8 +29,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
 
         public CostOptimizationAgent(IServiceProvider serviceProvider, ILogger<CostOptimizationAgent> logger)
         {
-            _serviceProvider = serviceProvider;
-            _logger = logger;
+            this._serviceProvider = serviceProvider;
+            this._logger = logger;
         }
 
         public async Task Execute(IJobExecutionContext context)
@@ -216,7 +216,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                     op => op.ProviderId.ToString(),
                     (pm, op) => new { pm.ProviderId, op.Id }
                 )
-                .ToListAsync(ct);
+                .ToListAsync(ct).ConfigureAwait(false);
 
             var result = new List<ProviderAlternative>();
 
@@ -225,12 +225,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                 // Get cost for this provider
                 var cost = await db.ModelCosts
                     .Where(mc => mc.Provider == alt.ProviderId && mc.Model == modelId)
-                    .FirstOrDefaultAsync(ct);
+                    .FirstOrDefaultAsync(ct).ConfigureAwait(false);
 
                 // Get health status
                 var health = await db.Database.SqlQuery<HealthDto>(
                     $"SELECT \"IsHealthy\" FROM operations.\"ProviderHealthStatus\" WHERE \"OrganizationProviderId\" = {alt.Id} ORDER BY \"LastCheckedAt\" DESC LIMIT 1"
-                ).FirstOrDefaultAsync(ct);
+                ).FirstOrDefaultAsync(ct).ConfigureAwait(false);
 
                 result.Add(new ProviderAlternative
                 {

@@ -63,266 +63,266 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
             Assert.Equal("token-123", token);
         }
 
-    [Fact]
-    public async Task GetToken_RefreshesIfExpired()
-    {
-        var mockStrat = new Mock<IAuthStrategy>();
-
-        var refreshed = new TokenResponse
+        [Fact]
+        public async Task GetToken_RefreshesIfExpired()
         {
-            AccessToken = "new-token",
-            RefreshToken = "new-refresh",
-            ExpiresInSeconds = 3600
-        };
+            var mockStrat = new Mock<IAuthStrategy>();
 
-        mockStrat.Setup(s => s.RefreshTokenAsync(It.IsAny<IdentityAccount>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(refreshed);
+            var refreshed = new TokenResponse
+            {
+                AccessToken = "new-token",
+                RefreshToken = "new-refresh",
+                ExpiresInSeconds = 3600
+            };
 
-        var acc = new IdentityAccount
+            mockStrat.Setup(s => s.RefreshTokenAsync(It.IsAny<IdentityAccount>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(refreshed);
+
+            var acc = new IdentityAccount
+            {
+                Id = "1",
+                Provider = "TestProvider",
+                AccessToken = "old-token",
+                RefreshToken = "refresh-1",
+                ExpiresAt = DateTimeOffset.UtcNow.AddHours(-1) // expired
+            };
+
+            var mockStore = new Mock<ISecureTokenStore>();
+            mockStore.Setup(s => s.LoadAsync()).ReturnsAsync(new List<IdentityAccount> { acc });
+            mockStore.Setup(s => s.SaveAsync(It.IsAny<List<IdentityAccount>>())).Returns(Task.CompletedTask);
+
+            var logger = new Mock<ILogger<IdentityManager>>();
+
+            var manager = new IdentityManager(new[] { mockStrat.Object }, mockStore.Object, logger.Object);
+
+            await manager.WaitForInitialLoadAsync();
+
+            var token = await manager.GetToken(acc.Provider);
+
+            Assert.Equal("new-token", token);
+            mockStrat.Verify(s => s.RefreshTokenAsync(It.IsAny<IdentityAccount>(), It.IsAny<CancellationToken>()), Times.Once);
+            mockStore.Verify(s => s.SaveAsync(It.IsAny<List<IdentityAccount>>()), Times.AtLeastOnce);
+        }
+
+        [Fact]
+        public async Task RefreshTokenAsync_ValidToken_ReturnsNewToken()
         {
-            Id = "1",
-            Provider = "TestProvider",
-            AccessToken = "old-token",
-            RefreshToken = "refresh-1",
-            ExpiresAt = DateTimeOffset.UtcNow.AddHours(-1) // expired
-        };
+            var mockStrat = new Mock<IAuthStrategy>();
+            var mockStore = new Mock<ISecureTokenStore>();
+            var logger = new Mock<ILogger<IdentityManager>>();
 
-        var mockStore = new Mock<ISecureTokenStore>();
-        mockStore.Setup(s => s.LoadAsync()).ReturnsAsync(new List<IdentityAccount> { acc });
-        mockStore.Setup(s => s.SaveAsync(It.IsAny<List<IdentityAccount>>())).Returns(Task.CompletedTask);
+            var refreshedToken = new TokenResponse
+            {
+                AccessToken = "new-access-token",
+                RefreshToken = "new-refresh-token",
+                ExpiresInSeconds = 7200
+            };
 
-        var logger = new Mock<ILogger<IdentityManager>>();
+            mockStrat.Setup(s => s.RefreshTokenAsync(It.IsAny<IdentityAccount>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(refreshedToken);
 
-        var manager = new IdentityManager(new[] { mockStrat.Object }, mockStore.Object, logger.Object);
+            var manager = new IdentityManager(new[] { mockStrat.Object }, mockStore.Object, logger.Object);
 
-        await manager.WaitForInitialLoadAsync();
+            var account = new IdentityAccount
+            {
+                Id = "1",
+                Provider = "TestProvider",
+                AccessToken = "old-token",
+                RefreshToken = "valid-refresh-token",
+                ExpiresAt = DateTimeOffset.UtcNow.AddMinutes(-5) // expired
+            };
 
-        var token = await manager.GetToken(acc.Provider);
+            await manager.AddOrUpdateAccountAsync(account);
 
-        Assert.Equal("new-token", token);
-        mockStrat.Verify(s => s.RefreshTokenAsync(It.IsAny<IdentityAccount>(), It.IsAny<CancellationToken>()), Times.Once);
-        mockStore.Verify(s => s.SaveAsync(It.IsAny<List<IdentityAccount>>()), Times.AtLeastOnce);
+            var token = await manager.GetToken("TestProvider");
+
+            Assert.Equal("new-access-token", token);
+            mockStrat.Verify(s => s.RefreshTokenAsync(It.IsAny<IdentityAccount>(), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task RefreshTokenAsync_ExpiredToken_ThrowsException()
+        {
+            var mockStrat = new Mock<IAuthStrategy>();
+            var mockStore = new Mock<ISecureTokenStore>();
+            var logger = new Mock<ILogger<IdentityManager>>();
+
+            mockStrat.Setup(s => s.RefreshTokenAsync(It.IsAny<IdentityAccount>(), It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new InvalidOperationException("Refresh token expired"));
+            mockStore.Setup(s => s.LoadAsync()).ReturnsAsync(new List<IdentityAccount>());
+
+            var manager = new IdentityManager(new[] { mockStrat.Object }, mockStore.Object, logger.Object);
+
+            await manager.WaitForInitialLoadAsync();
+
+            var account = new IdentityAccount
+            {
+                Id = "1",
+                Provider = "TestProvider",
+                AccessToken = "old-token",
+                RefreshToken = "expired-refresh-token",
+                ExpiresAt = DateTimeOffset.UtcNow.AddHours(-1)
+            };
+
+            await manager.AddOrUpdateAccountAsync(account);
+
+            var token = await manager.GetToken("TestProvider");
+
+            // When refresh fails, it should return the old token
+            Assert.Equal("old-token", token);
+            mockStrat.Verify(s => s.RefreshTokenAsync(It.IsAny<IdentityAccount>(), It.IsAny<CancellationToken>()), Times.Once);
+            logger.Verify(
+                x => x.Log(
+                    LogLevel.Error,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Failed refreshing token")),
+                    It.IsAny<Exception>(),
+                    It.Is<Func<It.IsAnyType, Exception?, string>>((v, t) => true)),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task GetAccountAsync_ExistingAccount_ReturnsAccount()
+        {
+            var mockStrat = new Mock<IAuthStrategy>();
+            var mockStore = new Mock<ISecureTokenStore>();
+            var logger = new Mock<ILogger<IdentityManager>>();
+
+            var storedAccounts = new List<IdentityAccount>();
+            mockStore.Setup(s => s.SaveAsync(It.IsAny<List<IdentityAccount>>()))
+                .Callback<List<IdentityAccount>>(accounts => storedAccounts.AddRange(accounts))
+                .Returns(Task.CompletedTask);
+            mockStore.Setup(s => s.LoadAsync())
+                .ReturnsAsync(storedAccounts);
+
+            var manager = new IdentityManager(new[] { mockStrat.Object }, mockStore.Object, logger.Object);
+
+            var account = new IdentityAccount
+            {
+                Id = "1",
+                Provider = "TestProvider",
+                AccessToken = "test-token",
+                Email = "test@example.com"
+            };
+
+            await manager.AddOrUpdateAccountAsync(account);
+
+            var token = await manager.GetToken("TestProvider");
+
+            Assert.Equal("test-token", token);
+        }
+
+        [Fact]
+        public async Task GetAccountAsync_NonExistent_ReturnsNull()
+        {
+            var mockStrat = new Mock<IAuthStrategy>();
+            var mockStore = new Mock<ISecureTokenStore>();
+            var logger = new Mock<ILogger<IdentityManager>>();
+
+            var manager = new IdentityManager(new[] { mockStrat.Object }, mockStore.Object, logger.Object);
+
+            var token = await manager.GetToken("NonExistentProvider");
+
+            Assert.Null(token);
+        }
+
+        [Fact]
+        public async Task SaveAccountAsync_NewAccount_CreatesSuccessfully()
+        {
+            var mockStrat = new Mock<IAuthStrategy>();
+            var mockStore = new Mock<ISecureTokenStore>();
+            var logger = new Mock<ILogger<IdentityManager>>();
+
+            mockStore.Setup(s => s.SaveAsync(It.IsAny<List<IdentityAccount>>())).Returns(Task.CompletedTask);
+
+            var manager = new IdentityManager(new[] { mockStrat.Object }, mockStore.Object, logger.Object);
+
+            var account = new IdentityAccount
+            {
+                Id = "1",
+                Provider = "NewProvider",
+                AccessToken = "new-token",
+                Email = "new@example.com"
+            };
+
+            await manager.AddOrUpdateAccountAsync(account);
+
+            mockStore.Verify(s => s.SaveAsync(It.IsAny<List<IdentityAccount>>()), Times.AtLeastOnce);
+        }
+
+        [Fact]
+        public async Task DeleteAccountAsync_Existing_DeletesSuccessfully()
+        {
+            var mockStrat = new Mock<IAuthStrategy>();
+            var mockStore = new Mock<ISecureTokenStore>();
+            var logger = new Mock<ILogger<IdentityManager>>();
+
+            var existingAccount = new IdentityAccount
+            {
+                Id = "1",
+                Provider = "TestProvider",
+                AccessToken = "existing-token"
+            };
+
+            mockStore.Setup(s => s.LoadAsync()).ReturnsAsync(new List<IdentityAccount> { existingAccount });
+
+            var manager = new IdentityManager(new[] { mockStrat.Object }, mockStore.Object, logger.Object);
+
+            await manager.WaitForInitialLoadAsync();
+
+            var tokenBefore = await manager.GetToken("TestProvider");
+            Assert.Equal("existing-token", tokenBefore);
+
+            var newAccount = new IdentityAccount
+            {
+                Id = "1",
+                Provider = "TestProvider",
+                AccessToken = ""
+            };
+
+            await manager.AddOrUpdateAccountAsync(newAccount);
+
+            var tokenAfter = await manager.GetToken("TestProvider");
+            Assert.Equal("", tokenAfter);
+        }
+
+        [Fact]
+        public async Task CompleteAuth_ValidProvider_ReturnsAuthResult()
+        {
+            var mockStrat = new Mock<IAuthStrategy>();
+            var mockStore = new Mock<ISecureTokenStore>();
+            var logger = new Mock<ILogger<IdentityManager>>();
+
+            var authResult = new AuthResult
+            {
+                Status = "Success",
+                Message = "Authentication completed"
+            };
+
+            mockStrat.Setup(s => s.CompleteFlowAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(authResult);
+
+            var manager = new IdentityManager(new[] { mockStrat.Object }, mockStore.Object, logger.Object);
+
+            var providerName = mockStrat.Object.GetType().Name;
+            var result = await manager.CompleteAuth(providerName, "auth-code", "state");
+
+            Assert.NotNull(result);
+            Assert.Equal("Success", result.Status);
+            mockStrat.Verify(s => s.CompleteFlowAsync("auth-code", "state", It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task CompleteAuth_InvalidProvider_ThrowsException()
+        {
+            var mockStore = new Mock<ISecureTokenStore>();
+            var logger = new Mock<ILogger<IdentityManager>>();
+
+            // Create manager with empty strategy list
+            var manager = new IdentityManager(Array.Empty<IAuthStrategy>(), mockStore.Object, logger.Object);
+
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                manager.CompleteAuth("NonExistentProvider123", "auth-code", "state"));
+        }
     }
-
-    [Fact]
-    public async Task RefreshTokenAsync_ValidToken_ReturnsNewToken()
-    {
-        var mockStrat = new Mock<IAuthStrategy>();
-        var mockStore = new Mock<ISecureTokenStore>();
-        var logger = new Mock<ILogger<IdentityManager>>();
-
-        var refreshedToken = new TokenResponse
-        {
-            AccessToken = "new-access-token",
-            RefreshToken = "new-refresh-token",
-            ExpiresInSeconds = 7200
-        };
-
-        mockStrat.Setup(s => s.RefreshTokenAsync(It.IsAny<IdentityAccount>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(refreshedToken);
-
-        var manager = new IdentityManager(new[] { mockStrat.Object }, mockStore.Object, logger.Object);
-
-        var account = new IdentityAccount
-        {
-            Id = "1",
-            Provider = "TestProvider",
-            AccessToken = "old-token",
-            RefreshToken = "valid-refresh-token",
-            ExpiresAt = DateTimeOffset.UtcNow.AddMinutes(-5) // expired
-        };
-
-        await manager.AddOrUpdateAccountAsync(account);
-
-        var token = await manager.GetToken("TestProvider");
-
-        Assert.Equal("new-access-token", token);
-        mockStrat.Verify(s => s.RefreshTokenAsync(It.IsAny<IdentityAccount>(), It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task RefreshTokenAsync_ExpiredToken_ThrowsException()
-    {
-        var mockStrat = new Mock<IAuthStrategy>();
-        var mockStore = new Mock<ISecureTokenStore>();
-        var logger = new Mock<ILogger<IdentityManager>>();
-
-        mockStrat.Setup(s => s.RefreshTokenAsync(It.IsAny<IdentityAccount>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new InvalidOperationException("Refresh token expired"));
-        mockStore.Setup(s => s.LoadAsync()).ReturnsAsync(new List<IdentityAccount>());
-
-        var manager = new IdentityManager(new[] { mockStrat.Object }, mockStore.Object, logger.Object);
-
-        await manager.WaitForInitialLoadAsync();
-
-        var account = new IdentityAccount
-        {
-            Id = "1",
-            Provider = "TestProvider",
-            AccessToken = "old-token",
-            RefreshToken = "expired-refresh-token",
-            ExpiresAt = DateTimeOffset.UtcNow.AddHours(-1)
-        };
-
-        await manager.AddOrUpdateAccountAsync(account);
-
-        var token = await manager.GetToken("TestProvider");
-
-        // When refresh fails, it should return the old token
-        Assert.Equal("old-token", token);
-        mockStrat.Verify(s => s.RefreshTokenAsync(It.IsAny<IdentityAccount>(), It.IsAny<CancellationToken>()), Times.Once);
-        logger.Verify(
-            x => x.Log(
-                LogLevel.Error,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Failed refreshing token")),
-                It.IsAny<Exception>(),
-                It.Is<Func<It.IsAnyType, Exception?, string>>((v, t) => true)),
-            Times.Once);
-    }
-
-    [Fact]
-    public async Task GetAccountAsync_ExistingAccount_ReturnsAccount()
-    {
-        var mockStrat = new Mock<IAuthStrategy>();
-        var mockStore = new Mock<ISecureTokenStore>();
-        var logger = new Mock<ILogger<IdentityManager>>();
-
-        var storedAccounts = new List<IdentityAccount>();
-        mockStore.Setup(s => s.SaveAsync(It.IsAny<List<IdentityAccount>>()))
-            .Callback<List<IdentityAccount>>(accounts => storedAccounts.AddRange(accounts))
-            .Returns(Task.CompletedTask);
-        mockStore.Setup(s => s.LoadAsync())
-            .ReturnsAsync(storedAccounts);
-
-        var manager = new IdentityManager(new[] { mockStrat.Object }, mockStore.Object, logger.Object);
-
-        var account = new IdentityAccount
-        {
-            Id = "1",
-            Provider = "TestProvider",
-            AccessToken = "test-token",
-            Email = "test@example.com"
-        };
-
-        await manager.AddOrUpdateAccountAsync(account);
-
-        var token = await manager.GetToken("TestProvider");
-
-        Assert.Equal("test-token", token);
-    }
-
-    [Fact]
-    public async Task GetAccountAsync_NonExistent_ReturnsNull()
-    {
-        var mockStrat = new Mock<IAuthStrategy>();
-        var mockStore = new Mock<ISecureTokenStore>();
-        var logger = new Mock<ILogger<IdentityManager>>();
-
-        var manager = new IdentityManager(new[] { mockStrat.Object }, mockStore.Object, logger.Object);
-
-        var token = await manager.GetToken("NonExistentProvider");
-
-        Assert.Null(token);
-    }
-
-    [Fact]
-    public async Task SaveAccountAsync_NewAccount_CreatesSuccessfully()
-    {
-        var mockStrat = new Mock<IAuthStrategy>();
-        var mockStore = new Mock<ISecureTokenStore>();
-        var logger = new Mock<ILogger<IdentityManager>>();
-
-        mockStore.Setup(s => s.SaveAsync(It.IsAny<List<IdentityAccount>>())).Returns(Task.CompletedTask);
-
-        var manager = new IdentityManager(new[] { mockStrat.Object }, mockStore.Object, logger.Object);
-
-        var account = new IdentityAccount
-        {
-            Id = "1",
-            Provider = "NewProvider",
-            AccessToken = "new-token",
-            Email = "new@example.com"
-        };
-
-        await manager.AddOrUpdateAccountAsync(account);
-
-        mockStore.Verify(s => s.SaveAsync(It.IsAny<List<IdentityAccount>>()), Times.AtLeastOnce);
-    }
-
-    [Fact]
-    public async Task DeleteAccountAsync_Existing_DeletesSuccessfully()
-    {
-        var mockStrat = new Mock<IAuthStrategy>();
-        var mockStore = new Mock<ISecureTokenStore>();
-        var logger = new Mock<ILogger<IdentityManager>>();
-
-        var existingAccount = new IdentityAccount
-        {
-            Id = "1",
-            Provider = "TestProvider",
-            AccessToken = "existing-token"
-        };
-
-        mockStore.Setup(s => s.LoadAsync()).ReturnsAsync(new List<IdentityAccount> { existingAccount });
-
-        var manager = new IdentityManager(new[] { mockStrat.Object }, mockStore.Object, logger.Object);
-
-        await manager.WaitForInitialLoadAsync();
-
-        var tokenBefore = await manager.GetToken("TestProvider");
-        Assert.Equal("existing-token", tokenBefore);
-
-        var newAccount = new IdentityAccount
-        {
-            Id = "1",
-            Provider = "TestProvider",
-            AccessToken = ""
-        };
-
-        await manager.AddOrUpdateAccountAsync(newAccount);
-
-        var tokenAfter = await manager.GetToken("TestProvider");
-        Assert.Equal("", tokenAfter);
-    }
-
-    [Fact]
-    public async Task CompleteAuth_ValidProvider_ReturnsAuthResult()
-    {
-        var mockStrat = new Mock<IAuthStrategy>();
-        var mockStore = new Mock<ISecureTokenStore>();
-        var logger = new Mock<ILogger<IdentityManager>>();
-
-        var authResult = new AuthResult
-        {
-            Status = "Success",
-            Message = "Authentication completed"
-        };
-
-        mockStrat.Setup(s => s.CompleteFlowAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(authResult);
-
-        var manager = new IdentityManager(new[] { mockStrat.Object }, mockStore.Object, logger.Object);
-
-        var providerName = mockStrat.Object.GetType().Name;
-        var result = await manager.CompleteAuth(providerName, "auth-code", "state");
-
-        Assert.NotNull(result);
-        Assert.Equal("Success", result.Status);
-        mockStrat.Verify(s => s.CompleteFlowAsync("auth-code", "state", It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task CompleteAuth_InvalidProvider_ThrowsException()
-    {
-        var mockStore = new Mock<ISecureTokenStore>();
-        var logger = new Mock<ILogger<IdentityManager>>();
-
-        // Create manager with empty strategy list
-        var manager = new IdentityManager(Array.Empty<IAuthStrategy>(), mockStore.Object, logger.Object);
-
-        await Assert.ThrowsAsync<InvalidOperationException>(() => 
-            manager.CompleteAuth("NonExistentProvider123", "auth-code", "state"));
-    }
-}
 }

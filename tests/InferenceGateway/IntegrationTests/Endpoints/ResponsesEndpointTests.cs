@@ -169,12 +169,12 @@ public class ResponsesEndpointTests : IClassFixture<SynaxisWebApplicationFactory
         var token = await GetAuthTokenAsync();
         var authenticatedClient = CreateAuthenticatedClient(token);
 
-            var request = new
-            {
-                model = "test-alias",
-                messages = new[] { new { role = "user", content = "Hello" } },
-                stream = true
-            };
+        var request = new
+        {
+            model = "test-alias",
+            messages = new[] { new { role = "user", content = "Hello" } },
+            stream = true
+        };
 
         var response = await authenticatedClient.PostAsJsonAsync("/openai/v1/responses", request);
 

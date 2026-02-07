@@ -172,7 +172,7 @@ public class SmartRoutingChatClientTests : TestBase
         // Act & Assert
         var exception = await Assert.ThrowsAsync<AggregateException>(async () =>
             await _client.GetResponseAsync(messages, options, cts.Token));
-        
+
         Assert.Contains("All providers failed for model 'gpt-4'", exception.Message);
     }
 

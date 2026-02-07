@@ -21,7 +21,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
         private readonly HttpClient _httpClient;
         private readonly string _modelId;
         private readonly ChatClientMetadata _metadata;
-        private static readonly JsonSerializerOptions _jsonOptions = new ()
+        private static readonly JsonSerializerOptions _jsonOptions = new()
         {
             PropertyNameCaseInsensitive = true,
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
@@ -29,14 +29,14 @@ namespace Synaxis.InferenceGateway.Infrastructure
 
         public CohereChatClient(HttpClient httpClient, string modelId, string apiKey)
         {
-            _httpClient = httpClient;
-            _modelId = modelId;
+            this._httpClient = httpClient;
+            this._modelId = modelId;
             _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
             _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Synaxis/1.0");
-            _metadata = new ChatClientMetadata("Cohere", new Uri("https://api.cohere.com/v2/chat"), modelId);
+            this._metadata = new ChatClientMetadata("Cohere", new Uri("https://api.cohere.com/v2/chat"), modelId);
         }
 
-        public ChatClientMetadata Metadata => _metadata;
+        public ChatClientMetadata Metadata => this._metadata;
 
         public async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
         {
@@ -189,7 +189,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
             };
         }
 
-        public void Dispose() => _httpClient.Dispose();
+        public void Dispose() => this._httpClient.Dispose();
 
         public object? GetService(Type serviceType, object? serviceKey = null) => null;
 

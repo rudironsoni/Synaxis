@@ -15,23 +15,23 @@ namespace Synaxis.InferenceGateway.Infrastructure.ChatClients
 
         public ChatClientFactory(IServiceProvider serviceProvider)
         {
-            _serviceProvider = serviceProvider;
+            this._serviceProvider = serviceProvider;
         }
 
         public IChatClient? GetClient(string? key = null)
         {
             if (string.IsNullOrEmpty(key))
             {
-                return _serviceProvider.GetService<IChatClient>();
+                return this._serviceProvider.GetService<IChatClient>();
             }
 
-            return _serviceProvider.GetKeyedService<IChatClient>(key);
+            return this._serviceProvider.GetKeyedService<IChatClient>(key);
         }
 
         public object? GetService(Type serviceType, object? serviceKey = null)
         {
-            if (serviceKey == null) return _serviceProvider.GetService(serviceType);
-            return _serviceProvider.GetKeyedService(serviceType, serviceKey);
+            if (serviceKey == null) return this._serviceProvider.GetService(serviceType);
+            return this._serviceProvider.GetKeyedService(serviceType, serviceKey);
         }
     }
 }

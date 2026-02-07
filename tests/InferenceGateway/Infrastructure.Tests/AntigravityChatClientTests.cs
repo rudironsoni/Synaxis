@@ -59,7 +59,7 @@ public class AntigravityChatClientTests
                 ItExpr.IsAny<HttpRequestMessage>(),
                 ItExpr.IsAny<CancellationToken>()
             )
-            .Callback<HttpRequestMessage, CancellationToken>((req, _) => 
+            .Callback<HttpRequestMessage, CancellationToken>((req, _) =>
             {
                 capturedRequest = req;
                 requestBody = req.Content?.ReadAsStringAsync().GetAwaiter().GetResult();
@@ -75,10 +75,10 @@ public class AntigravityChatClientTests
             BaseAddress = new Uri("https://cloudcode-pa.googleapis.com")
         };
         var client = new AntigravityChatClient(httpClient, _modelId, _projectId, _tokenProviderMock.Object);
-        var messages = new List<ChatMessage> 
-        { 
+        var messages = new List<ChatMessage>
+        {
             new ChatMessage(ChatRole.System, "Be helpful"),
-            new ChatMessage(ChatRole.User, "Hi") 
+            new ChatMessage(ChatRole.User, "Hi")
         };
 
         // Act
@@ -103,7 +103,7 @@ public class AntigravityChatClientTests
 
         Assert.Equal(_projectId, root.GetProperty("project").GetString());
         Assert.Equal(_modelId, root.GetProperty("model").GetString());
-        
+
         var req = root.GetProperty("request");
         Assert.Equal("Be helpful", req.GetProperty("systemInstruction").GetProperty("parts")[0].GetProperty("text").GetString());
         Assert.Equal("Hi", req.GetProperty("contents")[0].GetProperty("parts")[0].GetProperty("text").GetString());
@@ -113,7 +113,7 @@ public class AntigravityChatClientTests
     public async Task GetStreamingResponseAsync_ParsesSSE_YieldsUpdates()
     {
         // Arrange
-        var streamContent = 
+        var streamContent =
 @"data: { ""response"": { ""candidates"": [{ ""content"": { ""role"": ""model"", ""parts"": [{ ""text"": ""Hello"" }] }, ""responseId"": ""1"" }] } }
 
 data: { ""response"": { ""candidates"": [{ ""content"": { ""role"": ""model"", ""parts"": [{ ""text"": "" World"" }] }, ""responseId"": ""1"" }] } }

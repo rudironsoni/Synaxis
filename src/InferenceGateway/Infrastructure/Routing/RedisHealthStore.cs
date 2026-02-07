@@ -18,8 +18,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Routing
 
         public RedisHealthStore(IConnectionMultiplexer redis, ILogger<RedisHealthStore> logger)
         {
-            _redis = redis;
-            _logger = logger;
+            this._redis = redis;
+            this._logger = logger;
         }
 
         public async Task<bool> IsHealthyAsync(string providerKey, CancellationToken cancellationToken = default)

@@ -24,9 +24,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
             ILogger<SecurityConfigurationValidator> logger,
             string environmentName = "Production")
         {
-            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _isDevelopment = environmentName == "Development";
+            this._configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._isDevelopment = environmentName == "Development";
         }
 
         /// <summary>

@@ -132,13 +132,13 @@ public class SynaxisWebApplicationFactory : WebApplicationFactory<Program>, IAsy
             // Load .env files if present so environment variables are available for tests
             DotNetEnv.Env.TraversePath().Load();
 
-        var settings = new Dictionary<string, string?>
-        {
-            ["Synaxis:ControlPlane:ConnectionString"] = _postgres.GetConnectionString(),
-            ["Synaxis:ControlPlane:UseInMemory"] = "false",
-            ["Synaxis:ControlPlane:RunMigrations"] = "false",
-            ["ConnectionStrings:Redis"] = $"{_redis.GetConnectionString()},abortConnect=false"
-        };
+            var settings = new Dictionary<string, string?>
+            {
+                ["Synaxis:ControlPlane:ConnectionString"] = _postgres.GetConnectionString(),
+                ["Synaxis:ControlPlane:UseInMemory"] = "false",
+                ["Synaxis:ControlPlane:RunMigrations"] = "false",
+                ["ConnectionStrings:Redis"] = $"{_redis.GetConnectionString()},abortConnect=false"
+            };
             // Map a standard list of provider environment variables to configuration keys.
             // Support both modern names like GROQ_API_KEY and legacy SYNAPLEXER_* variants by trying
             // multiple candidate env var names for each provider.

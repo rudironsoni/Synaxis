@@ -73,7 +73,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Contracts
 
         public string? Purpose { get; set; }
 
-        public string[] ? DataCategories { get; set; }
+        public string[]? DataCategories { get; set; }
 
         public bool EncryptionUsed { get; set; }
 
@@ -90,7 +90,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Contracts
 
         public string? LegalBasis { get; set; }
 
-        public string[] ? DataCategories { get; set; }
+        public string[]? DataCategories { get; set; }
     }
 
     public class BreachContext
@@ -101,7 +101,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Contracts
 
         public int AffectedUsersCount { get; set; }
 
-        public string[] ? DataCategoriesExposed { get; set; }
+        public string[]? DataCategoriesExposed { get; set; }
 
         public string? RiskLevel { get; set; } // low, medium, high
     }
@@ -112,7 +112,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Contracts
 
         public string Format { get; set; } = "json";
 
-        public byte[] ? Data { get; set; }
+        public byte[]? Data { get; set; }
 
         public DateTime ExportedAt { get; set; }
 

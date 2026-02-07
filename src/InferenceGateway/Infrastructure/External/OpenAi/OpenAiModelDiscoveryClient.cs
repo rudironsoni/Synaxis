@@ -22,8 +22,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.OpenAi
 
         public OpenAiModelDiscoveryClient(HttpClient httpClient, ILogger<OpenAiModelDiscoveryClient> logger)
         {
-            _httpClient = httpClient;
-            _logger = logger;
+            this._httpClient = httpClient;
+            this._logger = logger;
         }
 
         public async Task<List<string>> GetModelsAsync(string baseUrl, string apiKey, CancellationToken ct)

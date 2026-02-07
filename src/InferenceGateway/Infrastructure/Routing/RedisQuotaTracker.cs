@@ -114,9 +114,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Routing
             ILogger<RedisQuotaTracker> logger,
             IOptions<SynaxisConfiguration> config)
         {
-            _redis = redis;
-            _logger = logger;
-            _config = config.Value;
+            this._redis = redis;
+            this._logger = logger;
+            this._config = config.Value;
         }
 
         /// <summary>
@@ -145,7 +145,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Routing
                 var maxTpm = providerConfig.RateLimitTPM;
 
                 // If no rate limits configured, allow request
-                if (!maxRpm.HasValue && !maxTpm.HasValue)
+                if (!maxthis.Rpm.HasValue && !maxthis.Tpm.HasValue)
                 {
                     return true;
                 }
@@ -167,11 +167,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Routing
                     var rpmValue = currentRpm.HasValue ? (long)currentRpm : 0;
                     var tpmValue = currentTpm.HasValue ? (long)currentTpm : 0;
 
-                    if (maxRpm.HasValue && rpmValue >= maxRpm.Value)
+                    if (maxthis.Rpm.HasValue && rpmValue >= maxRpm.Value)
                     {
                         _logger.LogWarning("Provider '{ProviderKey}' exceeded RPM limit: {CurrentRpm}/{MaxRpm}", providerKey, rpmValue, maxRpm.Value);
                     }
-                    else if (maxTpm.HasValue && tpmValue >= maxTpm.Value)
+                    else if (maxthis.Tpm.HasValue && tpmValue >= maxTpm.Value)
                     {
                         _logger.LogWarning("Provider '{ProviderKey}' exceeded TPM limit: {CurrentTpm}/{MaxTpm}", providerKey, tpmValue, maxTpm.Value);
                     }

@@ -82,7 +82,7 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
     {
         // Create first user and their project
         var (client1, user1) = await CreateAuthenticatedClientAsync("user1@example.com");
-        
+
         // Create second user with their own tenant
         var (_, user2) = await CreateAuthenticatedClientAsync("user2@example.com");
         var projectForUser2 = await CreateTestProjectAsync(user2.TenantId);
@@ -154,7 +154,7 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
     {
         // Create first user
         var (client1, user1) = await CreateAuthenticatedClientAsync("user1@example.com");
-        
+
         // Create second user with their own tenant and project
         var (_, user2) = await CreateAuthenticatedClientAsync("user2@example.com");
         var projectForUser2 = await CreateTestProjectAsync(user2.TenantId);

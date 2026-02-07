@@ -24,7 +24,7 @@ public class ProvidersEndpointTests : IClassFixture<SynaxisWebApplicationFactory
 
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
-        
+
         Assert.True(content.TryGetProperty("providers", out var providers));
         Assert.Equal(JsonValueKind.Array, providers.ValueKind);
     }
@@ -39,7 +39,7 @@ public class ProvidersEndpointTests : IClassFixture<SynaxisWebApplicationFactory
         var providers = content.GetProperty("providers").EnumerateArray().ToList();
 
         Assert.True(providers.Count > 0);
-        
+
         var firstProvider = providers.First();
         Assert.True(firstProvider.TryGetProperty("id", out _));
         Assert.True(firstProvider.TryGetProperty("name", out _));
@@ -63,7 +63,7 @@ public class ProvidersEndpointTests : IClassFixture<SynaxisWebApplicationFactory
         foreach (var provider in providers)
         {
             var status = provider.GetProperty("status").GetString();
-            Assert.True(status == "healthy" || status == "unhealthy", 
+            Assert.True(status == "healthy" || status == "unhealthy",
                 $"Provider status should be 'healthy' or 'unhealthy', got '{status}'");
         }
     }
@@ -78,10 +78,10 @@ public class ProvidersEndpointTests : IClassFixture<SynaxisWebApplicationFactory
         var providers = content.GetProperty("providers").EnumerateArray().ToList();
 
         Assert.True(providers.Count > 0);
-        
+
         var firstProvider = providers.First();
         var usage = firstProvider.GetProperty("usage");
-        
+
         Assert.True(usage.TryGetProperty("totalTokens", out _));
         Assert.True(usage.TryGetProperty("requests", out _));
     }
@@ -91,7 +91,7 @@ public class ProvidersEndpointTests : IClassFixture<SynaxisWebApplicationFactory
     {
         var providersResponse = await _client.GetAsync("/api/providers");
         providersResponse.EnsureSuccessStatusCode();
-        
+
         var providersContent = await providersResponse.Content.ReadFromJsonAsync<JsonElement>();
         var providers = providersContent.GetProperty("providers").EnumerateArray().ToList();
         var providerId = providers.First().GetProperty("id").GetString();
@@ -100,13 +100,13 @@ public class ProvidersEndpointTests : IClassFixture<SynaxisWebApplicationFactory
 
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
-        
+
         Assert.True(content.TryGetProperty("status", out var status));
         Assert.True(content.TryGetProperty("lastChecked", out var lastChecked));
-        
+
         var statusValue = status.GetString();
         Assert.True(statusValue == "healthy" || statusValue == "unhealthy");
-        
+
         Assert.False(string.IsNullOrEmpty(lastChecked.GetString()));
     }
 
@@ -123,7 +123,7 @@ public class ProvidersEndpointTests : IClassFixture<SynaxisWebApplicationFactory
     {
         var providersResponse = await _client.GetAsync("/api/providers");
         providersResponse.EnsureSuccessStatusCode();
-        
+
         var providersContent = await providersResponse.Content.ReadFromJsonAsync<JsonElement>();
         var providers = providersContent.GetProperty("providers").EnumerateArray().ToList();
         var providerId = providers.First().GetProperty("id").GetString();
@@ -133,7 +133,7 @@ public class ProvidersEndpointTests : IClassFixture<SynaxisWebApplicationFactory
 
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
-        
+
         Assert.True(content.TryGetProperty("success", out var success));
         Assert.True(success.GetBoolean());
     }
@@ -152,7 +152,7 @@ public class ProvidersEndpointTests : IClassFixture<SynaxisWebApplicationFactory
     {
         var providersResponse = await _client.GetAsync("/api/providers");
         providersResponse.EnsureSuccessStatusCode();
-        
+
         var providersContent = await providersResponse.Content.ReadFromJsonAsync<JsonElement>();
         var providers = providersContent.GetProperty("providers").EnumerateArray().ToList();
         var providerId = providers.First().GetProperty("id").GetString();
@@ -162,7 +162,7 @@ public class ProvidersEndpointTests : IClassFixture<SynaxisWebApplicationFactory
 
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
-        
+
         Assert.True(content.TryGetProperty("success", out var success));
         Assert.True(success.GetBoolean());
     }
@@ -172,7 +172,7 @@ public class ProvidersEndpointTests : IClassFixture<SynaxisWebApplicationFactory
     {
         var providersResponse = await _client.GetAsync("/api/providers");
         providersResponse.EnsureSuccessStatusCode();
-        
+
         var providersContent = await providersResponse.Content.ReadFromJsonAsync<JsonElement>();
         var providers = providersContent.GetProperty("providers").EnumerateArray().ToList();
         var providerId = providers.First().GetProperty("id").GetString();
@@ -182,7 +182,7 @@ public class ProvidersEndpointTests : IClassFixture<SynaxisWebApplicationFactory
 
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
-        
+
         Assert.True(content.TryGetProperty("success", out var success));
         Assert.True(success.GetBoolean());
     }
@@ -198,19 +198,19 @@ public class ProvidersEndpointTests : IClassFixture<SynaxisWebApplicationFactory
         var root = json.RootElement;
 
         Assert.True(root.TryGetProperty("providers", out var providers));
-        
+
         var providerList = providers.EnumerateArray().ToList();
         if (providerList.Count > 0)
         {
             var sampleProvider = providerList.First();
-            
+
             Assert.True(sampleProvider.GetProperty("id").ValueKind == JsonValueKind.String);
             Assert.True(sampleProvider.GetProperty("name").ValueKind == JsonValueKind.String);
             Assert.True(sampleProvider.GetProperty("status").ValueKind == JsonValueKind.String);
             Assert.True(sampleProvider.GetProperty("tier").ValueKind == JsonValueKind.Number);
             Assert.True(sampleProvider.GetProperty("models").ValueKind == JsonValueKind.Array);
             Assert.True(sampleProvider.GetProperty("usage").ValueKind == JsonValueKind.Object);
-            
+
             var usage = sampleProvider.GetProperty("usage");
             Assert.True(usage.GetProperty("totalTokens").ValueKind == JsonValueKind.Number);
             Assert.True(usage.GetProperty("requests").ValueKind == JsonValueKind.Number);

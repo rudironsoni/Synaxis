@@ -19,7 +19,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
 
         public AesGcmTokenVault(ControlPlaneDbContext dbContext, IOptions<SynaxisConfiguration> config)
         {
-            _dbContext = dbContext;
+            this._dbContext = dbContext;
             // Derive a master key from a configured string. Do not allow an empty or missing master key.
             var masterKeyString = config.Value.MasterKey;
             if (string.IsNullOrWhiteSpace(masterKeyString))
@@ -28,7 +28,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
             }
 
             using var sha = SHA256.Create();
-            _masterKey = sha.ComputeHash(Encoding.UTF8.GetBytes(masterKeyString));
+            this._masterKey = sha.ComputeHash(Encoding.UTF8.GetBytes(masterKeyString));
         }
 
         public async Task<byte[]> EncryptAsync(Guid tenantId, string plaintext, CancellationToken cancellationToken = default)
@@ -86,7 +86,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
 
         private byte[] DecryptTenantKey(byte[] encryptedKey)
         {
-            if (encryptedKey.Length == 0) return _masterKey; // Fallback for uninitialized tenants (MVP)
+            if (encryptedKey.Length == 0) return this._masterKey; // Fallback for uninitialized tenants (MVP)
             return Decrypt(encryptedKey, _masterKey);
         }
 

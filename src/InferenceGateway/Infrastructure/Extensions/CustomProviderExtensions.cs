@@ -12,8 +12,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
     using Microsoft.Extensions.Logging;
     using Synaxis.InferenceGateway.Infrastructure.External.GitHub;
 
-        public static class CustomProviderExtensions
-        {
+    public static class CustomProviderExtensions
+    {
         public static IServiceCollection AddCohere(this IServiceCollection services, string apiKey, string modelId)
         {
             services.AddChatClient(sp =>

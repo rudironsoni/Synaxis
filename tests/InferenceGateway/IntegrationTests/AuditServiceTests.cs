@@ -33,7 +33,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         {
             using var dbContext = CreateInMemoryDbContext();
             var service = new AuditService(dbContext);
-            
+
             Assert.NotNull(service);
         }
 
@@ -43,7 +43,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             // Arrange
             using var dbContext = CreateInMemoryDbContext();
             var service = new AuditService(dbContext);
-            
+
             var tenantId = Guid.NewGuid();
             var userId = Guid.NewGuid();
             var action = "user.login";
@@ -70,7 +70,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             // Arrange
             using var dbContext = CreateInMemoryDbContext();
             var service = new AuditService(dbContext);
-            
+
             var tenantId = Guid.NewGuid();
             var action = "system.startup";
             var payload = new { version = "1.0.0", timestamp = DateTimeOffset.UtcNow };
@@ -94,7 +94,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             // Arrange
             using var dbContext = CreateInMemoryDbContext();
             var service = new AuditService(dbContext);
-            
+
             var tenantId = Guid.NewGuid();
             var userId = Guid.NewGuid();
             var action = "user.logout";
@@ -117,7 +117,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             // Arrange
             using var dbContext = CreateInMemoryDbContext();
             var service = new AuditService(dbContext);
-            
+
             var tenantId = Guid.NewGuid();
             var userId = Guid.NewGuid();
             var action = "user.ping";
@@ -141,12 +141,12 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             // Arrange
             using var dbContext = CreateInMemoryDbContext();
             var service = new AuditService(dbContext);
-            
+
             var tenantId = Guid.NewGuid();
             var userId = Guid.NewGuid();
             var action = "api.request";
-            var payload = new 
-            { 
+            var payload = new
+            {
                 endpoint = "/v1/chat/completions",
                 method = "POST",
                 headers = new { authorization = "Bearer token", contentType = "application/json" },
@@ -173,7 +173,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             // Arrange
             using var dbContext = CreateInMemoryDbContext();
             var service = new AuditService(dbContext);
-            
+
             var tenantId = Guid.NewGuid();
             var action = "test.action";
 
@@ -193,7 +193,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             // Arrange
             using var dbContext = CreateInMemoryDbContext();
             var service = new AuditService(dbContext);
-            
+
             var tenantId = Guid.NewGuid();
             var action = "timestamp.test";
             var beforeLog = DateTimeOffset.UtcNow;
@@ -215,7 +215,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             // Arrange
             using var dbContext = CreateInMemoryDbContext();
             var service = new AuditService(dbContext);
-            
+
             var tenantId = Guid.NewGuid();
             var longAction = new string('a', 255);
             var payload = new { test = "value" };
@@ -235,7 +235,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             // Arrange
             using var dbContext = CreateInMemoryDbContext();
             var service = new AuditService(dbContext);
-            
+
             var tenantId = Guid.NewGuid();
             var action = "cancellation.test";
             var cancellationToken = new CancellationToken(true); // Already cancelled
@@ -251,7 +251,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             // Arrange
             using var dbContext = CreateInMemoryDbContext();
             var service = new AuditService(dbContext);
-            
+
             var tenantId = Guid.NewGuid();
             var action = "action-with-dashes_and.underscores";
             var payload = new { special = "chars!@#$%^&*()" };
@@ -273,7 +273,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             // Arrange
             using var dbContext = CreateInMemoryDbContext();
             var service = new AuditService(dbContext);
-            
+
             var tenant1 = Guid.NewGuid();
             var tenant2 = Guid.NewGuid();
             var action = "multi.tenant";
@@ -295,7 +295,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             // Arrange
             using var dbContext = CreateInMemoryDbContext();
             var service = new AuditService(dbContext);
-            
+
             var tenantId = Guid.NewGuid();
             var action = "null.payload";
             var payload = new { value1 = "not null", value2 = (string?)null, value3 = 42 };
@@ -319,7 +319,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             // Arrange
             using var dbContext = CreateInMemoryDbContext();
             var service = new AuditService(dbContext);
-            
+
             var tenantId = Guid.NewGuid();
             var action = "large.payload";
             var largeString = new string('x', 10000);
@@ -341,7 +341,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             // Arrange
             using var dbContext = CreateInMemoryDbContext();
             var service = new AuditService(dbContext);
-            
+
             var tenantId = Guid.NewGuid();
             var action = "utc.time";
 

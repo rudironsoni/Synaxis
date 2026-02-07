@@ -17,7 +17,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
 
         public NotificationService(ILogger<NotificationService> logger)
         {
-            _logger = logger;
+            this._logger = logger;
         }
 
         public Task SendQuotaWarningAsync(

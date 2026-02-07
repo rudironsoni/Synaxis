@@ -35,28 +35,28 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
 
         public CopilotSdkClient(ICopilotSdkAdapter adapter)
         {
-            _adapter = adapter ?? throw new ArgumentNullException(nameof(adapter));
+            this._adapter = adapter ?? throw new ArgumentNullException(nameof(adapter));
         }
 
         // Note: For scenarios where the SDK is available at runtime a factory/wrapper can be
         // written to produce an ICopilotSdkAdapter that talks to GitHub.Copilot.SDK. That factory
         // is intentionally not included here to keep the client lightweight and testable.
 
-        public ChatClientMetadata Metadata => _adapter.Metadata ?? new ChatClientMetadata("Copilot");
+        public ChatClientMetadata Metadata => this._adapter.Metadata ?? new ChatClientMetadata("Copilot");
 
         public Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
         {
-            return _adapter.GetResponseAsync(chatMessages, options, cancellationToken);
+            return this._adapter.GetResponseAsync(chatMessages, options, cancellationToken);
         }
 
         public IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
         {
-            return _adapter.GetStreamingResponseAsync(chatMessages, options, cancellationToken);
+            return this._adapter.GetStreamingResponseAsync(chatMessages, options, cancellationToken);
         }
 
         public object? GetService(Type serviceType, object? serviceKey = null)
         {
-            return _adapter.GetService(serviceType, serviceKey);
+            return this._adapter.GetService(serviceType, serviceKey);
         }
 
         public void Dispose()
