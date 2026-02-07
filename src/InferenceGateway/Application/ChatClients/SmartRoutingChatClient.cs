@@ -26,7 +26,7 @@ namespace Synaxis.InferenceGateway.Application.ChatClients
     /// </summary>
     public sealed class SmartRoutingChatClient : IChatClient
     {
-        private static readonly Regex StatusCodeRegex = new("(4\\d{2}|5\\d{2}|401|429)", RegexOptions.Compiled | RegexOptions.ExplicitCapture, TimeSpan.FromMilliseconds(100));
+        private static readonly Regex StatusCodeRegex = new ("(4\\d{2}|5\\d{2}|401|429)", RegexOptions.Compiled | RegexOptions.ExplicitCapture, TimeSpan.FromMilliseconds(100));
 
         private readonly IChatClientFactory chatClientFactory;
         private readonly IHealthStore healthStore;
@@ -74,7 +74,7 @@ namespace Synaxis.InferenceGateway.Application.ChatClients
         /// <summary>
         /// Gets the metadata for this chat client.
         /// </summary>
-        public ChatClientMetadata Metadata { get; } = new("SmartRoutingChatClient");
+        public ChatClientMetadata Metadata { get; } = new ("SmartRoutingChatClient");
 
         /// <summary>
         /// Gets a chat response asynchronously.
