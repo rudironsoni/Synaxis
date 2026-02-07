@@ -39,17 +39,20 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         /// <param name="tenantContext">The tenant context.</param>
         /// <param name="regionRouter">The region router.</param>
         /// <param name="geoIPService">The GeoIP service.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+#pragma warning disable MA0051 // Method is too long
         public async Task InvokeAsync(
             HttpContext context,
             ITenantContext tenantContext,
             IRegionRouter regionRouter,
             IGeoIPService geoIPService)
+#pragma warning restore MA0051
         {
             try
             {
                 // Skip region routing for health checks and public endpoints
-                if (context.Request.Path.StartsWithSegments("/health") ||
-                    context.Request.Path.StartsWithSegments("/openapi"))
+                if (context.Request.Path.StartsWithSegments("/health", StringComparison.OrdinalIgnoreCase) ||
+                    context.Request.Path.StartsWithSegments("/openapi", StringComparison.OrdinalIgnoreCase))
                 {
                     await this._next(context).ConfigureAwait(false);
                     return;
@@ -85,7 +88,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 context.Items["IsCrossBorder"] = await regionRouter.IsCrossBorderAsync(currentRegion, userRegion).ConfigureAwait(false);
 
                 // Check if cross-border routing is required
-                if (currentRegion != userRegion)
+                if (!string.Equals(currentRegion, userRegion, StringComparison.Ordinal))
                 {
                     this._logger.LogInformation(
                         "Cross-region request detected. Current: {CurrentRegion}, User: {UserRegion}, OrgId: {OrgId}",
@@ -142,7 +145,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 {
                     context.Response.Headers["X-Synaxis-Region"] = currentRegion;
                     context.Response.Headers["X-User-Region"] = userRegion;
-                    context.Response.Headers["X-Cross-Border"] = (currentRegion != userRegion).ToString();
+                    context.Response.Headers["X-Cross-Border"] = (!string.Equals(currentRegion, userRegion, StringComparison.Ordinal)).ToString();
                     return Task.CompletedTask;
                 });
 
@@ -180,7 +183,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 return "eu-west-1";
             }
 
-            if (countryCode == "BR")
+            if (string.Equals(countryCode, "BR", StringComparison.Ordinal))
             {
                 return "sa-east-1";
             }

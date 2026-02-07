@@ -4,6 +4,7 @@
 
 namespace Synaxis.InferenceGateway.WebApi.Middleware
 {
+    using System.Globalization;
     using System.Net;
     using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.Caching.Memory;
@@ -66,9 +67,9 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     this._logger.LogWarning("Rate limit exceeded for IP {ClientIp}: {Count} requests in last minute", clientIp, requestTimestamps.Count);
 
                     context.Response.StatusCode = (int)HttpStatusCode.TooManyRequests;
-                    context.Response.Headers.Append("X-RateLimit-Limit", this._requestsPerMinute.ToString());
+                    context.Response.Headers.Append("X-RateLimit-Limit", this._requestsPerMinute.ToString(CultureInfo.InvariantCulture));
                     context.Response.Headers.Append("X-RateLimit-Remaining", "0");
-                    context.Response.Headers.Append("X-RateLimit-Reset", requestTimestamps[0].Add(this._windowSize).ToString("R"));
+                    context.Response.Headers.Append("X-RateLimit-Reset", requestTimestamps[0].Add(this._windowSize).ToString("R", CultureInfo.InvariantCulture));
 
                     return;
                 }
@@ -81,9 +82,9 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 lock (requestTimestamps)
                 {
                     var remaining = this._requestsPerMinute - requestTimestamps.Count;
-                    context.Response.Headers.Append("X-RateLimit-Limit", this._requestsPerMinute.ToString());
-                    context.Response.Headers.Append("X-RateLimit-Remaining", remaining.ToString());
-                    context.Response.Headers.Append("X-RateLimit-Reset", requestTimestamps[0].Add(this._windowSize).ToString("R"));
+                    context.Response.Headers.Append("X-RateLimit-Limit", this._requestsPerMinute.ToString(CultureInfo.InvariantCulture));
+                    context.Response.Headers.Append("X-RateLimit-Remaining", remaining.ToString(CultureInfo.InvariantCulture));
+                    context.Response.Headers.Append("X-RateLimit-Reset", requestTimestamps[0].Add(this._windowSize).ToString("R", CultureInfo.InvariantCulture));
                 }
 
                 return Task.CompletedTask;
