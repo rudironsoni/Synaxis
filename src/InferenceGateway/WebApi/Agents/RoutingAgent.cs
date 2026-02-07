@@ -94,16 +94,14 @@ namespace Synaxis.InferenceGateway.WebApi.Agents
             var translatedResponse = this._translator.TranslateResponse(canonicalResponse);
 
             // 7. Log Routing Context
-            if (httpContext != null && response.AdditionalProperties != null)
+            if (httpContext != null && response.AdditionalProperties != null &&
+                response.AdditionalProperties.TryGetValue("model_id", out var resolvedModel) &&
+                response.AdditionalProperties.TryGetValue("provider_name", out var provider))
             {
-                if (response.AdditionalProperties.TryGetValue("model_id", out var resolvedModel) &&
-                    response.AdditionalProperties.TryGetValue("provider_name", out var provider))
-                {
-                    httpContext.Items["RoutingContext"] = new RoutingContext(
-                        openReq.Model ?? "default",
-                        resolvedModel?.ToString() ?? string.Empty,
-                        provider?.ToString() ?? string.Empty);
-                }
+                httpContext.Items["RoutingContext"] = new RoutingContext(
+                    openReq.Model ?? "default",
+                    resolvedModel?.ToString() ?? string.Empty,
+                    provider?.ToString() ?? string.Empty);
             }
 
             // 8. Build Agent Response
@@ -158,16 +156,14 @@ namespace Synaxis.InferenceGateway.WebApi.Agents
                 var translatedUpdate = this._translator.TranslateUpdate(update);
 
                 // 7. Log Routing Context (on first update if available)
-                if (httpContext != null && translatedUpdate.AdditionalProperties != null && !httpContext.Items.ContainsKey("RoutingContext"))
+                if (httpContext != null && translatedUpdate.AdditionalProperties != null && !httpContext.Items.ContainsKey("RoutingContext") &&
+                    translatedUpdate.AdditionalProperties.TryGetValue("model_id", out var resolvedModel) &&
+                    translatedUpdate.AdditionalProperties.TryGetValue("provider_name", out var provider))
                 {
-                    if (translatedUpdate.AdditionalProperties.TryGetValue("model_id", out var resolvedModel) &&
-                        translatedUpdate.AdditionalProperties.TryGetValue("provider_name", out var provider))
-                    {
-                        httpContext.Items["RoutingContext"] = new RoutingContext(
-                            openReq.Model ?? "default",
-                            resolvedModel?.ToString() ?? string.Empty,
-                            provider?.ToString() ?? string.Empty);
-                    }
+                    httpContext.Items["RoutingContext"] = new RoutingContext(
+                        openReq.Model ?? "default",
+                        resolvedModel?.ToString() ?? string.Empty,
+                        provider?.ToString() ?? string.Empty);
                 }
 
                 yield return new Microsoft.Agents.AI.AgentResponseUpdate

@@ -129,6 +129,6 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints
         /// <summary>
         /// Gets or sets the reason for revocation.
         /// </summary>
-        public required string Reason { get; set; }
+        required public string Reason { get; set; }
     }
 }
