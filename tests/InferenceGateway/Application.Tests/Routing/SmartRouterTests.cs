@@ -13,6 +13,7 @@ public class SmartRouterTests
     private readonly Mock<ICostService> _costServiceMock;
     private readonly Mock<IHealthStore> _healthStoreMock;
     private readonly Mock<IQuotaTracker> _quotaTrackerMock;
+    private readonly Mock<IRoutingScoreCalculator> _routingScoreCalculatorMock;
     private readonly Mock<ILogger<SmartRouter>> _loggerMock;
     private readonly SmartRouter _router;
 
@@ -22,13 +23,20 @@ public class SmartRouterTests
         this._costServiceMock = new Mock<ICostService>();
         this._healthStoreMock = new Mock<IHealthStore>();
         this._quotaTrackerMock = new Mock<IQuotaTracker>();
+        this._routingScoreCalculatorMock = new Mock<IRoutingScoreCalculator>();
         this._loggerMock = new Mock<ILogger<SmartRouter>>();
+
+        // Default: return higher score for lower tier (tier 1 > tier 2)
+        this._routingScoreCalculatorMock
+            .Setup(x => x.CalculateScore(It.IsAny<EnrichedCandidate>(), It.IsAny<string?>(), It.IsAny<string?>()))
+            .Returns<EnrichedCandidate, string?, string?>((candidate, _, _) => 100.0 - candidate.config.Tier);
 
         this._router = new SmartRouter(
             this._modelResolverMock.Object,
             this._costServiceMock.Object,
             this._healthStoreMock.Object,
             this._quotaTrackerMock.Object,
+            this._routingScoreCalculatorMock.Object,
             this._loggerMock.Object);
     }
 

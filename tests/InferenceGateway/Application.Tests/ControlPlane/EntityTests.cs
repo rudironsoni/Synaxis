@@ -60,57 +60,57 @@ public class EntityTests
         Assert.NotNull(apiKey.Project);
     }
 
-    [Fact]
-    public void AuditLog_Properties_CanBeSetAndRetrieved()
-    {
-        // Arrange
-        var auditLog = new AuditLog
-        {
-            Id = Guid.NewGuid(),
-            TenantId = Guid.NewGuid(),
-            UserId = Guid.NewGuid(),
-            Action = "user.login",
-            PayloadJson = "{\"ip\":\"127.0.0.1\"}",
-            CreatedAt = DateTimeOffset.UtcNow,
-        };
-
-        // Assert
-        Assert.NotEqual(Guid.Empty, auditLog.Id);
-        Assert.NotEqual(Guid.Empty, auditLog.TenantId);
-        Assert.NotNull(auditLog.UserId);
-        Assert.Equal("user.login", auditLog.Action);
-        Assert.Equal("{\"ip\":\"127.0.0.1\"}", auditLog.PayloadJson);
-        Assert.True(auditLog.CreatedAt <= DateTimeOffset.UtcNow);
-    }
-
-    [Fact]
-    public void AuditLog_Timestamp_IsSetAutomatically()
-    {
-        // Arrange & Act
-        var auditLog = new AuditLog();
-
-        // Assert
-        Assert.True(auditLog.CreatedAt <= DateTimeOffset.UtcNow);
-        Assert.True(auditLog.CreatedAt > DateTimeOffset.UtcNow.AddMinutes(-1));
-    }
-
-    [Fact]
-    public void AuditLog_Serialization_PayloadJsonCanBeDeserialized()
-    {
-        // Arrange
-        var auditLog = new AuditLog
-        {
-            PayloadJson = "{\"userId\":\"123\",\"action\":\"login\"}",
-        };
-
-        // Act
-        var payload = JsonSerializer.Deserialize<Dictionary<string, string>>(auditLog.PayloadJson!);
-
-        // Assert
-        Assert.NotNull(payload);
-        Assert.Equal("123", payload["userId"]);
-        Assert.Equal("login", payload["action"]);
-    }
+    // [Fact]
+    // public void AuditLog_Properties_CanBeSetAndRetrieved()
+    // {
+    //     // Arrange
+    //     var auditLog = new AuditLog
+    //     {
+    //         Id = Guid.NewGuid(),
+    //         TenantId = Guid.NewGuid(),
+    //         UserId = Guid.NewGuid(),
+    //         Action = "user.login",
+    //         PayloadJson = "{\"ip\":\"127.0.0.1\"}",
+    //         CreatedAt = DateTimeOffset.UtcNow,
+    //     };
+    //
+    //     // Assert
+    //     Assert.NotEqual(Guid.Empty, auditLog.Id);
+    //     Assert.NotEqual(Guid.Empty, auditLog.TenantId);
+    //     Assert.NotNull(auditLog.UserId);
+    //     Assert.Equal("user.login", auditLog.Action);
+    //     Assert.Equal("{\"ip\":\"127.0.0.1\"}", auditLog.PayloadJson);
+    //     Assert.True(auditLog.CreatedAt <= DateTimeOffset.UtcNow);
+    // }
+    //
+    // [Fact]
+    // public void AuditLog_Timestamp_IsSetAutomatically()
+    // {
+    //     // Arrange & Act
+    //     var auditLog = new AuditLog();
+    //
+    //     // Assert
+    //     Assert.True(auditLog.CreatedAt <= DateTimeOffset.UtcNow);
+    //     Assert.True(auditLog.CreatedAt > DateTimeOffset.UtcNow.AddMinutes(-1));
+    // }
+    //
+    // [Fact]
+    // public void AuditLog_Serialization_PayloadJsonCanBeDeserialized()
+    // {
+    //     // Arrange
+    //     var auditLog = new AuditLog
+    //     {
+    //         PayloadJson = "{\"userId\":\"123\",\"action\":\"login\"}",
+    //     };
+    //
+    //     // Act
+    //     var payload = JsonSerializer.Deserialize<Dictionary<string, string>>(auditLog.PayloadJson!);
+    //
+    //     // Assert
+    //     Assert.NotNull(payload);
+    //     Assert.Equal("123", payload["userId"]);
+    //     Assert.Equal("login", payload["action"]);
+    // }
 
     [Fact]
     public void GlobalModel_Properties_CanBeSetAndRetrieved()

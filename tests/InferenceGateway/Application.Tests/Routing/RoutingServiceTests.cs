@@ -36,8 +36,7 @@ public class RoutingServiceTests
         return new RoutingService(
             this._chatClientMock.Object,
             this._translatorMock.Object,
-            this._httpContextAccessorMock.Object,
-            this._loggerMock.Object);
+            this._httpContextAccessorMock.Object);
     }
 
     #region Constructor Tests
@@ -229,9 +228,9 @@ public class RoutingServiceTests
         Assert.True(this._httpContext.Items.ContainsKey("RoutingContext"));
         var routingContext = this._httpContext.Items["RoutingContext"] as RoutingContext;
         Assert.NotNull(routingContext);
-        Assert.Equal("gpt-4", routingContext.RequestedModel);
-        Assert.Equal("gpt-4-turbo", routingContext.ResolvedCanonicalId);
-        Assert.Equal("openai", routingContext.Provider);
+        Assert.Equal("gpt-4", routingContext.requestedModel);
+        Assert.Equal("gpt-4-turbo", routingContext.resolvedCanonicalId);
+        Assert.Equal("openai", routingContext.provider);
     }
 
     [Fact]
@@ -585,9 +584,9 @@ public class RoutingServiceTests
 
         var routingContext = this._httpContext.Items["RoutingContext"] as RoutingContext;
         Assert.NotNull(routingContext);
-        Assert.Equal("requested-model", routingContext.RequestedModel);
-        Assert.Equal("resolved-model", routingContext.ResolvedCanonicalId);
-        Assert.Equal("test-provider", routingContext.Provider);
+        Assert.Equal("requested-model", routingContext.requestedModel);
+        Assert.Equal("resolved-model", routingContext.resolvedCanonicalId);
+        Assert.Equal("test-provider", routingContext.provider);
     }
 
     [Fact]
@@ -688,7 +687,7 @@ public class RoutingServiceTests
 
         var routingContext = this._httpContext.Items["RoutingContext"] as RoutingContext;
         Assert.NotNull(routingContext);
-        Assert.Equal("default", routingContext.RequestedModel);
+        Assert.Equal("default", routingContext.requestedModel);
     }
 
     #endregion

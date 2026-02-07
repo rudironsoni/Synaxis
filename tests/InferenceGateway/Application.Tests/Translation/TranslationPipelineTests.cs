@@ -17,7 +17,7 @@ public class TranslationPipelineTests
 
         var result = pipeline.TranslateRequest(request);
 
-        Assert.Equal("first-model", result.Model);
+        Assert.Equal("first-model", result.model);
     }
 
     [Fact]
@@ -31,7 +31,7 @@ public class TranslationPipelineTests
 
         var result = pipeline.TranslateResponse(response);
 
-        Assert.Equal("first-response", result.Content);
+        Assert.Equal("first-response", result.content);
     }
 
     [Fact]
@@ -63,7 +63,7 @@ public class TranslationPipelineTests
         public bool CanHandle(CanonicalRequest request) => this._canHandle;
 
         public CanonicalRequest Translate(CanonicalRequest request)
-            => request with { Model = this._model };
+            => request with { model = this._model };
     }
 
     private sealed class TestResponseTranslator : IResponseTranslator
@@ -80,7 +80,7 @@ public class TranslationPipelineTests
         public bool CanHandle(CanonicalResponse response) => this._canHandle;
 
         public CanonicalResponse Translate(CanonicalResponse response)
-            => response with { Content = this._content };
+            => response with { content = this._content };
     }
 
     private sealed class TestStreamingTranslator : IStreamingTranslator
