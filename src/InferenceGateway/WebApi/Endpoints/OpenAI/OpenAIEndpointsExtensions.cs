@@ -24,6 +24,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
     /// <summary>
     /// Extensions for mapping OpenAI-compatible endpoints.
     /// </summary>
+#pragma warning disable MA0051 // Method too long
     public static class OpenAIEndpointsExtensions
     {
         /// <summary>
@@ -268,6 +269,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
             group.MapLegacyCompletions();
             group.MapModels();
         }
+#pragma warning restore MA0051 // Method too long
     }
 
     /// <summary>

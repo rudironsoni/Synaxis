@@ -85,8 +85,7 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
                             chatMessage.Contents.Add(new FunctionCallContent(
                                 toolCall.Id,
                                 toolCall.Function.Name,
-                                string.IsNullOrEmpty(toolCall.Function.Arguments) ? null : JsonSerializer.Deserialize<IDictionary<string, object?>>(toolCall.Function.Arguments)
-                            ));
+                                string.IsNullOrEmpty(toolCall.Function.Arguments) ? null : JsonSerializer.Deserialize<IDictionary<string, object?>>(toolCall.Function.Arguments)));
                         }
                     }
                 }
@@ -140,16 +139,17 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
             {
                 if (element.ValueKind == JsonValueKind.String)
                 {
-                    return new List<string> { element.GetString()! };
+                    return new List<string> { element.GetString() ! };
                 }
-                else if (element.ValueKind == JsonValueKind.Array)
+
+                if (element.ValueKind == JsonValueKind.Array)
                 {
                     var list = new List<string>();
                     foreach (var item in element.EnumerateArray())
                     {
                         if (item.ValueKind == JsonValueKind.String)
                         {
-                            list.Add(item.GetString()!);
+                            list.Add(item.GetString() !);
                         }
                     }
 
