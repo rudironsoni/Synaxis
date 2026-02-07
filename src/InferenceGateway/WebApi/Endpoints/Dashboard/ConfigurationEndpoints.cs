@@ -120,7 +120,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
                     TotalProviders = config.Value.Providers.Count,
                     EnabledProviders = config.Value.Providers.Count(p => p.Value.Enabled),
                     TotalModels = config.Value.CanonicalModels.Count,
-                    TotalAliases = config.Value.Aliases.Count
+                    TotalAliases = config.Value.Aliases.Count,
                 };
 
                 return Results.Ok(settings);
@@ -135,7 +135,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
                     Theme = "dark",
                     DefaultModel = "default",
                     StreamingEnabled = true,
-                    NotificationsEnabled = true
+                    NotificationsEnabled = true,
                 };
 
                 return Results.Ok(preferences);

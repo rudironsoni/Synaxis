@@ -36,7 +36,7 @@ public class DuckDuckGoChatClientTests
             {
                 var res = new HttpResponseMessage(HttpStatusCode.OK)
                 {
-                    Content = JsonContent.Create(new { reply = "hello from ddg" })
+                    Content = JsonContent.Create(new { reply = "hello from ddg" }),
                 };
                 // Update token for next request
                 res.Headers.Add("x-vqd-4", "next-token");

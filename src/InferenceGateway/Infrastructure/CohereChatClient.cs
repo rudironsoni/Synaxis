@@ -21,7 +21,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
         private readonly HttpClient _httpClient;
         private readonly string _modelId;
         private readonly ChatClientMetadata _metadata;
-        private static readonly JsonSerializerOptions _jsonOptions = new ()
+        private static readonly JsonSerializerOptions _jsonOptions = new()
         {
             PropertyNameCaseInsensitive = true,
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
@@ -31,8 +31,8 @@ namespace Synaxis.InferenceGateway.Infrastructure
         {
             this._httpClient = httpClient;
             this._modelId = modelId;
-            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
-            _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Synaxis/1.0");
+            this._httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
+            this._httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Synaxis/1.0");
             this._metadata = new ChatClientMetadata("Cohere", new Uri("https://api.cohere.com/v2/chat"), modelId);
         }
 
@@ -40,52 +40,52 @@ namespace Synaxis.InferenceGateway.Infrastructure
 
         public async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
         {
-            var requestObj = CreateRequest(chatMessages, options, stream: false);
+            var requestObj = this.CreateRequest(chatMessages, options, stream: false);
             var request = new HttpRequestMessage(HttpMethod.Post, "https://api.cohere.com/v2/chat")
             {
-                Content = JsonContent.Create(requestObj)
+                Content = JsonContent.Create(requestObj),
             };
 
-            using var response = await _httpClient.SendAsync(request, cancellationToken);
+            using var response = await this._httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
             if (!response.IsSuccessStatusCode)
             {
-                var error = await response.Content.ReadAsStringAsync(cancellationToken);
+                var error = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
                 throw new HttpRequestException($"Cohere API Error {response.StatusCode}: {error}");
             }
 
             response.EnsureSuccessStatusCode();
 
-            var cohereResponse = await response.Content.ReadFromJsonAsync<CohereResponseV2>(_jsonOptions, cancellationToken: cancellationToken);
+            var cohereResponse = await response.Content.ReadFromJsonAsync<CohereResponseV2>(_jsonOptions, cancellationToken: cancellationToken).ConfigureAwait(false);
 
             var text = cohereResponse?.Message?.Content?.FirstOrDefault(c => c.Type == "text")?.Text ?? "";
             var chatResponse = new ChatResponse(new ChatMessage(ChatRole.Assistant, text))
             {
-                ModelId = _modelId
+                ModelId = this._modelId,
             };
             return chatResponse;
         }
 
         public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            var requestObj = CreateRequest(chatMessages, options, stream: true);
+            var requestObj = this.CreateRequest(chatMessages, options, stream: true);
             var request = new HttpRequestMessage(HttpMethod.Post, "https://api.cohere.com/v2/chat")
             {
-                Content = JsonContent.Create(requestObj)
+                Content = JsonContent.Create(requestObj),
             };
 
             // Ask for SSE
             request.Headers.Accept.Clear();
             request.Headers.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("text/event-stream"));
 
-            using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            using var response = await this._httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
             {
-                var err = await response.Content.ReadAsStringAsync(cancellationToken);
+                var err = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
                 throw new HttpRequestException($"Cohere API Error {response.StatusCode}: {err}");
             }
 
-            using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+            using var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
             using var reader = new System.IO.StreamReader(stream);
 
             string? line;
@@ -93,8 +93,15 @@ namespace Synaxis.InferenceGateway.Infrastructure
 
             while ((line = await reader.ReadLineAsync()) is not null)
             {
-                if (cancellationToken.IsCancellationRequested) yield break;
-                if (string.IsNullOrWhiteSpace(line)) continue;
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    yield break.ConfigureAwait(false);
+                }
+
+                if (string.IsNullOrWhiteSpace(line))
+                {
+                    continue;
+                }
 
                 // Track event name if provided
                 if (line.StartsWith("event: ", StringComparison.OrdinalIgnoreCase))
@@ -103,10 +110,16 @@ namespace Synaxis.InferenceGateway.Infrastructure
                     continue;
                 }
 
-                if (!line.StartsWith("data: ", StringComparison.OrdinalIgnoreCase)) continue;
+                if (!line.StartsWith("data: ", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
 
                 var json = line.Substring(6).Trim();
-                if (json == "[DONE]") break;
+                if (json == "[DONE]")
+                {
+                    break;
+                }
 
                 CohereStreamEvent? ev = null;
                 try
@@ -136,7 +149,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
                             var update = new ChatResponseUpdate
                             {
                                 Role = ChatRole.Assistant,
-                                ModelId = _modelId
+                                ModelId = this._modelId,
                             };
                             update.Contents.Add(new TextContent(text));
                             yield return update;
@@ -151,7 +164,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
                     var update = new ChatResponseUpdate
                     {
                         Role = ChatRole.Assistant,
-                        ModelId = _modelId
+                        ModelId = this._modelId,
                     };
 
                     // If Cohere provides an explicit finish reason, set it on the update if supported
@@ -178,14 +191,14 @@ namespace Synaxis.InferenceGateway.Infrastructure
                 role = m.Role == ChatRole.User ? "user" :
                        m.Role == ChatRole.Assistant ? "assistant" :
                        m.Role == ChatRole.System ? "system" : "user",
-                content = m.Text
+                content = m.Text,
             }).ToList();
 
             return new
             {
-                model = options?.ModelId ?? _modelId,
+                model = options?.ModelId ?? this._modelId,
                 messages = messages,
-                stream = stream
+                stream = stream,
             };
         }
 

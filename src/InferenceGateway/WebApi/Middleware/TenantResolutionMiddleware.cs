@@ -40,8 +40,8 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         /// <param name="logger">The logger instance.</param>
         public TenantResolutionMiddleware(RequestDelegate next, ILogger<TenantResolutionMiddleware> logger)
         {
-            _next = next ?? throw new ArgumentNullException(nameof(next));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._next = next ?? throw new ArgumentNullException(nameof(next));
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         /// <summary>
@@ -65,14 +65,14 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 {
                     // No authorization header - let subsequent middleware handle it
                     // (some endpoints may be public or use other auth mechanisms)
-                    await _next(context);
+                    await this._next(context);
                     return;
                 }
 
                 // Check if it's a Bearer token
                 if (!authHeader.StartsWith(BearerPrefix, StringComparison.OrdinalIgnoreCase))
                 {
-                    _logger.LogWarning("Authorization header does not use Bearer scheme");
+                    this._logger.LogWarning("Authorization header does not use Bearer scheme");
                     context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                     await context.Response.WriteAsJsonAsync(new
                     {
@@ -80,7 +80,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                         {
                             message = "Invalid authorization scheme. Use 'Bearer <token>'",
                             type = "invalid_request_error"
-                        }
+                        },
                     });
                     return;
                 }
@@ -91,12 +91,12 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 if (token.StartsWith(ApiKeyPrefix, StringComparison.Ordinal))
                 {
                     // API Key authentication
-                    await HandleApiKeyAuthenticationAsync(context, token, tenantContext, apiKeyService);
+                    await this.HandleApiKeyAuthenticationAsync(context, token, tenantContext, apiKeyService);
                 }
                 else
                 {
                     // JWT token authentication (already validated by ASP.NET Core JWT middleware)
-                    HandleJwtAuthentication(context, tenantContext);
+                    this.HandleJwtAuthentication(context, tenantContext);
                 }
 
                 // Only proceed if authentication was successful
@@ -105,11 +105,11 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     return;
                 }
 
-                await _next(context);
+                await this._next(context);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred during tenant resolution");
+                this._logger.LogError(ex, "Error occurred during tenant resolution");
                 context.Response.StatusCode = StatusCodes.Status500InternalServerError;
                 await context.Response.WriteAsJsonAsync(new
                 {
@@ -117,7 +117,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     {
                         message = "An error occurred during authentication",
                         type = "internal_server_error"
-                    }
+                    },
                 });
             }
         }
@@ -143,7 +143,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
 
                 if (!validationResult.IsValid)
                 {
-                    _logger.LogWarning("API key validation failed: {ErrorMessage}", validationResult.ErrorMessage);
+                    this._logger.LogWarning("API key validation failed: {ErrorMessage}", validationResult.ErrorMessage);
                     context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                     await context.Response.WriteAsJsonAsync(new
                     {
@@ -151,7 +151,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                         {
                             message = validationResult.ErrorMessage ?? "Invalid API key",
                             type = "invalid_api_key"
-                        }
+                        },
                     });
                     return;
                 }
@@ -159,7 +159,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 // API key is valid - populate tenant context
                 if (!validationResult.OrganizationId.HasValue || !validationResult.ApiKeyId.HasValue)
                 {
-                    _logger.LogError("API key validation succeeded but OrganizationId or ApiKeyId is missing");
+                    this._logger.LogError("API key validation succeeded but OrganizationId or ApiKeyId is missing");
                     context.Response.StatusCode = StatusCodes.Status500InternalServerError;
                     await context.Response.WriteAsJsonAsync(new
                     {
@@ -167,7 +167,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                         {
                             message = "Authentication data is incomplete",
                             type = "internal_server_error"
-                        }
+                        },
                     });
                     return;
                 }
@@ -179,14 +179,14 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     validationResult.RateLimitRpm,
                     validationResult.RateLimitTpm);
 
-                _logger.LogDebug(
+                this._logger.LogDebug(
                     "API key authenticated successfully for OrganizationId={OrganizationId}, ApiKeyId={ApiKeyId}",
                     validationResult.OrganizationId,
                     validationResult.ApiKeyId);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred during API key validation");
+                this._logger.LogError(ex, "Error occurred during API key validation");
                 context.Response.StatusCode = StatusCodes.Status500InternalServerError;
                 await context.Response.WriteAsJsonAsync(new
                 {
@@ -194,7 +194,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     {
                         message = "An error occurred during API key validation",
                         type = "internal_server_error"
-                    }
+                    },
                 });
             }
         }
@@ -212,7 +212,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
 
             if (user?.Identity?.IsAuthenticated != true)
             {
-                _logger.LogWarning("JWT token is not authenticated");
+                this._logger.LogWarning("JWT token is not authenticated");
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 context.Response.WriteAsJsonAsync(new
                 {
@@ -220,7 +220,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     {
                         message = "Invalid or expired JWT token",
                         type = "invalid_token"
-                    }
+                    },
                 }).Wait();
                 return;
             }
@@ -232,7 +232,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
 
             if (organizationIdClaim == null || userIdClaim == null)
             {
-                _logger.LogWarning("JWT token is missing required claims (organization_id or user_id)");
+                this._logger.LogWarning("JWT token is missing required claims (organization_id or user_id)");
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 context.Response.WriteAsJsonAsync(new
                 {
@@ -240,14 +240,14 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     {
                         message = "JWT token is missing required claims",
                         type = "invalid_token"
-                    }
+                    },
                 }).Wait();
                 return;
             }
 
             if (!Guid.TryParse(organizationIdClaim.Value, out var organizationId))
             {
-                _logger.LogWarning("Invalid organization_id claim value: {Value}", organizationIdClaim.Value);
+                this._logger.LogWarning("Invalid organization_id claim value: {Value}", organizationIdClaim.Value);
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 context.Response.WriteAsJsonAsync(new
                 {
@@ -255,14 +255,14 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     {
                         message = "Invalid organization_id in JWT token",
                         type = "invalid_token"
-                    }
+                    },
                 }).Wait();
                 return;
             }
 
             if (!Guid.TryParse(userIdClaim.Value, out var userId))
             {
-                _logger.LogWarning("Invalid user_id claim value: {Value}", userIdClaim.Value);
+                this._logger.LogWarning("Invalid user_id claim value: {Value}", userIdClaim.Value);
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 context.Response.WriteAsJsonAsync(new
                 {
@@ -270,7 +270,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     {
                         message = "Invalid user_id in JWT token",
                         type = "invalid_token"
-                    }
+                    },
                 }).Wait();
                 return;
             }
@@ -282,7 +282,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
 
             tenantContext.SetJwtContext(organizationId, userId, scopes);
 
-            _logger.LogDebug(
+            this._logger.LogDebug(
                 "JWT authenticated successfully for OrganizationId={OrganizationId}, UserId={UserId}",
                 organizationId,
                 userId);

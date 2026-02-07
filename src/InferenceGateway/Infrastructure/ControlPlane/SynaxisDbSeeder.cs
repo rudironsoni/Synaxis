@@ -18,16 +18,18 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
     {
         public static async Task SeedAsync(SynaxisDbContext context)
         {
-            await SeedProvidersAsync(context);
-            await SeedModelsAsync(context);
-            await SeedSystemRolesAsync(context);
-            await context.SaveChangesAsync();
+            await SeedProvidersAsync(context).ConfigureAwait(false);
+            await SeedModelsAsync(context).ConfigureAwait(false);
+            await SeedSystemRolesAsync(context).ConfigureAwait(false);
+            await context.SaveChangesAsync().ConfigureAwait(false);
         }
 
         private static async Task SeedProvidersAsync(SynaxisDbContext context)
         {
             if (await context.Providers.AnyAsync())
-                return;
+            {
+                return.ConfigureAwait(false);
+            }
 
             var providers = new[]
             {
@@ -44,7 +46,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                     SupportsVision = true,
                     IsActive = true,
                     IsPublic = true,
-                    IsFreeTier = false
+                    IsFreeTier = false,
                 },
                 new Provider
                 {
@@ -59,7 +61,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                     SupportsVision = true,
                     IsActive = true,
                     IsPublic = true,
-                    IsFreeTier = false
+                    IsFreeTier = false,
                 },
                 new Provider
                 {
@@ -74,7 +76,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                     SupportsVision = true,
                     IsActive = true,
                     IsPublic = true,
-                    IsFreeTier = true
+                    IsFreeTier = true,
                 },
                 new Provider
                 {
@@ -89,7 +91,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                     SupportsVision = false,
                     IsActive = true,
                     IsPublic = true,
-                    IsFreeTier = true
+                    IsFreeTier = true,
                 },
                 new Provider
                 {
@@ -104,7 +106,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                     SupportsVision = true,
                     IsActive = true,
                     IsPublic = true,
-                    IsFreeTier = false
+                    IsFreeTier = false,
                 },
                 new Provider
                 {
@@ -119,7 +121,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                     SupportsVision = true,
                     IsActive = true,
                     IsPublic = true,
-                    IsFreeTier = false
+                    IsFreeTier = false,
                 },
                 new Provider
                 {
@@ -135,22 +137,24 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                     IsActive = true,
                     IsPublic = true,
                     IsFreeTier = true
-                }
+                },
             };
 
-            await context.Providers.AddRangeAsync(providers);
+            await context.Providers.AddRangeAsync(providers).ConfigureAwait(false);
         }
 
         private static async Task SeedModelsAsync(SynaxisDbContext context)
         {
             if (await context.Models.AnyAsync())
-                return;
+            {
+                return.ConfigureAwait(false);
+            }
 
             // Get providers
-            var openai = await context.Providers.FirstAsync(p => p.Key == "openai");
-            var anthropic = await context.Providers.FirstAsync(p => p.Key == "anthropic");
-            var google = await context.Providers.FirstAsync(p => p.Key == "google");
-            var cohere = await context.Providers.FirstAsync(p => p.Key == "cohere");
+            var openai = await context.Providers.FirstAsync(p => p.Key == "openai").ConfigureAwait(false);
+            var anthropic = await context.Providers.FirstAsync(p => p.Key == "anthropic").ConfigureAwait(false);
+            var google = await context.Providers.FirstAsync(p => p.Key == "google").ConfigureAwait(false);
+            var cohere = await context.Providers.FirstAsync(p => p.Key == "cohere").ConfigureAwait(false);
 
             var models = new[]
             {
@@ -168,7 +172,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                     SupportsTools = true,
                     SupportsVision = true,
                     IsActive = true,
-                    IsPublic = true
+                    IsPublic = true,
                 },
                 new Model
                 {
@@ -183,7 +187,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                     SupportsTools = true,
                     SupportsVision = true,
                     IsActive = true,
-                    IsPublic = true
+                    IsPublic = true,
                 },
                 new Model
                 {
@@ -198,7 +202,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                     SupportsTools = true,
                     SupportsVision = false,
                     IsActive = true,
-                    IsPublic = true
+                    IsPublic = true,
                 },
 
                 // Anthropic Models
@@ -215,7 +219,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                     SupportsTools = true,
                     SupportsVision = true,
                     IsActive = true,
-                    IsPublic = true
+                    IsPublic = true,
                 },
                 new Model
                 {
@@ -230,7 +234,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                     SupportsTools = true,
                     SupportsVision = true,
                     IsActive = true,
-                    IsPublic = true
+                    IsPublic = true,
                 },
 
                 // Google Models
@@ -247,7 +251,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                     SupportsTools = true,
                     SupportsVision = true,
                     IsActive = true,
-                    IsPublic = true
+                    IsPublic = true,
                 },
                 new Model
                 {
@@ -262,7 +266,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                     SupportsTools = true,
                     SupportsVision = true,
                     IsActive = true,
-                    IsPublic = true
+                    IsPublic = true,
                 },
 
                 // Cohere Models
@@ -280,16 +284,18 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                     SupportsVision = false,
                     IsActive = true,
                     IsPublic = true
-                }
+                },
             };
 
-            await context.Models.AddRangeAsync(models);
+            await context.Models.AddRangeAsync(models).ConfigureAwait(false);
         }
 
         private static async Task SeedSystemRolesAsync(SynaxisDbContext context)
         {
             if (await context.Roles.AnyAsync())
-                return;
+            {
+                return.ConfigureAwait(false);
+            }
 
             var systemRoles = new[]
             {
@@ -300,7 +306,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                     NormalizedName = "SYSTEMADMIN",
                     IsSystemRole = true,
                     OrganizationId = null,
-                    Description = "Global system administrator with full access"
+                    Description = "Global system administrator with full access",
                 },
                 new Role
                 {
@@ -309,7 +315,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                     NormalizedName = "ORGANIZATIONOWNER",
                     IsSystemRole = true,
                     OrganizationId = null,
-                    Description = "Organization owner with full administrative rights"
+                    Description = "Organization owner with full administrative rights",
                 },
                 new Role
                 {
@@ -318,7 +324,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                     NormalizedName = "ORGANIZATIONADMIN",
                     IsSystemRole = true,
                     OrganizationId = null,
-                    Description = "Organization administrator with management rights"
+                    Description = "Organization administrator with management rights",
                 },
                 new Role
                 {
@@ -327,7 +333,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                     NormalizedName = "MEMBER",
                     IsSystemRole = true,
                     OrganizationId = null,
-                    Description = "Standard organization member"
+                    Description = "Standard organization member",
                 },
                 new Role
                 {
@@ -337,10 +343,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                     IsSystemRole = true,
                     OrganizationId = null,
                     Description = "Guest user with limited access"
-                }
+                },
             };
 
-            await context.Roles.AddRangeAsync(systemRoles);
+            await context.Roles.AddRangeAsync(systemRoles).ConfigureAwait(false);
         }
     }
 }

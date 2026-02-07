@@ -22,9 +22,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests.RealTime
 
         public async Task DisposeAsync()
         {
-            if (_connection != null)
+            if (this._connection != null)
             {
-                await _connection.DisposeAsync();
+                await this._connection.DisposeAsync();
             }
         }
 
@@ -34,7 +34,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.RealTime
             // Arrange
             var token = Environment.GetEnvironmentVariable("TEST_JWT_TOKEN") ?? "test-token";
 
-            _connection = new HubConnectionBuilder()
+            this._connection = new HubConnectionBuilder()
                 .WithUrl(HubUrl, options =>
                 {
                     options.AccessTokenProvider = () => Task.FromResult<string?>(token);
@@ -42,10 +42,10 @@ namespace Synaxis.InferenceGateway.IntegrationTests.RealTime
                 .Build();
 
             // Act
-            await _connection.StartAsync();
+            await this._connection.StartAsync();
 
             // Assert
-            Assert.Equal(HubConnectionState.Connected, _connection.State);
+            Assert.Equal(HubConnectionState.Connected, this._connection.State);
         }
 
         [Fact(Skip = "Integration test - requires running application")]
@@ -55,20 +55,20 @@ namespace Synaxis.InferenceGateway.IntegrationTests.RealTime
             var token = Environment.GetEnvironmentVariable("TEST_JWT_TOKEN") ?? "test-token";
             var organizationId = Guid.NewGuid().ToString();
 
-            _connection = new HubConnectionBuilder()
+            this._connection = new HubConnectionBuilder()
                 .WithUrl(HubUrl, options =>
                 {
                     options.AccessTokenProvider = () => Task.FromResult<string?>(token);
                 })
                 .Build();
 
-            await _connection.StartAsync();
+            await this._connection.StartAsync();
 
             // Act
-            await _connection.InvokeAsync("JoinOrganization", organizationId);
+            await this._connection.InvokeAsync("JoinOrganization", organizationId);
 
             // Assert - No exception means success
-            Assert.Equal(HubConnectionState.Connected, _connection.State);
+            Assert.Equal(HubConnectionState.Connected, this._connection.State);
         }
 
         [Fact(Skip = "Integration test - requires running application")]
@@ -79,20 +79,20 @@ namespace Synaxis.InferenceGateway.IntegrationTests.RealTime
             var organizationId = Guid.NewGuid().ToString();
             var tcs = new TaskCompletionSource<bool>();
 
-            _connection = new HubConnectionBuilder()
+            this._connection = new HubConnectionBuilder()
                 .WithUrl(HubUrl, options =>
                 {
                     options.AccessTokenProvider = () => Task.FromResult<string?>(token);
                 })
                 .Build();
 
-            _connection.On<object>("ProviderHealthChanged", (update) =>
+            this._connection.On<object>("ProviderHealthChanged", (update) =>
             {
                 tcs.SetResult(true);
             });
 
-            await _connection.StartAsync();
-            await _connection.InvokeAsync("JoinOrganization", organizationId);
+            await this._connection.StartAsync();
+            await this._connection.InvokeAsync("JoinOrganization", organizationId);
 
             // Act - Wait for notification (with timeout)
             var receivedNotification = await Task.WhenAny(
@@ -112,7 +112,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.RealTime
             // Arrange
             var token = Environment.GetEnvironmentVariable("TEST_JWT_TOKEN") ?? "test-token";
 
-            _connection = new HubConnectionBuilder()
+            this._connection = new HubConnectionBuilder()
                 .WithUrl(HubUrl, options =>
                 {
                     options.AccessTokenProvider = () => Task.FromResult<string?>(token);
@@ -121,34 +121,34 @@ namespace Synaxis.InferenceGateway.IntegrationTests.RealTime
                 .Build();
 
             var reconnectedTcs = new TaskCompletionSource<bool>();
-            _connection.Reconnected += _ =>
+            this._connection.Reconnected += _ =>
             {
                 reconnectedTcs.SetResult(true);
                 return Task.CompletedTask;
             };
 
-            await _connection.StartAsync();
-            Assert.Equal(HubConnectionState.Connected, _connection.State);
+            await this._connection.StartAsync();
+            Assert.Equal(HubConnectionState.Connected, this._connection.State);
 
             // Act - Force disconnect (in real scenario, this would be network interruption)
-            await _connection.StopAsync();
+            await this._connection.StopAsync();
             await Task.Delay(100);
-            await _connection.StartAsync();
+            await this._connection.StartAsync();
 
             // Assert
-            Assert.Equal(HubConnectionState.Connected, _connection.State);
+            Assert.Equal(HubConnectionState.Connected, this._connection.State);
         }
 
         [Fact(Skip = "Integration test - requires running application")]
         public async Task CannotConnect_WithoutToken()
         {
             // Arrange
-            _connection = new HubConnectionBuilder()
+            this._connection = new HubConnectionBuilder()
                 .WithUrl(HubUrl)
                 .Build();
 
             // Act & Assert
-            await Assert.ThrowsAsync<HubException>(async () => await _connection.StartAsync());
+            await Assert.ThrowsAsync<HubException>(async () => await this._connection.StartAsync());
         }
     }
 }

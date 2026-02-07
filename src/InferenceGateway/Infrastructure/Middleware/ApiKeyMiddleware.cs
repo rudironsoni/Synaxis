@@ -39,7 +39,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Middleware
                     var apiKey = authValue.Substring("Bearer ".Length);
 
                     // Validate the API key
-                    var validationResult = await apiKeyService.ValidateApiKeyAsync(apiKey);
+                    var validationResult = await apiKeyService.ValidateApiKeyAsync(apiKey).ConfigureAwait(false);
 
                     if (validationResult.IsValid)
                     {
@@ -54,7 +54,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Middleware
                         {
                             new System.Security.Claims.Claim("organizationId", validationResult.OrganizationId!.Value.ToString()),
                             new System.Security.Claims.Claim("apiKeyId", validationResult.ApiKeyId!.Value.ToString()),
-                            new System.Security.Claims.Claim("authenticationType", "ApiKey")
+                            new System.Security.Claims.Claim("authenticationType", "ApiKey"),
                         };
 
                         var identity = new System.Security.Claims.ClaimsIdentity(claims, "ApiKey");
@@ -68,14 +68,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.Middleware
                         await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(new
                         {
                             error = "Unauthorized",
-                            message = validationResult.ErrorMessage ?? "Invalid API key"
-                        }));
+                            message = validationResult.ErrorMessage ?? "Invalid API key",
+                        })).ConfigureAwait(false);
                         return;
                     }
                 }
             }
 
-            await _next(context);
+            await this._next(context).ConfigureAwait(false);
         }
     }
 

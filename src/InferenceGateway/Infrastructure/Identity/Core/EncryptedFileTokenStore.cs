@@ -24,21 +24,23 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
 
         public async Task<List<IdentityAccount>> LoadAsync()
         {
-            if (!File.Exists(_path))
+            if (!File.Exists(this._path))
             {
                 return new List<IdentityAccount>();
             }
 
-            var encrypted = await File.ReadAllTextAsync(_path).ConfigureAwait(false);
+            var encrypted = await File.ReadAllTextAsync(this._path).ConfigureAwait(false);
             if (string.IsNullOrWhiteSpace(encrypted))
+            {
                 return new List<IdentityAccount>();
+            }
 
             try
             {
-                var json = _protector.Unprotect(encrypted);
+                var json = this._protector.Unprotect(encrypted);
                 var accounts = JsonSerializer.Deserialize<List<IdentityAccount>>(json, new JsonSerializerOptions
                 {
-                    PropertyNameCaseInsensitive = true
+                    PropertyNameCaseInsensitive = true,
                 });
 
                 return accounts ?? new List<IdentityAccount>();
@@ -53,14 +55,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
         public async Task SaveAsync(List<IdentityAccount> accounts)
         {
             var json = JsonSerializer.Serialize(accounts);
-            var encrypted = _protector.Protect(json);
-            var dir = Path.GetDirectoryName(_path);
+            var encrypted = this._protector.Protect(json);
+            var dir = Path.GetDirectoryName(this._path);
             if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
             {
                 Directory.CreateDirectory(dir);
             }
 
-            await File.WriteAllTextAsync(_path, encrypted).ConfigureAwait(false);
+            await File.WriteAllTextAsync(this._path, encrypted).ConfigureAwait(false);
         }
     }
 }

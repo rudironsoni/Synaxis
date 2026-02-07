@@ -41,13 +41,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
             try
             {
                 // This is a placeholder - actual implementation would update OrganizationProvider settings
-                _logger.LogInformation("UpdateProviderConfig: OrgId={OrgId}, ProviderId={ProviderId}, Key={Key}",
+                this._logger.LogInformation("UpdateProviderConfig: OrgId={OrgId}, ProviderId={ProviderId}, Key={Key}",
                     organizationId, providerId, key);
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to update provider config");
+                this._logger.LogError(ex, "Failed to update provider config");
                 return false;
             }
         }
@@ -64,7 +64,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
             try
             {
                 // Query from Operations schema - ProviderHealthStatus
-                var healthStatus = await _db.Database.SqlQuery<ProviderHealthStatusDto>(
+                var healthStatus = await this._db.Database.SqlQuery<ProviderHealthStatusDto>(
                     $"SELECT \"IsHealthy\", \"LastCheckedAt\" FROM operations.\"ProviderHealthStatus\" WHERE \"OrganizationProviderId\" = {providerId} ORDER BY \"LastCheckedAt\" DESC LIMIT 1").FirstOrDefaultAsync(ct);
 
                 return new ProviderStatus(
@@ -74,7 +74,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get provider status");
+                this._logger.LogError(ex, "Failed to get provider status");
                 return new ProviderStatus(false, false, null);
             }
         }
@@ -94,7 +94,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get all providers");
+                this._logger.LogError(ex, "Failed to get all providers");
                 return new List<ProviderInfo>();
             }
         }
@@ -102,6 +102,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
         private sealed class ProviderHealthStatusDto
         {
             public bool IsHealthy { get; set; }
+
             public DateTime LastCheckedAt { get; set; }
         }
     }

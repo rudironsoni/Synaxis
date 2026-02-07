@@ -17,10 +17,16 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
             var cfgDir = Path.Combine(home, ".config", "gh");
             var path = Path.Combine(cfgDir, "hosts.yml");
 
-            if (!Directory.Exists(cfgDir)) Directory.CreateDirectory(cfgDir);
+            if (!Directory.Exists(cfgDir))
+            {
+                Directory.CreateDirectory(cfgDir);
+            }
 
             string existing = string.Empty;
-            if (File.Exists(path)) existing = await File.ReadAllTextAsync(path).ConfigureAwait(false);
+            if (File.Exists(path))
+            {
+                existing = await File.ReadAllTextAsync(path).ConfigureAwait(false);
+            }
 
             // Very small YAML manipulation: find github.com block, replace or append
             var hostBlock = new StringBuilder();
@@ -71,7 +77,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
             if (!replaced)
             {
                 // append
-                if (outSb.Length > 0 && !outSb.ToString().EndsWith("\n")) outSb.AppendLine();
+                if (outSb.Length > 0 && !outSb.ToString().EndsWith("\n"))
+                {
+                    outSb.AppendLine();
+                }
+
                 outSb.Append(hostBlock);
             }
 

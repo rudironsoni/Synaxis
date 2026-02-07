@@ -56,14 +56,14 @@ public class TranslationPipelineTests
 
         public TestRequestTranslator(string model, bool canHandle)
         {
-            _model = model;
-            _canHandle = canHandle;
+            this._model = model;
+            this._canHandle = canHandle;
         }
 
-        public bool CanHandle(CanonicalRequest request) => _canHandle;
+        public bool CanHandle(CanonicalRequest request) => this._canHandle;
 
         public CanonicalRequest Translate(CanonicalRequest request)
-            => request with { Model = _model };
+            => request with { Model = this._model };
     }
 
     private sealed class TestResponseTranslator : IResponseTranslator
@@ -73,14 +73,14 @@ public class TranslationPipelineTests
 
         public TestResponseTranslator(string content, bool canHandle)
         {
-            _content = content;
-            _canHandle = canHandle;
+            this._content = content;
+            this._canHandle = canHandle;
         }
 
-        public bool CanHandle(CanonicalResponse response) => _canHandle;
+        public bool CanHandle(CanonicalResponse response) => this._canHandle;
 
         public CanonicalResponse Translate(CanonicalResponse response)
-            => response with { Content = _content };
+            => response with { Content = this._content };
     }
 
     private sealed class TestStreamingTranslator : IStreamingTranslator
@@ -89,7 +89,7 @@ public class TranslationPipelineTests
 
         public TestStreamingTranslator(string text)
         {
-            _text = text;
+            this._text = text;
         }
 
         public bool CanHandle(ChatResponseUpdate update) => true;
@@ -97,7 +97,7 @@ public class TranslationPipelineTests
         public ChatResponseUpdate Translate(ChatResponseUpdate update)
         {
             var translated = new ChatResponseUpdate { Role = update.Role };
-            translated.Contents.Add(new TextContent(_text));
+            translated.Contents.Add(new TextContent(this._text));
             return translated;
         }
     }

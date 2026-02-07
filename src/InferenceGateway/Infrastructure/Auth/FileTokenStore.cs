@@ -25,17 +25,20 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
 
         public async Task<List<AntigravityAccount>> LoadAsync()
         {
-            if (!File.Exists(_path)) return new List<AntigravityAccount>();
+            if (!File.Exists(this._path))
+            {
+                return new List<AntigravityAccount>();
+            }
 
             try
             {
-                var json = await File.ReadAllTextAsync(_path);
+                var json = await File.ReadAllTextAsync(this._path).ConfigureAwait(false);
                 var accounts = JsonSerializer.Deserialize<List<AntigravityAccount>>(json);
                 return accounts ?? new List<AntigravityAccount>();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to load accounts from {Path}", _path);
+                this._logger.LogError(ex, "Failed to load accounts from {Path}", this._path);
                 return new List<AntigravityAccount>();
             }
         }
@@ -44,15 +47,18 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
         {
             try
             {
-                var dir = Path.GetDirectoryName(_path);
-                if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
+                var dir = Path.GetDirectoryName(this._path);
+                if (!string.IsNullOrEmpty(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
 
                 var json = JsonSerializer.Serialize(accounts);
-                await File.WriteAllTextAsync(_path, json);
+                await File.WriteAllTextAsync(this._path, json).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to save accounts.");
+                this._logger.LogError(ex, "Failed to save accounts.");
             }
         }
     }

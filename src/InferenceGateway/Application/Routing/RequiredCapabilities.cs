@@ -12,7 +12,7 @@ public class RequiredCapabilities
     /// <summary>
     /// Gets a default instance with all capabilities set to false.
     /// </summary>
-    public static RequiredCapabilities Default => new ();
+    public static RequiredCapabilities Default => new();
 
     /// <summary>
     /// Gets or sets a value indicating whether streaming response support is required.

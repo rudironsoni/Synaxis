@@ -13,14 +13,14 @@ public class ModelsEndpointTests : IClassFixture<SynaxisWebApplicationFactory>
 
     public ModelsEndpointTests(SynaxisWebApplicationFactory factory)
     {
-        _factory = factory;
-        _client = factory.CreateClient();
+        this._factory = factory;
+        this._client = factory.CreateClient();
     }
 
     [Fact]
     public async Task GetModels_ReturnsList()
     {
-        var response = await _client.GetAsync("/openai/v1/models");
+        var response = await this._client.GetAsync("/openai/v1/models");
 
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -34,7 +34,7 @@ public class ModelsEndpointTests : IClassFixture<SynaxisWebApplicationFactory>
     [Fact]
     public async Task GetModels_ContainsCanonicalModels()
     {
-        var response = await _client.GetAsync("/openai/v1/models");
+        var response = await this._client.GetAsync("/openai/v1/models");
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -46,7 +46,7 @@ public class ModelsEndpointTests : IClassFixture<SynaxisWebApplicationFactory>
     [Fact]
     public async Task GetModels_ModelsHaveRequiredFields()
     {
-        var response = await _client.GetAsync("/openai/v1/models");
+        var response = await this._client.GetAsync("/openai/v1/models");
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -64,7 +64,7 @@ public class ModelsEndpointTests : IClassFixture<SynaxisWebApplicationFactory>
     [Fact]
     public async Task GetModels_ModelsHaveCapabilities()
     {
-        var response = await _client.GetAsync("/openai/v1/models");
+        var response = await this._client.GetAsync("/openai/v1/models");
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -83,7 +83,7 @@ public class ModelsEndpointTests : IClassFixture<SynaxisWebApplicationFactory>
     [Fact]
     public async Task GetModels_ContainsProviders()
     {
-        var response = await _client.GetAsync("/openai/v1/models");
+        var response = await this._client.GetAsync("/openai/v1/models");
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -94,7 +94,7 @@ public class ModelsEndpointTests : IClassFixture<SynaxisWebApplicationFactory>
     [Fact]
     public async Task GetModels_ProvidersHaveRequiredFields()
     {
-        var response = await _client.GetAsync("/openai/v1/models");
+        var response = await this._client.GetAsync("/openai/v1/models");
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -113,13 +113,13 @@ public class ModelsEndpointTests : IClassFixture<SynaxisWebApplicationFactory>
     [Fact]
     public async Task GetModelById_ReturnsModel()
     {
-        var listResponse = await _client.GetAsync("/openai/v1/models");
+        var listResponse = await this._client.GetAsync("/openai/v1/models");
         listResponse.EnsureSuccessStatusCode();
         var listContent = await listResponse.Content.ReadFromJsonAsync<JsonElement>();
         var firstModelId = listContent.GetProperty("data").EnumerateArray().First().GetProperty("id").GetString();
         // Do not pre-encode the model id; HttpClient will handle URL encoding and the endpoint
         // uses a catch-all route pattern that expects raw segments.
-        var response = await _client.GetAsync($"/openai/v1/models/{firstModelId}");
+        var response = await this._client.GetAsync($"/openai/v1/models/{firstModelId}");
 
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -130,11 +130,11 @@ public class ModelsEndpointTests : IClassFixture<SynaxisWebApplicationFactory>
     [Fact]
     public async Task GetModelById_ReturnsCapabilities()
     {
-        var listResponse = await _client.GetAsync("/openai/v1/models");
+        var listResponse = await this._client.GetAsync("/openai/v1/models");
         listResponse.EnsureSuccessStatusCode();
         var listContent = await listResponse.Content.ReadFromJsonAsync<JsonElement>();
         var firstModelId = listContent.GetProperty("data").EnumerateArray().First().GetProperty("id").GetString();
-        var response = await _client.GetAsync($"/openai/v1/models/{firstModelId}");
+        var response = await this._client.GetAsync($"/openai/v1/models/{firstModelId}");
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -145,7 +145,7 @@ public class ModelsEndpointTests : IClassFixture<SynaxisWebApplicationFactory>
     [Fact]
     public async Task GetModelById_InvalidModel_ReturnsNotFound()
     {
-        var response = await _client.GetAsync("/openai/v1/models/nonexistent-model-12345");
+        var response = await this._client.GetAsync("/openai/v1/models/nonexistent-model-12345");
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
@@ -153,12 +153,12 @@ public class ModelsEndpointTests : IClassFixture<SynaxisWebApplicationFactory>
     [Fact]
     public async Task GetModelById_ReturnsModelPath()
     {
-        var listResponse = await _client.GetAsync("/openai/v1/models");
+        var listResponse = await this._client.GetAsync("/openai/v1/models");
         listResponse.EnsureSuccessStatusCode();
         var listContent = await listResponse.Content.ReadFromJsonAsync<JsonElement>();
         var firstModel = listContent.GetProperty("data").EnumerateArray().First();
         var firstModelId = firstModel.GetProperty("id").GetString();
-        var response = await _client.GetAsync($"/openai/v1/models/{firstModelId}");
+        var response = await this._client.GetAsync($"/openai/v1/models/{firstModelId}");
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -169,12 +169,12 @@ public class ModelsEndpointTests : IClassFixture<SynaxisWebApplicationFactory>
     [Fact]
     public async Task GetModelById_ReturnsProvider()
     {
-        var listResponse = await _client.GetAsync("/openai/v1/models");
+        var listResponse = await this._client.GetAsync("/openai/v1/models");
         listResponse.EnsureSuccessStatusCode();
         var listContent = await listResponse.Content.ReadFromJsonAsync<JsonElement>();
         var firstModel = listContent.GetProperty("data").EnumerateArray().First();
         var firstModelId = firstModel.GetProperty("id").GetString();
-        var response = await _client.GetAsync($"/openai/v1/models/{firstModelId}");
+        var response = await this._client.GetAsync($"/openai/v1/models/{firstModelId}");
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -185,7 +185,7 @@ public class ModelsEndpointTests : IClassFixture<SynaxisWebApplicationFactory>
     [Fact]
     public async Task GetModels_ContainsAliases()
     {
-        var response = await _client.GetAsync("/openai/v1/models");
+        var response = await this._client.GetAsync("/openai/v1/models");
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -198,7 +198,7 @@ public class ModelsEndpointTests : IClassFixture<SynaxisWebApplicationFactory>
     [Fact]
     public async Task GetModels_AliasesHaveSynaxisOwnedBy()
     {
-        var response = await _client.GetAsync("/openai/v1/models");
+        var response = await this._client.GetAsync("/openai/v1/models");
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -211,7 +211,7 @@ public class ModelsEndpointTests : IClassFixture<SynaxisWebApplicationFactory>
     [Fact]
     public async Task GetModels_CapabilitiesAreBoolean()
     {
-        var response = await _client.GetAsync("/openai/v1/models");
+        var response = await this._client.GetAsync("/openai/v1/models");
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();

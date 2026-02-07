@@ -21,16 +21,20 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
         public GitHubAuthStrategyTests()
         {
             // Preserve HOME so tests can safely change it when GhConfigWriter writes files
-            _origHome = Environment.GetEnvironmentVariable("HOME");
+            this._origHome = Environment.GetEnvironmentVariable("HOME");
         }
 
         public void Dispose()
         {
             // restore HOME
-            if (_origHome is null)
+            if (this._origHome is null)
+            {
                 Environment.SetEnvironmentVariable("HOME", null);
+            }
             else
-                Environment.SetEnvironmentVariable("HOME", _origHome);
+            {
+                Environment.SetEnvironmentVariable("HOME", this._origHome);
+            }
         }
 
         [Fact]
@@ -169,7 +173,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             {
                 var resp = new HttpResponseMessage(status)
                 {
-                    Content = new StringContent(json, Encoding.UTF8, "application/json")
+                    Content = new StringContent(json, Encoding.UTF8, "application/json"),
                 };
                 return Task.FromResult(resp);
             });
@@ -182,7 +186,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             {
                 var resp = new HttpResponseMessage(status)
                 {
-                    Content = new StringContent(body, Encoding.UTF8, "text/plain")
+                    Content = new StringContent(body, Encoding.UTF8, "text/plain"),
                 };
                 return Task.FromResult(resp);
             });
@@ -192,8 +196,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
         private sealed class DelegatingHandlerStub : HttpMessageHandler
         {
             private readonly Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> _handler;
-            public DelegatingHandlerStub(Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> handler) => _handler = handler;
-            protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) => _handler(request, cancellationToken);
+
+            public DelegatingHandlerStub(Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> handler) => this._handler = handler;
+
+            protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) => this._handler(request, cancellationToken);
         }
     }
 }

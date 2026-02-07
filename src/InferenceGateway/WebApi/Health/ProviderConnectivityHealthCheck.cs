@@ -26,8 +26,8 @@ namespace Synaxis.InferenceGateway.WebApi.Health
         /// <param name="logger">The logger.</param>
         public ProviderConnectivityHealthCheck(IOptions<SynaxisConfiguration> config, ILogger<ProviderConnectivityHealthCheck> logger)
         {
-            _config = config.Value;
-            _logger = logger;
+            this._config = config.Value;
+            this._logger = logger;
         }
 
         /// <summary>
@@ -40,20 +40,30 @@ namespace Synaxis.InferenceGateway.WebApi.Health
         {
             var failures = new List<string>();
 
-            foreach (var entry in _config.Providers)
+            foreach (var entry in this._config.Providers)
             {
                 var name = entry.Key;
                 var provider = entry.Value;
 
-                if (!provider.Enabled) continue;
+                if (!provider.Enabled)
+                {
+                    continue;
+                }
 
                 var endpoints = new List<string>();
-                if (!string.IsNullOrWhiteSpace(provider.Endpoint)) endpoints.Add(provider.Endpoint);
-                if (!string.IsNullOrWhiteSpace(provider.FallbackEndpoint)) endpoints.Add(provider.FallbackEndpoint);
+                if (!string.IsNullOrWhiteSpace(provider.Endpoint))
+                {
+                    endpoints.Add(provider.Endpoint);
+                }
+
+                if (!string.IsNullOrWhiteSpace(provider.FallbackEndpoint))
+                {
+                    endpoints.Add(provider.FallbackEndpoint);
+                }
 
                 if (endpoints.Count == 0)
                 {
-                    var defaultEndpoint = GetDefaultEndpoint(provider.Type);
+                    var defaultEndpoint = this.GetDefaultEndpoint(provider.Type);
                     if (!string.IsNullOrWhiteSpace(defaultEndpoint))
                     {
                         endpoints.Add(defaultEndpoint);
@@ -62,8 +72,8 @@ namespace Synaxis.InferenceGateway.WebApi.Health
 
                 if (endpoints.Count == 0)
                 {
-                    _logger.LogWarning("Provider {Provider} is enabled but has no endpoint and no default for type {Type}.", name, provider.Type);
-                    _logger.LogError("Provider {Provider} health check failed due to missing endpoint.", name);
+                    this._logger.LogWarning("Provider {Provider} is enabled but has no endpoint and no default for type {Type}.", name, provider.Type);
+                    this._logger.LogError("Provider {Provider} health check failed due to missing endpoint.", name);
                     failures.Add($"{name}: Missing endpoint");
                     continue;
                 }
@@ -75,15 +85,15 @@ namespace Synaxis.InferenceGateway.WebApi.Health
                 {
                     try
                     {
-                        await CheckConnectivityAsync(name, endpoint, cancellationToken);
+                        await this.CheckConnectivityAsync(name, endpoint, cancellationToken);
                         reachable = true;
                         break;
                     }
                     catch (Exception ex)
                     {
                         lastError = ex;
-                        _logger.LogWarning(ex, "Provider {Provider} connectivity check failed.", name);
-                        _logger.LogError(ex, "Connectivity check failed for provider {Provider} at {Endpoint}", name, endpoint);
+                        this._logger.LogWarning(ex, "Provider {Provider} connectivity check failed.", name);
+                        this._logger.LogError(ex, "Connectivity check failed for provider {Provider} at {Endpoint}", name, endpoint);
                     }
                 }
 

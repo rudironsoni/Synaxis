@@ -23,23 +23,23 @@ public class ApiKeyServiceTests : IDisposable
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
 
-        _context = new SynaxisDbContext(options);
-        _service = new ApiKeyService(_context);
+        this._context = new SynaxisDbContext(options);
+        this._service = new ApiKeyService(this._context);
 
         // Setup test organization
-        _organizationId = Guid.NewGuid();
+        this._organizationId = Guid.NewGuid();
         var organization = new Organization
         {
-            Id = _organizationId,
+            Id = this._organizationId,
             LegalName = "Test Org",
             DisplayName = "Test Org",
             Slug = "test-org",
             Status = "Active",
-            PlanTier = "Free"
+            PlanTier = "Free",
         };
 
-        _context.Organizations.Add(organization);
-        _context.SaveChanges();
+        this._context.Organizations.Add(organization);
+        this._context.SaveChanges();
     }
 
     [Fact]
@@ -48,13 +48,13 @@ public class ApiKeyServiceTests : IDisposable
         // Arrange
         var request = new GenerateApiKeyRequest
         {
-            OrganizationId = _organizationId,
+            OrganizationId = this._organizationId,
             Name = "Test API Key",
-            Scopes = new[] { "read", "write" }
+            Scopes = new[] { "read", "write" },
         };
 
         // Act
-        var result = await _service.GenerateApiKeyAsync(request);
+        var result = await this._service.GenerateApiKeyAsync(request);
 
         // Assert
         Assert.NotEqual(Guid.Empty, result.Id);
@@ -73,16 +73,16 @@ public class ApiKeyServiceTests : IDisposable
         // Arrange
         var request = new GenerateApiKeyRequest
         {
-            OrganizationId = _organizationId,
+            OrganizationId = this._organizationId,
             Name = "Test API Key",
-            Scopes = Array.Empty<string>()
+            Scopes = Array.Empty<string>(),
         };
 
         // Act
-        var result = await _service.GenerateApiKeyAsync(request);
+        var result = await this._service.GenerateApiKeyAsync(request);
 
         // Assert
-        var storedKey = await _context.ApiKeys.FindAsync(result.Id);
+        var storedKey = await this._context.ApiKeys.FindAsync(result.Id);
         Assert.NotNull(storedKey);
         Assert.NotEqual(result.ApiKey, storedKey.KeyHash);
         Assert.DoesNotContain(result.ApiKey, storedKey.KeyHash);
@@ -94,19 +94,19 @@ public class ApiKeyServiceTests : IDisposable
         // Arrange
         var request = new GenerateApiKeyRequest
         {
-            OrganizationId = _organizationId,
+            OrganizationId = this._organizationId,
             Name = "Test API Key",
-            Scopes = new[] { "read" }
+            Scopes = new[] { "read" },
         };
 
-        var generated = await _service.GenerateApiKeyAsync(request);
+        var generated = await this._service.GenerateApiKeyAsync(request);
 
         // Act
-        var result = await _service.ValidateApiKeyAsync(generated.ApiKey);
+        var result = await this._service.ValidateApiKeyAsync(generated.ApiKey);
 
         // Assert
         Assert.True(result.IsValid);
-        Assert.Equal(_organizationId, result.OrganizationId);
+        Assert.Equal(this._organizationId, result.OrganizationId);
         Assert.Equal(generated.Id, result.ApiKeyId);
         Assert.Single(result.Scopes);
         Assert.Contains("read", result.Scopes);
@@ -119,7 +119,7 @@ public class ApiKeyServiceTests : IDisposable
         var invalidKey = "synaxis_build_invalid_key";
 
         // Act
-        var result = await _service.ValidateApiKeyAsync(invalidKey);
+        var result = await this._service.ValidateApiKeyAsync(invalidKey);
 
         // Assert
         Assert.False(result.IsValid);
@@ -133,16 +133,16 @@ public class ApiKeyServiceTests : IDisposable
         // Arrange
         var request = new GenerateApiKeyRequest
         {
-            OrganizationId = _organizationId,
+            OrganizationId = this._organizationId,
             Name = "Test API Key",
-            Scopes = Array.Empty<string>()
+            Scopes = Array.Empty<string>(),
         };
 
-        var generated = await _service.GenerateApiKeyAsync(request);
-        await _service.RevokeApiKeyAsync(generated.Id, "Test revocation");
+        var generated = await this._service.GenerateApiKeyAsync(request);
+        await this._service.RevokeApiKeyAsync(generated.Id, "Test revocation");
 
         // Act
-        var result = await _service.ValidateApiKeyAsync(generated.ApiKey);
+        var result = await this._service.ValidateApiKeyAsync(generated.ApiKey);
 
         // Assert
         Assert.False(result.IsValid);
@@ -155,20 +155,20 @@ public class ApiKeyServiceTests : IDisposable
         // Arrange
         var request = new GenerateApiKeyRequest
         {
-            OrganizationId = _organizationId,
+            OrganizationId = this._organizationId,
             Name = "Test API Key",
-            Scopes = Array.Empty<string>()
+            Scopes = Array.Empty<string>(),
         };
 
-        var generated = await _service.GenerateApiKeyAsync(request);
+        var generated = await this._service.GenerateApiKeyAsync(request);
 
         // Act
-        var result = await _service.RevokeApiKeyAsync(generated.Id, "Test reason");
+        var result = await this._service.RevokeApiKeyAsync(generated.Id, "Test reason");
 
         // Assert
         Assert.True(result);
 
-        var storedKey = await _context.ApiKeys.FindAsync(generated.Id);
+        var storedKey = await this._context.ApiKeys.FindAsync(generated.Id);
         Assert.NotNull(storedKey);
         Assert.False(storedKey.IsActive);
         Assert.NotNull(storedKey.RevokedAt);
@@ -181,24 +181,24 @@ public class ApiKeyServiceTests : IDisposable
         // Arrange
         var request1 = new GenerateApiKeyRequest
         {
-            OrganizationId = _organizationId,
+            OrganizationId = this._organizationId,
             Name = "Active Key",
-            Scopes = Array.Empty<string>()
+            Scopes = Array.Empty<string>(),
         };
 
         var request2 = new GenerateApiKeyRequest
         {
-            OrganizationId = _organizationId,
+            OrganizationId = this._organizationId,
             Name = "Revoked Key",
-            Scopes = Array.Empty<string>()
+            Scopes = Array.Empty<string>(),
         };
 
-        var key1 = await _service.GenerateApiKeyAsync(request1);
-        var key2 = await _service.GenerateApiKeyAsync(request2);
-        await _service.RevokeApiKeyAsync(key2.Id, "Test");
+        var key1 = await this._service.GenerateApiKeyAsync(request1);
+        var key2 = await this._service.GenerateApiKeyAsync(request2);
+        await this._service.RevokeApiKeyAsync(key2.Id, "Test");
 
         // Act
-        var result = await _service.ListApiKeysAsync(_organizationId, includeRevoked: false);
+        var result = await this._service.ListApiKeysAsync(this._organizationId, includeRevoked: false);
 
         // Assert
         Assert.Single(result);
@@ -211,24 +211,24 @@ public class ApiKeyServiceTests : IDisposable
         // Arrange
         var request1 = new GenerateApiKeyRequest
         {
-            OrganizationId = _organizationId,
+            OrganizationId = this._organizationId,
             Name = "Active Key",
-            Scopes = Array.Empty<string>()
+            Scopes = Array.Empty<string>(),
         };
 
         var request2 = new GenerateApiKeyRequest
         {
-            OrganizationId = _organizationId,
+            OrganizationId = this._organizationId,
             Name = "Revoked Key",
-            Scopes = Array.Empty<string>()
+            Scopes = Array.Empty<string>(),
         };
 
-        var key1 = await _service.GenerateApiKeyAsync(request1);
-        var key2 = await _service.GenerateApiKeyAsync(request2);
-        await _service.RevokeApiKeyAsync(key2.Id, "Test");
+        var key1 = await this._service.GenerateApiKeyAsync(request1);
+        var key2 = await this._service.GenerateApiKeyAsync(request2);
+        await this._service.RevokeApiKeyAsync(key2.Id, "Test");
 
         // Act
-        var result = await _service.ListApiKeysAsync(_organizationId, includeRevoked: true);
+        var result = await this._service.ListApiKeysAsync(this._organizationId, includeRevoked: true);
 
         // Assert
         Assert.Equal(2, result.Count);
@@ -236,7 +236,7 @@ public class ApiKeyServiceTests : IDisposable
 
     public void Dispose()
     {
-        _context.Database.EnsureDeleted();
-        _context.Dispose();
+        this._context.Database.EnsureDeleted();
+        this._context.Dispose();
     }
 }

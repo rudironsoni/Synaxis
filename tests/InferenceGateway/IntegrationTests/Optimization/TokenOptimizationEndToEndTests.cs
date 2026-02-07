@@ -33,15 +33,15 @@ public class TokenOptimizationEndToEndTests : IAsyncLifetime
 
     public TokenOptimizationEndToEndTests(ITestOutputHelper output)
     {
-        _output = output ?? throw new ArgumentNullException(nameof(output));
-        _factory = new SynaxisWebApplicationFactory { OutputHelper = output };
+        this._output = output ?? throw new ArgumentNullException(nameof(output));
+        this._factory = new SynaxisWebApplicationFactory { OutputHelper = output };
 
-        _redis = new RedisBuilder()
+        this._redis = new RedisBuilder()
             .WithImage("redis:7-alpine")
             .WithPortBinding(6379, true)
             .Build();
 
-        _qdrant = new QdrantBuilder()
+        this._qdrant = new QdrantBuilder()
             .WithImage("qdrant/qdrant:latest")
             .WithPortBinding(6333, true)
             .Build();
@@ -50,24 +50,24 @@ public class TokenOptimizationEndToEndTests : IAsyncLifetime
     public async Task InitializeAsync()
     {
         // Start optimization containers (factory starts PostgreSQL automatically)
-        await Task.WhenAll(_redis.StartAsync(), _qdrant.StartAsync());
-        await _factory.InitializeAsync();
+        await Task.WhenAll(this._redis.StartAsync(), this._qdrant.StartAsync());
+        await this._factory.InitializeAsync();
 
-        _output.WriteLine($"Redis started: {_redis.GetConnectionString()}");
-        _output.WriteLine($"Qdrant started: {_qdrant.Hostname}:{_qdrant.GetMappedPublicPort(6333)}");
+        this._output.WriteLine($"Redis started: {this._redis.GetConnectionString()}");
+        this._output.WriteLine($"Qdrant started: {this._qdrant.Hostname}:{this._qdrant.GetMappedPublicPort(6333)}");
 
         // Create Redis connection for test verification
-        _redisConnection = await ConnectionMultiplexer.ConnectAsync(_redis.GetConnectionString());
+        this._redisConnection = await ConnectionMultiplexer.ConnectAsync(this._redis.GetConnectionString());
 
         // Create HTTP client with optimization configuration
-        _client = _factory.WithWebHostBuilder(builder =>
+        this._client = this._factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureAppConfiguration((context, config) =>
             {
                 config.AddInMemoryCollection(new Dictionary<string, string?>
                 {
                     // Override Redis connection to use test container
-                    ["ConnectionStrings:Redis"] = $"{_redis.GetConnectionString()},abortConnect=false",
+                    ["ConnectionStrings:Redis"] = $"{this._redis.GetConnectionString()},abortConnect=false",
 
                     // Enable token optimization features
                     ["Synaxis:InferenceGateway:TokenOptimization:Enabled"] = "true",
@@ -78,7 +78,7 @@ public class TokenOptimizationEndToEndTests : IAsyncLifetime
                     ["Synaxis:InferenceGateway:TokenOptimization:Deduplication:Enabled"] = "true",
 
                     // Qdrant configuration
-                    ["Synaxis:InferenceGateway:TokenOptimization:SemanticCache:QdrantEndpoint"] = $"http://{_qdrant.Hostname}:{_qdrant.GetMappedPublicPort(6333)}",
+                    ["Synaxis:InferenceGateway:TokenOptimization:SemanticCache:QdrantEndpoint"] = $"http://{this._qdrant.Hostname}:{this._qdrant.GetMappedPublicPort(6333)}",
 
                     // Test model configuration
                     ["Synaxis:InferenceGateway:CanonicalModels:0:Id"] = "test-provider/gpt-4",
@@ -87,7 +87,7 @@ public class TokenOptimizationEndToEndTests : IAsyncLifetime
                     ["Synaxis:InferenceGateway:CanonicalModels:0:Streaming"] = "true",
                     ["Synaxis:InferenceGateway:Aliases:test-model:Candidates:0"] = "test-provider/gpt-4",
                     ["Synaxis:InferenceGateway:Providers:test-provider:Type"] = "mock",
-                    ["Synaxis:InferenceGateway:Providers:test-provider:Tier"] = "1"
+                    ["Synaxis:InferenceGateway:Providers:test-provider:Tier"] = "1",
                 });
             });
         }).CreateClient();
@@ -95,18 +95,18 @@ public class TokenOptimizationEndToEndTests : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
-        _client?.Dispose();
+        this._client?.Dispose();
 
-        if (_redisConnection != null)
+        if (this._redisConnection != null)
         {
-            await _redisConnection.CloseAsync();
-            _redisConnection.Dispose();
+            await this._redisConnection.CloseAsync();
+            this._redisConnection.Dispose();
         }
 
         await Task.WhenAll(
-            _redis.DisposeAsync().AsTask(),
-            _qdrant.DisposeAsync().AsTask(),
-            _factory.DisposeAsync().AsTask()
+            this._redis.DisposeAsync().AsTask(),
+            this._qdrant.DisposeAsync().AsTask(),
+            this._factory.DisposeAsync().AsTask()
         );
     }
 
@@ -120,14 +120,14 @@ public class TokenOptimizationEndToEndTests : IAsyncLifetime
             messages = new[]
             {
                 new { role = "system", content = "You are a helpful assistant." },
-                new { role = "user", content = "What is the capital of France?" }
+                new { role = "user", content = "What is the capital of France?" },
             },
             temperature = 0.7,
-            x_session_id = "test-session-all-features"
+            x_session_id = "test-session-all-features",
         };
 
         // Act
-        var response = await _client!.PostAsJsonAsync("/openai/v1/chat/completions", request);
+        var response = await this._client!.PostAsJsonAsync("/openai/v1/chat/completions", request);
 
         // Assert
         Assert.True(response.IsSuccessStatusCode, $"Request failed with status {response.StatusCode}");
@@ -137,16 +137,16 @@ public class TokenOptimizationEndToEndTests : IAsyncLifetime
 
         // Verify response headers indicate optimization was applied
         // In real implementation, these headers would show cache status, compression ratio, etc.
-        _output.WriteLine($"Response Status: {response.StatusCode}");
-        _output.WriteLine($"Headers: {string.Join(", ", response.Headers.Select(h => $"{h.Key}={string.Join(",", h.Value)}"))}");
+        this._output.WriteLine($"Response Status: {response.StatusCode}");
+        this._output.WriteLine($"Headers: {string.Join(", ", response.Headers.Select(h => $"{h.Key}={string.Join(",", h.Value)}"))}");
 
         // Verify session was stored in Redis
-        var db = _redisConnection!.GetDatabase();
+        var db = this._redisConnection!.GetDatabase();
         var sessionKey = $"session:test-session-all-features";
         var sessionExists = await db.KeyExistsAsync(sessionKey);
 
         // Session storage depends on implementation - log for verification
-        _output.WriteLine($"Session exists in Redis: {sessionExists}");
+        this._output.WriteLine($"Session exists in Redis: {sessionExists}");
     }
 
     [Fact]
@@ -159,14 +159,14 @@ public class TokenOptimizationEndToEndTests : IAsyncLifetime
             model = "test-model",
             messages = new[]
             {
-                new { role = "user", content = "What is 2+2?" }
+                new { role = "user", content = "What is 2+2?" },
             },
             temperature = 0.0, // Low temperature for deterministic responses
-            x_session_id = sessionId
+            x_session_id = sessionId,
         };
 
         // Act - First request (cache miss)
-        var response1 = await _client!.PostAsJsonAsync("/openai/v1/chat/completions", request);
+        var response1 = await this._client!.PostAsJsonAsync("/openai/v1/chat/completions", request);
         Assert.True(response1.IsSuccessStatusCode);
         var content1 = await response1.Content.ReadFromJsonAsync<JsonElement>();
         var firstResponse = content1.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString();
@@ -175,7 +175,7 @@ public class TokenOptimizationEndToEndTests : IAsyncLifetime
         await Task.Delay(100);
 
         // Act - Second request (should be cache hit)
-        var response2 = await _client!.PostAsJsonAsync("/openai/v1/chat/completions", request);
+        var response2 = await this._client!.PostAsJsonAsync("/openai/v1/chat/completions", request);
         Assert.True(response2.IsSuccessStatusCode);
         var content2 = await response2.Content.ReadFromJsonAsync<JsonElement>();
         var secondResponse = content2.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString();
@@ -187,8 +187,8 @@ public class TokenOptimizationEndToEndTests : IAsyncLifetime
         // response2.Headers.TryGetValues("x-cache-status", out var cacheStatus);
         // Assert.Contains("hit", cacheStatus?.FirstOrDefault() ?? "miss");
 
-        _output.WriteLine($"First response: {firstResponse}");
-        _output.WriteLine($"Second response: {secondResponse}");
+        this._output.WriteLine($"First response: {firstResponse}");
+        this._output.WriteLine($"Second response: {secondResponse}");
     }
 
     [Fact]
@@ -203,7 +203,7 @@ public class TokenOptimizationEndToEndTests : IAsyncLifetime
             new { role = "assistant", content = "Computers have a long history dating back to the 1940s..." },
             new { role = "user", content = "What about modern computers?" },
             new { role = "assistant", content = "Modern computers are much more powerful and compact..." },
-            new { role = "user", content = "How do they work?" }
+            new { role = "user", content = "How do they work?" },
         };
 
         var request = new
@@ -211,11 +211,11 @@ public class TokenOptimizationEndToEndTests : IAsyncLifetime
             model = "test-model",
             messages = messages.ToArray(),
             x_session_id = sessionId,
-            x_enable_compression = true
+            x_enable_compression = true,
         };
 
         // Act
-        var response = await _client!.PostAsJsonAsync("/openai/v1/chat/completions", request);
+        var response = await this._client!.PostAsJsonAsync("/openai/v1/chat/completions", request);
 
         // Assert
         Assert.True(response.IsSuccessStatusCode);
@@ -224,7 +224,7 @@ public class TokenOptimizationEndToEndTests : IAsyncLifetime
         // response.Headers.TryGetValues("x-compression-ratio", out var compressionRatio);
         // response.Headers.TryGetValues("x-tokens-saved", out var tokensSaved);
 
-        _output.WriteLine("Compression applied to long conversation");
+        this._output.WriteLine("Compression applied to long conversation");
     }
 
     [Fact]
@@ -237,13 +237,13 @@ public class TokenOptimizationEndToEndTests : IAsyncLifetime
             model = "test-model",
             messages = new[]
             {
-                new { role = "user", content = "First message" }
+                new { role = "user", content = "First message" },
             },
-            x_session_id = sessionId
+            x_session_id = sessionId,
         };
 
         // Act - First request establishes provider affinity
-        var response1 = await _client!.PostAsJsonAsync("/openai/v1/chat/completions", request1);
+        var response1 = await this._client!.PostAsJsonAsync("/openai/v1/chat/completions", request1);
         Assert.True(response1.IsSuccessStatusCode);
 
         // Get provider from first request
@@ -256,20 +256,20 @@ public class TokenOptimizationEndToEndTests : IAsyncLifetime
             model = "test-model",
             messages = new[]
             {
-                new { role = "user", content = "Second message" }
+                new { role = "user", content = "Second message" },
             },
-            x_session_id = sessionId
+            x_session_id = sessionId,
         };
 
-        var response2 = await _client!.PostAsJsonAsync("/openai/v1/chat/completions", request2);
+        var response2 = await this._client!.PostAsJsonAsync("/openai/v1/chat/completions", request2);
         Assert.True(response2.IsSuccessStatusCode);
 
         response2.Headers.TryGetValues("x-gateway-provider", out var provider2Values);
         var provider2 = provider2Values?.FirstOrDefault();
 
         // Assert - Same provider used (if session affinity is working)
-        _output.WriteLine($"Provider 1: {provider1}");
-        _output.WriteLine($"Provider 2: {provider2}");
+        this._output.WriteLine($"Provider 1: {provider1}");
+        this._output.WriteLine($"Provider 2: {provider2}");
 
         // In real implementation with multiple providers, assert equality
         // Assert.Equal(provider1, provider2);
@@ -285,15 +285,15 @@ public class TokenOptimizationEndToEndTests : IAsyncLifetime
             model = "test-model",
             messages = new[]
             {
-                new { role = "user", content = "Unique test query for deduplication" }
+                new { role = "user", content = "Unique test query for deduplication" },
             },
             x_session_id = sessionId,
-            x_request_id = "dedup-test-request-123"
+            x_request_id = "dedup-test-request-123",
         };
 
         // Act - Send same request multiple times concurrently
         var tasks = Enumerable.Range(0, 5).Select(_ =>
-            _client!.PostAsJsonAsync("/openai/v1/chat/completions", request)
+            this._client!.PostAsJsonAsync("/openai/v1/chat/completions", request)
         ).ToArray();
 
         var responses = await Task.WhenAll(tasks);
@@ -303,7 +303,7 @@ public class TokenOptimizationEndToEndTests : IAsyncLifetime
 
         // In real implementation, verify only one provider call was made
         // This would require instrumentation/metrics to verify
-        _output.WriteLine($"All {responses.Length} duplicate requests completed successfully");
+        this._output.WriteLine($"All {responses.Length} duplicate requests completed successfully");
     }
 
     [Fact]
@@ -316,14 +316,14 @@ public class TokenOptimizationEndToEndTests : IAsyncLifetime
             model = "test-model",
             messages = new[]
             {
-                new { role = "user", content = "Tell me a story" }
+                new { role = "user", content = "Tell me a story" },
             },
             stream = true,
-            x_session_id = sessionId
+            x_session_id = sessionId,
         };
 
         // Act
-        var response = await _client!.PostAsJsonAsync("/openai/v1/chat/completions", request);
+        var response = await this._client!.PostAsJsonAsync("/openai/v1/chat/completions", request);
 
         // Assert
         Assert.True(response.IsSuccessStatusCode);
@@ -341,7 +341,7 @@ public class TokenOptimizationEndToEndTests : IAsyncLifetime
         {
             if (!string.IsNullOrWhiteSpace(line))
             {
-                _output.WriteLine($"Stream line: {line}");
+                this._output.WriteLine($"Stream line: {line}");
                 lineCount++;
 
                 if (line.Contains("[DONE]"))
@@ -353,6 +353,6 @@ public class TokenOptimizationEndToEndTests : IAsyncLifetime
         }
 
         Assert.True(lineCount > 0, "Expected streaming response with multiple chunks");
-        _output.WriteLine($"Received {lineCount} streaming chunks, found DONE: {foundDone}");
+        this._output.WriteLine($"Received {lineCount} streaming chunks, found DONE: {foundDone}");
     }
 }

@@ -27,7 +27,7 @@ namespace Synaxis.InferenceGateway.WebApi.Features.Chat.Handlers
         /// <param name="agent">The routing agent.</param>
         public ChatCompletionHandler(RoutingAgent agent)
         {
-            _agent = agent;
+            this._agent = agent;
         }
 
         /// <summary>
@@ -38,7 +38,7 @@ namespace Synaxis.InferenceGateway.WebApi.Features.Chat.Handlers
         /// <returns>The agent response.</returns>
         public async ValueTask<AgentResponse> Handle(ChatCommand request, CancellationToken cancellationToken)
         {
-            return await _agent.RunAsync(request.Messages, cancellationToken: cancellationToken);
+            return await this._agent.RunAsync(request.Messages, cancellationToken: cancellationToken);
         }
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace Synaxis.InferenceGateway.WebApi.Features.Chat.Handlers
         /// <returns>An async enumerable of agent response updates.</returns>
         public IAsyncEnumerable<AgentResponseUpdate> Handle(ChatStreamCommand request, CancellationToken cancellationToken)
         {
-            return _agent.RunStreamingAsync(request.Messages, cancellationToken: cancellationToken);
+            return this._agent.RunStreamingAsync(request.Messages, cancellationToken: cancellationToken);
         }
     }
 

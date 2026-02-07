@@ -24,16 +24,16 @@ public class RoutingAgentTests
 
     public RoutingAgentTests()
     {
-        _chatClientMock = new Mock<IChatClient>();
-        _translatorMock = new Mock<ITranslationPipeline>();
-        _httpContextAccessorMock = new Mock<IHttpContextAccessor>();
-        _loggerMock = new Mock<ILogger<RoutingAgent>>();
+        this._chatClientMock = new Mock<IChatClient>();
+        this._translatorMock = new Mock<ITranslationPipeline>();
+        this._httpContextAccessorMock = new Mock<IHttpContextAccessor>();
+        this._loggerMock = new Mock<ILogger<RoutingAgent>>();
 
-        _agent = new RoutingAgent(
-            _chatClientMock.Object,
-            _translatorMock.Object,
-            _httpContextAccessorMock.Object,
-            _loggerMock.Object);
+        this._agent = new RoutingAgent(
+            this._chatClientMock.Object,
+            this._translatorMock.Object,
+            this._httpContextAccessorMock.Object,
+            this._loggerMock.Object);
     }
 
     [Fact]
@@ -45,7 +45,7 @@ public class RoutingAgentTests
         var openAIRequest = new OpenAIRequest
         {
             Model = modelId,
-            Messages = new List<OpenAIMessage> { new OpenAIMessage { Role = "user", Content = "hello" } }
+            Messages = new List<OpenAIMessage> { new OpenAIMessage { Role = "user", Content = "hello" } },
         };
         var jsonBody = JsonSerializer.Serialize(openAIRequest);
         var bodyStream = new MemoryStream(Encoding.UTF8.GetBytes(jsonBody));
@@ -53,31 +53,31 @@ public class RoutingAgentTests
         var context = new DefaultHttpContext();
         context.Request.Body = bodyStream;
         context.Request.ContentLength = bodyStream.Length;
-        _httpContextAccessorMock.Setup(x => x.HttpContext).Returns(context);
+        this._httpContextAccessorMock.Setup(x => x.HttpContext).Returns(context);
 
         // Translator setup (pass-through)
         var translatedRequest = new CanonicalRequest(EndpointKind.ChatCompletions, modelId, messages);
-        _translatorMock.Setup(x => x.TranslateRequest(It.IsAny<CanonicalRequest>())).Returns(translatedRequest);
+        this._translatorMock.Setup(x => x.TranslateRequest(It.IsAny<CanonicalRequest>())).Returns(translatedRequest);
 
         var translatedResponse = new CanonicalResponse("Response", new List<FunctionCallContent>());
-        _translatorMock.Setup(x => x.TranslateResponse(It.IsAny<CanonicalResponse>())).Returns(translatedResponse);
+        this._translatorMock.Setup(x => x.TranslateResponse(It.IsAny<CanonicalResponse>())).Returns(translatedResponse);
 
         // ChatClient setup
         var expectedResponse = new ChatResponse(new ChatMessage(ChatRole.Assistant, "raw-response"));
         expectedResponse.AdditionalProperties = new AdditionalPropertiesDictionary
         {
             { "model_id", "actual-model-v1" },
-            { "provider_name", "provider-a" }
+            { "provider_name", "provider-a" },
         };
 
-        _chatClientMock.Setup(x => x.GetResponseAsync(
+        this._chatClientMock.Setup(x => x.GetResponseAsync(
             It.IsAny<IEnumerable<ChatMessage>>(),
             It.Is<ChatOptions>(o => o.ModelId == modelId),
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await _agent.RunAsync(messages);
+        var result = await this._agent.RunAsync(messages);
 
         // Assert
         Assert.NotNull(result);

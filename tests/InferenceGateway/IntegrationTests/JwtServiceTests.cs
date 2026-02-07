@@ -20,7 +20,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
         public JwtServiceTests(ITestOutputHelper output)
         {
-            _output = output ?? throw new ArgumentNullException(nameof(output));
+            this._output = output ?? throw new ArgumentNullException(nameof(output));
         }
 
         [Fact]
@@ -30,7 +30,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             {
                 JwtSecret = "this-is-a-very-long-test-secret-key-for-jwt-token-generation-that-is-definitely-longer-than-32-bytes-and-secure",
                 JwtIssuer = "Synaxis",
-                JwtAudience = "Synaxis"
+                JwtAudience = "Synaxis",
             };
             var mockConfig = new Mock<IOptions<SynaxisConfiguration>>();
             mockConfig.Setup(x => x.Value).Returns(config);
@@ -41,7 +41,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 Id = Guid.NewGuid(),
                 Email = "test@example.com",
                 Role = UserRole.Admin,
-                TenantId = Guid.NewGuid()
+                TenantId = Guid.NewGuid(),
             };
 
             var token = jwtService.GenerateToken(user);
@@ -58,7 +58,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             {
                 JwtSecret = "test-secret-key-for-claims-validation-that-is-long-enough-for-hmac-sha256-algorithm",
                 JwtIssuer = "TestIssuer",
-                JwtAudience = "TestAudience"
+                JwtAudience = "TestAudience",
             };
             var mockConfig = new Mock<IOptions<SynaxisConfiguration>>();
             mockConfig.Setup(x => x.Value).Returns(config);
@@ -71,7 +71,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 Id = userId,
                 Email = "claims.test@example.com",
                 Role = UserRole.Developer,
-                TenantId = tenantId
+                TenantId = tenantId,
             };
 
             var token = jwtService.GenerateToken(user);
@@ -92,7 +92,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             {
                 JwtSecret = "test-secret-for-expiration-validation-and-testing-long-enough-key",
                 JwtIssuer = "Synaxis",
-                JwtAudience = "Synaxis"
+                JwtAudience = "Synaxis",
             };
             var mockConfig = new Mock<IOptions<SynaxisConfiguration>>();
             mockConfig.Setup(x => x.Value).Returns(config);
@@ -103,7 +103,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 Id = Guid.NewGuid(),
                 Email = "expiration.test@example.com",
                 Role = UserRole.Developer,
-                TenantId = Guid.NewGuid()
+                TenantId = Guid.NewGuid(),
             };
 
             var token = jwtService.GenerateToken(user);
@@ -125,7 +125,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             {
                 JwtSecret = "test-secret-for-issuer-audience-that-is-long-enough-for-hmac-sha256",
                 JwtIssuer = "CustomIssuer",
-                JwtAudience = "CustomAudience"
+                JwtAudience = "CustomAudience",
             };
             var mockConfig = new Mock<IOptions<SynaxisConfiguration>>();
             mockConfig.Setup(x => x.Value).Returns(config);
@@ -136,7 +136,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 Id = Guid.NewGuid(),
                 Email = "issuer.test@example.com",
                 Role = UserRole.Developer,
-                TenantId = Guid.NewGuid()
+                TenantId = Guid.NewGuid(),
             };
 
             var token = jwtService.GenerateToken(user);
@@ -155,7 +155,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             {
                 JwtSecret = "test-secret-for-defaults-that-is-long-enough-for-hmac-sha256-algorithm",
                 JwtIssuer = null,
-                JwtAudience = null
+                JwtAudience = null,
             };
             var mockConfig = new Mock<IOptions<SynaxisConfiguration>>();
             mockConfig.Setup(x => x.Value).Returns(config);
@@ -166,7 +166,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 Id = Guid.NewGuid(),
                 Email = "defaults.test@example.com",
                 Role = UserRole.Developer,
-                TenantId = Guid.NewGuid()
+                TenantId = Guid.NewGuid(),
             };
 
             var token = jwtService.GenerateToken(user);
@@ -185,7 +185,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             {
                 JwtSecret = "test-secret-for-signature-validation-that-is-long-enough-for-hmac-sha256",
                 JwtIssuer = "Synaxis",
-                JwtAudience = "Synaxis"
+                JwtAudience = "Synaxis",
             };
             var mockConfig = new Mock<IOptions<SynaxisConfiguration>>();
             mockConfig.Setup(x => x.Value).Returns(config);
@@ -196,7 +196,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 Id = Guid.NewGuid(),
                 Email = "signature.test@example.com",
                 Role = UserRole.Developer,
-                TenantId = Guid.NewGuid()
+                TenantId = Guid.NewGuid(),
             };
 
             var token = jwtService.GenerateToken(user);
@@ -214,7 +214,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             {
                 JwtSecret = "",
                 JwtIssuer = "Synaxis",
-                JwtAudience = "Synaxis"
+                JwtAudience = "Synaxis",
             };
             var mockConfig = new Mock<IOptions<SynaxisConfiguration>>();
             mockConfig.Setup(x => x.Value).Returns(config);
@@ -225,7 +225,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 Id = Guid.NewGuid(),
                 Email = "empty.secret@example.com",
                 Role = UserRole.Developer,
-                TenantId = Guid.NewGuid()
+                TenantId = Guid.NewGuid(),
             };
 
             var exception = Assert.Throws<InvalidOperationException>(() =>
@@ -241,7 +241,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             {
                 JwtSecret = "   ",
                 JwtIssuer = "Synaxis",
-                JwtAudience = "Synaxis"
+                JwtAudience = "Synaxis",
             };
             var mockConfig = new Mock<IOptions<SynaxisConfiguration>>();
             mockConfig.Setup(x => x.Value).Returns(config);
@@ -252,7 +252,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 Id = Guid.NewGuid(),
                 Email = "whitespace.secret@example.com",
                 Role = UserRole.Readonly,
-                TenantId = Guid.NewGuid()
+                TenantId = Guid.NewGuid(),
             };
 
             var exception = Assert.Throws<InvalidOperationException>(() =>
@@ -268,7 +268,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             {
                 JwtSecret = "test-secret-for-uniqueness-that-is-long-enough-for-hmac-sha256-algorithm",
                 JwtIssuer = "Synaxis",
-                JwtAudience = "Synaxis"
+                JwtAudience = "Synaxis",
             };
             var mockConfig = new Mock<IOptions<SynaxisConfiguration>>();
             mockConfig.Setup(x => x.Value).Returns(config);
@@ -279,7 +279,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 Id = Guid.NewGuid(),
                 Email = "uniqueness.test@example.com",
                 Role = UserRole.Developer,
-                TenantId = Guid.NewGuid()
+                TenantId = Guid.NewGuid(),
             };
 
             var token1 = jwtService.GenerateToken(user);
@@ -297,7 +297,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             {
                 JwtSecret = "test-secret-for-user-differences-that-is-long-enough-for-hmac-sha256",
                 JwtIssuer = "Synaxis",
-                JwtAudience = "Synaxis"
+                JwtAudience = "Synaxis",
             };
             var mockConfig = new Mock<IOptions<SynaxisConfiguration>>();
             mockConfig.Setup(x => x.Value).Returns(config);
@@ -308,7 +308,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 Id = Guid.NewGuid(),
                 Email = "user1@example.com",
                 Role = UserRole.Developer,
-                TenantId = Guid.NewGuid()
+                TenantId = Guid.NewGuid(),
             };
 
             var user2 = new User
@@ -316,7 +316,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 Id = Guid.NewGuid(),
                 Email = "user2@example.com",
                 Role = UserRole.Admin,
-                TenantId = Guid.NewGuid()
+                TenantId = Guid.NewGuid(),
             };
 
             var token1 = jwtService.GenerateToken(user1);
@@ -341,7 +341,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             {
                 JwtSecret = "test-secret-for-roles-that-is-long-enough-for-hmac-sha256-algorithm",
                 JwtIssuer = "Synaxis",
-                JwtAudience = "Synaxis"
+                JwtAudience = "Synaxis",
             };
             var mockConfig = new Mock<IOptions<SynaxisConfiguration>>();
             mockConfig.Setup(x => x.Value).Returns(config);
@@ -356,7 +356,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                     Id = Guid.NewGuid(),
                     Email = $"role.test@{role}.example.com",
                     Role = role,
-                    TenantId = Guid.NewGuid()
+                    TenantId = Guid.NewGuid(),
                 };
 
                 var token = jwtService.GenerateToken(user);

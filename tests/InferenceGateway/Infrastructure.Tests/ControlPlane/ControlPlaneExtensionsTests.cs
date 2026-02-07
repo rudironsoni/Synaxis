@@ -16,7 +16,7 @@ public class ControlPlaneExtensionsTests
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 { "Synaxis:ControlPlane:UseInMemory", "true" },
-                { "Synaxis:ControlPlane:ConnectionString", "" }
+                { "Synaxis:ControlPlane:ConnectionString", "" },
             })
             .Build();
 
@@ -38,7 +38,7 @@ public class ControlPlaneExtensionsTests
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 { "Synaxis:ControlPlane:UseInMemory", "false" },
-                { "Synaxis:ControlPlane:ConnectionString", connectionString }
+                { "Synaxis:ControlPlane:ConnectionString", connectionString },
             })
             .Build();
 
@@ -59,7 +59,7 @@ public class ControlPlaneExtensionsTests
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 { "Synaxis:ControlPlane:UseInMemory", "true" },
-                { "Synaxis:ControlPlane:ConnectionString", "" }
+                { "Synaxis:ControlPlane:ConnectionString", "" },
             })
             .Build();
 
@@ -83,7 +83,7 @@ public class ControlPlaneExtensionsTests
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 { "Synaxis:ControlPlane:UseInMemory", "false" },
-                { "Synaxis:ControlPlane:ConnectionString", "" }
+                { "Synaxis:ControlPlane:ConnectionString", "" },
             })
             .Build();
 

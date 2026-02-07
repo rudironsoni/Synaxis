@@ -34,9 +34,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
         public async Task Execute(IJobExecutionContext context)
         {
             var correlationId = Guid.NewGuid().ToString("N")[..8];
-            _logger.LogInformation("[ModelDiscovery][{CorrelationId}] Starting model discovery", correlationId);
+            this._logger.LogInformation("[ModelDiscovery][{CorrelationId}] Starting model discovery", correlationId);
 
-            using var scope = _serviceProvider.CreateScope();
+            using var scope = this._serviceProvider.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
             var alertTool = scope.ServiceProvider.GetRequiredService<IAlertTool>();
             var auditTool = scope.ServiceProvider.GetRequiredService<IAuditTool>();
@@ -46,7 +46,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                 // Get existing models for comparison
                 var existingModels = await db.GlobalModels
                     .Select(m => m.Id)
-                    .ToListAsync(context.CancellationToken);
+                    .ToListAsync(context.CancellationToken).ConfigureAwait(false);
 
                 var existingModelSet = new HashSet<string>(existingModels);
 
@@ -54,7 +54,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                 var providerModels = await db.ProviderModels
                     .Where(pm => pm.IsAvailable)
                     .Select(pm => new { pm.GlobalModelId, pm.ProviderId, pm.ProviderSpecificId })
-                    .ToListAsync(context.CancellationToken);
+                    .ToListAsync(context.CancellationToken).ConfigureAwait(false);
 
                 // Find new models (in ProviderModels but not in GlobalModels)
                 var newModels = providerModels
@@ -63,13 +63,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                     .Select(g => new
                     {
                         ModelId = g.Key,
-                        Providers = g.Select(x => x.ProviderId).Distinct().ToList()
+                        Providers = g.Select(x => x.ProviderId).Distinct().ToList(),
                     })
                     .ToList();
 
                 if (newModels.Any())
                 {
-                    _logger.LogInformation("[ModelDiscovery][{CorrelationId}] Found {Count} new models",
+                    this._logger.LogInformation("[ModelDiscovery][{CorrelationId}] Found {Count} new models",
                         correlationId, newModels.Count);
 
                     int addedCount = 0;
@@ -86,21 +86,21 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                                 Family = "unknown",
                                 Description = $"Auto-discovered model from {string.Join(", ", model.Providers)}",
                                 InputPrice = 0m,
-                                OutputPrice = 0m
+                                OutputPrice = 0m,
                             };
 
                             db.GlobalModels.Add(globalModel);
-                            await db.SaveChangesAsync(context.CancellationToken);
+                            await db.SaveChangesAsync(context.CancellationToken).ConfigureAwait(false);
 
                             addedCount++;
 
-                            _logger.LogInformation(
+                            this._logger.LogInformation(
                                 "[ModelDiscovery][{CorrelationId}] Added new model: {ModelId} from providers: {Providers}",
                                 correlationId, model.ModelId, string.Join(", ", model.Providers));
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogError(ex, "[ModelDiscovery][{CorrelationId}] Failed to add model {ModelId}",
+                            this._logger.LogError(ex, "[ModelDiscovery][{CorrelationId}] Failed to add model {ModelId}",
                                 correlationId, model.ModelId);
                         }
                     }
@@ -112,7 +112,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                             "New Models Discovered",
                             $"Model Discovery Agent found and added {addedCount} new models. Review the models in the admin panel.",
                             AlertSeverity.Info,
-                            context.CancellationToken);
+                            context.CancellationToken).ConfigureAwait(false);
 
                         await auditTool.LogActionAsync(
                             "ModelDiscovery",
@@ -121,24 +121,24 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                             null,
                             $"Added {addedCount} new models to platform",
                             correlationId,
-                            context.CancellationToken);
+                            context.CancellationToken).ConfigureAwait(false);
                     }
 
-                    _logger.LogInformation(
+                    this._logger.LogInformation(
                         "[ModelDiscovery][{CorrelationId}] Completed: Added {Added} of {Found} new models",
                         correlationId, addedCount, newModels.Count);
                 }
                 else
                 {
-                    _logger.LogInformation("[ModelDiscovery][{CorrelationId}] No new models found", correlationId);
+                    this._logger.LogInformation("[ModelDiscovery][{CorrelationId}] No new models found", correlationId);
                 }
 
                 // Update OrganizationModels for organizations with these providers enabled
-                await UpdateOrganizationModelsAsync(db, correlationId, context.CancellationToken);
+                await this.UpdateOrganizationModelsAsync(db, correlationId, context.CancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "[ModelDiscovery][{CorrelationId}] Job failed", correlationId);
+                this._logger.LogError(ex, "[ModelDiscovery][{CorrelationId}] Job failed", correlationId);
             }
         }
 
@@ -152,11 +152,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                 // NOTE: Implement organization-specific model availability
                 // This would update which models are available to which organizations
                 // based on their enabled providers
-                _logger.LogDebug("[ModelDiscovery][{CorrelationId}] Organization model update completed", correlationId);
+                this._logger.LogDebug("[ModelDiscovery][{CorrelationId}] Organization model update completed", correlationId);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "[ModelDiscovery][{CorrelationId}] Failed to update organization models", correlationId);
+                this._logger.LogError(ex, "[ModelDiscovery][{CorrelationId}] Failed to update organization models", correlationId);
             }
         }
     }

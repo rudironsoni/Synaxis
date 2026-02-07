@@ -25,10 +25,10 @@ public class GitHubAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
 
     public GitHubAuthIntegrationTests(SynaxisWebApplicationFactory factory, ITestOutputHelper output)
     {
-        _factory = factory;
-        _factory.OutputHelper = output;
-        _output = output;
-        _client = _factory.CreateClient();
+        this._factory = factory;
+        this._factory.OutputHelper = output;
+        this._output = output;
+        this._client = this._factory.CreateClient();
     }
 
     [Fact]
@@ -49,12 +49,12 @@ public class GitHubAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
                 Content = new StringContent(
                     "device_code=test_device_code&user_code=USER-CODE&verification_uri=https://github.com/login/device&expires_in=900&interval=5",
                     System.Text.Encoding.UTF8,
-                    "application/x-www-form-urlencoded")
+                    "application/x-www-form-urlencoded"),
             });
 
         // Act & Assert: GitHub auth endpoint should be called
         // This test verifies the basic device flow initiation works
-        _output.WriteLine("GitHub device flow initiation test passed");
+        this._output.WriteLine("GitHub device flow initiation test passed");
 
         // GitHub auth should be callable (endpoint exists)
         Assert.True(true, "GitHub auth infrastructure is properly configured");
@@ -69,7 +69,7 @@ public class GitHubAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
         var gitHubEmail = $"{gitHubUsername}@github.com";
 
         // Act & Assert: Verify user can be created with GitHub auth provider
-        var scope = _factory.Services.CreateScope();
+        var scope = this._factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
 
         // Create a test user as if they completed GitHub auth
@@ -78,7 +78,7 @@ public class GitHubAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
             Id = Guid.NewGuid(),
             Name = "GitHub Test Tenant",
             Region = TenantRegion.Us,
-            Status = TenantStatus.Active
+            Status = TenantStatus.Active,
         };
         dbContext.Tenants.Add(tenant);
 
@@ -91,7 +91,7 @@ public class GitHubAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
             Role = UserRole.Owner,
             AuthProvider = "github",
             ProviderUserId = gitHubUserId,
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow,
         };
         dbContext.Users.Add(user);
 
@@ -111,7 +111,7 @@ public class GitHubAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
     public async Task GitHubAuth_MultipleUsers_SeparateTenants()
     {
         // Arrange: Create two GitHub users
-        var scope = _factory.Services.CreateScope();
+        var scope = this._factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
 
         var gitHubId1 = "github_user_1";
@@ -123,7 +123,7 @@ public class GitHubAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
             Id = Guid.NewGuid(),
             Name = "GitHub User 1 Tenant",
             Region = TenantRegion.Us,
-            Status = TenantStatus.Active
+            Status = TenantStatus.Active,
         };
         dbContext.Tenants.Add(tenant1);
 
@@ -136,7 +136,7 @@ public class GitHubAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
             Role = UserRole.Owner,
             AuthProvider = "github",
             ProviderUserId = gitHubId1,
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow,
         };
         dbContext.Users.Add(user1);
 
@@ -146,7 +146,7 @@ public class GitHubAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
             Id = Guid.NewGuid(),
             Name = "GitHub User 2 Tenant",
             Region = TenantRegion.Us,
-            Status = TenantStatus.Active
+            Status = TenantStatus.Active,
         };
         dbContext.Tenants.Add(tenant2);
 
@@ -159,7 +159,7 @@ public class GitHubAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
             Role = UserRole.Owner,
             AuthProvider = "github",
             ProviderUserId = gitHubId2,
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow,
         };
         dbContext.Users.Add(user2);
 
@@ -180,7 +180,7 @@ public class GitHubAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
     public async Task GitHubAuth_User_HasOwnerRole()
     {
         // Arrange
-        var scope = _factory.Services.CreateScope();
+        var scope = this._factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
 
         var gitHubUserId = $"gh_user_{Guid.NewGuid()}";
@@ -190,7 +190,7 @@ public class GitHubAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
             Id = Guid.NewGuid(),
             Name = "GitHub Auth Test Tenant",
             Region = TenantRegion.Us,
-            Status = TenantStatus.Active
+            Status = TenantStatus.Active,
         };
         dbContext.Tenants.Add(tenant);
 
@@ -203,7 +203,7 @@ public class GitHubAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
             Role = UserRole.Owner,
             AuthProvider = "github",
             ProviderUserId = gitHubUserId,
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow,
         };
         dbContext.Users.Add(user);
 
@@ -221,7 +221,7 @@ public class GitHubAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
     public async Task GitHubAuth_User_NoPasswordHashSet()
     {
         // Arrange: OAuth users should not have password hashes
-        var scope = _factory.Services.CreateScope();
+        var scope = this._factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
 
         var gitHubUserId = $"gh_oauth_{Guid.NewGuid()}";
@@ -231,7 +231,7 @@ public class GitHubAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
             Id = Guid.NewGuid(),
             Name = "OAuth Test Tenant",
             Region = TenantRegion.Us,
-            Status = TenantStatus.Active
+            Status = TenantStatus.Active,
         };
         dbContext.Tenants.Add(tenant);
 
@@ -244,7 +244,7 @@ public class GitHubAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
             Role = UserRole.Owner,
             AuthProvider = "github",
             ProviderUserId = gitHubUserId,
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow,
         };
         dbContext.Users.Add(user);
 
@@ -262,7 +262,7 @@ public class GitHubAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
     public async Task GitHubAuth_UserPersistence_PreservesProviderInfo()
     {
         // Arrange
-        var scope = _factory.Services.CreateScope();
+        var scope = this._factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
 
         var gitHubUserId = "octocat";
@@ -273,7 +273,7 @@ public class GitHubAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
             Id = Guid.NewGuid(),
             Name = "Octocat Tenant",
             Region = TenantRegion.Us,
-            Status = TenantStatus.Active
+            Status = TenantStatus.Active,
         };
         dbContext.Tenants.Add(tenant);
 
@@ -286,14 +286,14 @@ public class GitHubAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
             Role = UserRole.Owner,
             AuthProvider = "github",
             ProviderUserId = gitHubUserId,
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow,
         };
         dbContext.Users.Add(user);
 
         await dbContext.SaveChangesAsync();
 
         // Act: Reload user in new context
-        var newScope = _factory.Services.CreateScope();
+        var newScope = this._factory.Services.CreateScope();
         var newDbContext = newScope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
         var reloadedUser = await newDbContext.Users
             .FirstOrDefaultAsync(u => u.ProviderUserId == gitHubUserId);
@@ -309,7 +309,7 @@ public class GitHubAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
     public async Task GitHubAuth_User_CreatesActiveTenant()
     {
         // Arrange
-        var scope = _factory.Services.CreateScope();
+        var scope = this._factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
 
         var gitHubUserId = "tenant_test_user";
@@ -320,7 +320,7 @@ public class GitHubAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
             Id = tenantId,
             Name = "GitHub User Tenant",
             Region = TenantRegion.Us,
-            Status = TenantStatus.Active
+            Status = TenantStatus.Active,
         };
         dbContext.Tenants.Add(tenant);
 
@@ -333,7 +333,7 @@ public class GitHubAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
             Role = UserRole.Owner,
             AuthProvider = "github",
             ProviderUserId = gitHubUserId,
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow,
         };
         dbContext.Users.Add(user);
 
@@ -365,7 +365,7 @@ public class GitHubAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
             new (JwtRegisteredClaimNames.Email, email),
             new ("role", role.ToString()),
             new ("tenantId", tenantId.ToString()),
-            new ("authProvider", "github")
+            new ("authProvider", "github"),
         };
 
         // Verify all required claims are present

@@ -13,7 +13,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity
     public class Role : IdentityRole<Guid>
     {
         public bool IsSystemRole { get; set; }
+
         public Guid? OrganizationId { get; set; }
+
         public string? Description { get; set; }
 
         // Navigation properties

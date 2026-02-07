@@ -23,47 +23,47 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
         public ModelResolverTests(ITestOutputHelper output)
         {
-            _output = output ?? throw new ArgumentNullException(nameof(output));
+            this._output = output ?? throw new ArgumentNullException(nameof(output));
 
-            _mockConfig = new Mock<IOptions<SynaxisConfiguration>>();
-            _mockRegistry = new Mock<IProviderRegistry>();
-            _mockStore = new Mock<IControlPlaneStore>();
+            this._mockConfig = new Mock<IOptions<SynaxisConfiguration>>();
+            this._mockRegistry = new Mock<IProviderRegistry>();
+            this._mockStore = new Mock<IControlPlaneStore>();
         }
 
         [Fact]
         public void Constructor_ShouldThrowArgumentNullException_ForNullOptions()
         {
             Assert.Throws<ArgumentNullException>(() =>
-                new ModelResolver(null!, _mockRegistry.Object, _mockStore.Object));
+                new ModelResolver(null!, this._mockRegistry.Object, this._mockStore.Object));
         }
 
         [Fact]
         public void Constructor_ShouldThrowArgumentNullException_ForNullRegistry()
         {
-            var config = CreateValidConfiguration();
-            _mockConfig.Setup(x => x.Value).Returns(config);
+            var config = this.CreateValidConfiguration();
+            this._mockConfig.Setup(x => x.Value).Returns(config);
 
             Assert.Throws<ArgumentNullException>(() =>
-                new ModelResolver(_mockConfig.Object, null!, _mockStore.Object));
+                new ModelResolver(this._mockConfig.Object, null!, this._mockStore.Object));
         }
 
         [Fact]
         public void Constructor_ShouldThrowArgumentNullException_ForNullStore()
         {
-            var config = CreateValidConfiguration();
-            _mockConfig.Setup(x => x.Value).Returns(config);
+            var config = this.CreateValidConfiguration();
+            this._mockConfig.Setup(x => x.Value).Returns(config);
 
             Assert.Throws<ArgumentNullException>(() =>
-                new ModelResolver(_mockConfig.Object, _mockRegistry.Object, null!));
+                new ModelResolver(this._mockConfig.Object, this._mockRegistry.Object, null!));
         }
 
         [Fact]
         public void Constructor_ShouldInitializeSuccessfully_WithValidDependencies()
         {
-            var config = CreateValidConfiguration();
-            _mockConfig.Setup(x => x.Value).Returns(config);
+            var config = this.CreateValidConfiguration();
+            this._mockConfig.Setup(x => x.Value).Returns(config);
 
-            var resolver = new ModelResolver(_mockConfig.Object, _mockRegistry.Object, _mockStore.Object);
+            var resolver = new ModelResolver(this._mockConfig.Object, this._mockRegistry.Object, this._mockStore.Object);
 
             Assert.NotNull(resolver);
         }
@@ -72,13 +72,13 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public void Resolve_ShouldReturnValidResult_ForDirectModelMatch()
         {
             // Arrange
-            var config = CreateValidConfiguration();
-            _mockConfig.Setup(x => x.Value).Returns(config);
+            var config = this.CreateValidConfiguration();
+            this._mockConfig.Setup(x => x.Value).Returns(config);
 
-            _mockRegistry.Setup(r => r.GetCandidates("llama-3.3-70b-versatile"))
+            this._mockRegistry.Setup(r => r.GetCandidates("llama-3.3-70b-versatile"))
                 .Returns(new[] { ("Groq", 0), ("DeepSeek", 1) });
 
-            var resolver = new ModelResolver(_mockConfig.Object, _mockRegistry.Object, _mockStore.Object);
+            var resolver = new ModelResolver(this._mockConfig.Object, this._mockRegistry.Object, this._mockStore.Object);
 
             // Act
             var result = resolver.Resolve("llama-3.3-70b-versatile");
@@ -95,20 +95,20 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public void Resolve_ShouldHandleModelAliases()
         {
             // Arrange
-            var config = CreateValidConfiguration();
+            var config = this.CreateValidConfiguration();
             config.Aliases = new Dictionary<string, AliasConfig>
             {
-                ["default"] = new AliasConfig { Candidates = ["llama-3.3-70b-versatile", "deepseek-chat"] }
+                ["default"] = new AliasConfig { Candidates = ["llama-3.3-70b-versatile", "deepseek-chat"] },
             };
-            _mockConfig.Setup(x => x.Value).Returns(config);
+            this._mockConfig.Setup(x => x.Value).Returns(config);
 
             // Only first candidate should be used since it has providers
-            _mockRegistry.Setup(r => r.GetCandidates("llama-3.3-70b-versatile"))
+            this._mockRegistry.Setup(r => r.GetCandidates("llama-3.3-70b-versatile"))
                 .Returns(new[] { ("Groq", 0) });
-            _mockRegistry.Setup(r => r.GetCandidates("deepseek-chat"))
+            this._mockRegistry.Setup(r => r.GetCandidates("deepseek-chat"))
                 .Returns(new[] { ("DeepSeek", 1) });
 
-            var resolver = new ModelResolver(_mockConfig.Object, _mockRegistry.Object, _mockStore.Object);
+            var resolver = new ModelResolver(this._mockConfig.Object, this._mockRegistry.Object, this._mockStore.Object);
 
             // Act
             var result = resolver.Resolve("default");
@@ -124,7 +124,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public void Resolve_ShouldFilterByRequiredCapabilities()
         {
             // Arrange
-            var config = CreateValidConfiguration();
+            var config = this.CreateValidConfiguration();
             config.CanonicalModels = new List<CanonicalModelConfig>
             {
                 new CanonicalModelConfig
@@ -137,14 +137,14 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                     Vision = false,
                     StructuredOutput = false,
                     LogProbs = false
-                }
+                },
             };
-            _mockConfig.Setup(x => x.Value).Returns(config);
+            this._mockConfig.Setup(x => x.Value).Returns(config);
 
-            _mockRegistry.Setup(r => r.GetCandidates("llama-3.3-70b-versatile"))
+            this._mockRegistry.Setup(r => r.GetCandidates("llama-3.3-70b-versatile"))
                 .Returns(new[] { ("Groq", 0) });
 
-            var resolver = new ModelResolver(_mockConfig.Object, _mockRegistry.Object, _mockStore.Object);
+            var resolver = new ModelResolver(this._mockConfig.Object, this._mockRegistry.Object, this._mockStore.Object);
             var required = new RequiredCapabilities { Tools = true };
 
             // Act
@@ -160,8 +160,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task ResolveAsync_ShouldUseDatabaseGlobalModel_WhenAvailable()
         {
             // Arrange
-            var config = CreateValidConfiguration();
-            _mockConfig.Setup(x => x.Value).Returns(config);
+            var config = this.CreateValidConfiguration();
+            this._mockConfig.Setup(x => x.Value).Returns(config);
 
             var globalModel = new GlobalModel
             {
@@ -170,12 +170,12 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 {
                     new ProviderModel { ProviderId = "Groq", ProviderSpecificId = "llama-3.3-70b-versatile" },
                     new ProviderModel { ProviderId = "DeepSeek", ProviderSpecificId = "deepseek-chat" }
-                }
+                },
             };
-            _mockStore.Setup(s => s.GetGlobalModelAsync("llama-3.3-70b-versatile"))
+            this._mockStore.Setup(s => s.GetGlobalModelAsync("llama-3.3-70b-versatile"))
                 .ReturnsAsync(globalModel);
 
-            var resolver = new ModelResolver(_mockConfig.Object, _mockRegistry.Object, _mockStore.Object);
+            var resolver = new ModelResolver(this._mockConfig.Object, this._mockRegistry.Object, this._mockStore.Object);
 
             // Act
             var result = await resolver.ResolveAsync("llama-3.3-70b-versatile", EndpointKind.ChatCompletions);
@@ -192,15 +192,15 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task ResolveAsync_ShouldFallbackToConfig_WhenNoDatabaseModel()
         {
             // Arrange
-            var config = CreateValidConfiguration();
-            _mockConfig.Setup(x => x.Value).Returns(config);
+            var config = this.CreateValidConfiguration();
+            this._mockConfig.Setup(x => x.Value).Returns(config);
 
-            _mockStore.Setup(s => s.GetGlobalModelAsync("llama-3.3-70b-versatile"))
+            this._mockStore.Setup(s => s.GetGlobalModelAsync("llama-3.3-70b-versatile"))
                 .ReturnsAsync((GlobalModel?)null);
-            _mockRegistry.Setup(r => r.GetCandidates("llama-3.3-70b-versatile"))
+            this._mockRegistry.Setup(r => r.GetCandidates("llama-3.3-70b-versatile"))
                 .Returns(new[] { ("Groq", 0) });
 
-            var resolver = new ModelResolver(_mockConfig.Object, _mockRegistry.Object, _mockStore.Object);
+            var resolver = new ModelResolver(this._mockConfig.Object, this._mockRegistry.Object, this._mockStore.Object);
 
             // Act
             var result = await resolver.ResolveAsync("llama-3.3-70b-versatile", EndpointKind.ChatCompletions);
@@ -216,19 +216,19 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task ResolveAsync_ShouldHandleTenantAliases()
         {
             // Arrange
-            var config = CreateValidConfiguration();
-            _mockConfig.Setup(x => x.Value).Returns(config);
+            var config = this.CreateValidConfiguration();
+            this._mockConfig.Setup(x => x.Value).Returns(config);
 
             var tenantId = Guid.NewGuid();
             var alias = new ModelAlias { TargetModel = "llama-3.3-70b-versatile" };
-            _mockStore.Setup(s => s.GetGlobalModelAsync("llama-3.3-70b-versatile"))
+            this._mockStore.Setup(s => s.GetGlobalModelAsync("llama-3.3-70b-versatile"))
                 .ReturnsAsync((GlobalModel?)null);
-            _mockStore.Setup(s => s.GetAliasAsync(tenantId, "custom-alias"))
+            this._mockStore.Setup(s => s.GetAliasAsync(tenantId, "custom-alias"))
                 .ReturnsAsync(alias);
-            _mockRegistry.Setup(r => r.GetCandidates("llama-3.3-70b-versatile"))
+            this._mockRegistry.Setup(r => r.GetCandidates("llama-3.3-70b-versatile"))
                 .Returns(new[] { ("Groq", 0) });
 
-            var resolver = new ModelResolver(_mockConfig.Object, _mockRegistry.Object, _mockStore.Object);
+            var resolver = new ModelResolver(this._mockConfig.Object, this._mockRegistry.Object, this._mockStore.Object);
 
             // Act
             var result = await resolver.ResolveAsync("custom-alias", EndpointKind.ChatCompletions, tenantId: tenantId);
@@ -244,7 +244,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task ResolveAsync_ShouldHandleModelCombos()
         {
             // Arrange
-            var config = CreateValidConfiguration();
+            var config = this.CreateValidConfiguration();
             // Add the combo models to providers
             config.Providers["Provider1"] = new ProviderConfig
             {
@@ -252,7 +252,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 Key = "Provider1",
                 Tier = 0,
                 Models = ["model1"],
-                Type = "openai"
+                Type = "openai",
             };
             config.Providers["Provider2"] = new ProviderConfig
             {
@@ -260,25 +260,25 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 Key = "Provider2",
                 Tier = 1,
                 Models = ["model2"],
-                Type = "openai"
+                Type = "openai",
             };
-            _mockConfig.Setup(x => x.Value).Returns(config);
+            this._mockConfig.Setup(x => x.Value).Returns(config);
 
             var tenantId = Guid.NewGuid();
             var combo = new ModelCombo { OrderedModelsJson = "[\"model1\", \"model2\"]" };
-            _mockStore.Setup(s => s.GetGlobalModelAsync("model1"))
+            this._mockStore.Setup(s => s.GetGlobalModelAsync("model1"))
                 .ReturnsAsync((GlobalModel?)null);
-            _mockStore.Setup(s => s.GetGlobalModelAsync("model2"))
+            this._mockStore.Setup(s => s.GetGlobalModelAsync("model2"))
                 .ReturnsAsync((GlobalModel?)null);
-            _mockStore.Setup(s => s.GetComboAsync(tenantId, "my-combo"))
+            this._mockStore.Setup(s => s.GetComboAsync(tenantId, "my-combo"))
                 .ReturnsAsync(combo);
             // First candidate has providers, so resolver should stop there
-            _mockRegistry.Setup(r => r.GetCandidates("model1"))
+            this._mockRegistry.Setup(r => r.GetCandidates("model1"))
                 .Returns(new[] { ("Provider1", 0) });
-            _mockRegistry.Setup(r => r.GetCandidates("model2"))
+            this._mockRegistry.Setup(r => r.GetCandidates("model2"))
                 .Returns(new[] { ("Provider2", 1) });
 
-            var resolver = new ModelResolver(_mockConfig.Object, _mockRegistry.Object, _mockStore.Object);
+            var resolver = new ModelResolver(this._mockConfig.Object, this._mockRegistry.Object, this._mockStore.Object);
 
             // Act
             var result = await resolver.ResolveAsync("my-combo", EndpointKind.ChatCompletions, tenantId: tenantId);
@@ -294,7 +294,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public void Resolve_ShouldHandleFallbackToRawModelId_WhenCanonicalLookupFails()
         {
             // Arrange
-            var config = CreateValidConfiguration();
+            var config = this.CreateValidConfiguration();
             // Ensure no canonical config exists for this model
             config.CanonicalModels.Clear();
             // Add the complex model ID to a provider
@@ -304,18 +304,18 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 Key = "Provider",
                 Tier = 0,
                 Models = ["provider/model-name-with-slash"],
-                Type = "openai"
+                Type = "openai",
             };
-            _mockConfig.Setup(x => x.Value).Returns(config);
+            this._mockConfig.Setup(x => x.Value).Returns(config);
 
             // Simulate a model ID that contains '/' which might break parsing
             var complexModelId = "provider/model-name-with-slash";
-            _mockRegistry.Setup(r => r.GetCandidates("model-name-with-slash"))
+            this._mockRegistry.Setup(r => r.GetCandidates("model-name-with-slash"))
                 .Returns(Enumerable.Empty<(string, int)>());
-            _mockRegistry.Setup(r => r.GetCandidates(complexModelId))
+            this._mockRegistry.Setup(r => r.GetCandidates(complexModelId))
                 .Returns(new[] { ("Provider", 0) });
 
-            var resolver = new ModelResolver(_mockConfig.Object, _mockRegistry.Object, _mockStore.Object);
+            var resolver = new ModelResolver(this._mockConfig.Object, this._mockRegistry.Object, this._mockStore.Object);
 
             // Act
             var result = resolver.Resolve(complexModelId);
@@ -331,13 +331,13 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public void Resolve_ShouldReturnEmptyCandidates_WhenNoProvidersMatch()
         {
             // Arrange
-            var config = CreateValidConfiguration();
-            _mockConfig.Setup(x => x.Value).Returns(config);
+            var config = this.CreateValidConfiguration();
+            this._mockConfig.Setup(x => x.Value).Returns(config);
 
-            _mockRegistry.Setup(r => r.GetCandidates("non-existent-model"))
+            this._mockRegistry.Setup(r => r.GetCandidates("non-existent-model"))
                 .Returns(Enumerable.Empty<(string, int)>());
 
-            var resolver = new ModelResolver(_mockConfig.Object, _mockRegistry.Object, _mockStore.Object);
+            var resolver = new ModelResolver(this._mockConfig.Object, this._mockRegistry.Object, this._mockStore.Object);
 
             // Act
             var result = resolver.Resolve("non-existent-model");
@@ -352,7 +352,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public void Resolve_ShouldFilterProvidersByCanonicalProvider_WhenSpecified()
         {
             // Arrange
-            var config = CreateValidConfiguration();
+            var config = this.CreateValidConfiguration();
             config.CanonicalModels = new List<CanonicalModelConfig>
             {
                 new CanonicalModelConfig
@@ -360,14 +360,14 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                     Id = "llama-3.3-70b-versatile",
                     Provider = "Groq",
                     ModelPath = "llama-3.3-70b-versatile"
-                }
+                },
             };
-            _mockConfig.Setup(x => x.Value).Returns(config);
+            this._mockConfig.Setup(x => x.Value).Returns(config);
 
-            _mockRegistry.Setup(r => r.GetCandidates("llama-3.3-70b-versatile"))
+            this._mockRegistry.Setup(r => r.GetCandidates("llama-3.3-70b-versatile"))
                 .Returns(new[] { ("Groq", 0), ("DeepSeek", 1) });
 
-            var resolver = new ModelResolver(_mockConfig.Object, _mockRegistry.Object, _mockStore.Object);
+            var resolver = new ModelResolver(this._mockConfig.Object, this._mockRegistry.Object, this._mockStore.Object);
 
             // Act
             var result = resolver.Resolve("llama-3.3-70b-versatile");
@@ -391,7 +391,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                         Key = "Groq",
                         Tier = 0,
                         Models = ["llama-3.3-70b-versatile"],
-                        Type = "groq"
+                        Type = "groq",
                     },
                     ["DeepSeek"] = new ProviderConfig
                     {
@@ -400,10 +400,10 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                         Tier = 1,
                         Models = ["deepseek-chat"],
                         Type = "openai"
-                    }
+                    },
                 },
                 CanonicalModels = new List<CanonicalModelConfig>(),
-                Aliases = new Dictionary<string, AliasConfig>()
+                Aliases = new Dictionary<string, AliasConfig>(),
             };
         }
     }

@@ -33,7 +33,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
         public async Task SendAdminAlertAsync(string subject, string message, AlertSeverity severity, CancellationToken ct = default)
         {
             // NOTE: Implement actual alert mechanism (email, Slack, etc.)
-            _logger.LogWarning("[ADMIN ALERT][{Severity}] {Subject}: {Message}", severity, subject, message);
+            this._logger.LogWarning("[ADMIN ALERT][{Severity}] {Subject}: {Message}", severity, subject, message);
             await Task.CompletedTask.ConfigureAwait(false);
         }
 
@@ -48,7 +48,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
         public async Task SendNotificationAsync(Guid? userId, Guid? organizationId, string message, CancellationToken ct = default)
         {
             // NOTE: Implement actual notification mechanism
-            _logger.LogInformation("[NOTIFICATION] UserId={UserId}, OrgId={OrgId}, Message={Message}",
+            this._logger.LogInformation("[NOTIFICATION] UserId={UserId}, OrgId={OrgId}, Message={Message}",
                 userId, organizationId, message);
             await Task.CompletedTask.ConfigureAwait(false);
         }

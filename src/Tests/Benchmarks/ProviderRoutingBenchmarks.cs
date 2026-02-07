@@ -34,32 +34,32 @@ public class ProviderRoutingBenchmarks : TestBase
     [GlobalSetup]
     public void Setup()
     {
-        _modelResolverLogger = CreateMockLogger<ModelResolver>().Object;
-        _smartRouterLogger = CreateMockLogger<SmartRouter>().Object;
-        _healthStore = CreateMockHealthStore(true).Object;
-        _quotaTracker = CreateMockQuotaTracker().Object;
-        _costService = CreateMockCostService().Object;
-        _controlPlaneStore = CreateMockControlPlaneStore().Object;
-        _routingScoreCalculator = CreateMockRoutingScoreCalculator().Object;
+        this._modelResolverLogger = this.CreateMockLogger<ModelResolver>().Object;
+        this._smartRouterLogger = this.CreateMockLogger<SmartRouter>().Object;
+        this._healthStore = this.CreateMockHealthStore(true).Object;
+        this._quotaTracker = this.CreateMockQuotaTracker().Object;
+        this._costService = this.CreateMockCostService().Object;
+        this._controlPlaneStore = this.CreateMockControlPlaneStore().Object;
+        this._routingScoreCalculator = this.CreateMockRoutingScoreCalculator().Object;
 
-        var config = CreateSynaxisConfiguration(13, 10, 10);
-        _configOptions = Options.Create(config);
+        var config = this.CreateSynaxisConfiguration(13, 10, 10);
+        this._configOptions = Options.Create(config);
 
-        var providers = new ProviderRegistry(_configOptions);
-        _providerRegistry = providers;
+        var providers = new ProviderRegistry(this._configOptions);
+        this._providerRegistry = providers;
 
-        _modelResolver = new ModelResolver(
-            _configOptions,
-            _providerRegistry,
-            _controlPlaneStore);
+        this._modelResolver = new ModelResolver(
+            this._configOptions,
+            this._providerRegistry,
+            this._controlPlaneStore);
 
-        _smartRouter = new SmartRouter(
-            _modelResolver,
-            _costService,
-            _healthStore,
-            _quotaTracker,
-            _routingScoreCalculator,
-            _smartRouterLogger);
+        this._smartRouter = new SmartRouter(
+            this._modelResolver,
+            this._costService,
+            this._healthStore,
+            this._quotaTracker,
+            this._routingScoreCalculator,
+            this._smartRouterLogger);
     }
 
     [Benchmark]
@@ -69,10 +69,10 @@ public class ProviderRoutingBenchmarks : TestBase
     [Arguments(13)]
     public async Task<ResolutionResult> ModelResolver_ResolveAsync_SingleCanonicalModel(int providerCount)
     {
-        var config = CreateSynaxisConfiguration(providerCount, 1, 1);
+        var config = this.CreateSynaxisConfiguration(providerCount, 1, 1);
         var configOptions = Options.Create(config);
         var providers = new ProviderRegistry(configOptions);
-        var controlPlaneStore = CreateMockControlPlaneStore().Object;
+        var controlPlaneStore = this.CreateMockControlPlaneStore().Object;
 
         var resolver = new ModelResolver(
             configOptions,
@@ -91,10 +91,10 @@ public class ProviderRoutingBenchmarks : TestBase
     [Arguments(10)]
     public async Task<ResolutionResult> ModelResolver_ResolveAsync_MultipleCanonicalModels(int canonicalModelCount)
     {
-        var config = CreateSynaxisConfiguration(13, canonicalModelCount, 5);
+        var config = this.CreateSynaxisConfiguration(13, canonicalModelCount, 5);
         var configOptions = Options.Create(config);
         var providers = new ProviderRegistry(configOptions);
-        var controlPlaneStore = CreateMockControlPlaneStore().Object;
+        var controlPlaneStore = this.CreateMockControlPlaneStore().Object;
 
         var resolver = new ModelResolver(
             configOptions,
@@ -114,10 +114,10 @@ public class ProviderRoutingBenchmarks : TestBase
     [Arguments(13)]
     public async Task<IList<EnrichedCandidate>> SmartRouter_GetCandidatesAsync_SingleProvider(int providerCount)
     {
-        var config = CreateSynaxisConfiguration(providerCount, 1, 1);
+        var config = this.CreateSynaxisConfiguration(providerCount, 1, 1);
         var configOptions = Options.Create(config);
         var providers = new ProviderRegistry(configOptions);
-        var controlPlaneStore = CreateMockControlPlaneStore().Object;
+        var controlPlaneStore = this.CreateMockControlPlaneStore().Object;
 
         var resolver = new ModelResolver(
             configOptions,
@@ -126,11 +126,11 @@ public class ProviderRoutingBenchmarks : TestBase
 
         var router = new SmartRouter(
             resolver,
-            _costService,
-            _healthStore,
-            _quotaTracker,
-            _routingScoreCalculator,
-            _smartRouterLogger);
+            this._costService,
+            this._healthStore,
+            this._quotaTracker,
+            this._routingScoreCalculator,
+            this._smartRouterLogger);
 
         return await router.GetCandidatesAsync(
             SingleProviderModel,
@@ -144,10 +144,10 @@ public class ProviderRoutingBenchmarks : TestBase
     [Arguments(13)]
     public async Task<IList<EnrichedCandidate>> SmartRouter_GetCandidatesAsync_MultipleProviders(int providerCount)
     {
-        var config = CreateSynaxisConfiguration(providerCount, 10, 5);
+        var config = this.CreateSynaxisConfiguration(providerCount, 10, 5);
         var configOptions = Options.Create(config);
         var providers = new ProviderRegistry(configOptions);
-        var controlPlaneStore = CreateMockControlPlaneStore().Object;
+        var controlPlaneStore = this.CreateMockControlPlaneStore().Object;
 
         var resolver = new ModelResolver(
             configOptions,
@@ -156,11 +156,11 @@ public class ProviderRoutingBenchmarks : TestBase
 
         var router = new SmartRouter(
             resolver,
-            _costService,
-            _healthStore,
-            _quotaTracker,
-            _routingScoreCalculator,
-            _smartRouterLogger);
+            this._costService,
+            this._healthStore,
+            this._quotaTracker,
+            this._routingScoreCalculator,
+            this._smartRouterLogger);
 
         return await router.GetCandidatesAsync(
             MultipleProviderModel,
@@ -170,7 +170,7 @@ public class ProviderRoutingBenchmarks : TestBase
     [Benchmark]
     public async Task<IList<EnrichedCandidate>> SmartRouter_GetCandidatesAsync_AliasResolution()
     {
-        return await _smartRouter.GetCandidatesAsync(
+        return await this._smartRouter.GetCandidatesAsync(
             DefaultAlias,
             streaming: false);
     }
@@ -178,7 +178,7 @@ public class ProviderRoutingBenchmarks : TestBase
     [Benchmark]
     public async Task<IList<EnrichedCandidate>> SmartRouter_GetCandidatesAsync_WithStreamingCapability()
     {
-        return await _smartRouter.GetCandidatesAsync(
+        return await this._smartRouter.GetCandidatesAsync(
             SingleProviderModel,
             streaming: true);
     }
@@ -193,7 +193,7 @@ public class ProviderRoutingBenchmarks : TestBase
             JwtSecret = "test-jwt-secret",
             JwtIssuer = "test-issuer",
             JwtAudience = "test-audience",
-            MasterKey = "test-master-key"
+            MasterKey = "test-master-key",
         };
 
         for (int i = 0; i < providerCount; i++)
@@ -207,7 +207,7 @@ public class ProviderRoutingBenchmarks : TestBase
                 Models = i == 0
                     ? new List<string> { SingleProviderModel, MultipleProviderModel }
                     : new List<string> { MultipleProviderModel },
-                Enabled = true
+                Enabled = true,
             };
         }
 
@@ -222,7 +222,7 @@ public class ProviderRoutingBenchmarks : TestBase
                 Tools = true,
                 Vision = false,
                 StructuredOutput = false,
-                LogProbs = false
+                LogProbs = false,
             });
         }
 
@@ -234,13 +234,13 @@ public class ProviderRoutingBenchmarks : TestBase
                 {
                     $"canonical-model-{i % canonicalModelCount}",
                     $"canonical-model-{(i + 1) % canonicalModelCount}"
-                }
+                },
             };
         }
 
         config.Aliases[DefaultAlias] = new AliasConfig
         {
-            Candidates = new List<string> { "canonical-model-0" }
+            Candidates = new List<string> { "canonical-model-0" },
         };
 
         return config;

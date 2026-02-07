@@ -21,13 +21,16 @@ public class AntigravityAuthManagerTests : IDisposable
 
     public AntigravityAuthManagerTests()
     {
-        _tempAuthPath = Path.GetTempFileName();
-        _loggerMock = new Mock<ILogger<AntigravityAuthManager>>();
+        this._tempAuthPath = Path.GetTempFileName();
+        this._loggerMock = new Mock<ILogger<AntigravityAuthManager>>();
     }
 
     public void Dispose()
     {
-        if (File.Exists(_tempAuthPath)) File.Delete(_tempAuthPath);
+        if (File.Exists(this._tempAuthPath))
+        {
+            File.Delete(this._tempAuthPath);
+        }
     }
 
     [Fact]
@@ -37,15 +40,15 @@ public class AntigravityAuthManagerTests : IDisposable
         var accounts = new List<AntigravityAccount>
         {
             new () { Email = "user1@test.com", Token = new () { AccessToken = "token1", ExpiresInSeconds = 3600, IssuedUtc = DateTime.UtcNow } },
-            new () { Email = "user2@test.com", Token = new () { AccessToken = "token2", ExpiresInSeconds = 3600, IssuedUtc = DateTime.UtcNow } }
+            new () { Email = "user2@test.com", Token = new () { AccessToken = "token2", ExpiresInSeconds = 3600, IssuedUtc = DateTime.UtcNow } },
         };
-        await File.WriteAllTextAsync(_tempAuthPath, System.Text.Json.JsonSerializer.Serialize(accounts));
+        await File.WriteAllTextAsync(this._tempAuthPath, System.Text.Json.JsonSerializer.Serialize(accounts));
         var httpClientFactory = CreateHttpClientFactory(() => new HttpResponseMessage(HttpStatusCode.OK)
         {
-            Content = new StringContent("{}")
+            Content = new StringContent("{}"),
         });
         var settings = new AntigravitySettings { ClientId = "test-client", ClientSecret = "test-secret" };
-        var manager = new AntigravityAuthManager("proj", _tempAuthPath, settings, _loggerMock.Object, httpClientFactory);
+        var manager = new AntigravityAuthManager("proj", this._tempAuthPath, settings, this._loggerMock.Object, httpClientFactory);
 
         // Act
         // Force load by calling GetTokenAsync. 
@@ -69,13 +72,13 @@ public class AntigravityAuthManagerTests : IDisposable
         try
         {
             // Empty file
-            await File.WriteAllTextAsync(_tempAuthPath, "[]");
+            await File.WriteAllTextAsync(this._tempAuthPath, "[]");
             var httpClientFactory = CreateHttpClientFactory(() => new HttpResponseMessage(HttpStatusCode.BadRequest)
             {
-                Content = new StringContent("{\"error\":\"invalid_grant\"}")
+                Content = new StringContent("{\"error\":\"invalid_grant\"}"),
             });
             var settings = new AntigravitySettings { ClientId = "test-client", ClientSecret = "test-secret" };
-            var manager = new AntigravityAuthManager("proj", _tempAuthPath, settings, _loggerMock.Object, httpClientFactory);
+            var manager = new AntigravityAuthManager("proj", this._tempAuthPath, settings, this._loggerMock.Object, httpClientFactory);
 
             // Act
             // GetTokenAsync will detect env var, inject it.
@@ -110,12 +113,12 @@ public class AntigravityAuthManagerTests : IDisposable
 
         public StubHttpMessageHandler(Func<HttpResponseMessage> responseFactory)
         {
-            _responseFactory = responseFactory;
+            this._responseFactory = responseFactory;
         }
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, System.Threading.CancellationToken cancellationToken)
         {
-            return Task.FromResult(_responseFactory());
+            return Task.FromResult(this._responseFactory());
         }
     }
 }

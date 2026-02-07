@@ -29,7 +29,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
         public byte[] Unprotect(byte[] protectedData)
         {
             var s = Encoding.UTF8.GetString(protectedData);
-            if (s.StartsWith("protected:")) s = s.Substring("protected:".Length);
+            if (s.StartsWith("protected:"))
+            {
+                s = s.Substring("protected:".Length);
+            }
+
             return Encoding.UTF8.GetBytes(s);
         }
     }

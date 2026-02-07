@@ -25,9 +25,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Routing
 
         public async Task<ModelCost?> GetCostAsync(string provider, string model, CancellationToken cancellationToken = default)
         {
-            return await _dbContext.ModelCosts
+            return await this._dbContext.ModelCosts
                 .AsNoTracking()
-                .FirstOrDefaultAsync(c => c.Provider == provider && c.Model == model, cancellationToken);
+                .FirstOrDefaultAsync(c => c.Provider == provider && c.Model == model, cancellationToken).ConfigureAwait(false);
         }
     }
 }

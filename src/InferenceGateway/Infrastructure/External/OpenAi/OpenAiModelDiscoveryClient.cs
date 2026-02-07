@@ -28,8 +28,15 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.OpenAi
 
         public async Task<List<string>> GetModelsAsync(string baseUrl, string apiKey, CancellationToken ct)
         {
-            if (string.IsNullOrEmpty(baseUrl)) throw new ArgumentNullException(nameof(baseUrl));
-            if (string.IsNullOrEmpty(apiKey)) throw new ArgumentNullException(nameof(apiKey));
+            if (string.IsNullOrEmpty(baseUrl))
+            {
+                throw new ArgumentNullException(nameof(baseUrl));
+            }
+
+            if (string.IsNullOrEmpty(apiKey))
+            {
+                throw new ArgumentNullException(nameof(apiKey));
+            }
 
             var trimmed = baseUrl.TrimEnd('/');
             var url = trimmed + "/v1/models";
@@ -39,22 +46,25 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.OpenAi
 
             try
             {
-                using var resp = await _httpClient.SendAsync(request, ct).ConfigureAwait(false);
+                using var resp = await this._httpClient.SendAsync(request, ct).ConfigureAwait(false);
                 if (!resp.IsSuccessStatusCode)
                 {
-                    _logger.LogWarning("Model discovery call to {Url} returned {Status}", url, resp.StatusCode);
+                    this._logger.LogWarning("Model discovery call to {Url} returned {Status}", url, resp.StatusCode);
                     return new List<string>();
                 }
 
                 var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
                 var dto = await JsonSerializer.DeserializeAsync<OpenAiModelsResponse>(stream, cancellationToken: ct).ConfigureAwait(false);
-                if (dto == null || dto.Data == null) return new List<string>();
+                if (dto == null || dto.Data == null)
+                {
+                    return new List<string>();
+                }
 
                 return dto.Data.Where(d => !string.IsNullOrEmpty(d.Id)).Select(d => d.Id!).ToList();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error discovering models from {Url}", url);
+                this._logger.LogError(ex, "Error discovering models from {Url}", url);
                 return new List<string>();
             }
         }

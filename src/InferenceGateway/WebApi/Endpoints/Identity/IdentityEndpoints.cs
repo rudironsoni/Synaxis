@@ -48,7 +48,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Identity
                     a.Id,
                     a.Provider,
                     a.Email,
-                    AccessToken = string.IsNullOrEmpty(a.AccessToken) ? string.Empty : (a.AccessToken.Length <= 8 ? "****" : a.AccessToken.Substring(0, 4) + "...." + a.AccessToken.Substring(a.AccessToken.Length - 4))
+                    AccessToken = string.IsNullOrEmpty(a.AccessToken) ? string.Empty : (a.AccessToken.Length <= 8 ? "****" : a.AccessToken.Substring(0, 4) + "...." + a.AccessToken.Substring(a.AccessToken.Length - 4)),
                 });
                 return Results.Ok(masked);
             });

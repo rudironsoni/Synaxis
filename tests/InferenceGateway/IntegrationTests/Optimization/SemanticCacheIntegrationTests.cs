@@ -21,9 +21,9 @@ public class SemanticCacheIntegrationTests : IAsyncLifetime
 
     public SemanticCacheIntegrationTests(ITestOutputHelper output)
     {
-        _output = output ?? throw new ArgumentNullException(nameof(output));
+        this._output = output ?? throw new ArgumentNullException(nameof(output));
 
-        _qdrant = new QdrantBuilder()
+        this._qdrant = new QdrantBuilder()
             .WithImage("qdrant/qdrant:latest")
             .WithPortBinding(6333, true)
             .Build();
@@ -31,13 +31,13 @@ public class SemanticCacheIntegrationTests : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        await _qdrant.StartAsync();
-        _output.WriteLine($"Qdrant started on {_qdrant.Hostname}:{_qdrant.GetMappedPublicPort(6333)}");
+        await this._qdrant.StartAsync();
+        this._output.WriteLine($"Qdrant started on {this._qdrant.Hostname}:{this._qdrant.GetMappedPublicPort(6333)}");
     }
 
     public async Task DisposeAsync()
     {
-        await _qdrant.DisposeAsync();
+        await this._qdrant.DisposeAsync();
     }
 
     [Fact]
@@ -49,13 +49,13 @@ public class SemanticCacheIntegrationTests : IAsyncLifetime
         var sessionId = "session-exact-match";
         var model = "gpt-4";
         var temperature = 0.7;
-        var embedding = GenerateTestEmbedding(384);
+        var embedding = this.GenerateTestEmbedding(384);
 
         // Act - Store in cache
-        await StoreInCacheAsync(query, response, sessionId, model, temperature, embedding);
+        await this.StoreInCacheAsync(query, response, sessionId, model, temperature, embedding);
 
         // Act - Retrieve from cache with exact same query
-        var result = await RetrieveFromCacheAsync(query, sessionId, model, temperature, embedding);
+        var result = await this.RetrieveFromCacheAsync(query, sessionId, model, temperature, embedding);
 
         // Assert
         Assert.NotNull(result);
@@ -75,15 +75,15 @@ public class SemanticCacheIntegrationTests : IAsyncLifetime
         var model = "gpt-4";
         var temperature = 0.7;
 
-        var originalEmbedding = GenerateTestEmbedding(384, seed: 42);
+        var originalEmbedding = this.GenerateTestEmbedding(384, seed: 42);
         // Similar embedding (slightly different but close)
-        var similarEmbedding = GenerateTestEmbedding(384, seed: 42, noise: 0.1f);
+        var similarEmbedding = this.GenerateTestEmbedding(384, seed: 42, noise: 0.1f);
 
         // Act - Store original
-        await StoreInCacheAsync(originalQuery, response, sessionId, model, temperature, originalEmbedding);
+        await this.StoreInCacheAsync(originalQuery, response, sessionId, model, temperature, originalEmbedding);
 
         // Act - Retrieve with similar query
-        var result = await RetrieveFromCacheAsync(similarQuery, sessionId, model, temperature, similarEmbedding);
+        var result = await this.RetrieveFromCacheAsync(similarQuery, sessionId, model, temperature, similarEmbedding);
 
         // Assert
         Assert.NotNull(result);
@@ -110,13 +110,13 @@ public class SemanticCacheIntegrationTests : IAsyncLifetime
         var sessionId2 = "session-2";
         var model = "gpt-4";
         var temperature = 0.7;
-        var embedding = GenerateTestEmbedding(384);
+        var embedding = this.GenerateTestEmbedding(384);
 
         // Act - Store in session 1
-        await StoreInCacheAsync(query, response, sessionId1, model, temperature, embedding);
+        await this.StoreInCacheAsync(query, response, sessionId1, model, temperature, embedding);
 
         // Act - Try to retrieve from session 2 (different session)
-        var result = await RetrieveFromCacheAsync(query, sessionId2, model, temperature, embedding);
+        var result = await this.RetrieveFromCacheAsync(query, sessionId2, model, temperature, embedding);
 
         // Assert - Should not find cache from different session
         Assert.NotNull(result);
@@ -133,13 +133,13 @@ public class SemanticCacheIntegrationTests : IAsyncLifetime
         var model1 = "gpt-4";
         var model2 = "gpt-3.5-turbo";
         var temperature = 0.7;
-        var embedding = GenerateTestEmbedding(384);
+        var embedding = this.GenerateTestEmbedding(384);
 
         // Act - Store with model1
-        await StoreInCacheAsync(query, response, sessionId, model1, temperature, embedding);
+        await this.StoreInCacheAsync(query, response, sessionId, model1, temperature, embedding);
 
         // Act - Try to retrieve with model2
-        var result = await RetrieveFromCacheAsync(query, sessionId, model2, temperature, embedding);
+        var result = await this.RetrieveFromCacheAsync(query, sessionId, model2, temperature, embedding);
 
         // Assert - Should not return cache from different model
         Assert.NotNull(result);
@@ -156,13 +156,13 @@ public class SemanticCacheIntegrationTests : IAsyncLifetime
         var model = "gpt-4";
         var temperature1 = 0.0;
         var temperature2 = 0.7;
-        var embedding = GenerateTestEmbedding(384);
+        var embedding = this.GenerateTestEmbedding(384);
 
         // Act - Store with temperature 0.0
-        await StoreInCacheAsync(query, response, sessionId, model, temperature1, embedding);
+        await this.StoreInCacheAsync(query, response, sessionId, model, temperature1, embedding);
 
         // Act - Try to retrieve with temperature 0.7
-        var result = await RetrieveFromCacheAsync(query, sessionId, model, temperature2, embedding);
+        var result = await this.RetrieveFromCacheAsync(query, sessionId, model, temperature2, embedding);
 
         // Assert - Should not return cache with different temperature
         Assert.NotNull(result);
@@ -178,18 +178,18 @@ public class SemanticCacheIntegrationTests : IAsyncLifetime
         var temperature = 0.7;
 
         // Store multiple entries in the session
-        await StoreInCacheAsync("Query 1", "Response 1", sessionId, model, temperature, GenerateTestEmbedding(384, seed: 1));
-        await StoreInCacheAsync("Query 2", "Response 2", sessionId, model, temperature, GenerateTestEmbedding(384, seed: 2));
-        await StoreInCacheAsync("Query 3", "Response 3", sessionId, model, temperature, GenerateTestEmbedding(384, seed: 3));
+        await this.StoreInCacheAsync("Query 1", "Response 1", sessionId, model, temperature, this.GenerateTestEmbedding(384, seed: 1));
+        await this.StoreInCacheAsync("Query 2", "Response 2", sessionId, model, temperature, this.GenerateTestEmbedding(384, seed: 2));
+        await this.StoreInCacheAsync("Query 3", "Response 3", sessionId, model, temperature, this.GenerateTestEmbedding(384, seed: 3));
 
         // Act - Invalidate session
-        var invalidatedCount = await InvalidateSessionAsync(sessionId);
+        var invalidatedCount = await this.InvalidateSessionAsync(sessionId);
 
         // Assert
         Assert.True(invalidatedCount >= 3, $"Expected at least 3 invalidated entries, got {invalidatedCount}");
 
         // Verify entries are gone
-        var result1 = await RetrieveFromCacheAsync("Query 1", sessionId, model, temperature, GenerateTestEmbedding(384, seed: 1));
+        var result1 = await this.RetrieveFromCacheAsync("Query 1", sessionId, model, temperature, this.GenerateTestEmbedding(384, seed: 1));
         Assert.False(result1.IsHit, "Invalidated entry should not be retrievable");
     }
 
@@ -208,13 +208,13 @@ public class SemanticCacheIntegrationTests : IAsyncLifetime
             var index = i;
             tasks.Add(Task.Run(async () =>
             {
-                await StoreInCacheAsync(
+                await this.StoreInCacheAsync(
                     $"Query {index}",
                     $"Response {index}",
                     sessionId,
                     model,
                     temperature,
-                    GenerateTestEmbedding(384, seed: index));
+                    this.GenerateTestEmbedding(384, seed: index));
             }));
         }
 
@@ -224,12 +224,12 @@ public class SemanticCacheIntegrationTests : IAsyncLifetime
         // Verify all entries were stored
         var retrieveTasks = Enumerable.Range(0, 10).Select(async i =>
         {
-            var result = await RetrieveFromCacheAsync(
+            var result = await this.RetrieveFromCacheAsync(
                 $"Query {i}",
                 sessionId,
                 model,
                 temperature,
-                GenerateTestEmbedding(384, seed: i));
+                this.GenerateTestEmbedding(384, seed: i));
             return result.IsHit;
         });
 
@@ -248,11 +248,11 @@ public class SemanticCacheIntegrationTests : IAsyncLifetime
         var sessionId = "session-large";
         var model = "text-embedding-3-large";
         var temperature = 0.7;
-        var largeEmbedding = GenerateTestEmbedding(3072); // Large dimension
+        var largeEmbedding = this.GenerateTestEmbedding(3072); // Large dimension
 
         // Act
-        await StoreInCacheAsync(query, response, sessionId, model, temperature, largeEmbedding);
-        var result = await RetrieveFromCacheAsync(query, sessionId, model, temperature, largeEmbedding);
+        await this.StoreInCacheAsync(query, response, sessionId, model, temperature, largeEmbedding);
+        var result = await this.RetrieveFromCacheAsync(query, sessionId, model, temperature, largeEmbedding);
 
         // Assert
         Assert.NotNull(result);
@@ -289,7 +289,7 @@ public class SemanticCacheIntegrationTests : IAsyncLifetime
         // Simulated store operation - in actual implementation would call the semantic cache service
         // For this integration test, we're testing that the Qdrant container is operational
         await Task.Delay(10); // Simulate storage latency
-        _output.WriteLine($"Stored cache entry: session={sessionId}, model={model}, temp={temperature}");
+        this._output.WriteLine($"Stored cache entry: session={sessionId}, model={model}, temp={temperature}");
     }
 
     private async Task<CacheResult> RetrieveFromCacheAsync(string query, string sessionId, string model, double temperature, float[] embedding)
@@ -304,7 +304,7 @@ public class SemanticCacheIntegrationTests : IAsyncLifetime
             IsHit = false,
             Response = null,
             SimilarityScore = 0.0,
-            QueryEmbedding = embedding
+            QueryEmbedding = embedding,
         };
     }
 
@@ -312,15 +312,18 @@ public class SemanticCacheIntegrationTests : IAsyncLifetime
     {
         // Simulated invalidation - in actual implementation would delete from Qdrant
         await Task.Delay(10);
-        _output.WriteLine($"Invalidated session: {sessionId}");
+        this._output.WriteLine($"Invalidated session: {sessionId}");
         return 3; // Simulated count
     }
 
     private class CacheResult
     {
         public bool IsHit { get; set; }
+
         public string? Response { get; set; }
+
         public double SimilarityScore { get; set; }
+
         public float[]? QueryEmbedding { get; set; }
     }
 }

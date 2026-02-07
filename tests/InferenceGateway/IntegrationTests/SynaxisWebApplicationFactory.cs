@@ -36,12 +36,12 @@ public class SynaxisWebApplicationFactory : WebApplicationFactory<Program>, IAsy
     public async Task InitializeAsync()
     {
         // Start containers in parallel
-        await Task.WhenAll(_postgres.StartAsync(), _redis.StartAsync());
+        await Task.WhenAll(this._postgres.StartAsync(), this._redis.StartAsync());
 
         // Initialize the database schema
         // We do this here to ensure the DB is ready before the application starts
         var optionsBuilder = new DbContextOptionsBuilder<ControlPlaneDbContext>();
-        optionsBuilder.UseNpgsql(_postgres.GetConnectionString());
+        optionsBuilder.UseNpgsql(this._postgres.GetConnectionString());
 
         using var dbContext = new ControlPlaneDbContext(optionsBuilder.Options);
 
@@ -83,8 +83,15 @@ public class SynaxisWebApplicationFactory : WebApplicationFactory<Program>, IAsy
                 {
                     var appsettings = Path.Combine(webApiPath, "appsettings.json");
                     var appsettingsDev = Path.Combine(webApiPath, "appsettings.Development.json");
-                    if (File.Exists(appsettings)) builder.AddJsonFile(appsettings, optional: true, reloadOnChange: false);
-                    if (File.Exists(appsettingsDev)) builder.AddJsonFile(appsettingsDev, optional: true, reloadOnChange: false);
+                    if (File.Exists(appsettings))
+                    {
+                        builder.AddJsonFile(appsettings, optional: true, reloadOnChange: false);
+                    }
+
+                    if (File.Exists(appsettingsDev))
+                    {
+                        builder.AddJsonFile(appsettingsDev, optional: true, reloadOnChange: false);
+                    }
                 }
             }
 
@@ -102,7 +109,7 @@ public class SynaxisWebApplicationFactory : WebApplicationFactory<Program>, IAsy
     async Task IAsyncLifetime.DisposeAsync()
     {
         // Dispose containers
-        await Task.WhenAll(_postgres.DisposeAsync().AsTask(), _redis.DisposeAsync().AsTask());
+        await Task.WhenAll(this._postgres.DisposeAsync().AsTask(), this._redis.DisposeAsync().AsTask());
     }
 
     protected override IHost CreateHost(IHostBuilder builder)
@@ -134,10 +141,10 @@ public class SynaxisWebApplicationFactory : WebApplicationFactory<Program>, IAsy
 
             var settings = new Dictionary<string, string?>
             {
-                ["Synaxis:ControlPlane:ConnectionString"] = _postgres.GetConnectionString(),
+                ["Synaxis:ControlPlane:ConnectionString"] = this._postgres.GetConnectionString(),
                 ["Synaxis:ControlPlane:UseInMemory"] = "false",
                 ["Synaxis:ControlPlane:RunMigrations"] = "false",
-                ["ConnectionStrings:Redis"] = $"{_redis.GetConnectionString()},abortConnect=false"
+                ["ConnectionStrings:Redis"] = $"{this._redis.GetConnectionString()},abortConnect=false",
             };
             // Map a standard list of provider environment variables to configuration keys.
             // Support both modern names like GROQ_API_KEY and legacy SYNAPLEXER_* variants by trying
@@ -170,18 +177,28 @@ public class SynaxisWebApplicationFactory : WebApplicationFactory<Program>, IAsy
                     $"SYNAPLEXER_{envKey}",
                     // Some legacy names used _KEY instead of _API_KEY, support those too
                     envKey.Replace("_API_KEY", "_KEY"),
-                    $"SYNAPLEXER_{envKey.Replace("_API_KEY", "_KEY")}"
+                    $"SYNAPLEXER_{envKey.Replace("_API_KEY", "_KEY")}",
                 };
 
                 string? val = null;
                 foreach (var candidate in candidates)
                 {
-                    if (string.IsNullOrEmpty(candidate)) continue;
+                    if (string.IsNullOrEmpty(candidate))
+                    {
+                        continue;
+                    }
+
                     val = Environment.GetEnvironmentVariable(candidate);
-                    if (!string.IsNullOrEmpty(val)) break;
+                    if (!string.IsNullOrEmpty(val))
+                    {
+                        break;
+                    }
                 }
 
-                if (!string.IsNullOrEmpty(val)) settings[configKey] = val;
+                if (!string.IsNullOrEmpty(val))
+                {
+                    settings[configKey] = val;
+                }
             }
 
             config.AddInMemoryCollection(settings);

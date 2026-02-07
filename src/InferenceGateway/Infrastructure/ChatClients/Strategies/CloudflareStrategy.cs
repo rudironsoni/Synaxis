@@ -26,7 +26,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ChatClients.Strategies
             // handles protocol details. This strategy exists to allow future
             // provider-specific adjustments (e.g. token limits or option remapping)
             // without changing callers.
-            return await client.GetResponseAsync(messages, options, ct);
+            return await client.GetResponseAsync(messages, options, ct).ConfigureAwait(false);
         }
 
         public IAsyncEnumerable<ChatResponseUpdate> ExecuteStreamingAsync(

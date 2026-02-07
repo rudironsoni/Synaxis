@@ -10,24 +10,30 @@ namespace Synaxis.Common.Tests;
 public abstract class TokenOptimizationTestBase : TestBase
 {
     protected Mock<ISemanticCacheService> CacheMock { get; }
+
     protected Mock<IConversationStore> ConversationStoreMock { get; }
+
     protected Mock<ISessionStore> SessionStoreMock { get; }
+
     protected Mock<IInFlightDeduplicationService> DeduplicationMock { get; }
+
     protected Mock<IRequestFingerprinter> FingerprinterMock { get; }
+
     protected Mock<ITokenOptimizationConfigurationResolver> ConfigResolverMock { get; }
+
     protected Mock<IRequestContextProvider> ContextProviderMock { get; }
 
     protected TokenOptimizationTestBase()
     {
-        CacheMock = new Mock<ISemanticCacheService>();
-        ConversationStoreMock = new Mock<IConversationStore>();
-        SessionStoreMock = new Mock<ISessionStore>();
-        DeduplicationMock = new Mock<IInFlightDeduplicationService>();
-        FingerprinterMock = new Mock<IRequestFingerprinter>();
-        ConfigResolverMock = new Mock<ITokenOptimizationConfigurationResolver>();
-        ContextProviderMock = new Mock<IRequestContextProvider>();
+        this.CacheMock = new Mock<ISemanticCacheService>();
+        this.ConversationStoreMock = new Mock<IConversationStore>();
+        this.SessionStoreMock = new Mock<ISessionStore>();
+        this.DeduplicationMock = new Mock<IInFlightDeduplicationService>();
+        this.FingerprinterMock = new Mock<IRequestFingerprinter>();
+        this.ConfigResolverMock = new Mock<ITokenOptimizationConfigurationResolver>();
+        this.ContextProviderMock = new Mock<IRequestContextProvider>();
 
-        SetupDefaultMockBehaviors();
+        this.SetupDefaultMockBehaviors();
     }
 
     /// <summary>
@@ -37,43 +43,43 @@ public abstract class TokenOptimizationTestBase : TestBase
     protected virtual void SetupDefaultMockBehaviors()
     {
         // Default: optimization enabled with standard config
-        ConfigResolverMock.Setup(x => x.ResolveAsync(
+        this.ConfigResolverMock.Setup(x => x.ResolveAsync(
                 It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(TestDataFactory.CreateOptimizationConfig());
 
         // Default: cache miss
-        CacheMock.Setup(x => x.TryGetCachedAsync(
+        this.CacheMock.Setup(x => x.TryGetCachedAsync(
                 It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<string>(), It.IsAny<float?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(SemanticCacheResult.Miss(null));
 
         // Default: no in-flight requests
-        DeduplicationMock.Setup(x => x.TryGetInFlightAsync(
+        this.DeduplicationMock.Setup(x => x.TryGetInFlightAsync(
                 It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((ChatResponse?)null);
 
         // Default: no session affinity
-        SessionStoreMock.Setup(x => x.GetPreferredProviderAsync(
+        this.SessionStoreMock.Setup(x => x.GetPreferredProviderAsync(
                 It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((string?)null);
 
         // Default: return same messages for compression
-        ConversationStoreMock.Setup(x => x.CompressHistoryAsync(
+        this.ConversationStoreMock.Setup(x => x.CompressHistoryAsync(
                 It.IsAny<IEnumerable<ChatMessage>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((IEnumerable<ChatMessage> msgs, CancellationToken _) => msgs);
 
         // Default: generate unique fingerprints
-        FingerprinterMock.Setup(x => x.GenerateFingerprint(
+        this.FingerprinterMock.Setup(x => x.GenerateFingerprint(
                 It.IsAny<IEnumerable<ChatMessage>>(), It.IsAny<ChatOptions?>()))
             .Returns((IEnumerable<ChatMessage> msgs, ChatOptions? opts) =>
                 $"fingerprint-{Guid.NewGuid()}");
 
         // Default: return empty context
-        ContextProviderMock.Setup(x => x.GetTenantId())
+        this.ContextProviderMock.Setup(x => x.GetTenantId())
             .Returns("test-tenant");
-        ContextProviderMock.Setup(x => x.GetUserId())
+        this.ContextProviderMock.Setup(x => x.GetUserId())
             .Returns("test-user");
-        ContextProviderMock.Setup(x => x.GetSessionId())
+        this.ContextProviderMock.Setup(x => x.GetSessionId())
             .Returns("test-session");
     }
 }
@@ -85,15 +91,18 @@ public abstract class TokenOptimizationTestBase : TestBase
 public class SemanticCacheResult
 {
     public bool IsHit { get; init; }
+
     public string? Response { get; init; }
+
     public float? SimilarityScore { get; init; }
+
     public float[]? QueryEmbedding { get; init; }
 
     public static SemanticCacheResult Hit(string response, float similarityScore)
-        => new () { IsHit = true, Response = response, SimilarityScore = similarityScore };
+        => new() { IsHit = true, Response = response, SimilarityScore = similarityScore };
 
     public static SemanticCacheResult Miss(float[]? embedding)
-        => new () { IsHit = false, QueryEmbedding = embedding };
+        => new() { IsHit = false, QueryEmbedding = embedding };
 }
 
 /// <summary>
@@ -128,7 +137,9 @@ public interface ISemanticCacheService
 public interface IConversationStore
 {
     Task AddMessageAsync(string sessionId, ChatMessage message, CancellationToken cancellationToken);
+
     Task<IEnumerable<ChatMessage>> GetHistoryAsync(string sessionId, CancellationToken cancellationToken);
+
     Task<IEnumerable<ChatMessage>> CompressHistoryAsync(IEnumerable<ChatMessage> messages, CancellationToken cancellationToken);
 }
 
@@ -139,6 +150,7 @@ public interface IConversationStore
 public interface ISessionStore
 {
     Task<string?> GetPreferredProviderAsync(string sessionId, CancellationToken cancellationToken);
+
     Task SetPreferredProviderAsync(string sessionId, string providerId, CancellationToken cancellationToken);
 }
 
@@ -149,6 +161,7 @@ public interface ISessionStore
 public interface IInFlightDeduplicationService
 {
     Task<ChatResponse?> TryGetInFlightAsync(string fingerprint, CancellationToken cancellationToken);
+
     Task RegisterInFlightAsync(string fingerprint, Task<ChatResponse> responseTask, CancellationToken cancellationToken);
 }
 
@@ -177,6 +190,8 @@ public interface ITokenOptimizationConfigurationResolver
 public interface IRequestContextProvider
 {
     string GetTenantId();
+
     string GetUserId();
+
     string GetSessionId();
 }

@@ -20,7 +20,7 @@ public class OpenAIRequestMapperTests
             Messages = new List<OpenAIMessage>(),
             Temperature = 0.7,
             TopP = 0.9,
-            MaxTokens = 100
+            MaxTokens = 100,
         };
         var messages = new List<ChatMessage> { new(ChatRole.User, "Hello") };
 
@@ -42,7 +42,7 @@ public class OpenAIRequestMapperTests
         var openAIRequest = new OpenAIRequest
         {
             Model = "",
-            Messages = new List<OpenAIMessage>()
+            Messages = new List<OpenAIMessage>(),
         };
         var messages = new List<ChatMessage>();
 
@@ -57,7 +57,7 @@ public class OpenAIRequestMapperTests
         var openAIRequest = new OpenAIRequest
         {
             Model = null!,
-            Messages = new List<OpenAIMessage>()
+            Messages = new List<OpenAIMessage>(),
         };
         var messages = new List<ChatMessage>();
 
@@ -72,7 +72,7 @@ public class OpenAIRequestMapperTests
         var openAIRequest = new OpenAIRequest
         {
             Model = "   ",
-            Messages = new List<OpenAIMessage>()
+            Messages = new List<OpenAIMessage>(),
         };
         var messages = new List<ChatMessage>();
 
@@ -86,7 +86,7 @@ public class OpenAIRequestMapperTests
     {
         var openAIRequest = new OpenAIRequest
         {
-            Model = "gpt-4"
+            Model = "gpt-4",
         };
 
         Assert.Throws<ArgumentNullException>(() =>
@@ -111,7 +111,7 @@ public class OpenAIRequestMapperTests
                         Description = "Get weather information"
                     }
                 }
-            }
+            },
         };
         var messages = new List<ChatMessage>();
 
@@ -129,7 +129,7 @@ public class OpenAIRequestMapperTests
         {
             Model = "gpt-4",
             Messages = new List<OpenAIMessage>(),
-            ToolChoice = toolChoice
+            ToolChoice = toolChoice,
         };
         var messages = new List<ChatMessage>();
 
@@ -146,7 +146,7 @@ public class OpenAIRequestMapperTests
         {
             Model = "gpt-4",
             Messages = new List<OpenAIMessage>(),
-            ResponseFormat = responseFormat
+            ResponseFormat = responseFormat,
         };
         var messages = new List<ChatMessage>();
 
@@ -165,7 +165,7 @@ public class OpenAIRequestMapperTests
             Temperature = null,
             TopP = null,
             MaxTokens = null,
-            Stop = null
+            Stop = null,
         };
         var messages = new List<ChatMessage>();
 
@@ -186,7 +186,7 @@ public class OpenAIRequestMapperTests
         {
             Model = "gpt-4",
             Messages = new List<OpenAIMessage>(),
-            Stop = stopJson
+            Stop = stopJson,
         };
         var messages = new List<ChatMessage>();
 
@@ -205,7 +205,7 @@ public class OpenAIRequestMapperTests
         {
             Model = "gpt-4",
             Messages = new List<OpenAIMessage>(),
-            Stop = stopJson
+            Stop = stopJson,
         };
         var messages = new List<ChatMessage>();
 
@@ -226,7 +226,7 @@ public class OpenAIRequestMapperTests
     {
         var openAIRequest = new OpenAIRequest
         {
-            Messages = null!
+            Messages = null!,
         };
 
         var result = OpenAIRequestMapper.ToChatMessages(openAIRequest);
@@ -239,7 +239,7 @@ public class OpenAIRequestMapperTests
     {
         var openAIRequest = new OpenAIRequest
         {
-            Messages = new List<OpenAIMessage>()
+            Messages = new List<OpenAIMessage>(),
         };
 
         var result = OpenAIRequestMapper.ToChatMessages(openAIRequest);
@@ -255,7 +255,7 @@ public class OpenAIRequestMapperTests
             Messages = new List<OpenAIMessage>
             {
                 new () { Role = "system", Content = "You are helpful" }
-            }
+            },
         };
 
         var result = OpenAIRequestMapper.ToChatMessages(openAIRequest).ToList();
@@ -273,7 +273,7 @@ public class OpenAIRequestMapperTests
             Messages = new List<OpenAIMessage>
             {
                 new () { Role = "user", Content = "Hello" }
-            }
+            },
         };
 
         var result = OpenAIRequestMapper.ToChatMessages(openAIRequest).ToList();
@@ -291,7 +291,7 @@ public class OpenAIRequestMapperTests
             Messages = new List<OpenAIMessage>
             {
                 new () { Role = "assistant", Content = "Hi there" }
-            }
+            },
         };
 
         var result = OpenAIRequestMapper.ToChatMessages(openAIRequest).ToList();
@@ -309,7 +309,7 @@ public class OpenAIRequestMapperTests
             Messages = new List<OpenAIMessage>
             {
                 new () { Role = "tool", Content = "Tool result", ToolCallId = "call_123" }
-            }
+            },
         };
 
         var result = OpenAIRequestMapper.ToChatMessages(openAIRequest).ToList();
@@ -326,7 +326,7 @@ public class OpenAIRequestMapperTests
             Messages = new List<OpenAIMessage>
             {
                 new () { Role = "custom_role", Content = "Custom content" }
-            }
+            },
         };
 
         var result = OpenAIRequestMapper.ToChatMessages(openAIRequest).ToList();
@@ -344,7 +344,7 @@ public class OpenAIRequestMapperTests
             Messages = new List<OpenAIMessage>
             {
                 new () { Role = "user", Content = "Hello", Name = "John" }
-            }
+            },
         };
 
         var result = OpenAIRequestMapper.ToChatMessages(openAIRequest).ToList();
@@ -361,7 +361,7 @@ public class OpenAIRequestMapperTests
             Messages = new List<OpenAIMessage>
             {
                 new () { Role = "user", Content = null }
-            }
+            },
         };
 
         var result = OpenAIRequestMapper.ToChatMessages(openAIRequest).ToList();
@@ -395,7 +395,7 @@ public class OpenAIRequestMapperTests
                         }
                     }
                 }
-            }
+            },
         };
 
         var result = OpenAIRequestMapper.ToChatMessages(openAIRequest).ToList();
@@ -444,7 +444,7 @@ public class OpenAIRequestMapperTests
                         }
                     }
                 }
-            }
+            },
         };
 
         var result = OpenAIRequestMapper.ToChatMessages(openAIRequest).ToList();
@@ -479,7 +479,7 @@ public class OpenAIRequestMapperTests
                         }
                     }
                 }
-            }
+            },
         };
 
         var result = OpenAIRequestMapper.ToChatMessages(openAIRequest).ToList();
@@ -502,7 +502,7 @@ public class OpenAIRequestMapperTests
                     Content = "25 degrees",
                     ToolCallId = "call_123"
                 }
-            }
+            },
         };
 
         var result = OpenAIRequestMapper.ToChatMessages(openAIRequest).ToList();
@@ -527,7 +527,7 @@ public class OpenAIRequestMapperTests
                     Content = "Result",
                     ToolCallId = null
                 }
-            }
+            },
         };
 
         var result = OpenAIRequestMapper.ToChatMessages(openAIRequest).ToList();
@@ -548,7 +548,7 @@ public class OpenAIRequestMapperTests
                 new () { Role = "system", Content = "System prompt" },
                 new () { Role = "user", Content = "User message" },
                 new () { Role = "assistant", Content = "Assistant response" }
-            }
+            },
         };
 
         var result = OpenAIRequestMapper.ToChatMessages(openAIRequest).ToList();
@@ -572,7 +572,7 @@ public class OpenAIRequestMapperTests
                     Content = "No tools",
                     ToolCalls = new List<OpenAIToolCall>()
                 }
-            }
+            },
         };
 
         var result = OpenAIRequestMapper.ToChatMessages(openAIRequest).ToList();
@@ -602,7 +602,7 @@ public class OpenAIRequestMapperTests
                         }
                     }
                 }
-            }
+            },
         };
 
         var result = OpenAIRequestMapper.ToChatMessages(openAIRequest).ToList();

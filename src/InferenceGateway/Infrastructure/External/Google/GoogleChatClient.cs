@@ -22,10 +22,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.Google
         private readonly HttpClient _httpClient;
         private readonly string _modelId;
         private readonly ChatClientMetadata _metadata;
-        private static readonly JsonSerializerOptions _jsonOptions = new ()
+        private static readonly JsonSerializerOptions _jsonOptions = new()
         {
             PropertyNameCaseInsensitive = true,
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
         };
 
         private const string Endpoint = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
@@ -38,36 +38,36 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.Google
             this._logger = logger;
             if (!string.IsNullOrEmpty(apiKey))
             {
-                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
+                this._httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
             }
-            _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Synaxis/1.0");
-            this._metadata = new ChatClientMetadata("Google.Gemini", new Uri(Endpoint), _modelId);
+            this._httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Synaxis/1.0");
+            this._metadata = new ChatClientMetadata("Google.Gemini", new Uri(Endpoint), this._modelId);
         }
 
         public ChatClientMetadata Metadata => this._metadata;
 
         public async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
         {
-            var requestObj = CreateRequest(chatMessages, options, stream: false);
+            var requestObj = this.CreateRequest(chatMessages, options, stream: false);
 
             // Debug: print request URI and model field payload for diagnosing 404s and model formatting
             try
             {
                 var requestJson = JsonSerializer.Serialize(requestObj, _jsonOptions);
-                string payloadModel = _modelId;
+                string payloadModel = this._modelId;
                 try
                 {
                     using var doc = JsonDocument.Parse(requestJson);
                     if (doc.RootElement.TryGetProperty("model", out var modelProp))
                     {
-                        payloadModel = modelProp.ValueKind == JsonValueKind.String ? modelProp.GetString() ?? _modelId : _modelId;
+                        payloadModel = modelProp.ValueKind == JsonValueKind.String ? modelProp.GetString() ?? this._modelId : this._modelId;
                     }
                 }
                 catch { /* ignore parse errors and fall back to _modelId */ }
 
-                if (_logger != null)
+                if (this._logger != null)
                 {
-                    _logger.LogInformation("GoogleChatClient sending request. Endpoint: {Endpoint} Model: {Model} Payload: {Payload}", Endpoint, payloadModel, requestJson);
+                    this._logger.LogInformation("GoogleChatClient sending request. Endpoint: {Endpoint} Model: {Model} Payload: {Payload}", Endpoint, payloadModel, requestJson);
                 }
                 else
                 {
@@ -80,7 +80,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.Google
                 Console.WriteLine($"GoogleChatClient debug logging failed: {ex}");
             }
 
-            var response = await _httpClient.PostAsJsonAsync(Endpoint, requestObj, cancellationToken);
+            var response = await this._httpClient.PostAsJsonAsync(Endpoint, requestObj, cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
                 var err = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -94,7 +94,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.Google
 
             var chatResponse = new ChatResponse(new ChatMessage(ChatRole.Assistant, text))
             {
-                ModelId = _modelId
+                ModelId = this._modelId,
             };
 
             return chatResponse;
@@ -112,18 +112,19 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.Google
                 role = m.Role == ChatRole.User ? "user" :
                        m.Role == ChatRole.Assistant ? "assistant" :
                        m.Role == ChatRole.System ? "system" : "user",
-                content = m.Text
+                content = m.Text,
             }).ToList();
 
             return new
             {
-                model = options?.ModelId ?? _modelId,
+                model = options?.ModelId ?? this._modelId,
                 messages = messages,
-                stream = stream
+                stream = stream,
             };
         }
 
         public void Dispose() => this._httpClient.Dispose();
+
         public object? GetService(Type serviceType, object? serviceKey = null) => null;
 
         private class OpenAiChatResponse
@@ -134,13 +135,16 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.Google
         private class OpenAiChoice
         {
             [JsonPropertyName("message")] public OpenAiMessage? Message { get; set; }
+
             [JsonPropertyName("text")] public string? Text { get; set; }
+
             [JsonPropertyName("finish_reason")] public string? FinishReason { get; set; }
         }
 
         private class OpenAiMessage
         {
             [JsonPropertyName("role")] public string? Role { get; set; }
+
             [JsonPropertyName("content")] public string? Content { get; set; }
         }
     }

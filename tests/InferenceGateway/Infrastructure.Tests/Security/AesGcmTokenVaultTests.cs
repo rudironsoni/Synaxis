@@ -97,7 +97,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             var tenant = new Tenant
             {
                 Id = tenantId,
-                EncryptedByokKey = Array.Empty<byte>() // Use master key fallback
+                EncryptedByokKey = Array.Empty<byte>(), // Use master key fallback
             };
 
             dbContext.Tenants.Add(tenant);
@@ -148,7 +148,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             var tenant = new Tenant
             {
                 Id = tenantId,
-                EncryptedByokKey = Array.Empty<byte>() // Use master key fallback
+                EncryptedByokKey = Array.Empty<byte>(), // Use master key fallback
             };
 
             dbContext.Tenants.Add(tenant);
@@ -197,7 +197,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             var tenant = new Tenant
             {
                 Id = tenantId,
-                EncryptedByokKey = Array.Empty<byte>() // Use master key fallback
+                EncryptedByokKey = Array.Empty<byte>(), // Use master key fallback
             };
 
             dbContext.Tenants.Add(tenant);
@@ -225,7 +225,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             var tenant = new Tenant
             {
                 Id = tenantId,
-                EncryptedByokKey = Array.Empty<byte>() // Use master key fallback
+                EncryptedByokKey = Array.Empty<byte>(), // Use master key fallback
             };
 
             dbContext.Tenants.Add(tenant);
@@ -237,7 +237,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
                 Id = Guid.NewGuid(),
                 TenantId = tenantId,
                 AccessTokenEncrypted = await tokenVault.EncryptAsync(tenantId, "access-token"),
-                RefreshTokenEncrypted = await tokenVault.EncryptAsync(tenantId, "refresh-token")
+                RefreshTokenEncrypted = await tokenVault.EncryptAsync(tenantId, "refresh-token"),
             };
 
             dbContext.OAuthAccounts.Add(oauthAccount);
@@ -291,7 +291,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             var tenant = new Tenant
             {
                 Id = tenantId,
-                EncryptedByokKey = Array.Empty<byte>()
+                EncryptedByokKey = Array.Empty<byte>(),
             };
 
             dbContext.Tenants.Add(tenant);
@@ -346,7 +346,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
         {
             var config = new SynaxisConfiguration
             {
-                MasterKey = masterKey
+                MasterKey = masterKey,
             };
 
             var mockConfig = new Mock<IOptions<SynaxisConfiguration>>();
@@ -389,7 +389,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
 
         public static byte[] Decrypt(byte[] encrypted, byte[] key)
         {
-            if (encrypted.Length < 28) throw new ArgumentException("Invalid ciphertext");
+            if (encrypted.Length < 28)
+            {
+                throw new ArgumentException("Invalid ciphertext");
+            }
 
             var nonce = encrypted.AsSpan(0, 12);
             var tag = encrypted.AsSpan(12, 16);
