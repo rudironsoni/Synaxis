@@ -2,7 +2,7 @@
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -14,6 +14,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
     public partial class InitialMultiTenantSchema : Migration
     {
         /// <inheritdoc />
+#pragma warning disable MA0051 // Method too long
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.EnsureSchema(
@@ -947,6 +948,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 column: "NormalizedUserName",
                 unique: true);
         }
+#pragma warning restore MA0051
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)

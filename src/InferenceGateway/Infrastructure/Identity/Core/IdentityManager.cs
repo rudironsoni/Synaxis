@@ -17,16 +17,16 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
         private readonly IEnumerable<IAuthStrategy> _strategies;
         private readonly ISecureTokenStore _store;
         private readonly ILogger<IdentityManager> _logger;
-        private readonly object _lock = new object();
+        private readonly Lock _lock = new Lock();
         private readonly TaskCompletionSource<bool> _initialLoadComplete = new TaskCompletionSource<bool>();
         private readonly List<IdentityAccount> _accounts = new List<IdentityAccount>();
         private Timer? _timer;
 
         public IdentityManager(IEnumerable<IAuthStrategy> strategies, ISecureTokenStore store, ILogger<IdentityManager> logger)
         {
-            _strategies = strategies ?? Array.Empty<IAuthStrategy>();
-            _store = store ?? throw new ArgumentNullException(nameof(store));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._strategies = strategies ?? Array.Empty<IAuthStrategy>();
+            this._store = store ?? throw new ArgumentNullException(nameof(store));
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
             // Subscribe to account authenticated events from strategies
             try
@@ -78,7 +78,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
         public Task StartAsync(CancellationToken cancellationToken)
         {
             // Start a timer to refresh tokens periodically
-            _timer = new Timer(async _ => await RefreshLoopAsync(), null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
+            this._timer = new Timer(async _ => await RefreshLoopAsync(), null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
             return Task.CompletedTask;
         }
 
@@ -94,7 +94,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
         /// </summary>
         public Task WaitForInitialLoadAsync(CancellationToken ct = default)
         {
-            return _initialLoadComplete.Task.WaitAsync(ct);
+            return this._initialLoadComplete.Task.WaitAsync(ct);
         }
 
         public void Dispose()
@@ -129,7 +129,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
                         {
                             acc.AccessToken = tokenResp.AccessToken ?? acc.AccessToken;
                             if (!string.IsNullOrEmpty(tokenResp.RefreshToken)) acc.RefreshToken = tokenResp.RefreshToken;
-                            if (tokenResp.ExpiresInSeconds.HasValue)
+                            if (tokenResp.ExpiresInthis.Seconds.HasValue)
                                 acc.ExpiresAt = DateTimeOffset.UtcNow.AddSeconds(tokenResp.ExpiresInSeconds.Value);
                         }
                     }
@@ -169,7 +169,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
             }
 
             // Fallback: return first strategy
-            return _strategies.FirstOrDefault();
+            return this._strategies.FirstOrDefault();
         }
 
         public async Task<AuthResult?> StartAuth(string provider, CancellationToken ct = default)
@@ -223,7 +223,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
                             {
                                 acc.AccessToken = tokenResp.AccessToken ?? acc.AccessToken;
                                 if (!string.IsNullOrEmpty(tokenResp.RefreshToken)) acc.RefreshToken = tokenResp.RefreshToken;
-                                if (tokenResp.ExpiresInSeconds.HasValue)
+                                if (tokenResp.ExpiresInthis.Seconds.HasValue)
                                     acc.ExpiresAt = DateTimeOffset.UtcNow.AddSeconds(tokenResp.ExpiresInSeconds.Value);
                             }
 
@@ -242,9 +242,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
 
         public async Task AddOrUpdateAccountAsync(IdentityAccount account)
         {
-            lock (_lock)
+            lock (this._lock)
             {
-                var existing = _accounts.FirstOrDefault(a => string.Equals(a.Provider, account.Provider, StringComparison.OrdinalIgnoreCase) && string.Equals(a.Id, account.Id, StringComparison.OrdinalIgnoreCase));
+                var existing = this._accounts.FirstOrDefault(a => string.Equals(a.Provider, account.Provider, StringComparison.OrdinalIgnoreCase) && string.Equals(a.Id, account.Id, StringComparison.OrdinalIgnoreCase));
                 if (existing != null)
                 {
                     existing.AccessToken = account.AccessToken;
@@ -255,17 +255,17 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
                 }
                 else
                 {
-                    _accounts.Add(account);
+                    this._accounts.Add(account);
                 }
             }
 
             try
             {
-                await _store.SaveAsync(_accounts.Select(a => a).ToList()).ConfigureAwait(false);
+                await this._store.SaveAsync(this._accounts.Select(a => a).ToList()).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to save accounts after add/update");
+                this._logger.LogError(ex, "Failed to save accounts after add/update");
             }
         }
     }

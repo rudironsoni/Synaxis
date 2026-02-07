@@ -13,24 +13,24 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
     {
         private readonly CopilotSession _inner;
 
-        public CopilotSessionAdapter(CopilotSession inner) => _inner = inner ?? throw new ArgumentNullException(nameof(inner));
+        public CopilotSessionAdapter(CopilotSession inner) => this._inner = inner ?? throw new ArgumentNullException(nameof(inner));
 
-        public IDisposable On(SessionEventHandler handler) => _inner.On(handler);
+        public IDisposable On(SessionEventHandler handler) => this._inner.On(handler);
 
-        public Task SendAsync(MessageOptions options, CancellationToken cancellationToken = default) => _inner.SendAsync(options, cancellationToken);
+        public Task SendAsync(MessageOptions options, CancellationToken cancellationToken = default) => this._inner.SendAsync(options, cancellationToken);
 
-        public ValueTask DisposeAsync() => _inner.DisposeAsync();
+        public ValueTask DisposeAsync() => this._inner.DisposeAsync();
     }
 
     internal class CopilotClientAdapter : ICopilotClient
     {
         private readonly CopilotClient _inner;
 
-        public CopilotClientAdapter(CopilotClient inner) => _inner = inner ?? throw new ArgumentNullException(nameof(inner));
+        public CopilotClientAdapter(CopilotClient inner) => this._inner = inner ?? throw new ArgumentNullException(nameof(inner));
 
-        public ConnectionState State => _inner.State;
+        public ConnectionState State => this._inner.State;
 
-        public Task StartAsync(CancellationToken cancellationToken = default) => _inner.StartAsync(cancellationToken);
+        public Task StartAsync(CancellationToken cancellationToken = default) => this._inner.StartAsync(cancellationToken);
 
         public async Task<ICopilotSession> CreateSessionAsync(SessionConfig config, CancellationToken cancellationToken = default)
         {
@@ -38,6 +38,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
             return new CopilotSessionAdapter(s);
         }
 
-        public ValueTask DisposeAsync() => _inner.DisposeAsync();
+        public ValueTask DisposeAsync() => this._inner.DisposeAsync();
     }
 }

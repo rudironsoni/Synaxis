@@ -8,17 +8,32 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
     using Microsoft.Extensions.Logging;
     using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 
+    /// <summary>
+    /// Tool for managing provider health status.
+    /// </summary>
     public class HealthTool : IHealthTool
     {
         private readonly ControlPlaneDbContext _db;
         private readonly ILogger<HealthTool> _logger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HealthTool"/> class.
+        /// </summary>
+        /// <param name="db">The database context.</param>
+        /// <param name="logger">The logger.</param>
         public HealthTool(ControlPlaneDbContext db, ILogger<HealthTool> logger)
         {
-            _db = db;
-            _logger = logger;
+            this._db = db;
+            this._logger = logger;
         }
 
+        /// <summary>
+        /// Checks the health status of a provider.
+        /// </summary>
+        /// <param name="organizationId">The organization ID.</param>
+        /// <param name="providerId">The provider ID.</param>
+        /// <param name="ct">The cancellation token.</param>
+        /// <returns>The health check result.</returns>
         public async Task<HealthCheckResult> CheckHealthAsync(Guid organizationId, Guid providerId, CancellationToken ct = default)
         {
             try
@@ -46,6 +61,15 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
             }
         }
 
+        /// <summary>
+        /// Marks a provider as unhealthy.
+        /// </summary>
+        /// <param name="organizationId">The organization ID.</param>
+        /// <param name="providerId">The provider ID.</param>
+        /// <param name="reason">The reason for marking unhealthy.</param>
+        /// <param name="consecutiveFailures">The number of consecutive failures.</param>
+        /// <param name="ct">The cancellation token.</param>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         public async Task MarkUnhealthyAsync(Guid organizationId, Guid providerId, string reason, int consecutiveFailures, CancellationToken ct = default)
         {
             try
@@ -64,6 +88,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
             }
         }
 
+        /// <summary>
+        /// Marks a provider as healthy.
+        /// </summary>
+        /// <param name="organizationId">The organization ID.</param>
+        /// <param name="providerId">The provider ID.</param>
+        /// <param name="ct">The cancellation token.</param>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         public async Task MarkHealthyAsync(Guid organizationId, Guid providerId, CancellationToken ct = default)
         {
             try
@@ -78,6 +109,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
             }
         }
 
+        /// <summary>
+        /// Resets the health status of a provider.
+        /// </summary>
+        /// <param name="organizationId">The organization ID.</param>
+        /// <param name="providerId">The provider ID.</param>
+        /// <param name="ct">The cancellation token.</param>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         public async Task ResetHealthAsync(Guid organizationId, Guid providerId, CancellationToken ct = default)
         {
             try

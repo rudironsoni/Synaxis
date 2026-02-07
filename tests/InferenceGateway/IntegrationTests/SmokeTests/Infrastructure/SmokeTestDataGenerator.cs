@@ -28,18 +28,18 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                 if (!providerSection.GetValue<bool>("Enabled")) continue;
 
                 var providerName = providerSection.Key;
-                
+
                 // Skip providers with placeholder API keys
                 var apiKey = providerSection.GetValue<string>("Key");
-                if (string.IsNullOrEmpty(apiKey) || 
-                    apiKey.Contains("REPLACE_WITH", StringComparison.OrdinalIgnoreCase) || 
-                    apiKey.Contains("INSERT", StringComparison.OrdinalIgnoreCase) || 
+                if (string.IsNullOrEmpty(apiKey) ||
+                    apiKey.Contains("REPLACE_WITH", StringComparison.OrdinalIgnoreCase) ||
+                    apiKey.Contains("INSERT", StringComparison.OrdinalIgnoreCase) ||
                     apiKey.Contains("CHANGE", StringComparison.OrdinalIgnoreCase) ||
                     apiKey == "0000000000")
                 {
                     continue;
                 }
-                
+
                 var modelsSection = providerSection.GetSection("Models");
                 foreach (var modelItem in modelsSection.GetChildren())
                 {
@@ -76,7 +76,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
             Env.TraversePath().Load();
 
             builder.AddEnvironmentVariables();
-            
+
             // Map environment variables to configuration keys (same as WebApi Program.cs)
             var envMapping = new Dictionary<string, string?>
             {

@@ -15,7 +15,7 @@ namespace Synaxis.InferenceGateway.WebApi.Features.Chat.Handlers
     /// <summary>
     /// Handler for chat completion requests.
     /// </summary>
-    public class ChatCompletionHandler : 
+    public class ChatCompletionHandler :
     IRequestHandler<ChatCommand, Microsoft.Agents.AI.AgentResponse>,
     IStreamRequestHandler<ChatStreamCommand, Microsoft.Agents.AI.AgentResponseUpdate>
     {

@@ -76,8 +76,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             IConnectionMultiplexer redis,
             ILogger<RedisRateLimitingService> logger)
         {
-            _redis = redis ?? throw new ArgumentNullException(nameof(redis));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._redis = redis ?? throw new ArgumentNullException(nameof(redis));
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         /// <summary>
@@ -178,42 +178,42 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             var checks = new List<Task<(RateLimitResult Result, string Scope, string Type)>>();
 
             // User-level RPM check
-            if (config.UserRpm.HasValue)
+            if (config.Userthis.Rpm.HasValue)
             {
                 var key = BuildKey("user", userId.ToString(), "rpm");
                 checks.Add(CheckWithMetadataAsync(key, config.UserRpm.Value, window, "User", "RPM", cancellationToken));
             }
 
             // User-level TPM check (pre-check with increment=0, actual tokens added post-request)
-            if (config.UserTpm.HasValue)
+            if (config.Userthis.Tpm.HasValue)
             {
                 var key = BuildKey("user", userId.ToString(), "tpm");
                 checks.Add(CheckWithMetadataAsync(key, config.UserTpm.Value, window, "User", "TPM", cancellationToken, increment: 0));
             }
 
             // Group-level RPM check
-            if (groupId.HasValue && config.GroupRpm.HasValue)
+            if (groupthis.Id.HasValue && config.Groupthis.Rpm.HasValue)
             {
                 var key = BuildKey("group", groupId.Value.ToString(), "rpm");
                 checks.Add(CheckWithMetadataAsync(key, config.GroupRpm.Value, window, "Group", "RPM", cancellationToken));
             }
 
             // Group-level TPM check
-            if (groupId.HasValue && config.GroupTpm.HasValue)
+            if (groupthis.Id.HasValue && config.Groupthis.Tpm.HasValue)
             {
                 var key = BuildKey("group", groupId.Value.ToString(), "tpm");
                 checks.Add(CheckWithMetadataAsync(key, config.GroupTpm.Value, window, "Group", "TPM", cancellationToken, increment: 0));
             }
 
             // Organization-level RPM check
-            if (config.OrganizationRpm.HasValue)
+            if (config.Organizationthis.Rpm.HasValue)
             {
                 var key = BuildKey("org", organizationId.ToString(), "rpm");
                 checks.Add(CheckWithMetadataAsync(key, config.OrganizationRpm.Value, window, "Organization", "RPM", cancellationToken));
             }
 
             // Organization-level TPM check
-            if (config.OrganizationTpm.HasValue)
+            if (config.Organizationthis.Tpm.HasValue)
             {
                 var key = BuildKey("org", organizationId.ToString(), "tpm");
                 checks.Add(CheckWithMetadataAsync(key, config.OrganizationTpm.Value, window, "Organization", "TPM", cancellationToken, increment: 0));
@@ -326,7 +326,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                 IncrementTokenUsageAsync(BuildKey("org", organizationId.ToString(), "tpm"), tokenCount, window, cancellationToken)
             };
 
-            if (groupId.HasValue)
+            if (groupthis.Id.HasValue)
             {
                 tasks.Add(IncrementTokenUsageAsync(BuildKey("group", groupId.Value.ToString(), "tpm"), tokenCount, window, cancellationToken));
             }

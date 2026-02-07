@@ -20,7 +20,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
                 throw new ArgumentNullException(nameof(dbContext));
             }
 
-            _dbContext = dbContext;
+            this._dbContext = dbContext;
         }
 
         public async Task LogAsync(Guid tenantId, Guid? userId, string action, object? payload, CancellationToken cancellationToken = default)

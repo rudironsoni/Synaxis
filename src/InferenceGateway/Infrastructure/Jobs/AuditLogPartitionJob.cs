@@ -26,9 +26,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
             ILogger<AuditLogPartitionJob> logger,
             IConfiguration configuration)
         {
-            _dbContext = dbContext;
-            _logger = logger;
-            _configuration = configuration;
+            this._dbContext = dbContext;
+            this._logger = logger;
+            this._configuration = configuration;
         }
 
         public async Task Execute(IJobExecutionContext context)

@@ -24,12 +24,12 @@ namespace Synaxis.InferenceGateway.Infrastructure
 
         public PollinationsChatClient(HttpClient httpClient, string? modelId = null)
         {
-            _httpClient = httpClient;
-            _modelId = modelId ?? "openai";
-            _metadata = new ChatClientMetadata("Pollinations", new Uri("https://text.pollinations.ai/"), _modelId);
+            this._httpClient = httpClient;
+            this._modelId = modelId ?? "openai";
+            this._metadata = new ChatClientMetadata("Pollinations", new Uri("https://text.pollinations.ai/"), _modelId);
         }
 
-        public ChatClientMetadata Metadata => _metadata;
+        public ChatClientMetadata Metadata => this._metadata;
 
         public async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
         {
@@ -100,7 +100,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
             {
                 "gpt-4o-mini" => "openai",
                 "gpt-4o" => "openai-large",
-                _ => _modelId
+                _ => this._modelId
             };
 
             return new
@@ -112,7 +112,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
             };
         }
 
-        public void Dispose() => _httpClient.Dispose();
+        public void Dispose() => this._httpClient.Dispose();
         public object? GetService(Type serviceType, object? serviceKey = null) => null;
     }
 }

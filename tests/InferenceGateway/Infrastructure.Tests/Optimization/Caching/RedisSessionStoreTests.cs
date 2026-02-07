@@ -32,7 +32,7 @@ public class RedisSessionStoreTests
         var sessionId = "session-123";
         var expectedProvider = "openai-gpt4";
         var key = $"session:{sessionId}:affinity";
-        
+
         _mockDatabase
             .Setup(db => db.StringGetAsync(key, It.IsAny<CommandFlags>()))
             .ReturnsAsync((RedisValue)expectedProvider);
@@ -45,7 +45,7 @@ public class RedisSessionStoreTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal(expectedProvider, result);
-        
+
         _mockDatabase.Verify(
             db => db.StringGetAsync(key, It.IsAny<CommandFlags>()),
             Times.Once);
@@ -57,7 +57,7 @@ public class RedisSessionStoreTests
         // Arrange
         var sessionId = "session-nonexistent";
         var key = $"session:{sessionId}:affinity";
-        
+
         _mockDatabase
             .Setup(db => db.StringGetAsync(key, It.IsAny<CommandFlags>()))
             .ReturnsAsync(RedisValue.Null);
@@ -69,7 +69,7 @@ public class RedisSessionStoreTests
 
         // Assert
         Assert.Null(result);
-        
+
         _mockDatabase.Verify(
             db => db.StringGetAsync(key, It.IsAny<CommandFlags>()),
             Times.Once);
@@ -83,7 +83,7 @@ public class RedisSessionStoreTests
         var providerId = "anthropic-claude";
         var ttl = TimeSpan.FromHours(1);
         var key = $"session:{sessionId}:affinity";
-        
+
         _mockDatabase
             .Setup(db => db.StringSetAsync(key, providerId, ttl, false, When.Always, CommandFlags.None))
             .ReturnsAsync(true);
@@ -106,7 +106,7 @@ public class RedisSessionStoreTests
         var sessionId = "session-123";
         var expectedTimestamp = DateTimeOffset.UtcNow.AddMinutes(-5);
         var key = $"session:{sessionId}:lastactivity";
-        
+
         _mockDatabase
             .Setup(db => db.StringGetAsync(key, It.IsAny<CommandFlags>()))
             .ReturnsAsync((RedisValue)expectedTimestamp.ToUnixTimeSeconds());
@@ -120,7 +120,7 @@ public class RedisSessionStoreTests
         Assert.NotNull(result);
         Assert.True(result.HasValue);
         Assert.InRange(result.Value, expectedTimestamp.AddSeconds(-1), expectedTimestamp.AddSeconds(1));
-        
+
         _mockDatabase.Verify(
             db => db.StringGetAsync(key, It.IsAny<CommandFlags>()),
             Times.Once);
@@ -134,14 +134,14 @@ public class RedisSessionStoreTests
         var timestamp = DateTimeOffset.UtcNow;
         var ttl = TimeSpan.FromHours(2);
         var key = $"session:{sessionId}:lastactivity";
-        
+
         _mockDatabase
             .Setup(db => db.StringSetAsync(
-                key, 
-                It.IsAny<RedisValue>(), 
-                ttl, 
-                false, 
-                When.Always, 
+                key,
+                It.IsAny<RedisValue>(),
+                ttl,
+                false,
+                When.Always,
                 CommandFlags.None))
             .ReturnsAsync(true);
 
@@ -153,11 +153,11 @@ public class RedisSessionStoreTests
         // Assert
         _mockDatabase.Verify(
             db => db.StringSetAsync(
-                key, 
-                It.Is<RedisValue>(v => Math.Abs((long)v - timestamp.ToUnixTimeSeconds()) <= 1), 
-                ttl, 
-                false, 
-                When.Always, 
+                key,
+                It.Is<RedisValue>(v => Math.Abs((long)v - timestamp.ToUnixTimeSeconds()) <= 1),
+                ttl,
+                false,
+                When.Always,
                 CommandFlags.None),
             Times.Once);
     }
@@ -168,7 +168,7 @@ public class RedisSessionStoreTests
         // Arrange
         var sessionId = "session-123";
         var key = $"session:{sessionId}:affinity";
-        
+
         _mockDatabase
             .Setup(db => db.KeyExistsAsync(key, It.IsAny<CommandFlags>()))
             .ReturnsAsync(true);
@@ -180,7 +180,7 @@ public class RedisSessionStoreTests
 
         // Assert
         Assert.True(result);
-        
+
         _mockDatabase.Verify(
             db => db.KeyExistsAsync(key, It.IsAny<CommandFlags>()),
             Times.Once);
@@ -192,7 +192,7 @@ public class RedisSessionStoreTests
         // Arrange
         var sessionId = "session-nonexistent";
         var key = $"session:{sessionId}:affinity";
-        
+
         _mockDatabase
             .Setup(db => db.KeyExistsAsync(key, It.IsAny<CommandFlags>()))
             .ReturnsAsync(false);
@@ -204,7 +204,7 @@ public class RedisSessionStoreTests
 
         // Assert
         Assert.False(result);
-        
+
         _mockDatabase.Verify(
             db => db.KeyExistsAsync(key, It.IsAny<CommandFlags>()),
             Times.Once);
@@ -221,22 +221,22 @@ public class RedisSessionStoreTests
             "session:session-2:affinity",
             "session:session-3:affinity"
         };
-        
+
         var mockServer = new Mock<IServer>();
         mockServer
             .Setup(s => s.KeysAsync(
-                It.IsAny<int>(), 
-                It.Is<RedisValue>(v => v.ToString() == pattern), 
-                It.IsAny<int>(), 
-                It.IsAny<long>(), 
-                It.IsAny<int>(), 
+                It.IsAny<int>(),
+                It.Is<RedisValue>(v => v.ToString() == pattern),
+                It.IsAny<int>(),
+                It.IsAny<long>(),
+                It.IsAny<int>(),
                 It.IsAny<CommandFlags>()))
             .Returns(sessionKeys.ToAsyncEnumerable());
 
         _mockRedis
             .Setup(r => r.GetEndPoints(It.IsAny<bool>()))
             .Returns(new System.Net.EndPoint[] { new System.Net.IPEndPoint(System.Net.IPAddress.Loopback, 6379) });
-        
+
         _mockRedis
             .Setup(r => r.GetServer(It.IsAny<System.Net.EndPoint>(), It.IsAny<object>()))
             .Returns(mockServer.Object);
@@ -260,7 +260,7 @@ public class RedisSessionStoreTests
         // Arrange
         var sessionId = "session-123";
         var key = $"session:{sessionId}:affinity";
-        
+
         _mockDatabase
             .Setup(db => db.StringGetAsync(key, It.IsAny<CommandFlags>()))
             .ThrowsAsync(new RedisConnectionException(ConnectionFailureType.UnableToConnect, "Connection failed"));
@@ -282,11 +282,11 @@ public class RedisSessionStoreTests
         var providerId = "openai-gpt4";
         var key = $"session:{sessionId}:affinity";
         var ttl = TimeSpan.FromHours(1);
-        
+
         _mockDatabase
             .Setup(db => db.StringSetAsync(key, providerId, ttl, false, When.Always, CommandFlags.None))
             .ReturnsAsync(true);
-        
+
         _mockDatabase
             .Setup(db => db.StringGetAsync(key, It.IsAny<CommandFlags>()))
             .ReturnsAsync((RedisValue)providerId);
@@ -296,7 +296,7 @@ public class RedisSessionStoreTests
         // Act - Simulate concurrent access
         var setTasks = new Task[10];
         var getTasks = new Task<string?>[10];
-        
+
         for (int i = 0; i < 10; i++)
         {
             setTasks[i] = store.SetProviderAffinityAsync(sessionId, providerId, ttl, _cancellationToken);
@@ -308,11 +308,11 @@ public class RedisSessionStoreTests
 
         // Assert
         Assert.All(results, r => Assert.Equal(providerId, r));
-        
+
         _mockDatabase.Verify(
             db => db.StringSetAsync(key, providerId, ttl, false, When.Always, CommandFlags.None),
             Times.Exactly(10));
-        
+
         _mockDatabase.Verify(
             db => db.StringGetAsync(key, It.IsAny<CommandFlags>()),
             Times.Exactly(10));
@@ -372,12 +372,12 @@ public class RedisSessionStore : ISessionStore
         var db = _redis.GetDatabase();
         var key = $"session:{sessionId}:lastactivity";
         var value = await db.StringGetAsync(key);
-        
+
         if (value.HasValue && long.TryParse(value.ToString(), out var unixTimestamp))
         {
             return DateTimeOffset.FromUnixTimeSeconds(unixTimestamp);
         }
-        
+
         return null;
     }
 
@@ -399,12 +399,12 @@ public class RedisSessionStore : ISessionStore
     {
         var sessions = new List<string>();
         var endpoints = _redis.GetEndPoints();
-        
+
         foreach (var endpoint in endpoints)
         {
             var server = _redis.GetServer(endpoint);
             var keys = server.KeysAsync(pattern: "session:*:affinity");
-            
+
             await foreach (var key in keys)
             {
                 var keyStr = key.ToString();
@@ -416,7 +416,7 @@ public class RedisSessionStore : ISessionStore
                 }
             }
         }
-        
+
         return sessions;
     }
 }
