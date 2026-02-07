@@ -36,8 +36,8 @@ public class AntigravityAuthManagerTests : IDisposable
         // Arrange
         var accounts = new List<AntigravityAccount>
         {
-            new() { Email = "user1@test.com", Token = new() { AccessToken = "token1", ExpiresInSeconds = 3600, IssuedUtc = DateTime.UtcNow } },
-            new() { Email = "user2@test.com", Token = new() { AccessToken = "token2", ExpiresInSeconds = 3600, IssuedUtc = DateTime.UtcNow } }
+            new () { Email = "user1@test.com", Token = new () { AccessToken = "token1", ExpiresInSeconds = 3600, IssuedUtc = DateTime.UtcNow } },
+            new () { Email = "user2@test.com", Token = new () { AccessToken = "token2", ExpiresInSeconds = 3600, IssuedUtc = DateTime.UtcNow } }
         };
         await File.WriteAllTextAsync(_tempAuthPath, System.Text.Json.JsonSerializer.Serialize(accounts));
         var httpClientFactory = CreateHttpClientFactory(() => new HttpResponseMessage(HttpStatusCode.OK)

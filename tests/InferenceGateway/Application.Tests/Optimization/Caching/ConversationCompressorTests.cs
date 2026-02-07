@@ -550,7 +550,7 @@ public class ConversationMessage
 /// </summary>
 public class CompressionResult
 {
-    public List<ConversationMessage> CompressedMessages { get; set; } = new();
+    public List<ConversationMessage> CompressedMessages { get; set; } = new ();
     public int OriginalTokenCount { get; set; }
     public int CompressedTokenCount { get; set; }
     public double CompressionRatio { get; set; }

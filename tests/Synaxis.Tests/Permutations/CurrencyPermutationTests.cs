@@ -17,7 +17,7 @@ namespace Synaxis.Tests.Permutations
         /// <summary>
         /// Static exchange rates (USD base)
         /// </summary>
-        private static readonly Dictionary<string, decimal> ExchangeRates = new()
+        private static readonly Dictionary<string, decimal> ExchangeRates = new ()
         {
             { "USD", 1.00m },
             { "EUR", 0.92m },
@@ -28,7 +28,7 @@ namespace Synaxis.Tests.Permutations
         /// <summary>
         /// Inverse rates for conversion back to USD (calculated for precision)
         /// </summary>
-        private static readonly Dictionary<string, decimal> InverseRates = new()
+        private static readonly Dictionary<string, decimal> InverseRates = new ()
         {
             { "USD", 1.00m },
             { "EUR", 1m / 0.92m },  // Calculated: ~1.08695652

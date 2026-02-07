@@ -19,7 +19,7 @@ namespace Synaxis.Tests.Permutations
         /// <summary>
         /// Valid combinations matrix for each regulation
         /// </summary>
-        private static readonly Dictionary<string, HashSet<string>> ValidCombinations = new()
+        private static readonly Dictionary<string, HashSet<string>> ValidCombinations = new ()
         {
             {
                 "GDPR_personal_contract", new HashSet<string> { "contract", "consent", "legitimate_interest", "legal_obligation" }

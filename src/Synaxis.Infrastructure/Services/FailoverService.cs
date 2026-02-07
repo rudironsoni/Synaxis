@@ -20,7 +20,7 @@ namespace Synaxis.Infrastructure.Services
         private readonly ILogger<FailoverService> _logger;
         
         // Regional preference for failover (same compliance regime preferred)
-        private static readonly Dictionary<string, List<string>> RegionPreferences = new()
+        private static readonly Dictionary<string, List<string>> RegionPreferences = new ()
         {
             { "eu-west-1", new List<string> { "eu-west-1", "us-east-1", "sa-east-1" } }, // EU prefers EU, then US, then SA
             { "us-east-1", new List<string> { "us-east-1", "eu-west-1", "sa-east-1" } }, // US prefers US, then EU, then SA
