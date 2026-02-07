@@ -7,8 +7,24 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
     /// <summary>
     /// Context information for request routing.
     /// </summary>
-    /// <param name="RequestedModel">The requested model name.</param>
-    /// <param name="ResolvedCanonicalId">The resolved canonical model ID.</param>
-    /// <param name="Provider">The provider that will handle the request.</param>
-    public record RoutingContext(string RequestedModel, string ResolvedCanonicalId, string Provider);
+    /// <param name="requestedModel">The requested model name.</param>
+    /// <param name="resolvedCanonicalId">The resolved canonical model ID.</param>
+    /// <param name="provider">The provider that will handle the request.</param>
+    public record RoutingContext(string requestedModel, string resolvedCanonicalId, string provider)
+    {
+        /// <summary>
+        /// Gets the requested model name.
+        /// </summary>
+        public string RequestedModel { get; } = requestedModel;
+
+        /// <summary>
+        /// Gets the resolved canonical model ID.
+        /// </summary>
+        public string ResolvedCanonicalId { get; } = resolvedCanonicalId;
+
+        /// <summary>
+        /// Gets the provider that will handle the request.
+        /// </summary>
+        public string Provider { get; } = provider;
+    }
 }

@@ -66,9 +66,9 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     this._logger.LogWarning("Rate limit exceeded for IP {ClientIp}: {Count} requests in last minute", clientIp, requestTimestamps.Count);
 
                     context.Response.StatusCode = (int)HttpStatusCode.TooManyRequests;
-                    context.Response.Headers.Append("X-RateLimit-Limit", this._requestsPerMinute.ToString());
+                    context.Response.Headers.Append("X-RateLimit-Limit", this._requestsPerMinute.ToString(System.Globalization.CultureInfo.InvariantCulture));
                     context.Response.Headers.Append("X-RateLimit-Remaining", "0");
-                    context.Response.Headers.Append("X-RateLimit-Reset", requestTimestamps[0].Add(this._windowSize).ToString("R"));
+                    context.Response.Headers.Append("X-RateLimit-Reset", requestTimestamps[0].Add(this._windowSize).ToString("R", System.Globalization.CultureInfo.InvariantCulture));
 
                     return;
                 }
@@ -81,15 +81,15 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 lock (requestTimestamps)
                 {
                     var remaining = this._requestsPerMinute - requestTimestamps.Count;
-                    context.Response.Headers.Append("X-RateLimit-Limit", this._requestsPerMinute.ToString());
-                    context.Response.Headers.Append("X-RateLimit-Remaining", remaining.ToString());
-                    context.Response.Headers.Append("X-RateLimit-Reset", requestTimestamps[0].Add(this._windowSize).ToString("R"));
+                    context.Response.Headers.Append("X-RateLimit-Limit", this._requestsPerMinute.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                    context.Response.Headers.Append("X-RateLimit-Remaining", remaining.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                    context.Response.Headers.Append("X-RateLimit-Reset", requestTimestamps[0].Add(this._windowSize).ToString("R", System.Globalization.CultureInfo.InvariantCulture));
                 }
 
                 return Task.CompletedTask;
             });
 
-            await this._next(context);
+            await this._next(context).ConfigureAwait(false);
         }
 
         /// <summary>

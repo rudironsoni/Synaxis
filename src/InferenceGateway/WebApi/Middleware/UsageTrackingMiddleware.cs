@@ -43,7 +43,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
 
             try
             {
-                await this._next(context);
+                await this._next(context).ConfigureAwait(false);
             }
             finally
             {
@@ -55,13 +55,17 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     timestamp,
                     stopwatch.ElapsedMilliseconds,
                     context.Response.StatusCode,
-                    GetClientIpAddress(context)
-                );
+                    GetClientIpAddress(context));
 
                 context.Items["UsageData"] = usageData;
 
-                this._logger.LogInformation("Request tracked: {Method} {Path} - {StatusCode} in {DurationMs}ms from {ClientIp}",
-                    usageData.method, usageData.path, usageData.statusCode, usageData.durationMs, usageData.clientIp);
+                this._logger.LogInformation(
+                    "Request tracked: {Method} {Path} - {StatusCode} in {DurationMs}ms from {ClientIp}",
+                    usageData.method,
+                    usageData.path,
+                    usageData.statusCode,
+                    usageData.durationMs,
+                    usageData.clientIp);
             }
         }
 
@@ -87,11 +91,10 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
     /// Usage data for a single request.
     /// </summary>
     public record UsageData(
-    string path,
-    string method,
-    DateTime timestamp,
-    long durationMs,
-    int statusCode,
-    string clientIp
-    );
+        string path,
+        string method,
+        DateTime timestamp,
+        long durationMs,
+        int statusCode,
+        string clientIp);
 }

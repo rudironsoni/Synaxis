@@ -23,8 +23,8 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
     ///    - Set tenant context with OrganizationId, ApiKeyId
     /// 3. If token is JWT (not API key):
     ///    - Extract claims from JWT (already validated by ASP.NET Core JWT middleware)
-    ///    - Set tenant context with OrganizationId, UserId
-    /// 4. If no valid authentication found, return 401 Unauthorized
+    ///    - Set tenant context with OrganizationId, UserId.
+    /// 4. If no valid authentication found, return 401 Unauthorized.
     /// </remarks>
     public sealed class TenantResolutionMiddleware
     {
@@ -51,6 +51,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         /// <param name="tenantContext">The tenant context to populate.</param>
         /// <param name="apiKeyService">The API key service for validation.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
+#pragma warning disable MA0051 // Method is too long
         public async Task InvokeAsync(
             HttpContext context,
             ITenantContext tenantContext,
@@ -65,7 +66,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 {
                     // No authorization header - let subsequent middleware handle it
                     // (some endpoints may be public or use other auth mechanisms)
-                    await this._next(context);
+                    await this._next(context).ConfigureAwait(false);
                     return;
                 }
 
@@ -79,9 +80,9 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                         error = new
                         {
                             message = "Invalid authorization scheme. Use 'Bearer <token>'",
-                            type = "invalid_request_error"
+                            type = "invalid_request_error",
                         },
-                    });
+                    }).ConfigureAwait(false);
                     return;
                 }
 
@@ -91,7 +92,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 if (token.StartsWith(ApiKeyPrefix, StringComparison.Ordinal))
                 {
                     // API Key authentication
-                    await this.HandleApiKeyAuthenticationAsync(context, token, tenantContext, apiKeyService);
+                    await this.HandleApiKeyAuthenticationAsync(context, token, tenantContext, apiKeyService).ConfigureAwait(false);
                 }
                 else
                 {
@@ -105,7 +106,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     return;
                 }
 
-                await this._next(context);
+                await this._next(context).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -116,11 +117,12 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     error = new
                     {
                         message = "An error occurred during authentication",
-                        type = "internal_server_error"
+                        type = "internal_server_error",
                     },
-                });
+                }).ConfigureAwait(false);
             }
         }
+#pragma warning restore MA0051 // Method is too long
 
         /// <summary>
         /// Handles API key authentication by validating the key and populating tenant context.
@@ -130,6 +132,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         /// <param name="tenantContext">The tenant context to populate.</param>
         /// <param name="apiKeyService">The API key service for validation.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
+#pragma warning disable MA0051 // Method is too long
         private async Task HandleApiKeyAuthenticationAsync(
             HttpContext context,
             string apiKey,
@@ -139,7 +142,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             try
             {
                 // Validate API key using the service
-                var validationResult = await apiKeyService.ValidateApiKeyAsync(apiKey, context.RequestAborted);
+                var validationResult = await apiKeyService.ValidateApiKeyAsync(apiKey, context.RequestAborted).ConfigureAwait(false);
 
                 if (!validationResult.IsValid)
                 {
@@ -150,9 +153,9 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                         error = new
                         {
                             message = validationResult.ErrorMessage ?? "Invalid API key",
-                            type = "invalid_api_key"
+                            type = "invalid_api_key",
                         },
-                    });
+                    }).ConfigureAwait(false);
                     return;
                 }
 
@@ -166,9 +169,9 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                         error = new
                         {
                             message = "Authentication data is incomplete",
-                            type = "internal_server_error"
+                            type = "internal_server_error",
                         },
-                    });
+                    }).ConfigureAwait(false);
                     return;
                 }
 
@@ -193,17 +196,19 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     error = new
                     {
                         message = "An error occurred during API key validation",
-                        type = "internal_server_error"
+                        type = "internal_server_error",
                     },
-                });
+                }).ConfigureAwait(false);
             }
         }
+#pragma warning restore MA0051 // Method is too long
 
         /// <summary>
         /// Handles JWT token authentication by extracting claims and populating tenant context.
         /// </summary>
         /// <param name="context">The HTTP context.</param>
         /// <param name="tenantContext">The tenant context to populate.</param>
+#pragma warning disable MA0051 // Method is too long
         private void HandleJwtAuthentication(HttpContext context, ITenantContext tenantContext)
         {
             // JWT validation is handled by ASP.NET Core JWT middleware
@@ -219,7 +224,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     error = new
                     {
                         message = "Invalid or expired JWT token",
-                        type = "invalid_token"
+                        type = "invalid_token",
                     },
                 }).Wait();
                 return;
@@ -239,7 +244,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     error = new
                     {
                         message = "JWT token is missing required claims",
-                        type = "invalid_token"
+                        type = "invalid_token",
                     },
                 }).Wait();
                 return;
@@ -254,7 +259,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     error = new
                     {
                         message = "Invalid organization_id in JWT token",
-                        type = "invalid_token"
+                        type = "invalid_token",
                     },
                 }).Wait();
                 return;
@@ -269,7 +274,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     error = new
                     {
                         message = "Invalid user_id in JWT token",
-                        type = "invalid_token"
+                        type = "invalid_token",
                     },
                 }).Wait();
                 return;
@@ -287,5 +292,6 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 organizationId,
                 userId);
         }
+#pragma warning restore MA0051 // Method is too long
     }
 }

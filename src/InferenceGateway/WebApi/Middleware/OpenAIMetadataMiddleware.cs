@@ -28,7 +28,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         /// </summary>
         /// <param name="context">The HTTP context.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        public async Task InvokeAsync(HttpContext context)
+        public Task InvokeAsync(HttpContext context)
         {
             context.Response.OnStarting(() =>
             {
@@ -41,9 +41,9 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 else
                 {
                     // Ensure headers are present even if empty
-                    context.Response.Headers["x-gateway-model-requested"] = "";
-                    context.Response.Headers["x-gateway-model-resolved"] = "";
-                    context.Response.Headers["x-gateway-provider"] = "";
+                    context.Response.Headers["x-gateway-model-requested"] = string.Empty;
+                    context.Response.Headers["x-gateway-model-resolved"] = string.Empty;
+                    context.Response.Headers["x-gateway-provider"] = string.Empty;
                 }
 
                 if (!context.Response.Headers.ContainsKey("x-request-id"))
@@ -54,7 +54,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 return Task.CompletedTask;
             });
 
-            await this._next(context);
+            return this._next(context);
         }
     }
 }

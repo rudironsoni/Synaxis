@@ -38,11 +38,12 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         /// </summary>
         /// <param name="context">The HTTP context.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
+#pragma warning disable MA0051 // Method is too long
         public async Task InvokeAsync(HttpContext context)
         {
             try
             {
-                await this._next(context);
+                await this._next(context).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -57,8 +58,13 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
 
                 var isStreamingRequest = IsStreamingRequest(context);
 
-                this._logger.LogError(ex, "Unhandled exception caught. RequestId: {RequestId}, Path: {Path}, Method: {Method}, IsStreaming: {IsStreaming}",
-                    requestId, context.Request.Path, context.Request.Method, isStreamingRequest);
+                this._logger.LogError(
+                    ex,
+                    "Unhandled exception caught. RequestId: {RequestId}, Path: {Path}, Method: {Method}, IsStreaming: {IsStreaming}",
+                    requestId,
+                    context.Request.Path,
+                    context.Request.Method,
+                    isStreamingRequest);
 
                 // Special handling for AggregateException produced by the router
                 if (ex is AggregateException agg)
@@ -68,15 +74,29 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     var summaries = new List<string>();
                     var statusCodes = new List<int>();
 
-                    this._logger.LogError(ex, "AggregateException caught. RequestId: {RequestId}, Path: {Path}, Inner exceptions: {InnerExceptionCount}",
-                        requestId, context.Request.Path, flat.InnerExceptions.Count);
+                    this._logger.LogError(
+                        ex,
+                        "AggregateException caught. RequestId: {RequestId}, Path: {Path}, Inner exceptions: {InnerExceptionCount}",
+                        requestId,
+                        context.Request.Path,
+                        flat.InnerExceptions.Count);
 
                     foreach (var inner in flat.InnerExceptions)
                     {
                         // Provider name: try Data["ProviderName"], then Source, then exception type name
-                        string provider = inner.Data.Contains("ProviderName") && inner.Data["ProviderName"] is string p && !string.IsNullOrEmpty(p)
-                            ? p
-                            : (!string.IsNullOrEmpty(inner.Source) ? inner.Source : inner.GetType().Name);
+                        string provider;
+                        if (inner.Data.Contains("ProviderName") && inner.Data["ProviderName"] is string p && !string.IsNullOrEmpty(p))
+                        {
+                            provider = p;
+                        }
+                        else if (!string.IsNullOrEmpty(inner.Source))
+                        {
+                            provider = inner.Source;
+                        }
+                        else
+                        {
+                            provider = inner.GetType().Name;
+                        }
 
                         // Try to extract a status code from common exception types or reflection as fallback
                         int status = 500;
@@ -121,7 +141,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                         statusCodes.Add(status);
 
                         // Clean up message: remove newlines for summary
-                        var cleanMsg = inner.Message?.Replace("\r", "")?.Replace("\n", " ") ?? "Unknown error";
+                        var cleanMsg = inner.Message?.Replace("\r", string.Empty, StringComparison.Ordinal)?.Replace("\n", " ", StringComparison.Ordinal) ?? "Unknown error";
                         if (cleanMsg.Length > 100)
                         {
                             cleanMsg = cleanMsg.Substring(0, 97) + "...";
@@ -170,12 +190,12 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                                 message = message,
                                 code = "upstream_routing_failure",
                                 details = details,
-                                request_id = requestId
+                                request_id = requestId,
                             },
                         };
 
-                        await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(errorEvent)}\n\n");
-                        await context.Response.WriteAsync("data: [DONE]\n\n");
+                        await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(errorEvent)}\n\n").ConfigureAwait(false);
+                        await context.Response.WriteAsync("data: [DONE]\n\n").ConfigureAwait(false);
                     }
                     else
                     {
@@ -188,11 +208,11 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                                 message = message,
                                 code = "upstream_routing_failure",
                                 details = details,
-                                request_id = requestId
+                                request_id = requestId,
                             },
                         };
 
-                        await context.Response.WriteAsync(JsonSerializer.Serialize(error));
+                        await context.Response.WriteAsync(JsonSerializer.Serialize(error)).ConfigureAwait(false);
                     }
 
                     return;
@@ -216,8 +236,15 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     statusCode = (int)ErrorCodeMappings.GetStatusCode(errorCode);
                 }
 
-                this._logger.LogError(ex, "Exception caught. RequestId: {RequestId}, Path: {Path}, ErrorCode: {ErrorCode}, ErrorType: {ErrorType}, ExceptionType: {ExceptionType}, Message: {ExceptionMessage}",
-                    requestId, context.Request.Path, errorCode, errorType, ex.GetType().Name, ex.Message);
+                this._logger.LogError(
+                    ex,
+                    "Exception caught. RequestId: {RequestId}, Path: {Path}, ErrorCode: {ErrorCode}, ErrorType: {ErrorType}, ExceptionType: {ExceptionType}, Message: {ExceptionMessage}",
+                    requestId,
+                    context.Request.Path,
+                    errorCode,
+                    errorType,
+                    ex.GetType().Name,
+                    ex.Message);
 
                 context.Response.StatusCode = statusCode;
 
@@ -233,12 +260,12 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                             type = errorType,
                             param = (string?)null,
                             code = errorCode,
-                            request_id = requestId
+                            request_id = requestId,
                         },
                     };
 
-                    await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(errorEvent)}\n\n");
-                    await context.Response.WriteAsync("data: [DONE]\n\n");
+                    await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(errorEvent)}\n\n").ConfigureAwait(false);
+                    await context.Response.WriteAsync("data: [DONE]\n\n").ConfigureAwait(false);
                 }
                 else
                 {
@@ -252,14 +279,15 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                             type = errorType,
                             param = (string?)null,
                             code = errorCode,
-                            request_id = requestId
+                            request_id = requestId,
                         },
                     };
 
-                    await context.Response.WriteAsync(JsonSerializer.Serialize(singleError));
+                    await context.Response.WriteAsync(JsonSerializer.Serialize(singleError)).ConfigureAwait(false);
                 }
             }
         }
+#pragma warning restore MA0051 // Method is too long
 
         private static bool IsStreamingRequest(HttpContext context)
         {

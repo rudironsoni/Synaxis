@@ -39,7 +39,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         /// </summary>
         /// <param name="context">The HTTP context for the current request.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        public async Task InvokeAsync(HttpContext context)
+        public Task InvokeAsync(HttpContext context)
         {
             var response = context.Response;
 
@@ -82,13 +82,15 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 return Task.CompletedTask;
             });
 
-            await this._next(context);
+            return this._next(context);
         }
 
         /// <summary>
         /// Builds a Content Security Policy based on environment.
         /// Production uses stricter policies than development.
         /// </summary>
+        /// <param name="isDevelopment">Whether the environment is development.</param>
+        /// <returns>The Content Security Policy string.</returns>
         private static string BuildContentSecurityPolicy(bool isDevelopment)
         {
             if (isDevelopment)
