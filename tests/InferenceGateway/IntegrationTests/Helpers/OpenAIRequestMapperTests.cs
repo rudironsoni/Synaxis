@@ -22,7 +22,7 @@ public class OpenAIRequestMapperTests
             TopP = 0.9,
             MaxTokens = 100
         };
-        var messages = new List<ChatMessage> { new (ChatRole.User, "Hello") };
+        var messages = new List<ChatMessage> { new(ChatRole.User, "Hello") };
 
         var result = OpenAIRequestMapper.ToCanonicalRequest(openAIRequest, messages);
 
