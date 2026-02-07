@@ -36,7 +36,7 @@ public class TokenOptimizingChatClientTests : TestBase
 
     public TokenOptimizingChatClientTests()
     {
-        this._innerClientMock = this.CreateMockChatClient("Inner client response");
+        this._innerClientMock = TestBase.CreateMockChatClient("Inner client response");
         this._cacheServiceMock = new Mock<ISemanticCacheService>();
         this._conversationStoreMock = new Mock<IConversationStore>();
         this._sessionStoreMock = new Mock<ISessionStore>();
@@ -44,7 +44,7 @@ public class TokenOptimizingChatClientTests : TestBase
         this._fingerprinterMock = new Mock<IRequestFingerprinter>();
         this._configResolverMock = new Mock<ITokenOptimizationConfigurationResolver>();
         this._contextProviderMock = new Mock<IRequestContextProvider>();
-        this._loggerMock = this.CreateMockLogger<TokenOptimizingChatClient>();
+        this._loggerMock = TestBase.CreateMockLogger<TokenOptimizingChatClient>();
 
         this._client = new TokenOptimizingChatClient(
             this._innerClientMock.Object,
@@ -90,7 +90,7 @@ public class TokenOptimizingChatClientTests : TestBase
     {
         // Arrange
         var messages = new[] { new ChatMessage(ChatRole.User, "What is 2+2?") };
-        var options = new ChatOptions { ModelId = "gpt-4", Temperature = 0.0 };
+        var options = new ChatOptions { ModelId = "gpt-4", Temperature = (float?)0.0 };
 
         var cachedResult = new CacheResult
         {
@@ -376,7 +376,7 @@ public class TokenOptimizingChatClientTests : TestBase
 
         var response = new ChatResponse(new ChatMessage(ChatRole.Assistant, "Response"))
         {
-            AdditionalProperties = new Dictionary<string, object?>
+            AdditionalProperties = new AdditionalPropertiesDictionary
             {
                 ["provider_name"] = "openai"
             },
@@ -412,7 +412,7 @@ public class TokenOptimizingChatClientTests : TestBase
             .Setup(x => x.IsCachingEnabled())
             .Returns(true);
 
-        var mockStreamingClient = this.CreateMockStreamingChatClient("Hello", " World");
+        var mockStreamingClient = TestBase.CreateMockStreamingChatClient("Hello", " World");
         var streamingDecorator = new TokenOptimizingChatClient(
             mockStreamingClient.Object,
             this._cacheServiceMock.Object,
@@ -464,7 +464,7 @@ public class TokenOptimizingChatClientTests : TestBase
             .Setup(x => x.GetPreferredProviderAsync("session-123", It.IsAny<CancellationToken>()))
             .ReturnsAsync("openai");
 
-        var mockStreamingClient = this.CreateMockStreamingChatClient("Response");
+        var mockStreamingClient = TestBase.CreateMockStreamingChatClient("Response");
         var streamingDecorator = new TokenOptimizingChatClient(
             mockStreamingClient.Object,
             this._cacheServiceMock.Object,
@@ -507,7 +507,7 @@ public class TokenOptimizingChatClientTests : TestBase
             .Setup(x => x.ComputeSessionId(It.IsAny<Microsoft.AspNetCore.Http.HttpContext>()))
             .Returns("session-123");
 
-        var mockStreamingClient = this.CreateMockStreamingChatClient("Hello", " World");
+        var mockStreamingClient = TestBase.CreateMockStreamingChatClient("Hello", " World");
         var streamingDecorator = new TokenOptimizingChatClient(
             mockStreamingClient.Object,
             this._cacheServiceMock.Object,
@@ -660,7 +660,7 @@ public class TokenOptimizingChatClient : IChatClient
             {
                 var cachedResponse = new ChatResponse(new ChatMessage(ChatRole.Assistant, cacheResult.Response!))
                 {
-                    AdditionalProperties = new Dictionary<string, object?>
+                    AdditionalProperties = new AdditionalPropertiesDictionary
                     {
                         ["cache_hit"] = true
                     },
@@ -676,7 +676,7 @@ public class TokenOptimizingChatClient : IChatClient
             var inFlightResponse = await this._deduplicationService.TryGetInFlightAsync(fingerprint, cancellationToken);
             if (inFlightResponse != null)
             {
-                inFlightResponse.AdditionalProperties ??= new Dictionary<string, object?>();
+                inFlightResponse.AdditionalProperties = inFlightResponse.AdditionalProperties ?? new AdditionalPropertiesDictionary();
                 inFlightResponse.AdditionalProperties["deduplicated"] = true;
                 return inFlightResponse;
             }
@@ -751,7 +751,7 @@ public class TokenOptimizingChatClient : IChatClient
         }
     }
 
-    public ChatClientMetadata Metadata => this._innerClient.Metadata;
+    public ChatClientMetadata Metadata => throw new NotImplementedException();
 
     public object? GetService(Type serviceType, object? serviceKey = null)
     {
