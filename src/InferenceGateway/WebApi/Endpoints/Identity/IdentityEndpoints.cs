@@ -30,13 +30,13 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Identity
 
             group.MapPost("/{provider}/start", async (IdentityManager manager, [FromRoute] string provider) =>
             {
-                var result = await manager.StartAuth(provider);
+                var result = await manager.StartAuth(provider).ConfigureAwait(false);
                 return Results.Ok(result);
             });
 
             group.MapPost("/{provider}/complete", async (IdentityManager manager, [FromRoute] string provider, [FromBody] CompleteRequest body) =>
             {
-                var res = await manager.CompleteAuth(provider, body.Code, body.State);
+                var res = await manager.CompleteAuth(provider, body.Code, body.State).ConfigureAwait(false);
                 return Results.Ok(res);
             });
 

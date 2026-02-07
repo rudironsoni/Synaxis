@@ -27,6 +27,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
         /// Maps the legacy completions endpoint.
         /// </summary>
         /// <param name="app">The endpoint route builder.</param>
+#pragma warning disable MA0051 // Method too long
         public static void MapLegacyCompletions(this IEndpointRouteBuilder app)
         {
             app.MapPost("/v1/completions", async (HttpContext ctx, CompletionRequest request, IChatClient chatClient, IModelResolver resolver) =>
@@ -67,7 +68,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                             model = resolution.canonicalId.ToString(),
                             choices = new[]
                             {
-                            new { text = update.Text, index = 0, finish_reason = update.FinishReason?.ToString().ToLowerInvariant() }
+                            new { text = update.Text, index = 0, finish_reason = update.FinishReason?.ToString().ToLowerInvariant() },
                             },
                         };
                         await ctx.Response.WriteAsync($"data: {JsonSerializer.Serialize(chunk)}\n\n").ConfigureAwait(false);
@@ -103,7 +104,10 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                 return Task.CompletedTask;
             });
         }
+#pragma warning restore MA0051 // Method too long
 
+#pragma warning disable MA0051 // Method too long
+#pragma warning disable IDISP004 // Don't ignore created IDisposable
         private static bool TryParsePrompt(object? promptObj, out string promptText, out string? errorMessage)
         {
             promptText = string.Empty;
@@ -201,5 +205,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
             errorMessage = "Prompt must be a string or an array of strings.";
             return false;
         }
+#pragma warning restore IDISP004 // Don't ignore created IDisposable
+#pragma warning restore MA0051 // Method too long
     }
 }

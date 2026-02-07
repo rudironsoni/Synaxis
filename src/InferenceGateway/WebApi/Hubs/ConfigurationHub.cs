@@ -26,8 +26,8 @@ namespace Synaxis.InferenceGateway.WebApi.Hubs
         /// <summary>
         /// Subscribes the client to configuration updates for a specific tenant and user.
         /// </summary>
-        /// <param name="tenantId">Optional tenant ID</param>
-        /// <param name="userId">Optional user ID</param>
+        /// <param name="tenantId">Optional tenant ID.</param>
+        /// <param name="userId">Optional user ID.</param>
         public async Task SubscribeToConfigurationUpdates(string? tenantId = null, string? userId = null)
         {
             var connectionId = this.Context.ConnectionId;
@@ -53,9 +53,9 @@ namespace Synaxis.InferenceGateway.WebApi.Hubs
         /// <summary>
         /// Notifies clients that a configuration has changed.
         /// </summary>
-        /// <param name="configurationType">Type of configuration that changed</param>
-        /// <param name="tenantId">Optional tenant ID</param>
-        /// <param name="userId">Optional user ID</param>
+        /// <param name="configurationType">Type of configuration that changed.</param>
+        /// <param name="tenantId">Optional tenant ID.</param>
+        /// <param name="userId">Optional user ID.</param>
         public async Task NotifyConfigurationChanged(string configurationType, string? tenantId = null, string? userId = null)
         {
             this._logger.LogInformation("Configuration changed: {ConfigurationType} for tenant {TenantId}, user {UserId}", configurationType, tenantId, userId);
@@ -76,8 +76,8 @@ namespace Synaxis.InferenceGateway.WebApi.Hubs
         /// <summary>
         /// Notifies clients that a provider's status has changed.
         /// </summary>
-        /// <param name="providerKey">The provider key</param>
-        /// <param name="status">The new status (healthy/unhealthy)</param>
+        /// <param name="providerKey">The provider key.</param>
+        /// <param name="status">The new status (healthy/unhealthy).</param>
         public async Task NotifyProviderStatusChanged(string providerKey, string status)
         {
             this._logger.LogInformation("Provider status changed: {ProviderKey} is now {Status}", providerKey, status);
@@ -88,10 +88,10 @@ namespace Synaxis.InferenceGateway.WebApi.Hubs
         /// <summary>
         /// Notifies clients about quota warnings.
         /// </summary>
-        /// <param name="tenantId">The tenant ID</param>
-        /// <param name="userId">The user ID</param>
-        /// <param name="providerKey">The provider key</param>
-        /// <param name="remainingQuota">The remaining quota</param>
+        /// <param name="tenantId">The tenant ID.</param>
+        /// <param name="userId">The user ID.</param>
+        /// <param name="providerKey">The provider key.</param>
+        /// <param name="remainingQuota">The remaining quota.</param>
         public async Task NotifyQuotaWarning(string tenantId, string userId, string providerKey, int remainingQuota)
         {
             this._logger.LogWarning("Quota warning for tenant {TenantId}, user {UserId}, provider {ProviderKey}: {RemainingQuota} remaining", tenantId, userId, providerKey, remainingQuota);

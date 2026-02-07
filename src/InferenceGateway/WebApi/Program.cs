@@ -183,7 +183,6 @@ try
             .WithIdentity("AuditLogPartitionTrigger")
             .StartNow()
             .WithCronSchedule("0 0 3 * * ?")); // 3 AM daily
-
     });
 
     // Add hosted service to run Quartz and wait for jobs to complete on shutdown

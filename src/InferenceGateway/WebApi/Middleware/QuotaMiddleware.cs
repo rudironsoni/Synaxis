@@ -35,6 +35,9 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         /// <summary>
         /// Invokes the middleware to enforce quota limits.
         /// </summary>
+        /// <param name="context">The HTTP context.</param>
+        /// <param name="tenantContext">The tenant context.</param>
+        /// <param name="quotaService">The quota service.</param>
         public async Task InvokeAsync(
             HttpContext context,
             ITenantContext tenantContext,
@@ -47,14 +50,14 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     context.Request.Path.StartsWithSegments("/openapi") ||
                     context.Request.Path.StartsWithSegments("/identity"))
                 {
-                    await this._next(context);
+                    await this._next(context).ConfigureAwait(false);
                     return;
                 }
 
                 // Only enforce quotas if tenant context is established
                 if (tenantContext.OrganizationId == null)
                 {
-                    await this._next(context);
+                    await this._next(context).ConfigureAwait(false);
                     return;
                 }
 
@@ -73,13 +76,13 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     quotaResult = await quotaService.CheckUserQuotaAsync(
                         tenantContext.OrganizationId.Value,
                         tenantContext.UserId.Value,
-                        quotaCheckRequest);
+                        quotaCheckRequest).ConfigureAwait(false);
                 }
                 else
                 {
                     quotaResult = await quotaService.CheckQuotaAsync(
                         tenantContext.OrganizationId.Value,
-                        quotaCheckRequest);
+                        quotaCheckRequest).ConfigureAwait(false);
                 }
 
                 // Handle quota result
@@ -88,7 +91,8 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     case QuotaAction.Block:
                         this._logger.LogWarning(
                             "Request blocked due to quota exhaustion. OrgId: {OrgId}, Reason: {Reason}",
-                            tenantContext.OrganizationId, quotaResult.Reason);
+                            tenantContext.OrganizationId,
+                            quotaResult.Reason);
 
                         context.Response.StatusCode = StatusCodes.Status402PaymentRequired;
                         await context.Response.WriteAsJsonAsync(new
@@ -97,9 +101,9 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                             {
                                 message = quotaResult.Reason ?? "Quota exceeded",
                                 type = "quota_exceeded",
-                                code = "QUOTA_EXHAUSTED"
+                                code = "QUOTA_EXHAUSTED",
                             },
-                        });
+                        }).ConfigureAwait(false);
                         return;
 
                     case QuotaAction.Throttle:
@@ -131,15 +135,16 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                                 message = "Rate limit exceeded",
                                 type = "rate_limit_exceeded",
                                 code = "RATE_LIMIT_EXCEEDED",
-                                retry_after = quotaResult.Details?.RetryAfter?.TotalSeconds
+                                retry_after = quotaResult.Details?.RetryAfter?.TotalSeconds,
                             },
-                        });
+                        }).ConfigureAwait(false);
                         return;
 
                     case QuotaAction.CreditCharge:
                         this._logger.LogInformation(
                             "Request will incur credit charge. OrgId: {OrgId}, Amount: {Amount}",
-                            tenantContext.OrganizationId, quotaResult.CreditCharge);
+                            tenantContext.OrganizationId,
+                            quotaResult.CreditCharge);
 
                         // Add credit charge header
                         context.Response.OnStarting(() =>
@@ -157,7 +162,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 // Store quota info in context for usage tracking
                 context.Items["QuotaResult"] = quotaResult;
 
-                await this._next(context);
+                await this._next(context).ConfigureAwait(false);
 
                 // After request completes, increment usage
                 if (context.Response.StatusCode < 400)
@@ -171,13 +176,13 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                             MetricType = "requests",
                             Value = 1,
                             Model = context.Items["ModelName"] as string,
-                        });
+                        }).ConfigureAwait(false);
                 }
             }
             catch (Exception ex)
             {
                 this._logger.LogError(ex, "Error occurred during quota enforcement");
-                await this._next(context);
+                await this._next(context).ConfigureAwait(false);
             }
         }
     }

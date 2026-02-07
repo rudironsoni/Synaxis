@@ -24,7 +24,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
     /// 3. If token is JWT (not API key):
     ///    - Extract claims from JWT (already validated by ASP.NET Core JWT middleware)
     ///    - Set tenant context with OrganizationId, UserId
-    /// 4. If no valid authentication found, return 401 Unauthorized
+    /// 4. If no valid authentication found, return 401 Unauthorized.
     /// </remarks>
     public sealed class TenantResolutionMiddleware
     {
@@ -65,7 +65,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 {
                     // No authorization header - let subsequent middleware handle it
                     // (some endpoints may be public or use other auth mechanisms)
-                    await this._next(context);
+                    await this._next(context).ConfigureAwait(false);
                     return;
                 }
 
@@ -79,9 +79,9 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                         error = new
                         {
                             message = "Invalid authorization scheme. Use 'Bearer <token>'",
-                            type = "invalid_request_error"
+                            type = "invalid_request_error",
                         },
-                    });
+                    }).ConfigureAwait(false);
                     return;
                 }
 
@@ -91,7 +91,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 if (token.StartsWith(ApiKeyPrefix, StringComparison.Ordinal))
                 {
                     // API Key authentication
-                    await this.HandleApiKeyAuthenticationAsync(context, token, tenantContext, apiKeyService);
+                    await this.HandleApiKeyAuthenticationAsync(context, token, tenantContext, apiKeyService).ConfigureAwait(false);
                 }
                 else
                 {
@@ -105,7 +105,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     return;
                 }
 
-                await this._next(context);
+                await this._next(context).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -116,9 +116,9 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     error = new
                     {
                         message = "An error occurred during authentication",
-                        type = "internal_server_error"
+                        type = "internal_server_error",
                     },
-                });
+                }).ConfigureAwait(false);
             }
         }
 
@@ -139,7 +139,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             try
             {
                 // Validate API key using the service
-                var validationResult = await apiKeyService.ValidateApiKeyAsync(apiKey, context.RequestAborted);
+                var validationResult = await apiKeyService.ValidateApiKeyAsync(apiKey, context.RequestAborted).ConfigureAwait(false);
 
                 if (!validationResult.IsValid)
                 {
@@ -150,9 +150,9 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                         error = new
                         {
                             message = validationResult.ErrorMessage ?? "Invalid API key",
-                            type = "invalid_api_key"
+                            type = "invalid_api_key",
                         },
-                    });
+                    }).ConfigureAwait(false);
                     return;
                 }
 
@@ -166,9 +166,9 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                         error = new
                         {
                             message = "Authentication data is incomplete",
-                            type = "internal_server_error"
+                            type = "internal_server_error",
                         },
-                    });
+                    }).ConfigureAwait(false);
                     return;
                 }
 
@@ -193,9 +193,9 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     error = new
                     {
                         message = "An error occurred during API key validation",
-                        type = "internal_server_error"
+                        type = "internal_server_error",
                     },
-                });
+                }).ConfigureAwait(false);
             }
         }
 
@@ -219,7 +219,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     error = new
                     {
                         message = "Invalid or expired JWT token",
-                        type = "invalid_token"
+                        type = "invalid_token",
                     },
                 }).Wait();
                 return;
@@ -239,7 +239,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     error = new
                     {
                         message = "JWT token is missing required claims",
-                        type = "invalid_token"
+                        type = "invalid_token",
                     },
                 }).Wait();
                 return;
@@ -254,7 +254,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     error = new
                     {
                         message = "Invalid organization_id in JWT token",
-                        type = "invalid_token"
+                        type = "invalid_token",
                     },
                 }).Wait();
                 return;
@@ -269,7 +269,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     error = new
                     {
                         message = "Invalid user_id in JWT token",
-                        type = "invalid_token"
+                        type = "invalid_token",
                     },
                 }).Wait();
                 return;
