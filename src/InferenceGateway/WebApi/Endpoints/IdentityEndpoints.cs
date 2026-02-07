@@ -29,7 +29,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints
 
         /// <summary>
         /// Registers a new user and organization.
-        /// POST /identity/register
+        /// POST /identity/register.
         /// </summary>
         /// <param name="request">The registration request.</param>
         /// <returns>The registration result.</returns>
@@ -54,7 +54,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints
 
         /// <summary>
         /// Logs in a user and returns JWT tokens.
-        /// POST /identity/login
+        /// POST /identity/login.
         /// </summary>
         /// <param name="request">The login request.</param>
         /// <returns>The login result with JWT tokens.</returns>
@@ -74,7 +74,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints
 
         /// <summary>
         /// Refreshes an access token using a refresh token.
-        /// POST /identity/refresh
+        /// POST /identity/refresh.
         /// </summary>
         /// <param name="request">The refresh token request.</param>
         /// <returns>The new access token.</returns>
@@ -94,7 +94,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints
 
         /// <summary>
         /// Gets information about the current user.
-        /// GET /identity/me
+        /// GET /identity/me.
         /// </summary>
         /// <returns>The current user's information.</returns>
         [HttpGet("me")]
@@ -118,7 +118,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints
 
         /// <summary>
         /// Gets all organizations for the current user.
-        /// GET /identity/organizations
+        /// GET /identity/organizations.
         /// </summary>
         /// <returns>The list of organizations.</returns>
         [HttpGet("organizations")]
@@ -142,7 +142,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints
 
         /// <summary>
         /// Switches the current user's active organization.
-        /// POST /identity/organizations/{id}/switch
+        /// POST /identity/organizations/{id}/switch.
         /// </summary>
         /// <param name="id">The organization ID to switch to.</param>
         /// <returns>The switch result.</returns>

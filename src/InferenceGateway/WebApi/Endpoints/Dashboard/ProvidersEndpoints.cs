@@ -26,13 +26,14 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
         /// </summary>
         /// <param name="app">The endpoint route builder.</param>
         /// <returns>The endpoint route builder for chaining.</returns>
+#pragma warning disable MA0051 // Method too long
         public static IEndpointRouteBuilder MapProvidersEndpoints(this IEndpointRouteBuilder app)
         {
             var dashboardGroup = app.MapGroup("/api/providers")
                 .RequireCors("WebApp");
 
             // GET /api/providers - List all providers
-            dashboardGroup.MapGet("", (
+            dashboardGroup.MapGet(string.Empty, (
                 IOptions<SynaxisConfiguration> config,
                 IConnectionMultiplexer redis,
                 CancellationToken ct) =>
@@ -93,7 +94,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
                         Usage = new ProviderStatsDto
                         {
                             TotalTokens = totalTokens,
-                            Requests = requests
+                            Requests = requests,
                         },
                     });
                 }
@@ -131,7 +132,11 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
                         var endpoint = GetProviderEndpoint(provider);
                         if (!string.IsNullOrEmpty(endpoint))
                         {
+#pragma warning disable IDISP001 // Dispose created
+#pragma warning disable IDISP004 // Don't ignore created IDisposable
                             using var httpClient = httpClientFactory.CreateClient();
+#pragma warning restore IDISP004 // Don't ignore created IDisposable
+#pragma warning restore IDISP001 // Dispose created
                             httpClient.Timeout = TimeSpan.FromSeconds(5);
 
                             var request = new HttpRequestMessage(HttpMethod.Head, endpoint);
@@ -191,6 +196,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
 
             return app;
         }
+#pragma warning restore MA0051 // Method too long
 
         private static string? GetProviderEndpoint(ProviderConfig provider)
         {

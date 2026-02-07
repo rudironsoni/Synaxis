@@ -45,7 +45,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                             Tools = cm.Tools,
                             Vision = cm.Vision,
                             StructuredOutput = cm.StructuredOutput,
-                            LogProbs = cm.LogProbs
+                            LogProbs = cm.LogProbs,
                         },
                     });
                 }
@@ -73,7 +73,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                         Id = p.Key,
                         Type = p.Value.Type,
                         Enabled = p.Value.Enabled,
-                        Tier = p.Value.Tier
+                        Tier = p.Value.Tier,
                     }).ToList(),
                 };
 
@@ -102,7 +102,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                             Tools = cm.Tools,
                             Vision = cm.Vision,
                             StructuredOutput = cm.StructuredOutput,
-                            LogProbs = cm.LogProbs
+                            LogProbs = cm.LogProbs,
                         },
                     }, ModelJsonContext.Options);
                 }
@@ -129,7 +129,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                             message = $"The model '{id}' does not exist",
                             type = "invalid_request_error",
                             param = "model",
-                            code = "model_not_found"
+                            code = "model_not_found",
                         },
                     },
                     ModelJsonContext.Options,

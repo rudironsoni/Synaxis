@@ -43,7 +43,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
                 var end = ParseEndDate(endDate);
                 var start = ParseStartDate(startDate, end);
 
-                var response = await BuildUsageAnalyticsResponse(dbContext, start, end, ct);
+                var response = await BuildUsageAnalyticsResponse(dbContext, start, end, ct).ConfigureAwait(false);
                 return Results.Ok(response);
             })
             .WithTags("Analytics")
@@ -58,7 +58,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
                 CancellationToken ct) =>
             {
                 var yesterday = DateTimeOffset.UtcNow.AddDays(-1);
-                var providers = await BuildProviderAnalyticsList(dbContext, yesterday, ct);
+                var providers = await BuildProviderAnalyticsList(dbContext, yesterday, ct).ConfigureAwait(false);
 
                 return Results.Ok(new ProviderAnalyticsResponseDto
                 {
@@ -76,9 +76,9 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
             DateTimeOffset end,
             CancellationToken ct)
         {
-            var tokenUsageData = await GetTokenUsageData(dbContext, start, end, ct);
-            var providerData = await GetProviderUsageData(dbContext, start, end, ct);
-            await PopulateProviderTokens(dbContext, providerData, ct);
+            var tokenUsageData = await GetTokenUsageData(dbContext, start, end, ct).ConfigureAwait(false);
+            var providerData = await GetProviderUsageData(dbContext, start, end, ct).ConfigureAwait(false);
+            await PopulateProviderTokens(dbContext, providerData, ct).ConfigureAwait(false);
 
             return new UsageAnalyticsDto
             {
@@ -98,12 +98,12 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
             DateTimeOffset yesterday,
             CancellationToken ct)
         {
-            var providerStats = await GetProviderStats(dbContext, yesterday, ct);
+            var providerStats = await GetProviderStats(dbContext, yesterday, ct).ConfigureAwait(false);
             var providers = new List<ProviderAnalyticsDto>();
 
             foreach (var stat in providerStats)
             {
-                var dailyTokens = await GetProviderDailyTokens(dbContext, stat.ProviderId!, yesterday, ct);
+                var dailyTokens = await GetProviderDailyTokens(dbContext, stat.ProviderId!, yesterday, ct).ConfigureAwait(false);
                 var successRate = CalculateSuccessRate(stat.TotalRequests, stat.SuccessfulRequests);
 
                 providers.Add(new ProviderAnalyticsDto
@@ -142,13 +142,13 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
                 .FirstOrDefaultAsync(ct).ConfigureAwait(false);
         }
 
-        private static async Task<List<ProviderUsageStatsDto>> GetProviderUsageData(
+        private static Task<List<ProviderUsageStatsDto>> GetProviderUsageData(
             ControlPlaneDbContext dbContext,
             DateTimeOffset start,
             DateTimeOffset end,
             CancellationToken ct)
         {
-            return await dbContext.RequestLogs
+            return dbContext.RequestLogs
                 .Where(r => r.CreatedAt >= start && r.CreatedAt <= end && r.Provider != null)
                 .GroupBy(r => r.Provider)
                 .Select(g => new ProviderUsageStatsDto
@@ -157,7 +157,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
                     Requests = g.Count(),
                     Tokens = 0,
                 })
-                .ToListAsync(ct).ConfigureAwait(false);
+                .ToListAsync(ct);
         }
 
         private static async Task PopulateProviderTokens(
@@ -179,12 +179,12 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
             }
         }
 
-        private static async Task<List<ProviderStatsInternal>> GetProviderStats(
+        private static Task<List<ProviderStatsInternal>> GetProviderStats(
             ControlPlaneDbContext dbContext,
             DateTimeOffset yesterday,
             CancellationToken ct)
         {
-            return await dbContext.RequestLogs
+            return dbContext.RequestLogs
                 .Where(r => r.CreatedAt >= yesterday && r.Provider != null)
                 .GroupBy(r => r.Provider)
                 .Select(g => new ProviderStatsInternal
@@ -194,7 +194,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
                     SuccessfulRequests = g.Count(r => r.StatusCode >= 200 && r.StatusCode < 300),
                     AverageLatency = g.Average(r => r.LatencyMs ?? 0),
                 })
-                .ToListAsync(ct).ConfigureAwait(false);
+                .ToListAsync(ct);
         }
 
         private static async Task<long> GetProviderDailyTokens(
