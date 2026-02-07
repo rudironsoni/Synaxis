@@ -22,12 +22,12 @@ public class SynaxisDbContextTests : IDisposable
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
 
-        _context = new SynaxisDbContext(options);
+        this._context = new SynaxisDbContext(options);
     }
 
     public void Dispose()
     {
-        _context.Dispose();
+        this._context.Dispose();
     }
 
     [Fact]
@@ -46,15 +46,15 @@ public class SynaxisDbContextTests : IDisposable
             DefaultInputCostPer1MTokens = 0.03m,
             DefaultOutputCostPer1MTokens = 0.06m,
             IsActive = true,
-            IsPublic = true
+            IsPublic = true,
         };
 
         // Act
-        _context.Providers.Add(provider);
-        _context.SaveChanges();
+        this._context.Providers.Add(provider);
+        this._context.SaveChanges();
 
         // Assert
-        var savedProvider = _context.Providers.Find(provider.Id);
+        var savedProvider = this._context.Providers.Find(provider.Id);
         savedProvider.Should().NotBeNull();
         savedProvider!.Key.Should().Be("openai");
         savedProvider.DisplayName.Should().Be("OpenAI");
@@ -70,7 +70,7 @@ public class SynaxisDbContextTests : IDisposable
             Key = "openai",
             DisplayName = "OpenAI",
             ProviderType = "OpenAI",
-            IsActive = true
+            IsActive = true,
         };
 
         var model = new Model
@@ -84,16 +84,16 @@ public class SynaxisDbContextTests : IDisposable
             MaxOutputTokens = 4096,
             SupportsStreaming = true,
             SupportsTools = true,
-            IsActive = true
+            IsActive = true,
         };
 
         // Act
-        _context.Providers.Add(provider);
-        _context.Models.Add(model);
-        _context.SaveChanges();
+        this._context.Providers.Add(provider);
+        this._context.Models.Add(model);
+        this._context.SaveChanges();
 
         // Assert
-        var savedModel = _context.Models
+        var savedModel = this._context.Models
             .Include(m => m.Provider)
             .FirstOrDefault(m => m.Id == model.Id);
 
@@ -114,7 +114,7 @@ public class SynaxisDbContextTests : IDisposable
             Slug = "acme-corp",
             Status = "Active",
             PlanTier = "Professional",
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
 
         var settings = new OrganizationSettings
@@ -122,16 +122,16 @@ public class SynaxisDbContextTests : IDisposable
             OrganizationId = organization.Id,
             JwtTokenLifetimeMinutes = 120,
             DefaultRateLimitRpm = 1000,
-            AllowAutoOptimization = true
+            AllowAutoOptimization = true,
         };
 
         // Act
-        _context.Organizations.Add(organization);
-        _context.OrganizationSettings.Add(settings);
-        _context.SaveChanges();
+        this._context.Organizations.Add(organization);
+        this._context.OrganizationSettings.Add(settings);
+        this._context.SaveChanges();
 
         // Assert
-        var savedOrg = _context.Organizations
+        var savedOrg = this._context.Organizations
             .Include(o => o.Settings)
             .FirstOrDefault(o => o.Id == organization.Id);
 
@@ -151,7 +151,7 @@ public class SynaxisDbContextTests : IDisposable
             DisplayName = "Test",
             Slug = "test-org",
             Status = "Active",
-            PlanTier = "Free"
+            PlanTier = "Free",
         };
 
         var user = new SynaxisUser
@@ -162,7 +162,7 @@ public class SynaxisDbContextTests : IDisposable
             FirstName = "Test",
             LastName = "User",
             Status = "Active",
-            EmailConfirmed = true
+            EmailConfirmed = true,
         };
 
         var membership = new UserOrganizationMembership
@@ -171,17 +171,17 @@ public class SynaxisDbContextTests : IDisposable
             UserId = user.Id,
             OrganizationId = organization.Id,
             OrganizationRole = "Admin",
-            Status = "Active"
+            Status = "Active",
         };
 
         // Act
-        _context.Organizations.Add(organization);
-        _context.Users.Add(user);
-        _context.UserOrganizationMemberships.Add(membership);
-        _context.SaveChanges();
+        this._context.Organizations.Add(organization);
+        this._context.Users.Add(user);
+        this._context.UserOrganizationMemberships.Add(membership);
+        this._context.SaveChanges();
 
         // Assert
-        var savedMembership = _context.UserOrganizationMemberships
+        var savedMembership = this._context.UserOrganizationMemberships
             .Include(m => m.User)
             .Include(m => m.Organization)
             .FirstOrDefault(m => m.Id == membership.Id);
@@ -202,7 +202,7 @@ public class SynaxisDbContextTests : IDisposable
             DisplayName = "Test",
             Slug = "test-org",
             Status = "Active",
-            PlanTier = "Free"
+            PlanTier = "Free",
         };
 
         var parentGroup = new Group
@@ -211,7 +211,7 @@ public class SynaxisDbContextTests : IDisposable
             OrganizationId = organization.Id,
             Name = "Engineering",
             Slug = "engineering",
-            Status = "Active"
+            Status = "Active",
         };
 
         var childGroup = new Group
@@ -220,17 +220,17 @@ public class SynaxisDbContextTests : IDisposable
             OrganizationId = organization.Id,
             Name = "Backend Team",
             Slug = "backend-team",
-            Status = "Active"
+            Status = "Active",
         };
 
         // Act
-        _context.Organizations.Add(organization);
-        _context.Groups.Add(parentGroup);
-        _context.Groups.Add(childGroup);
-        _context.SaveChanges();
+        this._context.Organizations.Add(organization);
+        this._context.Groups.Add(parentGroup);
+        this._context.Groups.Add(childGroup);
+        this._context.SaveChanges();
 
         // Assert
-        var savedChild = _context.Groups
+        var savedChild = this._context.Groups
             .FirstOrDefault(g => g.Id == childGroup.Id);
 
         savedChild.Should().NotBeNull();
@@ -248,7 +248,7 @@ public class SynaxisDbContextTests : IDisposable
             DisplayName = "Test",
             Slug = "test-org",
             Status = "Active",
-            PlanTier = "Free"
+            PlanTier = "Free",
         };
 
         var provider = new Provider
@@ -257,7 +257,7 @@ public class SynaxisDbContextTests : IDisposable
             Key = "openai",
             DisplayName = "OpenAI",
             ProviderType = "OpenAI",
-            IsActive = true
+            IsActive = true,
         };
 
         var orgProvider = new OrganizationProvider
@@ -269,17 +269,17 @@ public class SynaxisDbContextTests : IDisposable
             InputCostPer1MTokens = 0.03m,
             OutputCostPer1MTokens = 0.06m,
             IsEnabled = true,
-            IsDefault = true
+            IsDefault = true,
         };
 
         // Act
-        _context.Organizations.Add(organization);
-        _context.Providers.Add(provider);
-        _context.OrganizationProviders.Add(orgProvider);
-        _context.SaveChanges();
+        this._context.Organizations.Add(organization);
+        this._context.Providers.Add(provider);
+        this._context.OrganizationProviders.Add(orgProvider);
+        this._context.SaveChanges();
 
         // Assert
-        var savedOrgProvider = _context.OrganizationProviders
+        var savedOrgProvider = this._context.OrganizationProviders
             .FirstOrDefault(op => op.Id == orgProvider.Id);
 
         savedOrgProvider.Should().NotBeNull();
@@ -298,7 +298,7 @@ public class SynaxisDbContextTests : IDisposable
             DisplayName = "Test",
             Slug = "test-org",
             Status = "Active",
-            PlanTier = "Free"
+            PlanTier = "Free",
         };
 
         var strategy = new RoutingStrategy
@@ -311,16 +311,16 @@ public class SynaxisDbContextTests : IDisposable
             PrioritizeFreeProviders = true,
             MaxCostPer1MTokens = 0.05m,
             IsDefault = true,
-            IsActive = true
+            IsActive = true,
         };
 
         // Act
-        _context.Organizations.Add(organization);
-        _context.RoutingStrategies.Add(strategy);
-        _context.SaveChanges();
+        this._context.Organizations.Add(organization);
+        this._context.RoutingStrategies.Add(strategy);
+        this._context.SaveChanges();
 
         // Assert
-        var savedStrategy = _context.RoutingStrategies
+        var savedStrategy = this._context.RoutingStrategies
             .FirstOrDefault(s => s.Id == strategy.Id);
 
         savedStrategy.Should().NotBeNull();
@@ -339,7 +339,7 @@ public class SynaxisDbContextTests : IDisposable
             DisplayName = "Test",
             Slug = "test-org",
             Status = "Active",
-            PlanTier = "Free"
+            PlanTier = "Free",
         };
 
         var provider = new Provider
@@ -348,7 +348,7 @@ public class SynaxisDbContextTests : IDisposable
             Key = "openai",
             DisplayName = "OpenAI",
             ProviderType = "OpenAI",
-            IsActive = true
+            IsActive = true,
         };
 
         var orgProvider = new OrganizationProvider
@@ -356,7 +356,7 @@ public class SynaxisDbContextTests : IDisposable
             Id = Guid.NewGuid(),
             OrganizationId = organization.Id,
             ProviderId = provider.Id,
-            IsEnabled = true
+            IsEnabled = true,
         };
 
         var healthStatus = new ProviderHealthStatus
@@ -368,18 +368,18 @@ public class SynaxisDbContextTests : IDisposable
             HealthScore = 0.95m,
             LastCheckedAt = DateTime.UtcNow,
             AverageLatencyMs = 250,
-            SuccessRate = 0.99m
+            SuccessRate = 0.99m,
         };
 
         // Act
-        _context.Organizations.Add(organization);
-        _context.Providers.Add(provider);
-        _context.OrganizationProviders.Add(orgProvider);
-        _context.ProviderHealthStatuses.Add(healthStatus);
-        _context.SaveChanges();
+        this._context.Organizations.Add(organization);
+        this._context.Providers.Add(provider);
+        this._context.OrganizationProviders.Add(orgProvider);
+        this._context.ProviderHealthStatuses.Add(healthStatus);
+        this._context.SaveChanges();
 
         // Assert
-        var savedHealth = _context.ProviderHealthStatuses
+        var savedHealth = this._context.ProviderHealthStatuses
             .Include(h => h.OrganizationProvider)
             .FirstOrDefault(h => h.Id == healthStatus.Id);
 
@@ -399,7 +399,7 @@ public class SynaxisDbContextTests : IDisposable
             DisplayName = "Test",
             Slug = "test-org",
             Status = "Active",
-            PlanTier = "Free"
+            PlanTier = "Free",
         };
 
         var apiKey = new ApiKey
@@ -412,16 +412,16 @@ public class SynaxisDbContextTests : IDisposable
             Scopes = "read,write",
             RateLimitRpm = 1000,
             IsActive = true,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
 
         // Act
-        _context.Organizations.Add(organization);
-        _context.ApiKeys.Add(apiKey);
-        _context.SaveChanges();
+        this._context.Organizations.Add(organization);
+        this._context.ApiKeys.Add(apiKey);
+        this._context.SaveChanges();
 
         // Assert
-        var savedKey = _context.ApiKeys
+        var savedKey = this._context.ApiKeys
             .FirstOrDefault(k => k.Id == apiKey.Id);
 
         savedKey.Should().NotBeNull();
@@ -440,7 +440,7 @@ public class SynaxisDbContextTests : IDisposable
             DisplayName = "Test",
             Slug = "test-org",
             Status = "Active",
-            PlanTier = "Free"
+            PlanTier = "Free",
         };
 
         var user = new SynaxisUser
@@ -449,7 +449,7 @@ public class SynaxisDbContextTests : IDisposable
             UserName = "testuser@example.com",
             Email = "testuser@example.com",
             Status = "Active",
-            EmailConfirmed = true
+            EmailConfirmed = true,
         };
 
         var auditLog = new AuditLog
@@ -465,17 +465,17 @@ public class SynaxisDbContextTests : IDisposable
             UserAgent = "Mozilla/5.0",
             CorrelationId = Guid.NewGuid().ToString(),
             CreatedAt = DateTime.UtcNow,
-            PartitionDate = DateTime.UtcNow.Date
+            PartitionDate = DateTime.UtcNow.Date,
         };
 
         // Act
-        _context.Organizations.Add(organization);
-        _context.Users.Add(user);
-        _context.AuditLogs.Add(auditLog);
-        _context.SaveChanges();
+        this._context.Organizations.Add(organization);
+        this._context.Users.Add(user);
+        this._context.AuditLogs.Add(auditLog);
+        this._context.SaveChanges();
 
         // Assert
-        var savedLog = _context.AuditLogs
+        var savedLog = this._context.AuditLogs
             .FirstOrDefault(l => l.Id == auditLog.Id);
 
         savedLog.Should().NotBeNull();
@@ -494,7 +494,7 @@ public class SynaxisDbContextTests : IDisposable
             DisplayName = "Active",
             Slug = "active-org",
             Status = "Active",
-            PlanTier = "Free"
+            PlanTier = "Free",
         };
 
         var deletedOrg = new Organization
@@ -505,15 +505,15 @@ public class SynaxisDbContextTests : IDisposable
             Slug = "deleted-org",
             Status = "Active",
             PlanTier = "Free",
-            DeletedAt = DateTime.UtcNow
+            DeletedAt = DateTime.UtcNow,
         };
 
-        _context.Organizations.Add(activeOrg);
-        _context.Organizations.Add(deletedOrg);
-        _context.SaveChanges();
+        this._context.Organizations.Add(activeOrg);
+        this._context.Organizations.Add(deletedOrg);
+        this._context.SaveChanges();
 
         // Act
-        var organizations = _context.Organizations.ToList();
+        var organizations = this._context.Organizations.ToList();
 
         // Assert
         organizations.Should().HaveCount(1);
@@ -530,7 +530,7 @@ public class SynaxisDbContextTests : IDisposable
             UserName = "active@example.com",
             Email = "active@example.com",
             Status = "Active",
-            EmailConfirmed = true
+            EmailConfirmed = true,
         };
 
         var deletedUser = new SynaxisUser
@@ -540,15 +540,15 @@ public class SynaxisDbContextTests : IDisposable
             Email = "deleted@example.com",
             Status = "Deactivated",
             EmailConfirmed = true,
-            DeletedAt = DateTime.UtcNow
+            DeletedAt = DateTime.UtcNow,
         };
 
-        _context.Users.Add(activeUser);
-        _context.Users.Add(deletedUser);
-        _context.SaveChanges();
+        this._context.Users.Add(activeUser);
+        this._context.Users.Add(deletedUser);
+        this._context.SaveChanges();
 
         // Act
-        var users = _context.Users.ToList();
+        var users = this._context.Users.ToList();
 
         // Assert
         users.Should().HaveCount(1);

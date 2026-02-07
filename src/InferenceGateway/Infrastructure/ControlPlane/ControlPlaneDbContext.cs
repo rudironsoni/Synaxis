@@ -22,75 +22,75 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
         }
 
         // Legacy entities (to be migrated)
-        public DbSet<Tenant> Tenants => Set<Tenant>();
+        public DbSet<Tenant> Tenants => this.Set<Tenant>();
 
-        public DbSet<User> Users => Set<User>();
+        public DbSet<User> Users => this.Set<User>();
 
-        public DbSet<Project> Projects => Set<Project>();
+        public DbSet<Project> Projects => this.Set<Project>();
 
-        public DbSet<ApplicationApiKey> ApiKeys => Set<ApplicationApiKey>();
+        public DbSet<ApplicationApiKey> ApiKeys => this.Set<ApplicationApiKey>();
 
-        public DbSet<OAuthAccount> OAuthAccounts => Set<OAuthAccount>();
+        public DbSet<OAuthAccount> OAuthAccounts => this.Set<OAuthAccount>();
 
-        public DbSet<RoutingPolicy> RoutingPolicies => Set<RoutingPolicy>();
+        public DbSet<RoutingPolicy> RoutingPolicies => this.Set<RoutingPolicy>();
 
-        public DbSet<ModelAlias> ModelAliases => Set<ModelAlias>();
+        public DbSet<ModelAlias> ModelAliases => this.Set<ModelAlias>();
 
-        public DbSet<ModelCombo> ModelCombos => Set<ModelCombo>();
+        public DbSet<ModelCombo> ModelCombos => this.Set<ModelCombo>();
 
-        public DbSet<ProviderAccount> ProviderAccounts => Set<ProviderAccount>();
+        public DbSet<ProviderAccount> ProviderAccounts => this.Set<ProviderAccount>();
 
-        public DbSet<ModelCost> ModelCosts => Set<ModelCost>();
+        public DbSet<ModelCost> ModelCosts => this.Set<ModelCost>();
 
-        public DbSet<RequestLog> RequestLogs => Set<RequestLog>();
+        public DbSet<RequestLog> RequestLogs => this.Set<RequestLog>();
 
-        public DbSet<TokenUsage> TokenUsages => Set<TokenUsage>();
+        public DbSet<TokenUsage> TokenUsages => this.Set<TokenUsage>();
 
-        public DbSet<QuotaSnapshot> QuotaSnapshots => Set<QuotaSnapshot>();
+        public DbSet<QuotaSnapshot> QuotaSnapshots => this.Set<QuotaSnapshot>();
 
-        public DbSet<DeviationEntry> Deviations => Set<DeviationEntry>();
+        public DbSet<DeviationEntry> Deviations => this.Set<DeviationEntry>();
 
-        public DbSet<GlobalModel> GlobalModels => Set<GlobalModel>();
+        public DbSet<GlobalModel> GlobalModels => this.Set<GlobalModel>();
 
-        public DbSet<ProviderModel> ProviderModels => Set<ProviderModel>();
+        public DbSet<ProviderModel> ProviderModels => this.Set<ProviderModel>();
 
-        public DbSet<TenantModelLimit> TenantModelLimits => Set<TenantModelLimit>();
+        public DbSet<TenantModelLimit> TenantModelLimits => this.Set<TenantModelLimit>();
 
         // Platform schema entities
-        public DbSet<Provider> Providers => Set<Provider>();
+        public DbSet<Provider> Providers => this.Set<Provider>();
 
-        public DbSet<Model> Models => Set<Model>();
+        public DbSet<Model> Models => this.Set<Model>();
 
         // Identity schema entities
-        public DbSet<Organization> Organizations => Set<Organization>();
+        public DbSet<Organization> Organizations => this.Set<Organization>();
 
-        public DbSet<Group> Groups => Set<Group>();
+        public DbSet<Group> Groups => this.Set<Group>();
 
-        public DbSet<OrganizationSettings> OrganizationSettings => Set<OrganizationSettings>();
+        public DbSet<OrganizationSettings> OrganizationSettings => this.Set<OrganizationSettings>();
 
-        public DbSet<SynaxisUser> SynaxisUsers => Set<SynaxisUser>();
+        public DbSet<SynaxisUser> SynaxisUsers => this.Set<SynaxisUser>();
 
-        public DbSet<Role> Roles => Set<Role>();
+        public DbSet<Role> Roles => this.Set<Role>();
 
-        public DbSet<IdentityUserRole> UserRoles => Set<IdentityUserRole>();
+        public DbSet<IdentityUserRole> UserRoles => this.Set<IdentityUserRole>();
 
-        public DbSet<UserOrganizationMembership> UserOrganizationMemberships => Set<UserOrganizationMembership>();
+        public DbSet<UserOrganizationMembership> UserOrganizationMemberships => this.Set<UserOrganizationMembership>();
 
-        public DbSet<UserGroupMembership> UserGroupMemberships => Set<UserGroupMembership>();
+        public DbSet<UserGroupMembership> UserGroupMemberships => this.Set<UserGroupMembership>();
 
         // Operations schema entities
-        public DbSet<OperationsApiKey> OperationsApiKeys => Set<OperationsApiKey>();
+        public DbSet<OperationsApiKey> OperationsApiKeys => this.Set<OperationsApiKey>();
 
-        public DbSet<OrganizationProvider> OrganizationProviders => Set<OrganizationProvider>();
+        public DbSet<OrganizationProvider> OrganizationProviders => this.Set<OrganizationProvider>();
 
-        public DbSet<OrganizationModel> OrganizationModels => Set<OrganizationModel>();
+        public DbSet<OrganizationModel> OrganizationModels => this.Set<OrganizationModel>();
 
-        public DbSet<RoutingStrategy> RoutingStrategies => Set<RoutingStrategy>();
+        public DbSet<RoutingStrategy> RoutingStrategies => this.Set<RoutingStrategy>();
 
-        public DbSet<ProviderHealthStatus> ProviderHealthStatuses => Set<ProviderHealthStatus>();
+        public DbSet<ProviderHealthStatus> ProviderHealthStatuses => this.Set<ProviderHealthStatus>();
 
         // Audit schema entities
-        public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+        public DbSet<AuditLog> AuditLogs => this.Set<AuditLog>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -31,7 +31,7 @@ public class ModelsAndHealthEndpointTests
                 var defaults = new Dictionary<string, string?>
                 {
                     ["Synaxis:ControlPlane:UseInMemory"] = "true",
-                    ["Synaxis:ControlPlane:ConnectionString"] = ""
+                    ["Synaxis:ControlPlane:ConnectionString"] = "",
                 };
 
                 foreach (var kvp in defaults)
@@ -59,7 +59,7 @@ public class ModelsAndHealthEndpointTests
             ["Synaxis:InferenceGateway:CanonicalModels:0:Provider"] = "TestProvider",
             ["Synaxis:InferenceGateway:CanonicalModels:0:ModelPath"] = "test-model",
             ["Synaxis:InferenceGateway:Aliases:fast:Candidates:0"] = "test-model",
-            ["Synaxis:InferenceGateway:Aliases:default:Candidates:0"] = "test-model"
+            ["Synaxis:InferenceGateway:Aliases:default:Candidates:0"] = "test-model",
         };
 
         await using var factory = CreateFactory(settings);
@@ -102,7 +102,7 @@ public class ModelsAndHealthEndpointTests
             ["Synaxis:InferenceGateway:CanonicalModels:0:ModelPath"] = "test-model",
             ["Synaxis:InferenceGateway:Aliases:default:Candidates:0"] = "test-model",
             ["Synaxis:ControlPlane:ConnectionString"] = "",
-            ["ConnectionStrings:Redis"] = "localhost:6379,abortConnect=false,connectTimeout=100,asyncTimeout=100"
+            ["ConnectionStrings:Redis"] = "localhost:6379,abortConnect=false,connectTimeout=100,asyncTimeout=100",
         };
 
         await using var factory = CreateFactory(settings, suppressHealthLogs: true);
@@ -116,14 +116,18 @@ public class ModelsAndHealthEndpointTests
     private sealed class ModelListResponse
     {
         public string Object { get; set; } = string.Empty;
-        public List<ModelItem> Data { get; set; } = new ();
+
+        public List<ModelItem> Data { get; set; } = new();
     }
 
     private sealed class ModelItem
     {
         public string Id { get; set; } = string.Empty;
+
         public string Object { get; set; } = string.Empty;
+
         public long Created { get; set; }
+
         public string Owned_By { get; set; } = string.Empty;
     }
 }

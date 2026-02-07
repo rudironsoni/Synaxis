@@ -20,12 +20,12 @@ public class RedisQuotaTrackerTests
 
     public RedisQuotaTrackerTests()
     {
-        _mockRedis = new Mock<IConnectionMultiplexer>();
-        _mockDatabase = new Mock<IDatabase>();
-        _mockLogger = new Mock<ILogger<RedisQuotaTracker>>();
-        _mockConfig = new Mock<IOptions<SynaxisConfiguration>>();
+        this._mockRedis = new Mock<IConnectionMultiplexer>();
+        this._mockDatabase = new Mock<IDatabase>();
+        this._mockLogger = new Mock<ILogger<RedisQuotaTracker>>();
+        this._mockConfig = new Mock<IOptions<SynaxisConfiguration>>();
 
-        _config = new SynaxisConfiguration
+        this._config = new SynaxisConfiguration
         {
             // TODO: Re-enable provider configuration tests once ProviderConfiguration type is available
             // Providers = new Dictionary<string, ProviderConfiguration>
@@ -38,15 +38,15 @@ public class RedisQuotaTrackerTests
             // }
         };
 
-        _mockConfig.Setup(c => c.Value).Returns(_config);
-        _mockRedis.Setup(r => r.GetDatabase(It.IsAny<int>(), It.IsAny<object>())).Returns(_mockDatabase.Object);
+        this._mockConfig.Setup(c => c.Value).Returns(this._config);
+        this._mockRedis.Setup(r => r.GetDatabase(It.IsAny<int>(), It.IsAny<object>())).Returns(this._mockDatabase.Object);
     }
 
     [Fact]
     public async Task CheckQuotaAsync_WithNonExistentProvider_ReturnsTrue()
     {
         // Arrange
-        var tracker = new RedisQuotaTracker(_mockRedis.Object, _mockLogger.Object, _mockConfig.Object);
+        var tracker = new RedisQuotaTracker(this._mockRedis.Object, this._mockLogger.Object, this._mockConfig.Object);
 
         // Act
         var result = await tracker.CheckQuotaAsync("NonExistent");
@@ -79,7 +79,7 @@ public class RedisQuotaTrackerTests
     public async Task CheckQuotaAsync_WithinLimits_ReturnsTrue()
     {
         // Arrange
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.ScriptEvaluateAsync(
                 It.IsAny<string>(),
                 It.IsAny<RedisKey[]>(),
@@ -87,7 +87,7 @@ public class RedisQuotaTrackerTests
                 It.IsAny<CommandFlags>()))
             .ReturnsAsync(RedisResult.Create(1L));
 
-        var tracker = new RedisQuotaTracker(_mockRedis.Object, _mockLogger.Object, _mockConfig.Object);
+        var tracker = new RedisQuotaTracker(this._mockRedis.Object, this._mockLogger.Object, this._mockConfig.Object);
 
         // Act
         var result = await tracker.CheckQuotaAsync("Groq");
@@ -100,7 +100,7 @@ public class RedisQuotaTrackerTests
     public async Task CheckQuotaAsync_ExceedsLimit_ReturnsFalse()
     {
         // Arrange
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.ScriptEvaluateAsync(
                 It.IsAny<string>(),
                 It.IsAny<RedisKey[]>(),
@@ -108,11 +108,11 @@ public class RedisQuotaTrackerTests
                 It.IsAny<CommandFlags>()))
             .ReturnsAsync(RedisResult.Create(0L));
 
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.StringGetAsync(It.IsAny<RedisKey>(), It.IsAny<CommandFlags>()))
             .ReturnsAsync((RedisValue)101L);
 
-        var tracker = new RedisQuotaTracker(_mockRedis.Object, _mockLogger.Object, _mockConfig.Object);
+        var tracker = new RedisQuotaTracker(this._mockRedis.Object, this._mockLogger.Object, this._mockConfig.Object);
 
         // Act
         var result = await tracker.CheckQuotaAsync("Groq");
@@ -125,7 +125,7 @@ public class RedisQuotaTrackerTests
     public async Task CheckQuotaAsync_OnRedisError_ReturnsTrueAsFailsafe()
     {
         // Arrange
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.ScriptEvaluateAsync(
                 It.IsAny<string>(),
                 It.IsAny<RedisKey[]>(),
@@ -133,7 +133,7 @@ public class RedisQuotaTrackerTests
                 It.IsAny<CommandFlags>()))
             .ThrowsAsync(new RedisException("Connection failed"));
 
-        var tracker = new RedisQuotaTracker(_mockRedis.Object, _mockLogger.Object, _mockConfig.Object);
+        var tracker = new RedisQuotaTracker(this._mockRedis.Object, this._mockLogger.Object, this._mockConfig.Object);
 
         // Act
         var result = await tracker.CheckQuotaAsync("Groq");
@@ -146,13 +146,13 @@ public class RedisQuotaTrackerTests
     public async Task RecordUsageAsync_IncrementsTokenCounters()
     {
         // Arrange
-        var tracker = new RedisQuotaTracker(_mockRedis.Object, _mockLogger.Object, _mockConfig.Object);
+        var tracker = new RedisQuotaTracker(this._mockRedis.Object, this._mockLogger.Object, this._mockConfig.Object);
 
         // Act
         await tracker.RecordUsageAsync("Groq", 100, 50);
 
         // Assert
-        _mockDatabase.Verify(
+        this._mockDatabase.Verify(
             db => db.StringIncrementAsync(
                 It.Is<RedisKey>(k => k.ToString().Contains("tpm")),
                 150,
@@ -164,13 +164,13 @@ public class RedisQuotaTrackerTests
     public async Task RecordUsageAsync_SetsExpiration()
     {
         // Arrange
-        var tracker = new RedisQuotaTracker(_mockRedis.Object, _mockLogger.Object, _mockConfig.Object);
+        var tracker = new RedisQuotaTracker(this._mockRedis.Object, this._mockLogger.Object, this._mockConfig.Object);
 
         // Act
         await tracker.RecordUsageAsync("Groq", 100, 50);
 
         // Assert
-        _mockDatabase.Verify(
+        this._mockDatabase.Verify(
             db => db.KeyExpireAsync(
                 It.Is<RedisKey>(k => k.ToString().Contains("tpm")),
                 TimeSpan.FromMinutes(1),
@@ -183,7 +183,7 @@ public class RedisQuotaTrackerTests
     public async Task CheckHierarchicalQuotaAsync_WithinAllLimits_ReturnsTrue()
     {
         // Arrange
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.ScriptEvaluateAsync(
                 It.IsAny<string>(),
                 It.IsAny<RedisKey[]>(),
@@ -191,7 +191,7 @@ public class RedisQuotaTrackerTests
                 It.IsAny<CommandFlags>()))
             .ReturnsAsync(RedisResult.Create(1L));
 
-        var tracker = new RedisQuotaTracker(_mockRedis.Object, _mockLogger.Object, _mockConfig.Object);
+        var tracker = new RedisQuotaTracker(this._mockRedis.Object, this._mockLogger.Object, this._mockConfig.Object);
 
         // Act
         var result = await tracker.CheckHierarchicalQuotaAsync(
@@ -208,7 +208,7 @@ public class RedisQuotaTrackerTests
     public async Task CheckHierarchicalQuotaAsync_ExceedsAnyLimit_ReturnsFalse()
     {
         // Arrange
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.ScriptEvaluateAsync(
                 It.IsAny<string>(),
                 It.IsAny<RedisKey[]>(),
@@ -216,7 +216,7 @@ public class RedisQuotaTrackerTests
                 It.IsAny<CommandFlags>()))
             .ReturnsAsync(RedisResult.Create(0L));
 
-        var tracker = new RedisQuotaTracker(_mockRedis.Object, _mockLogger.Object, _mockConfig.Object);
+        var tracker = new RedisQuotaTracker(this._mockRedis.Object, this._mockLogger.Object, this._mockConfig.Object);
 
         // Act
         var result = await tracker.CheckHierarchicalQuotaAsync(
@@ -235,7 +235,7 @@ public class RedisQuotaTrackerTests
         // Arrange
         RedisKey[]? capturedKeys = null;
 
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.ScriptEvaluateAsync(
                 It.IsAny<string>(),
                 It.IsAny<RedisKey[]>(),
@@ -247,7 +247,7 @@ public class RedisQuotaTrackerTests
             })
             .ReturnsAsync(RedisResult.Create(1L));
 
-        var tracker = new RedisQuotaTracker(_mockRedis.Object, _mockLogger.Object, _mockConfig.Object);
+        var tracker = new RedisQuotaTracker(this._mockRedis.Object, this._mockLogger.Object, this._mockConfig.Object);
 
         // Act
         await tracker.CheckHierarchicalQuotaAsync(
@@ -266,7 +266,7 @@ public class RedisQuotaTrackerTests
     public async Task CheckHierarchicalQuotaAsync_OnRedisError_ReturnsTrueAsFailsafe()
     {
         // Arrange
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.ScriptEvaluateAsync(
                 It.IsAny<string>(),
                 It.IsAny<RedisKey[]>(),
@@ -274,7 +274,7 @@ public class RedisQuotaTrackerTests
                 It.IsAny<CommandFlags>()))
             .ThrowsAsync(new RedisException("Connection failed"));
 
-        var tracker = new RedisQuotaTracker(_mockRedis.Object, _mockLogger.Object, _mockConfig.Object);
+        var tracker = new RedisQuotaTracker(this._mockRedis.Object, this._mockLogger.Object, this._mockConfig.Object);
 
         // Act
         var result = await tracker.CheckHierarchicalQuotaAsync(

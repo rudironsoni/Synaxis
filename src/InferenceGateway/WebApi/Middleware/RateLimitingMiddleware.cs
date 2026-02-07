@@ -33,9 +33,9 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             IMemoryCache cache,
             ILogger<RateLimitingMiddleware> logger)
         {
-            _next = next ?? throw new ArgumentNullException(nameof(next));
-            _cache = cache ?? throw new ArgumentNullException(nameof(cache));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._next = next ?? throw new ArgumentNullException(nameof(next));
+            this._cache = cache ?? throw new ArgumentNullException(nameof(cache));
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         /// <summary>
@@ -49,11 +49,11 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             var cacheKey = $"ratelimit:{clientIp}";
 
             var now = DateTime.UtcNow;
-            var windowStart = now.Add(-_windowSize);
+            var windowStart = now.Add(-this._windowSize);
 
-            var requestTimestamps = _cache.GetOrCreate(cacheKey, entry =>
+            var requestTimestamps = this._cache.GetOrCreate(cacheKey, entry =>
             {
-                entry.AbsoluteExpirationRelativeToNow = _windowSize;
+                entry.AbsoluteExpirationRelativeToNow = this._windowSize;
                 return new List<DateTime>();
             }) ?? new List<DateTime>();
 
@@ -61,14 +61,14 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             {
                 requestTimestamps.RemoveAll(t => t < windowStart);
 
-                if (requestTimestamps.Count >= _requestsPerMinute)
+                if (requestTimestamps.Count >= this._requestsPerMinute)
                 {
-                    _logger.LogWarning("Rate limit exceeded for IP {ClientIp}: {Count} requests in last minute", clientIp, requestTimestamps.Count);
+                    this._logger.LogWarning("Rate limit exceeded for IP {ClientIp}: {Count} requests in last minute", clientIp, requestTimestamps.Count);
 
                     context.Response.StatusCode = (int)HttpStatusCode.TooManyRequests;
-                    context.Response.Headers.Append("X-RateLimit-Limit", _requestsPerMinute.ToString());
+                    context.Response.Headers.Append("X-RateLimit-Limit", this._requestsPerMinute.ToString());
                     context.Response.Headers.Append("X-RateLimit-Remaining", "0");
-                    context.Response.Headers.Append("X-RateLimit-Reset", requestTimestamps[0].Add(_windowSize).ToString("R"));
+                    context.Response.Headers.Append("X-RateLimit-Reset", requestTimestamps[0].Add(this._windowSize).ToString("R"));
 
                     return;
                 }
@@ -80,15 +80,15 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             {
                 lock (requestTimestamps)
                 {
-                    var remaining = _requestsPerMinute - requestTimestamps.Count;
-                    context.Response.Headers.Append("X-RateLimit-Limit", _requestsPerMinute.ToString());
+                    var remaining = this._requestsPerMinute - requestTimestamps.Count;
+                    context.Response.Headers.Append("X-RateLimit-Limit", this._requestsPerMinute.ToString());
                     context.Response.Headers.Append("X-RateLimit-Remaining", remaining.ToString());
-                    context.Response.Headers.Append("X-RateLimit-Reset", requestTimestamps[0].Add(_windowSize).ToString("R"));
+                    context.Response.Headers.Append("X-RateLimit-Reset", requestTimestamps[0].Add(this._windowSize).ToString("R"));
                 }
                 return Task.CompletedTask;
             });
 
-            await _next(context);
+            await this._next(context);
         }
 
         /// <summary>

@@ -20,18 +20,18 @@ public class AntigravityEndpointTests : IClassFixture<SynaxisWebApplicationFacto
 
     public AntigravityEndpointTests(SynaxisWebApplicationFactory factory, ITestOutputHelper output)
     {
-        _factory = factory;
-        _factory.OutputHelper = output;
+        this._factory = factory;
+        this._factory.OutputHelper = output;
 
         // We need to override the IAntigravityAuthManager to avoid real file I/O or Google calls during integration tests
-        _client = _factory.WithWebHostBuilder(builder =>
+        this._client = this._factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureTestServices(services =>
             {
                 var mockAuth = new Mock<IAntigravityAuthManager>();
                 mockAuth.Setup(x => x.ListAccounts()).Returns(new List<AccountInfo>
                 {
-                    new AccountInfo("test@example.com", true)
+                    new AccountInfo("test@example.com", true),
                 });
                 mockAuth.Setup(x => x.StartAuthFlow(It.IsAny<string>())).Returns("https://accounts.google.com/o/oauth2/auth?mock=true");
                 mockAuth.Setup(x => x.CompleteAuthFlowAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>())).Returns(Task.CompletedTask);
@@ -44,7 +44,7 @@ public class AntigravityEndpointTests : IClassFixture<SynaxisWebApplicationFacto
     [Fact]
     public async Task Get_Accounts_ReturnsList()
     {
-        var response = await _client.GetAsync("/antigravity/accounts");
+        var response = await this._client.GetAsync("/antigravity/accounts");
         response.EnsureSuccessStatusCode();
 
         var accounts = await response.Content.ReadFromJsonAsync<List<AccountInfo>>();
@@ -57,7 +57,7 @@ public class AntigravityEndpointTests : IClassFixture<SynaxisWebApplicationFacto
     public async Task Post_StartAuth_ReturnsUrl()
     {
         var request = new { RedirectUrl = "http://localhost/cb" };
-        var response = await _client.PostAsJsonAsync("/antigravity/auth/start", request);
+        var response = await this._client.PostAsJsonAsync("/antigravity/auth/start", request);
         response.EnsureSuccessStatusCode();
 
         var result = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -68,7 +68,7 @@ public class AntigravityEndpointTests : IClassFixture<SynaxisWebApplicationFacto
     public async Task Post_CompleteAuth_ReturnsSuccess()
     {
         var request = new { Code = "123", State = "state-abc", RedirectUrl = "http://localhost/cb" };
-        var response = await _client.PostAsJsonAsync("/antigravity/auth/complete", request);
+        var response = await this._client.PostAsJsonAsync("/antigravity/auth/complete", request);
         response.EnsureSuccessStatusCode();
 
         var result = await response.Content.ReadFromJsonAsync<JsonElement>();

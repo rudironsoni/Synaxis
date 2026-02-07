@@ -28,8 +28,8 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             RequestDelegate next,
             ILogger<RegionRoutingMiddleware> logger)
         {
-            _next = next ?? throw new ArgumentNullException(nameof(next));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._next = next ?? throw new ArgumentNullException(nameof(next));
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         /// <summary>
@@ -47,14 +47,14 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 if (context.Request.Path.StartsWithSegments("/health") ||
                     context.Request.Path.StartsWithSegments("/openapi"))
                 {
-                    await _next(context);
+                    await this._next(context);
                     return;
                 }
 
                 // Only route if tenant context is established
                 if (tenantContext.OrganizationId == null)
                 {
-                    await _next(context);
+                    await this._next(context);
                     return;
                 }
 
@@ -83,7 +83,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 // Check if cross-border routing is required
                 if (currentRegion != userRegion)
                 {
-                    _logger.LogInformation(
+                    this._logger.LogInformation(
                         "Cross-region request detected. Current: {CurrentRegion}, User: {UserRegion}, OrgId: {OrgId}",
                         currentRegion, userRegion, tenantContext.OrganizationId);
 
@@ -96,7 +96,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
 
                         if (requiresConsent)
                         {
-                            _logger.LogWarning(
+                            this._logger.LogWarning(
                                 "Cross-border transfer requires consent. UserId: {UserId}, From: {From}, To: {To}",
                                 tenantContext.UserId.Value, userRegion, currentRegion);
 
@@ -110,7 +110,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                                     code = "CROSS_BORDER_CONSENT_REQUIRED",
                                     user_region = userRegion,
                                     current_region = currentRegion
-                                }
+                                },
                             });
                             return;
                         }
@@ -125,7 +125,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                         ToRegion = currentRegion,
                         LegalBasis = "SCC", // Standard Contractual Clauses
                         Purpose = "inference_request",
-                        DataCategories = new[] { "api_request", "model_inference" }
+                        DataCategories = new[] { "api_request", "model_inference" },
                     });
                 }
 
@@ -138,12 +138,12 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     return Task.CompletedTask;
                 });
 
-                await _next(context);
+                await this._next(context);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred during region routing");
-                await _next(context);
+                this._logger.LogError(ex, "Error occurred during region routing");
+                await this._next(context);
             }
         }
 
@@ -164,14 +164,18 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             var euCountries = new HashSet<string>
         {
             "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE",
-            "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE", "GB"
+            "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE", "GB",
         };
 
             if (euCountries.Contains(countryCode))
+            {
                 return "eu-west-1";
+            }
 
             if (countryCode == "BR")
+            {
                 return "sa-east-1";
+            }
 
             // Default to US
             return "us-east-1";

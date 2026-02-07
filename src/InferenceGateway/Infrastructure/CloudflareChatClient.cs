@@ -31,7 +31,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
             this._accountId = accountId;
             this._modelId = modelId;
             this._logger = logger;
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+            this._httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
 
             // Store the raw model id; Cloudflare expects path-like model ids (e.g. @cf/meta/...) as raw segments.
             this._metadata = new ChatClientMetadata("Cloudflare", new Uri($"https://api.cloudflare.com/client/v4/accounts/{accountId}/ai/run/{modelId}"), modelId);
@@ -41,42 +41,42 @@ namespace Synaxis.InferenceGateway.Infrastructure
 
         public async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
         {
-            var request = CreateRequest(chatMessages, options, stream: false);
-            var url = $"https://api.cloudflare.com/client/v4/accounts/{_accountId}/ai/run/{_modelId}";
+            var request = this.CreateRequest(chatMessages, options, stream: false);
+            var url = $"https://api.cloudflare.com/client/v4/accounts/{this._accountId}/ai/run/{this._modelId}";
 
             // Debug: print the full request URL and model id to help diagnose 404s
             var requestUrl = url;
-            if (_logger != null)
+            if (this._logger != null)
             {
-                _logger.LogInformation("CloudflareChatClient sending request. Url: {Url} ModelId: {ModelId}", requestUrl, _modelId);
+                this._logger.LogInformation("CloudflareChatClient sending request. Url: {Url} ModelId: {ModelId}", requestUrl, this._modelId);
             }
             else
             {
-                Console.WriteLine($"CloudflareChatClient sending request. Url: {requestUrl} ModelId: {_modelId}");
+                Console.WriteLine($"CloudflareChatClient sending request. Url: {requestUrl} ModelId: {this._modelId}");
             }
 
-            var response = await _httpClient.PostAsJsonAsync(url, request, cancellationToken);
+            var response = await this._httpClient.PostAsJsonAsync(url, request, cancellationToken);
             response.EnsureSuccessStatusCode();
 
             var cloudflareResponse = await response.Content.ReadFromJsonAsync<CloudflareResponse>(cancellationToken: cancellationToken);
 
             var text = cloudflareResponse?.Result?.Response ?? "";
             var chatResponse = new ChatResponse(new ChatMessage(ChatRole.Assistant, text));
-            chatResponse.ModelId = _modelId;
+            chatResponse.ModelId = this._modelId;
             return chatResponse;
         }
 
         public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            var request = CreateRequest(chatMessages, options, stream: true);
-            var url = $"https://api.cloudflare.com/client/v4/accounts/{_accountId}/ai/run/{_modelId}";
+            var request = this.CreateRequest(chatMessages, options, stream: true);
+            var url = $"https://api.cloudflare.com/client/v4/accounts/{this._accountId}/ai/run/{this._modelId}";
 
             var httpRequest = new HttpRequestMessage(HttpMethod.Post, url)
             {
-                Content = JsonContent.Create(request)
+                Content = JsonContent.Create(request),
             };
 
-            using var response = await _httpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            using var response = await this._httpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
             response.EnsureSuccessStatusCode();
 
             using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
@@ -85,11 +85,21 @@ namespace Synaxis.InferenceGateway.Infrastructure
             string? line;
             while ((line = await reader.ReadLineAsync()) is not null)
             {
-                if (string.IsNullOrWhiteSpace(line)) continue;
-                if (!line.StartsWith("data: ")) continue;
+                if (string.IsNullOrWhiteSpace(line))
+                {
+                    continue;
+                }
+
+                if (!line.StartsWith("data: "))
+                {
+                    continue;
+                }
 
                 var json = line.Substring(6).Trim();
-                if (json == "[DONE]") break;
+                if (json == "[DONE]")
+                {
+                    break;
+                }
 
                 CloudflareStreamResponse? streamEvent = null;
                 try
@@ -103,7 +113,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
                     var update = new ChatResponseUpdate
                     {
                         Role = ChatRole.Assistant,
-                        ModelId = _modelId
+                        ModelId = this._modelId,
                     };
                     update.Contents.Add(new TextContent(streamEvent.Response));
                     yield return update;
@@ -119,18 +129,19 @@ namespace Synaxis.InferenceGateway.Infrastructure
                 messages.Add(new
                 {
                     role = msg.Role.Value,
-                    content = msg.Text
+                    content = msg.Text,
                 });
             }
 
             return new
             {
                 messages = messages,
-                stream = stream
+                stream = stream,
             };
         }
 
         public void Dispose() => this._httpClient.Dispose();
+
         public object? GetService(Type serviceType, object? serviceKey = null) => null;
 
         private sealed class CloudflareResponse

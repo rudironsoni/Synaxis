@@ -33,44 +33,47 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
         {
             // Aggregate streaming updates into a single response for the non-streaming API
             var parts = new List<string>();
-            await foreach (var update in GetStreamingResponseAsync(chatMessages, options, cancellationToken))
+            await foreach (var update in this.GetStreamingResponseAsync(chatMessages, options, cancellationToken))
             {
                 // collect text parts from updates
                 foreach (var c in update.Contents)
                 {
                     if (c is TextContent tc)
                     {
-                        parts.Add(tc.Text ?? string.Empty);
+                        parts.Add(tc.Text ?? string.Empty).ConfigureAwait(false);
                     }
                 }
             }
 
             var finalText = string.Join(string.Empty, parts.Where(p => !string.IsNullOrEmpty(p)));
             var resp = new ChatResponse(new ChatMessage(ChatRole.Assistant, finalText ?? string.Empty));
-            resp.ModelId = _modelId;
+            resp.ModelId = this._modelId;
             return resp;
         }
 
         public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            if (chatMessages is null) throw new ArgumentNullException(nameof(chatMessages));
+            if (chatMessages is null)
+            {
+                throw new ArgumentNullException(nameof(chatMessages));
+            }
 
             // Ensure client started
-            if (_copilotClient.State != ConnectionState.Connected)
+            if (this._copilotClient.State != ConnectionState.Connected)
             {
                 try
                 {
-                    await _copilotClient.StartAsync(cancellationToken).ConfigureAwait(false);
+                    await this._copilotClient.StartAsync(cancellationToken).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
-                    _logger?.LogWarning(ex, "Failed to start CopilotClient");
+                    this._logger?.LogWarning(ex, "Failed to start CopilotClient");
                 }
             }
 
             // Always create a fresh streaming session for each call
             var sessionConfig = new SessionConfig { Streaming = true };
-            ICopilotSession copilotSession = await _copilotClient.CreateSessionAsync(sessionConfig, cancellationToken).ConfigureAwait(false);
+            ICopilotSession copilotSession = await this._copilotClient.CreateSessionAsync(sessionConfig, cancellationToken).ConfigureAwait(false);
 
             var channel = Channel.CreateUnbounded<ChatResponseUpdate>();
 
@@ -106,7 +109,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
                 }
                 catch (Exception ex)
                 {
-                    _logger?.LogDebug(ex, "Error in Copilot event handler");
+                    this._logger?.LogDebug(ex, "Error in Copilot event handler");
                 }
             });
 
@@ -140,13 +143,17 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
 
         public object? GetService(Type serviceType, object? serviceKey = null)
         {
-            if (serviceType == typeof(ICopilotClient)) return this._copilotClient;
+            if (serviceType == typeof(ICopilotClient))
+            {
+                return this._copilotClient;
+            }
+
             return null;
         }
 
         public void Dispose()
         {
-            try { _copilotClient.DisposeAsync().GetAwaiter().GetResult(); } catch { }
+            try { this._copilotClient.DisposeAsync().GetAwaiter().GetResult(); } catch { }
         }
     }
 }

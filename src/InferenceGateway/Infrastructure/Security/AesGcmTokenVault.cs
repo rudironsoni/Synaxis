@@ -33,35 +33,47 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
 
         public async Task<byte[]> EncryptAsync(Guid tenantId, string plaintext, CancellationToken cancellationToken = default)
         {
-            var tenant = await _dbContext.Tenants.FindAsync(new object[] { tenantId }, cancellationToken);
-            if (tenant == null) throw new ArgumentException("Tenant not found", nameof(tenantId));
+            var tenant = await this._dbContext.Tenants.FindAsync(new object[] { tenantId }, cancellationToken).ConfigureAwait(false);
+            if (tenant == null)
+            {
+                throw new ArgumentException("Tenant not found", nameof(tenantId));
+            }
 
-            var tenantKey = DecryptTenantKey(tenant.EncryptedByokKey);
+            var tenantKey = this.DecryptTenantKey(tenant.EncryptedByokKey);
             return Encrypt(Encoding.UTF8.GetBytes(plaintext), tenantKey);
         }
 
         public async Task<string> DecryptAsync(Guid tenantId, byte[] ciphertext, CancellationToken cancellationToken = default)
         {
-            var tenant = await _dbContext.Tenants.FindAsync(new object[] { tenantId }, cancellationToken);
-            if (tenant == null) throw new ArgumentException("Tenant not found", nameof(tenantId));
+            var tenant = await this._dbContext.Tenants.FindAsync(new object[] { tenantId }, cancellationToken).ConfigureAwait(false);
+            if (tenant == null)
+            {
+                throw new ArgumentException("Tenant not found", nameof(tenantId));
+            }
 
-            var tenantKey = DecryptTenantKey(tenant.EncryptedByokKey);
+            var tenantKey = this.DecryptTenantKey(tenant.EncryptedByokKey);
             var plainBytes = Decrypt(ciphertext, tenantKey);
             return Encoding.UTF8.GetString(plainBytes);
         }
 
         public async Task RotateKeyAsync(Guid tenantId, string newKeyBase64, CancellationToken cancellationToken = default)
         {
-            var tenant = await _dbContext.Tenants
+            var tenant = await this._dbContext.Tenants
                 .Include(t => t.OAuthAccounts)
-                .FirstOrDefaultAsync(t => t.Id == tenantId, cancellationToken);
+                .FirstOrDefaultAsync(t => t.Id == tenantId, cancellationToken).ConfigureAwait(false);
 
-            if (tenant == null) throw new ArgumentException("Tenant not found", nameof(tenantId));
+            if (tenant == null)
+            {
+                throw new ArgumentException("Tenant not found", nameof(tenantId));
+            }
 
-            var oldKey = DecryptTenantKey(tenant.EncryptedByokKey);
+            var oldKey = this.DecryptTenantKey(tenant.EncryptedByokKey);
             var newKey = Convert.FromBase64String(newKeyBase64);
 
-            if (newKey.Length != 32) throw new ArgumentException("Key must be 32 bytes", nameof(newKeyBase64));
+            if (newKey.Length != 32)
+            {
+                throw new ArgumentException("Key must be 32 bytes", nameof(newKeyBase64));
+            }
 
             // Re-encrypt all OAuth tokens
             foreach (var account in tenant.OAuthAccounts)
@@ -80,14 +92,18 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
             }
 
             // Update tenant key
-            tenant.EncryptedByokKey = Encrypt(newKey, _masterKey);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            tenant.EncryptedByokKey = Encrypt(newKey, this._masterKey);
+            await this._dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 
         private byte[] DecryptTenantKey(byte[] encryptedKey)
         {
-            if (encryptedKey.Length == 0) return this._masterKey; // Fallback for uninitialized tenants (MVP)
-            return Decrypt(encryptedKey, _masterKey);
+            if (encryptedKey.Length == 0)
+            {
+                return this._masterKey; // Fallback for uninitialized tenants (MVP)
+            }
+
+            return Decrypt(encryptedKey, this._masterKey);
         }
 
         private static byte[] Encrypt(byte[] plaintext, byte[] key)
@@ -112,7 +128,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
 
         private static byte[] Decrypt(byte[] encrypted, byte[] key)
         {
-            if (encrypted.Length < 28) throw new ArgumentException("Invalid ciphertext");
+            if (encrypted.Length < 28)
+            {
+                throw new ArgumentException("Invalid ciphertext");
+            }
 
             var nonce = encrypted.AsSpan(0, 12);
             var tag = encrypted.AsSpan(12, 16);

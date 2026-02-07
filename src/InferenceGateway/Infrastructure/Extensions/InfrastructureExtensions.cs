@@ -54,7 +54,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
                     MaxRetryAttempts = 3,
                     BackoffType = DelayBackoffType.Exponential,
                     UseJitter = true,
-                    Delay = TimeSpan.FromSeconds(1)
+                    Delay = TimeSpan.FromSeconds(1),
                 });
                 builder.AddTimeout(TimeSpan.FromMinutes(2));
             });
@@ -167,7 +167,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
                 {
                     var name = provider.Key;
                     var config = provider.Value;
-                    if (!config.Enabled) continue;
+                    if (!config.Enabled)
+                    {
+                        continue;
+                    }
+
                     var defaultModel = config.Models.FirstOrDefault(m => m != "*") ?? "default";
 
                     switch (config.Type?.ToLowerInvariant())
@@ -231,7 +235,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
                                 // Ensure the adapter is registered as a singleton and return the CopilotSdkClient
 
                                 var adapter = sp.GetService<ICopilotSdkAdapter>();
-                                if (adapter != null) return new CopilotSdkClient(adapter);
+                                if (adapter != null)
+                                {
+                                    return new CopilotSdkClient(adapter);
+                                }
 
                                 // If adapter isn't registered (older deployments), fall back to a no-op client
                                 var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
@@ -341,7 +348,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
                 }
 
                 var context = services.GetRequiredService<ControlPlaneDbContext>();
-                await context.Database.MigrateAsync();
+                await context.Database.MigrateAsync().ConfigureAwait(false);
             }
             catch (Exception ex)
             {

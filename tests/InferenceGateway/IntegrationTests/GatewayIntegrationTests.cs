@@ -19,9 +19,9 @@ public class GatewayIntegrationTests : IClassFixture<SynaxisWebApplicationFactor
 
     public GatewayIntegrationTests(SynaxisWebApplicationFactory factory, ITestOutputHelper output)
     {
-        _factory = factory;
-        _factory.OutputHelper = output;
-        _client = _factory.WithWebHostBuilder(builder =>
+        this._factory = factory;
+        this._factory.OutputHelper = output;
+        this._client = this._factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureAppConfiguration((context, config) =>
             {
@@ -57,7 +57,7 @@ public class GatewayIntegrationTests : IClassFixture<SynaxisWebApplicationFactor
     [Fact]
     public async Task Get_Models_ReturnsCanonicalAndAliases()
     {
-        var response = await _client.GetAsync("/openai/v1/models");
+        var response = await this._client.GetAsync("/openai/v1/models");
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -78,11 +78,11 @@ public class GatewayIntegrationTests : IClassFixture<SynaxisWebApplicationFactor
             messages = new[]
             {
                 new { role = "user", content = "Hello" }
-            }
+            },
         };
 
-        var response = await _client.PostAsJsonAsync("/openai/v1/chat/completions", request);
-        await EnsureSuccessAsync(response);
+        var response = await this._client.PostAsJsonAsync("/openai/v1/chat/completions", request);
+        await this.EnsureSuccessAsync(response);
 
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
         Assert.Equal("chat.completion", content.GetProperty("object").GetString());
@@ -98,13 +98,13 @@ public class GatewayIntegrationTests : IClassFixture<SynaxisWebApplicationFactor
             model = "test-alias",
             messages = new[]
             {
-                new { role = "user", content = "Hello" }
+                new { role = "user", content = "Hello" },
             },
-            stream = true
+            stream = true,
         };
 
-        var response = await _client.PostAsJsonAsync("/openai/v1/chat/completions", request);
-        await EnsureSuccessAsync(response);
+        var response = await this._client.PostAsJsonAsync("/openai/v1/chat/completions", request);
+        await this.EnsureSuccessAsync(response);
 
         using var reader = new StreamReader(await response.Content.ReadAsStreamAsync());
         bool foundDone = false;
@@ -112,9 +112,16 @@ public class GatewayIntegrationTests : IClassFixture<SynaxisWebApplicationFactor
         string? line;
         while ((line = await reader.ReadLineAsync()) != null)
         {
-            _factory.OutputHelper?.WriteLine($"Line: {line}");
-            if (line.Contains("[DONE]")) foundDone = true;
-            if (line.Contains("\"finish_reason\":\"stop\"")) foundStop = true;
+            this._factory.OutputHelper?.WriteLine($"Line: {line}");
+            if (line.Contains("[DONE]"))
+            {
+                foundDone = true;
+            }
+
+            if (line.Contains("\"finish_reason\":\"stop\""))
+            {
+                foundStop = true;
+            }
         }
 
         Assert.True(foundDone || foundStop, "SSE stream should contain [DONE] or finish_reason: stop");
@@ -127,11 +134,11 @@ public class GatewayIntegrationTests : IClassFixture<SynaxisWebApplicationFactor
         {
             model = "test-alias",
             prompt = "Hello",
-            max_tokens = 10
+            max_tokens = 10,
         };
 
-        var response = await _client.PostAsJsonAsync("/openai/v1/completions", request);
-        await EnsureSuccessAsync(response);
+        var response = await this._client.PostAsJsonAsync("/openai/v1/completions", request);
+        await this.EnsureSuccessAsync(response);
 
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
         Assert.Equal("text_completion", content.GetProperty("object").GetString());
@@ -146,18 +153,21 @@ public class GatewayIntegrationTests : IClassFixture<SynaxisWebApplicationFactor
         {
             model = "test-alias",
             prompt = "Hello",
-            stream = true
+            stream = true,
         };
 
-        var response = await _client.PostAsJsonAsync("/openai/v1/completions", request);
-        await EnsureSuccessAsync(response);
+        var response = await this._client.PostAsJsonAsync("/openai/v1/completions", request);
+        await this.EnsureSuccessAsync(response);
 
         using var reader = new StreamReader(await response.Content.ReadAsStreamAsync());
         bool foundDone = false;
         string? line;
         while ((line = await reader.ReadLineAsync()) != null)
         {
-            if (line.Contains("[DONE]")) foundDone = true;
+            if (line.Contains("[DONE]"))
+            {
+                foundDone = true;
+            }
         }
 
         Assert.True(foundDone, "SSE stream should contain [DONE]");
@@ -172,15 +182,15 @@ public class GatewayIntegrationTests : IClassFixture<SynaxisWebApplicationFactor
             messages = new[]
             {
                 new { role = "user", content = "Hello" }
-            }
+            },
         };
 
-        var response = await _client.PostAsJsonAsync("/openai/v1/responses", request);
+        var response = await this._client.PostAsJsonAsync("/openai/v1/responses", request);
 
         if (response.StatusCode == HttpStatusCode.InternalServerError)
         {
             var error = await response.Content.ReadAsStringAsync();
-            _factory.OutputHelper?.WriteLine($"Error: {error}");
+            this._factory.OutputHelper?.WriteLine($"Error: {error}");
         }
 
         // Just verify it's not 404
@@ -192,7 +202,7 @@ public class GatewayIntegrationTests : IClassFixture<SynaxisWebApplicationFactor
     {
         // Use a separate client where 'default' points to a non-streaming model
         // because RoutingAgent is currently hardcoded to use 'default'
-        var client = _factory.WithWebHostBuilder(builder =>
+        var client = this._factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureAppConfiguration((context, config) =>
             {
@@ -208,9 +218,9 @@ public class GatewayIntegrationTests : IClassFixture<SynaxisWebApplicationFactor
             model = "test-provider/no-stream",
             messages = new[]
             {
-                new { role = "user", content = "Hello" }
+                new { role = "user", content = "Hello" },
             },
-            stream = true
+            stream = true,
         };
 
         var response = await client.PostAsJsonAsync("/openai/v1/chat/completions", request);
@@ -231,11 +241,11 @@ public class GatewayIntegrationTests : IClassFixture<SynaxisWebApplicationFactor
             messages = new[]
             {
                 new { role = "user", content = "Hello" }
-            }
+            },
         };
 
-        var response = await _client.PostAsJsonAsync("/openai/v1/chat/completions", request);
-        await EnsureSuccessAsync(response);
+        var response = await this._client.PostAsJsonAsync("/openai/v1/chat/completions", request);
+        await this.EnsureSuccessAsync(response);
 
         Assert.True(response.Headers.Contains("x-gateway-model-requested"));
         Assert.True(response.Headers.Contains("x-gateway-model-resolved"));
@@ -247,7 +257,7 @@ public class GatewayIntegrationTests : IClassFixture<SynaxisWebApplicationFactor
         if (!response.IsSuccessStatusCode)
         {
             var error = await response.Content.ReadAsStringAsync();
-            _factory.OutputHelper?.WriteLine($"Status: {(int)response.StatusCode} Body: {error}");
+            this._factory.OutputHelper?.WriteLine($"Status: {(int)response.StatusCode} Body: {error}");
         }
 
         response.EnsureSuccessStatusCode();
@@ -262,7 +272,7 @@ public class MockChatClient : IChatClient
     {
         return Task.FromResult(new ChatResponse(new ChatMessage(ChatRole.Assistant, "Hello from mock!"))
         {
-            Usage = new UsageDetails { InputTokenCount = 10, OutputTokenCount = 5 }
+            Usage = new UsageDetails { InputTokenCount = 10, OutputTokenCount = 5 },
         });
     }
 
@@ -275,6 +285,7 @@ public class MockChatClient : IChatClient
     }
 
     public void Dispose() { }
+
     public object? GetService(Type serviceType, object? serviceKey = null) => null;
 }
 
@@ -296,7 +307,7 @@ public class MockProviderRegistry : IProviderRegistry
             {
                 Key = "test-provider",
                 Tier = 1,
-                Models = new List<string> { "test/model", "test/no-stream" }
+                Models = new List<string> { "test/model", "test/no-stream" },
             };
         }
         return null;

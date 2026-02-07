@@ -19,10 +19,10 @@ public class RedisInFlightDeduplicationTests
 
     public RedisInFlightDeduplicationTests()
     {
-        _mockRedis = new Mock<IConnectionMultiplexer>();
-        _mockDatabase = new Mock<IDatabase>();
-        _mockRedis.Setup(r => r.GetDatabase(It.IsAny<int>(), It.IsAny<object>())).Returns(_mockDatabase.Object);
-        _cancellationToken = CancellationToken.None;
+        this._mockRedis = new Mock<IConnectionMultiplexer>();
+        this._mockDatabase = new Mock<IDatabase>();
+        this._mockRedis.Setup(r => r.GetDatabase(It.IsAny<int>(), It.IsAny<object>())).Returns(this._mockDatabase.Object);
+        this._cancellationToken = CancellationToken.None;
     }
 
     [Fact]
@@ -35,7 +35,7 @@ public class RedisInFlightDeduplicationTests
         var lockTimeout = TimeSpan.FromSeconds(30);
 
         // Lock acquired (first call)
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.StringSetAsync(
                 It.Is<RedisKey>(k => k.ToString() == lockKey),
                 It.IsAny<RedisValue>(),
@@ -46,7 +46,7 @@ public class RedisInFlightDeduplicationTests
             .ReturnsAsync(true);
 
         // Store result
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.StringSetAsync(
                 It.Is<RedisKey>(k => k.ToString() == resultKey),
                 It.IsAny<RedisValue>(),
@@ -57,11 +57,11 @@ public class RedisInFlightDeduplicationTests
             .ReturnsAsync(true);
 
         // Release lock
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.KeyDeleteAsync(It.Is<RedisKey>(k => k.ToString() == lockKey), CommandFlags.None))
             .ReturnsAsync(true);
 
-        var service = new RedisInFlightDeduplication(_mockRedis.Object);
+        var service = new RedisInFlightDeduplication(this._mockRedis.Object);
         var executed = false;
         Func<Task<string>> operation = async () =>
         {
@@ -75,13 +75,13 @@ public class RedisInFlightDeduplicationTests
             requestHash,
             operation,
             lockTimeout,
-            _cancellationToken);
+            this._cancellationToken);
 
         // Assert
         Assert.True(executed);
         Assert.Equal("Result from operation", result);
 
-        _mockDatabase.Verify(
+        this._mockDatabase.Verify(
             db => db.StringSetAsync(
                 It.Is<RedisKey>(k => k.ToString() == lockKey),
                 It.IsAny<RedisValue>(),
@@ -104,7 +104,7 @@ public class RedisInFlightDeduplicationTests
         var lockAttempts = 0;
 
         // First call acquires lock, subsequent calls fail to acquire
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.StringSetAsync(
                 lockKey,
                 It.IsAny<RedisValue>(),
@@ -116,12 +116,12 @@ public class RedisInFlightDeduplicationTests
 
         // After operation completes, result is available
         var resultAvailable = false;
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.StringGetAsync(resultKey, It.IsAny<CommandFlags>()))
             .ReturnsAsync(() => resultAvailable ? (RedisValue)System.Text.Json.JsonSerializer.Serialize("Result from operation") : RedisValue.Null);
 
         // Store result (called by first request)
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.StringSetAsync(
                 resultKey,
                 It.IsAny<RedisValue>(),
@@ -133,11 +133,11 @@ public class RedisInFlightDeduplicationTests
             .ReturnsAsync(true);
 
         // Release lock
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.KeyDeleteAsync(lockKey, CommandFlags.None))
             .ReturnsAsync(true);
 
-        var service = new RedisInFlightDeduplication(_mockRedis.Object);
+        var service = new RedisInFlightDeduplication(this._mockRedis.Object);
         var executionCount = 0;
 
         Func<Task<string>> operation = async () =>
@@ -155,7 +155,7 @@ public class RedisInFlightDeduplicationTests
                 requestHash,
                 operation,
                 lockTimeout,
-                _cancellationToken);
+                this._cancellationToken);
         }
 
         var results = await Task.WhenAll(tasks);
@@ -175,7 +175,7 @@ public class RedisInFlightDeduplicationTests
         var lockTimeout = TimeSpan.FromMilliseconds(50);
 
         // Lock cannot be acquired (someone else holds it)
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.StringSetAsync(
                 lockKey,
                 It.IsAny<RedisValue>(),
@@ -186,11 +186,11 @@ public class RedisInFlightDeduplicationTests
             .ReturnsAsync(false);
 
         // No result available yet
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.StringGetAsync(resultKey, It.IsAny<CommandFlags>()))
             .ReturnsAsync(RedisValue.Null);
 
-        var service = new RedisInFlightDeduplication(_mockRedis.Object);
+        var service = new RedisInFlightDeduplication(this._mockRedis.Object);
         var executed = false;
 
         Func<Task<string>> operation = async () =>
@@ -205,7 +205,7 @@ public class RedisInFlightDeduplicationTests
             requestHash,
             operation,
             lockTimeout,
-            _cancellationToken);
+            this._cancellationToken);
 
         // Assert - Should execute operation as fallback after timeout
         Assert.True(executed);
@@ -222,7 +222,7 @@ public class RedisInFlightDeduplicationTests
         var lockTimeout = TimeSpan.FromSeconds(30);
         var resultTtl = TimeSpan.FromMinutes(5);
 
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.StringSetAsync(
                 lockKey,
                 It.IsAny<RedisValue>(),
@@ -232,14 +232,14 @@ public class RedisInFlightDeduplicationTests
                 CommandFlags.None))
             .ReturnsAsync(true);
 
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.StringGetAsync(resultKey, It.IsAny<CommandFlags>()))
             .ReturnsAsync(RedisValue.Null);
 
         RedisValue storedResult = RedisValue.Null;
         TimeSpan? storedTtl = null;
 
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.StringSetAsync(
                 resultKey,
                 It.IsAny<RedisValue>(),
@@ -251,11 +251,11 @@ public class RedisInFlightDeduplicationTests
                 (k, v, t, b, w, f) => { storedResult = v; storedTtl = t; })
             .ReturnsAsync(true);
 
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.KeyDeleteAsync(lockKey, CommandFlags.None))
             .ReturnsAsync(true);
 
-        var service = new RedisInFlightDeduplication(_mockRedis.Object);
+        var service = new RedisInFlightDeduplication(this._mockRedis.Object);
 
         Func<Task<string>> operation = async () =>
         {
@@ -268,14 +268,14 @@ public class RedisInFlightDeduplicationTests
             requestHash,
             operation,
             lockTimeout,
-            _cancellationToken);
+            this._cancellationToken);
 
         // Assert
         Assert.Equal("Operation result", result);
         Assert.False(storedResult.IsNull);
         Assert.Contains("Operation result", storedResult.ToString());
 
-        _mockDatabase.Verify(
+        this._mockDatabase.Verify(
             db => db.StringSetAsync(
                 resultKey,
                 It.IsAny<RedisValue>(),
@@ -295,7 +295,7 @@ public class RedisInFlightDeduplicationTests
         var resultKey = $"result:{requestHash}";
         var lockTimeout = TimeSpan.FromSeconds(30);
 
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.StringSetAsync(
                 lockKey,
                 It.IsAny<RedisValue>(),
@@ -305,17 +305,17 @@ public class RedisInFlightDeduplicationTests
                 CommandFlags.None))
             .ReturnsAsync(true);
 
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.StringGetAsync(resultKey, It.IsAny<CommandFlags>()))
             .ReturnsAsync(RedisValue.Null);
 
         var lockReleased = false;
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.KeyDeleteAsync(lockKey, CommandFlags.None))
             .Callback(() => lockReleased = true)
             .ReturnsAsync(true);
 
-        var service = new RedisInFlightDeduplication(_mockRedis.Object);
+        var service = new RedisInFlightDeduplication(this._mockRedis.Object);
 
         Func<Task<string>> operation = async () =>
         {
@@ -330,13 +330,13 @@ public class RedisInFlightDeduplicationTests
                 requestHash,
                 operation,
                 lockTimeout,
-                _cancellationToken);
+                this._cancellationToken);
         });
 
         // Assert - Lock should be released even on failure
         Assert.True(lockReleased);
 
-        _mockDatabase.Verify(
+        this._mockDatabase.Verify(
             db => db.KeyDeleteAsync(lockKey, CommandFlags.None),
             Times.Once);
     }
@@ -350,7 +350,7 @@ public class RedisInFlightDeduplicationTests
         var resultKey = $"result:{requestHash}";
         var lockTimeout = TimeSpan.FromSeconds(30);
 
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.StringSetAsync(
                 lockKey,
                 It.IsAny<RedisValue>(),
@@ -360,15 +360,15 @@ public class RedisInFlightDeduplicationTests
                 CommandFlags.None))
             .ReturnsAsync(true);
 
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.StringGetAsync(resultKey, It.IsAny<CommandFlags>()))
             .ReturnsAsync(RedisValue.Null);
 
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.KeyDeleteAsync(lockKey, CommandFlags.None))
             .ReturnsAsync(true);
 
-        var service = new RedisInFlightDeduplication(_mockRedis.Object);
+        var service = new RedisInFlightDeduplication(this._mockRedis.Object);
 
         Func<Task<string>> operation = () => throw new ArgumentException("Invalid argument");
 
@@ -379,7 +379,7 @@ public class RedisInFlightDeduplicationTests
                 requestHash,
                 operation,
                 lockTimeout,
-                _cancellationToken);
+                this._cancellationToken);
         });
 
         Assert.Equal("Invalid argument", exception.Message);
@@ -392,19 +392,19 @@ public class RedisInFlightDeduplicationTests
         var requestHash = "hash-locked";
         var lockKey = $"inflight:{requestHash}";
 
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.KeyExistsAsync(lockKey, It.IsAny<CommandFlags>()))
             .ReturnsAsync(true);
 
-        var service = new RedisInFlightDeduplication(_mockRedis.Object);
+        var service = new RedisInFlightDeduplication(this._mockRedis.Object);
 
         // Act
-        var result = await service.IsInFlightAsync(requestHash, _cancellationToken);
+        var result = await service.IsInFlightAsync(requestHash, this._cancellationToken);
 
         // Assert
         Assert.True(result);
 
-        _mockDatabase.Verify(
+        this._mockDatabase.Verify(
             db => db.KeyExistsAsync(lockKey, It.IsAny<CommandFlags>()),
             Times.Once);
     }
@@ -416,19 +416,19 @@ public class RedisInFlightDeduplicationTests
         var requestHash = "hash-unlocked";
         var lockKey = $"inflight:{requestHash}";
 
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.KeyExistsAsync(lockKey, It.IsAny<CommandFlags>()))
             .ReturnsAsync(false);
 
-        var service = new RedisInFlightDeduplication(_mockRedis.Object);
+        var service = new RedisInFlightDeduplication(this._mockRedis.Object);
 
         // Act
-        var result = await service.IsInFlightAsync(requestHash, _cancellationToken);
+        var result = await service.IsInFlightAsync(requestHash, this._cancellationToken);
 
         // Assert
         Assert.False(result);
 
-        _mockDatabase.Verify(
+        this._mockDatabase.Verify(
             db => db.KeyExistsAsync(lockKey, It.IsAny<CommandFlags>()),
             Times.Once);
     }
@@ -440,7 +440,7 @@ public class RedisInFlightDeduplicationTests
         var requestHash = "hash-redis-failure";
         var lockKey = $"inflight:{requestHash}";
 
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.StringSetAsync(
                 lockKey,
                 It.IsAny<RedisValue>(),
@@ -450,7 +450,7 @@ public class RedisInFlightDeduplicationTests
                 CommandFlags.None))
             .ThrowsAsync(new RedisConnectionException(ConnectionFailureType.UnableToConnect, "Connection failed"));
 
-        var service = new RedisInFlightDeduplication(_mockRedis.Object);
+        var service = new RedisInFlightDeduplication(this._mockRedis.Object);
         var executed = false;
 
         Func<Task<string>> operation = async () =>
@@ -465,7 +465,7 @@ public class RedisInFlightDeduplicationTests
             requestHash,
             operation,
             TimeSpan.FromSeconds(30),
-            _cancellationToken);
+            this._cancellationToken);
 
         // Assert
         Assert.True(executed);
@@ -496,7 +496,7 @@ public class RedisInFlightDeduplication : IInFlightDeduplication
 
     public RedisInFlightDeduplication(IConnectionMultiplexer redis)
     {
-        _redis = redis;
+        this._redis = redis;
     }
 
     public async Task<T> ExecuteWithDeduplication<T>(
@@ -507,7 +507,7 @@ public class RedisInFlightDeduplication : IInFlightDeduplication
     {
         try
         {
-            var db = _redis.GetDatabase();
+            var db = this._redis.GetDatabase();
             var lockKey = $"inflight:{requestHash}";
             var resultKey = $"result:{requestHash}";
 
@@ -562,7 +562,7 @@ public class RedisInFlightDeduplication : IInFlightDeduplication
 
     public async Task<bool> IsInFlightAsync(string requestHash, CancellationToken cancellationToken)
     {
-        var db = _redis.GetDatabase();
+        var db = this._redis.GetDatabase();
         var lockKey = $"inflight:{requestHash}";
         return await db.KeyExistsAsync(lockKey);
     }

@@ -24,7 +24,7 @@ public class AiHordeChatClientTests
             .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.Is<HttpRequestMessage>(m => m.Method == HttpMethod.Post), ItExpr.IsAny<CancellationToken>())
             .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK)
             {
-                Content = JsonContent.Create(new { id = "abc123" })
+                Content = JsonContent.Create(new { id = "abc123" }),
             });
 
         // Then GET returns done=false once, then done=true
@@ -38,12 +38,12 @@ public class AiHordeChatClientTests
                 {
                     return new HttpResponseMessage(HttpStatusCode.OK)
                     {
-                        Content = JsonContent.Create(new { done = false })
+                        Content = JsonContent.Create(new { done = false }),
                     };
                 }
                 return new HttpResponseMessage(HttpStatusCode.OK)
                 {
-                    Content = JsonContent.Create(new { done = true, text = "Hello" })
+                    Content = JsonContent.Create(new { done = true, text = "Hello" }),
                 };
             });
 
@@ -65,14 +65,14 @@ public class AiHordeChatClientTests
             .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.Is<HttpRequestMessage>(m => m.Method == HttpMethod.Post), ItExpr.IsAny<CancellationToken>())
             .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK)
             {
-                Content = JsonContent.Create(new { id = "xyz" })
+                Content = JsonContent.Create(new { id = "xyz" }),
             });
 
         handler.Protected()
             .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.Is<HttpRequestMessage>(m => m.Method == HttpMethod.Get), ItExpr.IsAny<CancellationToken>())
             .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK)
             {
-                Content = JsonContent.Create(new { done = true, text = "StreamingText" })
+                Content = JsonContent.Create(new { done = true, text = "StreamingText" }),
             });
 
         var client = new HttpClient(handler.Object);

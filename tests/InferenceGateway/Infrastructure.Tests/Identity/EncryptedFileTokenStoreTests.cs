@@ -16,14 +16,17 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
 
         public EncryptedFileTokenStoreTests()
         {
-            _tmpPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+            this._tmpPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
         }
 
         public void Dispose()
         {
             try
             {
-                if (File.Exists(_tmpPath)) File.Delete(_tmpPath);
+                if (File.Exists(this._tmpPath))
+                {
+                    File.Delete(this._tmpPath);
+                }
             }
             catch { }
         }
@@ -32,17 +35,17 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
         public async Task SaveAsync_CallsProtectAndWritesFile()
         {
             var provider = new FakeDataProtectionProvider();
-            var store = new EncryptedFileTokenStore(provider, _tmpPath);
+            var store = new EncryptedFileTokenStore(provider, this._tmpPath);
 
             var accounts = new List<IdentityAccount>
             {
-                new IdentityAccount { Id = "1", Provider = "P", AccessToken = "t" }
+                new IdentityAccount { Id = "1", Provider = "P", AccessToken = "t" },
             };
 
             await store.SaveAsync(accounts);
 
             // Reload using a new store with the same provider to verify roundtrip
-            var loader = new EncryptedFileTokenStore(provider, _tmpPath);
+            var loader = new EncryptedFileTokenStore(provider, this._tmpPath);
             var loaded = await loader.LoadAsync();
             Assert.NotNull(loaded);
             Assert.Single(loaded);
@@ -56,13 +59,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
 
             var sample = System.Text.Json.JsonSerializer.Serialize(new List<IdentityAccount>
             {
-                new IdentityAccount { Id = "1", Provider = "P", AccessToken = "t" }
+                new IdentityAccount { Id = "1", Provider = "P", AccessToken = "t" },
             });
             var protector = provider.CreateProtector("Synaxis.Identity.TokenStore.v1");
             var protectedContent = protector.Protect(sample);
-            await File.WriteAllTextAsync(_tmpPath, protectedContent);
+            await File.WriteAllTextAsync(this._tmpPath, protectedContent);
 
-            var store = new EncryptedFileTokenStore(provider, _tmpPath);
+            var store = new EncryptedFileTokenStore(provider, this._tmpPath);
 
             var loaded = await store.LoadAsync();
             Assert.NotNull(loaded);

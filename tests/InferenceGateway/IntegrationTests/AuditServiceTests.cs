@@ -19,7 +19,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
         public AuditServiceTests(ITestOutputHelper output)
         {
-            _output = output ?? throw new ArgumentNullException(nameof(output));
+            this._output = output ?? throw new ArgumentNullException(nameof(output));
         }
 
         [Fact]
@@ -31,7 +31,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         [Fact]
         public void Constructor_ShouldInitializeSuccessfully_WithValidDbContext()
         {
-            using var dbContext = CreateInMemoryDbContext();
+            using var dbContext = this.CreateInMemoryDbContext();
             var service = new AuditService(dbContext);
 
             Assert.NotNull(service);
@@ -41,7 +41,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task LogAsync_ShouldCreateAuditLog_WithAllParameters()
         {
             // Arrange
-            using var dbContext = CreateInMemoryDbContext();
+            using var dbContext = this.CreateInMemoryDbContext();
             var service = new AuditService(dbContext);
 
             var tenantId = Guid.NewGuid();
@@ -68,7 +68,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task LogAsync_ShouldCreateAuditLog_WithNullUserId()
         {
             // Arrange
-            using var dbContext = CreateInMemoryDbContext();
+            using var dbContext = this.CreateInMemoryDbContext();
             var service = new AuditService(dbContext);
 
             var tenantId = Guid.NewGuid();
@@ -92,7 +92,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task LogAsync_ShouldCreateAuditLog_WithNullPayload()
         {
             // Arrange
-            using var dbContext = CreateInMemoryDbContext();
+            using var dbContext = this.CreateInMemoryDbContext();
             var service = new AuditService(dbContext);
 
             var tenantId = Guid.NewGuid();
@@ -115,7 +115,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task LogAsync_ShouldCreateAuditLog_WithEmptyPayload()
         {
             // Arrange
-            using var dbContext = CreateInMemoryDbContext();
+            using var dbContext = this.CreateInMemoryDbContext();
             var service = new AuditService(dbContext);
 
             var tenantId = Guid.NewGuid();
@@ -139,7 +139,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task LogAsync_ShouldCreateAuditLog_WithComplexPayload()
         {
             // Arrange
-            using var dbContext = CreateInMemoryDbContext();
+            using var dbContext = this.CreateInMemoryDbContext();
             var service = new AuditService(dbContext);
 
             var tenantId = Guid.NewGuid();
@@ -150,7 +150,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 endpoint = "/v1/chat/completions",
                 method = "POST",
                 headers = new { authorization = "Bearer token", contentType = "application/json" },
-                body = new { model = "llama-3.3-70b-versatile", messages = new[] { new { role = "user", content = "Hello" } } }
+                body = new { model = "llama-3.3-70b-versatile", messages = new[] { new { role = "user", content = "Hello" } } },
             };
 
             // Act
@@ -171,7 +171,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task LogAsync_ShouldGenerateUniqueId_ForEachLog()
         {
             // Arrange
-            using var dbContext = CreateInMemoryDbContext();
+            using var dbContext = this.CreateInMemoryDbContext();
             var service = new AuditService(dbContext);
 
             var tenantId = Guid.NewGuid();
@@ -191,7 +191,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task LogAsync_ShouldSetCorrectTimestamp()
         {
             // Arrange
-            using var dbContext = CreateInMemoryDbContext();
+            using var dbContext = this.CreateInMemoryDbContext();
             var service = new AuditService(dbContext);
 
             var tenantId = Guid.NewGuid();
@@ -213,7 +213,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task LogAsync_ShouldHandleLongActionNames()
         {
             // Arrange
-            using var dbContext = CreateInMemoryDbContext();
+            using var dbContext = this.CreateInMemoryDbContext();
             var service = new AuditService(dbContext);
 
             var tenantId = Guid.NewGuid();
@@ -233,7 +233,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task LogAsync_ShouldRespectCancellationToken()
         {
             // Arrange
-            using var dbContext = CreateInMemoryDbContext();
+            using var dbContext = this.CreateInMemoryDbContext();
             var service = new AuditService(dbContext);
 
             var tenantId = Guid.NewGuid();
@@ -249,7 +249,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task LogAsync_ShouldHandleSpecialCharactersInAction()
         {
             // Arrange
-            using var dbContext = CreateInMemoryDbContext();
+            using var dbContext = this.CreateInMemoryDbContext();
             var service = new AuditService(dbContext);
 
             var tenantId = Guid.NewGuid();
@@ -271,7 +271,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task LogAsync_ShouldHandleMultipleTenants()
         {
             // Arrange
-            using var dbContext = CreateInMemoryDbContext();
+            using var dbContext = this.CreateInMemoryDbContext();
             var service = new AuditService(dbContext);
 
             var tenant1 = Guid.NewGuid();
@@ -293,7 +293,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task LogAsync_ShouldHandlePayloadWithNullValues()
         {
             // Arrange
-            using var dbContext = CreateInMemoryDbContext();
+            using var dbContext = this.CreateInMemoryDbContext();
             var service = new AuditService(dbContext);
 
             var tenantId = Guid.NewGuid();
@@ -317,7 +317,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task LogAsync_ShouldHandleLargePayloads()
         {
             // Arrange
-            using var dbContext = CreateInMemoryDbContext();
+            using var dbContext = this.CreateInMemoryDbContext();
             var service = new AuditService(dbContext);
 
             var tenantId = Guid.NewGuid();
@@ -339,7 +339,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task LogAsync_ShouldUseUtcTime()
         {
             // Arrange
-            using var dbContext = CreateInMemoryDbContext();
+            using var dbContext = this.CreateInMemoryDbContext();
             var service = new AuditService(dbContext);
 
             var tenantId = Guid.NewGuid();

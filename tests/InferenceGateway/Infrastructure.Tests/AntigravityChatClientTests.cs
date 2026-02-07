@@ -24,10 +24,10 @@ public class AntigravityChatClientTests
 
     public AntigravityChatClientTests()
     {
-        _handlerMock = new Mock<HttpMessageHandler>();
-        _tokenProviderMock = new Mock<ITokenProvider>();
-        _tokenProviderMock.Setup(x => x.GetTokenAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(_fakeToken);
+        this._handlerMock = new Mock<HttpMessageHandler>();
+        this._tokenProviderMock = new Mock<ITokenProvider>();
+        this._tokenProviderMock.Setup(x => x.GetTokenAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(this._fakeToken);
     }
 
     [Fact]
@@ -53,7 +53,7 @@ public class AntigravityChatClientTests
         HttpRequestMessage? capturedRequest = null;
         string? requestBody = null;
 
-        _handlerMock.Protected()
+        this._handlerMock.Protected()
             .Setup<Task<HttpResponseMessage>>(
                 "SendAsync",
                 ItExpr.IsAny<HttpRequestMessage>(),
@@ -67,18 +67,18 @@ public class AntigravityChatClientTests
             .ReturnsAsync(new HttpResponseMessage
             {
                 StatusCode = HttpStatusCode.OK,
-                Content = new StringContent(responseJson)
+                Content = new StringContent(responseJson),
             });
 
-        var httpClient = new HttpClient(_handlerMock.Object)
+        var httpClient = new HttpClient(this._handlerMock.Object)
         {
-            BaseAddress = new Uri("https://cloudcode-pa.googleapis.com")
+            BaseAddress = new Uri("https://cloudcode-pa.googleapis.com"),
         };
-        var client = new AntigravityChatClient(httpClient, _modelId, _projectId, _tokenProviderMock.Object);
+        var client = new AntigravityChatClient(httpClient, this._modelId, this._projectId, this._tokenProviderMock.Object);
         var messages = new List<ChatMessage>
         {
             new ChatMessage(ChatRole.System, "Be helpful"),
-            new ChatMessage(ChatRole.User, "Hi")
+            new ChatMessage(ChatRole.User, "Hi"),
         };
 
         // Act
@@ -94,15 +94,15 @@ public class AntigravityChatClientTests
         Assert.NotNull(capturedRequest);
         Assert.Equal("https://cloudcode-pa.googleapis.com/v1/chat/completions", capturedRequest!.RequestUri?.ToString());
         Assert.Equal("Bearer", capturedRequest.Headers.Authorization?.Scheme);
-        Assert.Equal(_fakeToken, capturedRequest.Headers.Authorization?.Parameter);
+        Assert.Equal(this._fakeToken, capturedRequest.Headers.Authorization?.Parameter);
         Assert.Contains("antigravity/1.11.5", capturedRequest.Headers.UserAgent.ToString());
 
         Assert.NotNull(requestBody);
         var doc = JsonDocument.Parse(requestBody);
         var root = doc.RootElement;
 
-        Assert.Equal(_projectId, root.GetProperty("project").GetString());
-        Assert.Equal(_modelId, root.GetProperty("model").GetString());
+        Assert.Equal(this._projectId, root.GetProperty("project").GetString());
+        Assert.Equal(this._modelId, root.GetProperty("model").GetString());
 
         var req = root.GetProperty("request");
         Assert.Equal("Be helpful", req.GetProperty("systemInstruction").GetProperty("parts")[0].GetProperty("text").GetString());
@@ -120,7 +120,7 @@ data: { ""response"": { ""candidates"": [{ ""content"": { ""role"": ""model"", "
 
 data: [DONE]
 ";
-        _handlerMock.Protected()
+        this._handlerMock.Protected()
             .Setup<Task<HttpResponseMessage>>(
                 "SendAsync",
                 ItExpr.IsAny<HttpRequestMessage>(),
@@ -129,14 +129,14 @@ data: [DONE]
             .ReturnsAsync(new HttpResponseMessage
             {
                 StatusCode = HttpStatusCode.OK,
-                Content = new StringContent(streamContent)
+                Content = new StringContent(streamContent),
             });
 
-        var httpClient = new HttpClient(_handlerMock.Object)
+        var httpClient = new HttpClient(this._handlerMock.Object)
         {
-            BaseAddress = new Uri("https://cloudcode-pa.googleapis.com")
+            BaseAddress = new Uri("https://cloudcode-pa.googleapis.com"),
         };
-        var client = new AntigravityChatClient(httpClient, _modelId, _projectId, _tokenProviderMock.Object);
+        var client = new AntigravityChatClient(httpClient, this._modelId, this._projectId, this._tokenProviderMock.Object);
 
         // Act
         var parts = new List<string>();

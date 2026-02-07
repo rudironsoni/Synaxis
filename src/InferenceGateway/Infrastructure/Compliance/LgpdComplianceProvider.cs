@@ -26,9 +26,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
         private readonly SynaxisDbContext _dbContext;
 
         // Brazilian regions for data residency validation
-        private static readonly HashSet<string> BrazilianRegions = new ()
+        private static readonly HashSet<string> BrazilianRegions = new()
         {
-            "sa-east-1", "br-south-1", "sa-saopaulo-1"
+            "sa-east-1", "br-south-1", "sa-saopaulo-1",
         };
 
         public LgpdComplianceProvider(SynaxisDbContext dbContext)
@@ -43,14 +43,18 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
         public async Task<bool> ValidateTransferAsync(TransferContext context)
         {
             if (context == null)
+            {
                 throw new ArgumentNullException(nameof(context));
+            }
 
             // 1. Check if transfer is within Brazil (no restrictions)
-            if (IsWithinBrazil(context.FromRegion) && IsWithinBrazil(context.ToRegion))
+            if (this.IsWithinBrazil(context.FromRegion) && this.IsWithinBrazil(context.ToRegion))
+            {
                 return true;
+            }
 
             // 2. Transfer FROM Brazil to outside requires specific safeguards (LGPD Art. 33)
-            if (IsWithinBrazil(context.FromRegion) && !IsWithinBrazil(context.ToRegion))
+            if (this.IsWithinBrazil(context.FromRegion) && !this.IsWithinBrazil(context.ToRegion))
             {
                 // Check for international cooperation agreement (adequacy decision)
                 // When there's adequacy, encryption is still required but purpose may be implicit
@@ -58,23 +62,32 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                 {
                     // Still require encryption even with adequacy
                     if (!context.EncryptionUsed)
+                    {
                         return false;
+                    }
+
                     return true;
                 }
 
                 // For all other legal bases, both encryption AND purpose are mandatory
                 // Encryption is required for ALL international transfers
                 if (!context.EncryptionUsed)
+                {
                     return false;
+                }
 
                 // Purpose must be clearly defined for all international transfers
                 if (string.IsNullOrWhiteSpace(context.Purpose))
+                {
                     return false;
+                }
 
                 // Check for Standard Contractual Clauses
                 if (context.LegalBasis?.Equals("SCC", StringComparison.OrdinalIgnoreCase) == true ||
                     context.LegalBasis?.Equals("contract", StringComparison.OrdinalIgnoreCase) == true)
+                {
                     return true;
+                }
 
                 // Check for explicit user consent (must be specific)
                 if (context.UserConsentObtained &&
@@ -94,7 +107,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
         public async Task LogTransferAsync(TransferContext context)
         {
             if (context == null)
+            {
                 throw new ArgumentNullException(nameof(context));
+            }
 
             var auditLog = new AuditLog
             {
@@ -113,14 +128,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                     categorias_dados = context.DataCategories,
                     criptografia_utilizada = context.EncryptionUsed,
                     consentimento_obtido = context.UserConsentObtained,
-                    regulamento = "LGPD"
+                    regulamento = "LGPD",
                 }),
                 CreatedAt = DateTime.UtcNow,
-                PartitionDate = DateTime.UtcNow.Date
+                PartitionDate = DateTime.UtcNow.Date,
             };
 
-            _dbContext.AuditLogs.Add(auditLog);
-            await _dbContext.SaveChangesAsync();
+            this._dbContext.AuditLogs.Add(auditLog);
+            await this._dbContext.SaveChangesAsync().ConfigureAwait(false);
         }
 
         public async Task<DataExport> ExportUserDataAsync(Guid userId)
@@ -129,7 +144,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
             var userData = new Dictionary<string, object>();
 
             // Get user profile
-            var user = await _dbContext.Users
+            var user = await this._dbContext.Users
                 .Where(u => u.Id == userId)
                 .Select(u => new
                 {
@@ -140,42 +155,44 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                     u.PhoneNumber,
                     u.Status,
                 })
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync().ConfigureAwait(false);
 
             if (user == null)
+            {
                 throw new InvalidOperationException($"Usuário {userId} não encontrado");
+            }
 
             userData["perfil"] = user;
 
             // Get organization memberships
-            var memberships = await _dbContext.UserOrganizationMemberships
+            var memberships = await this._dbContext.UserOrganizationMemberships
                 .Where(m => m.UserId == userId)
                 .Select(m => new
                 {
                     m.OrganizationId,
                     m.OrganizationRole,
 
-                    m.Status
+                    m.Status,
                 })
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
 
             userData["vinculos_organizacao"] = memberships;
 
             // Get group memberships
-            var groupMemberships = await _dbContext.UserGroupMemberships
+            var groupMemberships = await this._dbContext.UserGroupMemberships
                 .Where(m => m.UserId == userId)
                 .Select(m => new
                 {
                     m.GroupId,
                     m.GroupRole,
-                    m.JoinedAt
+                    m.JoinedAt,
                 })
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
 
             userData["vinculos_grupo"] = groupMemberships;
 
             // Get API keys created by user
-            var apiKeys = await _dbContext.ApiKeys
+            var apiKeys = await this._dbContext.ApiKeys
                 .Where(k => k.CreatedBy == userId)
                 .Select(k => new
                 {
@@ -184,14 +201,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                     k.KeyPrefix,
                     k.CreatedAt,
                     k.ExpiresAt,
-                    k.IsActive
+                    k.IsActive,
                 })
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
 
             userData["chaves_api"] = apiKeys;
 
             // Get audit logs for this user
-            var auditLogs = await _dbContext.AuditLogs
+            var auditLogs = await this._dbContext.AuditLogs
                 .Where(a => a.UserId == userId)
                 .OrderByDescending(a => a.CreatedAt)
                 .Take(1000) // Limit to last 1000 entries
@@ -200,9 +217,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                     a.Action,
                     a.EntityType,
                     a.EntityId,
-                    a.CreatedAt
+                    a.CreatedAt,
                 })
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
 
             userData["registros_auditoria"] = auditLogs;
 
@@ -210,7 +227,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
             var jsonData = JsonSerializer.Serialize(userData, new JsonSerializerOptions
             {
                 WriteIndented = true,
-                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping // Support Portuguese characters
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping, // Support Portuguese characters
             });
 
             return new DataExport
@@ -232,13 +249,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                         chaves_api = apiKeys.Count,
                         registros_auditoria = auditLogs.Count
                     }
-                }
+                },
             };
         }
 
         public async Task<bool> DeleteUserDataAsync(Guid userId)
         {
-            using var transaction = await _dbContext.Database.BeginTransactionAsync();
+            using var transaction = await this._dbContext.Database.BeginTransactionAsync().ConfigureAwait(false);
 
             try
             {
@@ -255,34 +272,34 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                         regulamento = "LGPD",
                         direito = "direito_eliminacao",
                         artigo = "Artigo 18, VI",
-                        data_hora = DateTime.UtcNow
+                        data_hora = DateTime.UtcNow,
                     }),
                     CreatedAt = DateTime.UtcNow,
-                    PartitionDate = DateTime.UtcNow.Date
+                    PartitionDate = DateTime.UtcNow.Date,
                 };
 
-                _dbContext.AuditLogs.Add(deletionLog);
-                await _dbContext.SaveChangesAsync();
+                this._dbContext.AuditLogs.Add(deletionLog);
+                await this._dbContext.SaveChangesAsync().ConfigureAwait(false);
 
                 // Delete user data (cascade will handle related records)
                 // Note: Audit logs are kept for compliance with ANPD requirements
 
                 // Delete group memberships
-                var groupMemberships = await _dbContext.UserGroupMemberships
+                var groupMemberships = await this._dbContext.UserGroupMemberships
                     .Where(m => m.UserId == userId)
-                    .ToListAsync();
-                _dbContext.UserGroupMemberships.RemoveRange(groupMemberships);
+                    .ToListAsync().ConfigureAwait(false);
+                this._dbContext.UserGroupMemberships.RemoveRange(groupMemberships);
 
                 // Delete organization memberships
-                var orgMemberships = await _dbContext.UserOrganizationMemberships
+                var orgMemberships = await this._dbContext.UserOrganizationMemberships
                     .Where(m => m.UserId == userId)
-                    .ToListAsync();
-                _dbContext.UserOrganizationMemberships.RemoveRange(orgMemberships);
+                    .ToListAsync().ConfigureAwait(false);
+                this._dbContext.UserOrganizationMemberships.RemoveRange(orgMemberships);
 
                 // Revoke API keys
-                var apiKeys = await _dbContext.ApiKeys
+                var apiKeys = await this._dbContext.ApiKeys
                     .Where(k => k.CreatedBy == userId)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 foreach (var key in apiKeys)
                 {
@@ -292,20 +309,20 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                 }
 
                 // Delete user account
-                var user = await _dbContext.Users.FindAsync(userId);
+                var user = await this._dbContext.Users.FindAsync(userId).ConfigureAwait(false);
                 if (user != null)
                 {
-                    _dbContext.Users.Remove(user);
+                    this._dbContext.Users.Remove(user);
                 }
 
-                await _dbContext.SaveChangesAsync();
-                await transaction.CommitAsync();
+                await this._dbContext.SaveChangesAsync().ConfigureAwait(false);
+                await transaction.CommitAsync().ConfigureAwait(false);
 
                 return true;
             }
             catch (Exception)
             {
-                await transaction.RollbackAsync();
+                await transaction.RollbackAsync().ConfigureAwait(false);
                 throw;
             }
         }
@@ -313,7 +330,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
         public async Task<bool> IsProcessingAllowedAsync(ProcessingContext context)
         {
             if (context == null)
+            {
                 throw new ArgumentNullException(nameof(context));
+            }
 
             // LGPD has 10 legal bases for processing (Article 7)
             var validLegalBases = new[]
@@ -327,11 +346,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                 "life_protection", // VII - Protection of life or physical safety
                 "health_protection", // VIII - Health protection
                 "legitimate_interests", // IX - Legitimate interests (not for sensitive data)
-                "credit_protection" // X - Credit protection
+                "credit_protection", // X - Credit protection
             };
 
             if (string.IsNullOrWhiteSpace(context.LegalBasis))
+            {
                 return false;
+            }
 
             var normalizedBasis = context.LegalBasis.ToLowerInvariant().Replace("_", "").Replace("-", "");
 
@@ -350,18 +371,24 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
         public async Task<bool> IsBreachNotificationRequiredAsync(BreachContext context)
         {
             if (context == null)
+            {
                 throw new ArgumentNullException(nameof(context));
+            }
 
             // LGPD Article 48: Notification to ANPD (Brazilian Authority) required for relevant incidents
 
             // Always notify ANPD for high-risk breaches
             if (context.RiskLevel?.Equals("high", StringComparison.OrdinalIgnoreCase) == true)
+            {
                 return true;
+            }
 
             // Notify for medium risk if significant number of users affected
             if (context.RiskLevel?.Equals("medium", StringComparison.OrdinalIgnoreCase) == true &&
                 context.AffectedUsersCount >= 50) // Lower threshold than GDPR
+            {
                 return true;
+            }
 
             // Check if sensitive data categories are exposed (LGPD Article 5, II)
             var sensitiveCategories = new[]
@@ -374,12 +401,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                 "health_data",
                 "genetic_data",
                 "biometric_data",
-                "sexual_life_data"
+                "sexual_life_data",
             };
 
             if (context.DataCategoriesExposed?.Any(cat =>
                 sensitiveCategories.Contains(cat, StringComparer.OrdinalIgnoreCase)) == true)
+            {
                 return true;
+            }
 
             // For low risk breaches with few affected users, notification might not be required
             return false;
@@ -388,7 +417,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
         private bool IsWithinBrazil(string region)
         {
             if (string.IsNullOrWhiteSpace(region))
+            {
                 return false;
+            }
 
             // Check if region code indicates Brazil
             return region.StartsWith("sa-east", StringComparison.OrdinalIgnoreCase) ||

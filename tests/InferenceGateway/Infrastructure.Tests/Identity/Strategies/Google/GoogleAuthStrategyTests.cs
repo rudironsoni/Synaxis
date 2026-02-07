@@ -23,7 +23,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.Goog
         [Fact]
         public async Task InitiateFlowAsync_GeneratesAuthorizationUrlWithPkce()
         {
-            var settings = CreateSettings();
+            var settings = this.CreateSettings();
             var httpFactory = new Mock<IHttpClientFactory>();
             var logger = new Mock<ILogger<GoogleAuthStrategy>>();
 
@@ -43,7 +43,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.Goog
         [Fact]
         public async Task CompleteFlowAsync_ExchangesCode_FetchesUserInfo_EmitsEvent()
         {
-            var settings = CreateSettings();
+            var settings = this.CreateSettings();
             var httpFactory = new Mock<IHttpClientFactory>();
             var logger = new Mock<ILogger<GoogleAuthStrategy>>();
 
@@ -61,8 +61,16 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.Goog
             {
                 // Return clients in the order used: ExchangeCodeForTokenAsync (Post), FetchUserEmailAsync (Get), FetchProjectIdAsync (Post requests probed repeatedly)
                 seq++;
-                if (seq == 1) return tokenClient;
-                if (seq == 2) return userClient;
+                if (seq == 1)
+                {
+                    return tokenClient;
+                }
+
+                if (seq == 2)
+                {
+                    return userClient;
+                }
+
                 return projectClient;
             });
 
@@ -94,7 +102,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.Goog
         [Fact]
         public async Task RefreshTokenAsync_RefreshesTokens()
         {
-            var settings = CreateSettings();
+            var settings = this.CreateSettings();
             var httpFactory = new Mock<IHttpClientFactory>();
             var logger = new Mock<ILogger<GoogleAuthStrategy>>();
 
@@ -115,7 +123,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.Goog
         [Fact]
         public async Task RefreshTokenAsync_NetworkFailure_ThrowsInvalidOperationException()
         {
-            var settings = CreateSettings();
+            var settings = this.CreateSettings();
             var httpFactory = new Mock<IHttpClientFactory>();
             var logger = new Mock<ILogger<GoogleAuthStrategy>>();
 
@@ -132,7 +140,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.Goog
         [Fact]
         public async Task CompleteFlowAsync_InvalidTokenResponse_HandlesError()
         {
-            var settings = CreateSettings();
+            var settings = this.CreateSettings();
             var httpFactory = new Mock<IHttpClientFactory>();
             var logger = new Mock<ILogger<GoogleAuthStrategy>>();
 
@@ -157,7 +165,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.Goog
         [Fact]
         public async Task FetchUserEmailAsync_InvalidResponse_ReturnsEmptyString()
         {
-            var settings = CreateSettings();
+            var settings = this.CreateSettings();
             var httpFactory = new Mock<IHttpClientFactory>();
             var logger = new Mock<ILogger<GoogleAuthStrategy>>();
 
@@ -192,7 +200,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.Goog
             {
                 var resp = new HttpResponseMessage(status)
                 {
-                    Content = new StringContent(json, Encoding.UTF8, "application/json")
+                    Content = new StringContent(json, Encoding.UTF8, "application/json"),
                 };
                 return Task.FromResult(resp);
             });
@@ -205,7 +213,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.Goog
             {
                 var resp = new HttpResponseMessage(status)
                 {
-                    Content = new StringContent(body, Encoding.UTF8, "text/plain")
+                    Content = new StringContent(body, Encoding.UTF8, "text/plain"),
                 };
                 return Task.FromResult(resp);
             });
@@ -215,8 +223,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.Goog
         private sealed class DelegatingHandlerStub : HttpMessageHandler
         {
             private readonly Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> _handler;
-            public DelegatingHandlerStub(Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> handler) => _handler = handler;
-            protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) => _handler(request, cancellationToken);
+
+            public DelegatingHandlerStub(Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> handler) => this._handler = handler;
+
+            protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) => this._handler(request, cancellationToken);
         }
     }
 }

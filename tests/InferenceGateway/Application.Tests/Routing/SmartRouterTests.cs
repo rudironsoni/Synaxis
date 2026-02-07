@@ -18,18 +18,18 @@ public class SmartRouterTests
 
     public SmartRouterTests()
     {
-        _modelResolverMock = new Mock<IModelResolver>();
-        _costServiceMock = new Mock<ICostService>();
-        _healthStoreMock = new Mock<IHealthStore>();
-        _quotaTrackerMock = new Mock<IQuotaTracker>();
-        _loggerMock = new Mock<ILogger<SmartRouter>>();
+        this._modelResolverMock = new Mock<IModelResolver>();
+        this._costServiceMock = new Mock<ICostService>();
+        this._healthStoreMock = new Mock<IHealthStore>();
+        this._quotaTrackerMock = new Mock<IQuotaTracker>();
+        this._loggerMock = new Mock<ILogger<SmartRouter>>();
 
-        _router = new SmartRouter(
-            _modelResolverMock.Object,
-            _costServiceMock.Object,
-            _healthStoreMock.Object,
-            _quotaTrackerMock.Object,
-            _loggerMock.Object);
+        this._router = new SmartRouter(
+            this._modelResolverMock.Object,
+            this._costServiceMock.Object,
+            this._healthStoreMock.Object,
+            this._quotaTrackerMock.Object,
+            this._loggerMock.Object);
     }
 
     [Fact]
@@ -48,28 +48,28 @@ public class SmartRouterTests
             {
                 new ProviderConfig { Key = unhealthyKey },
                 new ProviderConfig { Key = expensiveKey, Tier = 2 },
-                new ProviderConfig { Key = cheapKey, Tier = 1 }
+                new ProviderConfig { Key = cheapKey, Tier = 1 },
             });
 
-        _modelResolverMock.Setup(x => x.ResolveAsync(modelId, EndpointKind.ChatCompletions, It.IsAny<RequiredCapabilities>(), default))
+        this._modelResolverMock.Setup(x => x.ResolveAsync(modelId, EndpointKind.ChatCompletions, It.IsAny<RequiredCapabilities>(), default))
             .ReturnsAsync(resolution);
 
         // Health: Unhealthy one fails
-        _healthStoreMock.Setup(x => x.IsHealthyAsync(unhealthyKey, default)).ReturnsAsync(false);
-        _healthStoreMock.Setup(x => x.IsHealthyAsync(expensiveKey, default)).ReturnsAsync(true);
-        _healthStoreMock.Setup(x => x.IsHealthyAsync(cheapKey, default)).ReturnsAsync(true);
+        this._healthStoreMock.Setup(x => x.IsHealthyAsync(unhealthyKey, default)).ReturnsAsync(false);
+        this._healthStoreMock.Setup(x => x.IsHealthyAsync(expensiveKey, default)).ReturnsAsync(true);
+        this._healthStoreMock.Setup(x => x.IsHealthyAsync(cheapKey, default)).ReturnsAsync(true);
 
         // Quota: All pass
-        _quotaTrackerMock.Setup(x => x.CheckQuotaAsync(It.IsAny<string>(), default)).ReturnsAsync(true);
+        this._quotaTrackerMock.Setup(x => x.CheckQuotaAsync(It.IsAny<string>(), default)).ReturnsAsync(true);
 
         // Cost
-        _costServiceMock.Setup(x => x.GetCostAsync(expensiveKey, "default", default))
+        this._costServiceMock.Setup(x => x.GetCostAsync(expensiveKey, "default", default))
             .ReturnsAsync(new ModelCost { CostPerToken = 0.02m });
-        _costServiceMock.Setup(x => x.GetCostAsync(cheapKey, "default", default))
+        this._costServiceMock.Setup(x => x.GetCostAsync(cheapKey, "default", default))
             .ReturnsAsync(new ModelCost { CostPerToken = 0.01m });
 
         // Act
-        var result = await _router.GetCandidatesAsync(modelId, false);
+        var result = await this._router.GetCandidatesAsync(modelId, false);
 
         // Assert
         Assert.Equal(2, result.Count);
@@ -87,11 +87,11 @@ public class SmartRouterTests
             new CanonicalModelId("canonical", "canonical"),
             new List<ProviderConfig>());
 
-        _modelResolverMock.Setup(x => x.ResolveAsync(modelId, EndpointKind.ChatCompletions, It.IsAny<RequiredCapabilities>(), default))
+        this._modelResolverMock.Setup(x => x.ResolveAsync(modelId, EndpointKind.ChatCompletions, It.IsAny<RequiredCapabilities>(), default))
             .ReturnsAsync(resolution);
 
         // Act & Assert
-        var ex = await Assert.ThrowsAsync<ArgumentException>(() => _router.GetCandidatesAsync(modelId, false));
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() => this._router.GetCandidatesAsync(modelId, false));
         Assert.Contains($"No providers available for model '{modelId}'", ex.Message);
     }
 
@@ -109,23 +109,23 @@ public class SmartRouterTests
             new List<ProviderConfig>
             {
                 new ProviderConfig { Key = provider1 },
-                new ProviderConfig { Key = provider2 }
+                new ProviderConfig { Key = provider2 },
             });
 
-        _modelResolverMock.Setup(x => x.ResolveAsync(modelId, EndpointKind.ChatCompletions, It.IsAny<RequiredCapabilities>(), default))
+        this._modelResolverMock.Setup(x => x.ResolveAsync(modelId, EndpointKind.ChatCompletions, It.IsAny<RequiredCapabilities>(), default))
             .ReturnsAsync(resolution);
 
-        _healthStoreMock.Setup(x => x.IsHealthyAsync(It.IsAny<string>(), default))
+        this._healthStoreMock.Setup(x => x.IsHealthyAsync(It.IsAny<string>(), default))
             .ReturnsAsync(false);
 
-        _quotaTrackerMock.Setup(x => x.CheckQuotaAsync(It.IsAny<string>(), default))
+        this._quotaTrackerMock.Setup(x => x.CheckQuotaAsync(It.IsAny<string>(), default))
             .ReturnsAsync(true);
 
-        _costServiceMock.Setup(x => x.GetCostAsync(It.IsAny<string>(), It.IsAny<string>(), default))
+        this._costServiceMock.Setup(x => x.GetCostAsync(It.IsAny<string>(), It.IsAny<string>(), default))
             .ReturnsAsync((ModelCost?)null);
 
         // Act
-        var result = await _router.GetCandidatesAsync(modelId, false);
+        var result = await this._router.GetCandidatesAsync(modelId, false);
 
         // Assert
         Assert.Empty(result);
@@ -143,20 +143,20 @@ public class SmartRouterTests
             new CanonicalModelId("canonical", "canonical"),
             new List<ProviderConfig>
             {
-                new ProviderConfig { Key = provider1 }
+                new ProviderConfig { Key = provider1 },
             });
 
-        _modelResolverMock.Setup(x => x.ResolveAsync(modelId, EndpointKind.ChatCompletions, It.IsAny<RequiredCapabilities>(), default))
+        this._modelResolverMock.Setup(x => x.ResolveAsync(modelId, EndpointKind.ChatCompletions, It.IsAny<RequiredCapabilities>(), default))
             .ReturnsAsync(resolution);
 
-        _healthStoreMock.Setup(x => x.IsHealthyAsync(provider1, default))
+        this._healthStoreMock.Setup(x => x.IsHealthyAsync(provider1, default))
             .ReturnsAsync(true);
 
-        _quotaTrackerMock.Setup(x => x.CheckQuotaAsync(provider1, default))
+        this._quotaTrackerMock.Setup(x => x.CheckQuotaAsync(provider1, default))
             .ReturnsAsync(false);
 
         // Act
-        var result = await _router.GetCandidatesAsync(modelId, false);
+        var result = await this._router.GetCandidatesAsync(modelId, false);
 
         // Assert
         Assert.Empty(result);
@@ -176,25 +176,25 @@ public class SmartRouterTests
             new List<ProviderConfig>
             {
                 new ProviderConfig { Key = freeProvider, Tier = 2 },
-                new ProviderConfig { Key = paidProvider, Tier = 1 }
+                new ProviderConfig { Key = paidProvider, Tier = 1 },
             });
 
-        _modelResolverMock.Setup(x => x.ResolveAsync(modelId, EndpointKind.ChatCompletions, It.IsAny<RequiredCapabilities>(), It.IsAny<Guid?>()))
+        this._modelResolverMock.Setup(x => x.ResolveAsync(modelId, EndpointKind.ChatCompletions, It.IsAny<RequiredCapabilities>(), It.IsAny<Guid?>()))
             .ReturnsAsync(resolution);
 
-        _healthStoreMock.Setup(x => x.IsHealthyAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        this._healthStoreMock.Setup(x => x.IsHealthyAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        _quotaTrackerMock.Setup(x => x.CheckQuotaAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        this._quotaTrackerMock.Setup(x => x.CheckQuotaAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        _costServiceMock.Setup(x => x.GetCostAsync(freeProvider, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        this._costServiceMock.Setup(x => x.GetCostAsync(freeProvider, It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ModelCost { CostPerToken = 0m, FreeTier = true });
-        _costServiceMock.Setup(x => x.GetCostAsync(paidProvider, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        this._costServiceMock.Setup(x => x.GetCostAsync(paidProvider, It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ModelCost { CostPerToken = 0.01m, FreeTier = false });
 
         // Act
-        var result = await _router.GetCandidatesAsync(modelId, false);
+        var result = await this._router.GetCandidatesAsync(modelId, false);
 
         // Assert
         Assert.Equal(2, result.Count);
@@ -215,14 +215,14 @@ public class SmartRouterTests
             new CanonicalModelId("canonical", "canonical"),
             new List<ProviderConfig>());
 
-        _modelResolverMock.Setup(x => x.ResolveAsync(modelId, EndpointKind.ChatCompletions, It.IsAny<RequiredCapabilities>(), It.IsAny<Guid?>()))
+        this._modelResolverMock.Setup(x => x.ResolveAsync(modelId, EndpointKind.ChatCompletions, It.IsAny<RequiredCapabilities>(), It.IsAny<Guid?>()))
             .Callback<string, EndpointKind, RequiredCapabilities?, Guid?>((_, _, caps, _) => capturedCaps = caps)
             .ReturnsAsync(resolution);
 
         // Act
         try
         {
-            await _router.GetCandidatesAsync(modelId, true);
+            await this._router.GetCandidatesAsync(modelId, true);
         }
         catch (ArgumentException)
         {
@@ -248,24 +248,24 @@ public class SmartRouterTests
             new List<ProviderConfig>
             {
                 new ProviderConfig { Key = highTier, Tier = 2 },
-                new ProviderConfig { Key = lowTier, Tier = 1 }
+                new ProviderConfig { Key = lowTier, Tier = 1 },
             });
 
-        _modelResolverMock.Setup(x => x.ResolveAsync(modelId, EndpointKind.ChatCompletions, It.IsAny<RequiredCapabilities>(), default))
+        this._modelResolverMock.Setup(x => x.ResolveAsync(modelId, EndpointKind.ChatCompletions, It.IsAny<RequiredCapabilities>(), default))
             .ReturnsAsync(resolution);
 
-        _healthStoreMock.Setup(x => x.IsHealthyAsync(It.IsAny<string>(), default))
+        this._healthStoreMock.Setup(x => x.IsHealthyAsync(It.IsAny<string>(), default))
             .ReturnsAsync(true);
 
-        _quotaTrackerMock.Setup(x => x.CheckQuotaAsync(It.IsAny<string>(), default))
+        this._quotaTrackerMock.Setup(x => x.CheckQuotaAsync(It.IsAny<string>(), default))
             .ReturnsAsync(true);
 
         // Same cost
-        _costServiceMock.Setup(x => x.GetCostAsync(It.IsAny<string>(), It.IsAny<string>(), default))
+        this._costServiceMock.Setup(x => x.GetCostAsync(It.IsAny<string>(), It.IsAny<string>(), default))
             .ReturnsAsync(new ModelCost { CostPerToken = 0.01m });
 
         // Act
-        var result = await _router.GetCandidatesAsync(modelId, false);
+        var result = await this._router.GetCandidatesAsync(modelId, false);
 
         // Assert
         Assert.Equal(2, result.Count);

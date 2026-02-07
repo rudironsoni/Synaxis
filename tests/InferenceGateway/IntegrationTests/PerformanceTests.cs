@@ -36,7 +36,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
         public PerformanceTests(ITestOutputHelper output)
         {
-            _output = output ?? throw new ArgumentNullException(nameof(output));
+            this._output = output ?? throw new ArgumentNullException(nameof(output));
 
             // Setup dependency injection with real components
             var services = new ServiceCollection();
@@ -91,7 +91,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                         Type = "groq",
                         Key = "test-key",
                         Tier = 0,
-                        Models = ["llama-3.1-70b-versatile", "mixtral-8x7b-32768"]
+                        Models = ["llama-3.1-70b-versatile", "mixtral-8x7b-32768"],
                     },
                     ["deepseek"] = new ProviderConfig
                     {
@@ -100,7 +100,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                         Endpoint = "https://api.deepseek.com/v1",
                         Key = "test-key",
                         Tier = 1,
-                        Models = ["deepseek-chat", "deepseek-coder"]
+                        Models = ["deepseek-chat", "deepseek-coder"],
                     },
                     ["fireworks"] = new ProviderConfig
                     {
@@ -110,7 +110,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                         Key = "test-key",
                         Tier = 2,
                         Models = ["accounts/fireworks/models/llama-v2-7b-chat"]
-                    }
+                    },
                 },
                 CanonicalModels = [
                     new CanonicalModelConfig
@@ -122,7 +122,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                         Tools = true,
                         Vision = false,
                         StructuredOutput = false,
-                        LogProbs = false
+                        LogProbs = false,
                     },
                     new CanonicalModelConfig
                     {
@@ -133,7 +133,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                         Tools = true,
                         Vision = false,
                         StructuredOutput = false,
-                        LogProbs = false
+                        LogProbs = false,
                     }
                 ],
                 Aliases = new Dictionary<string, AliasConfig>
@@ -142,7 +142,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                     {
                         Candidates = ["llama-3.1-70b-versatile", "deepseek-chat"]
                     }
-                }
+                },
             };
 
             services.AddSingleton(Options.Create(config));
@@ -157,33 +157,33 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 provider.GetRequiredService<IControlPlaneStore>()
             ));
 
-            _serviceProvider = services.BuildServiceProvider();
-            _dbContext = _serviceProvider.GetRequiredService<ControlPlaneDbContext>();
+            this._serviceProvider = services.BuildServiceProvider();
+            this._dbContext = this._serviceProvider.GetRequiredService<ControlPlaneDbContext>();
 
             // Seed database with test data
-            SeedDatabase();
+            this.SeedDatabase();
         }
 
         private void SeedDatabase()
         {
             // Clear existing data to avoid duplicate key issues
-            _dbContext.ModelCosts.RemoveRange(_dbContext.ModelCosts);
+            this._dbContext.ModelCosts.RemoveRange(this._dbContext.ModelCosts);
 
             // Seed model costs for performance testing
-            _dbContext.ModelCosts.Add(new ModelCost { Provider = "groq", Model = "llama-3.1-70b-versatile", CostPerToken = 0.001m, FreeTier = true });
-            _dbContext.ModelCosts.Add(new ModelCost { Provider = "groq", Model = "mixtral-8x7b-32768", CostPerToken = 0.002m, FreeTier = true });
-            _dbContext.ModelCosts.Add(new ModelCost { Provider = "deepseek", Model = "deepseek-chat", CostPerToken = 0.0005m, FreeTier = false });
-            _dbContext.ModelCosts.Add(new ModelCost { Provider = "deepseek", Model = "deepseek-coder", CostPerToken = 0.0003m, FreeTier = false });
-            _dbContext.ModelCosts.Add(new ModelCost { Provider = "fireworks", Model = "accounts/fireworks/models/llama-v2-7b-chat", CostPerToken = 0.0015m, FreeTier = false });
+            this._dbContext.ModelCosts.Add(new ModelCost { Provider = "groq", Model = "llama-3.1-70b-versatile", CostPerToken = 0.001m, FreeTier = true });
+            this._dbContext.ModelCosts.Add(new ModelCost { Provider = "groq", Model = "mixtral-8x7b-32768", CostPerToken = 0.002m, FreeTier = true });
+            this._dbContext.ModelCosts.Add(new ModelCost { Provider = "deepseek", Model = "deepseek-chat", CostPerToken = 0.0005m, FreeTier = false });
+            this._dbContext.ModelCosts.Add(new ModelCost { Provider = "deepseek", Model = "deepseek-coder", CostPerToken = 0.0003m, FreeTier = false });
+            this._dbContext.ModelCosts.Add(new ModelCost { Provider = "fireworks", Model = "accounts/fireworks/models/llama-v2-7b-chat", CostPerToken = 0.0015m, FreeTier = false });
 
-            _dbContext.SaveChanges();
+            this._dbContext.SaveChanges();
         }
 
         [Fact]
         public async Task RoutingPipeline_ShouldHandleConcurrentRequests_Efficiently()
         {
             // Arrange
-            var smartRouter = _serviceProvider.GetRequiredService<SmartRouter>();
+            var smartRouter = this._serviceProvider.GetRequiredService<SmartRouter>();
             var modelId = "llama-3.1-70b-versatile";
             var streaming = false;
             var cancellationToken = CancellationToken.None;
@@ -207,10 +207,10 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var totalTime = stopwatch.ElapsedMilliseconds;
             var averageTimePerRequest = (double)totalTime / concurrentRequests;
 
-            _output.WriteLine($"Concurrent Requests: {concurrentRequests}");
-            _output.WriteLine($"Total Time: {totalTime}ms");
-            _output.WriteLine($"Average Time Per Request: {averageTimePerRequest:F2}ms");
-            _output.WriteLine($"Throughput: {concurrentRequests / (totalTime / 1000.0):F2} requests/second");
+            this._output.WriteLine($"Concurrent Requests: {concurrentRequests}");
+            this._output.WriteLine($"Total Time: {totalTime}ms");
+            this._output.WriteLine($"Average Time Per Request: {averageTimePerRequest:F2}ms");
+            this._output.WriteLine($"Throughput: {concurrentRequests / (totalTime / 1000.0):F2} requests/second");
 
             // Performance assertions
             Assert.True(totalTime < 5000, $"Total time {totalTime}ms exceeds 5 second threshold");
@@ -222,7 +222,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task RoutingPipeline_ShouldScaleLinearly_WithRequestVolume()
         {
             // Arrange
-            var smartRouter = _serviceProvider.GetRequiredService<SmartRouter>();
+            var smartRouter = this._serviceProvider.GetRequiredService<SmartRouter>();
             var modelId = "deepseek-chat";
             var streaming = false;
             var cancellationToken = CancellationToken.None;
@@ -247,7 +247,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 var throughput = batchSize / (stopwatch.ElapsedMilliseconds / 1000.0);
                 results[batchSize] = (stopwatch.ElapsedMilliseconds, throughput);
 
-                _output.WriteLine($"Batch Size: {batchSize}, Time: {stopwatch.ElapsedMilliseconds}ms, Throughput: {throughput:F2} req/s");
+                this._output.WriteLine($"Batch Size: {batchSize}, Time: {stopwatch.ElapsedMilliseconds}ms, Throughput: {throughput:F2} req/s");
             }
 
             // Assert - Check for reasonable scaling
@@ -263,7 +263,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task RoutingPipeline_ShouldHandleMixedModelRequests_Efficiently()
         {
             // Arrange
-            var smartRouter = _serviceProvider.GetRequiredService<SmartRouter>();
+            var smartRouter = this._serviceProvider.GetRequiredService<SmartRouter>();
             var cancellationToken = CancellationToken.None;
 
             var models = new[]
@@ -271,7 +271,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 ("llama-3.1-70b-versatile", false),
                 ("deepseek-chat", false),
                 ("mixtral-8x7b-32768", true),
-                ("deepseek-coder", true)
+                ("deepseek-coder", true),
             };
 
             const int requestsPerModel = 25;
@@ -298,9 +298,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var totalTime = stopwatch.ElapsedMilliseconds;
             var throughput = totalRequests / (totalTime / 1000.0);
 
-            _output.WriteLine($"Mixed Model Requests: {totalRequests}");
-            _output.WriteLine($"Total Time: {totalTime}ms");
-            _output.WriteLine($"Throughput: {throughput:F2} requests/second");
+            this._output.WriteLine($"Mixed Model Requests: {totalRequests}");
+            this._output.WriteLine($"Total Time: {totalTime}ms");
+            this._output.WriteLine($"Throughput: {throughput:F2} requests/second");
 
             Assert.True(totalTime < 10000, $"Total time {totalTime}ms exceeds 10 second threshold");
             Assert.True(throughput > 10, $"Throughput {throughput:F2} req/s below minimum threshold");
@@ -310,7 +310,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task RoutingPipeline_ShouldHandleDatabasePressure_Gracefully()
         {
             // Arrange
-            var costService = _serviceProvider.GetRequiredService<ICostService>();
+            var costService = this._serviceProvider.GetRequiredService<ICostService>();
             var cancellationToken = CancellationToken.None;
 
             const int concurrentDbQueries = 200;
@@ -334,9 +334,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var totalTime = stopwatch.ElapsedMilliseconds;
             var throughput = concurrentDbQueries / (totalTime / 1000.0);
 
-            _output.WriteLine($"Concurrent DB Queries: {concurrentDbQueries}");
-            _output.WriteLine($"Total Time: {totalTime}ms");
-            _output.WriteLine($"Throughput: {throughput:F2} queries/second");
+            this._output.WriteLine($"Concurrent DB Queries: {concurrentDbQueries}");
+            this._output.WriteLine($"Total Time: {totalTime}ms");
+            this._output.WriteLine($"Throughput: {throughput:F2} queries/second");
 
             Assert.True(totalTime < 5000, $"Total time {totalTime}ms exceeds 5 second threshold");
             Assert.True(throughput > 30, $"Throughput {throughput:F2} queries/s below minimum threshold");
@@ -346,7 +346,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task RoutingPipeline_ShouldHandleCancellation_Efficiently()
         {
             // Arrange
-            var smartRouter = _serviceProvider.GetRequiredService<SmartRouter>();
+            var smartRouter = this._serviceProvider.GetRequiredService<SmartRouter>();
             var modelId = "llama-3.1-70b-versatile";
             var streaming = false;
 
@@ -362,7 +362,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             await Assert.ThrowsAsync<OperationCanceledException>(() => task);
             stopwatch.Stop();
 
-            _output.WriteLine($"Cancellation handled in {stopwatch.ElapsedMilliseconds}ms");
+            this._output.WriteLine($"Cancellation handled in {stopwatch.ElapsedMilliseconds}ms");
             Assert.True(stopwatch.ElapsedMilliseconds < 1000, "Cancellation should be handled quickly");
         }
 
@@ -372,7 +372,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task RoutingPipeline_ShouldMaintainLowMemoryFootprint()
         {
             // Arrange
-            var smartRouter = _serviceProvider.GetRequiredService<SmartRouter>();
+            var smartRouter = this._serviceProvider.GetRequiredService<SmartRouter>();
             var modelId = "deepseek-chat";
             var streaming = false;
             var cancellationToken = CancellationToken.None;
@@ -401,12 +401,12 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var memoryIncrease = finalMemory - initialMemory;
             var memoryIncreasePerRequest = (double)memoryIncrease / iterations;
 
-            _output.WriteLine($"Iterations: {iterations}");
-            _output.WriteLine($"Initial Memory: {initialMemory / 1024} KB");
-            _output.WriteLine($"Final Memory: {finalMemory / 1024} KB");
-            _output.WriteLine($"Memory Increase: {memoryIncrease / 1024} KB");
-            _output.WriteLine($"Memory Per Request: {memoryIncreasePerRequest:F2} bytes");
-            _output.WriteLine($"Total Time: {stopwatch.ElapsedMilliseconds}ms");
+            this._output.WriteLine($"Iterations: {iterations}");
+            this._output.WriteLine($"Initial Memory: {initialMemory / 1024} KB");
+            this._output.WriteLine($"Final Memory: {finalMemory / 1024} KB");
+            this._output.WriteLine($"Memory Increase: {memoryIncrease / 1024} KB");
+            this._output.WriteLine($"Memory Per Request: {memoryIncreasePerRequest:F2} bytes");
+            this._output.WriteLine($"Total Time: {stopwatch.ElapsedMilliseconds}ms");
 
             // Memory footprint should be reasonable - relax threshold for CI environments
             // Performance tests can be flaky due to system resource variability
@@ -416,8 +416,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
         public void Dispose()
         {
-            _serviceProvider?.Dispose();
-            _dbContext?.Dispose();
+            this._serviceProvider?.Dispose();
+            this._dbContext?.Dispose();
         }
     }
 }

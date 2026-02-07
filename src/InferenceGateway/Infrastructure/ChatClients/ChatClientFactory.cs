@@ -30,7 +30,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.ChatClients
 
         public object? GetService(Type serviceType, object? serviceKey = null)
         {
-            if (serviceKey == null) return this._serviceProvider.GetService(serviceType);
+            if (serviceKey == null)
+            {
+                return this._serviceProvider.GetService(serviceType);
+            }
+
             return this._serviceProvider.GetKeyedService(serviceType, serviceKey);
         }
     }

@@ -80,7 +80,7 @@ public abstract class TestBase
         providers ??= new Dictionary<string, ProviderConfig>
         {
             ["groq"] = new ProviderConfig { Type = "groq", Tier = 0, Models = ["llama-3.1-70b-versatile"] },
-            ["openai"] = new ProviderConfig { Type = "openai", Tier = 1, Models = ["gpt-4"] }
+            ["openai"] = new ProviderConfig { Type = "openai", Tier = 1, Models = ["gpt-4"] },
         };
 
         mock.Setup(x => x.GetProvider(It.IsAny<string>()))

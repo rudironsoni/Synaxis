@@ -26,34 +26,34 @@ namespace Synaxis.InferenceGateway.Infrastructure
         {
             this._httpClient = httpClient;
             this._modelId = modelId ?? "openai";
-            this._metadata = new ChatClientMetadata("Pollinations", new Uri("https://text.pollinations.ai/"), _modelId);
+            this._metadata = new ChatClientMetadata("Pollinations", new Uri("https://text.pollinations.ai/"), this._modelId);
         }
 
         public ChatClientMetadata Metadata => this._metadata;
 
         public async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
         {
-            var request = CreateRequest(chatMessages, options, stream: false);
-            var response = await _httpClient.PostAsJsonAsync("https://text.pollinations.ai/", request, cancellationToken);
+            var request = this.CreateRequest(chatMessages, options, stream: false);
+            var response = await this._httpClient.PostAsJsonAsync("https://text.pollinations.ai/", request, cancellationToken);
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync(cancellationToken);
 
             var chatResponse = new ChatResponse(new ChatMessage(ChatRole.Assistant, content));
-            chatResponse.ModelId = _modelId;
+            chatResponse.ModelId = this._modelId;
             return chatResponse;
         }
 
         public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            var request = CreateRequest(chatMessages, options, stream: true);
+            var request = this.CreateRequest(chatMessages, options, stream: true);
 
             var httpRequest = new HttpRequestMessage(HttpMethod.Post, "https://text.pollinations.ai/")
             {
-                Content = JsonContent.Create(request)
+                Content = JsonContent.Create(request),
             };
 
-            using var response = await _httpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            using var response = await this._httpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
             response.EnsureSuccessStatusCode();
 
             using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
@@ -75,7 +75,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
                     var update = new ChatResponseUpdate
                     {
                         Role = ChatRole.Assistant,
-                        ModelId = _modelId
+                        ModelId = this._modelId,
                     };
                     update.Contents.Add(new TextContent(text));
                     yield return update;
@@ -91,12 +91,12 @@ namespace Synaxis.InferenceGateway.Infrastructure
                 messages.Add(new
                 {
                     role = msg.Role.Value,
-                    content = msg.Text
+                    content = msg.Text,
                 });
             }
 
             // Map standard model names to Pollinations aliases
-            var model = _modelId switch
+            var model = this._modelId switch
             {
                 "gpt-4o-mini" => "openai",
                 "gpt-4o" => "openai-large",
@@ -108,11 +108,12 @@ namespace Synaxis.InferenceGateway.Infrastructure
                 messages = messages,
                 model = model,
                 stream = stream,
-                seed = Random.Shared.Next() // Avoid caching
+                seed = Random.Shared.Next(), // Avoid caching
             };
         }
 
         public void Dispose() => this._httpClient.Dispose();
+
         public object? GetService(Type serviceType, object? serviceKey = null) => null;
     }
 }

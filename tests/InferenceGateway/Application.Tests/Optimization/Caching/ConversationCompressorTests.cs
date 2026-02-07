@@ -19,8 +19,8 @@ public class ConversationCompressorTests
 
     public ConversationCompressorTests()
     {
-        _mockCompressor = new Mock<IConversationCompressor>();
-        _cancellationToken = CancellationToken.None;
+        this._mockCompressor = new Mock<IConversationCompressor>();
+        this._cancellationToken = CancellationToken.None;
     }
 
     [Fact]
@@ -31,14 +31,14 @@ public class ConversationCompressorTests
         {
             new ConversationMessage { Role = "system", Content = "You are a helpful assistant." },
             new ConversationMessage { Role = "user", Content = "Hello!" },
-            new ConversationMessage { Role = "assistant", Content = "Hi! How can I help you today?" }
+            new ConversationMessage { Role = "assistant", Content = "Hi! How can I help you today?" },
         };
 
         var threshold = 4000;
         var strategy = CompressionStrategy.Smart;
 
-        _mockCompressor
-            .Setup(x => x.CompressAsync(messages, threshold, strategy, _cancellationToken))
+        this._mockCompressor
+            .Setup(x => x.CompressAsync(messages, threshold, strategy, this._cancellationToken))
             .ReturnsAsync(new CompressionResult
             {
                 CompressedMessages = messages,
@@ -46,12 +46,12 @@ public class ConversationCompressorTests
                 CompressedTokenCount = 25,
                 CompressionRatio = 1.0,
                 StrategyUsed = strategy,
-                WasCompressed = false
+                WasCompressed = false,
             });
 
         // Act
-        var result = await _mockCompressor.Object.CompressAsync(
-            messages, threshold, strategy, _cancellationToken);
+        var result = await this._mockCompressor.Object.CompressAsync(
+            messages, threshold, strategy, this._cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -61,8 +61,8 @@ public class ConversationCompressorTests
         Assert.Equal(25, result.CompressedTokenCount);
         Assert.Equal(1.0, result.CompressionRatio);
 
-        _mockCompressor.Verify(
-            x => x.CompressAsync(messages, threshold, strategy, _cancellationToken),
+        this._mockCompressor.Verify(
+            x => x.CompressAsync(messages, threshold, strategy, this._cancellationToken),
             Times.Once);
     }
 
@@ -81,12 +81,12 @@ public class ConversationCompressorTests
             messages.Add(new ConversationMessage
             {
                 Role = "user",
-                Content = $"This is user message {i} with some content that takes up tokens."
+                Content = $"This is user message {i} with some content that takes up tokens.",
             });
             messages.Add(new ConversationMessage
             {
                 Role = "assistant",
-                Content = $"This is assistant response {i} with detailed information."
+                Content = $"This is assistant response {i} with detailed information.",
             });
         }
 
@@ -101,14 +101,14 @@ public class ConversationCompressorTests
             {
                 Role = "system",
                 Content = "[Conversation summary: 30 messages about various topics compressed for context]"
-            }
+            },
         };
 
         // Add last 5 exchanges
         compressedMessages.AddRange(messages.Skip(messages.Count - 10).Take(10));
 
-        _mockCompressor
-            .Setup(x => x.CompressAsync(messages, threshold, strategy, _cancellationToken))
+        this._mockCompressor
+            .Setup(x => x.CompressAsync(messages, threshold, strategy, this._cancellationToken))
             .ReturnsAsync(new CompressionResult
             {
                 CompressedMessages = compressedMessages,
@@ -116,12 +116,12 @@ public class ConversationCompressorTests
                 CompressedTokenCount = 450,
                 CompressionRatio = 0.375,
                 StrategyUsed = strategy,
-                WasCompressed = true
+                WasCompressed = true,
             });
 
         // Act
-        var result = await _mockCompressor.Object.CompressAsync(
-            messages, threshold, strategy, _cancellationToken);
+        var result = await this._mockCompressor.Object.CompressAsync(
+            messages, threshold, strategy, this._cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -133,8 +133,8 @@ public class ConversationCompressorTests
         Assert.True(result.CompressionRatio < 1.0);
         Assert.Equal(CompressionStrategy.Smart, result.StrategyUsed);
 
-        _mockCompressor.Verify(
-            x => x.CompressAsync(messages, threshold, strategy, _cancellationToken),
+        this._mockCompressor.Verify(
+            x => x.CompressAsync(messages, threshold, strategy, this._cancellationToken),
             Times.Once);
     }
 
@@ -149,12 +149,12 @@ public class ConversationCompressorTests
             messages.Add(new ConversationMessage
             {
                 Role = "user",
-                Content = $"User message {i}"
+                Content = $"User message {i}",
             });
             messages.Add(new ConversationMessage
             {
                 Role = "assistant",
-                Content = $"Assistant response {i}"
+                Content = $"Assistant response {i}",
             });
         }
 
@@ -164,8 +164,8 @@ public class ConversationCompressorTests
         // Expected: Keep last 6 messages (3 exchanges)
         var compressedMessages = messages.Skip(messages.Count - 6).ToList();
 
-        _mockCompressor
-            .Setup(x => x.CompressAsync(messages, threshold, strategy, _cancellationToken))
+        this._mockCompressor
+            .Setup(x => x.CompressAsync(messages, threshold, strategy, this._cancellationToken))
             .ReturnsAsync(new CompressionResult
             {
                 CompressedMessages = compressedMessages,
@@ -173,12 +173,12 @@ public class ConversationCompressorTests
                 CompressedTokenCount = 250,
                 CompressionRatio = 0.3125,
                 StrategyUsed = strategy,
-                WasCompressed = true
+                WasCompressed = true,
             });
 
         // Act
-        var result = await _mockCompressor.Object.CompressAsync(
-            messages, threshold, strategy, _cancellationToken);
+        var result = await this._mockCompressor.Object.CompressAsync(
+            messages, threshold, strategy, this._cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -189,8 +189,8 @@ public class ConversationCompressorTests
         Assert.True(result.CompressedTokenCount < threshold);
         Assert.Equal(CompressionStrategy.TruncateOldest, result.StrategyUsed);
 
-        _mockCompressor.Verify(
-            x => x.CompressAsync(messages, threshold, strategy, _cancellationToken),
+        this._mockCompressor.Verify(
+            x => x.CompressAsync(messages, threshold, strategy, this._cancellationToken),
             Times.Once);
     }
 
@@ -201,7 +201,7 @@ public class ConversationCompressorTests
         var messages = new List<ConversationMessage>
         {
             new ConversationMessage { Role = "system", Content = "You are a helpful assistant specialized in code." },
-            new ConversationMessage { Role = "system", Content = "Always format code with syntax highlighting." }
+            new ConversationMessage { Role = "system", Content = "Always format code with syntax highlighting." },
         };
 
         // Add many messages
@@ -222,8 +222,8 @@ public class ConversationCompressorTests
         };
         compressedMessages.AddRange(messages.Skip(messages.Count - 8)); // Last 4 exchanges
 
-        _mockCompressor
-            .Setup(x => x.CompressAsync(messages, threshold, strategy, _cancellationToken))
+        this._mockCompressor
+            .Setup(x => x.CompressAsync(messages, threshold, strategy, this._cancellationToken))
             .ReturnsAsync(new CompressionResult
             {
                 CompressedMessages = compressedMessages,
@@ -231,12 +231,12 @@ public class ConversationCompressorTests
                 CompressedTokenCount = 380,
                 CompressionRatio = 0.38,
                 StrategyUsed = strategy,
-                WasCompressed = true
+                WasCompressed = true,
             });
 
         // Act
-        var result = await _mockCompressor.Object.CompressAsync(
-            messages, threshold, strategy, _cancellationToken);
+        var result = await this._mockCompressor.Object.CompressAsync(
+            messages, threshold, strategy, this._cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -248,8 +248,8 @@ public class ConversationCompressorTests
         Assert.Equal("You are a helpful assistant specialized in code.", result.CompressedMessages[0].Content);
         Assert.Equal("Always format code with syntax highlighting.", result.CompressedMessages[1].Content);
 
-        _mockCompressor.Verify(
-            x => x.CompressAsync(messages, threshold, strategy, _cancellationToken),
+        this._mockCompressor.Verify(
+            x => x.CompressAsync(messages, threshold, strategy, this._cancellationToken),
             Times.Once);
     }
 
@@ -271,8 +271,8 @@ public class ConversationCompressorTests
         // Most recent 3 exchanges should be preserved
         var recentMessages = messages.Skip(messages.Count - 6).ToList();
 
-        _mockCompressor
-            .Setup(x => x.CompressAsync(messages, threshold, strategy, _cancellationToken))
+        this._mockCompressor
+            .Setup(x => x.CompressAsync(messages, threshold, strategy, this._cancellationToken))
             .ReturnsAsync(new CompressionResult
             {
                 CompressedMessages = recentMessages,
@@ -280,12 +280,12 @@ public class ConversationCompressorTests
                 CompressedTokenCount = 350,
                 CompressionRatio = 0.35,
                 StrategyUsed = strategy,
-                WasCompressed = true
+                WasCompressed = true,
             });
 
         // Act
-        var result = await _mockCompressor.Object.CompressAsync(
-            messages, threshold, strategy, _cancellationToken);
+        var result = await this._mockCompressor.Object.CompressAsync(
+            messages, threshold, strategy, this._cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -295,8 +295,8 @@ public class ConversationCompressorTests
         Assert.Equal("User message 19", result.CompressedMessages.Last().Content);
         Assert.Equal("user", result.CompressedMessages[result.CompressedMessages.Count - 2].Role);
 
-        _mockCompressor.Verify(
-            x => x.CompressAsync(messages, threshold, strategy, _cancellationToken),
+        this._mockCompressor.Verify(
+            x => x.CompressAsync(messages, threshold, strategy, this._cancellationToken),
             Times.Once);
     }
 
@@ -308,8 +308,8 @@ public class ConversationCompressorTests
         var threshold = 4000;
         var strategy = CompressionStrategy.Smart;
 
-        _mockCompressor
-            .Setup(x => x.CompressAsync(messages, threshold, strategy, _cancellationToken))
+        this._mockCompressor
+            .Setup(x => x.CompressAsync(messages, threshold, strategy, this._cancellationToken))
             .ReturnsAsync(new CompressionResult
             {
                 CompressedMessages = messages,
@@ -317,12 +317,12 @@ public class ConversationCompressorTests
                 CompressedTokenCount = 0,
                 CompressionRatio = 1.0,
                 StrategyUsed = strategy,
-                WasCompressed = false
+                WasCompressed = false,
             });
 
         // Act
-        var result = await _mockCompressor.Object.CompressAsync(
-            messages, threshold, strategy, _cancellationToken);
+        var result = await this._mockCompressor.Object.CompressAsync(
+            messages, threshold, strategy, this._cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -338,18 +338,18 @@ public class ConversationCompressorTests
         // Arrange
         var message = "This is a test message with approximately 10 tokens in it.";
 
-        _mockCompressor
+        this._mockCompressor
             .Setup(x => x.EstimateTokens(message))
             .Returns(10);
 
         // Act
-        var tokenCount = _mockCompressor.Object.EstimateTokens(message);
+        var tokenCount = this._mockCompressor.Object.EstimateTokens(message);
 
         // Assert
         Assert.Equal(10, tokenCount);
         Assert.True(tokenCount > 0);
 
-        _mockCompressor.Verify(x => x.EstimateTokens(message), Times.Once);
+        this._mockCompressor.Verify(x => x.EstimateTokens(message), Times.Once);
     }
 
     [Fact]
@@ -358,12 +358,12 @@ public class ConversationCompressorTests
         // Arrange
         var message = string.Empty;
 
-        _mockCompressor
+        this._mockCompressor
             .Setup(x => x.EstimateTokens(message))
             .Returns(0);
 
         // Act
-        var tokenCount = _mockCompressor.Object.EstimateTokens(message);
+        var tokenCount = this._mockCompressor.Object.EstimateTokens(message);
 
         // Assert
         Assert.Equal(0, tokenCount);
@@ -375,7 +375,7 @@ public class ConversationCompressorTests
         // Arrange
         var messages = new List<ConversationMessage>
         {
-            new ConversationMessage { Role = "system", Content = "You are a helpful assistant." }
+            new ConversationMessage { Role = "system", Content = "You are a helpful assistant." },
         };
 
         // Add old messages (should be summarized)
@@ -402,12 +402,12 @@ public class ConversationCompressorTests
             {
                 Role = "system",
                 Content = "[Summary: Previous conversation covered topics A, B, and C]"
-            }
+            },
         };
         compressedMessages.AddRange(messages.Skip(messages.Count - 6)); // Last 3 exchanges
 
-        _mockCompressor
-            .Setup(x => x.CompressAsync(messages, threshold, strategy, _cancellationToken))
+        this._mockCompressor
+            .Setup(x => x.CompressAsync(messages, threshold, strategy, this._cancellationToken))
             .ReturnsAsync(new CompressionResult
             {
                 CompressedMessages = compressedMessages,
@@ -415,12 +415,12 @@ public class ConversationCompressorTests
                 CompressedTokenCount = 450,
                 CompressionRatio = 0.5625,
                 StrategyUsed = strategy,
-                WasCompressed = true
+                WasCompressed = true,
             });
 
         // Act
-        var result = await _mockCompressor.Object.CompressAsync(
-            messages, threshold, strategy, _cancellationToken);
+        var result = await this._mockCompressor.Object.CompressAsync(
+            messages, threshold, strategy, this._cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -435,8 +435,8 @@ public class ConversationCompressorTests
         // Verify recent messages are preserved
         Assert.Contains(result.CompressedMessages, m => m.Content == "Recent user message 2");
 
-        _mockCompressor.Verify(
-            x => x.CompressAsync(messages, threshold, strategy, _cancellationToken),
+        this._mockCompressor.Verify(
+            x => x.CompressAsync(messages, threshold, strategy, this._cancellationToken),
             Times.Once);
     }
 
@@ -458,8 +458,8 @@ public class ConversationCompressorTests
         // Keep last 4 messages (2 exchanges)
         var compressedMessages = messages.Skip(16).ToList();
 
-        _mockCompressor
-            .Setup(x => x.CompressAsync(messages, threshold, strategy, _cancellationToken))
+        this._mockCompressor
+            .Setup(x => x.CompressAsync(messages, threshold, strategy, this._cancellationToken))
             .ReturnsAsync(new CompressionResult
             {
                 CompressedMessages = compressedMessages,
@@ -467,12 +467,12 @@ public class ConversationCompressorTests
                 CompressedTokenCount = 180,
                 CompressionRatio = 0.3,
                 StrategyUsed = strategy,
-                WasCompressed = true
+                WasCompressed = true,
             });
 
         // Act
-        var result = await _mockCompressor.Object.CompressAsync(
-            messages, threshold, strategy, _cancellationToken);
+        var result = await this._mockCompressor.Object.CompressAsync(
+            messages, threshold, strategy, this._cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -494,7 +494,7 @@ public class ConversationCompressorTests
         // Arrange
         var messages = new List<ConversationMessage>
         {
-            new ConversationMessage { Role = "user", Content = "Hello" }
+            new ConversationMessage { Role = "user", Content = "Hello" },
         };
 
         var threshold = 4000;
@@ -502,14 +502,14 @@ public class ConversationCompressorTests
         var cts = new CancellationTokenSource();
         cts.Cancel();
 
-        _mockCompressor
+        this._mockCompressor
             .Setup(x => x.CompressAsync(messages, threshold, strategy, cts.Token))
             .ThrowsAsync(new OperationCanceledException());
 
         // Act & Assert
         await Assert.ThrowsAsync<OperationCanceledException>(async () =>
         {
-            await _mockCompressor.Object.CompressAsync(
+            await this._mockCompressor.Object.CompressAsync(
                 messages, threshold, strategy, cts.Token);
         });
     }
@@ -521,12 +521,12 @@ public class ConversationCompressorTests
         var shortText = "Hello world";
         var longText = new string('x', 1000);
 
-        _mockCompressor.Setup(x => x.EstimateTokens(shortText)).Returns(3);
-        _mockCompressor.Setup(x => x.EstimateTokens(longText)).Returns(250);
+        this._mockCompressor.Setup(x => x.EstimateTokens(shortText)).Returns(3);
+        this._mockCompressor.Setup(x => x.EstimateTokens(longText)).Returns(250);
 
         // Act
-        var shortTokens = _mockCompressor.Object.EstimateTokens(shortText);
-        var longTokens = _mockCompressor.Object.EstimateTokens(longText);
+        var shortTokens = this._mockCompressor.Object.EstimateTokens(shortText);
+        var longTokens = this._mockCompressor.Object.EstimateTokens(longText);
 
         // Assert
         Assert.True(longTokens > shortTokens);
@@ -541,7 +541,9 @@ public class ConversationCompressorTests
 public class ConversationMessage
 {
     public string Role { get; set; } = string.Empty;
+
     public string Content { get; set; } = string.Empty;
+
     public DateTimeOffset Timestamp { get; set; } = DateTimeOffset.UtcNow;
 }
 
@@ -550,11 +552,16 @@ public class ConversationMessage
 /// </summary>
 public class CompressionResult
 {
-    public List<ConversationMessage> CompressedMessages { get; set; } = new ();
+    public List<ConversationMessage> CompressedMessages { get; set; } = new();
+
     public int OriginalTokenCount { get; set; }
+
     public int CompressedTokenCount { get; set; }
+
     public double CompressionRatio { get; set; }
+
     public CompressionStrategy StrategyUsed { get; set; }
+
     public bool WasCompressed { get; set; }
 }
 
@@ -566,7 +573,7 @@ public enum CompressionStrategy
     None,
     TruncateOldest,
     Smart,
-    Summarize
+    Summarize,
 }
 
 /// <summary>

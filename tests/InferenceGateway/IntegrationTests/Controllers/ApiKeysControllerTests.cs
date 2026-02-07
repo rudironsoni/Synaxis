@@ -20,10 +20,10 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
 
     public ApiKeysControllerTests(SynaxisWebApplicationFactory factory, ITestOutputHelper output)
     {
-        _factory = factory;
-        _factory.OutputHelper = output;
-        _output = output;
-        _client = _factory.CreateClient();
+        this._factory = factory;
+        this._factory.OutputHelper = output;
+        this._output = output;
+        this._client = this._factory.CreateClient();
     }
 
     [Fact]
@@ -32,7 +32,7 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
         var request = new { Name = "Test Key" };
         var projectId = Guid.NewGuid();
 
-        var response = await _client.PostAsJsonAsync($"/projects/{projectId}/keys", request);
+        var response = await this._client.PostAsJsonAsync($"/projects/{projectId}/keys", request);
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
@@ -40,7 +40,7 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task CreateKey_WithAuth_InvalidProject_ReturnsNotFound()
     {
-        var (client, _) = await CreateAuthenticatedClientAsync();
+        var (client, _) = await this.CreateAuthenticatedClientAsync();
         var invalidProjectId = Guid.NewGuid();
 
         var request = new { Name = "Test Key" };
@@ -52,8 +52,8 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task CreateKey_WithAuth_ValidProject_ReturnsCreatedKey()
     {
-        var (client, user) = await CreateAuthenticatedClientAsync();
-        var project = await CreateTestProjectAsync(user.TenantId);
+        var (client, user) = await this.CreateAuthenticatedClientAsync();
+        var project = await this.CreateTestProjectAsync(user.TenantId);
 
         var request = new { Name = "Production API Key" };
         var response = await client.PostAsJsonAsync($"/projects/{project.Id}/keys", request);
@@ -61,7 +61,7 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
         if (!response.IsSuccessStatusCode)
         {
             var errorContent = await response.Content.ReadAsStringAsync();
-            _output.WriteLine($"Error response: {errorContent}");
+            this._output.WriteLine($"Error response: {errorContent}");
         }
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -81,11 +81,11 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
     public async Task CreateKey_WithAuth_WrongTenant_ReturnsNotFound()
     {
         // Create first user and their project
-        var (client1, user1) = await CreateAuthenticatedClientAsync("user1@example.com");
+        var (client1, user1) = await this.CreateAuthenticatedClientAsync("user1@example.com");
 
         // Create second user with their own tenant
-        var (_, user2) = await CreateAuthenticatedClientAsync("user2@example.com");
-        var projectForUser2 = await CreateTestProjectAsync(user2.TenantId);
+        var (_, user2) = await this.CreateAuthenticatedClientAsync("user2@example.com");
+        var projectForUser2 = await this.CreateTestProjectAsync(user2.TenantId);
 
         // Try to create key in user2's project using user1's token
         var request = new { Name = "Test Key" };
@@ -100,7 +100,7 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
         var projectId = Guid.NewGuid();
         var keyId = Guid.NewGuid();
 
-        var response = await _client.DeleteAsync($"/projects/{projectId}/keys/{keyId}");
+        var response = await this._client.DeleteAsync($"/projects/{projectId}/keys/{keyId}");
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
@@ -108,8 +108,8 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task RevokeKey_WithAuth_InvalidKey_ReturnsNotFound()
     {
-        var (client, user) = await CreateAuthenticatedClientAsync();
-        var project = await CreateTestProjectAsync(user.TenantId);
+        var (client, user) = await this.CreateAuthenticatedClientAsync();
+        var project = await this.CreateTestProjectAsync(user.TenantId);
         var invalidKeyId = Guid.NewGuid();
 
         var response = await client.DeleteAsync($"/projects/{project.Id}/keys/{invalidKeyId}");
@@ -120,9 +120,9 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task RevokeKey_WithAuth_InvalidProject_ReturnsNotFound()
     {
-        var (client, user) = await CreateAuthenticatedClientAsync();
-        var project = await CreateTestProjectAsync(user.TenantId);
-        var apiKey = await CreateTestApiKeyAsync(project.Id);
+        var (client, user) = await this.CreateAuthenticatedClientAsync();
+        var project = await this.CreateTestProjectAsync(user.TenantId);
+        var apiKey = await this.CreateTestApiKeyAsync(project.Id);
         var invalidProjectId = Guid.NewGuid();
 
         var response = await client.DeleteAsync($"/projects/{invalidProjectId}/keys/{apiKey.Id}");
@@ -133,16 +133,16 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task RevokeKey_WithAuth_ValidKey_ReturnsNoContent()
     {
-        var (client, user) = await CreateAuthenticatedClientAsync();
-        var project = await CreateTestProjectAsync(user.TenantId);
-        var apiKey = await CreateTestApiKeyAsync(project.Id);
+        var (client, user) = await this.CreateAuthenticatedClientAsync();
+        var project = await this.CreateTestProjectAsync(user.TenantId);
+        var apiKey = await this.CreateTestApiKeyAsync(project.Id);
 
         var response = await client.DeleteAsync($"/projects/{project.Id}/keys/{apiKey.Id}");
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
         // Verify the key is revoked in the database
-        var scope = _factory.Services.CreateScope();
+        var scope = this._factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
         var revokedKey = await dbContext.ApiKeys.FindAsync(apiKey.Id);
         Assert.NotNull(revokedKey);
@@ -153,12 +153,12 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
     public async Task RevokeKey_WithAuth_WrongTenant_ReturnsNotFound()
     {
         // Create first user
-        var (client1, user1) = await CreateAuthenticatedClientAsync("user1@example.com");
+        var (client1, user1) = await this.CreateAuthenticatedClientAsync("user1@example.com");
 
         // Create second user with their own tenant and project
-        var (_, user2) = await CreateAuthenticatedClientAsync("user2@example.com");
-        var projectForUser2 = await CreateTestProjectAsync(user2.TenantId);
-        var apiKey = await CreateTestApiKeyAsync(projectForUser2.Id);
+        var (_, user2) = await this.CreateAuthenticatedClientAsync("user2@example.com");
+        var projectForUser2 = await this.CreateTestProjectAsync(user2.TenantId);
+        var apiKey = await this.CreateTestApiKeyAsync(projectForUser2.Id);
 
         // Try to revoke key in user2's project using user1's token
         var response = await client1.DeleteAsync($"/projects/{projectForUser2.Id}/keys/{apiKey.Id}");
@@ -169,8 +169,8 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task CreateKey_StoresCorrectDataInDatabase()
     {
-        var (client, user) = await CreateAuthenticatedClientAsync();
-        var project = await CreateTestProjectAsync(user.TenantId);
+        var (client, user) = await this.CreateAuthenticatedClientAsync();
+        var project = await this.CreateTestProjectAsync(user.TenantId);
 
         var request = new { Name = "Database Test Key" };
         var response = await client.PostAsJsonAsync($"/projects/{project.Id}/keys", request);
@@ -180,7 +180,7 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
         var keyId = content.GetProperty("id").GetGuid();
 
         // Verify in database
-        var scope = _factory.Services.CreateScope();
+        var scope = this._factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
         var storedKey = await dbContext.ApiKeys.FindAsync(keyId);
 
@@ -195,16 +195,16 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task RevokeKey_CreatesAuditLog()
     {
-        var (client, user) = await CreateAuthenticatedClientAsync();
-        var project = await CreateTestProjectAsync(user.TenantId);
-        var apiKey = await CreateTestApiKeyAsync(project.Id);
+        var (client, user) = await this.CreateAuthenticatedClientAsync();
+        var project = await this.CreateTestProjectAsync(user.TenantId);
+        var apiKey = await this.CreateTestApiKeyAsync(project.Id);
 
         var response = await client.DeleteAsync($"/projects/{project.Id}/keys/{apiKey.Id}");
 
         response.EnsureSuccessStatusCode();
 
         // Verify audit log was created
-        var scope = _factory.Services.CreateScope();
+        var scope = this._factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
         var auditLog = await dbContext.AuditLogs
             .Where(a => a.Action == "RevokeApiKey" && a.UserId == user.Id)
@@ -219,8 +219,8 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task CreateKey_CreatesAuditLog()
     {
-        var (client, user) = await CreateAuthenticatedClientAsync();
-        var project = await CreateTestProjectAsync(user.TenantId);
+        var (client, user) = await this.CreateAuthenticatedClientAsync();
+        var project = await this.CreateTestProjectAsync(user.TenantId);
 
         var request = new { Name = "Audit Test Key" };
         var response = await client.PostAsJsonAsync($"/projects/{project.Id}/keys", request);
@@ -230,7 +230,7 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
         var keyId = content.GetProperty("id").GetGuid();
 
         // Verify audit log was created
-        var scope = _factory.Services.CreateScope();
+        var scope = this._factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
         var auditLog = await dbContext.AuditLogs
             .Where(a => a.Action == "CreateApiKey" && a.UserId == user.Id)
@@ -246,8 +246,8 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task CreateKey_KeyHashIsValid()
     {
-        var (client, user) = await CreateAuthenticatedClientAsync();
-        var project = await CreateTestProjectAsync(user.TenantId);
+        var (client, user) = await this.CreateAuthenticatedClientAsync();
+        var project = await this.CreateTestProjectAsync(user.TenantId);
 
         var request = new { Name = "Hash Test Key" };
         var response = await client.PostAsJsonAsync($"/projects/{project.Id}/keys", request);
@@ -259,7 +259,7 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
         Assert.NotNull(rawKey);
 
         // Get the stored hash
-        var scope = _factory.Services.CreateScope();
+        var scope = this._factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
         var storedKey = await dbContext.ApiKeys.FindAsync(keyId);
 
@@ -276,7 +276,7 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
     {
         // Use the dev-login endpoint to get a valid JWT token
         var loginRequest = new { Email = email };
-        var response = await _client.PostAsJsonAsync("/auth/dev-login", loginRequest);
+        var response = await this._client.PostAsJsonAsync("/auth/dev-login", loginRequest);
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -290,13 +290,13 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
         var tenantId = Guid.Parse(jwtToken.Claims.First(c => c.Type == "tenantId").Value);
 
         // Get the user from database
-        var scope = _factory.Services.CreateScope();
+        var scope = this._factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
         var user = await dbContext.Users.FindAsync(userId);
         Assert.NotNull(user);
 
         // Create a new client with the authorization header
-        var authenticatedClient = _factory.CreateClient();
+        var authenticatedClient = this._factory.CreateClient();
         authenticatedClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
         return (authenticatedClient, user);
@@ -304,7 +304,7 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
 
     private async Task<Project> CreateTestProjectAsync(Guid tenantId, string name = "Test Project")
     {
-        var scope = _factory.Services.CreateScope();
+        var scope = this._factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
 
         var project = new Project
@@ -313,7 +313,7 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
             TenantId = tenantId,
             Name = name,
             Status = ProjectStatus.Active,
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow,
         };
 
         dbContext.Projects.Add(project);
@@ -324,7 +324,7 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
 
     private async Task<ApiKey> CreateTestApiKeyAsync(Guid projectId, string name = "Test API Key")
     {
-        var scope = _factory.Services.CreateScope();
+        var scope = this._factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
         var apiKeyService = scope.ServiceProvider.GetRequiredService<IApiKeyService>();
 
@@ -338,7 +338,7 @@ public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory
             Name = name,
             KeyHash = hash,
             Status = ApiKeyStatus.Active,
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow,
         };
 
         dbContext.ApiKeys.Add(apiKey);

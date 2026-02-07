@@ -54,17 +54,17 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
                         action,
                         details,
                         correlationId,
-                        timestamp = DateTime.UtcNow
+                        timestamp = DateTime.UtcNow,
                     }),
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
                 };
 
-                _db.AuditLogs.Add(auditLog);
-                await _db.SaveChangesAsync(ct);
+                this._db.AuditLogs.Add(auditLog);
+                await this._db.SaveChangesAsync(ct).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to log action to audit");
+                this._logger.LogError(ex, "Failed to log action to audit");
             }
         }
 
@@ -95,21 +95,21 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
                         newProvider,
                         savingsPercent,
                         reason,
-                        timestamp = DateTime.UtcNow
+                        timestamp = DateTime.UtcNow,
                     }),
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
                 };
 
-                _db.AuditLogs.Add(auditLog);
-                await _db.SaveChangesAsync(ct);
+                this._db.AuditLogs.Add(auditLog);
+                await this._db.SaveChangesAsync(ct).ConfigureAwait(false);
 
-                _logger.LogInformation(
+                this._logger.LogInformation(
                     "Optimization logged: OrgId={OrgId}, Model={Model}, {Old}->{New}, Savings={Savings}%",
                     organizationId, modelId, oldProvider, newProvider, savingsPercent);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to log optimization");
+                this._logger.LogError(ex, "Failed to log optimization");
             }
         }
     }

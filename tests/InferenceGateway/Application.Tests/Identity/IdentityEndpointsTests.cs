@@ -20,22 +20,22 @@ public class IdentityEndpointsTests
     public IdentityEndpointsTests()
     {
         var strategiesMock = new Mock<IEnumerable<IAuthStrategy>>();
-        _identityManagerMock = new Mock<IdentityManager>(
+        this._identityManagerMock = new Mock<IdentityManager>(
             strategiesMock.Object,
             Mock.Of<ISecureTokenStore>(),
             Mock.Of<ILogger<IdentityManager>>())
         { CallBase = true };
 
-        _tokenStoreMock = new Mock<ISecureTokenStore>();
-        _loggerMock = new Mock<ILogger<IdentityManager>>();
-        _routeData = new RouteData();
-        _httpContext = new DefaultHttpContext();
+        this._tokenStoreMock = new Mock<ISecureTokenStore>();
+        this._loggerMock = new Mock<ILogger<IdentityManager>>();
+        this._routeData = new RouteData();
+        this._httpContext = new DefaultHttpContext();
     }
 
     private IdentityManager CreateIdentityManager()
     {
         var strategiesMock = new Mock<IEnumerable<IAuthStrategy>>();
-        return new IdentityManager(strategiesMock.Object, _tokenStoreMock.Object, _loggerMock.Object);
+        return new IdentityManager(strategiesMock.Object, this._tokenStoreMock.Object, this._loggerMock.Object);
     }
 
     #region MapIdentityEndpoints Tests
@@ -66,14 +66,14 @@ public class IdentityEndpointsTests
             Status = "Pending",
             UserCode = "test-code",
             VerificationUri = "https://github.com/login",
-            Message = "Please complete authentication"
+            Message = "Please complete authentication",
         };
 
         authStrategyMock.Setup(x => x.InitiateFlowAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
         var strategies = new List<IAuthStrategy> { authStrategyMock.Object };
-        var manager = new IdentityManager(strategies, _tokenStoreMock.Object, _loggerMock.Object);
+        var manager = new IdentityManager(strategies, this._tokenStoreMock.Object, this._loggerMock.Object);
 
         // Act
         var result = await manager.StartAuth(provider);
@@ -91,7 +91,7 @@ public class IdentityEndpointsTests
         // Arrange
         var provider = "invalid-provider";
         var strategies = new List<IAuthStrategy>();
-        var manager = new IdentityManager(strategies, _tokenStoreMock.Object, _loggerMock.Object);
+        var manager = new IdentityManager(strategies, this._tokenStoreMock.Object, this._loggerMock.Object);
 
         // Act
         var result = await manager.StartAuth(provider);
@@ -108,7 +108,7 @@ public class IdentityEndpointsTests
         // Arrange
         var provider = "";
         var strategies = new List<IAuthStrategy>();
-        var manager = new IdentityManager(strategies, _tokenStoreMock.Object, _loggerMock.Object);
+        var manager = new IdentityManager(strategies, this._tokenStoreMock.Object, this._loggerMock.Object);
 
         // Act
         var result = await manager.StartAuth(provider);
@@ -140,14 +140,14 @@ public class IdentityEndpointsTests
                 AccessToken = "test-access-token",
                 RefreshToken = "test-refresh-token",
                 ExpiresInSeconds = 3600
-            }
+            },
         };
 
         authStrategyMock.Setup(x => x.CompleteFlowAsync(code, state, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
         var strategies = new List<IAuthStrategy> { authStrategyMock.Object };
-        var manager = new IdentityManager(strategies, _tokenStoreMock.Object, _loggerMock.Object);
+        var manager = new IdentityManager(strategies, this._tokenStoreMock.Object, this._loggerMock.Object);
 
         // Act
         var result = await manager.CompleteAuth(provider, code, state);
@@ -167,7 +167,7 @@ public class IdentityEndpointsTests
         var code = "valid-code";
         var state = "valid-state";
         var strategies = new List<IAuthStrategy>();
-        var manager = new IdentityManager(strategies, _tokenStoreMock.Object, _loggerMock.Object);
+        var manager = new IdentityManager(strategies, this._tokenStoreMock.Object, this._loggerMock.Object);
 
         // Act & Assert
         await Assert.ThrowsAsync<InvalidOperationException>(() => manager.CompleteAuth(provider, code, state));
@@ -186,7 +186,7 @@ public class IdentityEndpointsTests
             .ThrowsAsync(new ArgumentException("Code cannot be null"));
 
         var strategies = new List<IAuthStrategy> { authStrategyMock.Object };
-        var manager = new IdentityManager(strategies, _tokenStoreMock.Object, _loggerMock.Object);
+        var manager = new IdentityManager(strategies, this._tokenStoreMock.Object, this._loggerMock.Object);
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(() => manager.CompleteAuth(provider, code!, state));
@@ -201,11 +201,11 @@ public class IdentityEndpointsTests
     {
         // Arrange
         var accounts = new List<IdentityAccount>();
-        _tokenStoreMock.Setup(x => x.LoadAsync())
+        this._tokenStoreMock.Setup(x => x.LoadAsync())
             .ReturnsAsync(accounts);
 
         // Act
-        var result = await _tokenStoreMock.Object.LoadAsync();
+        var result = await this._tokenStoreMock.Object.LoadAsync();
 
         // Assert
         Assert.NotNull(result);
@@ -223,7 +223,7 @@ public class IdentityEndpointsTests
                 Id = "account-1",
                 Provider = "github",
                 Email = "user1@example.com",
-                AccessToken = "gh-token-12345"
+                AccessToken = "gh-token-12345",
             },
             new IdentityAccount
             {
@@ -231,13 +231,13 @@ public class IdentityEndpointsTests
                 Provider = "google",
                 Email = "user2@example.com",
                 AccessToken = "short" // Less than 8 chars
-            }
+            },
         };
-        _tokenStoreMock.Setup(x => x.LoadAsync())
+        this._tokenStoreMock.Setup(x => x.LoadAsync())
             .ReturnsAsync(accounts);
 
         // Act
-        var result = await _tokenStoreMock.Object.LoadAsync();
+        var result = await this._tokenStoreMock.Object.LoadAsync();
 
         // Assert
         Assert.NotNull(result);
@@ -263,13 +263,13 @@ public class IdentityEndpointsTests
                 Provider = "github",
                 Email = "user@example.com",
                 AccessToken = null!
-            }
+            },
         };
-        _tokenStoreMock.Setup(x => x.LoadAsync())
+        this._tokenStoreMock.Setup(x => x.LoadAsync())
             .ReturnsAsync(accounts);
 
         // Act
-        var result = await _tokenStoreMock.Object.LoadAsync();
+        var result = await this._tokenStoreMock.Object.LoadAsync();
 
         // Assert
         Assert.NotNull(result);
@@ -291,13 +291,13 @@ public class IdentityEndpointsTests
                 AccessToken = "full-token-12345",
                 RefreshToken = "refresh-token-123",
                 ExpiresAt = DateTimeOffset.UtcNow.AddHours(1)
-            }
+            },
         };
-        _tokenStoreMock.Setup(x => x.LoadAsync())
+        this._tokenStoreMock.Setup(x => x.LoadAsync())
             .ReturnsAsync(accounts);
 
         // Act
-        var result = await _tokenStoreMock.Object.LoadAsync();
+        var result = await this._tokenStoreMock.Object.LoadAsync();
 
         // Assert - Verify all IdentityAccount fields are returned from the store
         var account = result.First();
@@ -331,7 +331,7 @@ public class IdentityEndpointsTests
         var request = new IdentityEndpoints.CompleteRequest
         {
             Code = "test-code",
-            State = "test-state"
+            State = "test-state",
         };
 
         // Assert

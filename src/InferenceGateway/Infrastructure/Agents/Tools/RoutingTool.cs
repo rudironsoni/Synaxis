@@ -40,7 +40,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
         {
             try
             {
-                _logger.LogInformation(
+                this._logger.LogInformation(
                     "Switching provider for OrgId={OrgId}, Model={Model}, From={From}, To={To}, Reason={Reason}",
                     organizationId, modelId, fromProvider, toProvider, reason);
 
@@ -50,7 +50,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to switch provider");
+                this._logger.LogError(ex, "Failed to switch provider");
                 return false;
             }
         }
@@ -71,7 +71,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get routing metrics");
+                this._logger.LogError(ex, "Failed to get routing metrics");
                 return new RoutingMetrics(0, new Dictionary<string, int>(), 0m);
             }
         }

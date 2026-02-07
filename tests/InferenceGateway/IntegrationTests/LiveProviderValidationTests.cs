@@ -13,54 +13,78 @@ public class LiveProviderValidationTests : IClassFixture<SynaxisWebApplicationFa
 
     public LiveProviderValidationTests(SynaxisWebApplicationFactory factory, ITestOutputHelper output)
     {
-        _factory = factory;
-        _factory.OutputHelper = output;
+        this._factory = factory;
+        this._factory.OutputHelper = output;
     }
 
     [Fact]
     public async Task Validate_Groq_Connectivity()
     {
-        var config = _factory.Services.GetRequiredService<IConfiguration>();
-        if (!ShouldRunLiveTests(config)) return;
+        var config = this._factory.Services.GetRequiredService<IConfiguration>();
+        if (!ShouldRunLiveTests(config))
+        {
+            return;
+        }
+
         var apiKey = config["Synaxis:InferenceGateway:Providers:Groq:Key"];
 
-        if (string.IsNullOrEmpty(apiKey)) return;
+        if (string.IsNullOrEmpty(apiKey))
+        {
+            return;
+        }
 
-        await ExecuteTest("llama-3.1-8b-instant");
+        await this.ExecuteTest("llama-3.1-8b-instant");
     }
 
     [Fact]
     public async Task Validate_Cohere_Connectivity()
     {
-        var config = _factory.Services.GetRequiredService<IConfiguration>();
-        if (!ShouldRunLiveTests(config)) return;
+        var config = this._factory.Services.GetRequiredService<IConfiguration>();
+        if (!ShouldRunLiveTests(config))
+        {
+            return;
+        }
+
         var apiKey = config["Synaxis:InferenceGateway:Providers:Cohere:Key"];
 
-        if (string.IsNullOrEmpty(apiKey)) return;
+        if (string.IsNullOrEmpty(apiKey))
+        {
+            return;
+        }
 
-        await ExecuteTest("command-r-08-2024");
+        await this.ExecuteTest("command-r-08-2024");
     }
 
     [Fact]
     public async Task Validate_Pollinations_Connectivity()
     {
-        var config = _factory.Services.GetRequiredService<IConfiguration>();
-        if (!ShouldRunLiveTests(config)) return;
+        var config = this._factory.Services.GetRequiredService<IConfiguration>();
+        if (!ShouldRunLiveTests(config))
+        {
+            return;
+        }
 
-        await ExecuteTest("gpt-4o-mini");
+        await this.ExecuteTest("gpt-4o-mini");
     }
 
     [Fact]
     public async Task Validate_Cloudflare_Connectivity()
     {
-        var config = _factory.Services.GetRequiredService<IConfiguration>();
-        if (!ShouldRunLiveTests(config)) return;
+        var config = this._factory.Services.GetRequiredService<IConfiguration>();
+        if (!ShouldRunLiveTests(config))
+        {
+            return;
+        }
+
         var apiKey = config["Synaxis:InferenceGateway:Providers:Cloudflare:Key"];
         var accountId = config["Synaxis:InferenceGateway:Providers:Cloudflare:AccountId"];
 
-        if (string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(accountId)) return;
+        if (string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(accountId))
+        {
+            return;
+        }
 
-        await ExecuteTest("@cf/meta/llama-3-8b-instruct");
+        await this.ExecuteTest("@cf/meta/llama-3-8b-instruct");
     }
 
     private static bool ShouldRunLiveTests(IConfiguration config)
@@ -71,16 +95,16 @@ public class LiveProviderValidationTests : IClassFixture<SynaxisWebApplicationFa
 
     private async Task ExecuteTest(string modelId)
     {
-        var client = _factory.CreateClient();
+        var client = this._factory.CreateClient();
 
         var request = new
         {
             model = modelId,
             messages = new[]
             {
-                new { role = "user", content = "Hello, this is an integration test. Reply with 'OK'." }
+                new { role = "user", content = "Hello, this is an integration test. Reply with 'OK'." },
             },
-            stream = false
+            stream = false,
         };
 
         var response = await client.PostAsJsonAsync("/openai/v1/chat/completions", request);
@@ -101,7 +125,10 @@ public class LiveProviderValidationTests : IClassFixture<SynaxisWebApplicationFa
 
     // Helper records for deserialization matching the Gateway's output
     public record ChatCompletionResponse(string Id, string Object, long Created, string Model, List<Choice> Choices, Usage Usage);
+
     public record Choice(int Index, Message Message, string Finish_Reason);
+
     public record Message(string Role, string Content);
+
     public record Usage(int Prompt_Tokens, int Completion_Tokens, int Total_Tokens);
 }

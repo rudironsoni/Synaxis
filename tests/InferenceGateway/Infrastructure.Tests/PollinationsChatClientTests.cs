@@ -61,7 +61,7 @@ public class PollinationsChatClientTests
             .ReturnsAsync(new HttpResponseMessage
             {
                 StatusCode = HttpStatusCode.OK,
-                Content = new StringContent(responseText)
+                Content = new StringContent(responseText),
             });
 
         var httpClient = new HttpClient(handlerMock.Object);
@@ -92,7 +92,7 @@ public class PollinationsChatClientTests
             .ReturnsAsync(new HttpResponseMessage
             {
                 StatusCode = HttpStatusCode.OK,
-                Content = new StringContent(responseText)
+                Content = new StringContent(responseText),
             });
 
         var httpClient = new HttpClient(handlerMock.Object);
@@ -124,7 +124,7 @@ public class PollinationsChatClientTests
             .ReturnsAsync(new HttpResponseMessage
             {
                 StatusCode = HttpStatusCode.BadRequest,
-                Content = new StringContent("Error response")
+                Content = new StringContent("Error response"),
             });
 
         var httpClient = new HttpClient(handlerMock.Object);
@@ -150,7 +150,7 @@ public class PollinationsChatClientTests
             .ReturnsAsync(new HttpResponseMessage
             {
                 StatusCode = HttpStatusCode.OK,
-                Content = new StringContent(responseText)
+                Content = new StringContent(responseText),
             });
 
         var httpClient = new HttpClient(handlerMock.Object);
@@ -161,7 +161,7 @@ public class PollinationsChatClientTests
             new ChatMessage(ChatRole.System, "You are a helpful assistant"),
             new ChatMessage(ChatRole.User, "Hello"),
             new ChatMessage(ChatRole.Assistant, "Hi there!"),
-            new ChatMessage(ChatRole.User, "How are you?")
+            new ChatMessage(ChatRole.User, "How are you?"),
         };
 
         // Act
@@ -186,7 +186,7 @@ public class PollinationsChatClientTests
             .ReturnsAsync(new HttpResponseMessage
             {
                 StatusCode = HttpStatusCode.OK,
-                Content = new StringContent(responseText)
+                Content = new StringContent(responseText),
             });
 
         var httpClient = new HttpClient(handlerMock.Object);
@@ -214,7 +214,7 @@ public class PollinationsChatClientTests
             .ReturnsAsync(new HttpResponseMessage
             {
                 StatusCode = HttpStatusCode.OK,
-                Content = streamContent
+                Content = streamContent,
             });
 
         var httpClient = new HttpClient(handlerMock.Object);
@@ -250,7 +250,7 @@ public class PollinationsChatClientTests
             .ReturnsAsync(new HttpResponseMessage
             {
                 StatusCode = HttpStatusCode.OK,
-                Content = streamContent
+                Content = streamContent,
             });
 
         var httpClient = new HttpClient(handlerMock.Object);
@@ -286,7 +286,7 @@ public class PollinationsChatClientTests
             .ReturnsAsync(new HttpResponseMessage
             {
                 StatusCode = HttpStatusCode.OK,
-                Content = emptyContent
+                Content = emptyContent,
             });
 
         var httpClient = new HttpClient(handlerMock.Object);
@@ -318,7 +318,7 @@ public class PollinationsChatClientTests
             .ReturnsAsync(new HttpResponseMessage
             {
                 StatusCode = HttpStatusCode.InternalServerError,
-                Content = new StringContent("Server error")
+                Content = new StringContent("Server error"),
             });
 
         var httpClient = new HttpClient(handlerMock.Object);

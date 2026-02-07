@@ -60,7 +60,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             return new RateLimitConfig
             {
                 UserRpm = rpm,
-                UserTpm = tpm
+                UserTpm = tpm,
             };
         }
 
@@ -72,7 +72,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             return new RateLimitConfig
             {
                 OrganizationRpm = rpm,
-                OrganizationTpm = tpm
+                OrganizationTpm = tpm,
             };
         }
 

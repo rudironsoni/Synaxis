@@ -20,7 +20,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity
 
         public async Task<string> GetTokenAsync(CancellationToken cancellationToken = default)
         {
-            var t = await _manager.GetToken("google", cancellationToken).ConfigureAwait(false);
+            var t = await this._manager.GetToken("google", cancellationToken).ConfigureAwait(false);
             return t ?? string.Empty;
         }
     }

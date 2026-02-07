@@ -23,9 +23,9 @@ public class RedisInfrastructureIntegrationTests : IAsyncLifetime
 
     public RedisInfrastructureIntegrationTests(ITestOutputHelper output)
     {
-        _output = output ?? throw new ArgumentNullException(nameof(output));
+        this._output = output ?? throw new ArgumentNullException(nameof(output));
 
-        _redis = new RedisBuilder()
+        this._redis = new RedisBuilder()
             .WithImage("redis:7-alpine")
             .WithPortBinding(6379, true)
             .Build();
@@ -33,22 +33,22 @@ public class RedisInfrastructureIntegrationTests : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        await _redis.StartAsync();
-        _output.WriteLine($"Redis started on {_redis.GetConnectionString()}");
+        await this._redis.StartAsync();
+        this._output.WriteLine($"Redis started on {this._redis.GetConnectionString()}");
 
-        var connectionString = _redis.GetConnectionString();
-        _connection = await ConnectionMultiplexer.ConnectAsync(connectionString);
-        _database = _connection.GetDatabase();
+        var connectionString = this._redis.GetConnectionString();
+        this._connection = await ConnectionMultiplexer.ConnectAsync(connectionString);
+        this._database = this._connection.GetDatabase();
     }
 
     public async Task DisposeAsync()
     {
-        if (_connection != null)
+        if (this._connection != null)
         {
-            await _connection.CloseAsync();
-            _connection.Dispose();
+            await this._connection.CloseAsync();
+            this._connection.Dispose();
         }
-        await _redis.DisposeAsync();
+        await this._redis.DisposeAsync();
     }
 
     [Fact]
@@ -61,22 +61,22 @@ public class RedisInfrastructureIntegrationTests : IAsyncLifetime
             ["userId"] = "user123",
             ["model"] = "gpt-4",
             ["provider"] = "openai",
-            ["createdAt"] = DateTimeOffset.UtcNow.ToString("o")
+            ["createdAt"] = DateTimeOffset.UtcNow.ToString("o"),
         };
 
         // Act - Store session
         foreach (var kvp in sessionData)
         {
-            ArgumentNullException.ThrowIfNull(_database);
-            await _database.HashSetAsync($"session:{sessionId}", kvp.Key, kvp.Value);
+            ArgumentNullException.ThrowIfNull(this._database);
+            await this._database.HashSetAsync($"session:{sessionId}", kvp.Key, kvp.Value);
         }
 
         // Set TTL
-        ArgumentNullException.ThrowIfNull(_database);
-        await _database.KeyExpireAsync($"session:{sessionId}", TimeSpan.FromHours(1));
+        ArgumentNullException.ThrowIfNull(this._database);
+        await this._database.KeyExpireAsync($"session:{sessionId}", TimeSpan.FromHours(1));
 
         // Retrieve session
-        var retrievedData = await _database.HashGetAllAsync($"session:{sessionId}");
+        var retrievedData = await this._database.HashGetAllAsync($"session:{sessionId}");
         var retrievedDict = retrievedData.ToDictionary(
             x => x.Name.ToString(),
             x => x.Value.ToString()
@@ -89,7 +89,7 @@ public class RedisInfrastructureIntegrationTests : IAsyncLifetime
         Assert.Equal(sessionData["provider"], retrievedDict["provider"]);
 
         // Verify TTL is set
-        var ttl = await _database.KeyTimeToLiveAsync($"session:{sessionId}");
+        var ttl = await this._database.KeyTimeToLiveAsync($"session:{sessionId}");
         Assert.NotNull(ttl);
         Assert.True(ttl.Value.TotalMinutes > 55, $"Expected TTL > 55 minutes, got {ttl.Value.TotalMinutes}");
     }
@@ -104,22 +104,22 @@ public class RedisInfrastructureIntegrationTests : IAsyncLifetime
             "{\"role\":\"user\",\"content\":\"Hello\"}",
             "{\"role\":\"assistant\",\"content\":\"Hi there!\"}",
             "{\"role\":\"user\",\"content\":\"How are you?\"}",
-            "{\"role\":\"assistant\",\"content\":\"I'm doing well!\"}"
+            "{\"role\":\"assistant\",\"content\":\"I'm doing well!\"}",
         };
 
         // Act - Append messages
         foreach (var message in messages)
         {
-            ArgumentNullException.ThrowIfNull(_database);
-            await _database.ListRightPushAsync($"conversation:{conversationId}", message);
+            ArgumentNullException.ThrowIfNull(this._database);
+            await this._database.ListRightPushAsync($"conversation:{conversationId}", message);
         }
 
         // Set TTL
-        ArgumentNullException.ThrowIfNull(_database);
-        await _database.KeyExpireAsync($"conversation:{conversationId}", TimeSpan.FromDays(7));
+        ArgumentNullException.ThrowIfNull(this._database);
+        await this._database.KeyExpireAsync($"conversation:{conversationId}", TimeSpan.FromDays(7));
 
         // Retrieve all messages
-        var retrievedMessages = await _database.ListRangeAsync($"conversation:{conversationId}");
+        var retrievedMessages = await this._database.ListRangeAsync($"conversation:{conversationId}");
         var retrievedList = retrievedMessages.Select(x => x.ToString()).ToList();
 
         // Assert
@@ -130,7 +130,7 @@ public class RedisInfrastructureIntegrationTests : IAsyncLifetime
         }
 
         // Verify we can retrieve last N messages
-        var lastTwo = await _database.ListRangeAsync($"conversation:{conversationId}", -2, -1);
+        var lastTwo = await this._database.ListRangeAsync($"conversation:{conversationId}", -2, -1);
         Assert.Equal(2, lastTwo.Length);
         Assert.Contains("How are you?", lastTwo[0].ToString());
         Assert.Contains("I'm doing well!", lastTwo[1].ToString());
@@ -146,7 +146,7 @@ public class RedisInfrastructureIntegrationTests : IAsyncLifetime
         var lockDuration = TimeSpan.FromSeconds(30);
 
         // Act - Acquire lock
-        var acquired = await _database!.StringSetAsync(
+        var acquired = await this._database!.StringSetAsync(
             lockKey,
             lockValue,
             lockDuration,
@@ -157,7 +157,7 @@ public class RedisInfrastructureIntegrationTests : IAsyncLifetime
         Assert.True(acquired, "First lock acquisition should succeed");
 
         // Act - Try to acquire same lock
-        var secondAcquisition = await _database.StringSetAsync(
+        var secondAcquisition = await this._database.StringSetAsync(
             lockKey,
             Guid.NewGuid().ToString(),
             lockDuration,
@@ -175,7 +175,7 @@ public class RedisInfrastructureIntegrationTests : IAsyncLifetime
                 return 0
             end";
 
-        var released = await _database.ScriptEvaluateAsync(
+        var released = await this._database.ScriptEvaluateAsync(
             script,
             new RedisKey[] { lockKey },
             new RedisValue[] { lockValue }
@@ -185,7 +185,7 @@ public class RedisInfrastructureIntegrationTests : IAsyncLifetime
         Assert.Equal(1, (int)released);
 
         // Act - Try to acquire after release
-        var reacquired = await _database.StringSetAsync(
+        var reacquired = await this._database.StringSetAsync(
             lockKey,
             Guid.NewGuid().ToString(),
             lockDuration,
@@ -205,17 +205,17 @@ public class RedisInfrastructureIntegrationTests : IAsyncLifetime
         var ttl = TimeSpan.FromSeconds(2);
 
         // Act - Set with TTL
-        await _database!.StringSetAsync(key, value, ttl);
+        await this._database!.StringSetAsync(key, value, ttl);
 
         // Assert - Key exists immediately
-        var exists = await _database.KeyExistsAsync(key);
+        var exists = await this._database.KeyExistsAsync(key);
         Assert.True(exists, "Key should exist immediately after set");
 
         // Wait for expiration
         await Task.Delay(TimeSpan.FromSeconds(2.5));
 
         // Assert - Key expired
-        var existsAfter = await _database.KeyExistsAsync(key);
+        var existsAfter = await this._database.KeyExistsAsync(key);
         Assert.False(existsAfter, "Key should be expired after TTL");
     }
 
@@ -232,14 +232,14 @@ public class RedisInfrastructureIntegrationTests : IAsyncLifetime
         {
             tasks.Add(Task.Run(async () =>
             {
-                await _database!.StringIncrementAsync(counterKey);
+                await this._database!.StringIncrementAsync(counterKey);
             }));
         }
 
         await Task.WhenAll(tasks);
 
         // Retrieve final value
-        var finalValue = await _database!.StringGetAsync(counterKey);
+        var finalValue = await this._database!.StringGetAsync(counterKey);
 
         // Assert - All increments were applied
         Assert.Equal(iterations, (int)finalValue);
@@ -252,7 +252,7 @@ public class RedisInfrastructureIntegrationTests : IAsyncLifetime
         // In production, the application should degrade gracefully when Redis is unavailable
 
         // Arrange - Create a connection with aggressive timeout settings
-        var config = ConfigurationOptions.Parse(_redis.GetConnectionString());
+        var config = ConfigurationOptions.Parse(this._redis.GetConnectionString());
         config.ConnectTimeout = 100;
         config.SyncTimeout = 100;
         config.AbortOnConnectFail = false;
@@ -272,6 +272,6 @@ public class RedisInfrastructureIntegrationTests : IAsyncLifetime
         // 3. Circuit breakers protect against cascading failures
         // 4. Fallback mechanisms exist for critical paths
 
-        _output.WriteLine("Connection failure handling verified - connection configured with timeouts and retry logic");
+        this._output.WriteLine("Connection failure handling verified - connection configured with timeouts and retry logic");
     }
 }

@@ -30,7 +30,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
         public string GenerateToken(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var secret = _config.JwtSecret;
+            var secret = this._config.JwtSecret;
 
             // Do not allow an empty/whitespace JWT secret. Require explicit configuration.
             if (string.IsNullOrWhiteSpace(secret))
@@ -45,16 +45,16 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim("role", user.Role.ToString()),
-                new Claim("tenantId", user.TenantId.ToString())
+                new Claim("tenantId", user.TenantId.ToString()),
             };
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddDays(7),
-                Issuer = _config.JwtIssuer ?? "Synaxis",
-                Audience = _config.JwtAudience ?? "Synaxis",
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                Issuer = this._config.JwtIssuer ?? "Synaxis",
+                Audience = this._config.JwtAudience ?? "Synaxis",
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
             };
 
             var token = tokenHandler.CreateToken(tokenDescriptor);

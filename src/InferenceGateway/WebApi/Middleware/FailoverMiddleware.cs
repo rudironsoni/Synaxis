@@ -28,8 +28,8 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             RequestDelegate next,
             ILogger<FailoverMiddleware> logger)
         {
-            _next = next ?? throw new ArgumentNullException(nameof(next));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._next = next ?? throw new ArgumentNullException(nameof(next));
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 if (context.Request.Path.StartsWithSegments("/health") ||
                     context.Request.Path.StartsWithSegments("/openapi"))
                 {
-                    await _next(context);
+                    await this._next(context);
                     return;
                 }
 
@@ -60,7 +60,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
 
                 if (!isHealthy)
                 {
-                    _logger.LogWarning(
+                    this._logger.LogWarning(
                         "Current region {Region} is unhealthy. Attempting failover for OrgId: {OrgId}",
                         currentRegion, tenantContext.OrganizationId);
 
@@ -73,7 +73,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
 
                     if (string.IsNullOrEmpty(failoverRegion))
                     {
-                        _logger.LogError(
+                        this._logger.LogError(
                             "No healthy regions available for failover. Current: {CurrentRegion}",
                             currentRegion);
 
@@ -85,12 +85,12 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                                 message = "Service temporarily unavailable in all regions",
                                 type = "service_unavailable",
                                 code = "NO_HEALTHY_REGIONS"
-                            }
+                            },
                         });
                         return;
                     }
 
-                    _logger.LogInformation(
+                    this._logger.LogInformation(
                         "Failing over from {CurrentRegion} to {FailoverRegion}",
                         currentRegion, failoverRegion);
 
@@ -121,7 +121,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
 
                             if (requiresConsent)
                             {
-                                _logger.LogWarning(
+                                this._logger.LogWarning(
                                     "Failover to {FailoverRegion} requires consent. UserId: {UserId}, UserRegion: {UserRegion}",
                                     failoverRegion, tenantContext.UserId.Value, userRegion);
 
@@ -136,7 +136,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                                         user_region = userRegion,
                                         failover_region = failoverRegion,
                                         reason = "primary_region_unavailable"
-                                    }
+                                    },
                                 });
                                 return;
                             }
@@ -150,18 +150,18 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                                 ToRegion = failoverRegion,
                                 LegalBasis = "vital_interest", // Failover is for service continuity
                                 Purpose = "disaster_recovery",
-                                DataCategories = new[] { "api_request", "model_inference" }
+                                DataCategories = new[] { "api_request", "model_inference" },
                             });
                         }
                     }
                 }
 
-                await _next(context);
+                await this._next(context);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred during failover handling");
-                await _next(context);
+                this._logger.LogError(ex, "Error occurred during failover handling");
+                await this._next(context);
             }
         }
 

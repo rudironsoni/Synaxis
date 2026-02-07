@@ -34,7 +34,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
 
         public async Task<ICopilotSession> CreateSessionAsync(SessionConfig config, CancellationToken cancellationToken = default)
         {
-            var s = await _inner.CreateSessionAsync(config, cancellationToken).ConfigureAwait(false);
+            var s = await this._inner.CreateSessionAsync(config, cancellationToken).ConfigureAwait(false);
             return new CopilotSessionAdapter(s);
         }
 

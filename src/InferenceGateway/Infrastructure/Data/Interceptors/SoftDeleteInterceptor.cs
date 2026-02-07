@@ -90,7 +90,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Data.Interceptors
 
             try
             {
-                ProcessSoftDelete(eventData.Context);
+                this.ProcessSoftDelete(eventData.Context);
             }
             catch (Exception ex)
             {
@@ -125,7 +125,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Data.Interceptors
 
             try
             {
-                ProcessSoftDelete(eventData.Context);
+                this.ProcessSoftDelete(eventData.Context);
             }
             catch (Exception ex)
             {
@@ -152,7 +152,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Data.Interceptors
         /// </remarks>
         private void ProcessSoftDelete(DbContext context)
         {
-            var currentUserId = GetCurrentUserId();
+            var currentUserId = this.GetCurrentUserId();
             var utcNow = DateTime.UtcNow;
 
             // Find all entities marked for deletion that support soft delete
@@ -277,7 +277,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Data.Interceptors
         /// </remarks>
         private Guid? GetCurrentUserId()
         {
-            var httpContext = _httpContextAccessor?.HttpContext;
+            var httpContext = this._httpContextAccessor?.HttpContext;
             if (httpContext?.User?.Identity?.IsAuthenticated != true)
             {
                 return null;

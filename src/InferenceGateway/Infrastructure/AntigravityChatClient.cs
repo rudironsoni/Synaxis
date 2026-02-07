@@ -55,21 +55,21 @@ namespace Synaxis.InferenceGateway.Infrastructure
         public async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
         {
             var messagesList = chatMessages.ToList();
-            var request = BuildRequest(messagesList, options);
+            var request = this.BuildRequest(messagesList, options);
             var json = JsonSerializer.Serialize(request, AntigravityJsonContext.Default.AntigravityRequest);
 
             using var httpRequest = new HttpRequestMessage(HttpMethod.Post, EndpointRelative);
             httpRequest.Content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            await PrepareRequestAsync(httpRequest, cancellationToken);
+            await this.PrepareRequestAsync(httpRequest, cancellationToken).ConfigureAwait(false);
 
-            using var response = await _httpClient.SendAsync(httpRequest, cancellationToken);
-            await EnsureSuccessAsync(response);
+            using var response = await this._httpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false);
+            await this.EnsureSuccessAsync(response).ConfigureAwait(false);
 
-            var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
+            var responseJson = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             var agResponse = JsonSerializer.Deserialize(responseJson, AntigravityJsonContext.Default.AntigravityResponseWrapper);
 
-            return MapResponse(agResponse?.Response);
+            return this.MapResponse(agResponse?.Response);
         }
 
         public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
@@ -78,31 +78,41 @@ namespace Synaxis.InferenceGateway.Infrastructure
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             var messagesList = chatMessages.ToList();
-            var request = BuildRequest(messagesList, options);
+            var request = this.BuildRequest(messagesList, options);
             var json = JsonSerializer.Serialize(request, AntigravityJsonContext.Default.AntigravityRequest);
 
             using var httpRequest = new HttpRequestMessage(HttpMethod.Post, StreamEndpointRelative);
             httpRequest.Content = new StringContent(json, Encoding.UTF8, "application/json");
             httpRequest.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
 
-            await PrepareRequestAsync(httpRequest, cancellationToken);
+            await this.PrepareRequestAsync(httpRequest, cancellationToken).ConfigureAwait(false);
 
-            using var response = await _httpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-            await EnsureSuccessAsync(response);
+            using var response = await this._httpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+            await this.EnsureSuccessAsync(response).ConfigureAwait(false);
 
-            using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+            using var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
             using var reader = new StreamReader(stream);
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                var line = await reader.ReadLineAsync(cancellationToken);
-                if (line == null) break; // End of stream
-                if (string.IsNullOrWhiteSpace(line)) continue;
+                var line = await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false);
+                if (line == null)
+                {
+                    break; // End of stream
+                }
+
+                if (string.IsNullOrWhiteSpace(line))
+                {
+                    continue;
+                }
 
                 if (line.StartsWith("data: "))
                 {
                     var data = line.Substring(6).Trim();
-                    if (data == "[DONE]") break;
+                    if (data == "[DONE]")
+                    {
+                        break;
+                    }
 
                     AntigravityResponseWrapper? wrapper = null;
                     try
@@ -124,7 +134,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
                                         yield return new ChatResponseUpdate
                                         {
                                             Role = new ChatRole(candidate.Content.Role ?? "model"),
-                                            Contents = { new TextContent(part.Text) }
+                                            Contents = { new TextContent(part.Text) },
                                         };
                                     }
                                 }
@@ -137,7 +147,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
 
         private async Task PrepareRequestAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var token = await _tokenProvider.GetTokenAsync(cancellationToken);
+            var token = await this._tokenProvider.GetTokenAsync(cancellationToken).ConfigureAwait(false);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
             // Strict Headers required by Antigravity
@@ -150,7 +160,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
         {
             if (!response.IsSuccessStatusCode)
             {
-                var error = await response.Content.ReadAsStringAsync();
+                var error = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 throw new HttpRequestException($"Antigravity API Error ({response.StatusCode}): {error}");
             }
         }
@@ -178,7 +188,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
                     contentList.Add(new Content
                     {
                         Role = role,
-                        Parts = new List<Part> { new Part { Text = msg.Text } }
+                        Parts = new List<Part> { new Part { Text = msg.Text } },
                     });
                 }
             }
@@ -188,7 +198,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
                 MaxOutputTokens = options?.MaxOutputTokens ?? 4000,
                 Temperature = options?.Temperature ?? 0.7f,
                 TopP = options?.TopP ?? 0.95f,
-                StopSequences = options?.StopSequences
+                StopSequences = options?.StopSequences,
             };
 
             // Handle Thinking Config
@@ -205,32 +215,34 @@ namespace Synaxis.InferenceGateway.Infrastructure
 
             return new AntigravityRequest
             {
-                Project = _projectId,
-                Model = _modelId,
+                Project = this._projectId,
+                Model = this._modelId,
                 RequestPayload = new RequestPayload
                 {
                     Contents = contentList,
                     SystemInstruction = systemInstruction,
                     GenerationConfig = config
-                }
+                },
             };
         }
 
         private ChatResponse MapResponse(AntigravityResponse? response)
         {
             if (response?.Candidates == null || response.Candidates.Count == 0)
+            {
                 return new ChatResponse(new List<ChatMessage>());
+            }
 
             var candidate = response.Candidates[0];
             var text = string.Join("", candidate.Content?.Parts?.Select(p => p.Text) ?? Array.Empty<string>());
 
             return new ChatResponse(new List<ChatMessage>
             {
-                new ChatMessage(new ChatRole(candidate.Content?.Role ?? "model"), text)
+                new ChatMessage(new ChatRole(candidate.Content?.Role ?? "model"), text),
             })
             {
                 ResponseId = response.ResponseId,
-                ModelId = response.ModelVersion
+                ModelId = response.ModelVersion,
             };
         }
 
@@ -252,19 +264,19 @@ namespace Synaxis.InferenceGateway.Infrastructure
         public string Model { get; set; } = string.Empty;
 
         [JsonPropertyName("request")]
-        public RequestPayload RequestPayload { get; set; } = new ();
+        public RequestPayload RequestPayload { get; set; } = new();
     }
 
     internal class RequestPayload
     {
         [JsonPropertyName("contents")]
-        public List<Content> Contents { get; set; } = new ();
+        public List<Content> Contents { get; set; } = new();
 
         [JsonPropertyName("systemInstruction")]
         public SystemInstruction? SystemInstruction { get; set; }
 
         [JsonPropertyName("generationConfig")]
-        public GenerationConfig GenerationConfig { get; set; } = new ();
+        public GenerationConfig GenerationConfig { get; set; } = new();
     }
 
     internal class Content
@@ -273,13 +285,13 @@ namespace Synaxis.InferenceGateway.Infrastructure
         public string Role { get; set; } = "user";
 
         [JsonPropertyName("parts")]
-        public List<Part> Parts { get; set; } = new ();
+        public List<Part> Parts { get; set; } = new();
     }
 
     internal class SystemInstruction
     {
         [JsonPropertyName("parts")]
-        public List<Part> Parts { get; set; } = new ();
+        public List<Part> Parts { get; set; } = new();
     }
 
     internal class Part
@@ -327,7 +339,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
     internal class AntigravityResponse
     {
         [JsonPropertyName("candidates")]
-        public List<Candidate> Candidates { get; set; } = new ();
+        public List<Candidate> Candidates { get; set; } = new();
 
         [JsonPropertyName("modelVersion")]
         public string ModelVersion { get; set; } = string.Empty;

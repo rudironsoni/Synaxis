@@ -29,7 +29,7 @@ public class CohereChatClientTests
             .ReturnsAsync(new HttpResponseMessage
             {
                 StatusCode = HttpStatusCode.OK,
-                Content = new StringContent(responseJson)
+                Content = new StringContent(responseJson),
             });
 
         var httpClient = new HttpClient(handlerMock.Object);

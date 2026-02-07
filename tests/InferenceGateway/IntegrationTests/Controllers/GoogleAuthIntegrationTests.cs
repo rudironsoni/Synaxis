@@ -22,10 +22,10 @@ public class GoogleAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
 
     public GoogleAuthIntegrationTests(SynaxisWebApplicationFactory factory, ITestOutputHelper output)
     {
-        _factory = factory;
-        _factory.OutputHelper = output;
-        _output = output;
-        _client = _factory.CreateClient();
+        this._factory = factory;
+        this._factory.OutputHelper = output;
+        this._output = output;
+        this._client = this._factory.CreateClient();
     }
 
     [Fact]
@@ -36,7 +36,7 @@ public class GoogleAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
         var googleEmail = $"testuser_{Guid.NewGuid()}@gmail.com";
 
         // Act & Assert: Verify user can be created with Google auth provider
-        var scope = _factory.Services.CreateScope();
+        var scope = this._factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
 
         // Create a test user as if they completed Google auth
@@ -45,7 +45,7 @@ public class GoogleAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
             Id = Guid.NewGuid(),
             Name = "Google Test Tenant",
             Region = TenantRegion.Us,
-            Status = TenantStatus.Active
+            Status = TenantStatus.Active,
         };
         dbContext.Tenants.Add(tenant);
 
@@ -58,7 +58,7 @@ public class GoogleAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
             Role = UserRole.Owner,
             AuthProvider = "google",
             ProviderUserId = googleUserId,
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow,
         };
         dbContext.Users.Add(user);
 
@@ -79,7 +79,7 @@ public class GoogleAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
     public async Task GoogleAuth_MultipleUsers_SeparateTenants()
     {
         // Arrange: Create two Google users
-        var scope = _factory.Services.CreateScope();
+        var scope = this._factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
 
         var googleId1 = "google_user_1";
@@ -91,7 +91,7 @@ public class GoogleAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
             Id = Guid.NewGuid(),
             Name = "Google User 1 Tenant",
             Region = TenantRegion.Us,
-            Status = TenantStatus.Active
+            Status = TenantStatus.Active,
         };
         dbContext.Tenants.Add(tenant1);
 
@@ -104,7 +104,7 @@ public class GoogleAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
             Role = UserRole.Owner,
             AuthProvider = "google",
             ProviderUserId = googleId1,
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow,
         };
         dbContext.Users.Add(user1);
 
@@ -114,7 +114,7 @@ public class GoogleAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
             Id = Guid.NewGuid(),
             Name = "Google User 2 Tenant",
             Region = TenantRegion.Us,
-            Status = TenantStatus.Active
+            Status = TenantStatus.Active,
         };
         dbContext.Tenants.Add(tenant2);
 
@@ -127,7 +127,7 @@ public class GoogleAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
             Role = UserRole.Owner,
             AuthProvider = "google",
             ProviderUserId = googleId2,
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow,
         };
         dbContext.Users.Add(user2);
 
@@ -148,7 +148,7 @@ public class GoogleAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
     public async Task GoogleAuth_User_HasOwnerRole()
     {
         // Arrange
-        var scope = _factory.Services.CreateScope();
+        var scope = this._factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
 
         var googleUserId = $"google_user_{Guid.NewGuid()}";
@@ -158,7 +158,7 @@ public class GoogleAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
             Id = Guid.NewGuid(),
             Name = "Google Auth Test Tenant",
             Region = TenantRegion.Us,
-            Status = TenantStatus.Active
+            Status = TenantStatus.Active,
         };
         dbContext.Tenants.Add(tenant);
 
@@ -171,7 +171,7 @@ public class GoogleAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
             Role = UserRole.Owner,
             AuthProvider = "google",
             ProviderUserId = googleUserId,
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow,
         };
         dbContext.Users.Add(user);
 
@@ -189,7 +189,7 @@ public class GoogleAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
     public async Task GoogleAuth_User_NoPasswordHashSet()
     {
         // Arrange: OAuth users should not have password hashes
-        var scope = _factory.Services.CreateScope();
+        var scope = this._factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
 
         var googleUserId = $"google_oauth_{Guid.NewGuid()}";
@@ -199,7 +199,7 @@ public class GoogleAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
             Id = Guid.NewGuid(),
             Name = "OAuth Test Tenant",
             Region = TenantRegion.Us,
-            Status = TenantStatus.Active
+            Status = TenantStatus.Active,
         };
         dbContext.Tenants.Add(tenant);
 
@@ -212,7 +212,7 @@ public class GoogleAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
             Role = UserRole.Owner,
             AuthProvider = "google",
             ProviderUserId = googleUserId,
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow,
         };
         dbContext.Users.Add(user);
 
@@ -230,7 +230,7 @@ public class GoogleAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
     public async Task GoogleAuth_UserPersistence_PreservesProviderInfo()
     {
         // Arrange
-        var scope = _factory.Services.CreateScope();
+        var scope = this._factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
 
         var googleUserId = "987654321";
@@ -241,7 +241,7 @@ public class GoogleAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
             Id = Guid.NewGuid(),
             Name = "Jane Doe Tenant",
             Region = TenantRegion.Us,
-            Status = TenantStatus.Active
+            Status = TenantStatus.Active,
         };
         dbContext.Tenants.Add(tenant);
 
@@ -254,14 +254,14 @@ public class GoogleAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
             Role = UserRole.Owner,
             AuthProvider = "google",
             ProviderUserId = googleUserId,
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow,
         };
         dbContext.Users.Add(user);
 
         await dbContext.SaveChangesAsync();
 
         // Act: Reload user in new context
-        var newScope = _factory.Services.CreateScope();
+        var newScope = this._factory.Services.CreateScope();
         var newDbContext = newScope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
         var reloadedUser = await newDbContext.Users
             .FirstOrDefaultAsync(u => u.ProviderUserId == googleUserId);
@@ -277,7 +277,7 @@ public class GoogleAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
     public async Task GoogleAuth_User_CreatesActiveTenant()
     {
         // Arrange
-        var scope = _factory.Services.CreateScope();
+        var scope = this._factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
 
         var googleUserId = "tenant_test_user";
@@ -288,7 +288,7 @@ public class GoogleAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
             Id = tenantId,
             Name = "Google User Tenant",
             Region = TenantRegion.Us,
-            Status = TenantStatus.Active
+            Status = TenantStatus.Active,
         };
         dbContext.Tenants.Add(tenant);
 
@@ -301,7 +301,7 @@ public class GoogleAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
             Role = UserRole.Owner,
             AuthProvider = "google",
             ProviderUserId = googleUserId,
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow,
         };
         dbContext.Users.Add(user);
 
@@ -333,7 +333,7 @@ public class GoogleAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
             new (JwtRegisteredClaimNames.Email, email),
             new ("role", role.ToString()),
             new ("tenantId", tenantId.ToString()),
-            new ("authProvider", "google")
+            new ("authProvider", "google"),
         };
 
         // Verify all required claims are present
@@ -348,7 +348,7 @@ public class GoogleAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
     public async Task GoogleAuth_ExistingUser_UpdatesEmailIfChanged()
     {
         // Arrange: Create a user with initial email
-        var scope = _factory.Services.CreateScope();
+        var scope = this._factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
 
         var googleUserId = "existing_google_user";
@@ -360,7 +360,7 @@ public class GoogleAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
             Id = Guid.NewGuid(),
             Name = "Email Update Test Tenant",
             Region = TenantRegion.Us,
-            Status = TenantStatus.Active
+            Status = TenantStatus.Active,
         };
         dbContext.Tenants.Add(tenant);
 
@@ -373,7 +373,7 @@ public class GoogleAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
             Role = UserRole.Owner,
             AuthProvider = "google",
             ProviderUserId = googleUserId,
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow,
         };
         dbContext.Users.Add(user);
 
@@ -389,7 +389,7 @@ public class GoogleAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFac
         await dbContext.SaveChangesAsync();
 
         // Assert: Verify email was updated
-        var newScope = _factory.Services.CreateScope();
+        var newScope = this._factory.Services.CreateScope();
         var newDbContext = newScope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
         var reloadedUser = await newDbContext.Users.FindAsync(userId);
 
