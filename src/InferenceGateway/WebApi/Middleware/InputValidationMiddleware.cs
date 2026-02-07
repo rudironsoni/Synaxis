@@ -42,11 +42,13 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         {
             if (context.Request.ContentLength > this._maxRequestBodySize)
             {
-                this._logger.LogWarning("Request body too large: {ContentLength} bytes (max: {MaxSize} bytes)",
-                    context.Request.ContentLength, this._maxRequestBodySize);
+                this._logger.LogWarning(
+                    "Request body too large: {ContentLength} bytes (max: {MaxSize} bytes)",
+                    context.Request.ContentLength,
+                    this._maxRequestBodySize);
 
                 context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                await context.Response.WriteAsJsonAsync(new { error = "Request body too large" });
+                await context.Response.WriteAsJsonAsync(new { error = "Request body too large" }).ConfigureAwait(false);
                 return;
             }
 
@@ -58,12 +60,12 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     this._logger.LogWarning("Invalid content type: {ContentType}", contentType);
 
                     context.Response.StatusCode = (int)HttpStatusCode.UnsupportedMediaType;
-                    await context.Response.WriteAsJsonAsync(new { error = "Content-Type must be application/json" });
+                    await context.Response.WriteAsJsonAsync(new { error = "Content-Type must be application/json" }).ConfigureAwait(false);
                     return;
                 }
             }
 
-            await this._next(context);
+            await this._next(context).ConfigureAwait(false);
         }
     }
 }

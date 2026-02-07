@@ -38,7 +38,7 @@ namespace Synaxis.InferenceGateway.WebApi.Features.Chat.Handlers
         /// <returns>The agent response.</returns>
         public async ValueTask<AgentResponse> Handle(ChatCommand request, CancellationToken cancellationToken)
         {
-            return await this._agent.RunAsync(request.Messages, cancellationToken: cancellationToken);
+            return await this._agent.RunAsync(request.Messages, cancellationToken: cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>

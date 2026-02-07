@@ -42,7 +42,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         {
             try
             {
-                await this._next(context);
+                await this._next(context).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -57,8 +57,13 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
 
                 var isStreamingRequest = IsStreamingRequest(context);
 
-                this._logger.LogError(ex, "Unhandled exception caught. RequestId: {RequestId}, Path: {Path}, Method: {Method}, IsStreaming: {IsStreaming}",
-                    requestId, context.Request.Path, context.Request.Method, isStreamingRequest);
+                this._logger.LogError(
+                    ex,
+                    "Unhandled exception caught. RequestId: {RequestId}, Path: {Path}, Method: {Method}, IsStreaming: {IsStreaming}",
+                    requestId,
+                    context.Request.Path,
+                    context.Request.Method,
+                    isStreamingRequest);
 
                 // Special handling for AggregateException produced by the router
                 if (ex is AggregateException agg)
@@ -68,8 +73,12 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     var summaries = new List<string>();
                     var statusCodes = new List<int>();
 
-                    this._logger.LogError(ex, "AggregateException caught. RequestId: {RequestId}, Path: {Path}, Inner exceptions: {InnerExceptionCount}",
-                        requestId, context.Request.Path, flat.InnerExceptions.Count);
+                    this._logger.LogError(
+                        ex,
+                        "AggregateException caught. RequestId: {RequestId}, Path: {Path}, Inner exceptions: {InnerExceptionCount}",
+                        requestId,
+                        context.Request.Path,
+                        flat.InnerExceptions.Count);
 
                     foreach (var inner in flat.InnerExceptions)
                     {
@@ -170,12 +179,12 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                                 message = message,
                                 code = "upstream_routing_failure",
                                 details = details,
-                                request_id = requestId
+                                request_id = requestId,
                             },
                         };
 
-                        await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(errorEvent)}\n\n");
-                        await context.Response.WriteAsync("data: [DONE]\n\n");
+                        await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(errorEvent)}\n\n").ConfigureAwait(false);
+                        await context.Response.WriteAsync("data: [DONE]\n\n").ConfigureAwait(false);
                     }
                     else
                     {
@@ -188,11 +197,11 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                                 message = message,
                                 code = "upstream_routing_failure",
                                 details = details,
-                                request_id = requestId
+                                request_id = requestId,
                             },
                         };
 
-                        await context.Response.WriteAsync(JsonSerializer.Serialize(error));
+                        await context.Response.WriteAsync(JsonSerializer.Serialize(error)).ConfigureAwait(false);
                     }
 
                     return;
@@ -216,8 +225,15 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     statusCode = (int)ErrorCodeMappings.GetStatusCode(errorCode);
                 }
 
-                this._logger.LogError(ex, "Exception caught. RequestId: {RequestId}, Path: {Path}, ErrorCode: {ErrorCode}, ErrorType: {ErrorType}, ExceptionType: {ExceptionType}, Message: {ExceptionMessage}",
-                    requestId, context.Request.Path, errorCode, errorType, ex.GetType().Name, ex.Message);
+                this._logger.LogError(
+                    ex,
+                    "Exception caught. RequestId: {RequestId}, Path: {Path}, ErrorCode: {ErrorCode}, ErrorType: {ErrorType}, ExceptionType: {ExceptionType}, Message: {ExceptionMessage}",
+                    requestId,
+                    context.Request.Path,
+                    errorCode,
+                    errorType,
+                    ex.GetType().Name,
+                    ex.Message);
 
                 context.Response.StatusCode = statusCode;
 
@@ -233,12 +249,12 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                             type = errorType,
                             param = (string?)null,
                             code = errorCode,
-                            request_id = requestId
+                            request_id = requestId,
                         },
                     };
 
-                    await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(errorEvent)}\n\n");
-                    await context.Response.WriteAsync("data: [DONE]\n\n");
+                    await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(errorEvent)}\n\n").ConfigureAwait(false);
+                    await context.Response.WriteAsync("data: [DONE]\n\n").ConfigureAwait(false);
                 }
                 else
                 {
@@ -252,11 +268,11 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                             type = errorType,
                             param = (string?)null,
                             code = errorCode,
-                            request_id = requestId
+                            request_id = requestId,
                         },
                     };
 
-                    await context.Response.WriteAsync(JsonSerializer.Serialize(singleError));
+                    await context.Response.WriteAsync(JsonSerializer.Serialize(singleError)).ConfigureAwait(false);
                 }
             }
         }

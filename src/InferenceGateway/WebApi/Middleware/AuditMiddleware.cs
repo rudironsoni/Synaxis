@@ -37,6 +37,8 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         /// <summary>
         /// Invokes the middleware to log request details.
         /// </summary>
+        /// <param name="context">The HTTP context.</param>
+        /// <param name="tenantContext">The tenant context.</param>
         public async Task InvokeAsync(
             HttpContext context,
             ITenantContext tenantContext)
@@ -46,7 +48,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 context.Request.Path.StartsWithSegments("/openapi") ||
                 context.Request.Path.Value?.Contains("swagger", StringComparison.OrdinalIgnoreCase) == true)
             {
-                await this._next(context);
+                await this._next(context).ConfigureAwait(false);
                 return;
             }
 
@@ -63,7 +65,11 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             // Log request start
             this._logger.LogInformation(
                 "API Request Started: {RequestId} {Method} {Path}{Query} from {ClientIp}",
-                requestId, requestMethod, requestPath, requestQuery, clientIp);
+                requestId,
+                requestMethod,
+                requestPath,
+                requestQuery,
+                clientIp);
 
             // Capture original response body stream
             var originalBodyStream = context.Response.Body;
@@ -74,7 +80,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 context.Response.Body = responseBodyStream;
 
                 // Process the request
-                await this._next(context);
+                await this._next(context).ConfigureAwait(false);
 
                 stopwatch.Stop();
 
@@ -88,29 +94,42 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                               statusCode >= 400 ? LogLevel.Warning :
                               LogLevel.Information;
 
-                this._logger.Log(logLevel,
+                this._logger.Log(
+                    logLevel,
                     "API Request Completed: {RequestId} {Method} {Path} -> {StatusCode} in {Duration}ms | " +
                     "OrgId: {OrgId} | UserId: {UserId} | ApiKeyId: {ApiKeyId} | " +
                     "Region: {UserRegion} | CrossBorder: {CrossBorder} | " +
                     "Size: {ResponseSize} bytes",
-                    requestId, requestMethod, requestPath, statusCode, stopwatch.ElapsedMilliseconds,
-                    tenantContext.OrganizationId, tenantContext.UserId, tenantContext.ApiKeyId,
-                    context.Items["UserRegion"], context.Items["IsCrossBorder"],
+                    requestId,
+                    requestMethod,
+                    requestPath,
+                    statusCode,
+                    stopwatch.ElapsedMilliseconds,
+                    tenantContext.OrganizationId,
+                    tenantContext.UserId,
+                    tenantContext.ApiKeyId,
+                    context.Items["UserRegion"],
+                    context.Items["IsCrossBorder"],
                     responseSize);
 
                 // Copy response body back to original stream
                 responseBodyStream.Seek(0, SeekOrigin.Begin);
-                await responseBodyStream.CopyToAsync(originalBodyStream);
+                await responseBodyStream.CopyToAsync(originalBodyStream).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 stopwatch.Stop();
 
-                this._logger.LogError(ex,
+                this._logger.LogError(
+                    ex,
                     "API Request Failed: {RequestId} {Method} {Path} after {Duration}ms | " +
                     "OrgId: {OrgId} | Error: {ErrorMessage}",
-                    requestId, requestMethod, requestPath, stopwatch.ElapsedMilliseconds,
-                    tenantContext.OrganizationId, ex.Message);
+                    requestId,
+                    requestMethod,
+                    requestPath,
+                    stopwatch.ElapsedMilliseconds,
+                    tenantContext.OrganizationId,
+                    ex.Message);
 
                 throw;
             }
