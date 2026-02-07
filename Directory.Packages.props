@@ -12,7 +12,7 @@
     <PackageVersion Include="coverlet.collector" Version="6.0.2" />
     <PackageVersion Include="coverlet.msbuild" Version="6.0.2" />
     <PackageVersion Include="FluentAssertions" Version="7.0.0" />
-    <PackageVersion Include="FsCheck.Xunit" Version="3.0.0" />
+    <PackageVersion Include="FsCheck.Xunit" Version="2.16.6" />
     <PackageVersion Include="DotNetEnv" Version="3.1.1" />
     <PackageVersion Include="GitHub.Copilot.SDK" Version="0.1.19" />
     <PackageVersion Include="Google.Apis.Auth" Version="1.73.0" />

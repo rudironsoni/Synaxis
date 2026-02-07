@@ -12,6 +12,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
 
+    /// <summary>
+    /// Manages identity accounts, authentication strategies, and token refresh operations.
+    /// </summary>
     public sealed class IdentityManager : IHostedService, IDisposable
     {
         private readonly IEnumerable<IAuthStrategy> _strategies;
@@ -22,6 +25,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
         private readonly List<IdentityAccount> _accounts = new List<IdentityAccount>();
         private Timer? _timer;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="IdentityManager"/> class.
+        /// </summary>
+        /// <param name="strategies">The collection of authentication strategies.</param>
+        /// <param name="store">The secure token store.</param>
+        /// <param name="logger">The logger instance.</param>
         public IdentityManager(IEnumerable<IAuthStrategy> strategies, ISecureTokenStore store, ILogger<IdentityManager> logger)
         {
             this._strategies = strategies ?? Array.Empty<IAuthStrategy>();
@@ -52,7 +61,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
             }
 
             // Load existing accounts from store synchronously at startup
-            Task.Run(async () =>
+            _ = Task.Run(async () =>
             {
                 try
                 {
@@ -63,8 +72,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
                         if (loaded != null)
                         {
                             this._accounts.AddRange(loaded);
-                        }
                     }
+                }
+
                     this._initialLoadComplete.TrySetResult(true);
                 }
                 catch (Exception ex)
@@ -75,13 +85,34 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
             });
         }
 
+        /// <inheritdoc/>
         public Task StartAsync(CancellationToken cancellationToken)
         {
             // Start a timer to refresh tokens periodically
-            this._timer = new Timer(async _ => await this.RefreshLoopAsync(), null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1)).ConfigureAwait(false);
+            this._timer = new Timer(
+                _ =>
+                {
+#pragma warning disable S1854 // Intentional fire-and-forget async operation
+                    _ = Task.Run(async () =>
+#pragma warning restore S1854
+                    {
+                        try
+                        {
+                            await this.RefreshLoopAsync().ConfigureAwait(false);
+                        }
+                        catch (Exception ex)
+                        {
+                            this._logger.LogError(ex, "Error in refresh loop");
+                        }
+                    });
+                },
+                null,
+                TimeSpan.FromMinutes(1),
+                TimeSpan.FromMinutes(1));
             return Task.CompletedTask;
         }
 
+        /// <inheritdoc/>
         public Task StopAsync(CancellationToken cancellationToken)
         {
             this._timer?.Change(Timeout.Infinite, 0);
@@ -90,13 +121,15 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
 
         /// <summary>
         /// Waits for the initial account loading to complete.
-        /// This is primarily used in tests to ensure background loading is finished.
         /// </summary>
+        /// <param name="ct">Cancellation token.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
         public Task WaitForInitialLoadAsync(CancellationToken ct = default)
         {
             return this._initialLoadComplete.Task.WaitAsync(ct);
         }
 
+        /// <inheritdoc/>
         public void Dispose()
         {
             this._timer?.Dispose();
@@ -133,7 +166,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
                                 acc.RefreshToken = tokenResp.RefreshToken;
                             }
 
-                            if (tokenResp.ExpiresInthis.Seconds.HasValue)
+                            if (tokenResp.ExpiresInSeconds.HasValue)
                             {
                                 acc.ExpiresAt = DateTimeOffset.UtcNow.AddSeconds(tokenResp.ExpiresInSeconds.Value);
                             }
@@ -154,6 +187,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
                 {
                     snapshot = this._accounts.Select(a => a).ToList();
                 }
+
                 await this._store.SaveAsync(snapshot).ConfigureAwait(false);
             }
             catch (Exception ex)
@@ -170,6 +204,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
             }
 
             var prov = provider.Trim();
+
             // Try exact match on type name or substring match
             foreach (var s in this._strategies)
             {
@@ -184,6 +219,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
             return this._strategies.FirstOrDefault();
         }
 
+        /// <summary>
+        /// Initiates an authentication flow for the specified provider.
+        /// </summary>
+        /// <param name="provider">The provider name.</param>
+        /// <param name="ct">Cancellation token.</param>
+        /// <returns>The authentication result.</returns>
         public async Task<AuthResult?> StartAuth(string provider, CancellationToken ct = default)
         {
             var strat = this.FindStrategyForProvider(provider);
@@ -197,7 +238,15 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
         }
 
         // New helper to complete auth from external callers by provider
-        public async Task<AuthResult> CompleteAuth(string provider, string code, string state)
+
+        /// <summary>
+        /// Completes an authentication flow using the provided authorization code and state.
+        /// </summary>
+        /// <param name="provider">The provider name.</param>
+        /// <param name="code">The authorization code.</param>
+        /// <param name="state">The state parameter.</param>
+        /// <returns>The authentication result.</returns>
+        public Task<AuthResult> CompleteAuth(string provider, string code, string state)
         {
             var strat = this.FindStrategyForProvider(provider);
             if (strat == null)
@@ -206,9 +255,15 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
                 throw new InvalidOperationException("No strategy found");
             }
 
-            return await strat.CompleteFlowAsync(code, state, CancellationToken.None).ConfigureAwait(false);
+            return strat.CompleteFlowAsync(code, state, CancellationToken.None);
         }
 
+        /// <summary>
+        /// Retrieves an access token for the specified provider.
+        /// </summary>
+        /// <param name="provider">The provider name.</param>
+        /// <param name="ct">Cancellation token.</param>
+        /// <returns>The access token or null if not found.</returns>
         public async Task<string?> GetToken(string provider, CancellationToken ct = default)
         {
             IdentityAccount? acc;
@@ -241,7 +296,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
                                     acc.RefreshToken = tokenResp.RefreshToken;
                                 }
 
-                                if (tokenResp.ExpiresInthis.Seconds.HasValue)
+                                if (tokenResp.ExpiresInSeconds.HasValue)
                                 {
                                     acc.ExpiresAt = DateTimeOffset.UtcNow.AddSeconds(tokenResp.ExpiresInSeconds.Value);
                                 }
@@ -260,6 +315,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
             return acc.AccessToken;
         }
 
+        /// <summary>
+        /// Adds or updates an identity account in the manager.
+        /// </summary>
+        /// <param name="account">The account to add or update.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
         public async Task AddOrUpdateAccountAsync(IdentityAccount account)
         {
             lock (this._lock)

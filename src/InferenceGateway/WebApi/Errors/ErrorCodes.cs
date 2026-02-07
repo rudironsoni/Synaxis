@@ -11,52 +11,52 @@ namespace Synaxis.InferenceGateway.WebApi.Errors
     public static class ErrorCodes
     {
         /// <summary>
-        /// Invalid request error - client provided invalid input (400)
+        /// Invalid request error - client provided invalid input (400).
         /// </summary>
         public const string InvalidRequestError = "invalid_request_error";
 
         /// <summary>
-        /// Invalid value - specific parameter has invalid value (400)
+        /// Invalid value - specific parameter has invalid value (400).
         /// </summary>
         public const string InvalidValue = "invalid_value";
 
         /// <summary>
-        /// Upstream routing failure - all providers failed (502)
+        /// Upstream routing failure - all providers failed (502).
         /// </summary>
         public const string UpstreamRoutingFailure = "upstream_routing_failure";
 
         /// <summary>
-        /// Provider error - specific provider returned an error (502)
+        /// Provider error - specific provider returned an error (502).
         /// </summary>
         public const string ProviderError = "provider_error";
 
         /// <summary>
-        /// Rate limit exceeded - too many requests (429)
+        /// Rate limit exceeded - too many requests (429).
         /// </summary>
         public const string RateLimitExceeded = "rate_limit_exceeded";
 
         /// <summary>
-        /// Authentication error - invalid or missing credentials (401)
+        /// Authentication error - invalid or missing credentials (401).
         /// </summary>
         public const string AuthenticationError = "authentication_error";
 
         /// <summary>
-        /// Authorization error - insufficient permissions (403)
+        /// Authorization error - insufficient permissions (403).
         /// </summary>
         public const string AuthorizationError = "authorization_error";
 
         /// <summary>
-        /// Not found - resource not found (404)
+        /// Not found - resource not found (404).
         /// </summary>
         public const string NotFound = "not_found";
 
         /// <summary>
-        /// Service unavailable - service temporarily unavailable (503)
+        /// Service unavailable - service temporarily unavailable (503).
         /// </summary>
         public const string ServiceUnavailable = "service_unavailable";
 
         /// <summary>
-        /// Internal server error - unexpected server error (500)
+        /// Internal server error - unexpected server error (500).
         /// </summary>
         public const string InternalError = "internal_error";
 

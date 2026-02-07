@@ -28,10 +28,10 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
     /// </remarks>
     public sealed class TenantResolutionMiddleware
     {
-        private readonly RequestDelegate _next;
-        private readonly ILogger<TenantResolutionMiddleware> _logger;
         private const string BearerPrefix = "Bearer ";
         private const string ApiKeyPrefix = "synaxis_";
+        private readonly RequestDelegate _next;
+        private readonly ILogger<TenantResolutionMiddleware> _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TenantResolutionMiddleware"/> class.
@@ -288,5 +288,4 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 userId);
         }
     }
-
 }

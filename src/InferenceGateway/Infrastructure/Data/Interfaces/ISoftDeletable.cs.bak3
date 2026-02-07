@@ -1,0 +1,54 @@
+// <copyright file="ISoftDeletable.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
+namespace Synaxis.InferenceGateway.Infrastructure.Data.Interfaces
+{
+    /// <summary>
+    /// Marker interface for entities that support soft deletion.
+    /// Entities implementing this interface will not be physically deleted from the database.
+    /// Instead, they will be marked as deleted with a timestamp and optional user identifier.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Soft deletion allows for data recovery and maintains referential integrity by keeping.
+    /// deleted records in the database with a DeletedAt timestamp set. A global query filter
+    /// automatically excludes soft-deleted entities from normal queries.
+    /// </para>
+    /// <para>
+    /// The soft delete interceptor automatically handles:
+    /// - Converting DELETE operations to UPDATE operations that set DeletedAt
+    /// - Setting DeletedBy from the current user context (if available)
+    /// - Cascading soft deletes to related entities (e.g., when an Organization is deleted)
+    /// - Applying global query filters to exclude soft-deleted entities
+    /// </para>
+    /// <para>
+    /// To restore a soft-deleted entity, set DeletedAt and DeletedBy to null.
+    /// </para>
+    /// </remarks>
+    /// <summary>
+    /// ISoftDeletable interface.
+    /// </summary>
+    public interface ISoftDeletable
+    {
+        /// <summary>
+        /// Gets or sets the timestamp when the entity was soft deleted.
+        /// When this value is not null, the entity is considered deleted and will be excluded.
+        /// from normal queries by the global query filter.
+        /// </summary>
+        /// <value>
+        /// The UTC date and time when the entity was deleted, or null if the entity is not deleted.
+        /// </value>
+        DateTime? DeletedAt { get; set; }
+
+        /// <summary>
+        /// Gets or sets the unique identifier of the user who soft deleted the entity.
+        /// This property is optional and may be null if the deletion was performed by.
+        /// a system process or if user context is not available.
+        /// </summary>
+        /// <value>
+        /// The ID of the user who deleted the entity, or null if not tracked.
+        /// </value>
+        Guid? DeletedBy { get; set; }
+    }
+}

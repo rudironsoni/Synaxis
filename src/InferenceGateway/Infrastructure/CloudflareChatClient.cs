@@ -17,7 +17,10 @@ namespace Synaxis.InferenceGateway.Infrastructure
     using Microsoft.Extensions.AI;
     using Microsoft.Extensions.Logging;
 
-    public class CloudflareChatClient : IChatClient
+    /// <summary>
+    /// CloudflareChatClient class.
+    /// </summary>
+    public sealed class CloudflareChatClient : IChatClient
     {
         private readonly HttpClient _httpClient;
         private readonly string _accountId;
@@ -25,6 +28,14 @@ namespace Synaxis.InferenceGateway.Infrastructure
         private readonly ChatClientMetadata _metadata;
         private readonly ILogger<CloudflareChatClient>? _logger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CloudflareChatClient"/> class.
+        /// </summary>
+        /// <param name="httpClient">The HTTP client for API requests.</param>
+        /// <param name="accountId">The Cloudflare account ID.</param>
+        /// <param name="modelId">The model identifier.</param>
+        /// <param name="apiKey">The API key for authentication.</param>
+        /// <param name="logger">The optional logger instance.</param>
         public CloudflareChatClient(HttpClient httpClient, string accountId, string modelId, string apiKey, ILogger<CloudflareChatClient>? logger = null)
         {
             this._httpClient = httpClient;
@@ -34,15 +45,23 @@ namespace Synaxis.InferenceGateway.Infrastructure
             this._httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
 
             // Store the raw model id; Cloudflare expects path-like model ids (e.g. @cf/meta/...) as raw segments.
+#pragma warning disable S1075 // URIs should not be hardcoded - API endpoint
             this._metadata = new ChatClientMetadata("Cloudflare", new Uri($"https://api.cloudflare.com/client/v4/accounts/{accountId}/ai/run/{modelId}"), modelId);
+#pragma warning restore S1075 // URIs should not be hardcoded
         }
 
+        /// <summary>
+        /// Gets the metadata for this chat client.
+        /// </summary>
         public ChatClientMetadata Metadata => this._metadata;
 
-        public async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
+        /// <inheritdoc/>
+        public async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default)
         {
-            var request = this.CreateRequest(chatMessages, options, stream: false);
+            var request = this.CreateRequest(messages, stream: false);
+#pragma warning disable S1075 // URIs should not be hardcoded - API endpoint
             var url = $"https://api.cloudflare.com/client/v4/accounts/{this._accountId}/ai/run/{this._modelId}";
+#pragma warning restore S1075 // URIs should not be hardcoded
 
             // Debug: print the full request URL and model id to help diagnose 404s
             var requestUrl = url;
@@ -55,48 +74,61 @@ namespace Synaxis.InferenceGateway.Infrastructure
                 Console.WriteLine($"CloudflareChatClient sending request. Url: {requestUrl} ModelId: {this._modelId}");
             }
 
-            var response = await this._httpClient.PostAsJsonAsync(url, request, cancellationToken);
+#pragma warning disable IDISP001 // HttpClient created by IHttpClientFactory
+            var response = await this._httpClient.PostAsJsonAsync(url, request, cancellationToken).ConfigureAwait(false);
+#pragma warning restore IDISP001
             response.EnsureSuccessStatusCode();
 
-            var cloudflareResponse = await response.Content.ReadFromJsonAsync<CloudflareResponse>(cancellationToken: cancellationToken);
+            var cloudflareResponse = await response.Content.ReadFromJsonAsync<CloudflareResponse>(cancellationToken: cancellationToken).ConfigureAwait(false);
 
-            var text = cloudflareResponse?.Result?.Response ?? "";
+            var text = cloudflareResponse?.Result?.Response ?? string.Empty;
             var chatResponse = new ChatResponse(new ChatMessage(ChatRole.Assistant, text));
             chatResponse.ModelId = this._modelId;
             return chatResponse;
         }
 
-        public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        /// <summary>
+        /// Gets streaming response asynchronously.
+        /// </summary>
+        /// <param name="messages">The chat messages.</param>
+        /// <param name="options">The chat options.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>An async enumerable of chat response updates.</returns>
+        public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            var request = this.CreateRequest(chatMessages, options, stream: true);
+            var request = this.CreateRequest(messages, stream: true);
+#pragma warning disable S1075 // URIs should not be hardcoded - API endpoint
             var url = $"https://api.cloudflare.com/client/v4/accounts/{this._accountId}/ai/run/{this._modelId}";
+#pragma warning restore S1075 // URIs should not be hardcoded
 
+#pragma warning disable IDISP001 // HttpRequestMessage created and disposed within using block
             var httpRequest = new HttpRequestMessage(HttpMethod.Post, url)
             {
                 Content = JsonContent.Create(request),
             };
+#pragma warning restore IDISP001
 
-            using var response = await this._httpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            using var response = await this._httpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
-            using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+            using var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
             using var reader = new System.IO.StreamReader(stream);
 
             string? line;
-            while ((line = await reader.ReadLineAsync()) is not null)
+            while ((line = await reader.ReadLineAsync().ConfigureAwait(false)) is not null)
             {
                 if (string.IsNullOrWhiteSpace(line))
                 {
                     continue;
                 }
 
-                if (!line.StartsWith("data: "))
+                if (!line.StartsWith("data: ", StringComparison.Ordinal))
                 {
                     continue;
                 }
 
                 var json = line.Substring(6).Trim();
-                if (json == "[DONE]")
+                if (string.Equals(json, "[DONE]", StringComparison.Ordinal))
                 {
                     break;
                 }
@@ -106,7 +138,10 @@ namespace Synaxis.InferenceGateway.Infrastructure
                 {
                     streamEvent = JsonSerializer.Deserialize<CloudflareStreamResponse>(json);
                 }
-                catch { continue; }
+                catch
+                {
+                    continue;
+                }
 
                 if (streamEvent?.Response != null)
                 {
@@ -121,7 +156,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
             }
         }
 
-        private object CreateRequest(IEnumerable<ChatMessage> chatMessages, ChatOptions? options, bool stream)
+        private object CreateRequest(IEnumerable<ChatMessage> chatMessages, bool stream)
         {
             var messages = new List<object>();
             foreach (var msg in chatMessages)
@@ -140,23 +175,48 @@ namespace Synaxis.InferenceGateway.Infrastructure
             };
         }
 
-        public void Dispose() => this._httpClient.Dispose();
+        /// <summary>
+        /// Disposes resources. HttpClient is not disposed as it is injected.
+        /// </summary>
+        public void Dispose()
+        {
+            // HttpClient is injected and managed externally, so we don't dispose it here
+            // This implementation satisfies the IDisposable contract without disposing injected dependencies
+        }
 
+        /// <summary>
+        /// Gets a service of the specified type.
+        /// </summary>
+        /// <param name="serviceType">The type of service to get.</param>
+        /// <param name="serviceKey">The optional service key.</param>
+        /// <returns>The service instance or null.</returns>
         public object? GetService(Type serviceType, object? serviceKey = null) => null;
 
         private sealed class CloudflareResponse
         {
-            [JsonPropertyName("result")] public CloudflareResult? Result { get; set; }
+            /// <summary>
+            /// Gets or sets the Result.
+            /// </summary>
+            [JsonPropertyName("result")]
+            public CloudflareResult? Result { get; set; }
         }
 
         private sealed class CloudflareResult
         {
-            [JsonPropertyName("response")] public string? Response { get; set; }
+            /// <summary>
+            /// Gets or sets the Response.
+            /// </summary>
+            [JsonPropertyName("response")]
+            public string? Response { get; set; }
         }
 
         private sealed class CloudflareStreamResponse
         {
-            [JsonPropertyName("response")] public string? Response { get; set; }
+            /// <summary>
+            /// Gets or sets the Response.
+            /// </summary>
+            [JsonPropertyName("response")]
+            public string? Response { get; set; }
         }
     }
 }

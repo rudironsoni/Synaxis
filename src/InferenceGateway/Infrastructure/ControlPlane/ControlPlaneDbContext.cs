@@ -14,84 +14,199 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
     using IdentityUserRole = Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.UserRole;
     using OperationsApiKey = Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Operations.ApiKey;
 
+    /// <summary>
+    /// ControlPlaneDbContext class.
+    /// </summary>
     public sealed class ControlPlaneDbContext : DbContext
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ControlPlaneDbContext"/> class.
+        /// </summary>
+        /// <param name="options">The options for this context.</param>
         public ControlPlaneDbContext(DbContextOptions<ControlPlaneDbContext> options)
             : base(options)
         {
         }
 
         // Legacy entities (to be migrated)
+
+        /// <summary>
+        /// Gets the Tenants DbSet.
+        /// </summary>
         public DbSet<Tenant> Tenants => this.Set<Tenant>();
 
+        /// <summary>
+        /// Gets the Users DbSet.
+        /// </summary>
         public DbSet<User> Users => this.Set<User>();
 
+        /// <summary>
+        /// Gets the Projects DbSet.
+        /// </summary>
         public DbSet<Project> Projects => this.Set<Project>();
 
+        /// <summary>
+        /// Gets the ApiKeys DbSet.
+        /// </summary>
         public DbSet<ApplicationApiKey> ApiKeys => this.Set<ApplicationApiKey>();
 
+        /// <summary>
+        /// Gets the OAuthAccounts DbSet.
+        /// </summary>
         public DbSet<OAuthAccount> OAuthAccounts => this.Set<OAuthAccount>();
 
+        /// <summary>
+        /// Gets the RoutingPolicies DbSet.
+        /// </summary>
         public DbSet<RoutingPolicy> RoutingPolicies => this.Set<RoutingPolicy>();
 
+        /// <summary>
+        /// Gets the ModelAliases DbSet.
+        /// </summary>
         public DbSet<ModelAlias> ModelAliases => this.Set<ModelAlias>();
 
+        /// <summary>
+        /// Gets the ModelCombos DbSet.
+        /// </summary>
         public DbSet<ModelCombo> ModelCombos => this.Set<ModelCombo>();
 
+        /// <summary>
+        /// Gets the ProviderAccounts DbSet.
+        /// </summary>
         public DbSet<ProviderAccount> ProviderAccounts => this.Set<ProviderAccount>();
 
+        /// <summary>
+        /// Gets the ModelCosts DbSet.
+        /// </summary>
         public DbSet<ModelCost> ModelCosts => this.Set<ModelCost>();
 
+        /// <summary>
+        /// Gets the RequestLogs DbSet.
+        /// </summary>
         public DbSet<RequestLog> RequestLogs => this.Set<RequestLog>();
 
+        /// <summary>
+        /// Gets the TokenUsages DbSet.
+        /// </summary>
         public DbSet<TokenUsage> TokenUsages => this.Set<TokenUsage>();
 
+        /// <summary>
+        /// Gets the QuotaSnapshots DbSet.
+        /// </summary>
         public DbSet<QuotaSnapshot> QuotaSnapshots => this.Set<QuotaSnapshot>();
 
+        /// <summary>
+        /// Gets the Deviations DbSet.
+        /// </summary>
         public DbSet<DeviationEntry> Deviations => this.Set<DeviationEntry>();
 
+        /// <summary>
+        /// Gets the GlobalModels DbSet.
+        /// </summary>
         public DbSet<GlobalModel> GlobalModels => this.Set<GlobalModel>();
 
+        /// <summary>
+        /// Gets the ProviderModels DbSet.
+        /// </summary>
         public DbSet<ProviderModel> ProviderModels => this.Set<ProviderModel>();
 
+        /// <summary>
+        /// Gets the TenantModelLimits DbSet.
+        /// </summary>
         public DbSet<TenantModelLimit> TenantModelLimits => this.Set<TenantModelLimit>();
 
         // Platform schema entities
+
+        /// <summary>
+        /// Gets the Providers DbSet.
+        /// </summary>
         public DbSet<Provider> Providers => this.Set<Provider>();
 
+        /// <summary>
+        /// Gets the Models DbSet.
+        /// </summary>
         public DbSet<Model> Models => this.Set<Model>();
 
         // Identity schema entities
+
+        /// <summary>
+        /// Gets the Organizations DbSet.
+        /// </summary>
         public DbSet<Organization> Organizations => this.Set<Organization>();
 
+        /// <summary>
+        /// Gets the Groups DbSet.
+        /// </summary>
         public DbSet<Group> Groups => this.Set<Group>();
 
+        /// <summary>
+        /// Gets the OrganizationSettings DbSet.
+        /// </summary>
         public DbSet<OrganizationSettings> OrganizationSettings => this.Set<OrganizationSettings>();
 
+        /// <summary>
+        /// Gets the SynaxisUsers DbSet.
+        /// </summary>
         public DbSet<SynaxisUser> SynaxisUsers => this.Set<SynaxisUser>();
 
+        /// <summary>
+        /// Gets the Roles DbSet.
+        /// </summary>
         public DbSet<Role> Roles => this.Set<Role>();
 
+        /// <summary>
+        /// Gets the UserRoles DbSet.
+        /// </summary>
         public DbSet<IdentityUserRole> UserRoles => this.Set<IdentityUserRole>();
 
+        /// <summary>
+        /// Gets the UserOrganizationMemberships DbSet.
+        /// </summary>
         public DbSet<UserOrganizationMembership> UserOrganizationMemberships => this.Set<UserOrganizationMembership>();
 
+        /// <summary>
+        /// Gets the UserGroupMemberships DbSet.
+        /// </summary>
         public DbSet<UserGroupMembership> UserGroupMemberships => this.Set<UserGroupMembership>();
 
         // Operations schema entities
+
+        /// <summary>
+        /// Gets the OperationsApiKeys DbSet.
+        /// </summary>
         public DbSet<OperationsApiKey> OperationsApiKeys => this.Set<OperationsApiKey>();
 
+        /// <summary>
+        /// Gets the OrganizationProviders DbSet.
+        /// </summary>
         public DbSet<OrganizationProvider> OrganizationProviders => this.Set<OrganizationProvider>();
 
+        /// <summary>
+        /// Gets the OrganizationModels DbSet.
+        /// </summary>
         public DbSet<OrganizationModel> OrganizationModels => this.Set<OrganizationModel>();
 
+        /// <summary>
+        /// Gets the RoutingStrategies DbSet.
+        /// </summary>
         public DbSet<RoutingStrategy> RoutingStrategies => this.Set<RoutingStrategy>();
 
+        /// <summary>
+        /// Gets the ProviderHealthStatuses DbSet.
+        /// </summary>
         public DbSet<ProviderHealthStatus> ProviderHealthStatuses => this.Set<ProviderHealthStatus>();
 
         // Audit schema entities
+
+        /// <summary>
+        /// Gets the AuditLogs DbSet.
+        /// </summary>
         public DbSet<AuditLog> AuditLogs => this.Set<AuditLog>();
 
+        /// <summary>
+        /// Configures the model that was discovered by convention from the entity types.
+        /// </summary>
+        /// <param name="modelBuilder">The builder being used to construct the model for this context.</param>
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Configure schemas for PostgreSQL
@@ -184,7 +299,18 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
 
         private static void ConfigureIdentitySchema(ModelBuilder modelBuilder)
         {
-            // Organization configuration
+            ConfigureOrganizationEntity(modelBuilder);
+            ConfigureOrganizationSettingsEntity(modelBuilder);
+            ConfigureGroupEntity(modelBuilder);
+            ConfigureSynaxisUserEntity(modelBuilder);
+            ConfigureRoleEntity(modelBuilder);
+            ConfigureUserRoleEntity(modelBuilder);
+            ConfigureUserOrganizationMembershipEntity(modelBuilder);
+            ConfigureUserGroupMembershipEntity(modelBuilder);
+        }
+
+        private static void ConfigureOrganizationEntity(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<Organization>(entity =>
             {
                 entity.HasKey(o => o.Id);
@@ -208,8 +334,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                 entity.HasIndex(o => o.Status);
                 entity.HasIndex(o => o.CreatedAt);
             });
+        }
 
-            // OrganizationSettings configuration
+        private static void ConfigureOrganizationSettingsEntity(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<OrganizationSettings>(entity =>
             {
                 entity.HasKey(s => s.OrganizationId);
@@ -219,8 +347,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                     .HasForeignKey<OrganizationSettings>(s => s.OrganizationId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
+        }
 
-            // Group configuration
+        private static void ConfigureGroupEntity(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<Group>(entity =>
             {
                 entity.HasKey(g => g.Id);
@@ -237,8 +367,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                 entity.HasIndex(g => new { g.OrganizationId, g.Slug }).IsUnique();
                 entity.HasIndex(g => g.Status);
             });
+        }
 
-            // SynaxisUser configuration
+        private static void ConfigureSynaxisUserEntity(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<SynaxisUser>(entity =>
             {
                 entity.HasKey(u => u.Id);
@@ -249,8 +381,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                 entity.HasIndex(u => u.Email).IsUnique();
                 entity.HasIndex(u => u.Status);
             });
+        }
 
-            // Role configuration
+        private static void ConfigureRoleEntity(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<Role>(entity =>
             {
                 entity.HasKey(r => r.Id);
@@ -266,8 +400,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                     .HasFilter("\"OrganizationId\" IS NOT NULL");
                 entity.HasIndex(r => r.IsSystemRole);
             });
+        }
 
-            // UserRole configuration
+        private static void ConfigureUserRoleEntity(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<IdentityUserRole>(entity =>
             {
                 entity.HasKey(ur => new { ur.UserId, ur.RoleId });
@@ -289,8 +425,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
 
                 entity.HasIndex(ur => ur.OrganizationId);
             });
+        }
 
-            // UserOrganizationMembership configuration
+        private static void ConfigureUserOrganizationMembershipEntity(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<UserOrganizationMembership>(entity =>
             {
                 entity.HasKey(m => m.Id);
@@ -316,8 +454,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                 entity.HasIndex(m => m.OrganizationId);
                 entity.HasIndex(m => m.Status);
             });
+        }
 
-            // UserGroupMembership configuration
+        private static void ConfigureUserGroupMembershipEntity(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<UserGroupMembership>(entity =>
             {
                 entity.HasKey(m => m.Id);
@@ -341,7 +481,15 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
 
         private static void ConfigureOperationsSchema(ModelBuilder modelBuilder)
         {
-            // ApiKey configuration (operations schema - new)
+            ConfigureOperationsApiKeyEntity(modelBuilder);
+            ConfigureOrganizationProviderEntity(modelBuilder);
+            ConfigureOrganizationModelEntity(modelBuilder);
+            ConfigureRoutingStrategyEntity(modelBuilder);
+            ConfigureProviderHealthStatusEntity(modelBuilder);
+        }
+
+        private static void ConfigureOperationsApiKeyEntity(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<OperationsApiKey>(entity =>
             {
                 entity.HasKey(k => k.Id);
@@ -355,8 +503,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                 entity.HasIndex(k => k.KeyHash).IsUnique();
                 entity.HasIndex(k => k.IsActive);
             });
+        }
 
-            // OrganizationProvider configuration
+        private static void ConfigureOrganizationProviderEntity(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<OrganizationProvider>(entity =>
             {
                 entity.HasKey(op => op.Id);
@@ -369,8 +519,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                 entity.HasIndex(op => op.ProviderId);
                 entity.HasIndex(op => op.IsEnabled);
             });
+        }
 
-            // OrganizationModel configuration
+        private static void ConfigureOrganizationModelEntity(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<OrganizationModel>(entity =>
             {
                 entity.HasKey(om => om.Id);
@@ -383,8 +535,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                 entity.HasIndex(om => om.ModelId);
                 entity.HasIndex(om => om.IsEnabled);
             });
+        }
 
-            // RoutingStrategy configuration
+        private static void ConfigureRoutingStrategyEntity(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<RoutingStrategy>(entity =>
             {
                 entity.HasKey(rs => rs.Id);
@@ -399,8 +553,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                     .HasFilter("\"IsDefault\" = true");
                 entity.HasIndex(rs => rs.IsActive);
             });
+        }
 
-            // ProviderHealthStatus configuration
+        private static void ConfigureProviderHealthStatusEntity(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<ProviderHealthStatus>(entity =>
             {
                 entity.HasKey(phs => phs.Id);
@@ -443,6 +599,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
         }
 
         private static void ConfigureLegacyEntities(ModelBuilder modelBuilder)
+        {
+            ConfigureLegacyTenantEntities(modelBuilder);
+            ConfigureLegacyAccountingEntities(modelBuilder);
+            ConfigureLegacyModelEntities(modelBuilder);
+        }
+
+        private static void ConfigureLegacyTenantEntities(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Tenant>(entity =>
             {
@@ -497,7 +660,17 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                 entity.Property(o => o.Provider).HasMaxLength(50).IsRequired();
                 entity.Property(o => o.Status).HasConversion<string>().IsRequired();
             });
+        }
 
+        private static void ConfigureLegacyAccountingEntities(ModelBuilder modelBuilder)
+        {
+            ConfigureRoutingAndAliasEntities(modelBuilder);
+            ConfigureProviderAccountingEntities(modelBuilder);
+            ConfigureLoggingAndTrackingEntities(modelBuilder);
+        }
+
+        private static void ConfigureRoutingAndAliasEntities(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<RoutingPolicy>(entity =>
             {
                 entity.HasKey(r => r.Id);
@@ -517,7 +690,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                 entity.Property(m => m.Name).HasMaxLength(200).IsRequired();
                 entity.Property(m => m.OrderedModelsJson).HasColumnType("jsonb");
             });
+        }
 
+        private static void ConfigureProviderAccountingEntities(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<ProviderAccount>(entity =>
             {
                 entity.HasKey(p => p.Id);
@@ -533,6 +709,17 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                 entity.Property(m => m.Model).HasMaxLength(200).IsRequired();
             });
 
+            modelBuilder.Entity<QuotaSnapshot>(entity =>
+            {
+                entity.HasKey(q => q.Id);
+                entity.Property(q => q.Provider).HasMaxLength(100).IsRequired();
+                entity.Property(q => q.AccountId).HasMaxLength(200).IsRequired();
+                entity.Property(q => q.QuotaJson).HasColumnType("jsonb");
+            });
+        }
+
+        private static void ConfigureLoggingAndTrackingEntities(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<RequestLog>(entity =>
             {
                 entity.HasKey(r => r.Id);
@@ -548,14 +735,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                 entity.Property(t => t.RequestId).HasMaxLength(200).IsRequired();
             });
 
-            modelBuilder.Entity<QuotaSnapshot>(entity =>
-            {
-                entity.HasKey(q => q.Id);
-                entity.Property(q => q.Provider).HasMaxLength(100).IsRequired();
-                entity.Property(q => q.AccountId).HasMaxLength(200).IsRequired();
-                entity.Property(q => q.QuotaJson).HasColumnType("jsonb");
-            });
-
             modelBuilder.Entity<DeviationEntry>(entity =>
             {
                 entity.HasKey(d => d.Id);
@@ -565,7 +744,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                 entity.Property(d => d.Mitigation).HasMaxLength(500).IsRequired();
                 entity.Property(d => d.Status).HasConversion<string>().IsRequired();
             });
+        }
 
+        private static void ConfigureLegacyModelEntities(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<GlobalModel>(entity =>
             {
                 entity.HasKey(g => g.Id);

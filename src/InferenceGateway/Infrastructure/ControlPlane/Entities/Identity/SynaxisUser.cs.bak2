@@ -1,0 +1,40 @@
+// <copyright file="SynaxisUser.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
+namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity
+{
+    using Microsoft.AspNetCore.Identity;
+
+    /// <summary>
+    /// Represents a user in the system, extending ASP.NET Core Identity.
+    /// </summary>
+    public class SynaxisUser : IdentityUser<Guid>
+    {
+        public string? FirstName { get; set; }
+
+        public string? LastName { get; set; }
+
+        required public string Status { get; set; } = "Active";
+
+        /// <summary>
+        /// Gets or sets the DeletedAt.
+        /// </summary>
+        public DateTime? DeletedAt { get; set; }
+
+        /// <summary>
+        /// Gets or sets the CreatedAt.
+        /// </summary>
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        /// <summary>
+        /// Gets or sets the UpdatedAt.
+        /// </summary>
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+        // Navigation properties
+        public ICollection<UserOrganizationMembership> OrganizationMemberships { get; set; } = new List<UserOrganizationMembership>();
+
+        public ICollection<UserGroupMembership> GroupMemberships { get; set; } = new List<UserGroupMembership>();
+    }
+}

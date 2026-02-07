@@ -9,10 +9,17 @@ namespace Synaxis.InferenceGateway.Infrastructure.Routing
     using Synaxis.InferenceGateway.Application.Routing;
     using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 
+    /// <summary>
+    /// CostService class.
+    /// </summary>
     public sealed class CostService : ICostService
     {
         private readonly ControlPlaneDbContext _dbContext;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CostService"/> class.
+        /// </summary>
+        /// <param name="dbContext">The dbContext.</param>
         public CostService(ControlPlaneDbContext dbContext)
         {
             if (dbContext is null)
@@ -23,11 +30,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Routing
             this._dbContext = dbContext;
         }
 
-        public async Task<ModelCost?> GetCostAsync(string provider, string model, CancellationToken cancellationToken = default)
+        /// <inheritdoc/>
+        public Task<ModelCost?> GetCostAsync(string provider, string model, CancellationToken cancellationToken = default)
         {
-            return await this._dbContext.ModelCosts
+            return this._dbContext.ModelCosts
                 .AsNoTracking()
-                .FirstOrDefaultAsync(c => c.Provider == provider && c.Model == model, cancellationToken).ConfigureAwait(false);
+                .FirstOrDefaultAsync(c => c.Provider == provider && c.Model == model, cancellationToken);
         }
     }
 }

@@ -123,28 +123,28 @@ namespace Synaxis.Core.Contracts
         /// Creates an allowed quota result.
         /// </summary>
         /// <returns>A quota result indicating request is allowed.</returns>
-        public static QuotaResult Allowed() => new() { IsAllowed = true, Action = QuotaAction.Allow };
+        public static QuotaResult Allowed() => new () { IsAllowed = true, Action = QuotaAction.Allow };
 
         /// <summary>
         /// Creates a throttled quota result.
         /// </summary>
         /// <param name="details">The quota details.</param>
         /// <returns>A quota result indicating request is throttled.</returns>
-        public static QuotaResult Throttled(QuotaDetails details) => new() { IsAllowed = false, Action = QuotaAction.Throttle, Details = details };
+        public static QuotaResult Throttled(QuotaDetails details) => new () { IsAllowed = false, Action = QuotaAction.Throttle, Details = details };
 
         /// <summary>
         /// Creates a blocked quota result.
         /// </summary>
         /// <param name="reason">The reason for blocking.</param>
         /// <returns>A quota result indicating request is blocked.</returns>
-        public static QuotaResult Blocked(string reason) => new() { IsAllowed = false, Action = QuotaAction.Block, Reason = reason };
+        public static QuotaResult Blocked(string reason) => new () { IsAllowed = false, Action = QuotaAction.Block, Reason = reason };
 
         /// <summary>
         /// Creates a credit charge quota result.
         /// </summary>
         /// <param name="amount">The amount to charge.</param>
         /// <returns>A quota result indicating credit charge is required.</returns>
-        public static QuotaResult Charge(decimal amount) => new() { IsAllowed = true, Action = QuotaAction.CreditCharge, CreditCharge = amount };
+        public static QuotaResult Charge(decimal amount) => new () { IsAllowed = true, Action = QuotaAction.CreditCharge, CreditCharge = amount };
     }
 
     /// <summary>

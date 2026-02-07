@@ -11,18 +11,27 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.DataProtection;
 
+    /// <summary>
+    /// Encrypted file-based token store.
+    /// </summary>
     public class EncryptedFileTokenStore : ISecureTokenStore
     {
         private readonly string _path;
         private readonly IDataProtector _protector;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EncryptedFileTokenStore"/> class.
+        /// </summary>
+        /// <param name="provider">The data protection provider.</param>
+        /// <param name="path">The file path.</param>
         public EncryptedFileTokenStore(IDataProtectionProvider provider, string path)
         {
             this._protector = provider.CreateProtector("Synaxis.Identity.TokenStore.v1");
             this._path = path;
         }
 
-        public async Task<List<IdentityAccount>> LoadAsync()
+        /// <inheritdoc/>
+        public async Task<IList<IdentityAccount>> LoadAsync()
         {
             if (!File.Exists(this._path))
             {
@@ -52,7 +61,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
             }
         }
 
-        public async Task SaveAsync(List<IdentityAccount> accounts)
+        /// <inheritdoc/>
+        public Task SaveAsync(IList<IdentityAccount> accounts)
         {
             var json = JsonSerializer.Serialize(accounts);
             var encrypted = this._protector.Protect(json);
@@ -62,7 +72,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
                 Directory.CreateDirectory(dir);
             }
 
-            await File.WriteAllTextAsync(this._path, encrypted).ConfigureAwait(false);
+            return File.WriteAllTextAsync(this._path, encrypted);
         }
     }
 }

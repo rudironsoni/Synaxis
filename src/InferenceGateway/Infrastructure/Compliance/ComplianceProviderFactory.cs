@@ -21,6 +21,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
         private readonly Dictionary<string, IComplianceProvider> _providers;
         private readonly IComplianceProvider _defaultProvider;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ComplianceProviderFactory"/> class.
+        /// </summary>
+        /// <param name="dbContext">The dbContext.</param>
         public ComplianceProviderFactory(SynaxisDbContext dbContext)
         {
             if (dbContext == null)
@@ -56,8 +60,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
         /// Gets a compliance provider for the specified region.
         /// Returns the appropriate provider or defaults to GDPR if no specific provider exists.
         /// </summary>
-        /// <param name="region">The region code (e.g., "eu-west-1", "sa-east-1")</param>
-        /// <returns>The compliance provider for the region</returns>
+        /// <param name="region">The region code (e.g., "eu-west-1", "sa-east-1").</param>
+        /// <returns>The compliance provider for the region.</returns>
         public IComplianceProvider GetProvider(string region)
         {
             if (string.IsNullOrWhiteSpace(region))
@@ -90,8 +94,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
         /// <summary>
         /// Gets a compliance provider by regulation code.
         /// </summary>
-        /// <param name="regulationCode">The regulation code (e.g., "GDPR", "LGPD")</param>
-        /// <returns>The compliance provider for the regulation</returns>
+        /// <param name="regulationCode">The regulation code (e.g., "GDPR", "LGPD").</param>
+        /// <returns>The compliance provider for the regulation.</returns>
         public IComplianceProvider GetProviderByRegulation(string regulationCode)
         {
             if (string.IsNullOrWhiteSpace(regulationCode))
@@ -108,7 +112,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
         /// <summary>
         /// Gets all registered compliance providers.
         /// </summary>
-        /// <returns>Collection of all compliance providers</returns>
+        /// <returns>Collection of all compliance providers.</returns>
         public IEnumerable<IComplianceProvider> GetAllProviders()
         {
             return this._providers.Values.Distinct();
@@ -117,8 +121,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
         /// <summary>
         /// Registers a custom compliance provider for a specific region.
         /// </summary>
-        /// <param name="region">The region code</param>
-        /// <param name="provider">The compliance provider</param>
+        /// <param name="region">The region code.</param>
+        /// <param name="provider">The compliance provider.</param>
         public void RegisterProvider(string region, IComplianceProvider provider)
         {
             if (string.IsNullOrWhiteSpace(region))
@@ -137,8 +141,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
         /// <summary>
         /// Checks if a provider is registered for a specific region.
         /// </summary>
-        /// <param name="region">The region code</param>
-        /// <returns>True if a provider is registered, false otherwise</returns>
+        /// <param name="region">The region code.</param>
+        /// <returns>True if a provider is registered, false otherwise.</returns>
         public bool HasProvider(string region)
         {
             if (string.IsNullOrWhiteSpace(region))

@@ -272,6 +272,7 @@ try
         {
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(key),
+
             // Enable issuer/audience validation in production
             ValidateIssuer = !builder.Environment.IsDevelopment(),
             ValidateAudience = !builder.Environment.IsDevelopment(),
@@ -366,6 +367,7 @@ try
             {
                 Log.Fatal("Security Error: {Error}", error);
             }
+
             throw new InvalidOperationException(
                 $"Security configuration validation failed with {validationResult.Errors.Count} error(s). " +
                 "Please fix the security issues before starting the application.");
@@ -424,7 +426,6 @@ try
     app.MapHub<SynaxisHub>("/hubs/synaxis");
 
     // NOTE: Removed temporary debug endpoint that created AggregateException for testing.
-
     app.MapHealthChecks("/health/liveness", new HealthCheckOptions
     {
         Predicate = r => r.Tags.Contains("liveness"),
@@ -450,6 +451,6 @@ finally
 /// The main program class for the Synaxis Inference Gateway web application.
 /// This partial class enables programmatic access to the application for testing and hosting scenarios.
 /// </summary>
-public static partial class Program
+public partial class Program
 {
 }

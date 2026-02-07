@@ -103,7 +103,7 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the provider health statuses.
         /// </summary>
-        public IDictionary<string, bool> ProviderHealth { get; set; } = new Dictionary<string, bool>();
+        public IDictionary<string, bool> ProviderHealth { get; set; } = new Dictionary<string, bool>(StringComparer.Ordinal);
 
         /// <summary>
         /// Gets or sets the timestamp of last health check.

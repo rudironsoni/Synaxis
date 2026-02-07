@@ -1,0 +1,51 @@
+Pattern 1: .ConfigureAwait(false) after return or yield break (potential syntax errors)
+Files:
+- src/InferenceGateway/Infrastructure/Services/IdentityService.cs:307 - return await this.MapToUserInfo(user, memberships, cancellationToken).ConfigureAwait(false);
+- src/InferenceGateway/Infrastructure/Identity/Core/IdentityManager.cs:196 - return await strat.InitiateFlowAsync(ct).ConfigureAwait(false);
+- src/InferenceGateway/Infrastructure/Identity/Core/IdentityManager.cs:209 - return await strat.CompleteFlowAsync(code, state, CancellationToken.None).ConfigureAwait(false);
+- src/InferenceGateway/Infrastructure/ChatClients/Strategies/OpenAiGenericStrategy.cs:28 - return await client.GetResponseAsync(messages, options, ct).ConfigureAwait(false);
+- src/InferenceGateway/Infrastructure/Routing/RedisHealthStore.cs:31 - return !await db.KeyExistsAsync($"health:{providerKey}:penalty").ConfigureAwait(false);
+- src/InferenceGateway/Infrastructure/ChatClients/Strategies/CloudflareStrategy.cs:29 - return await client.GetResponseAsync(messages, options, ct).ConfigureAwait(false);
+- src/InferenceGateway/Application/Routing/FallbackOrchestrator.cs:78 - return await operation(preferred).ConfigureAwait(false);
+- src/InferenceGateway/Application/Routing/FallbackOrchestrator.cs:102 - return await operation(provider).ConfigureAwait(false);
+- src/InferenceGateway/Application/Routing/FallbackOrchestrator.cs:131 - return await operation(provider).ConfigureAwait(false);
+- src/InferenceGateway/Application/Routing/FallbackOrchestrator.cs:155 - return await operation(provider).ConfigureAwait(false);
+
+Note: All occurrences include 'await' before .ConfigureAwait(false), so they are not syntax errors.
+
+Pattern 2: Identifiers incorrectly ending with "this"
+Files:
+- src/InferenceGateway/Infrastructure/Services/RedisRateLimitingService.cs:181 - if (config.Userthis.Rpm.HasValue)
+- src/InferenceGateway/Infrastructure/Services/RedisRateLimitingService.cs:188 - if (config.Userthis.Tpm.HasValue)
+- src/InferenceGateway/Infrastructure/Services/RedisRateLimitingService.cs:195 - if (groupthis.Id.HasValue && config.Groupthis.Rpm.HasValue)
+- src/InferenceGateway/Infrastructure/Services/RedisRateLimitingService.cs:202 - if (groupthis.Id.HasValue && config.Groupthis.Tpm.HasValue)
+- src/InferenceGateway/Infrastructure/Services/RedisRateLimitingService.cs:209 - if (config.Organizationthis.Rpm.HasValue)
+- src/InferenceGateway/Infrastructure/Services/RedisRateLimitingService.cs:216 - if (config.Organizationthis.Tpm.HasValue)
+- src/InferenceGateway/Infrastructure/Services/RedisRateLimitingService.cs:329 - if (groupthis.Id.HasValue)
+- src/InferenceGateway/Infrastructure/Identity/Strategies/GitHub/GitHubAuthStrategy.cs:142 - if (token.ExpiresInthis.Seconds.HasValue)
+- src/InferenceGateway/Infrastructure/Identity/Core/IdentityManager.cs:136 - if (tokenResp.ExpiresInthis.Seconds.HasValue)
+- src/InferenceGateway/Infrastructure/Identity/Core/IdentityManager.cs:244 - if (tokenResp.ExpiresInthis.Seconds.HasValue)
+- src/InferenceGateway/Infrastructure/Services/ConfigurationResolver.cs:53 - if (userthis.Id.HasValue && organizationthis.Id.HasValue)
+- src/InferenceGateway/Infrastructure/Services/ConfigurationResolver.cs:60 - if (membership?.Ratethis.LimitRpm.HasValue == true || membership?.Ratethis.LimitTpm.HasValue == true)
+- src/InferenceGateway/Infrastructure/Services/ConfigurationResolver.cs:71 - if (membership?.Primarythis.GroupId.HasValue == true)
+- src/InferenceGateway/Infrastructure/Services/ConfigurationResolver.cs:78 - if (group?.Ratethis.LimitRpm.HasValue == true || group?.Ratethis.LimitTpm.HasValue == true)
+- src/InferenceGateway/Infrastructure/Services/ConfigurationResolver.cs:91 - if (organizationthis.Id.HasValue)
+- src/InferenceGateway/Infrastructure/Services/ConfigurationResolver.cs:132 - if (orgModel?.InputCostPer1this.MTokens.HasValue == true &&
+- src/InferenceGateway/Infrastructure/Services/ConfigurationResolver.cs:133 - orgModel.OutputCostPer1this.MTokens.HasValue)
+- src/InferenceGateway/Infrastructure/Services/ConfigurationResolver.cs:149 - if (orgProvider?.InputCostPer1this.MTokens.HasValue == true &&
+- src/InferenceGateway/Infrastructure/Services/ConfigurationResolver.cs:150 - orgProvider.OutputCostPer1this.MTokens.HasValue)
+- src/InferenceGateway/Infrastructure/Services/ConfigurationResolver.cs:164 - if (provider?.DefaultInputCostPer1this.MTokens.HasValue == true &&
+- src/InferenceGateway/Infrastructure/Services/ConfigurationResolver.cs:165 - provider.DefaultOutputCostPer1this.MTokens.HasValue)
+- src/InferenceGateway/Infrastructure/Services/ConfigurationResolver.cs:191 - if (userthis.Id.HasValue && organizationthis.Id.HasValue)
+- src/InferenceGateway/Infrastructure/Services/ConfigurationResolver.cs:204 - if (membership?.Primarythis.GroupId.HasValue == true)
+- src/InferenceGateway/Infrastructure/Services/ConfigurationResolver.cs:219 - if (organizationthis.Id.HasValue)
+- src/InferenceGateway/Infrastructure/Identity/Strategies/Google/GoogleAuthStrategy.cs:132 - if (token.ExpiresInthis.Seconds.HasValue)
+- src/InferenceGateway/Infrastructure/Services/IdentityService.cs:253 - var membership = request.Organizationthis.Id.HasValue
+- src/InferenceGateway/Infrastructure/Services/ApiKeyService.cs:166 - if (matchedKey.Revokedthis.At.HasValue)
+- src/InferenceGateway/Infrastructure/Services/ApiKeyService.cs:226 - if (apiKey.Revokedthis.At.HasValue)
+- src/InferenceGateway/Infrastructure/Services/ApiKeyService.cs:251 - query = query.Where(k => k.IsActive && !k.Revokedthis.At.HasValue);
+- src/InferenceGateway/Infrastructure/Routing/RedisQuotaTracker.cs:148 - if (!maxthis.Rpm.HasValue && !maxthis.Tpm.HasValue)
+- src/InferenceGateway/Infrastructure/Routing/RedisQuotaTracker.cs:170 - if (maxthis.Rpm.HasValue && rpmValue >= maxRpm.Value)
+- src/InferenceGateway/Infrastructure/Routing/RedisQuotaTracker.cs:174 - else if (maxthis.Tpm.HasValue && tpmValue >= maxTpm.Value)
+
+Total: 32 problematic lines across 8 files.

@@ -85,10 +85,10 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             // Assert
             Assert.NotNull(result);
-            Assert.Equal("llama-3.3-70b-versatile", result.OriginalModelId);
-            Assert.Equal(2, result.Candidates.Count);
-            Assert.Equal("Groq", result.Candidates[0].Key);
-            Assert.Equal("DeepSeek", result.Candidates[1].Key);
+            Assert.Equal("llama-3.3-70b-versatile", result.originalModelId);
+            Assert.Equal(2, result.candidates.Count);
+            Assert.Equal("Groq", result.candidates[0].Key);
+            Assert.Equal("DeepSeek", result.candidates[1].Key);
         }
 
         [Fact]
@@ -115,9 +115,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             // Assert - Should only return providers from first candidate
             Assert.NotNull(result);
-            Assert.Equal("default", result.OriginalModelId);
-            Assert.Single(result.Candidates);
-            Assert.Equal("Groq", result.Candidates[0].Key);
+            Assert.Equal("default", result.originalModelId);
+            Assert.Single(result.candidates);
+            Assert.Equal("Groq", result.candidates[0].Key);
         }
 
         [Fact]
@@ -152,8 +152,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             // Assert - Should return empty candidates since model doesn't support tools
             Assert.NotNull(result);
-            Assert.Equal("llama-3.3-70b-versatile", result.OriginalModelId);
-            Assert.Empty(result.Candidates);
+            Assert.Equal("llama-3.3-70b-versatile", result.originalModelId);
+            Assert.Empty(result.candidates);
         }
 
         [Fact]
@@ -182,10 +182,10 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             // Assert
             Assert.NotNull(result);
-            Assert.Equal("llama-3.3-70b-versatile", result.OriginalModelId);
-            Assert.Equal(2, result.Candidates.Count);
-            Assert.Equal("Groq", result.Candidates[0].Key);
-            Assert.Equal("DeepSeek", result.Candidates[1].Key);
+            Assert.Equal("llama-3.3-70b-versatile", result.originalModelId);
+            Assert.Equal(2, result.candidates.Count);
+            Assert.Equal("Groq", result.candidates[0].Key);
+            Assert.Equal("DeepSeek", result.candidates[1].Key);
         }
 
         [Fact]
@@ -207,9 +207,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             // Assert
             Assert.NotNull(result);
-            Assert.Equal("llama-3.3-70b-versatile", result.OriginalModelId);
-            Assert.Single(result.Candidates);
-            Assert.Equal("Groq", result.Candidates[0].Key);
+            Assert.Equal("llama-3.3-70b-versatile", result.originalModelId);
+            Assert.Single(result.candidates);
+            Assert.Equal("Groq", result.candidates[0].Key);
         }
 
         [Fact]
@@ -235,9 +235,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             // Assert
             Assert.NotNull(result);
-            Assert.Equal("custom-alias", result.OriginalModelId);
-            Assert.Single(result.Candidates);
-            Assert.Equal("Groq", result.Candidates[0].Key);
+            Assert.Equal("custom-alias", result.originalModelId);
+            Assert.Single(result.candidates);
+            Assert.Equal("Groq", result.candidates[0].Key);
         }
 
         [Fact]
@@ -285,9 +285,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             // Assert - Should only return providers from first candidate
             Assert.NotNull(result);
-            Assert.Equal("my-combo", result.OriginalModelId);
-            Assert.Single(result.Candidates);
-            Assert.Equal("Provider1", result.Candidates[0].Key);
+            Assert.Equal("my-combo", result.originalModelId);
+            Assert.Single(result.candidates);
+            Assert.Equal("Provider1", result.candidates[0].Key);
         }
 
         [Fact]
@@ -322,9 +322,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             // Assert
             Assert.NotNull(result);
-            Assert.Equal(complexModelId, result.OriginalModelId);
-            Assert.Single(result.Candidates);
-            Assert.Equal("Provider", result.Candidates[0].Key);
+            Assert.Equal(complexModelId, result.originalModelId);
+            Assert.Single(result.candidates);
+            Assert.Equal("Provider", result.candidates[0].Key);
         }
 
         [Fact]
@@ -344,8 +344,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             // Assert
             Assert.NotNull(result);
-            Assert.Equal("non-existent-model", result.OriginalModelId);
-            Assert.Empty(result.Candidates);
+            Assert.Equal("non-existent-model", result.originalModelId);
+            Assert.Empty(result.candidates);
         }
 
         [Fact]
@@ -374,9 +374,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             // Assert - Should only include Groq since it matches the canonical provider
             Assert.NotNull(result);
-            Assert.Equal("llama-3.3-70b-versatile", result.OriginalModelId);
-            Assert.Single(result.Candidates);
-            Assert.Equal("Groq", result.Candidates[0].Key);
+            Assert.Equal("llama-3.3-70b-versatile", result.originalModelId);
+            Assert.Single(result.candidates);
+            Assert.Equal("Groq", result.candidates[0].Key);
         }
 
         private SynaxisConfiguration CreateValidConfiguration()

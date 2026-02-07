@@ -4,19 +4,19 @@
 
 namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
 {
-    using Microsoft.AspNetCore.Builder;
-    using Microsoft.AspNetCore.Http;
-    using Microsoft.AspNetCore.Routing;
-    using Microsoft.Extensions.AI;
-    using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.AspNetCore.OpenApi;
-    using Synaxis.InferenceGateway.Application.Routing;
-    using Synaxis.InferenceGateway.WebApi.DTOs;
-    using Synaxis.InferenceGateway.WebApi.Middleware;
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Text.Json;
+    using Microsoft.AspNetCore.Builder;
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.AspNetCore.OpenApi;
+    using Microsoft.AspNetCore.Routing;
+    using Microsoft.Extensions.AI;
+    using Microsoft.Extensions.DependencyInjection;
+    using Synaxis.InferenceGateway.Application.Routing;
+    using Synaxis.InferenceGateway.WebApi.DTOs;
+    using Synaxis.InferenceGateway.WebApi.Middleware;
 
     /// <summary>
     /// Legacy completions endpoint for backward compatibility with OpenAI API.
@@ -37,7 +37,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                 }
 
                 var caps = new RequiredCapabilities { Streaming = request.Stream };
-                var resolution = await resolver.ResolveAsync(request.Model, EndpointKind.LegacyCompletions, caps);
+                var resolution = await resolver.ResolveAsync(request.Model, EndpointKind.LegacyCompletions, caps).ConfigureAwait(false);
 
                 ctx.Items["RoutingContext"] = new RoutingContext(request.Model, resolution.canonicalId.ToString(), resolution.canonicalId.provider);
 
@@ -57,7 +57,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                 if (request.Stream)
                 {
                     ctx.Response.Headers.ContentType = "text/event-stream";
-                    await foreach (var update in chatClient.GetStreamingResponseAsync(messages, options))
+                    await foreach (var update in chatClient.GetStreamingResponseAsync(messages, options).ConfigureAwait(false))
                     {
                         var chunk = new
                         {
@@ -70,16 +70,16 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                             new { text = update.Text, index = 0, finish_reason = update.FinishReason?.ToString().ToLowerInvariant() }
                             },
                         };
-                        await ctx.Response.WriteAsync($"data: {JsonSerializer.Serialize(chunk)}\n\n");
-                        await ctx.Response.Body.FlushAsync();
+                        await ctx.Response.WriteAsync($"data: {JsonSerializer.Serialize(chunk)}\n\n").ConfigureAwait(false);
+                        await ctx.Response.Body.FlushAsync().ConfigureAwait(false);
                     }
 
-                    await ctx.Response.WriteAsync("data: [DONE]\n\n");
+                    await ctx.Response.WriteAsync("data: [DONE]\n\n").ConfigureAwait(false);
                     return Results.Empty;
                 }
                 else
                 {
-                    var response = await chatClient.GetResponseAsync(messages, options);
+                    var response = await chatClient.GetResponseAsync(messages, options).ConfigureAwait(false);
                     return Results.Ok(new
                     {
                         id = "cmpl-" + Guid.NewGuid(),

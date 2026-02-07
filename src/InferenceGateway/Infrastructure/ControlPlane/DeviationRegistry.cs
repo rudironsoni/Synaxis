@@ -8,16 +8,24 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
     using Synaxis.InferenceGateway.Application.ControlPlane;
     using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
 
+    /// <summary>
+    /// DeviationRegistry class.
+    /// </summary>
     public sealed class DeviationRegistry : IDeviationRegistry
     {
         private readonly ControlPlaneDbContext _dbContext;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DeviationRegistry"/> class.
+        /// </summary>
+        /// <param name="dbContext">The dbContext.</param>
         public DeviationRegistry(ControlPlaneDbContext dbContext)
         {
             this._dbContext = dbContext;
         }
 
-        public async Task RegisterAsync(DeviationEntry entry, CancellationToken cancellationToken = default)
+        /// <inheritdoc/>
+        public Task RegisterAsync(DeviationEntry entry, CancellationToken cancellationToken = default)
         {
             if (entry.Id == Guid.Empty)
             {
@@ -25,9 +33,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
             }
 
             this._dbContext.Deviations.Add(entry);
-            await this._dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return this._dbContext.SaveChangesAsync(cancellationToken);
         }
 
+        /// <inheritdoc/>
         public async Task<IReadOnlyList<DeviationEntry>> ListAsync(Guid tenantId, CancellationToken cancellationToken = default)
         {
             return await this._dbContext.Deviations
@@ -37,6 +46,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                 .ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
+        /// <inheritdoc/>
         public async Task UpdateStatusAsync(Guid deviationId, DeviationStatus status, CancellationToken cancellationToken = default)
         {
             var deviation = await this._dbContext.Deviations

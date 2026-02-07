@@ -28,7 +28,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Data.Interceptors
     ///   - When an Organization is soft deleted, automatically soft deletes all related Groups,
     ///     UserOrganizationMemberships, and ApiKeys
     /// - Works in conjunction with global query filters (configured in DbContext.OnModelCreating)
-    ///   that exclude soft-deleted entities from normal queries
+    ///   that exclude soft-deleted entities from normal queries.
     /// </para>
     /// <para>
     /// Usage:
@@ -148,7 +148,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Data.Interceptors
         /// 2. Finds all entities in Deleted state that implement ISoftDeletable
         /// 3. Converts DELETE to UPDATE by changing EntityState to Modified
         /// 4. Sets DeletedAt to DateTime.UtcNow and DeletedBy to current user ID
-        /// 5. For Organization entities, cascades soft delete to related entities
+        /// 5. For Organization entities, cascades soft delete to related entities.
         /// </remarks>
         private void ProcessSoftDelete(DbContext context)
         {
@@ -212,26 +212,15 @@ namespace Synaxis.InferenceGateway.Infrastructure.Data.Interceptors
                            e.State != EntityState.Detached &&
                            e.Entity.OrganizationId == organizationId)
                 .Select(e => e.Entity)
+                .Where(group => group.DeletedAt is null)
                 .ToList();
 
             foreach (var group in groups)
             {
-                if (group.DeletedAt is null)
-                {
-                    group.DeletedAt = deletedAt;
+                group.DeletedAt = deletedAt;
 
-                    // Note: Group doesn't have DeletedBy property in the current schema
-                }
+                // Note: Group doesn't have DeletedBy property in the current schema
             }
-
-            // Soft delete all UserOrganizationMemberships
-            var memberships = context.ChangeTracker
-                .Entries<UserOrganizationMembership>()
-                .Where(e => e.State != EntityState.Deleted &&
-                           e.State != EntityState.Detached &&
-                           e.Entity.OrganizationId == organizationId)
-                .Select(e => e.Entity)
-                .ToList();
 
             // Note: UserOrganizationMembership doesn't have DeletedAt/DeletedBy in current schema
             // If it should support soft delete, add ISoftDeletable interface to the entity
@@ -244,19 +233,17 @@ namespace Synaxis.InferenceGateway.Infrastructure.Data.Interceptors
                            e.State != EntityState.Detached &&
                            e.Entity.OrganizationId == organizationId)
                 .Select(e => e.Entity)
+                .Where(apiKey => apiKey.RevokedAt is null)
                 .ToList();
 
             // Note: ApiKey uses RevokedAt/RevokedBy pattern instead of DeletedAt/DeletedBy
             // Setting IsActive to false and populating RevokedAt/RevokedBy for consistency
             foreach (var apiKey in apiKeys)
             {
-                if (apiKey.RevokedAt is null)
-                {
-                    apiKey.IsActive = false;
-                    apiKey.RevokedAt = deletedAt;
-                    apiKey.RevokedBy = userId;
-                    apiKey.RevocationReason = "Organization deleted";
-                }
+                apiKey.IsActive = false;
+                apiKey.RevokedAt = deletedAt;
+                apiKey.RevokedBy = userId;
+                apiKey.RevocationReason = "Organization deleted";
             }
         }
 

@@ -25,5 +25,4 @@ namespace Synaxis.InferenceGateway.WebApi.Features.Chat.Commands
     /// <param name="Messages">The chat messages.</param>
     public record ChatStreamCommand(OpenAIRequest Request, IEnumerable<ChatMessage> Messages)
     : IStreamRequest<Microsoft.Agents.AI.AgentResponseUpdate>;
-
 }

@@ -15,18 +15,27 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.OpenAi
     using Microsoft.Extensions.Logging;
     using Synaxis.InferenceGateway.Infrastructure.External.OpenAi.Dto;
 
+    /// <summary>
+    /// OpenAiModelDiscoveryClient class.
+    /// </summary>
     public class OpenAiModelDiscoveryClient : IOpenAiModelDiscoveryClient
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<OpenAiModelDiscoveryClient> _logger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="OpenAiModelDiscoveryClient"/> class.
+        /// </summary>
+        /// <param name="httpClient">The HTTP client for making requests.</param>
+        /// <param name="logger">The logger instance.</param>
         public OpenAiModelDiscoveryClient(HttpClient httpClient, ILogger<OpenAiModelDiscoveryClient> logger)
         {
             this._httpClient = httpClient;
             this._logger = logger;
         }
 
-        public async Task<List<string>> GetModelsAsync(string baseUrl, string apiKey, CancellationToken ct)
+        /// <inheritdoc/>
+        public async Task<IList<string>> GetModelsAsync(string baseUrl, string apiKey, CancellationToken ct)
         {
             if (string.IsNullOrEmpty(baseUrl))
             {
@@ -53,7 +62,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.OpenAi
                     return new List<string>();
                 }
 
+#pragma warning disable IDISP001 // Stream obtained from response content - disposed with response
                 var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
+#pragma warning restore IDISP001
                 var dto = await JsonSerializer.DeserializeAsync<OpenAiModelsResponse>(stream, cancellationToken: ct).ConfigureAwait(false);
                 if (dto == null || dto.Data == null)
                 {
