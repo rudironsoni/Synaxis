@@ -37,9 +37,9 @@ public class RedisConversationStoreTests
 
         var messages = new List<ConversationMessage>
         {
-            new() { Role = "user", Content = "Hello", Timestamp = DateTimeOffset.UtcNow.AddMinutes(-10) },
-            new() { Role = "assistant", Content = "Hi there!", Timestamp = DateTimeOffset.UtcNow.AddMinutes(-9) },
-            new() { Role = "user", Content = "How are you?", Timestamp = DateTimeOffset.UtcNow.AddMinutes(-8) }
+            new () { Role = "user", Content = "Hello", Timestamp = DateTimeOffset.UtcNow.AddMinutes(-10) },
+            new () { Role = "assistant", Content = "Hi there!", Timestamp = DateTimeOffset.UtcNow.AddMinutes(-9) },
+            new () { Role = "user", Content = "How are you?", Timestamp = DateTimeOffset.UtcNow.AddMinutes(-8) }
         };
 
         var redisValues = messages.Select(m => (RedisValue)JsonSerializer.Serialize(m)).ToArray();

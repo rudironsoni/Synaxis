@@ -135,7 +135,7 @@ public class AdminUiE2ETests : IAsyncLifetime
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         // Act - Wait for providers to load
-        await page.WaitForSelectorAsync("text=Groq", new() { Timeout = 5000 });
+        await page.WaitForSelectorAsync("text=Groq", new () { Timeout = 5000 });
 
         // Assert
         Assert.True(await page.IsVisibleAsync("text=Groq"));
@@ -158,7 +158,7 @@ public class AdminUiE2ETests : IAsyncLifetime
         await SetJwtToken(page, "valid-jwt-token");
         await page.GotoAsync("/admin/providers");
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-        await page.WaitForSelectorAsync("text=Groq", new() { Timeout = 5000 });
+        await page.WaitForSelectorAsync("text=Groq", new () { Timeout = 5000 });
 
         // Act
         var toggle = page.Locator("label.toggle").First;
@@ -185,7 +185,7 @@ public class AdminUiE2ETests : IAsyncLifetime
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         // Act
-        await page.WaitForSelectorAsync("text=API Gateway", new() { Timeout = 5000 });
+        await page.WaitForSelectorAsync("text=API Gateway", new () { Timeout = 5000 });
 
         // Assert
         Assert.True(await page.IsVisibleAsync("text=API Gateway"));
