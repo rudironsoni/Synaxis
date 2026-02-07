@@ -22,7 +22,7 @@ namespace Synaxis.Infrastructure.Services
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<HealthMonitor> _logger;
         
-        private static readonly Dictionary<string, (double Latitude, double Longitude)> RegionCoordinates = new()
+        private static readonly Dictionary<string, (double Latitude, double Longitude)> RegionCoordinates = new ()
         {
             { "eu-west-1", (53.3498, -6.2603) },      // Dublin
             { "us-east-1", (39.0438, -77.4874) },     // Virginia
@@ -30,7 +30,7 @@ namespace Synaxis.Infrastructure.Services
         };
         
         // Cached health status (in-memory, could be moved to Redis for distributed cache)
-        private readonly Dictionary<string, RegionHealth> _healthCache = new();
+        private readonly Dictionary<string, RegionHealth> _healthCache = new ();
         private readonly TimeSpan _cacheExpiry = TimeSpan.FromSeconds(30);
         
         public HealthMonitor(

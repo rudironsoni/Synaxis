@@ -22,7 +22,7 @@ public class OpenAIRequestMapperTests
             TopP = 0.9,
             MaxTokens = 100
         };
-        var messages = new List<ChatMessage> { new(ChatRole.User, "Hello") };
+        var messages = new List<ChatMessage> { new (ChatRole.User, "Hello") };
 
         var result = OpenAIRequestMapper.ToCanonicalRequest(openAIRequest, messages);
 
@@ -102,7 +102,7 @@ public class OpenAIRequestMapperTests
             Messages = new List<OpenAIMessage>(),
             Tools = new List<OpenAITool>
             {
-                new()
+                new ()
                 {
                     Type = "function",
                     Function = new OpenAIFunction
@@ -254,7 +254,7 @@ public class OpenAIRequestMapperTests
         {
             Messages = new List<OpenAIMessage>
             {
-                new() { Role = "system", Content = "You are helpful" }
+                new () { Role = "system", Content = "You are helpful" }
             }
         };
 
@@ -272,7 +272,7 @@ public class OpenAIRequestMapperTests
         {
             Messages = new List<OpenAIMessage>
             {
-                new() { Role = "user", Content = "Hello" }
+                new () { Role = "user", Content = "Hello" }
             }
         };
 
@@ -290,7 +290,7 @@ public class OpenAIRequestMapperTests
         {
             Messages = new List<OpenAIMessage>
             {
-                new() { Role = "assistant", Content = "Hi there" }
+                new () { Role = "assistant", Content = "Hi there" }
             }
         };
 
@@ -308,7 +308,7 @@ public class OpenAIRequestMapperTests
         {
             Messages = new List<OpenAIMessage>
             {
-                new() { Role = "tool", Content = "Tool result", ToolCallId = "call_123" }
+                new () { Role = "tool", Content = "Tool result", ToolCallId = "call_123" }
             }
         };
 
@@ -325,7 +325,7 @@ public class OpenAIRequestMapperTests
         {
             Messages = new List<OpenAIMessage>
             {
-                new() { Role = "custom_role", Content = "Custom content" }
+                new () { Role = "custom_role", Content = "Custom content" }
             }
         };
 
@@ -343,7 +343,7 @@ public class OpenAIRequestMapperTests
         {
             Messages = new List<OpenAIMessage>
             {
-                new() { Role = "user", Content = "Hello", Name = "John" }
+                new () { Role = "user", Content = "Hello", Name = "John" }
             }
         };
 
@@ -360,7 +360,7 @@ public class OpenAIRequestMapperTests
         {
             Messages = new List<OpenAIMessage>
             {
-                new() { Role = "user", Content = null }
+                new () { Role = "user", Content = null }
             }
         };
 
@@ -377,13 +377,13 @@ public class OpenAIRequestMapperTests
         {
             Messages = new List<OpenAIMessage>
             {
-                new()
+                new ()
                 {
                     Role = "assistant",
                     Content = "Calling function",
                     ToolCalls = new List<OpenAIToolCall>
                     {
-                        new()
+                        new ()
                         {
                             Id = "call_123",
                             Type = "function",
@@ -416,13 +416,13 @@ public class OpenAIRequestMapperTests
         {
             Messages = new List<OpenAIMessage>
             {
-                new()
+                new ()
                 {
                     Role = "assistant",
                     Content = "Calling multiple functions",
                     ToolCalls = new List<OpenAIToolCall>
                     {
-                        new()
+                        new ()
                         {
                             Id = "call_1",
                             Type = "function",
@@ -432,7 +432,7 @@ public class OpenAIRequestMapperTests
                                 Arguments = "{}"
                             }
                         },
-                        new()
+                        new ()
                         {
                             Id = "call_2",
                             Type = "function",
@@ -461,13 +461,13 @@ public class OpenAIRequestMapperTests
         {
             Messages = new List<OpenAIMessage>
             {
-                new()
+                new ()
                 {
                     Role = "assistant",
                     Content = "",
                     ToolCalls = new List<OpenAIToolCall>
                     {
-                        new()
+                        new ()
                         {
                             Id = "call_123",
                             Type = "function",
@@ -496,7 +496,7 @@ public class OpenAIRequestMapperTests
         {
             Messages = new List<OpenAIMessage>
             {
-                new()
+                new ()
                 {
                     Role = "tool",
                     Content = "25 degrees",
@@ -521,7 +521,7 @@ public class OpenAIRequestMapperTests
         {
             Messages = new List<OpenAIMessage>
             {
-                new()
+                new ()
                 {
                     Role = "tool",
                     Content = "Result",
@@ -545,9 +545,9 @@ public class OpenAIRequestMapperTests
         {
             Messages = new List<OpenAIMessage>
             {
-                new() { Role = "system", Content = "System prompt" },
-                new() { Role = "user", Content = "User message" },
-                new() { Role = "assistant", Content = "Assistant response" }
+                new () { Role = "system", Content = "System prompt" },
+                new () { Role = "user", Content = "User message" },
+                new () { Role = "assistant", Content = "Assistant response" }
             }
         };
 
@@ -566,7 +566,7 @@ public class OpenAIRequestMapperTests
         {
             Messages = new List<OpenAIMessage>
             {
-                new()
+                new ()
                 {
                     Role = "assistant",
                     Content = "No tools",
@@ -588,13 +588,13 @@ public class OpenAIRequestMapperTests
         {
             Messages = new List<OpenAIMessage>
             {
-                new()
+                new ()
                 {
                     Role = "assistant",
                     Content = "",
                     ToolCalls = new List<OpenAIToolCall>
                     {
-                        new()
+                        new ()
                         {
                             Id = "call_123",
                             Type = "function",

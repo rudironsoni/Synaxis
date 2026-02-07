@@ -25,7 +25,7 @@ namespace Synaxis.Infrastructure.Services
         private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(1);
         
         // Fallback rates (used if external API fails)
-        private static readonly Dictionary<string, decimal> FallbackRates = new()
+        private static readonly Dictionary<string, decimal> FallbackRates = new ()
         {
             { "USD", 1.00m },
             { "EUR", 0.92m },

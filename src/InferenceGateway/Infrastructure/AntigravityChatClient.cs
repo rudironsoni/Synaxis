@@ -252,19 +252,19 @@ namespace Synaxis.InferenceGateway.Infrastructure
         public string Model { get; set; } = string.Empty;
 
         [JsonPropertyName("request")]
-        public RequestPayload RequestPayload { get; set; } = new();
+        public RequestPayload RequestPayload { get; set; } = new ();
     }
 
     internal class RequestPayload
     {
         [JsonPropertyName("contents")]
-        public List<Content> Contents { get; set; } = new();
+        public List<Content> Contents { get; set; } = new ();
 
         [JsonPropertyName("systemInstruction")]
         public SystemInstruction? SystemInstruction { get; set; }
 
         [JsonPropertyName("generationConfig")]
-        public GenerationConfig GenerationConfig { get; set; } = new();
+        public GenerationConfig GenerationConfig { get; set; } = new ();
     }
 
     internal class Content
@@ -273,13 +273,13 @@ namespace Synaxis.InferenceGateway.Infrastructure
         public string Role { get; set; } = "user";
 
         [JsonPropertyName("parts")]
-        public List<Part> Parts { get; set; } = new();
+        public List<Part> Parts { get; set; } = new ();
     }
 
     internal class SystemInstruction
     {
         [JsonPropertyName("parts")]
-        public List<Part> Parts { get; set; } = new();
+        public List<Part> Parts { get; set; } = new ();
     }
 
     internal class Part
@@ -327,7 +327,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
     internal class AntigravityResponse
     {
         [JsonPropertyName("candidates")]
-        public List<Candidate> Candidates { get; set; } = new();
+        public List<Candidate> Candidates { get; set; } = new ();
 
         [JsonPropertyName("modelVersion")]
         public string ModelVersion { get; set; } = string.Empty;

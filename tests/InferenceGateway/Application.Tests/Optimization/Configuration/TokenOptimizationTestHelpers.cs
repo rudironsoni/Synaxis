@@ -41,7 +41,7 @@ public enum ConfigurationLevel
 public class ValidationResult
 {
     public bool IsValid { get; set; }
-    public List<string> Errors { get; set; } = new();
+    public List<string> Errors { get; set; } = new ();
 }
 
 // Test-specific DbContext for Token Optimization
@@ -84,7 +84,7 @@ public class TokenOptimizationConfigurationResolver : ITokenOptimizationConfigur
 {
     private readonly IDbContextFactory<TestTokenOptimizationDbContext> _dbContextFactory;
 
-    private readonly TokenOptimizationConfig _systemDefaults = new()
+    private readonly TokenOptimizationConfig _systemDefaults = new ()
     {
         SimilarityThreshold = 0.85,
         CacheTtlSeconds = 3600,

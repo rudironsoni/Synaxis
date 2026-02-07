@@ -16,7 +16,7 @@ namespace Synaxis.Tests.Permutations
         /// <summary>
         /// Feature access matrix by tier
         /// </summary>
-        private static readonly Dictionary<string, HashSet<string>> TierFeatures = new()
+        private static readonly Dictionary<string, HashSet<string>> TierFeatures = new ()
         {
             { "free", new HashSet<string> { } },
             { "pro", new HashSet<string> { "multi_geo", "audit_logs" } },
