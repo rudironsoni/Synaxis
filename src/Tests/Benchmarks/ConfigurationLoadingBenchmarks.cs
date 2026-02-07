@@ -1,3 +1,7 @@
+// <copyright file="ConfigurationLoadingBenchmarks.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Diagnosers;
 using Microsoft.Extensions.Configuration;
@@ -84,6 +88,7 @@ public class ConfigurationLoadingBenchmarks
         {
             keys[i++] = provider["Key"] ?? string.Empty;
         }
+
         return keys;
     }
 

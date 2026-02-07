@@ -20,31 +20,41 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
     using Microsoft.Extensions.Logging;
     using Synaxis.InferenceGateway.Application.Configuration;
 
+    /// <summary>
+    /// Represents an Antigravity account with token and project information.
+    /// </summary>
     public class AntigravityAccount
     {
+        /// <summary>
+        /// Gets or sets the email address.
+        /// </summary>
         public string Email { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Gets or sets the project identifier.
+        /// </summary>
         public string ProjectId { get; set; } = string.Empty;
 
-        public TokenResponse Token { get; set; } = new();
+        /// <summary>
+        /// Gets or sets the Token.
+        /// </summary>
+        public TokenResponse Token { get; set; } = new ();
     }
 
     /// <summary>
-    /// Manages authentication for Antigravity, supporting multiple accounts, load balancing, and headless flows.
+    /// Manages Antigravity authentication with multi-account support and automatic token refresh.
     /// </summary>
     public class AntigravityAuthManager : IAntigravityAuthManager
     {
-        private readonly ILogger<AntigravityAuthManager> _logger;
-        private readonly ITokenStore _tokenStore;
-        private readonly string _projectId;
-        private readonly IHttpClientFactory _httpClientFactory;
-        private readonly AntigravitySettings _settings;
-
+#pragma warning disable S1075 // URIs should not be hardcoded - OAuth and API endpoints
         private const string AuthorizationEndpoint = "https://accounts.google.com/o/oauth2/v2/auth";
         private const string TokenEndpoint = "https://oauth2.googleapis.com/token";
         private const string UserInfoEndpoint = "https://www.googleapis.com/oauth2/v1/userinfo?alt=json";
         private const string DefaultProjectId = "rising-fact-p41fc";
-        private static readonly string[] Scopes = {
+#pragma warning restore S1075 // URIs should not be hardcoded
+
+        private static readonly string[] Scopes =
+        {
             "https://www.googleapis.com/auth/cloud-platform",
             "https://www.googleapis.com/auth/userinfo.email",
             "https://www.googleapis.com/auth/userinfo.profile",
@@ -66,11 +76,24 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
             "https://cloudcode-pa.googleapis.com",
         };
 
-        private List<AntigravityAccount> _accounts = new();
-        private readonly SemaphoreSlim _authLock = new(1, 1);
+        private readonly ILogger<AntigravityAuthManager> _logger;
+        private readonly ITokenStore _tokenStore;
+        private readonly string _projectId;
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly AntigravitySettings _settings;
+        private readonly SemaphoreSlim _authLock = new (1, 1);
+
+        private IList<AntigravityAccount> _accounts = new List<AntigravityAccount>();
         private int _requestCount = 0;
 
-        // New constructor that accepts a token store
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AntigravityAuthManager"/> class.
+        /// </summary>
+        /// <param name="projectId">The default project identifier.</param>
+        /// <param name="settings">The Antigravity settings.</param>
+        /// <param name="logger">The logger instance.</param>
+        /// <param name="httpClientFactory">The HTTP client factory.</param>
+        /// <param name="tokenStore">The token store.</param>
         public AntigravityAuthManager(
             string projectId,
             AntigravitySettings settings,
@@ -90,7 +113,15 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
             }
         }
 
-        // Backwards-compatible constructor that accepts a storage path and creates a FileTokenStore
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AntigravityAuthManager"/> class.
+        /// Backwards-compatible constructor that creates a FileTokenStore.
+        /// </summary>
+        /// <param name="projectId">The default project identifier.</param>
+        /// <param name="authStoragePath">The file path for storing tokens.</param>
+        /// <param name="settings">The Antigravity settings.</param>
+        /// <param name="logger">The logger instance.</param>
+        /// <param name="httpClientFactory">The HTTP client factory.</param>
         public AntigravityAuthManager(
             string projectId,
             string authStoragePath,
@@ -101,74 +132,18 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
         {
         }
 
+        /// <inheritdoc/>
         public async Task<string> GetTokenAsync(CancellationToken cancellationToken = default)
         {
-            await this._authLock.WaitAsync(cancellationToken);
+            await this._authLock.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
-                if (this._accounts.Count == 0)
-                {
-                    var loaded = await this._tokenStore.LoadAsync();
-                    if (loaded?.Count > 0)
-                    {
-                        this._accounts = loaded;
-                    }
-                }
+                await this.EnsureAccountsLoadedAsync().ConfigureAwait(false);
+                await this.InjectTransientAccountIfNeededAsync().ConfigureAwait(false);
+                await this.EnsureAccountsExistAsync(cancellationToken).ConfigureAwait(false);
 
-                // Check for Env Var Refresh Token (Transient Account)
-                var envRefreshToken = Environment.GetEnvironmentVariable("ANTIGRAVITY_REFRESH_TOKEN");
-                if (!string.IsNullOrWhiteSpace(envRefreshToken) && !this._accounts.Any(a => a.Token.RefreshToken == envRefreshToken))
-                {
-                    var parsed = ParseRefreshToken(envRefreshToken);
-                    this._logger.LogInformation("Injecting transient account from environment variable.");
-                    this._accounts.Add(new AntigravityAccount
-                    {
-                        Email = "env-var-user@system",
-                        ProjectId = parsed.ProjectId,
-                        Token = new TokenResponse { RefreshToken = parsed.RefreshToken, ExpiresInSeconds = 0, IssuedUtc = DateTime.UtcNow.AddHours(-1) },
-                    });
-                }
-
-                if (this._accounts.Count == 0)
-                {
-                    this._logger.LogInformation("No accounts found. Starting interactive login.");
-
-                    // For CLI usage, we can still trigger interactive login if no accounts exist
-                    // But for API usage, this might just fail until an account is added via API
-                    // We'll try interactive as a fallback for local dev convenience
-                    try
-                    {
-                        // This will block if run in a non-interactive console without input redirection
-                        // In a pure API scenario, this might timeout or throw
-                        await this.InteractiveLoginAsync(cancellationToken);
-                    }
-                    catch (Exception ex)
-                    {
-                        this._logger.LogWarning(ex, "Interactive login failed or was cancelled. Please add an account via API.");
-                        throw new InvalidOperationException("No authenticated accounts available. Please add an account via POST /antigravity/auth/start");
-                    }
-                }
-
-                if (this._accounts.Count == 0)
-                {
-                    throw new InvalidOperationException("Authentication failed.");
-                }
-
-                // Round-Robin Selection
-                var index = Interlocked.Increment(ref this._requestCount) % this._accounts.Count;
-                if (index < 0)
-                {
-                    index = -index; // Handle overflow
-                }
-
-                var account = this._accounts[index];
-
-                // Check Expiry & Refresh
-                if (account.Token.IsStale)
-                {
-                    this._logger.LogInformation("Refreshing token for {Email}...", account.Email);
-                    await this.RefreshAccountTokenAsync(account, cancellationToken);
-                }
+                var account = this.SelectAccountRoundRobin();
+                await this.RefreshTokenIfStaleAsync(account, cancellationToken).ConfigureAwait(false);
 
                 return account.Token.AccessToken;
             }
@@ -178,6 +153,78 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
             }
         }
 
+        private async Task EnsureAccountsLoadedAsync()
+        {
+            if (this._accounts.Count == 0)
+            {
+                var loaded = await this._tokenStore.LoadAsync().ConfigureAwait(false);
+                if (loaded?.Count > 0)
+                {
+                    this._accounts = loaded;
+                }
+            }
+        }
+
+        private async Task InjectTransientAccountIfNeededAsync()
+        {
+            var envRefreshToken = Environment.GetEnvironmentVariable("ANTIGRAVITY_REFRESH_TOKEN");
+            if (!string.IsNullOrWhiteSpace(envRefreshToken) && !this._accounts.Any(a => string.Equals(a.Token.RefreshToken, envRefreshToken, StringComparison.Ordinal)))
+            {
+                var parsed = ParseRefreshToken(envRefreshToken);
+                this._logger.LogInformation("Injecting transient account from environment variable.");
+                this._accounts.Add(new AntigravityAccount
+                {
+                    Email = "env-var-user@system",
+                    ProjectId = parsed.ProjectId,
+                    Token = new TokenResponse { RefreshToken = parsed.RefreshToken, ExpiresInSeconds = 0, IssuedUtc = DateTime.UtcNow.AddHours(-1) },
+                });
+            }
+        }
+
+        private async Task EnsureAccountsExistAsync(CancellationToken cancellationToken)
+        {
+            if (this._accounts.Count == 0)
+            {
+                this._logger.LogInformation("No accounts found. Starting interactive login.");
+
+                try
+                {
+                    await this.InteractiveLoginAsync(cancellationToken).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    this._logger.LogWarning(ex, "Interactive login failed or was cancelled. Please add an account via API.");
+                    throw new InvalidOperationException("No authenticated accounts available. Please add an account via POST /antigravity/auth/start");
+                }
+            }
+
+            if (this._accounts.Count == 0)
+            {
+                throw new InvalidOperationException("Authentication failed.");
+            }
+        }
+
+        private AntigravityAccount SelectAccountRoundRobin()
+        {
+            var index = Interlocked.Increment(ref this._requestCount) % this._accounts.Count;
+            if (index < 0)
+            {
+                index = -index; // Handle overflow
+            }
+
+            return this._accounts[index];
+        }
+
+        private async Task RefreshTokenIfStaleAsync(AntigravityAccount account, CancellationToken cancellationToken)
+        {
+            if (account.Token.IsStale)
+            {
+                this._logger.LogInformation("Refreshing token for {Email}...", account.Email);
+                await this.RefreshAccountTokenAsync(account, cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+        /// <inheritdoc/>
         public IEnumerable<AccountInfo> ListAccounts()
         {
             // Thread-safe read (copy list reference)
@@ -185,6 +232,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
             return accounts.Select(a => new AccountInfo(a.Email, !a.Token.IsStale));
         }
 
+        /// <inheritdoc/>
         public string StartAuthFlow(string redirectUrl)
         {
             var verifier = GenerateCodeVerifier();
@@ -193,9 +241,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
             return this.BuildAuthorizationUrl(redirectUrl, challenge, state);
         }
 
+        /// <inheritdoc/>
         public async Task CompleteAuthFlowAsync(string code, string redirectUrl, string? state = null)
         {
-            await this._authLock.WaitAsync();
+            await this._authLock.WaitAsync().ConfigureAwait(false);
             try
             {
                 if (string.IsNullOrWhiteSpace(code))
@@ -209,8 +258,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
                 }
 
                 var pkceState = DecodeState(state);
-                var token = await this.ExchangeCodeForTokenAsync(code, redirectUrl, pkceState.Verifier, CancellationToken.None);
-                var email = await this.FetchUserEmailAsync(token.AccessToken, CancellationToken.None);
+                var token = await this.ExchangeCodeForTokenAsync(code, redirectUrl, pkceState.Verifier, CancellationToken.None).ConfigureAwait(false);
+                var email = await this.FetchUserEmailAsync(token.AccessToken, CancellationToken.None).ConfigureAwait(false);
                 if (string.IsNullOrWhiteSpace(email))
                 {
                     email = "unknown@user";
@@ -219,7 +268,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
                 var projectId = pkceState.ProjectId;
                 if (string.IsNullOrWhiteSpace(projectId))
                 {
-                    projectId = await this.FetchProjectIdAsync(token.AccessToken, CancellationToken.None);
+                    projectId = await this.FetchProjectIdAsync(token.AccessToken, CancellationToken.None).ConfigureAwait(false);
                 }
 
                 if (string.IsNullOrWhiteSpace(projectId))
@@ -228,7 +277,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
                 }
 
                 // Update or Add
-                var existing = this._accounts.FirstOrDefault(a => a.Email == email);
+                var existing = this._accounts.FirstOrDefault(a => string.Equals(a.Email, email, StringComparison.Ordinal));
                 if (existing != null)
                 {
                     existing.Token = token;
@@ -241,7 +290,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
                     this._logger.LogInformation("Added new account: {Email}", email);
                 }
 
-                await this._tokenStore.SaveAsync(this._accounts);
+                await this._tokenStore.SaveAsync(this._accounts).ConfigureAwait(false);
             }
             finally
             {
@@ -256,7 +305,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
                 throw new InvalidOperationException("Missing refresh token for account.");
             }
 
-            var newToken = await this.RefreshTokenAsync(account.Token.RefreshToken, cancellationToken);
+            var newToken = await this.RefreshTokenAsync(account.Token.RefreshToken, cancellationToken).ConfigureAwait(false);
             if (string.IsNullOrWhiteSpace(newToken.RefreshToken))
             {
                 newToken.RefreshToken = account.Token.RefreshToken;
@@ -266,13 +315,15 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
 
             // We don't necessarily need to save on every refresh (performance), but it's safer to do so
             // to persist the new access token/expiry.
-            await this._tokenStore.SaveAsync(this._accounts);
+            await this._tokenStore.SaveAsync(this._accounts).ConfigureAwait(false);
         }
 
         // Legacy Interactive Login (kept for CLI convenience)
         private async Task InteractiveLoginAsync(CancellationToken cancellationToken)
         {
+#pragma warning disable S1075 // URIs should not be hardcoded - OAuth redirect URI
             var redirectUri = "http://localhost:51121/oauth/antigravity/callback";
+#pragma warning restore S1075 // URIs should not be hardcoded
             var url = this.StartAuthFlow(redirectUri);
 
             Console.WriteLine("----------------------------------------------------------------");
@@ -280,13 +331,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
             Console.WriteLine("----------------------------------------------------------------");
             Console.WriteLine("1. Visit this URL in your browser:");
             Console.WriteLine(url);
-            Console.WriteLine("");
+            Console.WriteLine(string.Empty);
             Console.WriteLine("2. Log in with your Google Account.");
             Console.WriteLine("3. Copy the full redirect URL after login (it contains code and state).");
             Console.WriteLine("----------------------------------------------------------------");
             Console.Write("Paste redirect URL here: ");
 
-            var codeOrUrl = await Task.Run(() => Console.ReadLine(), cancellationToken);
+            var codeOrUrl = await Task.Run(() => Console.ReadLine(), cancellationToken).ConfigureAwait(false);
 
             if (string.IsNullOrWhiteSpace(codeOrUrl))
             {
@@ -299,7 +350,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
                 throw new InvalidOperationException("The redirect URL must include both code and state parameters.");
             }
 
-            await this.CompleteAuthFlowAsync(code, redirectUri, state);
+            await this.CompleteAuthFlowAsync(code, redirectUri, state).ConfigureAwait(false);
         }
 
         private string BuildAuthorizationUrl(string redirectUrl, string codeChallenge, string state)
@@ -369,7 +420,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
         private static byte[] Base64UrlDecode(string input)
         {
             var normalized = input.Replace('-', '+').Replace('_', '/');
-            var padded = normalized.PadRight(normalized.Length + (4 - normalized.Length % 4) % 4, '=');
+            var padded = normalized.PadRight(normalized.Length + ((4 - (normalized.Length % 4)) % 4), '=');
             return Convert.FromBase64String(padded);
         }
 
@@ -390,8 +441,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
                 ["code_verifier"] = verifier,
             });
 
-            using var response = await httpClient.PostAsync(TokenEndpoint, content, cancellationToken);
-            var payload = await response.Content.ReadAsStringAsync(cancellationToken);
+            using var response = await httpClient.PostAsync(TokenEndpoint, content, cancellationToken).ConfigureAwait(false);
+            var payload = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
             {
                 throw new InvalidOperationException($"Token exchange failed: {payload}");
@@ -428,8 +479,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
                 ["grant_type"] = "refresh_token",
             });
 
-            using var response = await httpClient.PostAsync(TokenEndpoint, content, cancellationToken);
-            var payload = await response.Content.ReadAsStringAsync(cancellationToken);
+            using var response = await httpClient.PostAsync(TokenEndpoint, content, cancellationToken).ConfigureAwait(false);
+            var payload = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
             {
                 throw new InvalidOperationException($"Token refresh failed: {payload}");
@@ -456,13 +507,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
             using var request = new HttpRequestMessage(HttpMethod.Get, UserInfoEndpoint);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
-            using var response = await httpClient.SendAsync(request, cancellationToken);
+            using var response = await httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
             {
                 return string.Empty;
             }
 
-            var payload = await response.Content.ReadAsStringAsync(cancellationToken);
+            var payload = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             var userInfo = JsonSerializer.Deserialize<UserInfoPayload>(payload);
             return userInfo?.Email ?? string.Empty;
         }
@@ -488,7 +539,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
                     using var request = new HttpRequestMessage(HttpMethod.Post, url);
                     foreach (var header in loadHeaders)
                     {
-                        if (header.Key == "Authorization")
+                        if (string.Equals(header.Key, "Authorization", StringComparison.Ordinal))
                         {
                             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
                         }
@@ -503,13 +554,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
                         Encoding.UTF8,
                         "application/json");
 
-                    using var response = await httpClient.SendAsync(request, cancellationToken);
+                    using var response = await httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
                     if (!response.IsSuccessStatusCode)
                     {
                         continue;
                     }
 
-                    var payload = await response.Content.ReadAsStringAsync(cancellationToken);
+                    var payload = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
                     var projectId = ExtractProjectId(payload);
                     if (!string.IsNullOrWhiteSpace(projectId))
                     {
@@ -545,6 +596,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
             }
             catch (JsonException)
             {
+                // Silently ignore JSON parsing errors for project ID extraction
             }
 
             return string.Empty;
@@ -577,23 +629,47 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
 
         private sealed class PkceState
         {
-            [JsonPropertyName("verifier")] public string Verifier { get; set; } = string.Empty;
+            /// <summary>
+            /// Gets or sets the Verifier.
+            /// </summary>
+            [JsonPropertyName("verifier")]
+            public string Verifier { get; set; } = string.Empty;
 
-            [JsonPropertyName("projectId")] public string? ProjectId { get; set; }
+            /// <summary>
+            /// Gets or sets the ProjectId.
+            /// </summary>
+            [JsonPropertyName("projectId")]
+            public string? ProjectId { get; set; }
         }
 
         private sealed class TokenPayload
         {
-            [JsonPropertyName("access_token")] public string AccessToken { get; set; } = string.Empty;
+            /// <summary>
+            /// Gets or sets the AccessToken.
+            /// </summary>
+            [JsonPropertyName("access_token")]
+            public string AccessToken { get; set; } = string.Empty;
 
-            [JsonPropertyName("expires_in")] public int ExpiresIn { get; set; }
+            /// <summary>
+            /// Gets or sets the ExpiresIn.
+            /// </summary>
+            [JsonPropertyName("expires_in")]
+            public int ExpiresIn { get; set; }
 
-            [JsonPropertyName("refresh_token")] public string? RefreshToken { get; set; }
+            /// <summary>
+            /// Gets or sets the RefreshToken.
+            /// </summary>
+            [JsonPropertyName("refresh_token")]
+            public string? RefreshToken { get; set; }
         }
 
         private sealed class UserInfoPayload
         {
-            [JsonPropertyName("email")] public string? Email { get; set; }
+            /// <summary>
+            /// Gets or sets the Email.
+            /// </summary>
+            [JsonPropertyName("email")]
+            public string? Email { get; set; }
         }
     }
 }

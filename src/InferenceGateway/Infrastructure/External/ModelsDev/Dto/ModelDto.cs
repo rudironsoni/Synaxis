@@ -5,50 +5,131 @@
 namespace Synaxis.InferenceGateway.Infrastructure.External.ModelsDev.Dto
 {
     using System.Collections.Generic;
+    using System.Text.Json.Serialization;
 
+    /// <summary>
+    /// Data transfer object representing a model from models.dev.
+    /// </summary>
     public sealed class ModelDto
     {
-        public string? id { get; set; }
+        /// <summary>
+        /// Gets or sets the model identifier.
+        /// </summary>
+        [JsonPropertyName("id")]
+        public string? Id { get; set; }
 
-        public string? name { get; set; }
+        /// <summary>
+        /// Gets or sets the model name.
+        /// </summary>
+        [JsonPropertyName("name")]
+        public string? Name { get; set; }
 
-        public string? family { get; set; }
+        /// <summary>
+        /// Gets or sets the model family.
+        /// </summary>
+        [JsonPropertyName("family")]
+        public string? Family { get; set; }
 
-        public LimitDto? limit { get; set; }
+        /// <summary>
+        /// Gets or sets the Limit.
+        /// </summary>
+        [JsonPropertyName("limit")]
+        public LimitDto? Limit { get; set; }
 
-        public CostDto? cost { get; set; }
+        /// <summary>
+        /// Gets or sets the Cost.
+        /// </summary>
+        [JsonPropertyName("cost")]
+        public CostDto? Cost { get; set; }
 
-        public ModalitiesDto? modalities { get; set; }
+        /// <summary>
+        /// Gets or sets the Modalities.
+        /// </summary>
+        [JsonPropertyName("modalities")]
+        public ModalitiesDto? Modalities { get; set; }
 
-        public bool? open_weights { get; set; }
+        /// <summary>
+        /// Gets or sets a value indicating whether the model has open weights.
+        /// </summary>
+        [JsonPropertyName("open_weights")]
+        public bool? OpenWeights { get; set; }
 
-        public bool? tool_call { get; set; }
+        /// <summary>
+        /// Gets or sets a value indicating whether the model supports tool calls.
+        /// </summary>
+        [JsonPropertyName("tool_call")]
+        public bool? ToolCall { get; set; }
 
-        public bool? reasoning { get; set; }
+        /// <summary>
+        /// Gets or sets a value indicating whether the model supports reasoning.
+        /// </summary>
+        [JsonPropertyName("reasoning")]
+        public bool? Reasoning { get; set; }
 
-        public bool? structured_output { get; set; }
+        /// <summary>
+        /// Gets or sets a value indicating whether the model supports structured output.
+        /// </summary>
+        [JsonPropertyName("structured_output")]
+        public bool? StructuredOutput { get; set; }
 
-        public string? release_date { get; set; }
+        /// <summary>
+        /// Gets or sets the release date of the model.
+        /// </summary>
+        [JsonPropertyName("release_date")]
+        public string? ReleaseDate { get; set; }
 
+        /// <summary>
+        /// Data transfer object for model limits.
+        /// </summary>
         public sealed class LimitDto
         {
-            public int? context { get; set; }
+            /// <summary>
+            /// Gets or sets the Context.
+            /// </summary>
+            [JsonPropertyName("context")]
+            public int? Context { get; set; }
 
-            public int? output { get; set; }
+            /// <summary>
+            /// Gets or sets the Output.
+            /// </summary>
+            [JsonPropertyName("output")]
+            public int? Output { get; set; }
         }
 
+        /// <summary>
+        /// Data transfer object for model cost.
+        /// </summary>
         public sealed class CostDto
         {
-            public decimal? input { get; set; }
+            /// <summary>
+            /// Gets or sets the input cost per token.
+            /// </summary>
+            [JsonPropertyName("input")]
+            public decimal? Input { get; set; }
 
-            public decimal? output { get; set; }
+            /// <summary>
+            /// Gets or sets the output cost per token.
+            /// </summary>
+            [JsonPropertyName("output")]
+            public decimal? Output { get; set; }
         }
 
+        /// <summary>
+        /// Data transfer object for model modalities.
+        /// </summary>
         public sealed class ModalitiesDto
         {
-            public string[]? input { get; set; }
+            /// <summary>
+            /// Gets or sets the Input.
+            /// </summary>
+            [JsonPropertyName("input")]
+            public string[] ? Input { get; set; }
 
-            public string[]? output { get; set; }
+            /// <summary>
+            /// Gets or sets the Output.
+            /// </summary>
+            [JsonPropertyName("output")]
+            public string[] ? Output { get; set; }
         }
     }
 }

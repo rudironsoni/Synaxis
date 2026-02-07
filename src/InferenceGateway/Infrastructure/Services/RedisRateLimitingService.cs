@@ -14,9 +14,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
     /// </summary>
     public class RedisRateLimitingService
     {
-        private readonly IConnectionMultiplexer _redis;
-        private readonly ILogger<RedisRateLimitingService> _logger;
-
         // Lua script for atomic rate limit check and increment
         // Returns: [current_count, ttl_seconds]
         private const string LuaCheckAndIncrement = @"
@@ -66,12 +63,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             return {new_count, ttl}
         ";
 
+        private readonly IConnectionMultiplexer _redis;
+        private readonly ILogger<RedisRateLimitingService> _logger;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="RedisRateLimitingService"/> class.
         /// </summary>
         /// <param name="redis">The Redis connection multiplexer.</param>
         /// <param name="logger">The logger instance.</param>
-        /// <exception cref="ArgumentNullException">Thrown when redis or logger is null.</exception>
         public RedisRateLimitingService(
             IConnectionMultiplexer redis,
             ILogger<RedisRateLimitingService> logger)
@@ -115,8 +114,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                 var result = await db.ScriptEvaluateAsync(
                     LuaCheckAndIncrement,
                     new RedisKey[] { key },
-                    new RedisValue[] { limit, windowSeconds, increment }
-                ).ConfigureAwait(false);
+                    new RedisValue[] { limit, windowSeconds, increment }).ConfigureAwait(false);
 
                 var values = (RedisValue[])result!;
                 var current = (long)values[0];
@@ -126,14 +124,18 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                 {
                     this._logger.LogWarning(
                         "Rate limit exceeded for key {Key}: {Current}/{Limit}",
-                        key, current, limit);
+                        key,
+                        current,
+                        limit);
 
                     return RateLimitResult.Denied(current, limit, ttl, key);
                 }
 
                 this._logger.LogDebug(
                     "Rate limit check passed for key {Key}: {Current}/{Limit}",
-                    key, current, limit);
+                    key,
+                    current,
+                    limit);
 
                 return RateLimitResult.Allowed(current, limit, ttl);
             }
@@ -174,80 +176,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                 return RateLimitResult.Allowed(0, 0, 0);
             }
 
-            var window = config.Window;
-            var checks = new List<Task<(RateLimitResult Result, string Scope, string Type)>>();
-
-            // User-level RPM check
-            if (config.Userthis.Rpm.HasValue)
-            {
-                var key = BuildKey("user", userId.ToString(), "rpm");
-                checks.Add(this.CheckWithMetadataAsync(key, config.UserRpm.Value, window, "User", "RPM", cancellationToken));
-            }
-
-            // User-level TPM check (pre-check with increment=0, actual tokens added post-request)
-            if (config.Userthis.Tpm.HasValue)
-            {
-                var key = BuildKey("user", userId.ToString(), "tpm");
-                checks.Add(this.CheckWithMetadataAsync(key, config.UserTpm.Value, window, "User", "TPM", cancellationToken, increment: 0));
-            }
-
-            // Group-level RPM check
-            if (groupthis.Id.HasValue && config.Groupthis.Rpm.HasValue)
-            {
-                var key = BuildKey("group", groupId.Value.ToString(), "rpm");
-                checks.Add(this.CheckWithMetadataAsync(key, config.GroupRpm.Value, window, "Group", "RPM", cancellationToken));
-            }
-
-            // Group-level TPM check
-            if (groupthis.Id.HasValue && config.Groupthis.Tpm.HasValue)
-            {
-                var key = BuildKey("group", groupId.Value.ToString(), "tpm");
-                checks.Add(this.CheckWithMetadataAsync(key, config.GroupTpm.Value, window, "Group", "TPM", cancellationToken, increment: 0));
-            }
-
-            // Organization-level RPM check
-            if (config.Organizationthis.Rpm.HasValue)
-            {
-                var key = BuildKey("org", organizationId.ToString(), "rpm");
-                checks.Add(this.CheckWithMetadataAsync(key, config.OrganizationRpm.Value, window, "Organization", "RPM", cancellationToken));
-            }
-
-            // Organization-level TPM check
-            if (config.Organizationthis.Tpm.HasValue)
-            {
-                var key = BuildKey("org", organizationId.ToString(), "tpm");
-                checks.Add(this.CheckWithMetadataAsync(key, config.OrganizationTpm.Value, window, "Organization", "TPM", cancellationToken, increment: 0));
-            }
-
-            // Execute all checks in parallel
+            // Build and execute all rate limit checks
+            var checks = this.BuildRateLimitChecks(userId, groupId, organizationId, config, cancellationToken);
             var results = await Task.WhenAll(checks).ConfigureAwait(false);
 
-            // Find the first denied result (most restrictive)
-            var denied = results.FirstOrDefault(r => !r.Result.IsAllowed);
-            if (denied != default)
-            {
-                this._logger.LogWarning(
-                    "Hierarchical rate limit denied at {Scope} level ({Type}): {Current}/{Limit}",
-                    denied.Scope, denied.Type, denied.Result.Current, denied.Result.Limit);
-
-                denied.Result.LimitedBy = denied.Scope;
-                denied.Result.LimitType = denied.Type;
-                return denied.Result;
-            }
-
-            // All checks passed - return the most restrictive allowed result
-            var mostRestrictive = results
-                .OrderBy(r => r.Result.Remaining)
-                .First();
-
-            mostRestrictive.Result.LimitedBy = mostRestrictive.Scope;
-            mostRestrictive.Result.LimitType = mostRestrictive.Type;
-
-            this._logger.LogDebug(
-                "Hierarchical rate limit check passed. Most restrictive: {Scope} {Type} with {Remaining} remaining",
-                mostRestrictive.Scope, mostRestrictive.Type, mostRestrictive.Result.Remaining);
-
-            return mostRestrictive.Result;
+            // Find first denied result or return most restrictive allowed
+            return this.ProcessRateLimitResults(results);
         }
 
         /// <summary>
@@ -284,15 +218,16 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                 var result = await db.ScriptEvaluateAsync(
                     LuaIncrementTokens,
                     new RedisKey[] { key },
-                    new RedisValue[] { tokenCount, windowSeconds }
-                ).ConfigureAwait(false);
+                    new RedisValue[] { tokenCount, windowSeconds }).ConfigureAwait(false);
 
                 var values = (RedisValue[])result!;
                 var newCount = (long)values[0];
 
                 this._logger.LogDebug(
                     "Incremented token usage for key {Key}: +{Tokens} = {NewCount}",
-                    key, tokenCount, newCount);
+                    key,
+                    tokenCount,
+                    newCount);
 
                 return newCount;
             }
@@ -312,7 +247,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
         /// <param name="tokenCount">The number of tokens to add.</param>
         /// <param name="window">The time window for rate limiting.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
-        public async Task IncrementHierarchicalTokenUsageAsync(
+        /// <returns>A task representing the asynchronous operation.</returns>
+        public Task IncrementHierarchicalTokenUsageAsync(
             Guid userId,
             Guid? groupId,
             Guid organizationId,
@@ -326,12 +262,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                 this.IncrementTokenUsageAsync(BuildKey("org", organizationId.ToString(), "tpm"), tokenCount, window, cancellationToken),
             };
 
-            if (groupthis.Id.HasValue)
+            if (groupId.HasValue)
             {
                 tasks.Add(this.IncrementTokenUsageAsync(BuildKey("group", groupId.Value.ToString(), "tpm"), tokenCount, window, cancellationToken));
             }
 
-            await Task.WhenAll(tasks).ConfigureAwait(false);
+            return Task.WhenAll(tasks);
         }
 
         /// <summary>
@@ -362,6 +298,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
         /// </summary>
         /// <param name="key">The rate limit key to reset.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>True if the key was deleted, false otherwise.</returns>
         public async Task<bool> ResetRateLimitAsync(
             string key,
             CancellationToken cancellationToken = default)
@@ -411,6 +348,124 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
         {
             var result = await this.CheckRateLimitAsync(key, limit, window, increment, cancellationToken).ConfigureAwait(false);
             return (result, scope, type);
+        }
+
+        private List<Task<(RateLimitResult Result, string Scope, string Type)>> BuildRateLimitChecks(
+            Guid userId,
+            Guid? groupId,
+            Guid organizationId,
+            RateLimitConfig config,
+            CancellationToken cancellationToken)
+        {
+            var window = config.Window;
+            var checks = new List<Task<(RateLimitResult Result, string Scope, string Type)>>();
+
+            // User-level checks
+            this.AddUserLevelChecks(checks, userId, config, window, cancellationToken);
+
+            // Group-level checks
+            if (groupId.HasValue)
+            {
+                this.AddGroupLevelChecks(checks, groupId.Value, config, window, cancellationToken);
+            }
+
+            // Organization-level checks
+            this.AddOrganizationLevelChecks(checks, organizationId, config, window, cancellationToken);
+
+            return checks;
+        }
+
+        private void AddUserLevelChecks(
+            List<Task<(RateLimitResult Result, string Scope, string Type)>> checks,
+            Guid userId,
+            RateLimitConfig config,
+            TimeSpan window,
+            CancellationToken cancellationToken)
+        {
+            if (config.UserRpm.HasValue)
+            {
+                var key = BuildKey("user", userId.ToString(), "rpm");
+                checks.Add(this.CheckWithMetadataAsync(key, config.UserRpm.Value, window, "User", "RPM", cancellationToken));
+            }
+
+            if (config.UserTpm.HasValue)
+            {
+                var key = BuildKey("user", userId.ToString(), "tpm");
+                checks.Add(this.CheckWithMetadataAsync(key, config.UserTpm.Value, window, "User", "TPM", cancellationToken, increment: 0));
+            }
+        }
+
+        private void AddGroupLevelChecks(
+            List<Task<(RateLimitResult Result, string Scope, string Type)>> checks,
+            Guid groupId,
+            RateLimitConfig config,
+            TimeSpan window,
+            CancellationToken cancellationToken)
+        {
+            if (config.GroupRpm.HasValue)
+            {
+                var key = BuildKey("group", groupId.ToString(), "rpm");
+                checks.Add(this.CheckWithMetadataAsync(key, config.GroupRpm.Value, window, "Group", "RPM", cancellationToken));
+            }
+
+            if (config.GroupTpm.HasValue)
+            {
+                var key = BuildKey("group", groupId.ToString(), "tpm");
+                checks.Add(this.CheckWithMetadataAsync(key, config.GroupTpm.Value, window, "Group", "TPM", cancellationToken, increment: 0));
+            }
+        }
+
+        private void AddOrganizationLevelChecks(
+            List<Task<(RateLimitResult Result, string Scope, string Type)>> checks,
+            Guid organizationId,
+            RateLimitConfig config,
+            TimeSpan window,
+            CancellationToken cancellationToken)
+        {
+            if (config.OrganizationRpm.HasValue)
+            {
+                var key = BuildKey("org", organizationId.ToString(), "rpm");
+                checks.Add(this.CheckWithMetadataAsync(key, config.OrganizationRpm.Value, window, "Organization", "RPM", cancellationToken));
+            }
+
+            if (config.OrganizationTpm.HasValue)
+            {
+                var key = BuildKey("org", organizationId.ToString(), "tpm");
+                checks.Add(this.CheckWithMetadataAsync(key, config.OrganizationTpm.Value, window, "Organization", "TPM", cancellationToken, increment: 0));
+            }
+        }
+
+        private RateLimitResult ProcessRateLimitResults((RateLimitResult Result, string Scope, string Type)[] results)
+        {
+            // Find the first denied result (most restrictive)
+            var denied = results.FirstOrDefault(r => !r.Result.IsAllowed);
+            if (denied != default)
+            {
+                this._logger.LogWarning(
+                    "Hierarchical rate limit denied at {Scope} level ({Type}): {Current}/{Limit}",
+                    denied.Scope,
+                    denied.Type,
+                    denied.Result.Current,
+                    denied.Result.Limit);
+
+                denied.Result.LimitedBy = denied.Scope;
+                denied.Result.LimitType = denied.Type;
+                return denied.Result;
+            }
+
+            // All checks passed - return the most restrictive allowed result
+            var mostRestrictive = results.OrderBy(r => r.Result.Remaining).First();
+
+            mostRestrictive.Result.LimitedBy = mostRestrictive.Scope;
+            mostRestrictive.Result.LimitType = mostRestrictive.Type;
+
+            this._logger.LogDebug(
+                "Hierarchical rate limit check passed. Most restrictive: {Scope} {Type} with {Remaining} remaining",
+                mostRestrictive.Scope,
+                mostRestrictive.Type,
+                mostRestrictive.Result.Remaining);
+
+            return mostRestrictive.Result;
         }
     }
 }

@@ -8,35 +8,45 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
     using Synaxis.InferenceGateway.Application.ControlPlane;
     using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
 
+    /// <summary>
+    /// Control plane data store implementation.
+    /// </summary>
     public sealed class ControlPlaneStore : IControlPlaneStore
     {
         private readonly ControlPlaneDbContext _dbContext;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ControlPlaneStore"/> class.
+        /// </summary>
+        /// <param name="dbContext">The database context.</param>
         public ControlPlaneStore(ControlPlaneDbContext dbContext)
         {
             this._dbContext = dbContext;
         }
 
-        public async Task<ModelAlias?> GetAliasAsync(Guid tenantId, string alias, CancellationToken cancellationToken = default)
+        /// <inheritdoc/>
+        public Task<ModelAlias?> GetAliasAsync(Guid tenantId, string alias, CancellationToken cancellationToken = default)
         {
-            return await this._dbContext.ModelAliases
+            return this._dbContext.ModelAliases
                 .AsNoTracking()
-                .FirstOrDefaultAsync(a => a.TenantId == tenantId && a.Alias == alias, cancellationToken).ConfigureAwait(false);
+                .FirstOrDefaultAsync(a => a.TenantId == tenantId && a.Alias == alias, cancellationToken);
         }
 
-        public async Task<ModelCombo?> GetComboAsync(Guid tenantId, string name, CancellationToken cancellationToken = default)
+        /// <inheritdoc/>
+        public Task<ModelCombo?> GetComboAsync(Guid tenantId, string name, CancellationToken cancellationToken = default)
         {
-            return await this._dbContext.ModelCombos
+            return this._dbContext.ModelCombos
                 .AsNoTracking()
-                .FirstOrDefaultAsync(c => c.TenantId == tenantId && c.Name == name, cancellationToken).ConfigureAwait(false);
+                .FirstOrDefaultAsync(c => c.TenantId == tenantId && c.Name == name, cancellationToken);
         }
 
-        public async Task<GlobalModel?> GetGlobalModelAsync(string id, CancellationToken cancellationToken = default)
+        /// <inheritdoc/>
+        public Task<GlobalModel?> GetGlobalModelAsync(string id, CancellationToken cancellationToken = default)
         {
-            return await this._dbContext.GlobalModels
+            return this._dbContext.GlobalModels
                 .AsNoTracking()
                 .Include(g => g.ProviderModels)
-                .FirstOrDefaultAsync(g => g.Id == id, cancellationToken).ConfigureAwait(false);
+                .FirstOrDefaultAsync(g => g.Id == id, cancellationToken);
         }
     }
 }

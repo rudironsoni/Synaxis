@@ -11,15 +11,24 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
     /// Design-time factory for creating ControlPlaneDbContext during EF Core migrations.
     /// This enables 'dotnet ef migrations' commands to work without a running application.
     /// </summary>
+    /// <summary>
+    /// ControlPlaneDbContextFactory class.
+    /// </summary>
     public class ControlPlaneDbContextFactory : IDesignTimeDbContextFactory<ControlPlaneDbContext>
     {
+        /// <summary>
+        /// Creates a new instance of the ControlPlaneDbContext for design-time operations.
+        /// </summary>
+        /// <param name="args">Command-line arguments.</param>
+        /// <returns>A configured ControlPlaneDbContext instance.</returns>
         public ControlPlaneDbContext CreateDbContext(string[] args)
         {
             var optionsBuilder = new DbContextOptionsBuilder<ControlPlaneDbContext>();
 
             // Use a temporary connection string for design-time operations
             // In production, this comes from configuration/DI
-            optionsBuilder.UseNpgsql("Host=localhost;Database=synaxis_design;Username=postgres;Password=postgres",
+            optionsBuilder.UseNpgsql(
+                "Host=localhost;Database=synaxis_design;Username=postgres;Password=postgres",
                 npgsqlOptions =>
                 {
                     npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "public");

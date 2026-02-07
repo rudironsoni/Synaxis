@@ -13,6 +13,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations
     public partial class AddUserPasswordAndApiKeyUser : Migration
     {
         /// <inheritdoc />
+#pragma warning disable MA0051 // Method is too long - Migrations are inherently complex
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(
@@ -43,6 +44,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations
         }
 
         /// <inheritdoc />
+#pragma warning restore MA0051 // Method is too long
+
+#pragma warning disable MA0051 // Method is too long - Migrations are inherently complex
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(

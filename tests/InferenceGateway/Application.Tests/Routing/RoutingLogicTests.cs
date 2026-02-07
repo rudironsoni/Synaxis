@@ -25,6 +25,7 @@ public class RoutingLogicTests
     private readonly Mock<ICostService> _costServiceMock;
     private readonly Mock<IHealthStore> _healthStoreMock;
     private readonly Mock<IQuotaTracker> _quotaTrackerMock;
+    private readonly Mock<IRoutingScoreCalculator> _routingScoreCalculatorMock;
     private readonly Mock<ILogger<SmartRouter>> _loggerMock;
     private readonly ModelResolver _resolver;
     private readonly SmartRouter _router;
@@ -38,6 +39,7 @@ public class RoutingLogicTests
         this._costServiceMock = new Mock<ICostService>();
         this._healthStoreMock = new Mock<IHealthStore>();
         this._quotaTrackerMock = new Mock<IQuotaTracker>();
+        this._routingScoreCalculatorMock = new Mock<IRoutingScoreCalculator>();
         this._loggerMock = new Mock<ILogger<SmartRouter>>();
 
         var config = new SynaxisConfiguration
@@ -72,6 +74,7 @@ public class RoutingLogicTests
             this._costServiceMock.Object,
             this._healthStoreMock.Object,
             this._quotaTrackerMock.Object,
+            this._routingScoreCalculatorMock.Object,
             this._loggerMock.Object);
     }
 
@@ -89,11 +92,11 @@ public class RoutingLogicTests
         var result = this._resolver.Resolve(modelId);
 
         // Assert
-        Assert.Equal(modelId, result.OriginalModelId);
-        Assert.Equal("openai", result.CanonicalId.Provider);
-        Assert.Equal("gpt-4", result.CanonicalId.ModelPath);
-        Assert.Single(result.Candidates);
-        Assert.Equal("openai", result.Candidates[0].Key);
+        Assert.Equal(modelId, result.originalModelId);
+        Assert.Equal("openai", result.canonicalId.provider);
+        Assert.Equal("gpt-4", result.canonicalId.modelPath);
+        Assert.Single(result.candidates);
+        Assert.Equal("openai", result.candidates[0].Key);
     }
 
     [Fact]
@@ -108,11 +111,11 @@ public class RoutingLogicTests
         var result = this._resolver.Resolve(modelId);
 
         // Assert
-        Assert.Equal(modelId, result.OriginalModelId);
-        Assert.Equal("groq", result.CanonicalId.Provider);
-        Assert.Equal("llama-3.1-70b-versatile", result.CanonicalId.ModelPath);
-        Assert.Single(result.Candidates);
-        Assert.Equal("groq", result.Candidates[0].Key);
+        Assert.Equal(modelId, result.originalModelId);
+        Assert.Equal("groq", result.canonicalId.provider);
+        Assert.Equal("llama-3.1-70b-versatile", result.canonicalId.modelPath);
+        Assert.Single(result.candidates);
+        Assert.Equal("groq", result.candidates[0].Key);
     }
 
     [Fact]
@@ -127,10 +130,10 @@ public class RoutingLogicTests
         var result = this._resolver.Resolve(modelId);
 
         // Assert
-        Assert.Equal(modelId, result.OriginalModelId);
-        Assert.Equal("unknown", result.CanonicalId.Provider);
-        Assert.Equal(modelId, result.CanonicalId.ModelPath);
-        Assert.Empty(result.Candidates);
+        Assert.Equal(modelId, result.originalModelId);
+        Assert.Equal("unknown", result.canonicalId.provider);
+        Assert.Equal(modelId, result.canonicalId.modelPath);
+        Assert.Empty(result.candidates);
     }
 
     [Fact]
@@ -145,8 +148,8 @@ public class RoutingLogicTests
         var result = this._resolver.Resolve(modelId);
 
         // Assert
-        Assert.Equal(modelId, result.OriginalModelId);
-        Assert.Equal(3, result.Candidates.Count);
+        Assert.Equal(modelId, result.originalModelId);
+        Assert.Equal(3, result.candidates.Count);
     }
 
     [Fact]
@@ -161,8 +164,8 @@ public class RoutingLogicTests
         var result = this._resolver.Resolve(modelId);
 
         // Assert
-        Assert.Single(result.Candidates);
-        Assert.Equal("openai", result.Candidates[0].Key);
+        Assert.Single(result.candidates);
+        Assert.Equal("openai", result.candidates[0].Key);
     }
 
     #endregion
@@ -354,9 +357,9 @@ public class RoutingLogicTests
         var result = this._resolver.Resolve(modelId);
 
         // Assert
-        Assert.Equal("openai", result.CanonicalId.Provider);
-        Assert.Equal("gpt-4", result.CanonicalId.ModelPath);
-        Assert.Equal("openai/gpt-4", result.CanonicalId.ToString());
+        Assert.Equal("openai", result.canonicalId.provider);
+        Assert.Equal("gpt-4", result.canonicalId.modelPath);
+        Assert.Equal("openai/gpt-4", result.canonicalId.ToString());
     }
 
     [Fact]
@@ -371,8 +374,8 @@ public class RoutingLogicTests
         var result = this._resolver.Resolve(modelId);
 
         // Assert
-        Assert.Equal("openai", result.CanonicalId.Provider);
-        Assert.Equal("gpt-4", result.CanonicalId.ModelPath);
+        Assert.Equal("openai", result.canonicalId.provider);
+        Assert.Equal("gpt-4", result.canonicalId.modelPath);
     }
 
     [Fact]
@@ -387,8 +390,8 @@ public class RoutingLogicTests
         var result = this._resolver.Resolve(modelId);
 
         // Assert
-        Assert.Equal("unknown", result.CanonicalId.Provider);
-        Assert.Equal(modelId, result.CanonicalId.ModelPath);
+        Assert.Equal("unknown", result.canonicalId.provider);
+        Assert.Equal(modelId, result.canonicalId.modelPath);
     }
 
     [Fact]
@@ -407,8 +410,8 @@ public class RoutingLogicTests
         var result = this._resolver.Resolve(modelId);
 
         // Assert
-        Assert.Equal("meta", result.CanonicalId.Provider);
-        Assert.Equal("llama-2-7b-chat-int8", result.CanonicalId.ModelPath);
+        Assert.Equal("meta", result.canonicalId.provider);
+        Assert.Equal("llama-2-7b-chat-int8", result.canonicalId.modelPath);
     }
 
     [Fact]
@@ -424,7 +427,7 @@ public class RoutingLogicTests
         var result = this._resolver.Resolve(modelId, required);
 
         // Assert
-        Assert.Single(result.Candidates);
+        Assert.Single(result.candidates);
     }
 
     [Fact]
@@ -440,7 +443,7 @@ public class RoutingLogicTests
         var result = this._resolver.Resolve(modelId, required);
 
         // Assert
-        Assert.Empty(result.Candidates); // deepseek-chat doesn't support tools
+        Assert.Empty(result.candidates); // deepseek-chat doesn't support tools
     }
 
     [Fact]
@@ -456,7 +459,7 @@ public class RoutingLogicTests
         var result = this._resolver.Resolve(modelId, required);
 
         // Assert
-        Assert.Single(result.Candidates); // gpt-4 supports vision
+        Assert.Single(result.candidates); // gpt-4 supports vision
     }
 
     [Fact]
@@ -472,7 +475,7 @@ public class RoutingLogicTests
         var result = this._resolver.Resolve(modelId, required);
 
         // Assert
-        Assert.Single(result.Candidates);
+        Assert.Single(result.candidates);
     }
 
     [Fact]
@@ -488,7 +491,7 @@ public class RoutingLogicTests
         var result = this._resolver.Resolve(modelId, required);
 
         // Assert
-        Assert.Empty(result.Candidates);
+        Assert.Empty(result.candidates);
     }
 
     #endregion
@@ -507,10 +510,10 @@ public class RoutingLogicTests
         var result = this._resolver.Resolve(aliasId);
 
         // Assert
-        Assert.Equal(aliasId, result.OriginalModelId);
-        Assert.Equal("openai", result.CanonicalId.Provider);
-        Assert.Equal("gpt-4", result.CanonicalId.ModelPath);
-        Assert.Single(result.Candidates);
+        Assert.Equal(aliasId, result.originalModelId);
+        Assert.Equal("openai", result.canonicalId.provider);
+        Assert.Equal("gpt-4", result.canonicalId.modelPath);
+        Assert.Single(result.candidates);
     }
 
     [Fact]
@@ -527,10 +530,10 @@ public class RoutingLogicTests
         var result = this._resolver.Resolve(aliasId);
 
         // Assert
-        Assert.Equal(aliasId, result.OriginalModelId);
-        Assert.Equal("groq", result.CanonicalId.Provider);
-        Assert.Equal("llama-3.1-70b-versatile", result.CanonicalId.ModelPath);
-        Assert.Single(result.Candidates);
+        Assert.Equal(aliasId, result.originalModelId);
+        Assert.Equal("groq", result.canonicalId.provider);
+        Assert.Equal("llama-3.1-70b-versatile", result.canonicalId.modelPath);
+        Assert.Single(result.candidates);
     }
 
     [Fact]
@@ -549,8 +552,8 @@ public class RoutingLogicTests
         var result = this._resolver.Resolve(aliasId);
 
         // Assert
-        Assert.Equal(aliasId, result.OriginalModelId);
-        Assert.Empty(result.Candidates);
+        Assert.Equal(aliasId, result.originalModelId);
+        Assert.Empty(result.candidates);
     }
 
     [Fact]
@@ -565,9 +568,9 @@ public class RoutingLogicTests
         var result = this._resolver.Resolve(aliasId);
 
         // Assert
-        Assert.Equal(aliasId, result.OriginalModelId);
-        Assert.Equal("groq", result.CanonicalId.Provider);
-        Assert.Equal("llama-3.1-70b-versatile", result.CanonicalId.ModelPath);
+        Assert.Equal(aliasId, result.originalModelId);
+        Assert.Equal("groq", result.canonicalId.provider);
+        Assert.Equal("llama-3.1-70b-versatile", result.canonicalId.modelPath);
     }
 
     [Fact]
@@ -582,10 +585,10 @@ public class RoutingLogicTests
         var result = this._resolver.Resolve(aliasId);
 
         // Assert
-        Assert.Equal(aliasId, result.OriginalModelId);
-        Assert.Equal("unknown", result.CanonicalId.Provider);
-        Assert.Equal(aliasId, result.CanonicalId.ModelPath);
-        Assert.Empty(result.Candidates);
+        Assert.Equal(aliasId, result.originalModelId);
+        Assert.Equal("unknown", result.canonicalId.provider);
+        Assert.Equal(aliasId, result.canonicalId.modelPath);
+        Assert.Empty(result.candidates);
     }
 
     [Fact]
@@ -600,8 +603,8 @@ public class RoutingLogicTests
         var result = this._resolver.Resolve(aliasId);
 
         // Assert
-        Assert.Equal(aliasId, result.OriginalModelId);
-        Assert.Empty(result.Candidates);
+        Assert.Equal(aliasId, result.originalModelId);
+        Assert.Empty(result.candidates);
     }
 
     [Fact]
@@ -623,10 +626,10 @@ public class RoutingLogicTests
         var result = await this._resolver.ResolveAsync(aliasId, EndpointKind.ChatCompletions, tenantId: tenantId);
 
         // Assert
-        Assert.Equal(aliasId, result.OriginalModelId);
-        Assert.Equal("openai", result.CanonicalId.Provider);
-        Assert.Equal("gpt-4", result.CanonicalId.ModelPath);
-        Assert.Single(result.Candidates);
+        Assert.Equal(aliasId, result.originalModelId);
+        Assert.Equal("openai", result.canonicalId.provider);
+        Assert.Equal("gpt-4", result.canonicalId.modelPath);
+        Assert.Single(result.candidates);
     }
 
     [Fact]
@@ -648,10 +651,10 @@ public class RoutingLogicTests
         var result = await this._resolver.ResolveAsync(comboId, EndpointKind.ChatCompletions, tenantId: tenantId);
 
         // Assert
-        Assert.Equal(comboId, result.OriginalModelId);
-        Assert.Equal("openai", result.CanonicalId.Provider);
-        Assert.Equal("gpt-4", result.CanonicalId.ModelPath);
-        Assert.Single(result.Candidates);
+        Assert.Equal(comboId, result.originalModelId);
+        Assert.Equal("openai", result.canonicalId.provider);
+        Assert.Equal("gpt-4", result.canonicalId.modelPath);
+        Assert.Single(result.candidates);
     }
 
     [Fact]
@@ -671,10 +674,10 @@ public class RoutingLogicTests
         var result = await this._resolver.ResolveAsync(comboId, EndpointKind.ChatCompletions, tenantId: tenantId);
 
         // Assert
-        Assert.Equal(comboId, result.OriginalModelId);
-        Assert.Equal("unknown", result.CanonicalId.Provider);
-        Assert.Equal(comboId, result.CanonicalId.ModelPath);
-        Assert.Empty(result.Candidates);
+        Assert.Equal(comboId, result.originalModelId);
+        Assert.Equal("unknown", result.canonicalId.provider);
+        Assert.Equal(comboId, result.canonicalId.modelPath);
+        Assert.Empty(result.candidates);
     }
 
     #endregion
@@ -703,8 +706,8 @@ public class RoutingLogicTests
         var result = this._resolver.Resolve(modelId);
 
         // Assert
-        Assert.Equal(modelId, result.OriginalModelId);
-        Assert.Empty(result.Candidates);
+        Assert.Equal(modelId, result.originalModelId);
+        Assert.Empty(result.candidates);
     }
 
     [Fact]
@@ -757,8 +760,8 @@ public class RoutingLogicTests
         var result = CanonicalModelId.Parse(input);
 
         // Assert
-        Assert.Equal("openai", result.Provider);
-        Assert.Equal("gpt-4", result.ModelPath);
+        Assert.Equal("openai", result.provider);
+        Assert.Equal("gpt-4", result.modelPath);
     }
 
     [Fact]
@@ -771,8 +774,8 @@ public class RoutingLogicTests
         var result = CanonicalModelId.Parse(input);
 
         // Assert
-        Assert.Equal("unknown", result.Provider);
-        Assert.Equal("gpt-4", result.ModelPath);
+        Assert.Equal("unknown", result.provider);
+        Assert.Equal("gpt-4", result.modelPath);
     }
 
     [Fact]
@@ -785,8 +788,8 @@ public class RoutingLogicTests
         var result = CanonicalModelId.Parse(input);
 
         // Assert
-        Assert.Equal("unknown", result.Provider);
-        Assert.Equal(input, result.ModelPath);
+        Assert.Equal("unknown", result.provider);
+        Assert.Equal(input, result.modelPath);
     }
 
     #endregion

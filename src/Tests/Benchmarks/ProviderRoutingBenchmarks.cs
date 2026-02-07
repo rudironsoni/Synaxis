@@ -1,3 +1,7 @@
+// <copyright file="ProviderRoutingBenchmarks.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Diagnosers;
 using Microsoft.Extensions.Logging;
@@ -39,7 +43,7 @@ public class ProviderRoutingBenchmarks : TestBase
         this._healthStore = this.CreateMockHealthStore(true).Object;
         this._quotaTracker = this.CreateMockQuotaTracker().Object;
         this._costService = this.CreateMockCostService().Object;
-        this._controlPlaneStore = this.CreateMockControlPlaneStore().Object;
+        this._controlPlaneStore = CreateMockControlPlaneStore().Object;
         this._routingScoreCalculator = this.CreateMockRoutingScoreCalculator().Object;
 
         var config = this.CreateSynaxisConfiguration(13, 10, 10);
@@ -72,7 +76,7 @@ public class ProviderRoutingBenchmarks : TestBase
         var config = this.CreateSynaxisConfiguration(providerCount, 1, 1);
         var configOptions = Options.Create(config);
         var providers = new ProviderRegistry(configOptions);
-        var controlPlaneStore = this.CreateMockControlPlaneStore().Object;
+        var controlPlaneStore = CreateMockControlPlaneStore().Object;
 
         var resolver = new ModelResolver(
             configOptions,
@@ -82,7 +86,7 @@ public class ProviderRoutingBenchmarks : TestBase
         return await resolver.ResolveAsync(
             SingleProviderModel,
             EndpointKind.ChatCompletions,
-            RequiredCapabilities.Default);
+            RequiredCapabilities.Default).ConfigureAwait(false);
     }
 
     [Benchmark]
@@ -94,7 +98,7 @@ public class ProviderRoutingBenchmarks : TestBase
         var config = this.CreateSynaxisConfiguration(13, canonicalModelCount, 5);
         var configOptions = Options.Create(config);
         var providers = new ProviderRegistry(configOptions);
-        var controlPlaneStore = this.CreateMockControlPlaneStore().Object;
+        var controlPlaneStore = CreateMockControlPlaneStore().Object;
 
         var resolver = new ModelResolver(
             configOptions,
@@ -104,7 +108,7 @@ public class ProviderRoutingBenchmarks : TestBase
         return await resolver.ResolveAsync(
             MultipleProviderModel,
             EndpointKind.ChatCompletions,
-            RequiredCapabilities.Default);
+            RequiredCapabilities.Default).ConfigureAwait(false);
     }
 
     [Benchmark]
@@ -117,7 +121,7 @@ public class ProviderRoutingBenchmarks : TestBase
         var config = this.CreateSynaxisConfiguration(providerCount, 1, 1);
         var configOptions = Options.Create(config);
         var providers = new ProviderRegistry(configOptions);
-        var controlPlaneStore = this.CreateMockControlPlaneStore().Object;
+        var controlPlaneStore = CreateMockControlPlaneStore().Object;
 
         var resolver = new ModelResolver(
             configOptions,
@@ -134,7 +138,7 @@ public class ProviderRoutingBenchmarks : TestBase
 
         return await router.GetCandidatesAsync(
             SingleProviderModel,
-            streaming: false);
+            streaming: false).ConfigureAwait(false);
     }
 
     [Benchmark]
@@ -147,7 +151,7 @@ public class ProviderRoutingBenchmarks : TestBase
         var config = this.CreateSynaxisConfiguration(providerCount, 10, 5);
         var configOptions = Options.Create(config);
         var providers = new ProviderRegistry(configOptions);
-        var controlPlaneStore = this.CreateMockControlPlaneStore().Object;
+        var controlPlaneStore = CreateMockControlPlaneStore().Object;
 
         var resolver = new ModelResolver(
             configOptions,
@@ -164,7 +168,7 @@ public class ProviderRoutingBenchmarks : TestBase
 
         return await router.GetCandidatesAsync(
             MultipleProviderModel,
-            streaming: false);
+            streaming: false).ConfigureAwait(false);
     }
 
     [Benchmark]
@@ -172,7 +176,7 @@ public class ProviderRoutingBenchmarks : TestBase
     {
         return await this._smartRouter.GetCandidatesAsync(
             DefaultAlias,
-            streaming: false);
+            streaming: false).ConfigureAwait(false);
     }
 
     [Benchmark]
@@ -180,16 +184,16 @@ public class ProviderRoutingBenchmarks : TestBase
     {
         return await this._smartRouter.GetCandidatesAsync(
             SingleProviderModel,
-            streaming: true);
+            streaming: true).ConfigureAwait(false);
     }
 
     private SynaxisConfiguration CreateSynaxisConfiguration(int providerCount, int canonicalModelCount, int aliasCount)
     {
         var config = new SynaxisConfiguration
         {
-            Providers = new Dictionary<string, ProviderConfig>(),
+            Providers = new Dictionary<string, ProviderConfig>(StringComparer.Ordinal),
             CanonicalModels = new List<CanonicalModelConfig>(),
-            Aliases = new Dictionary<string, AliasConfig>(),
+            Aliases = new Dictionary<string, AliasConfig>(StringComparer.Ordinal),
             JwtSecret = "test-jwt-secret",
             JwtIssuer = "test-issuer",
             JwtAudience = "test-audience",
@@ -233,7 +237,7 @@ public class ProviderRoutingBenchmarks : TestBase
                 Candidates = new List<string>
                 {
                     $"canonical-model-{i % canonicalModelCount}",
-                    $"canonical-model-{(i + 1) % canonicalModelCount}"
+                    $"canonical-model-{(i + 1) % canonicalModelCount}",
                 },
             };
         }
@@ -246,7 +250,7 @@ public class ProviderRoutingBenchmarks : TestBase
         return config;
     }
 
-    private Mock<IControlPlaneStore> CreateMockControlPlaneStore()
+    private static Mock<IControlPlaneStore> CreateMockControlPlaneStore()
     {
         var mock = new Mock<IControlPlaneStore>();
         mock.Setup(x => x.GetGlobalModelAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))

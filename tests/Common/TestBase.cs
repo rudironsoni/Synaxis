@@ -17,7 +17,8 @@ public abstract class TestBase
     /// <summary>
     /// Creates a mock ILogger for any type.
     /// </summary>
-    protected Mock<ILogger<T>> CreateMockLogger<T>() where T : class
+    protected static Mock<ILogger<T>> CreateMockLogger<T>()
+        where T : class
     {
         var mock = new Mock<ILogger<T>>();
         mock.Setup(x => x.Log(
@@ -33,7 +34,7 @@ public abstract class TestBase
     /// <summary>
     /// Creates a mock IChatClient that returns a default response.
     /// </summary>
-    protected Mock<IChatClient> CreateMockChatClient(string responseText = "Mock response")
+    protected static Mock<IChatClient> CreateMockChatClient(string responseText = "Mock response")
     {
         var mock = new Mock<IChatClient>();
         mock.Setup(x => x.GetResponseAsync(
@@ -48,7 +49,7 @@ public abstract class TestBase
     /// <summary>
     /// Creates a mock IChatClient that returns a streaming response.
     /// </summary>
-    protected Mock<IChatClient> CreateMockStreamingChatClient(params string[] responseChunks)
+    protected static Mock<IChatClient> CreateMockStreamingChatClient(params string[] responseChunks)
     {
         var mock = new Mock<IChatClient>();
 
@@ -73,11 +74,11 @@ public abstract class TestBase
     /// <summary>
     /// Creates a mock IProviderRegistry with the specified provider configurations.
     /// </summary>
-    protected Mock<IProviderRegistry> CreateMockProviderRegistry(Dictionary<string, ProviderConfig>? providers = null)
+    protected Mock<IProviderRegistry> CreateMockProviderRegistry(IDictionary<string, ProviderConfig>? providers = null)
     {
         var mock = new Mock<IProviderRegistry>();
 
-        providers ??= new Dictionary<string, ProviderConfig>
+        providers ??= new Dictionary<string, ProviderConfig>(StringComparer.Ordinal)
         {
             ["groq"] = new ProviderConfig { Type = "groq", Tier = 0, Models = ["llama-3.1-70b-versatile"] },
             ["openai"] = new ProviderConfig { Type = "openai", Tier = 1, Models = ["gpt-4"] },
@@ -88,7 +89,7 @@ public abstract class TestBase
 
         mock.Setup(x => x.GetCandidates(It.IsAny<string>()))
             .Returns((string modelId) => providers
-                .Where(p => p.Value.Models.Contains(modelId) || p.Value.Models.Contains("*"))
+                .Where(p => p.Value.Models.Contains(modelId, StringComparer.Ordinal) || p.Value.Models.Contains("*", StringComparer.Ordinal))
                 .Select(p => (p.Key, p.Value.Tier)));
 
         return mock;
@@ -106,7 +107,7 @@ public abstract class TestBase
             .Returns(new ResolutionResult(
                 modelId,
                 new CanonicalModelId(canonicalId, canonicalId),
-                new List<ProviderConfig> { new() { Key = "test-provider" } }));
+                new List<ProviderConfig> { new() { Key = "test-provider" } } as IList<ProviderConfig>));
         mock.Setup(x => x.ResolveAsync(
             It.IsAny<string>(),
             It.IsAny<EndpointKind>(),
@@ -115,14 +116,14 @@ public abstract class TestBase
             .ReturnsAsync(new ResolutionResult(
                 modelId,
                 new CanonicalModelId(canonicalId, canonicalId),
-                new List<ProviderConfig> { new() { Key = "test-provider" } }));
+                new List<ProviderConfig> { new() { Key = "test-provider" } } as IList<ProviderConfig>));
         return mock;
     }
 
     /// <summary>
     /// Creates a mock IHealthStore that returns healthy status for all providers.
     /// </summary>
-    protected Mock<IHealthStore> CreateMockHealthStore(bool defaultHealthy = true)
+    protected static Mock<IHealthStore> CreateMockHealthStore(bool defaultHealthy = true)
     {
         var mock = new Mock<IHealthStore>();
         mock.Setup(x => x.IsHealthyAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -137,7 +138,7 @@ public abstract class TestBase
     /// <summary>
     /// Creates a mock IQuotaTracker with unlimited quota.
     /// </summary>
-    protected Mock<IQuotaTracker> CreateMockQuotaTracker()
+    protected static Mock<IQuotaTracker> CreateMockQuotaTracker()
     {
         var mock = new Mock<IQuotaTracker>();
         mock.Setup(x => x.CheckQuotaAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -156,7 +157,7 @@ public abstract class TestBase
     /// <summary>
     /// Creates a mock ICostService that returns zero cost.
     /// </summary>
-    protected Mock<ICostService> CreateMockCostService()
+    protected static Mock<ICostService> CreateMockCostService()
     {
         var mock = new Mock<ICostService>();
         mock.Setup(x => x.GetCostAsync(
@@ -170,7 +171,7 @@ public abstract class TestBase
     /// <summary>
     /// Creates a mock IEmbeddingProvider that returns test embeddings.
     /// </summary>
-    protected Mock<IEmbeddingProvider> CreateMockEmbeddingProvider()
+    protected static Mock<IEmbeddingProvider> CreateMockEmbeddingProvider()
     {
         var mock = new Mock<IEmbeddingProvider>();
         mock.Setup(x => x.GenerateEmbeddingAsync(
@@ -182,27 +183,9 @@ public abstract class TestBase
     /// <summary>
     /// Creates a mock IQdrantClient for vector database operations.
     /// </summary>
-    protected Mock<IQdrantClient> CreateMockQdrantClient()
+    protected static Mock<IQdrantClient> CreateMockQdrantClient()
     {
         var mock = new Mock<IQdrantClient>();
         return mock;
     }
-}
-
-/// <summary>
-/// Interface for embedding generation.
-/// This is a test stub - replace with actual implementation reference when available.
-/// </summary>
-public interface IEmbeddingProvider
-{
-    Task<float[]> GenerateEmbeddingAsync(string text, string model, CancellationToken cancellationToken);
-}
-
-/// <summary>
-/// Interface for Qdrant vector database client.
-/// This is a test stub - replace with actual implementation reference when available.
-/// </summary>
-public interface IQdrantClient
-{
-    // Placeholder for Qdrant client methods
 }

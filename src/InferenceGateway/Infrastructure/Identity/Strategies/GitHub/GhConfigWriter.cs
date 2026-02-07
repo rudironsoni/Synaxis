@@ -9,9 +9,34 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
     using System.Text;
     using System.Threading.Tasks;
 
+    /// <summary>
+    /// Utility class for writing GitHub CLI configuration files.
+    /// </summary>
     public static class GhConfigWriter
     {
+        /// <summary>
+        /// Writes a GitHub token to the gh CLI hosts configuration file.
+        /// </summary>
+        /// <param name="token">The OAuth token to write.</param>
+        /// <param name="user">The username to associate with the token.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
         public static async Task WriteTokenAsync(string token, string user = "synaxis-user")
+        {
+            var path = PrepareConfigDirectory();
+            var existing = await ReadExistingConfigAsync(path).ConfigureAwait(false);
+            var hostBlock = BuildGitHubHostBlock(user, token);
+
+            if (string.IsNullOrWhiteSpace(existing))
+            {
+                await File.WriteAllTextAsync(path, hostBlock).ConfigureAwait(false);
+                return;
+            }
+
+            var updated = ReplaceOrAppendGitHubBlock(existing, hostBlock);
+            await File.WriteAllTextAsync(path, updated).ConfigureAwait(false);
+        }
+
+        private static string PrepareConfigDirectory()
         {
             var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             var cfgDir = Path.Combine(home, ".config", "gh");
@@ -22,35 +47,40 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
                 Directory.CreateDirectory(cfgDir);
             }
 
-            string existing = string.Empty;
+            return path;
+        }
+
+        private static async Task<string> ReadExistingConfigAsync(string path)
+        {
             if (File.Exists(path))
             {
-                existing = await File.ReadAllTextAsync(path).ConfigureAwait(false);
+                return await File.ReadAllTextAsync(path).ConfigureAwait(false);
             }
 
-            // Very small YAML manipulation: find github.com block, replace or append
+            return string.Empty;
+        }
+
+        private static string BuildGitHubHostBlock(string user, string token)
+        {
             var hostBlock = new StringBuilder();
             hostBlock.AppendLine("github.com:");
             hostBlock.AppendLine($"  user: {user}");
             hostBlock.AppendLine($"  oauth_token: {token}");
+            return hostBlock.ToString();
+        }
 
-            if (string.IsNullOrWhiteSpace(existing))
-            {
-                await File.WriteAllTextAsync(path, hostBlock.ToString()).ConfigureAwait(false);
-                return;
-            }
-
-            // Try to replace existing github.com block
+        private static string ReplaceOrAppendGitHubBlock(string existing, string hostBlock)
+        {
             var lines = existing.Replace("\r\n", "\n").Split('\n');
             var outSb = new StringBuilder();
             bool inGithubBlock = false;
             bool replaced = false;
+
             foreach (var line in lines)
             {
                 var trimmed = line.TrimStart();
                 if (!inGithubBlock && trimmed.StartsWith("github.com:", StringComparison.Ordinal))
                 {
-                    // begin replace
                     outSb.Append(hostBlock);
                     inGithubBlock = true;
                     replaced = true;
@@ -59,14 +89,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
 
                 if (inGithubBlock)
                 {
-                    // If this line is another top-level key (no leading spaces), we left the block
-                    if (!line.StartsWith(" ") && !string.IsNullOrWhiteSpace(line))
+                    if (!line.StartsWith(' ') && !string.IsNullOrWhiteSpace(line))
                     {
                         inGithubBlock = false;
                     }
                     else
                     {
-                        // skip existing block lines
                         continue;
                     }
                 }
@@ -76,8 +104,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
 
             if (!replaced)
             {
-                // append
-                if (outSb.Length > 0 && !outSb.ToString().EndsWith("\n"))
+                if (outSb.Length > 0 && !outSb.ToString().EndsWith('\n'))
                 {
                     outSb.AppendLine();
                 }
@@ -85,7 +112,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
                 outSb.Append(hostBlock);
             }
 
-            await File.WriteAllTextAsync(path, outSb.ToString()).ConfigureAwait(false);
+            return outSb.ToString();
         }
     }
 }

@@ -19,25 +19,25 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
     /// </summary>
     /// <remarks>
     /// API Key Format: synaxis_{43-char-base62-id}_{43-char-base62-secret}
-    /// - ID Part: 32 bytes (256 bits) of entropy encoded as base62 (~43 characters)
-    /// - Secret Part: 32 bytes (256 bits) of entropy encoded as base62 (~43 characters)
-    /// - Prefix Format: synaxis_{first-8-chars-of-id}
-    /// - Hash: bcrypt with work factor 12
+    /// - ID Part: 32 bytes (256 bits) of entropy encoded as base62 (~43 characters).
+    /// - Secret Part: 32 bytes (256 bits) of entropy encoded as base62 (~43 characters).
+    /// - Prefix Format: synaxis_{first-8-chars-of-id}.
+    /// - Hash: bcrypt with work factor 12.
     /// </remarks>
     public class ApiKeyService : IApiKeyService
     {
-        private readonly SynaxisDbContext _context;
         private const string KeyPrefix = "synaxis";
         private const int EntropyBytes = 32; // 256 bits
         private const int WorkFactor = 12; // bcrypt work factor
         private const int PrefixIdLength = 8;
         private const string Base62Chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
+        private readonly SynaxisDbContext _context;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ApiKeyService"/> class.
         /// </summary>
         /// <param name="context">The database context.</param>
-        /// <exception cref="ArgumentNullException">Thrown when context is null.</exception>
         public ApiKeyService(SynaxisDbContext context)
         {
             this._context = context ?? throw new ArgumentNullException(nameof(context));
@@ -106,98 +106,31 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
         {
             var result = new ApiKeyValidationResult();
 
-            // Check format: synaxis_{id}_{secret}
-            if (!IsValidKeyFormat(apiKey))
+            // Check format and extract prefix
+            if (!TryExtractPrefix(apiKey, result, out var prefix))
             {
-                result.ErrorMessage = "Invalid API key format.";
                 return result;
             }
 
-            // Extract prefix to narrow database search
-            var parts = apiKey.Split('_', 3);
-            if (parts.Length != 3)
-            {
-                result.ErrorMessage = "Invalid API key structure.";
-                return result;
-            }
-
-            var keyIdPart = parts[1];
-            var prefix = ExtractKeyPrefix(keyIdPart);
-
-            // Find potential matching keys by prefix (indexed lookup)
-            var candidates = await this._context.ApiKeys
-                .Where(k => k.KeyPrefix == prefix)
-                .ToListAsync(cancellationToken).ConfigureAwait(false);
-
-            ApiKey? matchedKey = null;
-
-            // Verify against each candidate using bcrypt
-            foreach (var candidate in candidates)
-            {
-                try
-                {
-                    if (VerifyApiKeyWithBcrypt(apiKey, candidate.KeyHash))
-                    {
-                        matchedKey = candidate;
-                        break;
-                    }
-                }
-                catch (Exception)
-                {
-                    // Continue checking other candidates if bcrypt verification fails
-                    continue;
-                }
-            }
-
+            // Find and verify API key
+            var matchedKey = await this.FindMatchingApiKeyAsync(apiKey, prefix!, cancellationToken).ConfigureAwait(false);
             if (matchedKey == null)
             {
                 result.ErrorMessage = "API key not found.";
                 return result;
             }
 
-            // Check if active
-            if (!matchedKey.IsActive)
+            // Validate key status
+            if (!ValidateKeyStatus(matchedKey, result))
             {
-                result.ErrorMessage = "API key has been deactivated.";
                 return result;
             }
 
-            // Check if revoked
-            if (matchedKey.Revokedthis.At.HasValue)
-            {
-                result.ErrorMessage = $"API key was revoked: {matchedKey.RevocationReason ?? "No reason provided"}";
-                return result;
-            }
+            // Populate successful result
+            PopulateValidationResult(result, matchedKey);
 
-            // Check if expired
-            if (matchedKey.ExpiresAt.HasValue && matchedKey.ExpiresAt.Value < DateTime.UtcNow)
-            {
-                result.ErrorMessage = $"API key expired on {matchedKey.ExpiresAt.Value:yyyy-MM-dd HH:mm:ss} UTC.";
-                return result;
-            }
-
-            // Valid key - populate result
-            result.IsValid = true;
-            result.OrganizationId = matchedKey.OrganizationId;
-            result.ApiKeyId = matchedKey.Id;
-            result.Scopes = string.IsNullOrWhiteSpace(matchedKey.Scopes)
-                ? Array.Empty<string>()
-                : matchedKey.Scopes.Split(',', StringSplitOptions.RemoveEmptyEntries);
-            result.RateLimitRpm = matchedKey.RateLimitRpm;
-            result.RateLimitTpm = matchedKey.RateLimitTpm;
-
-            // Update last used timestamp (fire and forget to avoid blocking validation)
-            _ = Task.Run(async () =>
-            {
-                try
-                {
-                    await this.UpdateLastUsedAsync(matchedKey.Id, CancellationToken.None).ConfigureAwait(false);
-                }
-                catch
-                {
-                    // Silently ignore errors in background update
-                }
-            }, CancellationToken.None);
+            // Update last used timestamp (fire and forget)
+            _ = this.UpdateLastUsedInBackgroundAsync(matchedKey.Id);
 
             return result;
         }
@@ -223,7 +156,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             }
 
             // Check if already revoked
-            if (apiKey.Revokedthis.At.HasValue)
+            if (apiKey.RevokedAt.HasValue)
             {
                 return false;
             }
@@ -248,7 +181,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
 
             if (!includeRevoked)
             {
-                query = query.Where(k => k.IsActive && !k.Revokedthis.At.HasValue);
+                query = query.Where(k => k.IsActive && !k.RevokedAt.HasValue);
             }
 
             var keys = await query
@@ -301,8 +234,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                 await this._context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             }
         }
-
-        #region Private Helper Methods
 
         /// <summary>
         /// Generates cryptographically secure random bytes.
@@ -440,6 +371,90 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             };
         }
 
-        #endregion
+        private static bool TryExtractPrefix(string apiKey, ApiKeyValidationResult result, out string? prefix)
+        {
+            prefix = null;
+
+            if (!IsValidKeyFormat(apiKey))
+            {
+                result.ErrorMessage = "Invalid API key format.";
+                return false;
+            }
+
+            var parts = apiKey.Split('_', 3);
+            if (parts.Length != 3)
+            {
+                result.ErrorMessage = "Invalid API key structure.";
+                return false;
+            }
+
+            var keyIdPart = parts[1];
+            prefix = ExtractKeyPrefix(keyIdPart);
+            return true;
+        }
+
+        private async Task<ApiKey?> FindMatchingApiKeyAsync(
+            string apiKey,
+            string prefix,
+            CancellationToken cancellationToken)
+        {
+            var candidates = await this._context.ApiKeys
+                .Where(k => k.KeyPrefix == prefix)
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
+
+            return candidates.FirstOrDefault(candidate => VerifyApiKeyWithBcrypt(apiKey, candidate.KeyHash));
+        }
+
+        private static bool ValidateKeyStatus(ApiKey matchedKey, ApiKeyValidationResult result)
+        {
+            if (!matchedKey.IsActive)
+            {
+                result.ErrorMessage = "API key has been deactivated.";
+                return false;
+            }
+
+            if (matchedKey.RevokedAt.HasValue)
+            {
+                result.ErrorMessage = $"API key was revoked: {matchedKey.RevocationReason ?? "No reason provided"}";
+                return false;
+            }
+
+            if (matchedKey.ExpiresAt.HasValue && matchedKey.ExpiresAt.Value < DateTime.UtcNow)
+            {
+                result.ErrorMessage = $"API key expired on {matchedKey.ExpiresAt.Value:yyyy-MM-dd HH:mm:ss} UTC.";
+                return false;
+            }
+
+            return true;
+        }
+
+        private static void PopulateValidationResult(ApiKeyValidationResult result, ApiKey matchedKey)
+        {
+            result.IsValid = true;
+            result.OrganizationId = matchedKey.OrganizationId;
+            result.ApiKeyId = matchedKey.Id;
+            result.Scopes = string.IsNullOrWhiteSpace(matchedKey.Scopes)
+                ? Array.Empty<string>()
+                : matchedKey.Scopes.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            result.RateLimitRpm = matchedKey.RateLimitRpm;
+            result.RateLimitTpm = matchedKey.RateLimitTpm;
+        }
+
+        private Task UpdateLastUsedInBackgroundAsync(Guid apiKeyId)
+        {
+            return Task.Run(
+                async () =>
+            {
+                try
+                {
+                    await this.UpdateLastUsedAsync(apiKeyId, CancellationToken.None).ConfigureAwait(false);
+                }
+                catch
+                {
+                    // Silently ignore errors in background update
+                }
+            },
+                CancellationToken.None);
+        }
     }
 }

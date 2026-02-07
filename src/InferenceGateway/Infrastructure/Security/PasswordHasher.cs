@@ -8,12 +8,20 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
     using System.Text;
     using Synaxis.InferenceGateway.Application.Security;
 
+    /// <summary>
+    /// PasswordHasher class.
+    /// </summary>
     public sealed class PasswordHasher : IPasswordHasher
     {
         private const int SaltSize = 16;
         private const int HashSize = 32;
         private const int Iterations = 100000;
 
+        /// <summary>
+        /// Hashes a password using PBKDF2 with a randomly generated salt.
+        /// </summary>
+        /// <param name="password">The plain text password to hash.</param>
+        /// <returns>A Base64-encoded string containing the salt and hash.</returns>
         public string HashPassword(string password)
         {
             // Generate a random salt
@@ -35,6 +43,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
             return Convert.ToBase64String(hashBytes);
         }
 
+        /// <summary>
+        /// Verifies that a provided password matches a stored hash.
+        /// </summary>
+        /// <param name="password">The plain text password to verify.</param>
+        /// <param name="hash">The Base64-encoded hash to compare against.</param>
+        /// <returns>True if the password matches the hash; otherwise, false.</returns>
         public bool VerifyPassword(string password, string hash)
         {
             // Extract the salt and hash from the stored hash

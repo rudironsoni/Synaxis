@@ -1,0 +1,285 @@
+// <copyright file="ProviderDiscoveryJob.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
+namespace Synaxis.InferenceGateway.Infrastructure.Jobs
+{
+    using System;
+    using System.Linq;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Options;
+    using Quartz;
+    using Synaxis.InferenceGateway.Application.Configuration;
+    using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
+    using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
+    using Synaxis.InferenceGateway.Infrastructure.External.OpenAi;
+
+    public class ProviderDiscoveryJob : IJob
+    {
+        private readonly IServiceProvider _provider;
+        private readonly ILogger<ProviderDiscoveryJob> _logger;
+
+        public ProviderDiscoveryJob(IServiceProvider provider, ILogger<ProviderDiscoveryJob> logger)
+        {
+            this._provider = provider;
+            this._logger = logger;
+        }
+
+        private static string GetEffectiveBaseUrl(ProviderConfig config, string providerKey)
+        {
+            if (config == null)
+            {
+                return string.Empty;
+            }
+
+            var url = GetConfiguredEndpoint(config);
+
+            if (string.IsNullOrWhiteSpace(url))
+            {
+                url = GetDefaultEndpointByType(config.Type);
+            }
+
+            return CleanupEndpointUrl(url);
+        }
+
+        private static string GetConfiguredEndpoint(ProviderConfig config)
+        {
+            // Prefer explicit endpoint if provided
+            var url = config.Endpoint;
+
+            // If no explicit endpoint, allow fallback endpoint before using type defaults
+            if (string.IsNullOrWhiteSpace(url) && !string.IsNullOrWhiteSpace(config.FallbackEndpoint))
+            {
+                url = config.FallbackEndpoint;
+            }
+
+            return url ?? string.Empty;
+        }
+
+        private static string GetDefaultEndpointByType(string? providerType)
+        {
+            var type = providerType ?? string.Empty;
+#pragma warning disable S1075 // URIs should not be hardcoded - Default provider endpoints
+            return type.Trim().ToLowerInvariant() switch
+            {
+                "nvidia" => "https://integrate.api.nvidia.com",
+                "huggingface" => "https://router.huggingface.co",
+                "groq" => "https://api.groq.com/openai",
+                "openrouter" => "https://openrouter.ai/api",
+                "deepseek" => "https://api.deepseek.com",
+                "openai" => "https://api.openai.com",
+                "cohere" => "https://api.cohere.com/v2",
+                "duckduckgo" => "https://duckduckgo.com/duckchat/v1",
+                "aihorde" => "https://stablehorde.net/api/v2",
+                "siliconflow" => "https://api.siliconflow.cn/v1",
+                "sambanova" => "https://api.sambanova.ai/v1",
+                "zai" => "https://open.bigmodel.cn/api/paas/v4",
+                "hyperbolic" => "https://api.hyperbolic.xyz/v1",
+                "githubmodels" => "https://models.inference.ai.azure.com",
+                "pollinations" => "https://text.pollinations.ai",
+                "kilocode" => "https://api.kilocode.ai",
+                _ => string.Empty,
+            };
+#pragma warning restore S1075 // URIs should not be hardcoded
+        }
+
+        private static string CleanupEndpointUrl(string url)
+        {
+            // Clean up trailing /v1 if present. Many discovery clients append /v1/models.
+            url = url.Trim();
+            url = url.TrimEnd('/');
+            if (url.EndsWith("/v1", StringComparison.OrdinalIgnoreCase))
+            {
+                url = url.Substring(0, url.Length - "/v1".Length);
+            }
+
+            return url;
+        }
+
+        /// <summary>
+        /// Executes the provider discovery job to discover models from configured providers.
+        /// </summary>
+        /// <param name="context">The job execution context.</param>
+        /// <returns>A task that represents the asynchronous job execution.</returns>
+        public async Task Execute(IJobExecutionContext context)
+        {
+            using var scope = this._provider.CreateScope();
+            var config = scope.ServiceProvider.GetRequiredService<IOptions<SynaxisConfiguration>>().Value;
+            var db = scope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
+            var discovery = scope.ServiceProvider.GetRequiredService<IOpenAiModelDiscoveryClient>();
+
+            foreach (var kv in config.Providers)
+            {
+                await ProcessProviderAsync(kv.Key, kv.Value, db, discovery).ConfigureAwait(false);
+            }
+        }
+
+        private async Task ProcessProviderAsync(
+            string providerKey,
+            ProviderConfig providerCfg,
+            ControlPlaneDbContext db,
+            IOpenAiModelDiscoveryClient discovery)
+        {
+            if (!ShouldProcessProvider(providerCfg))
+            {
+                return;
+            }
+
+            var baseUrl = GetEffectiveBaseUrl(providerCfg, providerKey);
+            if (string.IsNullOrWhiteSpace(baseUrl))
+            {
+                this._logger.LogWarning("No effective base URL could be determined for provider {Provider}", providerKey);
+                return;
+            }
+
+            try
+            {
+                var apiKey = providerCfg.Key ?? string.Empty;
+                var ct = CancellationToken.None;
+                var models = await discovery.GetModelsAsync(baseUrl, apiKey, ct).ConfigureAwait(false);
+                var discoveredModels = models?.ToList() ?? new System.Collections.Generic.List<string>();
+
+                await ProcessDiscoveredModelsAsync(providerKey, discoveredModels, db).ConfigureAwait(false);
+
+                this._logger.LogInformation(
+                    "ProviderDiscoveryJob: Successfully upserted {Count} models for provider {Provider}",
+                    discoveredModels.Count,
+                    providerKey);
+            }
+            catch (Exception ex)
+            {
+                this._logger.LogError(ex, "Error discovering models for provider {Provider}", providerKey);
+            }
+        }
+
+        private static bool ShouldProcessProvider(ProviderConfig providerCfg)
+        {
+            if (!providerCfg.Enabled)
+            {
+                return false;
+            }
+
+            // Skip antigravity for now
+            if (string.Equals(providerCfg.Type, "antigravity", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private async Task ProcessDiscoveredModelsAsync(
+            string providerKey,
+            List<string> discoveredModels,
+            ControlPlaneDbContext db)
+        {
+            foreach (var found in discoveredModels)
+            {
+                if (string.IsNullOrEmpty(found))
+                {
+                    continue;
+                }
+
+                var global = await EnsureGlobalModelExistsAsync(found, db).ConfigureAwait(false);
+                if (global != null)
+                {
+                    await UpsertProviderModelAsync(providerKey, found, global.Id, db).ConfigureAwait(false);
+                }
+            }
+        }
+
+        private async Task<GlobalModel?> EnsureGlobalModelExistsAsync(string modelId, ControlPlaneDbContext db)
+        {
+            // Fuzzy match global model
+            var global = db.GlobalModels.FirstOrDefault(g => g.Id == modelId || modelId.Contains(g.Id));
+            if (global != null)
+            {
+                return global;
+            }
+
+            return await CreateGlobalModelAsync(modelId, db).ConfigureAwait(false);
+        }
+
+        private async Task<GlobalModel?> CreateGlobalModelAsync(string modelId, ControlPlaneDbContext db)
+        {
+            var global = new GlobalModel { Id = modelId, Name = modelId, Family = "unknown" };
+            db.GlobalModels.Add(global);
+            try
+            {
+                await db.SaveChangesAsync().ConfigureAwait(false);
+                return global;
+            }
+            catch (Npgsql.PostgresException ex) when (string.Equals(ex.SqlState, "23505", StringComparison.Ordinal))
+            {
+                db.ChangeTracker.Clear();
+                return db.GlobalModels.FirstOrDefault(g => g.Id == modelId);
+            }
+        }
+
+        private async Task UpsertProviderModelAsync(
+            string providerKey,
+            string modelId,
+            string globalModelId,
+            ControlPlaneDbContext db)
+        {
+            var existing = db.ProviderModels.FirstOrDefault(p => p.ProviderId == providerKey && p.ProviderSpecificId == modelId);
+            if (existing == null)
+            {
+                await CreateProviderModelAsync(providerKey, modelId, globalModelId, db).ConfigureAwait(false);
+            }
+            else
+            {
+                await UpdateProviderModelAsync(existing, globalModelId, db).ConfigureAwait(false);
+            }
+        }
+
+        private async Task CreateProviderModelAsync(
+            string providerKey,
+            string modelId,
+            string globalModelId,
+            ControlPlaneDbContext db)
+        {
+            try
+            {
+                var providerModel = new ProviderModel
+                {
+                    ProviderId = providerKey,
+                    ProviderSpecificId = modelId,
+                    GlobalModelId = globalModelId,
+                    IsAvailable = true,
+                };
+                db.ProviderModels.Add(providerModel);
+                await db.SaveChangesAsync().ConfigureAwait(false);
+            }
+            catch (Npgsql.PostgresException ex) when (string.Equals(ex.SqlState, "23505", StringComparison.Ordinal))
+            {
+                db.ChangeTracker.Clear();
+                var reloadedExisting = db.ProviderModels.FirstOrDefault(p => p.ProviderId == providerKey && p.ProviderSpecificId == modelId);
+                if (reloadedExisting != null)
+                {
+                    await UpdateProviderModelAsync(reloadedExisting, globalModelId, db).ConfigureAwait(false);
+                }
+            }
+        }
+
+        private async Task UpdateProviderModelAsync(
+            ProviderModel existing,
+            string globalModelId,
+            ControlPlaneDbContext db)
+        {
+            existing.IsAvailable = true;
+            existing.GlobalModelId = globalModelId;
+            try
+            {
+                await db.SaveChangesAsync().ConfigureAwait(false);
+            }
+            catch (Npgsql.PostgresException ex) when (string.Equals(ex.SqlState, "23505", StringComparison.Ordinal))
+            {
+                db.ChangeTracker.Clear();
+            }
+        }
+    }
+}

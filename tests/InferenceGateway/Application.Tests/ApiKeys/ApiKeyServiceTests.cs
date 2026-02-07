@@ -3,6 +3,7 @@ using Synaxis.InferenceGateway.Application.ApiKeys;
 using Synaxis.InferenceGateway.Application.ApiKeys.Models;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity;
+using Synaxis.InferenceGateway.Infrastructure.Services;
 using Xunit;
 
 namespace Synaxis.InferenceGateway.Application.Tests.ApiKeys;

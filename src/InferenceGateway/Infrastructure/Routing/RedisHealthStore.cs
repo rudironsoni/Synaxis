@@ -11,22 +11,32 @@ namespace Synaxis.InferenceGateway.Infrastructure.Routing
     using StackExchange.Redis;
     using Synaxis.InferenceGateway.Application.Routing;
 
+    /// <summary>
+    /// RedisHealthStore class.
+    /// </summary>
     public class RedisHealthStore : IHealthStore
     {
         private readonly IConnectionMultiplexer _redis;
         private readonly ILogger<RedisHealthStore> _logger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RedisHealthStore"/> class.
+        /// </summary>
+        /// <param name="redis">The Redis connection multiplexer.</param>
+        /// <param name="logger">The logger instance.</param>
         public RedisHealthStore(IConnectionMultiplexer redis, ILogger<RedisHealthStore> logger)
         {
             this._redis = redis;
             this._logger = logger;
         }
 
+        /// <inheritdoc/>
         public async Task<bool> IsHealthyAsync(string providerKey, CancellationToken cancellationToken = default)
         {
             try
             {
                 var db = this._redis.GetDatabase();
+
                 // If the penalty key exists, the provider is unhealthy
                 return !await db.KeyExistsAsync($"health:{providerKey}:penalty").ConfigureAwait(false);
             }
@@ -37,6 +47,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Routing
             }
         }
 
+        /// <inheritdoc/>
         public async Task MarkFailureAsync(string providerKey, TimeSpan cooldown, CancellationToken cancellationToken = default)
         {
             try
@@ -50,9 +61,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Routing
             }
         }
 
+        /// <inheritdoc/>
         public Task MarkSuccessAsync(string providerKey, CancellationToken cancellationToken = default)
         {
             _ = providerKey;
+
             // Optional: Could track success stats or reduce penalty level
             return Task.CompletedTask;
         }

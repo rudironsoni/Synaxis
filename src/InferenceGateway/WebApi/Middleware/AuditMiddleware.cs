@@ -137,5 +137,4 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             return context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
         }
     }
-
 }

@@ -19,6 +19,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
         private readonly ILogger<SecurityConfigurationValidator> _logger;
         private readonly bool _isDevelopment;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SecurityConfigurationValidator"/> class.
+        /// </summary>
+        /// <param name="configuration">The application configuration.</param>
+        /// <param name="logger">The logger instance.</param>
+        /// <param name="environmentName">The environment name (e.g., Development, Production).</param>
         public SecurityConfigurationValidator(
             IConfiguration configuration,
             ILogger<SecurityConfigurationValidator> logger,
@@ -26,12 +32,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
         {
             this._configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            this._isDevelopment = environmentName == "Development";
+            this._isDevelopment = string.Equals(environmentName, "Development", StringComparison.Ordinal);
         }
 
         /// <summary>
         /// Validates all security settings and returns validation results.
         /// </summary>
+        /// <returns>A <see cref="SecurityValidationResult"/> containing validation errors and warnings.</returns>
         public SecurityValidationResult Validate()
         {
             var result = new SecurityValidationResult();
@@ -39,7 +46,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
             this.ValidateJwtSecret(result);
             this.ValidateRateLimiting(result);
             this.ValidateCorsOrigins(result);
-            this.ValidateSecurityHeaders(result);
+            this.ValidateSecurityHeaders();
 
             if (result.HasErrors)
             {
@@ -81,7 +88,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
                 result.AddError($"JWT Secret must be at least 32 characters long. Current length: {jwtSecret.Length}");
             }
 
-            if (jwtSecret == defaultSecret)
+            if (string.Equals(jwtSecret, defaultSecret, StringComparison.Ordinal))
             {
                 if (this._isDevelopment)
                 {
@@ -149,7 +156,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
             }
         }
 
-        private void ValidateSecurityHeaders(SecurityValidationResult result)
+        private void ValidateSecurityHeaders()
         {
             // This is validated by the middleware itself, but we can check configuration if needed
             // For now, we'll just log that security headers will be enforced
@@ -162,18 +169,41 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
     /// </summary>
     public class SecurityValidationResult
     {
-        public List<string> Errors { get; } = new();
+        /// <summary>
+        /// Gets the list of validation errors.
+        /// </summary>
+        public ICollection<string> Errors { get; } = new List<string>();
 
-        public List<string> Warnings { get; } = new();
+        /// <summary>
+        /// Gets the list of validation warnings.
+        /// </summary>
+        public ICollection<string> Warnings { get; } = new List<string>();
 
+        /// <summary>
+        /// Gets a value indicating whether there are any errors.
+        /// </summary>
         public bool HasErrors => this.Errors.Count > 0;
 
+        /// <summary>
+        /// Gets a value indicating whether there are any warnings.
+        /// </summary>
         public bool HasWarnings => this.Warnings.Count > 0;
 
+        /// <summary>
+        /// Gets a value indicating whether the validation passed (no errors).
+        /// </summary>
         public bool IsValid => !this.HasErrors;
 
+        /// <summary>
+        /// Adds an error message to the validation result.
+        /// </summary>
+        /// <param name="error">The error message to add.</param>
         public void AddError(string error) => this.Errors.Add(error);
 
+        /// <summary>
+        /// Adds a warning message to the validation result.
+        /// </summary>
+        /// <param name="warning">The warning message to add.</param>
         public void AddWarning(string warning) => this.Warnings.Add(warning);
     }
 }

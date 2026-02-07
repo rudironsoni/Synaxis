@@ -54,7 +54,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             var strat = new GitHubAuthStrategy(deviceClient, deviceService, logger.Object);
 
             IdentityAccount? emitted = null;
-            strat.AccountAuthenticated += (_, acc) => emitted = acc;
+            strat.AccountAuthenticated += (_, acc) => emitted = acc.Account;
 
             var res = await strat.InitiateFlowAsync(CancellationToken.None);
 
@@ -139,7 +139,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             var strat = new GitHubAuthStrategy(client, mockDevice.Object, logger.Object);
 
             IdentityAccount? emitted = null;
-            strat.AccountAuthenticated += (_, acc) => emitted = acc;
+            strat.AccountAuthenticated += (_, acc) => emitted = acc.Account;
 
             var res = await strat.InitiateFlowAsync(CancellationToken.None);
             Assert.Equal("Pending", res.Status);

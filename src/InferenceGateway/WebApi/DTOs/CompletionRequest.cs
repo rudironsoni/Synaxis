@@ -77,7 +77,6 @@ namespace Synaxis.InferenceGateway.WebApi.DTOs
         /// Gets or sets additional extension data.
         /// </summary>
         [JsonExtensionData]
-        public Dictionary<string, object>? ExtensionData { get; set; }
+        public IDictionary<string, object>? ExtensionData { get; set; }
     }
-
 }

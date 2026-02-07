@@ -105,7 +105,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
 
                 this._logger.LogInformation(
                     "Optimization logged: OrgId={OrgId}, Model={Model}, {Old}->{New}, Savings={Savings}%",
-                    organizationId, modelId, oldProvider, newProvider, savingsPercent);
+                    organizationId,
+                    modelId,
+                    oldProvider,
+                    newProvider,
+                    savingsPercent);
             }
             catch (Exception ex)
             {

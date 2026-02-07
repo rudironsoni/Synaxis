@@ -32,10 +32,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
     }
 
     /// <summary>
-    /// Represents routing metrics for a model.
+    /// Represents routing metrics.
     /// </summary>
-    /// <param name="TotalRequests">The total number of requests.</param>
-    /// <param name="ProviderDistribution">Distribution of requests across providers.</param>
-    /// <param name="AverageCost">The average cost per request.</param>
-    public record RoutingMetrics(int TotalRequests, IDictionary<string, int> ProviderDistribution, decimal AverageCost);
+    /// <param name="totalRequests">The total number of requests.</param>
+    /// <param name="providerDistribution">Distribution of requests across providers.</param>
+    /// <param name="averageCost">The average cost per request.</param>
+    public record RoutingMetrics(int totalRequests, IDictionary<string, int> providerDistribution, decimal averageCost);
 }

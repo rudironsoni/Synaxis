@@ -2,6 +2,8 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
+#nullable enable
+
 namespace Synaxis.Core.Contracts
 {
     using System;
@@ -90,27 +92,29 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the source region.
         /// </summary>
-        public string FromRegion { get; set; }
+        required public string FromRegion { get; set; }
 
         /// <summary>
         /// Gets or sets the destination region.
         /// </summary>
-        public string ToRegion { get; set; }
+        required public string ToRegion { get; set; }
 
         /// <summary>
         /// Gets or sets the legal basis for transfer.
         /// </summary>
-        public string LegalBasis { get; set; }
+        required public string LegalBasis { get; set; }
 
         /// <summary>
         /// Gets or sets the purpose of transfer.
         /// </summary>
-        public string Purpose { get; set; }
+        required public string Purpose { get; set; }
 
         /// <summary>
         /// Gets or sets the data categories being transferred.
         /// </summary>
-        public string[] DataCategories { get; set; }
+#pragma warning disable SA1018 // Nullable type symbol should not be preceded by a space
+        public string[] ? DataCategories { get; set; }
+#pragma warning restore SA1018 // Nullable type symbol should not be preceded by a space
 
         /// <summary>
         /// Gets or sets a value indicating whether encryption is used.
@@ -141,17 +145,19 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the processing purpose.
         /// </summary>
-        public string ProcessingPurpose { get; set; }
+        required public string ProcessingPurpose { get; set; }
 
         /// <summary>
         /// Gets or sets the legal basis for processing.
         /// </summary>
-        public string LegalBasis { get; set; }
+        required public string LegalBasis { get; set; }
 
         /// <summary>
         /// Gets or sets the data categories being processed.
         /// </summary>
-        public string[] DataCategories { get; set; }
+#pragma warning disable SA1018 // Nullable type symbol should not be preceded by a space
+        public string[] ? DataCategories { get; set; }
+#pragma warning restore SA1018 // Nullable type symbol should not be preceded by a space
     }
 
     /// <summary>
@@ -167,7 +173,7 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the breach type.
         /// </summary>
-        public string BreachType { get; set; }
+        required public string BreachType { get; set; }
 
         /// <summary>
         /// Gets or sets the number of affected users.
@@ -177,12 +183,14 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the data categories exposed in breach.
         /// </summary>
-        public string[] DataCategoriesExposed { get; set; }
+#pragma warning disable SA1018 // Nullable type symbol should not be preceded by a space
+        public string[] ? DataCategoriesExposed { get; set; }
+#pragma warning restore SA1018 // Nullable type symbol should not be preceded by a space
 
         /// <summary>
         /// Gets or sets the risk level (low, medium, high).
         /// </summary>
-        public string RiskLevel { get; set; }
+        required public string RiskLevel { get; set; }
     }
 
     /// <summary>
@@ -203,7 +211,9 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the exported data.
         /// </summary>
-        public byte[] Data { get; set; }
+#pragma warning disable SA1018 // Nullable type symbol should not be preceded by a space
+        public byte[] ? Data { get; set; }
+#pragma warning restore SA1018 // Nullable type symbol should not be preceded by a space
 
         /// <summary>
         /// Gets or sets the timestamp when data was exported.
@@ -213,6 +223,6 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the export metadata.
         /// </summary>
-        public IDictionary<string, object> Metadata { get; set; }
+        required public IDictionary<string, object> Metadata { get; set; }
     }
 }

@@ -25,12 +25,23 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<ModelDiscoveryAgent> _logger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ModelDiscoveryAgent"/> class.
+        /// </summary>
+        /// <param name="serviceProvider">The service provider for dependency injection.</param>
+        /// <param name="logger">The logger instance for logging operations.</param>
         public ModelDiscoveryAgent(IServiceProvider serviceProvider, ILogger<ModelDiscoveryAgent> logger)
         {
             this._serviceProvider = serviceProvider;
             this._logger = logger;
         }
 
+        /// <summary>
+        /// Executes the model discovery job to find and add new models to the platform.
+        /// </summary>
+        /// <param name="context">The job execution context.</param>
+        /// <returns>A task that represents the asynchronous job execution.</returns>
+        /// <inheritdoc/>
         public async Task Execute(IJobExecutionContext context)
         {
             var correlationId = Guid.NewGuid().ToString("N")[..8];
@@ -43,90 +54,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
 
             try
             {
-                // Get existing models for comparison
-                var existingModels = await db.GlobalModels
-                    .Select(m => m.Id)
-                    .ToListAsync(context.CancellationToken).ConfigureAwait(false);
-
-                var existingModelSet = new HashSet<string>(existingModels);
-
-                // Get all provider models
-                var providerModels = await db.ProviderModels
-                    .Where(pm => pm.IsAvailable)
-                    .Select(pm => new { pm.GlobalModelId, pm.ProviderId, pm.ProviderSpecificId })
-                    .ToListAsync(context.CancellationToken).ConfigureAwait(false);
-
-                // Find new models (in ProviderModels but not in GlobalModels)
-                var newModels = providerModels
-                    .Where(pm => !existingModelSet.Contains(pm.GlobalModelId))
-                    .GroupBy(pm => pm.GlobalModelId)
-                    .Select(g => new
-                    {
-                        ModelId = g.Key,
-                        Providers = g.Select(x => x.ProviderId).Distinct().ToList(),
-                    })
-                    .ToList();
+                var newModels = await this.DiscoverNewModelsAsync(db, context.CancellationToken).ConfigureAwait(false);
 
                 if (newModels.Any())
                 {
-                    this._logger.LogInformation("[ModelDiscovery][{CorrelationId}] Found {Count} new models",
-                        correlationId, newModels.Count);
-
-                    int addedCount = 0;
-
-                    foreach (var model in newModels)
-                    {
-                        try
-                        {
-                            // Create minimal global model
-                            var globalModel = new GlobalModel
-                            {
-                                Id = model.ModelId,
-                                Name = model.ModelId,
-                                Family = "unknown",
-                                Description = $"Auto-discovered model from {string.Join(", ", model.Providers)}",
-                                InputPrice = 0m,
-                                OutputPrice = 0m,
-                            };
-
-                            db.GlobalModels.Add(globalModel);
-                            await db.SaveChangesAsync(context.CancellationToken).ConfigureAwait(false);
-
-                            addedCount++;
-
-                            this._logger.LogInformation(
-                                "[ModelDiscovery][{CorrelationId}] Added new model: {ModelId} from providers: {Providers}",
-                                correlationId, model.ModelId, string.Join(", ", model.Providers));
-                        }
-                        catch (Exception ex)
-                        {
-                            this._logger.LogError(ex, "[ModelDiscovery][{CorrelationId}] Failed to add model {ModelId}",
-                                correlationId, model.ModelId);
-                        }
-                    }
-
-                    // Send notification to admins
-                    if (addedCount > 0)
-                    {
-                        await alertTool.SendAdminAlertAsync(
-                            "New Models Discovered",
-                            $"Model Discovery Agent found and added {addedCount} new models. Review the models in the admin panel.",
-                            AlertSeverity.Info,
-                            context.CancellationToken).ConfigureAwait(false);
-
-                        await auditTool.LogActionAsync(
-                            "ModelDiscovery",
-                            "ModelsAdded",
-                            null,
-                            null,
-                            $"Added {addedCount} new models to platform",
-                            correlationId,
-                            context.CancellationToken).ConfigureAwait(false);
-                    }
-
-                    this._logger.LogInformation(
-                        "[ModelDiscovery][{CorrelationId}] Completed: Added {Added} of {Found} new models",
-                        correlationId, addedCount, newModels.Count);
+                    var addedCount = await this.AddNewModelsAsync(newModels, db, correlationId, context.CancellationToken).ConfigureAwait(false);
+                    await NotifyAdminsAsync(addedCount, alertTool, auditTool, correlationId, context.CancellationToken).ConfigureAwait(false);
                 }
                 else
                 {
@@ -142,11 +75,144 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
             }
         }
 
-        private async Task UpdateOrganizationModelsAsync(
+        private async Task<List<dynamic>> DiscoverNewModelsAsync(
+            ControlPlaneDbContext db,
+            CancellationToken ct)
+        {
+            // Get existing models for comparison
+            var existingModels = await db.GlobalModels
+                .Select(m => m.Id)
+                .ToListAsync(ct).ConfigureAwait(false);
+
+            var existingModelSet = new HashSet<string>(existingModels);
+
+            // Get all provider models
+            var providerModels = await db.ProviderModels
+                .Where(pm => pm.IsAvailable)
+                .Select(pm => new { pm.GlobalModelId, pm.ProviderId, pm.ProviderSpecificId })
+                .ToListAsync(ct).ConfigureAwait(false);
+
+            // Find new models (in ProviderModels but not in GlobalModels)
+            return providerModels
+                .Where(pm => !existingModelSet.Contains(pm.GlobalModelId))
+                .GroupBy(pm => pm.GlobalModelId)
+                .Select(g => new
+                {
+                    ModelId = g.Key,
+                    Providers = g.Select(x => x.ProviderId).Distinct().ToList(),
+                })
+                .Cast<dynamic>()
+                .ToList();
+        }
+
+        private async Task<int> AddNewModelsAsync(
+            List<dynamic> newModels,
             ControlPlaneDbContext db,
             string correlationId,
             CancellationToken ct)
         {
+            this._logger.LogInformation(
+                "[ModelDiscovery][{CorrelationId}] Found {Count} new models",
+                correlationId,
+                newModels.Count);
+
+            int addedCount = 0;
+
+            foreach (var model in newModels)
+            {
+                if (await this.TryAddGlobalModelAsync(model, db, correlationId, ct).ConfigureAwait(false))
+                {
+                    addedCount++;
+                }
+            }
+
+            this._logger.LogInformation(
+                "[ModelDiscovery][{CorrelationId}] Completed: Added {Added} of {Found} new models",
+                correlationId,
+                addedCount,
+                newModels.Count);
+
+            return addedCount;
+        }
+
+        private async Task<bool> TryAddGlobalModelAsync(
+            dynamic model,
+            ControlPlaneDbContext db,
+            string correlationId,
+            CancellationToken ct)
+        {
+            try
+            {
+                // Create minimal global model
+                var globalModel = new GlobalModel
+                {
+                    Id = model.ModelId,
+                    Name = model.ModelId,
+                    Family = "unknown",
+                    Description = $"Auto-discovered model from {string.Join(", ", model.Providers)}",
+                    InputPrice = 0m,
+                    OutputPrice = 0m,
+                };
+
+                db.GlobalModels.Add(globalModel);
+                await db.SaveChangesAsync(ct).ConfigureAwait(false);
+
+                var modelId = (string)model.ModelId;
+                var providers = string.Join(", ", (List<string>)model.Providers);
+                this._logger.LogInformation(
+                    "[ModelDiscovery][{CorrelationId}] Added new model: {ModelId} from providers: {Providers}",
+                    correlationId,
+                    modelId,
+                    providers);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                this._logger.LogError(
+                    ex,
+                    "[ModelDiscovery][{CorrelationId}] Failed to add model {ModelId}",
+                    correlationId,
+                    (string)model.ModelId);
+                return false;
+            }
+        }
+
+        private static async Task NotifyAdminsAsync(
+            int addedCount,
+            IAlertTool alertTool,
+            IAuditTool auditTool,
+            string correlationId,
+            CancellationToken ct)
+        {
+            if (addedCount > 0)
+            {
+                await alertTool.SendAdminAlertAsync(
+                    "New Models Discovered",
+                    $"Model Discovery Agent found and added {addedCount} new models. Review the models in the admin panel.",
+                    AlertSeverity.Info,
+                    ct).ConfigureAwait(false);
+
+                await auditTool.LogActionAsync(
+                    "ModelDiscovery",
+                    "ModelsAdded",
+                    null,
+                    null,
+                    $"Added {addedCount} new models to platform",
+                    correlationId,
+                    ct).ConfigureAwait(false);
+            }
+        }
+
+        private Task UpdateOrganizationModelsAsync(
+            ControlPlaneDbContext db,
+            string correlationId,
+            CancellationToken ct)
+        {
+            // Suppress unused parameter warnings - these will be used when the method is fully implemented
+            _ = db;
+            _ = ct;
+
             try
             {
                 // NOTE: Implement organization-specific model availability
@@ -158,6 +224,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
             {
                 this._logger.LogError(ex, "[ModelDiscovery][{CorrelationId}] Failed to update organization models", correlationId);
             }
+
+            return Task.CompletedTask;
         }
     }
 }

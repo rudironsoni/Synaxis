@@ -9,8 +9,16 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.ModelsDev
     using System.Threading.Tasks;
     using Synaxis.InferenceGateway.Infrastructure.External.ModelsDev.Dto;
 
+    /// <summary>
+    /// Interface for retrieving model information from models.dev API.
+    /// </summary>
     public interface IModelsDevClient
     {
-        Task<List<ModelDto>> GetAllModelsAsync(CancellationToken ct);
+        /// <summary>
+        /// Retrieves all available models from models.dev.
+        /// </summary>
+        /// <param name="ct">Cancellation token.</param>
+        /// <returns>A list of model data transfer objects.</returns>
+        Task<IList<ModelDto>> GetAllModelsAsync(CancellationToken ct);
     }
 }

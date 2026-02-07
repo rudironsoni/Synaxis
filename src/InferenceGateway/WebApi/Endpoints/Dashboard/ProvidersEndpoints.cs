@@ -4,17 +4,17 @@
 
 namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
 {
-    using Microsoft.AspNetCore.Builder;
-    using Microsoft.AspNetCore.Http;
-    using Microsoft.AspNetCore.Routing;
-    using Microsoft.Extensions.Options;
-    using Synaxis.InferenceGateway.Application.Configuration;
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Builder;
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.AspNetCore.Routing;
+    using Microsoft.Extensions.Options;
     using StackExchange.Redis;
+    using Synaxis.InferenceGateway.Application.Configuration;
 
     /// <summary>
     /// Endpoints for provider management and monitoring.
@@ -227,7 +227,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
         /// <summary>
         /// Gets or sets the list of providers.
         /// </summary>
-        public List<ProviderDto> Providers { get; set; } = new List<ProviderDto>();
+        public IList<ProviderDto> Providers { get; set; } = new List<ProviderDto>();
     }
 
     /// <summary>
@@ -258,7 +258,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
         /// <summary>
         /// Gets or sets the list of model identifiers supported by this provider.
         /// </summary>
-        public List<string> Models { get; set; } = new List<string>();
+        public IList<string> Models { get; set; } = new List<string>();
 
         /// <summary>
         /// Gets or sets the usage statistics for this provider.

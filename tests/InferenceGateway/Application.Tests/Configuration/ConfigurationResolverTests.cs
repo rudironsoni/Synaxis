@@ -4,6 +4,7 @@ using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Operations;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Platform;
+using Synaxis.InferenceGateway.Infrastructure.Services;
 using Xunit;
 
 namespace Synaxis.InferenceGateway.Application.Tests.Configuration;

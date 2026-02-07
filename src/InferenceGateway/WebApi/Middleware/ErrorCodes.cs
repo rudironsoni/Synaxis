@@ -5,6 +5,7 @@
 namespace Synaxis.InferenceGateway.WebApi.Middleware
 {
     using System.Net;
+
     /// <summary>
     /// Canonical error codes for consistent error handling across the Synaxis API.
     /// Based on OpenAI error format with additional Synaxis-specific codes.
@@ -12,7 +13,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
     public static class ErrorCodes
     {
         /// <summary>
-        /// Client-side validation errors (400 Bad Request)
+        /// Client-side validation errors (400 Bad Request).
         /// </summary>
         public const string InvalidRequestError = "invalid_request_error";
 
@@ -37,7 +38,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         public const string InvalidJson = "invalid_json";
 
         /// <summary>
-        /// Authentication and authorization errors (401, 403)
+        /// Authentication and authorization errors (401, 403).
         /// </summary>
         public const string AuthenticationError = "authentication_error";
 
@@ -62,7 +63,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         public const string InsufficientPermissions = "insufficient_permissions";
 
         /// <summary>
-        /// Resource not found errors (404)
+        /// Resource not found errors (404).
         /// </summary>
         public const string NotFound = "not_found";
 
@@ -77,7 +78,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         public const string ProviderNotFound = "provider_not_found";
 
         /// <summary>
-        /// Rate limiting errors (429)
+        /// Rate limiting errors (429).
         /// </summary>
         public const string RateLimitExceeded = "rate_limit_exceeded";
 
@@ -87,7 +88,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         public const string QuotaExceeded = "quota_exceeded";
 
         /// <summary>
-        /// Upstream provider errors (502, 503, 504)
+        /// Upstream provider errors (502, 503, 504).
         /// </summary>
         public const string UpstreamRoutingFailure = "upstream_routing_failure";
 
@@ -112,7 +113,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         public const string GatewayTimeout = "gateway_timeout";
 
         /// <summary>
-        /// Internal server errors (500)
+        /// Internal server errors (500).
         /// </summary>
         public const string InternalError = "internal_error";
 
@@ -227,5 +228,4 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             };
         }
     }
-
 }
