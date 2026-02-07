@@ -55,7 +55,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
                 var adapter = sp.GetRequiredService<ICopilotSdkAdapter>();
                 var clientObj = adapter.GetService(Type.GetType("GitHub.Copilot.Sdk.CopilotClient, GitHub.Copilot.Sdk") ?? typeof(object));
                 var concrete = clientObj as global::GitHub.Copilot.SDK.CopilotClient;
-                if (concrete == null) throw new InvalidOperationException("CopilotClient not available");
+                if (concrete == null)
+                {
+                    throw new InvalidOperationException("CopilotClient not available");
+                }
+
                 return new CopilotClientAdapter(concrete);
             });
 

@@ -27,7 +27,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
     {
         private readonly object _client;
         private readonly ILogger<CopilotSdkAdapter>? _logger;
-        private readonly SemaphoreSlim _startLock = new (1, 1);
+        private readonly SemaphoreSlim _startLock = new(1, 1);
         private bool _started;
         private readonly ChatClientMetadata _metadata = new ChatClientMetadata("GitHubCopilot", new Uri("https://copilot.github.com/"), "copilot");
         private readonly string _modelId = "copilot";
@@ -48,7 +48,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
             }
             catch (Exception ex)
             {
-                _logger?.LogDebug(ex, "Failed to create CopilotClient via reflection");
+                this._logger?.LogDebug(ex, "Failed to create CopilotClient via reflection");
             }
             this._client = client ?? new object();
         }
@@ -57,23 +57,33 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
 
         private async Task EnsureStartedAsync()
         {
-            if (_started) return;
-            await _startLock.WaitAsync().ConfigureAwait(false);
+            if (this._started)
+            {
+                return;
+            }
+
+            await this._startLock.WaitAsync().ConfigureAwait(false);
             try
             {
-                if (_started) return;
+                if (this._started)
+                {
+                    return;
+                }
                 // Call StartAsync if available on the SDK client.
-                var startMethod = _client.GetType().GetMethod("StartAsync", BindingFlags.Public | BindingFlags.Instance);
+                var startMethod = this._client.GetType().GetMethod("StartAsync", BindingFlags.Public | BindingFlags.Instance);
                 if (startMethod != null)
                 {
                     try
                     {
-                        var t = startMethod.Invoke(_client, null) as Task;
-                        if (t != null) await t.ConfigureAwait(false);
+                        var t = startMethod.Invoke(this._client, null) as Task;
+                        if (t != null)
+                        {
+                            await t.ConfigureAwait(false);
+                        }
                     }
                     catch (Exception ex)
                     {
-                        _logger?.LogWarning(ex, "Copilot StartAsync failed");
+                        this._logger?.LogWarning(ex, "Copilot StartAsync failed");
                     }
                 }
 
@@ -81,13 +91,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
             }
             finally
             {
-                _startLock.Release();
+                this._startLock.Release();
             }
         }
 
         public async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default)
         {
-            await EnsureStartedAsync().ConfigureAwait(false);
+            await this.EnsureStartedAsync().ConfigureAwait(false);
 
             // Best-effort: try to find an SDK chat/send API, otherwise fall back
             // to a lightweight echo response so the application remains usable
@@ -102,14 +112,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
                 // named "GetResponseAsync" on the client directly that accepts a
                 // single string. This keeps the adapter functional if the method
                 // exists while avoiding hard compile-time coupling.
-                var getRespMethod = _client.GetType().GetMethod("GetResponseAsync", BindingFlags.Public | BindingFlags.Instance);
+                var getRespMethod = this._client.GetType().GetMethod("GetResponseAsync", BindingFlags.Public | BindingFlags.Instance);
                 if (getRespMethod != null)
                 {
                     var parameters = getRespMethod.GetParameters();
                     object? result = null;
                     if (parameters.Length == 1 && parameters[0].ParameterType == typeof(string))
                     {
-                        var task = getRespMethod.Invoke(_client, new object[] { combined }) as Task<object>;
+                        var task = getRespMethod.Invoke(this._client, new object[] { combined }) as Task<object>;
                         if (task != null)
                         {
                             result = await task.ConfigureAwait(false);
@@ -121,7 +131,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
                     {
                         var text = result.ToString() ?? string.Empty;
                         var resp = new ChatResponse(new ChatMessage(ChatRole.Assistant, text));
-                        resp.ModelId = _modelId;
+                        resp.ModelId = this._modelId;
                         return resp;
                     }
                 }
@@ -136,13 +146,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
             var lastUser = messages.LastOrDefault(m => m.Role == ChatRole.User) ?? new ChatMessage(ChatRole.Assistant, string.Empty);
             var fallback = new ChatResponse(new ChatMessage(ChatRole.Assistant, lastUser.Text ?? string.Empty));
             // ChatClientMetadata does not expose ModelId; set on response instead
-            fallback.ModelId = _modelId;
+            fallback.ModelId = this._modelId;
             return fallback;
         }
 
         public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            await EnsureStartedAsync().ConfigureAwait(false);
+            await this.EnsureStartedAsync().ConfigureAwait(false);
 
             // Try to use a streaming SDK API if available. We'll invoke via reflection
             // and enumerate the returned IEnumerable outside of the try/catch to avoid
@@ -150,22 +160,26 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
             object? invoked = null;
             try
             {
-                var streamMethod = _client.GetType().GetMethod("GetStreamingResponseAsync", BindingFlags.Public | BindingFlags.Instance);
+                var streamMethod = this._client.GetType().GetMethod("GetStreamingResponseAsync", BindingFlags.Public | BindingFlags.Instance);
                 if (streamMethod != null)
                 {
-                    invoked = streamMethod.Invoke(_client, new object[] { messages });
+                    invoked = streamMethod.Invoke(this._client, new object[] { messages });
                 }
             }
             catch (Exception ex)
             {
-                _logger?.LogDebug(ex, "Streaming invocation failed");
+                this._logger?.LogDebug(ex, "Streaming invocation failed");
             }
 
             if (invoked is System.Collections.IEnumerable enumerable2)
             {
                 foreach (var item in enumerable2)
                 {
-                    if (cancellationToken.IsCancellationRequested) yield break;
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        yield break;
+                    }
+
                     var update = new ChatResponseUpdate { Role = ChatRole.Assistant };
                     update.Contents.Add(new TextContent(item?.ToString() ?? string.Empty));
                     yield return update;
@@ -174,7 +188,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
             }
 
             // Non-streaming fallback: yield a single update with the fully computed response
-            var final = await GetResponseAsync(messages, options, cancellationToken).ConfigureAwait(false);
+            var final = await this.GetResponseAsync(messages, options, cancellationToken).ConfigureAwait(false);
             var u = new ChatResponseUpdate { Role = ChatRole.Assistant };
             u.Contents.Add(new TextContent(final.Messages.FirstOrDefault()?.Text ?? string.Empty));
             yield return u;
@@ -182,10 +196,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
 
         public object? GetService(Type serviceType, object? serviceKey = null)
         {
-            if (_client != null)
+            if (this._client != null)
             {
                 var sdkType = Type.GetType("GitHub.Copilot.Sdk.CopilotClient, GitHub.Copilot.Sdk");
-                if (sdkType != null && serviceType == sdkType) return this._client;
+                if (sdkType != null && serviceType == sdkType)
+                {
+                    return this._client;
+                }
             }
             return null;
         }
@@ -195,13 +212,16 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
             try
             {
                 // Call Dispose or DisposeAsync if available
-                var dispose = _client.GetType().GetMethod("Dispose", BindingFlags.Public | BindingFlags.Instance);
-                if (dispose != null) dispose.Invoke(_client, null);
+                var dispose = this._client.GetType().GetMethod("Dispose", BindingFlags.Public | BindingFlags.Instance);
+                if (dispose != null)
+                {
+                    dispose.Invoke(this._client, null);
+                }
 
-                var disposeAsync = _client.GetType().GetMethod("DisposeAsync", BindingFlags.Public | BindingFlags.Instance);
+                var disposeAsync = this._client.GetType().GetMethod("DisposeAsync", BindingFlags.Public | BindingFlags.Instance);
                 if (disposeAsync != null)
                 {
-                    var task = disposeAsync.Invoke(_client, null) as Task;
+                    var task = disposeAsync.Invoke(this._client, null) as Task;
                     task?.GetAwaiter().GetResult();
                 }
             }

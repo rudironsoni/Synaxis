@@ -28,8 +28,8 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             RequestDelegate next,
             ILogger<InputValidationMiddleware> logger)
         {
-            _next = next ?? throw new ArgumentNullException(nameof(next));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._next = next ?? throw new ArgumentNullException(nameof(next));
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         /// <summary>
@@ -40,10 +40,10 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         /// <returns>A task representing the asynchronous operation.</returns>
         public async Task InvokeAsync(HttpContext context)
         {
-            if (context.Request.ContentLength > _maxRequestBodySize)
+            if (context.Request.ContentLength > this._maxRequestBodySize)
             {
-                _logger.LogWarning("Request body too large: {ContentLength} bytes (max: {MaxSize} bytes)",
-                    context.Request.ContentLength, _maxRequestBodySize);
+                this._logger.LogWarning("Request body too large: {ContentLength} bytes (max: {MaxSize} bytes)",
+                    context.Request.ContentLength, this._maxRequestBodySize);
 
                 context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 await context.Response.WriteAsJsonAsync(new { error = "Request body too large" });
@@ -55,7 +55,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 var contentType = context.Request.ContentType;
                 if (string.IsNullOrEmpty(contentType) || !contentType.Contains("application/json"))
                 {
-                    _logger.LogWarning("Invalid content type: {ContentType}", contentType);
+                    this._logger.LogWarning("Invalid content type: {ContentType}", contentType);
 
                     context.Response.StatusCode = (int)HttpStatusCode.UnsupportedMediaType;
                     await context.Response.WriteAsJsonAsync(new { error = "Content-Type must be application/json" });
@@ -63,7 +63,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 }
             }
 
-            await _next(context);
+            await this._next(context);
         }
     }
 

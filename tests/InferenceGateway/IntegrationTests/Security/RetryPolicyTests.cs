@@ -20,7 +20,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Security
 
         public RetryPolicyTests(ITestOutputHelper output)
         {
-            _output = output ?? throw new ArgumentNullException(nameof(output));
+            this._output = output ?? throw new ArgumentNullException(nameof(output));
         }
 
         [Fact]

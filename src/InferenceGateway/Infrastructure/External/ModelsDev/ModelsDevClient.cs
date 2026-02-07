@@ -29,17 +29,17 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.ModelsDev
             try
             {
                 // Request the correct endpoint which returns JSON
-                using var resp = await _httpClient.GetAsync("/api.json", HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
+                using var resp = await this._httpClient.GetAsync("/api.json", HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
                 if (!resp.IsSuccessStatusCode)
                 {
-                    _logger?.LogWarning("Models.dev returned non-success status {Status}", resp.StatusCode);
+                    this._logger?.LogWarning("Models.dev returned non-success status {Status}", resp.StatusCode);
                     return new List<ModelDto>();
                 }
 
                 var content = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
                 if (string.IsNullOrWhiteSpace(content))
                 {
-                    _logger?.LogWarning("Models.dev returned empty content");
+                    this._logger?.LogWarning("Models.dev returned empty content");
                     return new List<ModelDto>();
                 }
 
@@ -54,21 +54,32 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.ModelsDev
                 {
                     // include a short preview of the response to aid debugging
                     var preview = content.Length > 512 ? content.Substring(0, 512) + "..." : content;
-                    _logger?.LogWarning(jex, "Failed to deserialize models.dev response. Content preview: {Preview}", preview);
+                    this._logger?.LogWarning(jex, "Failed to deserialize models.dev response. Content preview: {Preview}", preview);
                     return new List<ModelDto>();
                 }
 
                 var list = new List<ModelDto>();
-                if (root == null) return list;
+                if (root == null)
+                {
+                    return list;
+                }
 
                 foreach (var provider in root.Values)
                 {
-                    if (provider?.models == null) continue;
+                    if (provider?.models == null)
+                    {
+                        continue;
+                    }
+
                     foreach (var kv in provider.models)
                     {
                         var model = kv.Value;
                         // ensure id present: if DTO id null, fallback to key
-                        if (string.IsNullOrEmpty(model.id)) model.id = kv.Key;
+                        if (string.IsNullOrEmpty(model.id))
+                        {
+                            model.id = kv.Key;
+                        }
+
                         list.Add(model);
                     }
                 }
@@ -82,7 +93,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.ModelsDev
             }
             catch (Exception ex)
             {
-                _logger?.LogWarning(ex, "Unexpected error while fetching models from models.dev");
+                this._logger?.LogWarning(ex, "Unexpected error while fetching models from models.dev");
                 return new List<ModelDto>();
             }
         }

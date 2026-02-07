@@ -40,20 +40,20 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity
             CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            ThrowIfDisposed();
+            this.ThrowIfDisposed();
 
             if (organizationId == null)
             {
                 // Return only system roles
-                return await Roles
+                return await this.Roles
                     .Where(r => r.IsSystemRole && r.OrganizationId == null)
-                    .ToListAsync(cancellationToken);
+                    .ToListAsync(cancellationToken).ConfigureAwait(false);
             }
 
             // Return organization-specific roles and system roles
-            return await Roles
+            return await this.Roles
                 .Where(r => r.IsSystemRole || r.OrganizationId == organizationId)
-                .ToListAsync(cancellationToken);
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -65,11 +65,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity
             CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            ThrowIfDisposed();
+            this.ThrowIfDisposed();
 
-            return await Roles
+            return await this.Roles
                 .Where(r => r.IsSystemRole && r.OrganizationId == null)
-                .ToListAsync(cancellationToken);
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -83,11 +83,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity
             CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            ThrowIfDisposed();
+            this.ThrowIfDisposed();
 
-            return await Roles
+            return await this.Roles
                 .Where(r => !r.IsSystemRole && r.OrganizationId == organizationId)
-                .ToListAsync(cancellationToken);
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -104,23 +104,23 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity
             CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            ThrowIfDisposed();
+            this.ThrowIfDisposed();
 
             if (organizationId == null)
             {
                 // Search only system roles
-                return await Roles
+                return await this.Roles
                     .Where(r => r.NormalizedName == normalizedRoleName &&
                                r.IsSystemRole &&
                                r.OrganizationId == null)
-                    .FirstOrDefaultAsync(cancellationToken);
+                    .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
             }
 
             // Search organization-specific roles first, then fall back to system roles
-            var orgRole = await Roles
+            var orgRole = await this.Roles
                 .Where(r => r.NormalizedName == normalizedRoleName &&
                            r.OrganizationId == organizationId)
-                .FirstOrDefaultAsync(cancellationToken);
+                .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
             if (orgRole != null)
             {
@@ -128,11 +128,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity
             }
 
             // Fall back to system roles
-            return await Roles
+            return await this.Roles
                 .Where(r => r.NormalizedName == normalizedRoleName &&
                            r.IsSystemRole &&
                            r.OrganizationId == null)
-                .FirstOrDefaultAsync(cancellationToken);
+                .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 }

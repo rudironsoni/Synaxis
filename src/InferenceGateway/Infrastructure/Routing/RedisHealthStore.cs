@@ -26,13 +26,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Routing
         {
             try
             {
-                var db = _redis.GetDatabase();
+                var db = this._redis.GetDatabase();
                 // If the penalty key exists, the provider is unhealthy
-                return !await db.KeyExistsAsync($"health:{providerKey}:penalty");
+                return !await db.KeyExistsAsync($"health:{providerKey}:penalty").ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Failed to check health for provider '{ProviderKey}'. Failing open (healthy).", providerKey);
+                this._logger.LogWarning(ex, "Failed to check health for provider '{ProviderKey}'. Failing open (healthy).", providerKey);
                 return true;
             }
         }
@@ -41,12 +41,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Routing
         {
             try
             {
-                var db = _redis.GetDatabase();
-                await db.StringSetAsync($"health:{providerKey}:penalty", "1", cooldown);
+                var db = this._redis.GetDatabase();
+                await db.StringSetAsync($"health:{providerKey}:penalty", "1", cooldown).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Failed to mark failure for provider '{ProviderKey}'.", providerKey);
+                this._logger.LogWarning(ex, "Failed to mark failure for provider '{ProviderKey}'.", providerKey);
             }
         }
 

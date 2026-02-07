@@ -6,28 +6,41 @@ namespace Synaxis.InferenceGateway.Application.Tests.Optimization.Configuration;
 public class TenantTokenOptimizationConfig
 {
     public Guid TenantId { get; set; }
+
     public double? SimilarityThreshold { get; set; }
+
     public int? CacheTtlSeconds { get; set; }
+
     public string? CompressionStrategy { get; set; }
+
     public bool? EnableCaching { get; set; }
 }
 
 public class UserTokenOptimizationConfig
 {
     public Guid UserId { get; set; }
+
     public double? SimilarityThreshold { get; set; }
+
     public int? CacheTtlSeconds { get; set; }
+
     public bool? EnableCaching { get; set; }
 }
 
 public class TokenOptimizationConfig
 {
     public double SimilarityThreshold { get; set; }
+
     public int? CacheTtlSeconds { get; set; }
+
     public string? CompressionStrategy { get; set; }
+
     public bool EnableCaching { get; set; }
+
     public bool EnableCompression { get; set; }
+
     public int? MaxConcurrentRequests { get; set; }
+
     public int? MaxTokensPerRequest { get; set; }
 }
 
@@ -35,13 +48,14 @@ public enum ConfigurationLevel
 {
     System,
     Tenant,
-    User
+    User,
 }
 
 public class ValidationResult
 {
     public bool IsValid { get; set; }
-    public List<string> Errors { get; set; } = new ();
+
+    public List<string> Errors { get; set; } = new();
 }
 
 // Test-specific DbContext for Token Optimization
@@ -52,8 +66,9 @@ public class TestTokenOptimizationDbContext : DbContext
     {
     }
 
-    public DbSet<TenantTokenOptimizationConfig> TenantTokenOptimizationConfigs => Set<TenantTokenOptimizationConfig>();
-    public DbSet<UserTokenOptimizationConfig> UserTokenOptimizationConfigs => Set<UserTokenOptimizationConfig>();
+    public DbSet<TenantTokenOptimizationConfig> TenantTokenOptimizationConfigs => this.Set<TenantTokenOptimizationConfig>();
+
+    public DbSet<UserTokenOptimizationConfig> UserTokenOptimizationConfigs => this.Set<UserTokenOptimizationConfig>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -75,8 +90,11 @@ public class TestTokenOptimizationDbContext : DbContext
 public interface ITokenOptimizationConfigurationResolver
 {
     Task<TokenOptimizationConfig> ResolveAsync(Guid tenantId, Guid userId);
+
     Task<TokenOptimizationConfig> GetTenantConfigAsync(Guid tenantId);
+
     Task<TokenOptimizationConfig> GetUserConfigAsync(Guid userId);
+
     TokenOptimizationConfig GetSystemConfig();
 }
 
@@ -84,7 +102,7 @@ public class TokenOptimizationConfigurationResolver : ITokenOptimizationConfigur
 {
     private readonly IDbContextFactory<TestTokenOptimizationDbContext> _dbContextFactory;
 
-    private readonly TokenOptimizationConfig _systemDefaults = new ()
+    private readonly TokenOptimizationConfig _systemDefaults = new()
     {
         SimilarityThreshold = 0.85,
         CacheTtlSeconds = 3600,
@@ -92,21 +110,21 @@ public class TokenOptimizationConfigurationResolver : ITokenOptimizationConfigur
         EnableCaching = true,
         EnableCompression = true,
         MaxConcurrentRequests = 100,
-        MaxTokensPerRequest = 4096
+        MaxTokensPerRequest = 4096,
     };
 
     public TokenOptimizationConfigurationResolver(
         IDbContextFactory<TestTokenOptimizationDbContext> dbContextFactory)
     {
-        _dbContextFactory = dbContextFactory;
+        this._dbContextFactory = dbContextFactory;
     }
 
     public async Task<TokenOptimizationConfig> ResolveAsync(Guid tenantId, Guid userId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        await using var context = await this._dbContextFactory.CreateDbContextAsync();
 
         // Start with system defaults
-        var config = CloneConfig(_systemDefaults);
+        var config = this.CloneConfig(this._systemDefaults);
 
         // Apply tenant overrides
         var tenantConfig = await context.TenantTokenOptimizationConfigs
@@ -114,7 +132,7 @@ public class TokenOptimizationConfigurationResolver : ITokenOptimizationConfigur
 
         if (tenantConfig != null)
         {
-            ApplyTenantOverrides(config, tenantConfig);
+            this.ApplyTenantOverrides(config, tenantConfig);
         }
 
         // Apply user overrides (highest priority)
@@ -123,7 +141,7 @@ public class TokenOptimizationConfigurationResolver : ITokenOptimizationConfigur
 
         if (userConfig != null)
         {
-            ApplyUserOverrides(config, userConfig);
+            this.ApplyUserOverrides(config, userConfig);
         }
 
         return config;
@@ -131,15 +149,15 @@ public class TokenOptimizationConfigurationResolver : ITokenOptimizationConfigur
 
     public async Task<TokenOptimizationConfig> GetTenantConfigAsync(Guid tenantId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        await using var context = await this._dbContextFactory.CreateDbContextAsync();
 
-        var config = CloneConfig(_systemDefaults);
+        var config = this.CloneConfig(this._systemDefaults);
         var tenantConfig = await context.TenantTokenOptimizationConfigs
             .FirstOrDefaultAsync(t => t.TenantId == tenantId);
 
         if (tenantConfig != null)
         {
-            ApplyTenantOverrides(config, tenantConfig);
+            this.ApplyTenantOverrides(config, tenantConfig);
         }
 
         return config;
@@ -147,15 +165,15 @@ public class TokenOptimizationConfigurationResolver : ITokenOptimizationConfigur
 
     public async Task<TokenOptimizationConfig> GetUserConfigAsync(Guid userId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        await using var context = await this._dbContextFactory.CreateDbContextAsync();
 
-        var config = CloneConfig(_systemDefaults);
+        var config = this.CloneConfig(this._systemDefaults);
         var userConfig = await context.UserTokenOptimizationConfigs
             .FirstOrDefaultAsync(u => u.UserId == userId);
 
         if (userConfig != null)
         {
-            ApplyUserOverrides(config, userConfig);
+            this.ApplyUserOverrides(config, userConfig);
         }
 
         return config;
@@ -163,34 +181,48 @@ public class TokenOptimizationConfigurationResolver : ITokenOptimizationConfigur
 
     public TokenOptimizationConfig GetSystemConfig()
     {
-        return CloneConfig(_systemDefaults);
+        return this.CloneConfig(this._systemDefaults);
     }
 
     private void ApplyTenantOverrides(TokenOptimizationConfig config, TenantTokenOptimizationConfig tenantConfig)
     {
         if (tenantConfig.SimilarityThreshold.HasValue)
+        {
             config.SimilarityThreshold = tenantConfig.SimilarityThreshold.Value;
+        }
 
         if (tenantConfig.CacheTtlSeconds.HasValue)
+        {
             config.CacheTtlSeconds = tenantConfig.CacheTtlSeconds.Value;
+        }
 
         if (!string.IsNullOrEmpty(tenantConfig.CompressionStrategy))
+        {
             config.CompressionStrategy = tenantConfig.CompressionStrategy;
+        }
 
         if (tenantConfig.EnableCaching.HasValue)
+        {
             config.EnableCaching = tenantConfig.EnableCaching.Value;
+        }
     }
 
     private void ApplyUserOverrides(TokenOptimizationConfig config, UserTokenOptimizationConfig userConfig)
     {
         if (userConfig.SimilarityThreshold.HasValue)
+        {
             config.SimilarityThreshold = userConfig.SimilarityThreshold.Value;
+        }
 
         if (userConfig.CacheTtlSeconds.HasValue)
+        {
             config.CacheTtlSeconds = userConfig.CacheTtlSeconds.Value;
+        }
 
         if (userConfig.EnableCaching.HasValue)
+        {
             config.EnableCaching = userConfig.EnableCaching.Value;
+        }
     }
 
     private TokenOptimizationConfig CloneConfig(TokenOptimizationConfig source)
@@ -203,7 +235,7 @@ public class TokenOptimizationConfigurationResolver : ITokenOptimizationConfigur
             EnableCaching = source.EnableCaching,
             EnableCompression = source.EnableCompression,
             MaxConcurrentRequests = source.MaxConcurrentRequests,
-            MaxTokensPerRequest = source.MaxTokensPerRequest
+            MaxTokensPerRequest = source.MaxTokensPerRequest,
         };
     }
 }
@@ -269,7 +301,7 @@ public class TokenOptimizationConfigValidator : ITokenOptimizationConfigValidato
         return new ValidationResult
         {
             IsValid = errors.Count == 0,
-            Errors = errors
+            Errors = errors,
         };
     }
 }

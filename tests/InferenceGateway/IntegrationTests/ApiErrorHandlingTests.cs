@@ -12,16 +12,16 @@ public class ApiErrorHandlingTests : IClassFixture<SynaxisWebApplicationFactory>
 
     public ApiErrorHandlingTests(SynaxisWebApplicationFactory factory, ITestOutputHelper output)
     {
-        _factory = factory;
-        _factory.OutputHelper = output;
-        _client = factory.CreateClient();
+        this._factory = factory;
+        this._factory.OutputHelper = output;
+        this._client = factory.CreateClient();
     }
 
     [Fact]
     public async Task Get_NonExistentEndpoint_Returns404()
     {
         // Act
-        var response = await _client.GetAsync("/openai/v1/non-existent");
+        var response = await this._client.GetAsync("/openai/v1/non-existent");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -31,7 +31,7 @@ public class ApiErrorHandlingTests : IClassFixture<SynaxisWebApplicationFactory>
     public async Task Post_InvalidEndpoint_Returns404()
     {
         // Act
-        var response = await _client.PostAsJsonAsync("/openai/v1/invalid", new { });
+        var response = await this._client.PostAsJsonAsync("/openai/v1/invalid", new { });
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -41,7 +41,7 @@ public class ApiErrorHandlingTests : IClassFixture<SynaxisWebApplicationFactory>
     public async Task Get_Models_ReturnsValidJson()
     {
         // Act
-        var response = await _client.GetAsync("/openai/v1/models");
+        var response = await this._client.GetAsync("/openai/v1/models");
 
         // Assert
         response.EnsureSuccessStatusCode();
@@ -57,7 +57,7 @@ public class ApiErrorHandlingTests : IClassFixture<SynaxisWebApplicationFactory>
     public async Task Get_ModelById_InvalidModel_Returns404()
     {
         // Act
-        var response = await _client.GetAsync("/openai/v1/models/non-existent-model-12345");
+        var response = await this._client.GetAsync("/openai/v1/models/non-existent-model-12345");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -70,7 +70,7 @@ public class ApiErrorHandlingTests : IClassFixture<SynaxisWebApplicationFactory>
         var content = new StringContent("{invalid json", System.Text.Encoding.UTF8, "application/json");
 
         // Act
-        var response = await _client.PostAsync("/openai/v1/chat/completions", content);
+        var response = await this._client.PostAsync("/openai/v1/chat/completions", content);
 
         // Assert - Malformed JSON returns 400 or 500 depending on middleware
         Assert.True(
@@ -86,7 +86,7 @@ public class ApiErrorHandlingTests : IClassFixture<SynaxisWebApplicationFactory>
         var content = new StringContent("", System.Text.Encoding.UTF8, "application/json");
 
         // Act
-        var response = await _client.PostAsync("/openai/v1/chat/completions", content);
+        var response = await this._client.PostAsync("/openai/v1/chat/completions", content);
 
         // Assert
         Assert.True(
@@ -99,7 +99,7 @@ public class ApiErrorHandlingTests : IClassFixture<SynaxisWebApplicationFactory>
     public async Task HealthChecks_Liveness_Returns200()
     {
         // Act
-        var response = await _client.GetAsync("/health/liveness");
+        var response = await this._client.GetAsync("/health/liveness");
 
         // Assert
         response.EnsureSuccessStatusCode();
@@ -109,7 +109,7 @@ public class ApiErrorHandlingTests : IClassFixture<SynaxisWebApplicationFactory>
     public async Task Response_ContentType_IsApplicationJson()
     {
         // Act
-        var response = await _client.GetAsync("/openai/v1/models");
+        var response = await this._client.GetAsync("/openai/v1/models");
 
         // Assert
         response.EnsureSuccessStatusCode();

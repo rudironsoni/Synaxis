@@ -28,25 +28,39 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
 
         private string Truncate(string? value, int maxLength)
         {
-            if (value == null) return string.Empty;
-            if (value.Length <= maxLength) return value;
+            if (value == null)
+            {
+                return string.Empty;
+            }
+
+            if (value.Length <= maxLength)
+            {
+                return value;
+            }
+
             return value.Substring(0, maxLength);
         }
 
         public async Task Execute(IJobExecutionContext context)
         {
-            using var scope = _provider.CreateScope();
+            using var scope = this._provider.CreateScope();
             var client = scope.ServiceProvider.GetRequiredService<IModelsDevClient>();
             var ct = CancellationToken.None;
 
             var models = await client.GetAllModelsAsync(ct).ConfigureAwait(false);
-            if (models == null || models.Count == 0) return;
+            if (models == null || models.Count == 0)
+            {
+                return;
+            }
 
             var db = scope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
 
             foreach (var m in models)
             {
-                if (string.IsNullOrEmpty(m.id)) continue;
+                if (string.IsNullOrEmpty(m.id))
+                {
+                    continue;
+                }
 
                 var existing = await db.GlobalModels.FindAsync(new object[] { m.id }, ct).ConfigureAwait(false);
                 if (existing == null)
@@ -55,8 +69,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                     db.GlobalModels.Add(existing);
                 }
 
-                existing.Name = Truncate(m.name ?? m.id, 200);
-                existing.Family = Truncate(m.family ?? "unknown", 200);
+                existing.Name = this.Truncate(m.name ?? m.id, 200);
+                existing.Family = this.Truncate(m.family ?? "unknown", 200);
 
                 existing.ContextWindow = m.limit?.context ?? existing.ContextWindow;
                 existing.MaxOutputTokens = m.limit?.output ?? existing.MaxOutputTokens;
@@ -79,19 +93,21 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                 if (!string.IsNullOrEmpty(m.release_date))
                 {
                     if (DateTime.TryParse(m.release_date, out var dt))
+                    {
                         existing.ReleaseDate = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+                    }
                 }
             }
 
             try
             {
                 await db.SaveChangesAsync(ct).ConfigureAwait(false);
-                _logger.LogInformation("ModelsDevSyncJob: synced {Count} models", models.Count);
-                _logger.LogInformation("ModelsDevSyncJob: Successfully upserted {Count} global models", models.Count);
+                this._logger.LogInformation("ModelsDevSyncJob: synced {Count} models", models.Count);
+                this._logger.LogInformation("ModelsDevSyncJob: Successfully upserted {Count} global models", models.Count);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "ModelsDevSyncJob: failed to save changes: {Message}", ex.InnerException?.Message ?? ex.Message);
+                this._logger.LogError(ex, "ModelsDevSyncJob: failed to save changes: {Message}", ex.InnerException?.Message ?? ex.Message);
             }
         }
     }

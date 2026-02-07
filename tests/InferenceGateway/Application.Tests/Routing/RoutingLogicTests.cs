@@ -31,14 +31,14 @@ public class RoutingLogicTests
 
     public RoutingLogicTests()
     {
-        _configMock = new Mock<IOptions<SynaxisConfiguration>>();
-        _registryMock = new Mock<IProviderRegistry>();
-        _storeMock = new Mock<IControlPlaneStore>();
-        _modelResolverMock = new Mock<IModelResolver>();
-        _costServiceMock = new Mock<ICostService>();
-        _healthStoreMock = new Mock<IHealthStore>();
-        _quotaTrackerMock = new Mock<IQuotaTracker>();
-        _loggerMock = new Mock<ILogger<SmartRouter>>();
+        this._configMock = new Mock<IOptions<SynaxisConfiguration>>();
+        this._registryMock = new Mock<IProviderRegistry>();
+        this._storeMock = new Mock<IControlPlaneStore>();
+        this._modelResolverMock = new Mock<IModelResolver>();
+        this._costServiceMock = new Mock<ICostService>();
+        this._healthStoreMock = new Mock<IHealthStore>();
+        this._quotaTrackerMock = new Mock<IQuotaTracker>();
+        this._loggerMock = new Mock<ILogger<SmartRouter>>();
 
         var config = new SynaxisConfiguration
         {
@@ -47,32 +47,32 @@ public class RoutingLogicTests
                 ["groq"] = new ProviderConfig { Type = "groq", Tier = 0, Models = ["llama-3.1-70b-versatile"], Enabled = true },
                 ["openai"] = new ProviderConfig { Type = "openai", Tier = 1, Models = ["gpt-4"], Enabled = true },
                 ["deepseek"] = new ProviderConfig { Type = "openai", Tier = 2, Models = ["deepseek-chat"], Enabled = true },
-                ["cohere"] = new ProviderConfig { Type = "cohere", Tier = 0, Models = ["command-r-plus"], Enabled = true }
+                ["cohere"] = new ProviderConfig { Type = "cohere", Tier = 0, Models = ["command-r-plus"], Enabled = true },
             },
             CanonicalModels = new List<CanonicalModelConfig>
             {
                 new CanonicalModelConfig { Id = "llama-3.1-70b-versatile", Provider = "groq", ModelPath = "llama-3.1-70b-versatile", Streaming = true, Tools = true },
                 new CanonicalModelConfig { Id = "gpt-4", Provider = "openai", ModelPath = "gpt-4", Streaming = true, Tools = true, Vision = true },
                 new CanonicalModelConfig { Id = "deepseek-chat", Provider = "deepseek", ModelPath = "deepseek-chat", Streaming = true, Tools = false },
-                new CanonicalModelConfig { Id = "command-r-plus", Provider = "cohere", ModelPath = "command-r-plus", Streaming = true, Tools = true }
+                new CanonicalModelConfig { Id = "command-r-plus", Provider = "cohere", ModelPath = "command-r-plus", Streaming = true, Tools = true },
             },
             Aliases = new Dictionary<string, AliasConfig>
             {
                 ["default"] = new AliasConfig { Candidates = ["gpt-4", "llama-3.1-70b-versatile", "deepseek-chat"] },
                 ["fast"] = new AliasConfig { Candidates = ["llama-3.1-70b-versatile", "command-r-plus"] },
                 ["smart"] = new AliasConfig { Candidates = ["gpt-4", "deepseek-chat"] }
-            }
+            },
         };
 
-        _configMock.Setup(x => x.Value).Returns(config);
+        this._configMock.Setup(x => x.Value).Returns(config);
 
-        _resolver = new ModelResolver(_configMock.Object, _registryMock.Object, _storeMock.Object);
-        _router = new SmartRouter(
-            _modelResolverMock.Object,
-            _costServiceMock.Object,
-            _healthStoreMock.Object,
-            _quotaTrackerMock.Object,
-            _loggerMock.Object);
+        this._resolver = new ModelResolver(this._configMock.Object, this._registryMock.Object, this._storeMock.Object);
+        this._router = new SmartRouter(
+            this._modelResolverMock.Object,
+            this._costServiceMock.Object,
+            this._healthStoreMock.Object,
+            this._quotaTrackerMock.Object,
+            this._loggerMock.Object);
     }
 
     #region Provider Routing Tests
@@ -82,11 +82,11 @@ public class RoutingLogicTests
     {
         // Arrange
         var modelId = "gpt-4";
-        _registryMock.Setup(x => x.GetCandidates("gpt-4"))
+        this._registryMock.Setup(x => x.GetCandidates("gpt-4"))
             .Returns([("openai", 1)]);
 
         // Act
-        var result = _resolver.Resolve(modelId);
+        var result = this._resolver.Resolve(modelId);
 
         // Assert
         Assert.Equal(modelId, result.OriginalModelId);
@@ -101,11 +101,11 @@ public class RoutingLogicTests
     {
         // Arrange
         var modelId = "llama-3.1-70b-versatile";
-        _registryMock.Setup(x => x.GetCandidates("llama-3.1-70b-versatile"))
+        this._registryMock.Setup(x => x.GetCandidates("llama-3.1-70b-versatile"))
             .Returns([("groq", 0), ("cohere", 0)]);
 
         // Act
-        var result = _resolver.Resolve(modelId);
+        var result = this._resolver.Resolve(modelId);
 
         // Assert
         Assert.Equal(modelId, result.OriginalModelId);
@@ -120,11 +120,11 @@ public class RoutingLogicTests
     {
         // Arrange
         var modelId = "unknown-model";
-        _registryMock.Setup(x => x.GetCandidates("unknown-model"))
+        this._registryMock.Setup(x => x.GetCandidates("unknown-model"))
             .Returns([]);
 
         // Act
-        var result = _resolver.Resolve(modelId);
+        var result = this._resolver.Resolve(modelId);
 
         // Assert
         Assert.Equal(modelId, result.OriginalModelId);
@@ -138,11 +138,11 @@ public class RoutingLogicTests
     {
         // Arrange
         var modelId = "*";
-        _registryMock.Setup(x => x.GetCandidates("*"))
+        this._registryMock.Setup(x => x.GetCandidates("*"))
             .Returns([("groq", 0), ("openai", 1), ("deepseek", 2)]);
 
         // Act
-        var result = _resolver.Resolve(modelId);
+        var result = this._resolver.Resolve(modelId);
 
         // Assert
         Assert.Equal(modelId, result.OriginalModelId);
@@ -154,11 +154,11 @@ public class RoutingLogicTests
     {
         // Arrange
         var modelId = "gpt-4";
-        _registryMock.Setup(x => x.GetCandidates("gpt-4"))
+        this._registryMock.Setup(x => x.GetCandidates("gpt-4"))
             .Returns([("openai", 1), ("disabled-provider", 2)]);
 
         // Act
-        var result = _resolver.Resolve(modelId);
+        var result = this._resolver.Resolve(modelId);
 
         // Assert
         Assert.Single(result.Candidates);
@@ -183,20 +183,20 @@ public class RoutingLogicTests
             new List<ProviderConfig>
             {
                 new ProviderConfig { Key = tier0Provider, Tier = 0 },
-                new ProviderConfig { Key = tier1Provider, Tier = 1 }
+                new ProviderConfig { Key = tier1Provider, Tier = 1 },
             });
 
-        _modelResolverMock.Setup(x => x.ResolveAsync(modelId, EndpointKind.ChatCompletions, It.IsAny<RequiredCapabilities>(), default))
+        this._modelResolverMock.Setup(x => x.ResolveAsync(modelId, EndpointKind.ChatCompletions, It.IsAny<RequiredCapabilities>(), default))
             .ReturnsAsync(resolution);
 
-        _healthStoreMock.Setup(x => x.IsHealthyAsync(tier0Provider, default)).ReturnsAsync(true);
-        _healthStoreMock.Setup(x => x.IsHealthyAsync(tier1Provider, default)).ReturnsAsync(true);
-        _quotaTrackerMock.Setup(x => x.CheckQuotaAsync(It.IsAny<string>(), default)).ReturnsAsync(true);
-        _costServiceMock.Setup(x => x.GetCostAsync(It.IsAny<string>(), It.IsAny<string>(), default))
+        this._healthStoreMock.Setup(x => x.IsHealthyAsync(tier0Provider, default)).ReturnsAsync(true);
+        this._healthStoreMock.Setup(x => x.IsHealthyAsync(tier1Provider, default)).ReturnsAsync(true);
+        this._quotaTrackerMock.Setup(x => x.CheckQuotaAsync(It.IsAny<string>(), default)).ReturnsAsync(true);
+        this._costServiceMock.Setup(x => x.GetCostAsync(It.IsAny<string>(), It.IsAny<string>(), default))
             .ReturnsAsync(new ModelCost { CostPerToken = 0.01m });
 
         // Act
-        var result = await _router.GetCandidatesAsync(modelId, false);
+        var result = await this._router.GetCandidatesAsync(modelId, false);
 
         // Assert
         Assert.Equal(2, result.Count);
@@ -218,20 +218,20 @@ public class RoutingLogicTests
             new List<ProviderConfig>
             {
                 new ProviderConfig { Key = tier0Provider, Tier = 0 },
-                new ProviderConfig { Key = tier1Provider, Tier = 1 }
+                new ProviderConfig { Key = tier1Provider, Tier = 1 },
             });
 
-        _modelResolverMock.Setup(x => x.ResolveAsync(modelId, EndpointKind.ChatCompletions, It.IsAny<RequiredCapabilities>(), default))
+        this._modelResolverMock.Setup(x => x.ResolveAsync(modelId, EndpointKind.ChatCompletions, It.IsAny<RequiredCapabilities>(), default))
             .ReturnsAsync(resolution);
 
-        _healthStoreMock.Setup(x => x.IsHealthyAsync(tier0Provider, default)).ReturnsAsync(false);
-        _healthStoreMock.Setup(x => x.IsHealthyAsync(tier1Provider, default)).ReturnsAsync(true);
-        _quotaTrackerMock.Setup(x => x.CheckQuotaAsync(It.IsAny<string>(), default)).ReturnsAsync(true);
-        _costServiceMock.Setup(x => x.GetCostAsync(It.IsAny<string>(), It.IsAny<string>(), default))
+        this._healthStoreMock.Setup(x => x.IsHealthyAsync(tier0Provider, default)).ReturnsAsync(false);
+        this._healthStoreMock.Setup(x => x.IsHealthyAsync(tier1Provider, default)).ReturnsAsync(true);
+        this._quotaTrackerMock.Setup(x => x.CheckQuotaAsync(It.IsAny<string>(), default)).ReturnsAsync(true);
+        this._costServiceMock.Setup(x => x.GetCostAsync(It.IsAny<string>(), It.IsAny<string>(), default))
             .ReturnsAsync(new ModelCost { CostPerToken = 0.01m });
 
         // Act
-        var result = await _router.GetCandidatesAsync(modelId, false);
+        var result = await this._router.GetCandidatesAsync(modelId, false);
 
         // Assert
         Assert.Single(result);
@@ -252,20 +252,20 @@ public class RoutingLogicTests
             new List<ProviderConfig>
             {
                 new ProviderConfig { Key = tier0Provider, Tier = 0 },
-                new ProviderConfig { Key = tier1Provider, Tier = 1 }
+                new ProviderConfig { Key = tier1Provider, Tier = 1 },
             });
 
-        _modelResolverMock.Setup(x => x.ResolveAsync(modelId, EndpointKind.ChatCompletions, It.IsAny<RequiredCapabilities>(), default))
+        this._modelResolverMock.Setup(x => x.ResolveAsync(modelId, EndpointKind.ChatCompletions, It.IsAny<RequiredCapabilities>(), default))
             .ReturnsAsync(resolution);
 
-        _healthStoreMock.Setup(x => x.IsHealthyAsync(It.IsAny<string>(), default)).ReturnsAsync(true);
-        _quotaTrackerMock.Setup(x => x.CheckQuotaAsync(tier0Provider, default)).ReturnsAsync(false);
-        _quotaTrackerMock.Setup(x => x.CheckQuotaAsync(tier1Provider, default)).ReturnsAsync(true);
-        _costServiceMock.Setup(x => x.GetCostAsync(It.IsAny<string>(), It.IsAny<string>(), default))
+        this._healthStoreMock.Setup(x => x.IsHealthyAsync(It.IsAny<string>(), default)).ReturnsAsync(true);
+        this._quotaTrackerMock.Setup(x => x.CheckQuotaAsync(tier0Provider, default)).ReturnsAsync(false);
+        this._quotaTrackerMock.Setup(x => x.CheckQuotaAsync(tier1Provider, default)).ReturnsAsync(true);
+        this._costServiceMock.Setup(x => x.GetCostAsync(It.IsAny<string>(), It.IsAny<string>(), default))
             .ReturnsAsync(new ModelCost { CostPerToken = 0.01m });
 
         // Act
-        var result = await _router.GetCandidatesAsync(modelId, false);
+        var result = await this._router.GetCandidatesAsync(modelId, false);
 
         // Assert
         Assert.Single(result);
@@ -286,17 +286,17 @@ public class RoutingLogicTests
             new List<ProviderConfig>
             {
                 new ProviderConfig { Key = tier0Provider, Tier = 0 },
-                new ProviderConfig { Key = tier1Provider, Tier = 1 }
+                new ProviderConfig { Key = tier1Provider, Tier = 1 },
             });
 
-        _modelResolverMock.Setup(x => x.ResolveAsync(modelId, EndpointKind.ChatCompletions, It.IsAny<RequiredCapabilities>(), default))
+        this._modelResolverMock.Setup(x => x.ResolveAsync(modelId, EndpointKind.ChatCompletions, It.IsAny<RequiredCapabilities>(), default))
             .ReturnsAsync(resolution);
 
-        _healthStoreMock.Setup(x => x.IsHealthyAsync(It.IsAny<string>(), default)).ReturnsAsync(false);
-        _quotaTrackerMock.Setup(x => x.CheckQuotaAsync(It.IsAny<string>(), default)).ReturnsAsync(true);
+        this._healthStoreMock.Setup(x => x.IsHealthyAsync(It.IsAny<string>(), default)).ReturnsAsync(false);
+        this._quotaTrackerMock.Setup(x => x.CheckQuotaAsync(It.IsAny<string>(), default)).ReturnsAsync(true);
 
         // Act
-        var result = await _router.GetCandidatesAsync(modelId, false);
+        var result = await this._router.GetCandidatesAsync(modelId, false);
 
         // Assert
         Assert.Empty(result);
@@ -316,21 +316,21 @@ public class RoutingLogicTests
             new List<ProviderConfig>
             {
                 new ProviderConfig { Key = expensiveProvider, Tier = 1 },
-                new ProviderConfig { Key = cheapProvider, Tier = 1 }
+                new ProviderConfig { Key = cheapProvider, Tier = 1 },
             });
 
-        _modelResolverMock.Setup(x => x.ResolveAsync(modelId, EndpointKind.ChatCompletions, It.IsAny<RequiredCapabilities>(), default))
+        this._modelResolverMock.Setup(x => x.ResolveAsync(modelId, EndpointKind.ChatCompletions, It.IsAny<RequiredCapabilities>(), default))
             .ReturnsAsync(resolution);
 
-        _healthStoreMock.Setup(x => x.IsHealthyAsync(It.IsAny<string>(), default)).ReturnsAsync(true);
-        _quotaTrackerMock.Setup(x => x.CheckQuotaAsync(It.IsAny<string>(), default)).ReturnsAsync(true);
-        _costServiceMock.Setup(x => x.GetCostAsync(expensiveProvider, It.IsAny<string>(), default))
+        this._healthStoreMock.Setup(x => x.IsHealthyAsync(It.IsAny<string>(), default)).ReturnsAsync(true);
+        this._quotaTrackerMock.Setup(x => x.CheckQuotaAsync(It.IsAny<string>(), default)).ReturnsAsync(true);
+        this._costServiceMock.Setup(x => x.GetCostAsync(expensiveProvider, It.IsAny<string>(), default))
             .ReturnsAsync(new ModelCost { CostPerToken = 0.02m });
-        _costServiceMock.Setup(x => x.GetCostAsync(cheapProvider, It.IsAny<string>(), default))
+        this._costServiceMock.Setup(x => x.GetCostAsync(cheapProvider, It.IsAny<string>(), default))
             .ReturnsAsync(new ModelCost { CostPerToken = 0.01m });
 
         // Act
-        var result = await _router.GetCandidatesAsync(modelId, false);
+        var result = await this._router.GetCandidatesAsync(modelId, false);
 
         // Assert
         Assert.Equal(2, result.Count);
@@ -347,11 +347,11 @@ public class RoutingLogicTests
     {
         // Arrange
         var modelId = "gpt-4";
-        _registryMock.Setup(x => x.GetCandidates("gpt-4"))
+        this._registryMock.Setup(x => x.GetCandidates("gpt-4"))
             .Returns([("openai", 1)]);
 
         // Act
-        var result = _resolver.Resolve(modelId);
+        var result = this._resolver.Resolve(modelId);
 
         // Assert
         Assert.Equal("openai", result.CanonicalId.Provider);
@@ -364,11 +364,11 @@ public class RoutingLogicTests
     {
         // Arrange
         var modelId = "openai/gpt-4";
-        _registryMock.Setup(x => x.GetCandidates("gpt-4"))
+        this._registryMock.Setup(x => x.GetCandidates("gpt-4"))
             .Returns([("openai", 1)]);
 
         // Act
-        var result = _resolver.Resolve(modelId);
+        var result = this._resolver.Resolve(modelId);
 
         // Assert
         Assert.Equal("openai", result.CanonicalId.Provider);
@@ -380,11 +380,11 @@ public class RoutingLogicTests
     {
         // Arrange
         var modelId = "@cf/meta/llama-2-7b-chat-int8";
-        _registryMock.Setup(x => x.GetCandidates("@cf/meta/llama-2-7b-chat-int8"))
+        this._registryMock.Setup(x => x.GetCandidates("@cf/meta/llama-2-7b-chat-int8"))
             .Returns([("cloudflare", 0)]);
 
         // Act
-        var result = _resolver.Resolve(modelId);
+        var result = this._resolver.Resolve(modelId);
 
         // Assert
         Assert.Equal("unknown", result.CanonicalId.Provider);
@@ -396,15 +396,15 @@ public class RoutingLogicTests
     {
         // Arrange
         var modelId = "meta/llama-2-7b-chat-int8";
-        _registryMock.Setup(x => x.GetCandidates("meta/llama-2-7b-chat-int8"))
+        this._registryMock.Setup(x => x.GetCandidates("meta/llama-2-7b-chat-int8"))
             .Returns([]);
 
         // Fallback to raw string
-        _registryMock.Setup(x => x.GetCandidates(modelId))
+        this._registryMock.Setup(x => x.GetCandidates(modelId))
             .Returns([("cloudflare", 0)]);
 
         // Act
-        var result = _resolver.Resolve(modelId);
+        var result = this._resolver.Resolve(modelId);
 
         // Assert
         Assert.Equal("meta", result.CanonicalId.Provider);
@@ -417,11 +417,11 @@ public class RoutingLogicTests
         // Arrange
         var modelId = "gpt-4";
         var required = new RequiredCapabilities { Streaming = true };
-        _registryMock.Setup(x => x.GetCandidates("gpt-4"))
+        this._registryMock.Setup(x => x.GetCandidates("gpt-4"))
             .Returns([("openai", 1)]);
 
         // Act
-        var result = _resolver.Resolve(modelId, required);
+        var result = this._resolver.Resolve(modelId, required);
 
         // Assert
         Assert.Single(result.Candidates);
@@ -433,11 +433,11 @@ public class RoutingLogicTests
         // Arrange
         var modelId = "deepseek-chat";
         var required = new RequiredCapabilities { Tools = true };
-        _registryMock.Setup(x => x.GetCandidates("deepseek-chat"))
+        this._registryMock.Setup(x => x.GetCandidates("deepseek-chat"))
             .Returns([("deepseek", 2)]);
 
         // Act
-        var result = _resolver.Resolve(modelId, required);
+        var result = this._resolver.Resolve(modelId, required);
 
         // Assert
         Assert.Empty(result.Candidates); // deepseek-chat doesn't support tools
@@ -449,11 +449,11 @@ public class RoutingLogicTests
         // Arrange
         var modelId = "gpt-4";
         var required = new RequiredCapabilities { Vision = true };
-        _registryMock.Setup(x => x.GetCandidates("gpt-4"))
+        this._registryMock.Setup(x => x.GetCandidates("gpt-4"))
             .Returns([("openai", 1)]);
 
         // Act
-        var result = _resolver.Resolve(modelId, required);
+        var result = this._resolver.Resolve(modelId, required);
 
         // Assert
         Assert.Single(result.Candidates); // gpt-4 supports vision
@@ -465,11 +465,11 @@ public class RoutingLogicTests
         // Arrange
         var modelId = "gpt-4";
         var required = new RequiredCapabilities { Streaming = true, Tools = true, Vision = true };
-        _registryMock.Setup(x => x.GetCandidates("gpt-4"))
+        this._registryMock.Setup(x => x.GetCandidates("gpt-4"))
             .Returns([("openai", 1)]);
 
         // Act
-        var result = _resolver.Resolve(modelId, required);
+        var result = this._resolver.Resolve(modelId, required);
 
         // Assert
         Assert.Single(result.Candidates);
@@ -481,11 +481,11 @@ public class RoutingLogicTests
         // Arrange
         var modelId = "deepseek-chat";
         var required = new RequiredCapabilities { Tools = true, Vision = true };
-        _registryMock.Setup(x => x.GetCandidates("deepseek-chat"))
+        this._registryMock.Setup(x => x.GetCandidates("deepseek-chat"))
             .Returns([("deepseek", 2)]);
 
         // Act
-        var result = _resolver.Resolve(modelId, required);
+        var result = this._resolver.Resolve(modelId, required);
 
         // Assert
         Assert.Empty(result.Candidates);
@@ -500,11 +500,11 @@ public class RoutingLogicTests
     {
         // Arrange
         var aliasId = "default";
-        _registryMock.Setup(x => x.GetCandidates("gpt-4"))
+        this._registryMock.Setup(x => x.GetCandidates("gpt-4"))
             .Returns([("openai", 1)]);
 
         // Act
-        var result = _resolver.Resolve(aliasId);
+        var result = this._resolver.Resolve(aliasId);
 
         // Assert
         Assert.Equal(aliasId, result.OriginalModelId);
@@ -518,13 +518,13 @@ public class RoutingLogicTests
     {
         // Arrange
         var aliasId = "default";
-        _registryMock.Setup(x => x.GetCandidates("gpt-4"))
+        this._registryMock.Setup(x => x.GetCandidates("gpt-4"))
             .Returns([]); // First candidate unavailable
-        _registryMock.Setup(x => x.GetCandidates("llama-3.1-70b-versatile"))
+        this._registryMock.Setup(x => x.GetCandidates("llama-3.1-70b-versatile"))
             .Returns([("groq", 0)]); // Second candidate available
 
         // Act
-        var result = _resolver.Resolve(aliasId);
+        var result = this._resolver.Resolve(aliasId);
 
         // Assert
         Assert.Equal(aliasId, result.OriginalModelId);
@@ -538,15 +538,15 @@ public class RoutingLogicTests
     {
         // Arrange
         var aliasId = "default";
-        _registryMock.Setup(x => x.GetCandidates("gpt-4"))
+        this._registryMock.Setup(x => x.GetCandidates("gpt-4"))
             .Returns([]);
-        _registryMock.Setup(x => x.GetCandidates("llama-3.1-70b-versatile"))
+        this._registryMock.Setup(x => x.GetCandidates("llama-3.1-70b-versatile"))
             .Returns([]);
-        _registryMock.Setup(x => x.GetCandidates("deepseek-chat"))
+        this._registryMock.Setup(x => x.GetCandidates("deepseek-chat"))
             .Returns([]);
 
         // Act
-        var result = _resolver.Resolve(aliasId);
+        var result = this._resolver.Resolve(aliasId);
 
         // Assert
         Assert.Equal(aliasId, result.OriginalModelId);
@@ -558,11 +558,11 @@ public class RoutingLogicTests
     {
         // Arrange
         var aliasId = "fast";
-        _registryMock.Setup(x => x.GetCandidates("llama-3.1-70b-versatile"))
+        this._registryMock.Setup(x => x.GetCandidates("llama-3.1-70b-versatile"))
             .Returns([("groq", 0)]);
 
         // Act
-        var result = _resolver.Resolve(aliasId);
+        var result = this._resolver.Resolve(aliasId);
 
         // Assert
         Assert.Equal(aliasId, result.OriginalModelId);
@@ -575,11 +575,11 @@ public class RoutingLogicTests
     {
         // Arrange
         var aliasId = "unknown-alias";
-        _registryMock.Setup(x => x.GetCandidates("unknown-alias"))
+        this._registryMock.Setup(x => x.GetCandidates("unknown-alias"))
             .Returns([]);
 
         // Act
-        var result = _resolver.Resolve(aliasId);
+        var result = this._resolver.Resolve(aliasId);
 
         // Assert
         Assert.Equal(aliasId, result.OriginalModelId);
@@ -593,11 +593,11 @@ public class RoutingLogicTests
     {
         // Arrange
         var aliasId = "";
-        _registryMock.Setup(x => x.GetCandidates(""))
+        this._registryMock.Setup(x => x.GetCandidates(""))
             .Returns([]);
 
         // Act
-        var result = _resolver.Resolve(aliasId);
+        var result = this._resolver.Resolve(aliasId);
 
         // Assert
         Assert.Equal(aliasId, result.OriginalModelId);
@@ -612,15 +612,15 @@ public class RoutingLogicTests
         var tenantId = Guid.NewGuid();
         var alias = new ModelAlias { TargetModel = "gpt-4" };
 
-        _storeMock.Setup(x => x.GetGlobalModelAsync(aliasId))
+        this._storeMock.Setup(x => x.GetGlobalModelAsync(aliasId))
             .ReturnsAsync((GlobalModel?)null);
-        _storeMock.Setup(x => x.GetAliasAsync(tenantId, aliasId))
+        this._storeMock.Setup(x => x.GetAliasAsync(tenantId, aliasId))
             .ReturnsAsync(alias);
-        _registryMock.Setup(x => x.GetCandidates("gpt-4"))
+        this._registryMock.Setup(x => x.GetCandidates("gpt-4"))
             .Returns([("openai", 1)]);
 
         // Act
-        var result = await _resolver.ResolveAsync(aliasId, EndpointKind.ChatCompletions, tenantId: tenantId);
+        var result = await this._resolver.ResolveAsync(aliasId, EndpointKind.ChatCompletions, tenantId: tenantId);
 
         // Assert
         Assert.Equal(aliasId, result.OriginalModelId);
@@ -637,15 +637,15 @@ public class RoutingLogicTests
         var tenantId = Guid.NewGuid();
         var combo = new ModelCombo { OrderedModelsJson = "[\"gpt-4\", \"llama-3.1-70b-versatile\"]" };
 
-        _storeMock.Setup(x => x.GetGlobalModelAsync(comboId))
+        this._storeMock.Setup(x => x.GetGlobalModelAsync(comboId))
             .ReturnsAsync((GlobalModel?)null);
-        _storeMock.Setup(x => x.GetComboAsync(tenantId, comboId))
+        this._storeMock.Setup(x => x.GetComboAsync(tenantId, comboId))
             .ReturnsAsync(combo);
-        _registryMock.Setup(x => x.GetCandidates("gpt-4"))
+        this._registryMock.Setup(x => x.GetCandidates("gpt-4"))
             .Returns([("openai", 1)]);
 
         // Act
-        var result = await _resolver.ResolveAsync(comboId, EndpointKind.ChatCompletions, tenantId: tenantId);
+        var result = await this._resolver.ResolveAsync(comboId, EndpointKind.ChatCompletions, tenantId: tenantId);
 
         // Assert
         Assert.Equal(comboId, result.OriginalModelId);
@@ -662,13 +662,13 @@ public class RoutingLogicTests
         var tenantId = Guid.NewGuid();
         var combo = new ModelCombo { OrderedModelsJson = "invalid-json" };
 
-        _storeMock.Setup(x => x.GetGlobalModelAsync(comboId))
+        this._storeMock.Setup(x => x.GetGlobalModelAsync(comboId))
             .ReturnsAsync((GlobalModel?)null);
-        _storeMock.Setup(x => x.GetComboAsync(tenantId, comboId))
+        this._storeMock.Setup(x => x.GetComboAsync(tenantId, comboId))
             .ReturnsAsync(combo);
 
         // Act
-        var result = await _resolver.ResolveAsync(comboId, EndpointKind.ChatCompletions, tenantId: tenantId);
+        var result = await this._resolver.ResolveAsync(comboId, EndpointKind.ChatCompletions, tenantId: tenantId);
 
         // Assert
         Assert.Equal(comboId, result.OriginalModelId);
@@ -688,7 +688,7 @@ public class RoutingLogicTests
         string modelId = null!;
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => _resolver.Resolve(modelId));
+        Assert.Throws<ArgumentNullException>(() => this._resolver.Resolve(modelId));
     }
 
     [Fact]
@@ -696,11 +696,11 @@ public class RoutingLogicTests
     {
         // Arrange
         var modelId = "   ";
-        _registryMock.Setup(x => x.GetCandidates("   "))
+        this._registryMock.Setup(x => x.GetCandidates("   "))
             .Returns([]);
 
         // Act
-        var result = _resolver.Resolve(modelId);
+        var result = this._resolver.Resolve(modelId);
 
         // Assert
         Assert.Equal(modelId, result.OriginalModelId);
@@ -714,7 +714,7 @@ public class RoutingLogicTests
         string modelId = null!;
 
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentNullException>(() => _resolver.ResolveAsync(modelId, EndpointKind.ChatCompletions));
+        await Assert.ThrowsAsync<ArgumentNullException>(() => this._resolver.ResolveAsync(modelId, EndpointKind.ChatCompletions));
     }
 
     [Fact]
@@ -727,11 +727,11 @@ public class RoutingLogicTests
             new CanonicalModelId("canonical", "canonical"),
             new List<ProviderConfig>());
 
-        _modelResolverMock.Setup(x => x.ResolveAsync(modelId!, EndpointKind.ChatCompletions, It.IsAny<RequiredCapabilities>(), default))
+        this._modelResolverMock.Setup(x => x.ResolveAsync(modelId!, EndpointKind.ChatCompletions, It.IsAny<RequiredCapabilities>(), default))
             .ReturnsAsync(resolution);
 
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentException>(() => _router.GetCandidatesAsync(modelId!, false));
+        await Assert.ThrowsAsync<ArgumentException>(() => this._router.GetCandidatesAsync(modelId!, false));
     }
 
     [Fact]

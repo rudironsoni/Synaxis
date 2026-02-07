@@ -37,7 +37,7 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
                     Temperature = (float?)openAIRequest.Temperature,
                     TopP = (float?)openAIRequest.TopP,
                     MaxOutputTokens = openAIRequest.MaxTokens,
-                    StopSequences = MapStopSequences(openAIRequest.Stop)
+                    StopSequences = MapStopSequences(openAIRequest.Stop),
                 });
         }
 
@@ -48,7 +48,10 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
         /// <returns>The chat messages.</returns>
         public static IEnumerable<ChatMessage> ToChatMessages(OpenAIRequest request)
         {
-            if (request.Messages == null) return Enumerable.Empty<ChatMessage>();
+            if (request.Messages == null)
+            {
+                return Enumerable.Empty<ChatMessage>();
+            }
 
             var messages = new List<ChatMessage>();
             foreach (var msg in request.Messages)
@@ -106,7 +109,11 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
 
         private static IList<AITool>? MapTools(IList<OpenAITool>? tools)
         {
-            if (tools == null) return null;
+            if (tools == null)
+            {
+                return null;
+            }
+
             var result = new List<AITool>();
             foreach (var tool in tools)
             {

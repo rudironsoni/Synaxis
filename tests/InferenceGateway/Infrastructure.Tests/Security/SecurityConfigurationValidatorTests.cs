@@ -13,7 +13,7 @@ public class SecurityConfigurationValidatorTests
 
     public SecurityConfigurationValidatorTests()
     {
-        _mockLogger = new Mock<ILogger<SecurityConfigurationValidator>>();
+        this._mockLogger = new Mock<ILogger<SecurityConfigurationValidator>>();
     }
 
     [Fact]
@@ -25,11 +25,11 @@ public class SecurityConfigurationValidatorTests
             {
                 ["Synaxis:InferenceGateway:JwtSecret"] = "ThisIsAVerySecureJwtSecretKey123456789012345",
                 ["Synaxis:InferenceGateway:Providers:Groq:RateLimitRPM"] = "100",
-                ["Synaxis:InferenceGateway:Cors:WebAppOrigins"] = "http://localhost:8080"
+                ["Synaxis:InferenceGateway:Cors:WebAppOrigins"] = "http://localhost:8080",
             })
             .Build();
 
-        var validator = new SecurityConfigurationValidator(configuration, _mockLogger.Object, "Production");
+        var validator = new SecurityConfigurationValidator(configuration, this._mockLogger.Object, "Production");
 
         // Act
         var result = validator.Validate();
@@ -48,7 +48,7 @@ public class SecurityConfigurationValidatorTests
             .AddInMemoryCollection(new Dictionary<string, string?>())
             .Build();
 
-        var validator = new SecurityConfigurationValidator(configuration, _mockLogger.Object, "Production");
+        var validator = new SecurityConfigurationValidator(configuration, this._mockLogger.Object, "Production");
 
         // Act
         var result = validator.Validate();
@@ -66,11 +66,11 @@ public class SecurityConfigurationValidatorTests
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["Synaxis:InferenceGateway:JwtSecret"] = "short"
+                ["Synaxis:InferenceGateway:JwtSecret"] = "short",
             })
             .Build();
 
-        var validator = new SecurityConfigurationValidator(configuration, _mockLogger.Object, "Production");
+        var validator = new SecurityConfigurationValidator(configuration, this._mockLogger.Object, "Production");
 
         // Act
         var result = validator.Validate();
@@ -88,11 +88,11 @@ public class SecurityConfigurationValidatorTests
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["Synaxis:InferenceGateway:JwtSecret"] = "SynaxisDefaultSecretKeyDoNotUseInProd1234567890"
+                ["Synaxis:InferenceGateway:JwtSecret"] = "SynaxisDefaultSecretKeyDoNotUseInProd1234567890",
             })
             .Build();
 
-        var validator = new SecurityConfigurationValidator(configuration, _mockLogger.Object, "Development");
+        var validator = new SecurityConfigurationValidator(configuration, this._mockLogger.Object, "Development");
 
         // Act
         var result = validator.Validate();
@@ -110,11 +110,11 @@ public class SecurityConfigurationValidatorTests
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["Synaxis:InferenceGateway:JwtSecret"] = "SynaxisDefaultSecretKeyDoNotUseInProd1234567890"
+                ["Synaxis:InferenceGateway:JwtSecret"] = "SynaxisDefaultSecretKeyDoNotUseInProd1234567890",
             })
             .Build();
 
-        var validator = new SecurityConfigurationValidator(configuration, _mockLogger.Object, "Production");
+        var validator = new SecurityConfigurationValidator(configuration, this._mockLogger.Object, "Production");
 
         // Act
         var result = validator.Validate();
@@ -132,11 +132,11 @@ public class SecurityConfigurationValidatorTests
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["Synaxis:InferenceGateway:JwtSecret"] = "mypassword123456789012345678901234"
+                ["Synaxis:InferenceGateway:JwtSecret"] = "mypassword123456789012345678901234",
             })
             .Build();
 
-        var validator = new SecurityConfigurationValidator(configuration, _mockLogger.Object, "Production");
+        var validator = new SecurityConfigurationValidator(configuration, this._mockLogger.Object, "Production");
 
         // Act
         var result = validator.Validate();
@@ -155,11 +155,11 @@ public class SecurityConfigurationValidatorTests
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Synaxis:InferenceGateway:JwtSecret"] = "ThisIsAVerySecureJwtSecretKey123456789012345",
-                ["Synaxis:InferenceGateway:Providers:Groq:Enabled"] = "true"
+                ["Synaxis:InferenceGateway:Providers:Groq:Enabled"] = "true",
             })
             .Build();
 
-        var validator = new SecurityConfigurationValidator(configuration, _mockLogger.Object, "Production");
+        var validator = new SecurityConfigurationValidator(configuration, this._mockLogger.Object, "Production");
 
         // Act
         var result = validator.Validate();
@@ -178,11 +178,11 @@ public class SecurityConfigurationValidatorTests
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Synaxis:InferenceGateway:JwtSecret"] = "ThisIsAVerySecureJwtSecretKey123456789012345",
-                ["Synaxis:InferenceGateway:Cors:PublicOrigins"] = "*"
+                ["Synaxis:InferenceGateway:Cors:PublicOrigins"] = "*",
             })
             .Build();
 
-        var validator = new SecurityConfigurationValidator(configuration, _mockLogger.Object, "Production");
+        var validator = new SecurityConfigurationValidator(configuration, this._mockLogger.Object, "Production");
 
         // Act
         var result = validator.Validate();
@@ -201,11 +201,11 @@ public class SecurityConfigurationValidatorTests
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Synaxis:InferenceGateway:JwtSecret"] = "short",
-                ["Synaxis:InferenceGateway:Cors:PublicOrigins"] = "*"
+                ["Synaxis:InferenceGateway:Cors:PublicOrigins"] = "*",
             })
             .Build();
 
-        var validator = new SecurityConfigurationValidator(configuration, _mockLogger.Object, "Production");
+        var validator = new SecurityConfigurationValidator(configuration, this._mockLogger.Object, "Production");
 
         // Act
         var result = validator.Validate();
@@ -227,11 +227,11 @@ public class SecurityConfigurationValidatorTests
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["Synaxis:InferenceGateway:JwtSecret"] = weakSecret
+                ["Synaxis:InferenceGateway:JwtSecret"] = weakSecret,
             })
             .Build();
 
-        var validator = new SecurityConfigurationValidator(configuration, _mockLogger.Object, "Production");
+        var validator = new SecurityConfigurationValidator(configuration, this._mockLogger.Object, "Production");
 
         // Act
         var result = validator.Validate();

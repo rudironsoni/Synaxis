@@ -56,7 +56,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                 Limit = limit,
                 ResetAfter = resetAfter,
                 Remaining = Math.Max(0, limit - current),
-                LimitType = limitType
+                LimitType = limitType,
             };
         }
 
@@ -73,7 +73,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                 ResetAfter = resetAfter,
                 Remaining = 0,
                 LimitedBy = limitedBy,
-                LimitType = limitType
+                LimitType = limitType,
             };
         }
 
@@ -84,19 +84,19 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
         {
             var headers = new Dictionary<string, string>
             {
-                ["X-RateLimit-Limit"] = Limit.ToString(),
-                ["X-RateLimit-Remaining"] = Remaining.ToString(),
-                ["X-RateLimit-Reset"] = DateTimeOffset.UtcNow.AddSeconds(ResetAfter).ToUnixTimeSeconds().ToString()
+                ["X-RateLimit-Limit"] = this.Limit.ToString(),
+                ["X-RateLimit-Remaining"] = this.Remaining.ToString(),
+                ["X-RateLimit-Reset"] = DateTimeOffset.UtcNow.AddSeconds(this.ResetAfter).ToUnixTimeSeconds().ToString(),
             };
 
-            if (!string.IsNullOrEmpty(LimitedBy))
+            if (!string.IsNullOrEmpty(this.LimitedBy))
             {
-                headers["X-RateLimit-Limited-By"] = LimitedBy;
+                headers["X-RateLimit-Limited-By"] = this.LimitedBy;
             }
 
-            if (!string.IsNullOrEmpty(LimitType))
+            if (!string.IsNullOrEmpty(this.LimitType))
             {
-                headers["X-RateLimit-Type"] = LimitType;
+                headers["X-RateLimit-Type"] = this.LimitType;
             }
 
             return headers;

@@ -18,7 +18,7 @@ public class ControlPlaneStoreTests
             Id = Guid.NewGuid(),
             TenantId = tenantId,
             Alias = "my-alias",
-            TargetModel = "gpt-4"
+            TargetModel = "gpt-4",
         };
 
         await dbContext.ModelAliases.AddAsync(alias);
@@ -56,7 +56,7 @@ public class ControlPlaneStoreTests
             Id = Guid.NewGuid(),
             TenantId = tenantId,
             Name = "my-combo",
-            OrderedModelsJson = "[\"gpt-4\", \"gpt-3.5-turbo\"]"
+            OrderedModelsJson = "[\"gpt-4\", \"gpt-3.5-turbo\"]",
         };
 
         await dbContext.ModelCombos.AddAsync(combo);
@@ -103,7 +103,7 @@ public class ControlPlaneStoreTests
             SupportsReasoning = true,
             SupportsVision = true,
             SupportsAudio = false,
-            SupportsStructuredOutput = true
+            SupportsStructuredOutput = true,
         };
 
         var providerModel1 = new ProviderModel
@@ -116,7 +116,7 @@ public class ControlPlaneStoreTests
             OverrideInputPrice = null,
             OverrideOutputPrice = null,
             RateLimitRPM = 3500,
-            RateLimitTPM = 90000
+            RateLimitTPM = 90000,
         };
 
         var providerModel2 = new ProviderModel
@@ -129,7 +129,7 @@ public class ControlPlaneStoreTests
             OverrideInputPrice = 0.02m,
             OverrideOutputPrice = 0.04m,
             RateLimitRPM = 200,
-            RateLimitTPM = 40000
+            RateLimitTPM = 40000,
         };
 
         globalModel.ProviderModels = new List<ProviderModel> { providerModel1, providerModel2 };
@@ -174,7 +174,7 @@ public class ControlPlaneStoreTests
             Id = Guid.NewGuid(),
             TenantId = tenantId,
             Alias = "perf-test-alias",
-            TargetModel = "llama-2"
+            TargetModel = "llama-2",
         };
 
         await dbContextForSeeding.ModelAliases.AddAsync(alias);
@@ -211,7 +211,7 @@ public class ControlPlaneStoreTests
             SupportsReasoning = false,
             SupportsVision = false,
             SupportsAudio = false,
-            SupportsStructuredOutput = false
+            SupportsStructuredOutput = false,
         };
 
         var providerModel = new ProviderModel
@@ -222,7 +222,7 @@ public class ControlPlaneStoreTests
             ProviderSpecificId = "llama-3.3-70b-versatile",
             IsAvailable = true,
             RateLimitRPM = 3000,
-            RateLimitTPM = 600000
+            RateLimitTPM = 600000,
         };
 
         globalModel.ProviderModels = new List<ProviderModel> { providerModel };

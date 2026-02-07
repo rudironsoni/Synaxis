@@ -34,9 +34,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
         public async Task Execute(IJobExecutionContext context)
         {
             var correlationId = Guid.NewGuid().ToString("N")[..8];
-            _logger.LogInformation("[SecurityAudit][{CorrelationId}] Starting security audit", correlationId);
+            this._logger.LogInformation("[SecurityAudit][{CorrelationId}] Starting security audit", correlationId);
 
-            using var scope = _serviceProvider.CreateScope();
+            using var scope = this._serviceProvider.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
             var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
             var alertTool = scope.ServiceProvider.GetRequiredService<IAlertTool>();
@@ -57,7 +57,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                             Severity = AlertSeverity.Critical,
                             Category = "Configuration",
                             Description = "JWT secret is too short (< 32 characters)",
-                            Recommendation = "Use a longer, cryptographically random secret"
+                            Recommendation = "Use a longer, cryptographically random secret",
                         });
                     }
 
@@ -69,7 +69,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                             Severity = AlertSeverity.Critical,
                             Category = "Configuration",
                             Description = "JWT secret appears to be a default or weak value",
-                            Recommendation = "Generate a strong, unique JWT secret"
+                            Recommendation = "Generate a strong, unique JWT secret",
                         });
                     }
                 }
@@ -87,7 +87,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                         Severity = AlertSeverity.Warning,
                         Category = "AccessControl",
                         Description = $"{inactiveKeys} API keys have not been used in 90+ days",
-                        Recommendation = "Review and revoke unused API keys"
+                        Recommendation = "Review and revoke unused API keys",
                     });
                 }
 
@@ -107,7 +107,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                         Severity = AlertSeverity.Warning,
                         Category = "AccessControl",
                         Description = $"{failedLogins.Count} users with 5+ failed login attempts in 24h",
-                        Recommendation = "Review suspicious login activity and consider implementing rate limiting"
+                        Recommendation = "Review suspicious login activity and consider implementing rate limiting",
                     });
                 }
 
@@ -123,7 +123,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                         Severity = AlertSeverity.Info,
                         Category = "Configuration",
                         Description = $"{providersWithoutLimits} providers without rate limits configured",
-                        Recommendation = "Configure rate limits for all providers"
+                        Recommendation = "Configure rate limits for all providers",
                     });
                 }
 
@@ -143,7 +143,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                         Severity = AlertSeverity.Info,
                         Category = "Usage",
                         Description = $"{highVolumeUsers.Count} users with 1000+ requests in last hour",
-                        Recommendation = "Review for potential abuse or misconfiguration"
+                        Recommendation = "Review for potential abuse or misconfiguration",
                     });
                 }
 
@@ -159,12 +159,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                         Severity = AlertSeverity.Info,
                         Category = "AccessControl",
                         Description = $"{adminCount} users with admin privileges",
-                        Recommendation = "Follow principle of least privilege"
+                        Recommendation = "Follow principle of least privilege",
                     });
                 }
 
                 // Generate audit report
-                _logger.LogInformation(
+                this._logger.LogInformation(
                     "[SecurityAudit][{CorrelationId}] Completed: Found {Count} issues ({Critical} critical, {Warning} warnings)",
                     correlationId,
                     issues.Count,
@@ -196,22 +196,25 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                 // Log all issues to audit log
                 foreach (var issue in issues)
                 {
-                    _logger.LogWarning(
+                    this._logger.LogWarning(
                         "[SecurityAudit][{CorrelationId}][{Severity}] {Category}: {Description} - {Recommendation}",
                         correlationId, issue.Severity, issue.Category, issue.Description, issue.Recommendation);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "[SecurityAudit][{CorrelationId}] Job failed", correlationId);
+                this._logger.LogError(ex, "[SecurityAudit][{CorrelationId}] Job failed", correlationId);
             }
         }
 
         private class SecurityIssue
         {
             public AlertSeverity Severity { get; set; }
+
             public string Category { get; set; } = string.Empty;
+
             public string Description { get; set; } = string.Empty;
+
             public string Recommendation { get; set; } = string.Empty;
         }
 

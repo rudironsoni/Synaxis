@@ -36,29 +36,29 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
         {
             var result = new SecurityValidationResult();
 
-            ValidateJwtSecret(result);
-            ValidateRateLimiting(result);
-            ValidateCorsOrigins(result);
-            ValidateSecurityHeaders(result);
+            this.ValidateJwtSecret(result);
+            this.ValidateRateLimiting(result);
+            this.ValidateCorsOrigins(result);
+            this.ValidateSecurityHeaders(result);
 
             if (result.HasErrors)
             {
-                _logger.LogError("Security configuration validation failed with {ErrorCount} errors", result.Errors.Count);
+                this._logger.LogError("Security configuration validation failed with {ErrorCount} errors", result.Errors.Count);
                 foreach (var error in result.Errors)
                 {
-                    _logger.LogError("Security Error: {Error}", error);
+                    this._logger.LogError("Security Error: {Error}", error);
                 }
             }
             else
             {
-                _logger.LogInformation("Security configuration validation passed successfully");
+                this._logger.LogInformation("Security configuration validation passed successfully");
             }
 
             if (result.HasWarnings)
             {
                 foreach (var warning in result.Warnings)
                 {
-                    _logger.LogWarning("Security Warning: {Warning}", warning);
+                    this._logger.LogWarning("Security Warning: {Warning}", warning);
                 }
             }
 
@@ -68,7 +68,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
         private void ValidateJwtSecret(SecurityValidationResult result)
         {
             const string defaultSecret = "SynaxisDefaultSecretKeyDoNotUseInProd1234567890";
-            var jwtSecret = _configuration["Synaxis:InferenceGateway:JwtSecret"];
+            var jwtSecret = this._configuration["Synaxis:InferenceGateway:JwtSecret"];
 
             if (string.IsNullOrWhiteSpace(jwtSecret))
             {
@@ -83,7 +83,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
 
             if (jwtSecret == defaultSecret)
             {
-                if (_isDevelopment)
+                if (this._isDevelopment)
                 {
                     result.AddWarning("Default JWT secret detected. This is only acceptable in development.");
                 }
@@ -103,7 +103,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
 
         private void ValidateRateLimiting(SecurityValidationResult result)
         {
-            var providersConfig = _configuration.GetSection("Synaxis:InferenceGateway:Providers");
+            var providersConfig = this._configuration.GetSection("Synaxis:InferenceGateway:Providers");
             var providers = providersConfig.GetChildren();
 
             var hasRateLimits = false;
@@ -119,7 +119,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
                 }
             }
 
-            if (!hasRateLimits && !_isDevelopment)
+            if (!hasRateLimits && !this._isDevelopment)
             {
                 result.AddWarning("No rate limiting configured for any provider. Consider setting RateLimitRPM/RateLimitTPM values.");
             }
@@ -127,12 +127,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
 
         private void ValidateCorsOrigins(SecurityValidationResult result)
         {
-            var webAppOrigins = _configuration["Synaxis:InferenceGateway:Cors:WebAppOrigins"];
-            var publicOrigins = _configuration["Synaxis:InferenceGateway:Cors:PublicOrigins"];
+            var webAppOrigins = this._configuration["Synaxis:InferenceGateway:Cors:WebAppOrigins"];
+            var publicOrigins = this._configuration["Synaxis:InferenceGateway:Cors:PublicOrigins"];
 
             if (string.IsNullOrWhiteSpace(webAppOrigins) && string.IsNullOrWhiteSpace(publicOrigins))
             {
-                if (_isDevelopment)
+                if (this._isDevelopment)
                 {
                     result.AddWarning("CORS origins not configured. Using development defaults.");
                 }
@@ -143,7 +143,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
             }
 
             // Check for wildcard in production
-            if (!_isDevelopment && (publicOrigins?.Contains("*") == true || webAppOrigins?.Contains("*") == true))
+            if (!this._isDevelopment && (publicOrigins?.Contains("*") == true || webAppOrigins?.Contains("*") == true))
             {
                 result.AddError("Wildcard (*) CORS origin detected in non-development environment. This is a security risk.");
             }
@@ -153,7 +153,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
         {
             // This is validated by the middleware itself, but we can check configuration if needed
             // For now, we'll just log that security headers will be enforced
-            _logger.LogDebug("Security headers enforcement will be handled by SecurityHeadersMiddleware");
+            this._logger.LogDebug("Security headers enforcement will be handled by SecurityHeadersMiddleware");
         }
     }
 
@@ -162,14 +162,18 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
     /// </summary>
     public class SecurityValidationResult
     {
-        public List<string> Errors { get; } = new ();
-        public List<string> Warnings { get; } = new ();
+        public List<string> Errors { get; } = new();
 
-        public bool HasErrors => Errors.Count > 0;
-        public bool HasWarnings => Warnings.Count > 0;
-        public bool IsValid => !HasErrors;
+        public List<string> Warnings { get; } = new();
 
-        public void AddError(string error) => Errors.Add(error);
-        public void AddWarning(string warning) => Warnings.Add(warning);
+        public bool HasErrors => this.Errors.Count > 0;
+
+        public bool HasWarnings => this.Warnings.Count > 0;
+
+        public bool IsValid => !this.HasErrors;
+
+        public void AddError(string error) => this.Errors.Add(error);
+
+        public void AddWarning(string warning) => this.Warnings.Add(warning);
     }
 }

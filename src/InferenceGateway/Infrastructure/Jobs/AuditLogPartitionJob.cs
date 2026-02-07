@@ -33,45 +33,45 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
 
         public async Task Execute(IJobExecutionContext context)
         {
-            _logger.LogInformation("Starting AuditLog partition maintenance job");
+            this._logger.LogInformation("Starting AuditLog partition maintenance job");
 
             try
             {
                 // Step 1: Ensure partitions for current and next month exist
-                await EnsurePartitionsAsync(context.CancellationToken);
+                await this.EnsurePartitionsAsync(context.CancellationToken).ConfigureAwait(false);
 
                 // Step 2: Cleanup old partitions beyond retention period
-                await CleanupOldPartitionsAsync(context.CancellationToken);
+                await this.CleanupOldPartitionsAsync(context.CancellationToken).ConfigureAwait(false);
 
-                _logger.LogInformation("AuditLog partition maintenance completed successfully");
+                this._logger.LogInformation("AuditLog partition maintenance completed successfully");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "AuditLog partition maintenance failed");
+                this._logger.LogError(ex, "AuditLog partition maintenance failed");
                 throw new JobExecutionException("Partition maintenance failed", ex, true);
             }
         }
 
         private async Task EnsurePartitionsAsync(CancellationToken cancellationToken)
         {
-            _logger.LogDebug("Ensuring partitions exist for current and next month");
+            this._logger.LogDebug("Ensuring partitions exist for current and next month");
 
             // Create partition for current month
-            var currentMonthResult = await _dbContext.Database
-                .ExecuteSqlRawAsync("SELECT audit.ensure_auditlog_partition(CURRENT_DATE)", cancellationToken);
-            _logger.LogInformation("Ensured partition for current month: {Result}", currentMonthResult);
+            var currentMonthResult = await this._dbContext.Database
+                .ExecuteSqlRawAsync("SELECT audit.ensure_auditlog_partition(CURRENT_DATE)", cancellationToken).ConfigureAwait(false);
+            this._logger.LogInformation("Ensured partition for current month: {Result}", currentMonthResult);
 
             // Create partition for next month (proactive creation)
-            var nextMonthResult = await _dbContext.Database
-                .ExecuteSqlRawAsync("SELECT audit.ensure_auditlog_partition(CURRENT_DATE + INTERVAL '1 month')", cancellationToken);
-            _logger.LogInformation("Ensured partition for next month: {Result}", nextMonthResult);
+            var nextMonthResult = await this._dbContext.Database
+                .ExecuteSqlRawAsync("SELECT audit.ensure_auditlog_partition(CURRENT_DATE + INTERVAL '1 month')", cancellationToken).ConfigureAwait(false);
+            this._logger.LogInformation("Ensured partition for next month: {Result}", nextMonthResult);
         }
 
         private async Task CleanupOldPartitionsAsync(CancellationToken cancellationToken)
         {
-            var retentionDays = _configuration.GetValue<int?>("Synaxis:AuditLogRetentionDays") ?? 90;
+            var retentionDays = this._configuration.GetValue<int?>("Synaxis:AuditLogRetentionDays") ?? 90;
 
-            _logger.LogInformation("Cleaning up partitions older than {RetentionDays} days", retentionDays);
+            this._logger.LogInformation("Cleaning up partitions older than {RetentionDays} days", retentionDays);
 
             // Query for partitions that would be dropped (dry run first for logging)
             var dryRunSql = @"
@@ -85,28 +85,28 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                 AND ns.nspname = 'audit';
             ";
 
-            var partitions = await _dbContext.Database
+            var partitions = await this._dbContext.Database
                 .SqlQueryRaw<string>(dryRunSql)
-                .ToListAsync(cancellationToken);
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
 
-            _logger.LogDebug("Found {Count} existing partitions", partitions.Count);
+            this._logger.LogDebug("Found {Count} existing partitions", partitions.Count);
 
             // Execute cleanup function
             var cleanupSql = $"SELECT * FROM audit.cleanup_auditlog_partitions({retentionDays})";
 
-            var droppedPartitions = await _dbContext.Database
+            var droppedPartitions = await this._dbContext.Database
                 .SqlQueryRaw<string>(cleanupSql)
-                .ToListAsync(cancellationToken);
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
 
             if (droppedPartitions.Count > 0)
             {
-                _logger.LogInformation("Dropped {Count} old partitions: {Partitions}",
+                this._logger.LogInformation("Dropped {Count} old partitions: {Partitions}",
                     droppedPartitions.Count,
                     string.Join(", ", droppedPartitions));
             }
             else
             {
-                _logger.LogDebug("No partitions needed cleanup");
+                this._logger.LogDebug("No partitions needed cleanup");
             }
         }
     }

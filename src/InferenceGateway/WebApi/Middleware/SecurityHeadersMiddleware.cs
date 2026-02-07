@@ -27,9 +27,9 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             ILogger<SecurityHeadersMiddleware> logger,
             IWebHostEnvironment environment)
         {
-            _next = next ?? throw new ArgumentNullException(nameof(next));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _isDevelopment = environment.IsDevelopment();
+            this._next = next ?? throw new ArgumentNullException(nameof(next));
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._isDevelopment = environment.IsDevelopment();
         }
 
         /// <summary>
@@ -62,26 +62,26 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     response.Headers.Append("Permissions-Policy", "geolocation=(), microphone=(), camera=(), payment=(), usb=()");
 
                     // HSTS: Force HTTPS in production
-                    if (!_isDevelopment)
+                    if (!this._isDevelopment)
                     {
                         response.Headers.Append("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
                     }
 
                     // Content Security Policy (CSP)
-                    var csp = BuildContentSecurityPolicy(_isDevelopment);
+                    var csp = BuildContentSecurityPolicy(this._isDevelopment);
                     response.Headers.Append("Content-Security-Policy", csp);
 
                     // Remove server identification header for security through obscurity
                     response.Headers.Remove("Server");
                     response.Headers.Remove("X-Powered-By");
 
-                    _logger.LogDebug("Security headers added to response for {Path}", context.Request.Path);
+                    this._logger.LogDebug("Security headers added to response for {Path}", context.Request.Path);
                 }
 
                 return Task.CompletedTask;
             });
 
-            await _next(context);
+            await this._next(context);
         }
 
         /// <summary>

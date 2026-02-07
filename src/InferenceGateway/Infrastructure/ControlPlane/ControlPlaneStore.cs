@@ -19,24 +19,24 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
 
         public async Task<ModelAlias?> GetAliasAsync(Guid tenantId, string alias, CancellationToken cancellationToken = default)
         {
-            return await _dbContext.ModelAliases
+            return await this._dbContext.ModelAliases
                 .AsNoTracking()
-                .FirstOrDefaultAsync(a => a.TenantId == tenantId && a.Alias == alias, cancellationToken);
+                .FirstOrDefaultAsync(a => a.TenantId == tenantId && a.Alias == alias, cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<ModelCombo?> GetComboAsync(Guid tenantId, string name, CancellationToken cancellationToken = default)
         {
-            return await _dbContext.ModelCombos
+            return await this._dbContext.ModelCombos
                 .AsNoTracking()
-                .FirstOrDefaultAsync(c => c.TenantId == tenantId && c.Name == name, cancellationToken);
+                .FirstOrDefaultAsync(c => c.TenantId == tenantId && c.Name == name, cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<GlobalModel?> GetGlobalModelAsync(string id, CancellationToken cancellationToken = default)
         {
-            return await _dbContext.GlobalModels
+            return await this._dbContext.GlobalModels
                 .AsNoTracking()
                 .Include(g => g.ProviderModels)
-                .FirstOrDefaultAsync(g => g.Id == id, cancellationToken);
+                .FirstOrDefaultAsync(g => g.Id == id, cancellationToken).ConfigureAwait(false);
         }
     }
 }

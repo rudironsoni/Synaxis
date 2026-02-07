@@ -24,25 +24,25 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
 
     public SoftDeleteInterceptorTests()
     {
-        _mockHttpContextAccessor = new Mock<IHttpContextAccessor>();
-        _httpContext = new DefaultHttpContext();
-        _mockHttpContextAccessor.Setup(x => x.HttpContext).Returns(_httpContext);
+        this._mockHttpContextAccessor = new Mock<IHttpContextAccessor>();
+        this._httpContext = new DefaultHttpContext();
+        this._mockHttpContextAccessor.Setup(x => x.HttpContext).Returns(this._httpContext);
 
-        _interceptor = new SoftDeleteInterceptor(_mockHttpContextAccessor.Object);
+        this._interceptor = new SoftDeleteInterceptor(this._mockHttpContextAccessor.Object);
 
         var options = new DbContextOptionsBuilder<SynaxisDbContext>()
             .UseInMemoryDatabase(databaseName: $"SoftDeleteTests_{Guid.NewGuid()}")
-            .AddInterceptors(_interceptor)
+            .AddInterceptors(this._interceptor)
             .Options;
 
-        _dbContext = new SynaxisDbContext(options);
+        this._dbContext = new SynaxisDbContext(options);
     }
 
     public Task InitializeAsync() => Task.CompletedTask;
 
     public async Task DisposeAsync()
     {
-        await _dbContext.DisposeAsync();
+        await this._dbContext.DisposeAsync();
     }
 
     #region Constructor Tests
@@ -59,7 +59,7 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
     public void Constructor_WithHttpContextAccessor_ShouldNotThrow()
     {
         // Act & Assert
-        var act = () => new SoftDeleteInterceptor(_mockHttpContextAccessor.Object);
+        var act = () => new SoftDeleteInterceptor(this._mockHttpContextAccessor.Object);
         act.Should().NotThrow();
     }
 
@@ -78,18 +78,18 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             DisplayName = "Test Org",
             Slug = "test-org",
             Status = "Active",
-            PlanTier = "Free"
+            PlanTier = "Free",
         };
 
-        await _dbContext.Organizations.AddAsync(organization);
-        await _dbContext.SaveChangesAsync();
+        await this._dbContext.Organizations.AddAsync(organization);
+        await this._dbContext.SaveChangesAsync();
 
         // Act
-        _dbContext.Organizations.Remove(organization);
-        await _dbContext.SaveChangesAsync();
+        this._dbContext.Organizations.Remove(organization);
+        await this._dbContext.SaveChangesAsync();
 
         // Assert
-        var deletedOrg = await _dbContext.Organizations
+        var deletedOrg = await this._dbContext.Organizations
             .IgnoreQueryFilters() // Bypass query filter to see soft-deleted entities
             .FirstOrDefaultAsync(o => o.Id == organization.Id);
 
@@ -109,7 +109,7 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             DisplayName = "Test Org",
             Slug = "test-org",
             Status = "Active",
-            PlanTier = "Free"
+            PlanTier = "Free",
         };
 
         var group = new Group
@@ -118,19 +118,19 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             OrganizationId = organization.Id,
             Name = "Test Group",
             Slug = "test-group",
-            Status = "Active"
+            Status = "Active",
         };
 
-        await _dbContext.Organizations.AddAsync(organization);
-        await _dbContext.Groups.AddAsync(group);
-        await _dbContext.SaveChangesAsync();
+        await this._dbContext.Organizations.AddAsync(organization);
+        await this._dbContext.Groups.AddAsync(group);
+        await this._dbContext.SaveChangesAsync();
 
         // Act
-        _dbContext.Groups.Remove(group);
-        await _dbContext.SaveChangesAsync();
+        this._dbContext.Groups.Remove(group);
+        await this._dbContext.SaveChangesAsync();
 
         // Assert
-        var deletedGroup = await _dbContext.Groups
+        var deletedGroup = await this._dbContext.Groups
             .IgnoreQueryFilters()
             .FirstOrDefaultAsync(g => g.Id == group.Id);
 
@@ -146,7 +146,7 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
         var userId = Guid.NewGuid();
         var claims = new[] { new Claim(ClaimTypes.NameIdentifier, userId.ToString()) };
         var identity = new ClaimsIdentity(claims, "TestAuth");
-        _httpContext.User = new ClaimsPrincipal(identity);
+        this._httpContext.User = new ClaimsPrincipal(identity);
 
         var organization = new Organization
         {
@@ -155,18 +155,18 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             DisplayName = "Test Org",
             Slug = "test-org",
             Status = "Active",
-            PlanTier = "Free"
+            PlanTier = "Free",
         };
 
-        await _dbContext.Organizations.AddAsync(organization);
-        await _dbContext.SaveChangesAsync();
+        await this._dbContext.Organizations.AddAsync(organization);
+        await this._dbContext.SaveChangesAsync();
 
         // Act
-        _dbContext.Organizations.Remove(organization);
-        await _dbContext.SaveChangesAsync();
+        this._dbContext.Organizations.Remove(organization);
+        await this._dbContext.SaveChangesAsync();
 
         // Assert
-        var deletedOrg = await _dbContext.Organizations
+        var deletedOrg = await this._dbContext.Organizations
             .IgnoreQueryFilters()
             .FirstOrDefaultAsync(o => o.Id == organization.Id);
 
@@ -178,7 +178,7 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
     public async Task SaveChangesAsync_WithUnauthenticatedUser_ShouldNotSetDeletedBy()
     {
         // Arrange
-        _httpContext.User = new ClaimsPrincipal(new ClaimsIdentity()); // Not authenticated
+        this._httpContext.User = new ClaimsPrincipal(new ClaimsIdentity()); // Not authenticated
 
         var organization = new Organization
         {
@@ -187,18 +187,18 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             DisplayName = "Test Org",
             Slug = "test-org",
             Status = "Active",
-            PlanTier = "Free"
+            PlanTier = "Free",
         };
 
-        await _dbContext.Organizations.AddAsync(organization);
-        await _dbContext.SaveChangesAsync();
+        await this._dbContext.Organizations.AddAsync(organization);
+        await this._dbContext.SaveChangesAsync();
 
         // Act
-        _dbContext.Organizations.Remove(organization);
-        await _dbContext.SaveChangesAsync();
+        this._dbContext.Organizations.Remove(organization);
+        await this._dbContext.SaveChangesAsync();
 
         // Assert
-        var deletedOrg = await _dbContext.Organizations
+        var deletedOrg = await this._dbContext.Organizations
             .IgnoreQueryFilters()
             .FirstOrDefaultAsync(o => o.Id == organization.Id);
 
@@ -213,7 +213,7 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
         var userId = Guid.NewGuid();
         var claims = new[] { new Claim("sub", userId.ToString()) }; // Use "sub" claim
         var identity = new ClaimsIdentity(claims, "TestAuth");
-        _httpContext.User = new ClaimsPrincipal(identity);
+        this._httpContext.User = new ClaimsPrincipal(identity);
 
         var organization = new Organization
         {
@@ -222,18 +222,18 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             DisplayName = "Test Org",
             Slug = "test-org",
             Status = "Active",
-            PlanTier = "Free"
+            PlanTier = "Free",
         };
 
-        await _dbContext.Organizations.AddAsync(organization);
-        await _dbContext.SaveChangesAsync();
+        await this._dbContext.Organizations.AddAsync(organization);
+        await this._dbContext.SaveChangesAsync();
 
         // Act
-        _dbContext.Organizations.Remove(organization);
-        await _dbContext.SaveChangesAsync();
+        this._dbContext.Organizations.Remove(organization);
+        await this._dbContext.SaveChangesAsync();
 
         // Assert
-        var deletedOrg = await _dbContext.Organizations
+        var deletedOrg = await this._dbContext.Organizations
             .IgnoreQueryFilters()
             .FirstOrDefaultAsync(o => o.Id == organization.Id);
 
@@ -254,11 +254,11 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             DisplayName = "Test Org",
             Slug = "test-org",
             Status = "Active",
-            PlanTier = "Free"
+            PlanTier = "Free",
         };
 
-        await _dbContext.Organizations.AddAsync(organization);
-        await _dbContext.SaveChangesAsync();
+        await this._dbContext.Organizations.AddAsync(organization);
+        await this._dbContext.SaveChangesAsync();
 
         // For this test, we're checking that soft-deletable entities work correctly
         // Non-soft-deletable entities would be hard deleted by EF Core normally
@@ -266,11 +266,11 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
         var orgId = organization.Id;
 
         // Act
-        _dbContext.Organizations.Remove(organization);
-        await _dbContext.SaveChangesAsync();
+        this._dbContext.Organizations.Remove(organization);
+        await this._dbContext.SaveChangesAsync();
 
         // Assert - Organization should be soft deleted
-        var deletedOrg = await _dbContext.Organizations
+        var deletedOrg = await this._dbContext.Organizations
             .IgnoreQueryFilters()
             .FirstOrDefaultAsync(o => o.Id == orgId);
 
@@ -293,7 +293,7 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             DisplayName = "Test Org",
             Slug = "test-org",
             Status = "Active",
-            PlanTier = "Free"
+            PlanTier = "Free",
         };
 
         var group1 = new Group
@@ -302,7 +302,7 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             OrganizationId = organization.Id,
             Name = "Group 1",
             Slug = "group-1",
-            Status = "Active"
+            Status = "Active",
         };
 
         var group2 = new Group
@@ -311,20 +311,20 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             OrganizationId = organization.Id,
             Name = "Group 2",
             Slug = "group-2",
-            Status = "Active"
+            Status = "Active",
         };
 
-        await _dbContext.Organizations.AddAsync(organization);
-        await _dbContext.Groups.AddAsync(group1);
-        await _dbContext.Groups.AddAsync(group2);
-        await _dbContext.SaveChangesAsync();
+        await this._dbContext.Organizations.AddAsync(organization);
+        await this._dbContext.Groups.AddAsync(group1);
+        await this._dbContext.Groups.AddAsync(group2);
+        await this._dbContext.SaveChangesAsync();
 
         // Act
-        _dbContext.Organizations.Remove(organization);
-        await _dbContext.SaveChangesAsync();
+        this._dbContext.Organizations.Remove(organization);
+        await this._dbContext.SaveChangesAsync();
 
         // Assert
-        var deletedGroups = await _dbContext.Groups
+        var deletedGroups = await this._dbContext.Groups
             .IgnoreQueryFilters()
             .Where(g => g.OrganizationId == organization.Id)
             .ToListAsync();
@@ -344,7 +344,7 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             DisplayName = "Test Org",
             Slug = "test-org",
             Status = "Active",
-            PlanTier = "Free"
+            PlanTier = "Free",
         };
 
         var apiKey1 = new ApiKey
@@ -354,7 +354,7 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             Name = "API Key 1",
             KeyHash = "hash1",
             KeyPrefix = "prefix1",
-            IsActive = true
+            IsActive = true,
         };
 
         var apiKey2 = new ApiKey
@@ -364,20 +364,20 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             Name = "API Key 2",
             KeyHash = "hash2",
             KeyPrefix = "prefix2",
-            IsActive = true
+            IsActive = true,
         };
 
-        await _dbContext.Organizations.AddAsync(organization);
-        await _dbContext.ApiKeys.AddAsync(apiKey1);
-        await _dbContext.ApiKeys.AddAsync(apiKey2);
-        await _dbContext.SaveChangesAsync();
+        await this._dbContext.Organizations.AddAsync(organization);
+        await this._dbContext.ApiKeys.AddAsync(apiKey1);
+        await this._dbContext.ApiKeys.AddAsync(apiKey2);
+        await this._dbContext.SaveChangesAsync();
 
         // Act
-        _dbContext.Organizations.Remove(organization);
-        await _dbContext.SaveChangesAsync();
+        this._dbContext.Organizations.Remove(organization);
+        await this._dbContext.SaveChangesAsync();
 
         // Assert
-        var revokedKeys = await _dbContext.ApiKeys
+        var revokedKeys = await this._dbContext.ApiKeys
             .Where(k => k.OrganizationId == organization.Id)
             .ToListAsync();
 
@@ -394,7 +394,7 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
         var userId = Guid.NewGuid();
         var claims = new[] { new Claim(ClaimTypes.NameIdentifier, userId.ToString()) };
         var identity = new ClaimsIdentity(claims, "TestAuth");
-        _httpContext.User = new ClaimsPrincipal(identity);
+        this._httpContext.User = new ClaimsPrincipal(identity);
 
         var organization = new Organization
         {
@@ -403,7 +403,7 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             DisplayName = "Test Org",
             Slug = "test-org",
             Status = "Active",
-            PlanTier = "Free"
+            PlanTier = "Free",
         };
 
         var apiKey = new ApiKey
@@ -413,19 +413,19 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             Name = "API Key",
             KeyHash = "hash",
             KeyPrefix = "prefix",
-            IsActive = true
+            IsActive = true,
         };
 
-        await _dbContext.Organizations.AddAsync(organization);
-        await _dbContext.ApiKeys.AddAsync(apiKey);
-        await _dbContext.SaveChangesAsync();
+        await this._dbContext.Organizations.AddAsync(organization);
+        await this._dbContext.ApiKeys.AddAsync(apiKey);
+        await this._dbContext.SaveChangesAsync();
 
         // Act
-        _dbContext.Organizations.Remove(organization);
-        await _dbContext.SaveChangesAsync();
+        this._dbContext.Organizations.Remove(organization);
+        await this._dbContext.SaveChangesAsync();
 
         // Assert
-        var revokedKey = await _dbContext.ApiKeys
+        var revokedKey = await this._dbContext.ApiKeys
             .FirstAsync(k => k.Id == apiKey.Id);
 
         revokedKey.RevokedBy.Should().Be(userId);
@@ -442,7 +442,7 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             DisplayName = "Test Org",
             Slug = "test-org",
             Status = "Active",
-            PlanTier = "Free"
+            PlanTier = "Free",
         };
 
         var originalRevocationTime = DateTime.UtcNow.AddDays(-1);
@@ -455,19 +455,19 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             KeyPrefix = "prefix",
             IsActive = false,
             RevokedAt = originalRevocationTime,
-            RevocationReason = "Original reason"
+            RevocationReason = "Original reason",
         };
 
-        await _dbContext.Organizations.AddAsync(organization);
-        await _dbContext.ApiKeys.AddAsync(apiKey);
-        await _dbContext.SaveChangesAsync();
+        await this._dbContext.Organizations.AddAsync(organization);
+        await this._dbContext.ApiKeys.AddAsync(apiKey);
+        await this._dbContext.SaveChangesAsync();
 
         // Act
-        _dbContext.Organizations.Remove(organization);
-        await _dbContext.SaveChangesAsync();
+        this._dbContext.Organizations.Remove(organization);
+        await this._dbContext.SaveChangesAsync();
 
         // Assert
-        var key = await _dbContext.ApiKeys.FirstAsync(k => k.Id == apiKey.Id);
+        var key = await this._dbContext.ApiKeys.FirstAsync(k => k.Id == apiKey.Id);
         key.RevokedAt.Should().Be(originalRevocationTime); // Should preserve original
         key.RevocationReason.Should().Be("Original reason"); // Should preserve original
     }
@@ -483,7 +483,7 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             DisplayName = "Org 1",
             Slug = "org-1",
             Status = "Active",
-            PlanTier = "Free"
+            PlanTier = "Free",
         };
 
         var org2 = new Organization
@@ -493,7 +493,7 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             DisplayName = "Org 2",
             Slug = "org-2",
             Status = "Active",
-            PlanTier = "Free"
+            PlanTier = "Free",
         };
 
         var group1 = new Group
@@ -502,7 +502,7 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             OrganizationId = org1.Id,
             Name = "Group 1",
             Slug = "group-1",
-            Status = "Active"
+            Status = "Active",
         };
 
         var group2 = new Group
@@ -511,21 +511,21 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             OrganizationId = org2.Id,
             Name = "Group 2",
             Slug = "group-2",
-            Status = "Active"
+            Status = "Active",
         };
 
-        await _dbContext.Organizations.AddAsync(org1);
-        await _dbContext.Organizations.AddAsync(org2);
-        await _dbContext.Groups.AddAsync(group1);
-        await _dbContext.Groups.AddAsync(group2);
-        await _dbContext.SaveChangesAsync();
+        await this._dbContext.Organizations.AddAsync(org1);
+        await this._dbContext.Organizations.AddAsync(org2);
+        await this._dbContext.Groups.AddAsync(group1);
+        await this._dbContext.Groups.AddAsync(group2);
+        await this._dbContext.SaveChangesAsync();
 
         // Act
-        _dbContext.Organizations.RemoveRange(org1, org2);
-        await _dbContext.SaveChangesAsync();
+        this._dbContext.Organizations.RemoveRange(org1, org2);
+        await this._dbContext.SaveChangesAsync();
 
         // Assert
-        var allGroups = await _dbContext.Groups
+        var allGroups = await this._dbContext.Groups
             .IgnoreQueryFilters()
             .ToListAsync();
 
@@ -544,7 +544,7 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             DisplayName = "Test Org",
             Slug = "test-org",
             Status = "Active",
-            PlanTier = "Free"
+            PlanTier = "Free",
         };
 
         var group = new Group
@@ -553,23 +553,23 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             OrganizationId = organization.Id,
             Name = "Test Group",
             Slug = "test-group",
-            Status = "Active"
+            Status = "Active",
         };
 
-        await _dbContext.Organizations.AddAsync(organization);
-        await _dbContext.Groups.AddAsync(group);
-        await _dbContext.SaveChangesAsync();
+        await this._dbContext.Organizations.AddAsync(organization);
+        await this._dbContext.Groups.AddAsync(group);
+        await this._dbContext.SaveChangesAsync();
 
         // Act - Delete only the group, not the organization
-        _dbContext.Groups.Remove(group);
-        await _dbContext.SaveChangesAsync();
+        this._dbContext.Groups.Remove(group);
+        await this._dbContext.SaveChangesAsync();
 
         // Assert - Organization should not be affected
-        var org = await _dbContext.Organizations.FindAsync(organization.Id);
+        var org = await this._dbContext.Organizations.FindAsync(organization.Id);
         org.Should().NotBeNull();
         org!.DeletedAt.Should().BeNull();
 
-        var deletedGroup = await _dbContext.Groups
+        var deletedGroup = await this._dbContext.Groups
             .IgnoreQueryFilters()
             .FirstOrDefaultAsync(g => g.Id == group.Id);
         deletedGroup.Should().NotBeNull();
@@ -591,7 +591,7 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             DisplayName = "Active Org",
             Slug = "active-org",
             Status = "Active",
-            PlanTier = "Free"
+            PlanTier = "Free",
         };
 
         var org2 = new Organization
@@ -601,18 +601,18 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             DisplayName = "Deleted Org",
             Slug = "deleted-org",
             Status = "Active",
-            PlanTier = "Free"
+            PlanTier = "Free",
         };
 
-        await _dbContext.Organizations.AddAsync(org1);
-        await _dbContext.Organizations.AddAsync(org2);
-        await _dbContext.SaveChangesAsync();
+        await this._dbContext.Organizations.AddAsync(org1);
+        await this._dbContext.Organizations.AddAsync(org2);
+        await this._dbContext.SaveChangesAsync();
 
-        _dbContext.Organizations.Remove(org2);
-        await _dbContext.SaveChangesAsync();
+        this._dbContext.Organizations.Remove(org2);
+        await this._dbContext.SaveChangesAsync();
 
         // Act
-        var activeOrgs = await _dbContext.Organizations.ToListAsync();
+        var activeOrgs = await this._dbContext.Organizations.ToListAsync();
 
         // Assert
         activeOrgs.Should().HaveCount(1);
@@ -631,7 +631,7 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             DisplayName = "Active Org",
             Slug = "active-org",
             Status = "Active",
-            PlanTier = "Free"
+            PlanTier = "Free",
         };
 
         var org2 = new Organization
@@ -641,18 +641,18 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             DisplayName = "Deleted Org",
             Slug = "deleted-org",
             Status = "Active",
-            PlanTier = "Free"
+            PlanTier = "Free",
         };
 
-        await _dbContext.Organizations.AddAsync(org1);
-        await _dbContext.Organizations.AddAsync(org2);
-        await _dbContext.SaveChangesAsync();
+        await this._dbContext.Organizations.AddAsync(org1);
+        await this._dbContext.Organizations.AddAsync(org2);
+        await this._dbContext.SaveChangesAsync();
 
-        _dbContext.Organizations.Remove(org2);
-        await _dbContext.SaveChangesAsync();
+        this._dbContext.Organizations.Remove(org2);
+        await this._dbContext.SaveChangesAsync();
 
         // Act
-        var allOrgs = await _dbContext.Organizations
+        var allOrgs = await this._dbContext.Organizations
             .IgnoreQueryFilters()
             .ToListAsync();
 
@@ -677,18 +677,18 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             DisplayName = "Test Org",
             Slug = "test-org",
             Status = "Active",
-            PlanTier = "Free"
+            PlanTier = "Free",
         };
 
-        _dbContext.Organizations.Add(organization);
-        _dbContext.SaveChanges();
+        this._dbContext.Organizations.Add(organization);
+        this._dbContext.SaveChanges();
 
         // Act
-        _dbContext.Organizations.Remove(organization);
-        _dbContext.SaveChanges();
+        this._dbContext.Organizations.Remove(organization);
+        this._dbContext.SaveChanges();
 
         // Assert
-        var deletedOrg = _dbContext.Organizations
+        var deletedOrg = this._dbContext.Organizations
             .IgnoreQueryFilters()
             .FirstOrDefault(o => o.Id == organization.Id);
 

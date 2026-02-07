@@ -28,33 +28,33 @@ public class IdentityServiceTests : IDisposable
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
 
-        _context = new SynaxisDbContext(options);
+        this._context = new SynaxisDbContext(options);
 
         // Setup UserManager mock
         var userStoreMock = new Mock<IUserStore<SynaxisUser>>();
-        _userManagerMock = new Mock<UserManager<SynaxisUser>>(
+        this._userManagerMock = new Mock<UserManager<SynaxisUser>>(
             userStoreMock.Object, null, null, null, null, null, null, null, null);
 
         // Setup SignInManager mock
         var contextAccessorMock = new Mock<Microsoft.AspNetCore.Http.IHttpContextAccessor>();
         var userPrincipalFactoryMock = new Mock<IUserClaimsPrincipalFactory<SynaxisUser>>();
-        _signInManagerMock = new Mock<SignInManager<SynaxisUser>>(
-            _userManagerMock.Object,
+        this._signInManagerMock = new Mock<SignInManager<SynaxisUser>>(
+            this._userManagerMock.Object,
             contextAccessorMock.Object,
             userPrincipalFactoryMock.Object,
             null, null, null, null);
 
         // Setup Configuration mock
-        _configurationMock = new Mock<IConfiguration>();
-        _configurationMock.Setup(c => c["Jwt:Secret"]).Returns("test-secret-key-min-32-chars-long!");
-        _configurationMock.Setup(c => c["Jwt:Issuer"]).Returns("TestIssuer");
-        _configurationMock.Setup(c => c["Jwt:Audience"]).Returns("TestAudience");
+        this._configurationMock = new Mock<IConfiguration>();
+        this._configurationMock.Setup(c => c["Jwt:Secret"]).Returns("test-secret-key-min-32-chars-long!");
+        this._configurationMock.Setup(c => c["Jwt:Issuer"]).Returns("TestIssuer");
+        this._configurationMock.Setup(c => c["Jwt:Audience"]).Returns("TestAudience");
 
-        _service = new IdentityService(
-            _userManagerMock.Object,
-            _signInManagerMock.Object,
-            _context,
-            _configurationMock.Object);
+        this._service = new IdentityService(
+            this._userManagerMock.Object,
+            this._signInManagerMock.Object,
+            this._context,
+            this._configurationMock.Object);
     }
 
     [Fact]
@@ -68,20 +68,20 @@ public class IdentityServiceTests : IDisposable
             FirstName = "Test",
             LastName = "User",
             OrganizationName = "Test Organization",
-            OrganizationSlug = "test-org"
+            OrganizationSlug = "test-org",
         };
 
-        _userManagerMock.Setup(um => um.FindByEmailAsync(It.IsAny<string>()))
+        this._userManagerMock.Setup(um => um.FindByEmailAsync(It.IsAny<string>()))
             .ReturnsAsync((SynaxisUser?)null);
 
-        _userManagerMock.Setup(um => um.CreateAsync(It.IsAny<SynaxisUser>(), It.IsAny<string>()))
+        this._userManagerMock.Setup(um => um.CreateAsync(It.IsAny<SynaxisUser>(), It.IsAny<string>()))
             .ReturnsAsync(IdentityResult.Success);
 
-        _userManagerMock.Setup(um => um.UpdateAsync(It.IsAny<SynaxisUser>()))
+        this._userManagerMock.Setup(um => um.UpdateAsync(It.IsAny<SynaxisUser>()))
             .ReturnsAsync(IdentityResult.Success);
 
         // Act
-        var result = await _service.RegisterOrganizationAsync(request);
+        var result = await this._service.RegisterOrganizationAsync(request);
 
         // Assert
         Assert.True(result.Success);
@@ -91,11 +91,11 @@ public class IdentityServiceTests : IDisposable
         Assert.Equal("Test Organization", result.Organization.DisplayName);
 
         // Verify database state
-        var org = await _context.Organizations.FirstOrDefaultAsync();
+        var org = await this._context.Organizations.FirstOrDefaultAsync();
         Assert.NotNull(org);
         Assert.Equal("test-org", org.Slug);
 
-        var group = await _context.Groups.FirstOrDefaultAsync();
+        var group = await this._context.Groups.FirstOrDefaultAsync();
         Assert.NotNull(group);
         Assert.True(group.IsDefaultGroup);
     }
@@ -108,21 +108,21 @@ public class IdentityServiceTests : IDisposable
         {
             Email = "existing@example.com",
             UserName = "existing@example.com",
-            Status = "Active"
+            Status = "Active",
         };
 
         var request = new RegisterRequest
         {
             Email = "existing@example.com",
             Password = "Password123!",
-            OrganizationName = "Test Organization"
+            OrganizationName = "Test Organization",
         };
 
-        _userManagerMock.Setup(um => um.FindByEmailAsync("existing@example.com"))
+        this._userManagerMock.Setup(um => um.FindByEmailAsync("existing@example.com"))
             .ReturnsAsync(existingUser);
 
         // Act
-        var result = await _service.RegisterOrganizationAsync(request);
+        var result = await this._service.RegisterOrganizationAsync(request);
 
         // Assert
         Assert.False(result.Success);
@@ -143,7 +143,7 @@ public class IdentityServiceTests : IDisposable
             DisplayName = "Test Org",
             Slug = "test-org",
             Status = "Active",
-            PlanTier = "Free"
+            PlanTier = "Free",
         };
 
         var defaultGroup = new Group
@@ -153,20 +153,20 @@ public class IdentityServiceTests : IDisposable
             Name = "Default",
             Slug = "default",
             Status = "Active",
-            IsDefaultGroup = true
+            IsDefaultGroup = true,
         };
 
-        _context.Organizations.Add(organization);
-        _context.Groups.Add(defaultGroup);
-        await _context.SaveChangesAsync();
+        this._context.Organizations.Add(organization);
+        this._context.Groups.Add(defaultGroup);
+        await this._context.SaveChangesAsync();
 
         // Act
-        var result = await _service.AssignUserToOrganizationAsync(userId, organizationId, "Member");
+        var result = await this._service.AssignUserToOrganizationAsync(userId, organizationId, "Member");
 
         // Assert
         Assert.True(result);
 
-        var membership = await _context.UserOrganizationMemberships
+        var membership = await this._context.UserOrganizationMemberships
             .FirstOrDefaultAsync(m => m.UserId == userId && m.OrganizationId == organizationId);
 
         Assert.NotNull(membership);
@@ -188,7 +188,7 @@ public class IdentityServiceTests : IDisposable
             DisplayName = "Test Org",
             Slug = "test-org",
             Status = "Active",
-            PlanTier = "Free"
+            PlanTier = "Free",
         };
 
         var group = new Group
@@ -197,20 +197,20 @@ public class IdentityServiceTests : IDisposable
             OrganizationId = organizationId,
             Name = "Test Group",
             Slug = "test-group",
-            Status = "Active"
+            Status = "Active",
         };
 
-        _context.Organizations.Add(organization);
-        _context.Groups.Add(group);
-        await _context.SaveChangesAsync();
+        this._context.Organizations.Add(organization);
+        this._context.Groups.Add(group);
+        await this._context.SaveChangesAsync();
 
         // Act
-        var result = await _service.AssignUserToGroupAsync(userId, groupId, "Member");
+        var result = await this._service.AssignUserToGroupAsync(userId, groupId, "Member");
 
         // Assert
         Assert.True(result);
 
-        var membership = await _context.UserGroupMemberships
+        var membership = await this._context.UserGroupMemberships
             .FirstOrDefaultAsync(m => m.UserId == userId && m.GroupId == groupId);
 
         Assert.NotNull(membership);
@@ -219,7 +219,7 @@ public class IdentityServiceTests : IDisposable
 
     public void Dispose()
     {
-        _context.Database.EnsureDeleted();
-        _context.Dispose();
+        this._context.Database.EnsureDeleted();
+        this._context.Dispose();
     }
 }

@@ -50,7 +50,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             var result = new RegistrationResult();
 
             // Check if user already exists
-            var existingUser = await _userManager.FindByEmailAsync(request.Email);
+            var existingUser = await this._userManager.FindByEmailAsync(request.Email).ConfigureAwait(false);
             if (existingUser != null)
             {
                 result.Errors.Add("User with this email already exists.");
@@ -65,10 +65,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                 FirstName = request.FirstName,
                 LastName = request.LastName,
                 Status = "PendingVerification",
-                EmailConfirmed = false
+                EmailConfirmed = false,
             };
 
-            var createResult = await _userManager.CreateAsync(user, request.Password);
+            var createResult = await this._userManager.CreateAsync(user, request.Password).ConfigureAwait(false);
             if (!createResult.Succeeded)
             {
                 result.Errors = createResult.Errors.Select(e => e.Description).ToList();
@@ -94,11 +94,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             }
 
             // Begin transaction
-            using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+            using var transaction = await this._context.Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
             try
             {
                 // Register user first
-                var userResult = await RegisterUserAsync(request, cancellationToken);
+                var userResult = await this.RegisterUserAsync(request, cancellationToken).ConfigureAwait(false);
                 if (!userResult.Success)
                 {
                     return userResult;
@@ -110,7 +110,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                     return result;
                 }
 
-                var user = await _userManager.FindByIdAsync(userResult.UserId.Value.ToString());
+                var user = await this._userManager.FindByIdAsync(userResult.UserId.Value.ToString()).ConfigureAwait(false);
                 if (user == null)
                 {
                     result.Errors.Add("User was created but could not be retrieved.");
@@ -124,9 +124,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                 // Ensure slug is unique by appending a number if needed
                 var originalSlug = slug;
                 var counter = 1;
-                while (await _context.Organizations.AnyAsync(o => o.Slug == slug, cancellationToken))
+                while (await this._context.Organizations.AnyAsync(o => o.Slug == slug, cancellationToken))
                 {
-                    slug = $"{originalSlug}-{counter}";
+                    slug = $"{originalSlug}-{counter}".ConfigureAwait(false);
                     counter++;
                 }
 
@@ -140,18 +140,18 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                     Status = "Active",
                     PlanTier = "Free",
                     CreatedAt = DateTime.UtcNow,
-                    CreatedBy = user.Id
+                    CreatedBy = user.Id,
                 };
 
-                _context.Organizations.Add(organization);
-                await _context.SaveChangesAsync(cancellationToken);
+                this._context.Organizations.Add(organization);
+                await this._context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
                 // Create organization settings
                 var settings = new OrganizationSettings
                 {
-                    OrganizationId = organization.Id
+                    OrganizationId = organization.Id,
                 };
-                _context.OrganizationSettings.Add(settings);
+                this._context.OrganizationSettings.Add(settings);
 
                 // Create default group
                 var defaultGroup = new Group
@@ -163,11 +163,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                     Status = "Active",
                     IsDefaultGroup = true,
                     CreatedAt = DateTime.UtcNow,
-                    CreatedBy = user.Id
+                    CreatedBy = user.Id,
                 };
 
-                _context.Groups.Add(defaultGroup);
-                await _context.SaveChangesAsync(cancellationToken);
+                this._context.Groups.Add(defaultGroup);
+                await this._context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
                 // Create user-organization membership
                 var membership = new UserOrganizationMembership
@@ -177,10 +177,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                     OrganizationId = organization.Id,
                     OrganizationRole = "Owner",
                     PrimaryGroupId = defaultGroup.Id,
-                    Status = "Active"
+                    Status = "Active",
                 };
 
-                _context.UserOrganizationMemberships.Add(membership);
+                this._context.UserOrganizationMemberships.Add(membership);
 
                 // Create user-group membership
                 var groupMembership = new UserGroupMembership
@@ -190,18 +190,18 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                     GroupId = defaultGroup.Id,
                     GroupRole = "Admin",
                     IsPrimary = true,
-                    JoinedAt = DateTime.UtcNow
+                    JoinedAt = DateTime.UtcNow,
                 };
 
-                _context.UserGroupMemberships.Add(groupMembership);
-                await _context.SaveChangesAsync(cancellationToken);
+                this._context.UserGroupMemberships.Add(groupMembership);
+                await this._context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
                 // Activate user
                 user.Status = "Active";
                 user.EmailConfirmed = true;
-                await _userManager.UpdateAsync(user);
+                await this._userManager.UpdateAsync(user).ConfigureAwait(false);
 
-                await transaction.CommitAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
 
                 result.Success = true;
                 result.UserId = user.Id;
@@ -210,7 +210,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             }
             catch (Exception)
             {
-                await transaction.RollbackAsync(cancellationToken);
+                await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
                 throw;
             }
         }
@@ -222,14 +222,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
         {
             var response = new AuthenticationResponse();
 
-            var user = await _userManager.FindByEmailAsync(request.Email);
+            var user = await this._userManager.FindByEmailAsync(request.Email).ConfigureAwait(false);
             if (user == null)
             {
                 response.ErrorMessage = "Invalid email or password.";
                 return response;
             }
 
-            var signInResult = await _signInManager.CheckPasswordSignInAsync(user, request.Password, false);
+            var signInResult = await this._signInManager.CheckPasswordSignInAsync(user, request.Password, false).ConfigureAwait(false);
             if (!signInResult.Succeeded)
             {
                 response.ErrorMessage = "Invalid email or password.";
@@ -237,11 +237,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             }
 
             // Get user's organizations
-            var memberships = await _context.UserOrganizationMemberships
+            var memberships = await this._context.UserOrganizationMemberships
                 .Where(m => m.UserId == user.Id && m.Status == "Active")
                 .Include(m => m.Organization)
                 .Where(m => m.Organization.DeletedAt == null)
-                .ToListAsync(cancellationToken);
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
 
             if (!memberships.Any())
             {
@@ -261,14 +261,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             }
 
             // Generate tokens
-            var accessToken = await GenerateAccessToken(user, membership, cancellationToken);
+            var accessToken = await this.GenerateAccessToken(user, membership, cancellationToken).ConfigureAwait(false);
             var refreshToken = GenerateRefreshToken();
 
             response.Success = true;
             response.AccessToken = accessToken;
             response.RefreshToken = refreshToken;
             response.ExpiresAt = DateTime.UtcNow.AddMinutes(60);
-            response.User = await MapToUserInfo(user, memberships, cancellationToken);
+            response.User = await this.MapToUserInfo(user, memberships, cancellationToken).ConfigureAwait(false);
 
             return response;
         }
@@ -283,7 +283,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             return new AuthenticationResponse
             {
                 Success = false,
-                ErrorMessage = "Refresh token functionality not yet implemented."
+                ErrorMessage = "Refresh token functionality not yet implemented.",
             };
         }
 
@@ -292,19 +292,19 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             Guid userId,
             CancellationToken cancellationToken = default)
         {
-            var user = await _userManager.FindByIdAsync(userId.ToString());
+            var user = await this._userManager.FindByIdAsync(userId.ToString()).ConfigureAwait(false);
             if (user == null)
             {
                 return null;
             }
 
-            var memberships = await _context.UserOrganizationMemberships
+            var memberships = await this._context.UserOrganizationMemberships
                 .Where(m => m.UserId == userId && m.Status == "Active")
                 .Include(m => m.Organization)
                 .Where(m => m.Organization.DeletedAt == null)
-                .ToListAsync(cancellationToken);
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
 
-            return await MapToUserInfo(user, memberships, cancellationToken);
+            return await this.MapToUserInfo(user, memberships, cancellationToken).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
@@ -322,8 +322,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             }
 
             // Check if membership already exists
-            var existingMembership = await _context.UserOrganizationMemberships
-                .FirstOrDefaultAsync(m => m.UserId == userId && m.OrganizationId == organizationId, cancellationToken);
+            var existingMembership = await this._context.UserOrganizationMemberships
+                .FirstOrDefaultAsync(m => m.UserId == userId && m.OrganizationId == organizationId, cancellationToken).ConfigureAwait(false);
 
             if (existingMembership != null)
             {
@@ -331,8 +331,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             }
 
             // Get default group for organization
-            var defaultGroup = await _context.Groups
-                .FirstOrDefaultAsync(g => g.OrganizationId == organizationId && g.IsDefaultGroup, cancellationToken);
+            var defaultGroup = await this._context.Groups
+                .FirstOrDefaultAsync(g => g.OrganizationId == organizationId && g.IsDefaultGroup, cancellationToken).ConfigureAwait(false);
 
             var membership = new UserOrganizationMembership
             {
@@ -341,10 +341,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                 OrganizationId = organizationId,
                 OrganizationRole = role,
                 PrimaryGroupId = defaultGroup?.Id,
-                Status = "Active"
+                Status = "Active",
             };
 
-            _context.UserOrganizationMemberships.Add(membership);
+            this._context.UserOrganizationMemberships.Add(membership);
 
             // If default group exists, add user to it
             if (defaultGroup != null)
@@ -356,13 +356,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                     GroupId = defaultGroup.Id,
                     GroupRole = "Member",
                     IsPrimary = true,
-                    JoinedAt = DateTime.UtcNow
+                    JoinedAt = DateTime.UtcNow,
                 };
 
-                _context.UserGroupMemberships.Add(groupMembership);
+                this._context.UserGroupMemberships.Add(groupMembership);
             }
 
-            await _context.SaveChangesAsync(cancellationToken);
+            await this._context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             return true;
         }
 
@@ -381,8 +381,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             }
 
             // Check if membership already exists
-            var existingMembership = await _context.UserGroupMemberships
-                .FirstOrDefaultAsync(m => m.UserId == userId && m.GroupId == groupId, cancellationToken);
+            var existingMembership = await this._context.UserGroupMemberships
+                .FirstOrDefaultAsync(m => m.UserId == userId && m.GroupId == groupId, cancellationToken).ConfigureAwait(false);
 
             if (existingMembership != null)
             {
@@ -396,11 +396,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                 GroupId = groupId,
                 GroupRole = groupRole,
                 IsPrimary = false,
-                JoinedAt = DateTime.UtcNow
+                JoinedAt = DateTime.UtcNow,
             };
 
-            _context.UserGroupMemberships.Add(membership);
-            await _context.SaveChangesAsync(cancellationToken);
+            this._context.UserGroupMemberships.Add(membership);
+            await this._context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             return true;
         }
 
@@ -414,16 +414,16 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                 new (ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new (ClaimTypes.Email, user.Email!),
                 new ("organizationId", membership.OrganizationId.ToString()),
-                new ("organizationRole", membership.OrganizationRole)
+                new ("organizationRole", membership.OrganizationRole),
             };
 
-            var jwtSecret = _configuration["Jwt:Secret"] ?? "your-secret-key-here-min-32-chars-long!";
+            var jwtSecret = this._configuration["Jwt:Secret"] ?? "your-secret-key-here-min-32-chars-long!";
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"] ?? "Synaxis",
-                audience: _configuration["Jwt:Audience"] ?? "Synaxis",
+                issuer: this._configuration["Jwt:Issuer"] ?? "Synaxis",
+                audience: this._configuration["Jwt:Audience"] ?? "Synaxis",
                 claims: claims,
                 expires: DateTime.UtcNow.AddMinutes(60),
                 signingCredentials: credentials
@@ -450,7 +450,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                 Id = m.OrganizationId,
                 DisplayName = m.Organization.DisplayName,
                 Slug = m.Organization.Slug,
-                Role = m.OrganizationRole
+                Role = m.OrganizationRole,
             }).ToList();
 
             return new UserInfo
@@ -460,7 +460,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 CurrentOrganization = organizations.FirstOrDefault(),
-                Organizations = organizations
+                Organizations = organizations,
             };
         }
 

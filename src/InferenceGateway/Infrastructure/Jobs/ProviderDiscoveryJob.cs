@@ -30,7 +30,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
 
         private static string GetEffectiveBaseUrl(ProviderConfig config, string providerKey)
         {
-            if (config == null) return string.Empty;
+            if (config == null)
+            {
+                return string.Empty;
+            }
 
             // Prefer explicit endpoint if provided
             var url = config.Endpoint;
@@ -114,7 +117,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
 
         public async Task Execute(IJobExecutionContext context)
         {
-            using var scope = _provider.CreateScope();
+            using var scope = this._provider.CreateScope();
             var config = scope.ServiceProvider.GetRequiredService<IOptions<SynaxisConfiguration>>().Value;
             var db = scope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
             var discovery = scope.ServiceProvider.GetRequiredService<IOpenAiModelDiscoveryClient>();
@@ -124,10 +127,16 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                 var providerKey = kv.Key;
                 var providerCfg = kv.Value;
 
-                if (!providerCfg.Enabled) continue;
+                if (!providerCfg.Enabled)
+                {
+                    continue;
+                }
 
                 // Skip antigravity for now
-                if (string.Equals(providerCfg.Type, "antigravity", StringComparison.OrdinalIgnoreCase)) continue;
+                if (string.Equals(providerCfg.Type, "antigravity", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
 
                 var apiKey = providerCfg.Key ?? string.Empty;
 
@@ -137,7 +146,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                     var baseUrl = GetEffectiveBaseUrl(providerCfg, providerKey);
                     if (string.IsNullOrWhiteSpace(baseUrl))
                     {
-                        _logger.LogWarning("No effective base URL could be determined for provider {Provider}", providerKey);
+                        this._logger.LogWarning("No effective base URL could be determined for provider {Provider}", providerKey);
                         continue;
                     }
 
@@ -146,7 +155,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
 
                     foreach (var found in discoveredModels)
                     {
-                        if (string.IsNullOrEmpty(found)) continue;
+                        if (string.IsNullOrEmpty(found))
+                        {
+                            continue;
+                        }
 
                         // Fuzzy match global model
                         var global = db.GlobalModels.FirstOrDefault(g => g.Id == found || (found.Contains(g.Id)));
@@ -181,7 +193,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                                     ProviderId = providerKey,
                                     ProviderSpecificId = found,
                                     GlobalModelId = global.Id,
-                                    IsAvailable = true
+                                    IsAvailable = true,
                                 };
                                 db.ProviderModels.Add(existing);
                                 await db.SaveChangesAsync().ConfigureAwait(false);
@@ -213,11 +225,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                         }
                     }
 
-                    _logger.LogInformation("ProviderDiscoveryJob: Successfully upserted {Count} models for provider {Provider}", discoveredModels.Count, providerKey);
+                    this._logger.LogInformation("ProviderDiscoveryJob: Successfully upserted {Count} models for provider {Provider}", discoveredModels.Count, providerKey);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error discovering models for provider {Provider}", providerKey);
+                    this._logger.LogError(ex, "Error discovering models for provider {Provider}", providerKey);
                 }
             }
         }

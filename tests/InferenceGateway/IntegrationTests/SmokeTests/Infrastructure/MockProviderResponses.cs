@@ -17,15 +17,15 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
 
         public MockProviderResponses()
         {
-            _chatResponses = CreateChatResponses();
-            _legacyResponses = CreateLegacyResponses();
-            _availableModels = CreateAvailableModels();
+            this._chatResponses = this.CreateChatResponses();
+            this._legacyResponses = this.CreateLegacyResponses();
+            this._availableModels = this.CreateAvailableModels();
         }
 
         public ChatCompletionResponse GetChatCompletionResponse(string model)
         {
             // Return specific model response if exists, otherwise return generic response
-            if (_chatResponses.TryGetValue(model, out var response))
+            if (this._chatResponses.TryGetValue(model, out var response))
             {
                 return new ChatCompletionResponse
                 {
@@ -34,7 +34,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                     Created = response.Created,
                     Model = model,
                     Choices = response.Choices,
-                    Usage = response.Usage
+                    Usage = response.Usage,
                 };
             }
 
@@ -45,7 +45,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
         public LegacyCompletionResponse GetLegacyCompletionResponse(string model)
         {
             // Return specific model response if exists, otherwise return generic response
-            if (_legacyResponses.TryGetValue(model, out var response))
+            if (this._legacyResponses.TryGetValue(model, out var response))
             {
                 return new LegacyCompletionResponse
                 {
@@ -54,7 +54,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                     Created = response.Created,
                     Model = model,
                     Choices = response.Choices,
-                    Usage = response.Usage
+                    Usage = response.Usage,
                 };
             }
 
@@ -67,7 +67,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
             return new
             {
                 @object = "list",
-                data = _availableModels
+                data = this._availableModels,
             };
         }
 
@@ -95,14 +95,14 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                             Content = "Mock response for " + model
                         },
                         FinishReason = "stop"
-                    }
+                    },
                 },
                 Usage = new ChatCompletionUsage
                 {
                     PromptTokens = 10,
                     CompletionTokens = 5,
                     TotalTokens = 15
-                }
+                },
             };
         }
 
@@ -121,14 +121,14 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                         Index = 0,
                         Text = "Mock text completion for " + model,
                         FinishReason = "stop"
-                    }
+                    },
                 },
                 Usage = new LegacyUsage
                 {
                     PromptTokens = 8,
                     CompletionTokens = 6,
                     TotalTokens = 14
-                }
+                },
             };
         }
 
@@ -153,14 +153,14 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                                 Content = "OK"
                             },
                             FinishReason = "stop"
-                        }
+                        },
                     },
                     Usage = new ChatCompletionUsage
                     {
                         PromptTokens = 12,
                         CompletionTokens = 2,
                         TotalTokens = 14
-                    }
+                    },
                 },
                 ["deepseek-chat"] = new ChatCompletionResponse
                 {
@@ -179,14 +179,14 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                                 Content = "OK"
                             },
                             FinishReason = "stop"
-                        }
+                        },
                     },
                     Usage = new ChatCompletionUsage
                     {
                         PromptTokens = 10,
                         CompletionTokens = 2,
                         TotalTokens = 12
-                    }
+                    },
                 },
                 // Add more provider-specific responses as needed
                 ["gpt-4o"] = new ChatCompletionResponse
@@ -214,7 +214,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                         CompletionTokens = 2,
                         TotalTokens = 17
                     }
-                }
+                },
             };
         }
 
@@ -235,14 +235,14 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                             Index = 0,
                             Text = "OK",
                             FinishReason = "stop"
-                        }
+                        },
                     },
                     Usage = new LegacyUsage
                     {
                         PromptTokens = 11,
                         CompletionTokens = 1,
                         TotalTokens = 12
-                    }
+                    },
                 },
                 ["deepseek-chat"] = new LegacyCompletionResponse
                 {
@@ -265,7 +265,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                         CompletionTokens = 1,
                         TotalTokens = 10
                     }
-                }
+                },
             };
         }
 
@@ -278,21 +278,21 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                     Id = "llama-3.1-70b-versatile",
                     Object = "model",
                     Created = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                    OwnedBy = "Groq"
+                    OwnedBy = "Groq",
                 },
                 new ModelInfo
                 {
                     Id = "deepseek-chat",
                     Object = "model",
                     Created = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                    OwnedBy = "DeepSeek"
+                    OwnedBy = "DeepSeek",
                 },
                 new ModelInfo
                 {
                     Id = "gpt-4o",
                     Object = "model",
                     Created = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                    OwnedBy = "OpenAI"
+                    OwnedBy = "OpenAI",
                 },
                 new ModelInfo
                 {
@@ -300,7 +300,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                     Object = "model",
                     Created = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
                     OwnedBy = "Anthropic"
-                }
+                },
             };
         }
     }
@@ -309,62 +309,84 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
     public class ChatCompletionResponse
     {
         public string Id { get; set; } = string.Empty;
+
         public string Object { get; set; } = string.Empty;
+
         public long Created { get; set; }
+
         public string Model { get; set; } = string.Empty;
-        public List<ChatCompletionChoice> Choices { get; set; } = new ();
+
+        public List<ChatCompletionChoice> Choices { get; set; } = new();
+
         public ChatCompletionUsage? Usage { get; set; }
     }
 
     public class ChatCompletionChoice
     {
         public int Index { get; set; }
-        public ChatCompletionMessageDto Message { get; set; } = new ();
+
+        public ChatCompletionMessageDto Message { get; set; } = new();
+
         public string FinishReason { get; set; } = string.Empty;
     }
 
     public class ChatCompletionMessageDto
     {
         public string Role { get; set; } = string.Empty;
+
         public string Content { get; set; } = string.Empty;
     }
 
     public class ChatCompletionUsage
     {
         public int PromptTokens { get; set; }
+
         public int CompletionTokens { get; set; }
+
         public int TotalTokens { get; set; }
     }
 
     public class LegacyCompletionResponse
     {
         public string Id { get; set; } = string.Empty;
+
         public string Object { get; set; } = string.Empty;
+
         public long Created { get; set; }
+
         public string Model { get; set; } = string.Empty;
-        public List<LegacyCompletionChoice> Choices { get; set; } = new ();
+
+        public List<LegacyCompletionChoice> Choices { get; set; } = new();
+
         public LegacyUsage? Usage { get; set; }
     }
 
     public class LegacyCompletionChoice
     {
         public int Index { get; set; }
+
         public string Text { get; set; } = string.Empty;
+
         public string FinishReason { get; set; } = string.Empty;
     }
 
     public class LegacyUsage
     {
         public int PromptTokens { get; set; }
+
         public int CompletionTokens { get; set; }
+
         public int TotalTokens { get; set; }
     }
 
     public class ModelInfo
     {
         public string Id { get; set; } = string.Empty;
+
         public string Object { get; set; } = string.Empty;
+
         public long Created { get; set; }
+
         public string OwnedBy { get; set; } = string.Empty;
     }
 }

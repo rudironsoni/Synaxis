@@ -27,7 +27,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
             int remainingQuota,
             CancellationToken cancellationToken = default)
         {
-            _logger.LogWarning(
+            this._logger.LogWarning(
                 "Quota warning for tenant {TenantId}, user {UserId}, provider {ProviderKey}: {RemainingQuota} remaining",
                 tenantId, userId, providerKey, remainingQuota);
             return Task.CompletedTask;

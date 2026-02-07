@@ -28,8 +28,8 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             RequestDelegate next,
             ILogger<ComplianceMiddleware> logger)
         {
-            _next = next ?? throw new ArgumentNullException(nameof(next));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._next = next ?? throw new ArgumentNullException(nameof(next));
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         /// <summary>
@@ -46,14 +46,14 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 if (context.Request.Path.StartsWithSegments("/health") ||
                     context.Request.Path.StartsWithSegments("/openapi"))
                 {
-                    await _next(context);
+                    await this._next(context);
                     return;
                 }
 
                 // Only validate if tenant context is established
                 if (tenantContext.OrganizationId == null)
                 {
-                    await _next(context);
+                    await this._next(context);
                     return;
                 }
 
@@ -75,14 +75,14 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                         Purpose = "inference_request",
                         DataCategories = new[] { "api_request", "model_inference" },
                         EncryptionUsed = context.Request.IsHttps,
-                        UserConsentObtained = tenantContext.UserId.HasValue
+                        UserConsentObtained = tenantContext.UserId.HasValue,
                     };
 
                     var isAllowed = await complianceProvider.ValidateTransferAsync(transferContext);
 
                     if (!isAllowed)
                     {
-                        _logger.LogWarning(
+                        this._logger.LogWarning(
                             "Compliance validation failed for cross-border transfer. OrgId: {OrgId}, From: {From}, To: {To}",
                             tenantContext.OrganizationId, userRegion, currentRegion);
 
@@ -95,7 +95,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                                 type = "compliance_error",
                                 code = "DATA_PROTECTION_VIOLATION",
                                 regulation = complianceProvider.RegulationCode
-                            }
+                            },
                         });
                         return;
                     }
@@ -113,14 +113,14 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                         UserId = tenantContext.UserId,
                         ProcessingPurpose = "inference_request",
                         LegalBasis = "contract",
-                        DataCategories = new[] { "api_request", "model_inference" }
+                        DataCategories = new[] { "api_request", "model_inference" },
                     };
 
                     var isProcessingAllowed = await complianceProvider.IsProcessingAllowedAsync(processingContext);
 
                     if (!isProcessingAllowed)
                     {
-                        _logger.LogWarning(
+                        this._logger.LogWarning(
                             "Processing not allowed by compliance provider. UserId: {UserId}, OrgId: {OrgId}",
                             tenantContext.UserId, tenantContext.OrganizationId);
 
@@ -132,7 +132,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                                 message = "Data processing not permitted under applicable regulations",
                                 type = "compliance_error",
                                 code = "PROCESSING_NOT_PERMITTED"
-                            }
+                            },
                         });
                         return;
                     }
@@ -146,12 +146,12 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     return Task.CompletedTask;
                 });
 
-                await _next(context);
+                await this._next(context);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred during compliance validation");
-                await _next(context);
+                this._logger.LogError(ex, "Error occurred during compliance validation");
+                await this._next(context);
             }
         }
     }

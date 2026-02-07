@@ -400,6 +400,7 @@ namespace Synaxis.InferenceGateway.UnitTests.Retry
         private class TestData
         {
             public int Id { get; set; }
+
             public string Name { get; set; } = string.Empty;
         }
     }

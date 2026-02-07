@@ -108,7 +108,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
 
             try
             {
-                var db = _redis.GetDatabase();
+                var db = this._redis.GetDatabase();
                 var windowSeconds = (int)window.TotalSeconds;
 
                 // Execute Lua script atomically
@@ -116,7 +116,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                     LuaCheckAndIncrement,
                     new RedisKey[] { key },
                     new RedisValue[] { limit, windowSeconds, increment }
-                );
+                ).ConfigureAwait(false);
 
                 var values = (RedisValue[])result!;
                 var current = (long)values[0];
@@ -124,14 +124,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
 
                 if (current > limit)
                 {
-                    _logger.LogWarning(
+                    this._logger.LogWarning(
                         "Rate limit exceeded for key {Key}: {Current}/{Limit}",
                         key, current, limit);
 
                     return RateLimitResult.Denied(current, limit, ttl, key);
                 }
 
-                _logger.LogDebug(
+                this._logger.LogDebug(
                     "Rate limit check passed for key {Key}: {Current}/{Limit}",
                     key, current, limit);
 
@@ -139,7 +139,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error checking rate limit for key {Key}", key);
+                this._logger.LogError(ex, "Error checking rate limit for key {Key}", key);
 
                 // Fail open: allow the request if Redis is unavailable
                 return RateLimitResult.Allowed(0, limit, (int)window.TotalSeconds);
@@ -170,7 +170,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
 
             if (!config.HasLimits())
             {
-                _logger.LogDebug("No rate limits configured, allowing request");
+                this._logger.LogDebug("No rate limits configured, allowing request");
                 return RateLimitResult.Allowed(0, 0, 0);
             }
 
@@ -181,52 +181,52 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             if (config.Userthis.Rpm.HasValue)
             {
                 var key = BuildKey("user", userId.ToString(), "rpm");
-                checks.Add(CheckWithMetadataAsync(key, config.UserRpm.Value, window, "User", "RPM", cancellationToken));
+                checks.Add(this.CheckWithMetadataAsync(key, config.UserRpm.Value, window, "User", "RPM", cancellationToken));
             }
 
             // User-level TPM check (pre-check with increment=0, actual tokens added post-request)
             if (config.Userthis.Tpm.HasValue)
             {
                 var key = BuildKey("user", userId.ToString(), "tpm");
-                checks.Add(CheckWithMetadataAsync(key, config.UserTpm.Value, window, "User", "TPM", cancellationToken, increment: 0));
+                checks.Add(this.CheckWithMetadataAsync(key, config.UserTpm.Value, window, "User", "TPM", cancellationToken, increment: 0));
             }
 
             // Group-level RPM check
             if (groupthis.Id.HasValue && config.Groupthis.Rpm.HasValue)
             {
                 var key = BuildKey("group", groupId.Value.ToString(), "rpm");
-                checks.Add(CheckWithMetadataAsync(key, config.GroupRpm.Value, window, "Group", "RPM", cancellationToken));
+                checks.Add(this.CheckWithMetadataAsync(key, config.GroupRpm.Value, window, "Group", "RPM", cancellationToken));
             }
 
             // Group-level TPM check
             if (groupthis.Id.HasValue && config.Groupthis.Tpm.HasValue)
             {
                 var key = BuildKey("group", groupId.Value.ToString(), "tpm");
-                checks.Add(CheckWithMetadataAsync(key, config.GroupTpm.Value, window, "Group", "TPM", cancellationToken, increment: 0));
+                checks.Add(this.CheckWithMetadataAsync(key, config.GroupTpm.Value, window, "Group", "TPM", cancellationToken, increment: 0));
             }
 
             // Organization-level RPM check
             if (config.Organizationthis.Rpm.HasValue)
             {
                 var key = BuildKey("org", organizationId.ToString(), "rpm");
-                checks.Add(CheckWithMetadataAsync(key, config.OrganizationRpm.Value, window, "Organization", "RPM", cancellationToken));
+                checks.Add(this.CheckWithMetadataAsync(key, config.OrganizationRpm.Value, window, "Organization", "RPM", cancellationToken));
             }
 
             // Organization-level TPM check
             if (config.Organizationthis.Tpm.HasValue)
             {
                 var key = BuildKey("org", organizationId.ToString(), "tpm");
-                checks.Add(CheckWithMetadataAsync(key, config.OrganizationTpm.Value, window, "Organization", "TPM", cancellationToken, increment: 0));
+                checks.Add(this.CheckWithMetadataAsync(key, config.OrganizationTpm.Value, window, "Organization", "TPM", cancellationToken, increment: 0));
             }
 
             // Execute all checks in parallel
-            var results = await Task.WhenAll(checks);
+            var results = await Task.WhenAll(checks).ConfigureAwait(false);
 
             // Find the first denied result (most restrictive)
             var denied = results.FirstOrDefault(r => !r.Result.IsAllowed);
             if (denied != default)
             {
-                _logger.LogWarning(
+                this._logger.LogWarning(
                     "Hierarchical rate limit denied at {Scope} level ({Type}): {Current}/{Limit}",
                     denied.Scope, denied.Type, denied.Result.Current, denied.Result.Limit);
 
@@ -243,7 +243,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             mostRestrictive.Result.LimitedBy = mostRestrictive.Scope;
             mostRestrictive.Result.LimitType = mostRestrictive.Type;
 
-            _logger.LogDebug(
+            this._logger.LogDebug(
                 "Hierarchical rate limit check passed. Most restrictive: {Scope} {Type} with {Remaining} remaining",
                 mostRestrictive.Scope, mostRestrictive.Type, mostRestrictive.Result.Remaining);
 
@@ -277,7 +277,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
 
             try
             {
-                var db = _redis.GetDatabase();
+                var db = this._redis.GetDatabase();
                 var windowSeconds = (int)window.TotalSeconds;
 
                 // Execute Lua script atomically
@@ -285,12 +285,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                     LuaIncrementTokens,
                     new RedisKey[] { key },
                     new RedisValue[] { tokenCount, windowSeconds }
-                );
+                ).ConfigureAwait(false);
 
                 var values = (RedisValue[])result!;
                 var newCount = (long)values[0];
 
-                _logger.LogDebug(
+                this._logger.LogDebug(
                     "Incremented token usage for key {Key}: +{Tokens} = {NewCount}",
                     key, tokenCount, newCount);
 
@@ -298,7 +298,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error incrementing token usage for key {Key}", key);
+                this._logger.LogError(ex, "Error incrementing token usage for key {Key}", key);
                 return 0;
             }
         }
@@ -322,16 +322,16 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
         {
             var tasks = new List<Task<long>>
             {
-                IncrementTokenUsageAsync(BuildKey("user", userId.ToString(), "tpm"), tokenCount, window, cancellationToken),
-                IncrementTokenUsageAsync(BuildKey("org", organizationId.ToString(), "tpm"), tokenCount, window, cancellationToken)
+                this.IncrementTokenUsageAsync(BuildKey("user", userId.ToString(), "tpm"), tokenCount, window, cancellationToken),
+                this.IncrementTokenUsageAsync(BuildKey("org", organizationId.ToString(), "tpm"), tokenCount, window, cancellationToken),
             };
 
             if (groupthis.Id.HasValue)
             {
-                tasks.Add(IncrementTokenUsageAsync(BuildKey("group", groupId.Value.ToString(), "tpm"), tokenCount, window, cancellationToken));
+                tasks.Add(this.IncrementTokenUsageAsync(BuildKey("group", groupId.Value.ToString(), "tpm"), tokenCount, window, cancellationToken));
             }
 
-            await Task.WhenAll(tasks);
+            await Task.WhenAll(tasks).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -346,13 +346,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
         {
             try
             {
-                var db = _redis.GetDatabase();
-                var value = await db.StringGetAsync(key);
+                var db = this._redis.GetDatabase();
+                var value = await db.StringGetAsync(key).ConfigureAwait(false);
                 return value.HasValue ? (long)value : 0;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting current usage for key {Key}", key);
+                this._logger.LogError(ex, "Error getting current usage for key {Key}", key);
                 return 0;
             }
         }
@@ -368,19 +368,19 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
         {
             try
             {
-                var db = _redis.GetDatabase();
-                var deleted = await db.KeyDeleteAsync(key);
+                var db = this._redis.GetDatabase();
+                var deleted = await db.KeyDeleteAsync(key).ConfigureAwait(false);
 
                 if (deleted)
                 {
-                    _logger.LogInformation("Reset rate limit for key {Key}", key);
+                    this._logger.LogInformation("Reset rate limit for key {Key}", key);
                 }
 
                 return deleted;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error resetting rate limit for key {Key}", key);
+                this._logger.LogError(ex, "Error resetting rate limit for key {Key}", key);
                 return false;
             }
         }
@@ -409,7 +409,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             CancellationToken cancellationToken,
             int increment = 1)
         {
-            var result = await CheckRateLimitAsync(key, limit, window, increment, cancellationToken);
+            var result = await this.CheckRateLimitAsync(key, limit, window, increment, cancellationToken).ConfigureAwait(false);
             return (result, scope, type);
         }
     }

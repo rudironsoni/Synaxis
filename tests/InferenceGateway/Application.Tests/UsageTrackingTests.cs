@@ -13,9 +13,9 @@ public class UsageTrackingTests
 
     public UsageTrackingTests()
     {
-        _innerMock = new Mock<IChatClient>();
-        _loggerMock = new Mock<ILogger<UsageTrackingChatClient>>();
-        _client = new UsageTrackingChatClient(_innerMock.Object, _loggerMock.Object);
+        this._innerMock = new Mock<IChatClient>();
+        this._loggerMock = new Mock<ILogger<UsageTrackingChatClient>>();
+        this._client = new UsageTrackingChatClient(this._innerMock.Object, this._loggerMock.Object);
     }
 
     [Fact]
@@ -31,14 +31,14 @@ public class UsageTrackingTests
             {
                 InputTokenCount = 100,
                 OutputTokenCount = 200
-            }
+            },
         };
 
-        _innerMock.Setup(c => c.GetResponseAsync(messages, options, It.IsAny<CancellationToken>()))
+        this._innerMock.Setup(c => c.GetResponseAsync(messages, options, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var response = await _client.GetResponseAsync(messages, options);
+        var response = await this._client.GetResponseAsync(messages, options);
 
         // Assert
         Assert.Equal(expectedResponse, response);
@@ -46,7 +46,7 @@ public class UsageTrackingTests
         // Verify logger was called with correct cost
         // llama cost: 0.70/1M input, 0.80/1M output
         // (100 * 0.70 / 1,000,000) + (200 * 0.80 / 1,000,000) = 0.00007 + 0.00016 = 0.00023
-        _loggerMock.Verify(
+        this._loggerMock.Verify(
             x => x.Log(
                 LogLevel.Information,
                 It.IsAny<EventId>(),
@@ -65,16 +65,16 @@ public class UsageTrackingTests
         update.Contents.Add(new TextContent("Part 1"));
         var updates = new[] { update }.ToAsyncEnumerable();
 
-        _innerMock.Setup(c => c.GetStreamingResponseAsync(messages, null, It.IsAny<CancellationToken>()))
+        this._innerMock.Setup(c => c.GetStreamingResponseAsync(messages, null, It.IsAny<CancellationToken>()))
             .Returns(updates);
 
         // Act
-        var response = _client.GetStreamingResponseAsync(messages);
+        var response = this._client.GetStreamingResponseAsync(messages);
         var result = await response.ToListAsync();
 
         // Assert
         Assert.Single(result);
         Assert.Equal("Part 1", result[0].Text);
-        _innerMock.Verify(c => c.GetStreamingResponseAsync(messages, null, It.IsAny<CancellationToken>()), Times.Once);
+        this._innerMock.Verify(c => c.GetStreamingResponseAsync(messages, null, It.IsAny<CancellationToken>()), Times.Once);
     }
 }

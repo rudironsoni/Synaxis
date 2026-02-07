@@ -17,7 +17,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
         public CostServiceTests(ITestOutputHelper output)
         {
-            _output = output ?? throw new ArgumentNullException(nameof(output));
+            this._output = output ?? throw new ArgumentNullException(nameof(output));
         }
 
         [Fact]
@@ -29,7 +29,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         [Fact]
         public void Constructor_ShouldInitializeSuccessfully_WithValidDbContext()
         {
-            using var dbContext = CreateInMemoryDbContext();
+            using var dbContext = this.CreateInMemoryDbContext();
             var service = new CostService(dbContext);
 
             Assert.NotNull(service);
@@ -39,7 +39,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task GetCostAsync_ShouldReturnNull_WhenNoMatchingCostFound()
         {
             // Arrange
-            using var dbContext = CreateInMemoryDbContext();
+            using var dbContext = this.CreateInMemoryDbContext();
             var service = new CostService(dbContext);
 
             // Act
@@ -53,13 +53,13 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task GetCostAsync_ShouldReturnCost_WhenExactMatchFound()
         {
             // Arrange
-            using var dbContext = CreateInMemoryDbContext();
+            using var dbContext = this.CreateInMemoryDbContext();
             var expectedCost = new ModelCost
             {
                 Provider = "Groq",
                 Model = "llama-3.3-70b-versatile",
                 CostPerToken = 0.0001m,
-                FreeTier = false
+                FreeTier = false,
             };
             dbContext.ModelCosts.Add(expectedCost);
             await dbContext.SaveChangesAsync();
@@ -81,13 +81,13 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task GetCostAsync_ShouldReturnFreeTierCost_WhenFreeTierIsTrue()
         {
             // Arrange
-            using var dbContext = CreateInMemoryDbContext();
+            using var dbContext = this.CreateInMemoryDbContext();
             var freeCost = new ModelCost
             {
                 Provider = "DeepSeek",
                 Model = "deepseek-chat",
                 CostPerToken = 0m,
-                FreeTier = true
+                FreeTier = true,
             };
             dbContext.ModelCosts.Add(freeCost);
             await dbContext.SaveChangesAsync();
@@ -109,7 +109,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task GetCostAsync_ShouldUseCaseSensitiveMatching()
         {
             // Arrange
-            using var dbContext = CreateInMemoryDbContext();
+            using var dbContext = this.CreateInMemoryDbContext();
             var cost1 = new ModelCost { Provider = "Groq", Model = "llama-3.3-70b-versatile", CostPerToken = 0.0001m };
             var cost2 = new ModelCost { Provider = "groq", Model = "llama-3.3-70b-versatile", CostPerToken = 0.0002m };
             dbContext.ModelCosts.Add(cost1);
@@ -131,7 +131,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task GetCostAsync_ShouldReturnFirstMatch_WhenMultipleCostsExist()
         {
             // Arrange
-            using var dbContext = CreateInMemoryDbContext();
+            using var dbContext = this.CreateInMemoryDbContext();
             var cost1 = new ModelCost { Provider = "Provider1", Model = "model1", CostPerToken = 0.0001m };
             var cost2 = new ModelCost { Provider = "Provider2", Model = "model2", CostPerToken = 0.0002m };
             dbContext.ModelCosts.Add(cost1);
@@ -152,7 +152,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task GetCostAsync_ShouldRespectCancellationToken()
         {
             // Arrange
-            using var dbContext = CreateInMemoryDbContext();
+            using var dbContext = this.CreateInMemoryDbContext();
             var service = new CostService(dbContext);
             var cancellationToken = new CancellationToken(true); // Already cancelled
 
@@ -165,7 +165,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task GetCostAsync_ShouldHandleEmptyProviderAndModel()
         {
             // Arrange
-            using var dbContext = CreateInMemoryDbContext();
+            using var dbContext = this.CreateInMemoryDbContext();
             var service = new CostService(dbContext);
 
             // Act
@@ -179,7 +179,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task GetCostAsync_ShouldHandleNullProviderAndModel()
         {
             // Arrange
-            using var dbContext = CreateInMemoryDbContext();
+            using var dbContext = this.CreateInMemoryDbContext();
             var service = new CostService(dbContext);
 
             // Act
@@ -193,7 +193,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task GetCostAsync_ShouldHandleVeryLongProviderAndModelNames()
         {
             // Arrange
-            using var dbContext = CreateInMemoryDbContext();
+            using var dbContext = this.CreateInMemoryDbContext();
             var longProvider = new string('a', 100);
             var longModel = new string('b', 200);
             var cost = new ModelCost { Provider = longProvider, Model = longModel, CostPerToken = 0.0001m };
@@ -216,7 +216,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task GetCostAsync_ShouldHandleSpecialCharactersInProviderAndModel()
         {
             // Arrange
-            using var dbContext = CreateInMemoryDbContext();
+            using var dbContext = this.CreateInMemoryDbContext();
             var provider = "Provider-With-Dashes";
             var model = "model_with_underscores_and.dots";
             var cost = new ModelCost { Provider = provider, Model = model, CostPerToken = 0.0001m };
@@ -238,7 +238,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task GetCostAsync_ShouldReturnDifferentCosts_ForDifferentProviderModelCombinations()
         {
             // Arrange
-            using var dbContext = CreateInMemoryDbContext();
+            using var dbContext = this.CreateInMemoryDbContext();
             var cost1 = new ModelCost { Provider = "Provider1", Model = "model1", CostPerToken = 0.0001m };
             var cost2 = new ModelCost { Provider = "Provider2", Model = "model2", CostPerToken = 0.0002m };
             dbContext.ModelCosts.Add(cost1);

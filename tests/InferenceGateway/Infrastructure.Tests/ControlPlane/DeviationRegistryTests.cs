@@ -20,7 +20,7 @@ public class DeviationRegistryTests
             Field = "response_format",
             Reason = "Not supported by provider",
             Mitigation = "Fallback to default",
-            Status = DeviationStatus.Open
+            Status = DeviationStatus.Open,
         };
 
         await registry.RegisterAsync(entry);
@@ -45,7 +45,7 @@ public class DeviationRegistryTests
             Field = "stream_options",
             Reason = "Streaming mismatch",
             Mitigation = "Documented deviation",
-            Status = DeviationStatus.Open
+            Status = DeviationStatus.Open,
         };
 
         await registry.RegisterAsync(entry);

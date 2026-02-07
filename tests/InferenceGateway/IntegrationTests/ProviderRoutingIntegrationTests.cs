@@ -35,7 +35,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
         public ProviderRoutingIntegrationTests(ITestOutputHelper output)
         {
-            _output = output ?? throw new ArgumentNullException(nameof(output));
+            this._output = output ?? throw new ArgumentNullException(nameof(output));
 
             // Setup dependency injection with real components
             var services = new ServiceCollection();
@@ -75,7 +75,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                     ["provider-2"] = new ProviderConfig { Enabled = true, Key = "provider-2", Tier = 1 },
                     ["provider-3"] = new ProviderConfig { Enabled = true, Key = "provider-3", Tier = 2 },
                     ["fallback-provider"] = new ProviderConfig { Enabled = true, Key = "fallback-provider", Tier = 0 }
-                }
+                },
             });
 
             var mockStore = new Mock<IControlPlaneStore>();
@@ -86,34 +86,34 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             services.AddSingleton(mockConfig.Object);
             services.AddSingleton(mockStore.Object);
 
-            _serviceProvider = services.BuildServiceProvider();
-            _dbContext = _serviceProvider.GetRequiredService<ControlPlaneDbContext>();
+            this._serviceProvider = services.BuildServiceProvider();
+            this._dbContext = this._serviceProvider.GetRequiredService<ControlPlaneDbContext>();
 
             // Seed the database with test data
-            SeedDatabase();
+            this.SeedDatabase();
         }
 
         private void SeedDatabase()
         {
             // Add cost data for testing
-            _dbContext.ModelCosts.Add(new ModelCost { Provider = "provider-1", Model = "test-model", CostPerToken = 0.001m, FreeTier = true });
-            _dbContext.ModelCosts.Add(new ModelCost { Provider = "provider-2", Model = "test-model", CostPerToken = 0.002m, FreeTier = false });
-            _dbContext.ModelCosts.Add(new ModelCost { Provider = "provider-3", Model = "test-model", CostPerToken = 0.003m, FreeTier = false });
-            _dbContext.ModelCosts.Add(new ModelCost { Provider = "fallback-provider", Model = "fallback-model", CostPerToken = 0.000m, FreeTier = true });
+            this._dbContext.ModelCosts.Add(new ModelCost { Provider = "provider-1", Model = "test-model", CostPerToken = 0.001m, FreeTier = true });
+            this._dbContext.ModelCosts.Add(new ModelCost { Provider = "provider-2", Model = "test-model", CostPerToken = 0.002m, FreeTier = false });
+            this._dbContext.ModelCosts.Add(new ModelCost { Provider = "provider-3", Model = "test-model", CostPerToken = 0.003m, FreeTier = false });
+            this._dbContext.ModelCosts.Add(new ModelCost { Provider = "fallback-provider", Model = "fallback-model", CostPerToken = 0.000m, FreeTier = true });
 
-            _dbContext.SaveChanges();
+            this._dbContext.SaveChanges();
         }
 
         [Fact]
         public async Task FullRoutingPipeline_ShouldReturnOptimalProvider()
         {
             // Arrange
-            var costService = _serviceProvider.GetRequiredService<ICostService>();
-            var mockHealthStore = Mock.Get(_serviceProvider.GetRequiredService<IHealthStore>());
-            var mockQuotaTracker = Mock.Get(_serviceProvider.GetRequiredService<IQuotaTracker>());
-            var mockProviderRegistry = Mock.Get(_serviceProvider.GetRequiredService<IProviderRegistry>());
-            var mockConfig = Mock.Get(_serviceProvider.GetRequiredService<IOptions<SynaxisConfiguration>>());
-            var mockStore = Mock.Get(_serviceProvider.GetRequiredService<IControlPlaneStore>());
+            var costService = this._serviceProvider.GetRequiredService<ICostService>();
+            var mockHealthStore = Mock.Get(this._serviceProvider.GetRequiredService<IHealthStore>());
+            var mockQuotaTracker = Mock.Get(this._serviceProvider.GetRequiredService<IQuotaTracker>());
+            var mockProviderRegistry = Mock.Get(this._serviceProvider.GetRequiredService<IProviderRegistry>());
+            var mockConfig = Mock.Get(this._serviceProvider.GetRequiredService<IOptions<SynaxisConfiguration>>());
+            var mockStore = Mock.Get(this._serviceProvider.GetRequiredService<IControlPlaneStore>());
 
             // Setup ModelResolver dependencies
             mockStore.Setup(x => x.GetGlobalModelAsync("test-model"))
@@ -134,7 +134,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             // Debug output to see actual results
             foreach (var candidate in result)
             {
-                _output.WriteLine($"Provider: {candidate.Key}, IsFree: {candidate.IsFree}, CostPerToken: {candidate.CostPerToken}");
+                this._output.WriteLine($"Provider: {candidate.Key}, IsFree: {candidate.IsFree}, CostPerToken: {candidate.CostPerToken}");
             }
 
             // First provider should be free tier
@@ -154,12 +154,12 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task RoutingPipeline_ShouldFilterUnhealthyProviders()
         {
             // Arrange
-            var costService = _serviceProvider.GetRequiredService<ICostService>();
-            var mockHealthStore = Mock.Get(_serviceProvider.GetRequiredService<IHealthStore>());
-            var mockQuotaTracker = Mock.Get(_serviceProvider.GetRequiredService<IQuotaTracker>());
-            var mockProviderRegistry = Mock.Get(_serviceProvider.GetRequiredService<IProviderRegistry>());
-            var mockConfig = Mock.Get(_serviceProvider.GetRequiredService<IOptions<SynaxisConfiguration>>());
-            var mockStore = Mock.Get(_serviceProvider.GetRequiredService<IControlPlaneStore>());
+            var costService = this._serviceProvider.GetRequiredService<ICostService>();
+            var mockHealthStore = Mock.Get(this._serviceProvider.GetRequiredService<IHealthStore>());
+            var mockQuotaTracker = Mock.Get(this._serviceProvider.GetRequiredService<IQuotaTracker>());
+            var mockProviderRegistry = Mock.Get(this._serviceProvider.GetRequiredService<IProviderRegistry>());
+            var mockConfig = Mock.Get(this._serviceProvider.GetRequiredService<IOptions<SynaxisConfiguration>>());
+            var mockStore = Mock.Get(this._serviceProvider.GetRequiredService<IControlPlaneStore>());
 
             // Setup unhealthy provider
             mockHealthStore.Setup(x => x.IsHealthyAsync("provider-2", It.IsAny<CancellationToken>()))
@@ -183,12 +183,12 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task RoutingPipeline_ShouldFilterQuotaExceededProviders()
         {
             // Arrange
-            var costService = _serviceProvider.GetRequiredService<ICostService>();
-            var mockHealthStore = Mock.Get(_serviceProvider.GetRequiredService<IHealthStore>());
-            var mockQuotaTracker = Mock.Get(_serviceProvider.GetRequiredService<IQuotaTracker>());
-            var mockProviderRegistry = Mock.Get(_serviceProvider.GetRequiredService<IProviderRegistry>());
-            var mockConfig = Mock.Get(_serviceProvider.GetRequiredService<IOptions<SynaxisConfiguration>>());
-            var mockStore = Mock.Get(_serviceProvider.GetRequiredService<IControlPlaneStore>());
+            var costService = this._serviceProvider.GetRequiredService<ICostService>();
+            var mockHealthStore = Mock.Get(this._serviceProvider.GetRequiredService<IHealthStore>());
+            var mockQuotaTracker = Mock.Get(this._serviceProvider.GetRequiredService<IQuotaTracker>());
+            var mockProviderRegistry = Mock.Get(this._serviceProvider.GetRequiredService<IProviderRegistry>());
+            var mockConfig = Mock.Get(this._serviceProvider.GetRequiredService<IOptions<SynaxisConfiguration>>());
+            var mockStore = Mock.Get(this._serviceProvider.GetRequiredService<IControlPlaneStore>());
 
             // Setup quota-exceeded provider
             mockQuotaTracker.Setup(x => x.CheckQuotaAsync("provider-3", It.IsAny<CancellationToken>()))
@@ -212,12 +212,12 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task RoutingPipeline_ShouldHandleDatabaseDrivenRouting()
         {
             // Arrange
-            var costService = _serviceProvider.GetRequiredService<ICostService>();
-            var mockHealthStore = Mock.Get(_serviceProvider.GetRequiredService<IHealthStore>());
-            var mockQuotaTracker = Mock.Get(_serviceProvider.GetRequiredService<IQuotaTracker>());
-            var mockProviderRegistry = Mock.Get(_serviceProvider.GetRequiredService<IProviderRegistry>());
-            var mockConfig = Mock.Get(_serviceProvider.GetRequiredService<IOptions<SynaxisConfiguration>>());
-            var mockStore = Mock.Get(_serviceProvider.GetRequiredService<IControlPlaneStore>());
+            var costService = this._serviceProvider.GetRequiredService<ICostService>();
+            var mockHealthStore = Mock.Get(this._serviceProvider.GetRequiredService<IHealthStore>());
+            var mockQuotaTracker = Mock.Get(this._serviceProvider.GetRequiredService<IQuotaTracker>());
+            var mockProviderRegistry = Mock.Get(this._serviceProvider.GetRequiredService<IProviderRegistry>());
+            var mockConfig = Mock.Get(this._serviceProvider.GetRequiredService<IOptions<SynaxisConfiguration>>());
+            var mockStore = Mock.Get(this._serviceProvider.GetRequiredService<IControlPlaneStore>());
 
             // Setup database-driven model resolution
             var globalModel = new GlobalModel
@@ -227,7 +227,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 {
                     new ProviderModel { ProviderId = "provider-1", ProviderSpecificId = "db-model-1" },
                     new ProviderModel { ProviderId = "provider-2", ProviderSpecificId = "db-model-2" }
-                }
+                },
             };
 
             mockStore.Setup(x => x.GetGlobalModelAsync("database-model"))
@@ -255,12 +255,12 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task RoutingPipeline_ShouldHandlePartialFailuresGracefully()
         {
             // Arrange
-            var costService = _serviceProvider.GetRequiredService<ICostService>();
-            var mockHealthStore = Mock.Get(_serviceProvider.GetRequiredService<IHealthStore>());
-            var mockQuotaTracker = Mock.Get(_serviceProvider.GetRequiredService<IQuotaTracker>());
-            var mockProviderRegistry = Mock.Get(_serviceProvider.GetRequiredService<IProviderRegistry>());
-            var mockConfig = Mock.Get(_serviceProvider.GetRequiredService<IOptions<SynaxisConfiguration>>());
-            var mockStore = Mock.Get(_serviceProvider.GetRequiredService<IControlPlaneStore>());
+            var costService = this._serviceProvider.GetRequiredService<ICostService>();
+            var mockHealthStore = Mock.Get(this._serviceProvider.GetRequiredService<IHealthStore>());
+            var mockQuotaTracker = Mock.Get(this._serviceProvider.GetRequiredService<IQuotaTracker>());
+            var mockProviderRegistry = Mock.Get(this._serviceProvider.GetRequiredService<IProviderRegistry>());
+            var mockConfig = Mock.Get(this._serviceProvider.GetRequiredService<IOptions<SynaxisConfiguration>>());
+            var mockStore = Mock.Get(this._serviceProvider.GetRequiredService<IControlPlaneStore>());
 
             // Setup partial failures: one unhealthy, one quota exceeded
             mockHealthStore.Setup(x => x.IsHealthyAsync("provider-2", It.IsAny<CancellationToken>()))
@@ -284,12 +284,12 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task RoutingPipeline_ShouldHandleModelNotFoundGracefully()
         {
             // Arrange
-            var costService = _serviceProvider.GetRequiredService<ICostService>();
-            var mockHealthStore = Mock.Get(_serviceProvider.GetRequiredService<IHealthStore>());
-            var mockQuotaTracker = Mock.Get(_serviceProvider.GetRequiredService<IQuotaTracker>());
-            var mockProviderRegistry = Mock.Get(_serviceProvider.GetRequiredService<IProviderRegistry>());
-            var mockConfig = Mock.Get(_serviceProvider.GetRequiredService<IOptions<SynaxisConfiguration>>());
-            var mockStore = Mock.Get(_serviceProvider.GetRequiredService<IControlPlaneStore>());
+            var costService = this._serviceProvider.GetRequiredService<ICostService>();
+            var mockHealthStore = Mock.Get(this._serviceProvider.GetRequiredService<IHealthStore>());
+            var mockQuotaTracker = Mock.Get(this._serviceProvider.GetRequiredService<IQuotaTracker>());
+            var mockProviderRegistry = Mock.Get(this._serviceProvider.GetRequiredService<IProviderRegistry>());
+            var mockConfig = Mock.Get(this._serviceProvider.GetRequiredService<IOptions<SynaxisConfiguration>>());
+            var mockStore = Mock.Get(this._serviceProvider.GetRequiredService<IControlPlaneStore>());
 
             // Setup unknown model
             mockProviderRegistry.Setup(x => x.GetCandidates("unknown-model"))
@@ -310,12 +310,12 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public async Task RoutingPipeline_ShouldRespectCapabilityRequirements()
         {
             // Arrange
-            var costService = _serviceProvider.GetRequiredService<ICostService>();
-            var mockHealthStore = Mock.Get(_serviceProvider.GetRequiredService<IHealthStore>());
-            var mockQuotaTracker = Mock.Get(_serviceProvider.GetRequiredService<IQuotaTracker>());
-            var mockProviderRegistry = Mock.Get(_serviceProvider.GetRequiredService<IProviderRegistry>());
-            var mockConfig = Mock.Get(_serviceProvider.GetRequiredService<IOptions<SynaxisConfiguration>>());
-            var mockStore = Mock.Get(_serviceProvider.GetRequiredService<IControlPlaneStore>());
+            var costService = this._serviceProvider.GetRequiredService<ICostService>();
+            var mockHealthStore = Mock.Get(this._serviceProvider.GetRequiredService<IHealthStore>());
+            var mockQuotaTracker = Mock.Get(this._serviceProvider.GetRequiredService<IQuotaTracker>());
+            var mockProviderRegistry = Mock.Get(this._serviceProvider.GetRequiredService<IProviderRegistry>());
+            var mockConfig = Mock.Get(this._serviceProvider.GetRequiredService<IOptions<SynaxisConfiguration>>());
+            var mockStore = Mock.Get(this._serviceProvider.GetRequiredService<IControlPlaneStore>());
 
             var modelResolver = new ModelResolver(mockConfig.Object, mockProviderRegistry.Object, mockStore.Object);
             var mockLogger = new Mock<ILogger<SmartRouter>>();
@@ -331,8 +331,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
         public void Dispose()
         {
-            _dbContext?.Database?.EnsureDeleted();
-            _serviceProvider?.Dispose();
+            this._dbContext?.Database?.EnsureDeleted();
+            this._serviceProvider?.Dispose();
         }
     }
 }

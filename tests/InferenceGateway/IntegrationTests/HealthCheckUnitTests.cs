@@ -30,12 +30,12 @@ public class HealthCheckUnitTests
         {
             Providers = new Dictionary<string, ProviderConfig>
             {
-                ["ProviderA"] = new ProviderConfig { Type = "openai", Models = new List<string> { "model-a" } }
+                ["ProviderA"] = new ProviderConfig { Type = "openai", Models = new List<string> { "model-a" } },
             },
             CanonicalModels = new List<CanonicalModelConfig>
             {
                 new () { Id = "model-x", Provider = "MissingProvider", ModelPath = "model-x" }
-            }
+            },
         };
 
         var check = new ConfigHealthCheck(Options.Create(config));
@@ -51,16 +51,16 @@ public class HealthCheckUnitTests
         {
             Providers = new Dictionary<string, ProviderConfig>
             {
-                ["ProviderA"] = new ProviderConfig { Type = "openai", Models = new List<string> { "model-a" } }
+                ["ProviderA"] = new ProviderConfig { Type = "openai", Models = new List<string> { "model-a" } },
             },
             CanonicalModels = new List<CanonicalModelConfig>
             {
-                new () { Id = "model-a", Provider = "ProviderA", ModelPath = "model-a" }
+                new () { Id = "model-a", Provider = "ProviderA", ModelPath = "model-a" },
             },
             Aliases = new Dictionary<string, AliasConfig>
             {
                 ["fast"] = new AliasConfig { Candidates = new List<string> { "missing-model" } }
-            }
+            },
         };
 
         var check = new ConfigHealthCheck(Options.Create(config));
@@ -76,16 +76,16 @@ public class HealthCheckUnitTests
         {
             Providers = new Dictionary<string, ProviderConfig>
             {
-                ["ProviderA"] = new ProviderConfig { Type = "openai", Models = new List<string> { "model-a" } }
+                ["ProviderA"] = new ProviderConfig { Type = "openai", Models = new List<string> { "model-a" } },
             },
             CanonicalModels = new List<CanonicalModelConfig>
             {
-                new () { Id = "model-a", Provider = "ProviderA", ModelPath = "model-a" }
+                new () { Id = "model-a", Provider = "ProviderA", ModelPath = "model-a" },
             },
             Aliases = new Dictionary<string, AliasConfig>
             {
                 ["fast"] = new AliasConfig { Candidates = new List<string> { "model-a" } }
-            }
+            },
         };
 
         var check = new ConfigHealthCheck(Options.Create(config));
@@ -102,7 +102,7 @@ public class HealthCheckUnitTests
             Providers = new Dictionary<string, ProviderConfig>
             {
                 ["ProviderA"] = new ProviderConfig { Enabled = false, Type = "openai" }
-            }
+            },
         };
 
         var check = new ProviderConnectivityHealthCheck(Options.Create(config), NullLogger<ProviderConnectivityHealthCheck>.Instance);
@@ -119,7 +119,7 @@ public class HealthCheckUnitTests
             Providers = new Dictionary<string, ProviderConfig>
             {
                 ["ProviderA"] = new ProviderConfig { Enabled = true, Type = "custom" }
-            }
+            },
         };
 
         var check = new ProviderConnectivityHealthCheck(Options.Create(config), NullLogger<ProviderConnectivityHealthCheck>.Instance);
@@ -143,7 +143,7 @@ public class HealthCheckUnitTests
                     Type = "custom",
                     Endpoint = $"http://127.0.0.1:{server.Port}"
                 }
-            }
+            },
         };
 
         var check = new ProviderConnectivityHealthCheck(Options.Create(config), NullLogger<ProviderConnectivityHealthCheck>.Instance);
@@ -155,16 +155,16 @@ public class HealthCheckUnitTests
     private sealed class LocalHttpServer : IAsyncDisposable
     {
         private readonly TcpListener _listener;
-        private readonly CancellationTokenSource _cts = new ();
+        private readonly CancellationTokenSource _cts = new();
         private Task _acceptTask;
 
         private LocalHttpServer(TcpListener listener)
         {
-            _listener = listener;
-            _acceptTask = AcceptOnceAsync();
+            this._listener = listener;
+            this._acceptTask = this.AcceptOnceAsync();
         }
 
-        public int Port => ((IPEndPoint)_listener.LocalEndpoint).Port;
+        public int Port => ((IPEndPoint)this._listener.LocalEndpoint).Port;
 
         public static Task<LocalHttpServer> StartAsync()
         {
@@ -179,10 +179,10 @@ public class HealthCheckUnitTests
         {
             try
             {
-                using var tcpProbe = await _listener.AcceptTcpClientAsync(_cts.Token);
+                using var tcpProbe = await this._listener.AcceptTcpClientAsync(this._cts.Token);
                 tcpProbe.Close();
 
-                using var httpClient = await _listener.AcceptTcpClientAsync(_cts.Token);
+                using var httpClient = await this._listener.AcceptTcpClientAsync(this._cts.Token);
                 using var stream = httpClient.GetStream();
                 using var reader = new StreamReader(stream, Encoding.ASCII, leaveOpen: true);
 
@@ -194,7 +194,7 @@ public class HealthCheckUnitTests
 
                 var response = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n";
                 var bytes = Encoding.ASCII.GetBytes(response);
-                await stream.WriteAsync(bytes, 0, bytes.Length, _cts.Token);
+                await stream.WriteAsync(bytes, 0, bytes.Length, this._cts.Token);
             }
             catch (OperationCanceledException)
             {
@@ -203,10 +203,10 @@ public class HealthCheckUnitTests
 
         public async ValueTask DisposeAsync()
         {
-            _cts.Cancel();
-            _listener.Stop();
-            await _acceptTask;
-            _cts.Dispose();
+            this._cts.Cancel();
+            this._listener.Stop();
+            await this._acceptTask;
+            this._cts.Dispose();
         }
     }
 }
