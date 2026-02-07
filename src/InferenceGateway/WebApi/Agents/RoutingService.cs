@@ -65,16 +65,16 @@ namespace Synaxis.InferenceGateway.WebApi.Agents
             var chatOptions = new ChatOptions { ModelId = translatedRequest.model };
 
             // 5. Execute
-            var response = await this._chatClient.GetResponseAsync(translatedRequest.messages, chatOptions, cancellationToken);
+            var response = await this._chatClient.GetResponseAsync(translatedRequest.messages, chatOptions, cancellationToken).ConfigureAwait(false);
 
             // 6. Translate Response
-            var message = response.Messages.FirstOrDefault() ?? new ChatMessage(ChatRole.Assistant, "");
+            var message = response.Messages.FirstOrDefault() ?? new ChatMessage(ChatRole.Assistant, string.Empty);
             var toolCalls = message.Contents.OfType<FunctionCallContent>().ToList();
             var canonicalResponse = new CanonicalResponse(message.Text, toolCalls);
             var translatedResponse = this._translator.TranslateResponse(canonicalResponse);
 
             // 7. Log Routing Context
-            this.LogRoutingContext(httpContext, openAIRequest.Model, response.AdditionalProperties);
+            LogRoutingContext(httpContext, openAIRequest.Model, response.AdditionalProperties);
 
             // 8. Build Agent Response
             var agentMessage = new ChatMessage(ChatRole.Assistant, translatedResponse.content);
@@ -100,31 +100,28 @@ namespace Synaxis.InferenceGateway.WebApi.Agents
         /// <returns>The agent response updates.</returns>
         public async IAsyncEnumerable<AgentsAI.AgentResponseUpdate> HandleStreamingAsync(OpenAIRequest openAIRequest, IEnumerable<ChatMessage> messages, AgentsAI.AgentThread? thread = null, AgentsAI.AgentRunOptions? options = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            var httpContext = this._httpContextAccessor.HttpContext;
-
             var canonicalRequest = OpenAIRequestMapper.ToCanonicalRequest(openAIRequest, messages);
             var translatedRequest = this._translator.TranslateRequest(canonicalRequest);
             var chatOptions = new ChatOptions { ModelId = translatedRequest.model };
 
-            await foreach (var update in this._chatClient.GetStreamingResponseAsync(translatedRequest.messages, chatOptions, cancellationToken))
+            await foreach (var update in this._chatClient.GetStreamingResponseAsync(translatedRequest.messages, chatOptions, cancellationToken).ConfigureAwait(false))
             {
                 var translatedUpdate = this._translator.TranslateUpdate(update);
                 yield return new AgentsAI.AgentResponseUpdate(translatedUpdate);
             }
         }
 
-        private void LogRoutingContext(HttpContext? httpContext, string? requestedModel, AdditionalPropertiesDictionary? properties)
+        private static void LogRoutingContext(HttpContext? httpContext, string? requestedModel, AdditionalPropertiesDictionary? properties)
         {
-            if (httpContext != null && properties != null)
+            if (httpContext != null &&
+                properties != null &&
+                properties.TryGetValue("model_id", out var resolvedModel) &&
+                properties.TryGetValue("provider_name", out var provider))
             {
-                if (properties.TryGetValue("model_id", out var resolvedModel) &&
-                    properties.TryGetValue("provider_name", out var provider))
-                {
-                    httpContext.Items["RoutingContext"] = new RoutingContext(
-                        requestedModel ?? "default",
-                        resolvedModel?.ToString() ?? "",
-                        provider?.ToString() ?? "");
-                }
+                httpContext.Items["RoutingContext"] = new RoutingContext(
+                    requestedModel ?? string.Empty,
+                    resolvedModel?.ToString() ?? string.Empty,
+                    provider?.ToString() ?? string.Empty);
             }
         }
     }

@@ -129,8 +129,7 @@ try
         q.AddTrigger(opts => opts
             .ForJob(modelsDevSyncJobKey)
             .StartNow()
-            .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromHours(24)).RepeatForever())
-        );
+            .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromHours(24)).RepeatForever()));
 
         // Create a job key for ProviderDiscoveryJob
         var providerDiscoveryJobKey = new JobKey("ProviderDiscoveryJob");
@@ -142,8 +141,7 @@ try
         q.AddTrigger(opts => opts
             .ForJob(providerDiscoveryJobKey)
             .StartNow()
-            .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromHours(1)).RepeatForever())
-        );
+            .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromHours(1)).RepeatForever()));
 
         // Health Monitoring - every 2 minutes
         var healthJobKey = new JobKey("HealthMonitoringJob");
@@ -151,8 +149,7 @@ try
         q.AddTrigger(opts => opts
             .ForJob(healthJobKey)
             .StartNow()
-            .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromMinutes(2)).RepeatForever())
-        );
+            .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromMinutes(2)).RepeatForever()));
 
         // Cost Optimization - every 15 minutes
         var costJobKey = new JobKey("CostOptimizationJob");
@@ -160,8 +157,7 @@ try
         q.AddTrigger(opts => opts
             .ForJob(costJobKey)
             .StartNow()
-            .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromMinutes(15)).RepeatForever())
-        );
+            .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromMinutes(15)).RepeatForever()));
 
         // Model Discovery - daily at 2 AM
         var discoveryJobKey = new JobKey("ModelDiscoveryJob");
@@ -169,8 +165,7 @@ try
         q.AddTrigger(opts => opts
             .ForJob(discoveryJobKey)
             .StartNow()
-            .WithCronSchedule("0 0 2 * * ?")
-        ); // 2 AM daily
+            .WithCronSchedule("0 0 2 * * ?")); // 2 AM daily
 
         // Security Audit - every 6 hours
         var securityJobKey = new JobKey("SecurityAuditJob");
@@ -178,8 +173,7 @@ try
         q.AddTrigger(opts => opts
             .ForJob(securityJobKey)
             .StartNow()
-            .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromHours(6)).RepeatForever())
-        );
+            .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromHours(6)).RepeatForever()));
 
         // Audit Log Partition Management - daily at 3 AM
         var auditPartitionJobKey = new JobKey("AuditLogPartitionJob");
@@ -188,8 +182,8 @@ try
             .ForJob(auditPartitionJobKey)
             .WithIdentity("AuditLogPartitionTrigger")
             .StartNow()
-            .WithCronSchedule("0 0 3 * * ?") // 3 AM daily
-        );
+            .WithCronSchedule("0 0 3 * * ?")); // 3 AM daily
+
     });
 
     // Add hosted service to run Quartz and wait for jobs to complete on shutdown
@@ -386,7 +380,7 @@ try
     // logged but do not crash the host.
     try
     {
-        await app.InitializeDatabaseAsync();
+        await app.InitializeDatabaseAsync().ConfigureAwait(false);
     }
     catch (Exception ex)
     {
@@ -406,7 +400,7 @@ try
     app.Use(async (context, next) =>
     {
         context.Request.EnableBuffering();
-        await next();
+        await next().ConfigureAwait(false);
     });
 
     app.UseMiddleware<RequestIdMiddleware>();
@@ -436,7 +430,7 @@ try
         Predicate = r => r.Tags.Contains("readiness"),
     });
 
-    await app.RunAsync();
+    await app.RunAsync().ConfigureAwait(false);
 }
 catch (Exception ex)
 {
@@ -444,13 +438,13 @@ catch (Exception ex)
 }
 finally
 {
-    await Log.CloseAndFlushAsync();
+    await Log.CloseAndFlushAsync().ConfigureAwait(false);
 }
 
 /// <summary>
 /// The main program class for the Synaxis Inference Gateway web application.
 /// This partial class enables programmatic access to the application for testing and hosting scenarios.
 /// </summary>
-public partial class Program
+internal static partial class Program
 {
 }

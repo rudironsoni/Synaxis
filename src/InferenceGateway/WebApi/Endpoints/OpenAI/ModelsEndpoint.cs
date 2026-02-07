@@ -268,7 +268,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
         /// <summary>
         /// Gets the JSON serializer options for model DTOs.
         /// </summary>
-        public static readonly System.Text.Json.JsonSerializerOptions Options = new()
+        public static readonly System.Text.Json.JsonSerializerOptions Options = new ()
         {
             PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.SnakeCaseLower,
             PropertyNameCaseInsensitive = true,
