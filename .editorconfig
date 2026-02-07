@@ -104,7 +104,7 @@ dotnet_diagnostic.MA0002.severity = suggestion
 [src/InferenceGateway/**/*.cs]
 dotnet_diagnostic.SA1649.severity = none
 
-# Suppress SA1516 for WebApi project (generated code only, but suppression for generated files not working)
+# Suppress SA1516 for WebApi project (generated GlobalUsings.g.cs triggers SA1516, suppression for obj directory not effective)
 [src/InferenceGateway/WebApi/**/*.cs]
 dotnet_diagnostic.SA1516.severity = none
 
