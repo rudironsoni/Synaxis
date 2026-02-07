@@ -81,11 +81,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                 RateLimitTpm = request.RateLimitTpm,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow,
-                CreatedBy = request.CreatedBy
+                CreatedBy = request.CreatedBy,
             };
 
-            _context.ApiKeys.Add(apiKey);
-            await _context.SaveChangesAsync(cancellationToken);
+            this._context.ApiKeys.Add(apiKey);
+            await this._context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
             return new GenerateApiKeyResponse
             {
@@ -95,7 +95,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                 Prefix = prefix,
                 Scopes = request.Scopes,
                 ExpiresAt = apiKey.ExpiresAt,
-                CreatedAt = apiKey.CreatedAt
+                CreatedAt = apiKey.CreatedAt,
             };
         }
 
@@ -125,9 +125,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             var prefix = ExtractKeyPrefix(keyIdPart);
 
             // Find potential matching keys by prefix (indexed lookup)
-            var candidates = await _context.ApiKeys
+            var candidates = await this._context.ApiKeys
                 .Where(k => k.KeyPrefix == prefix)
-                .ToListAsync(cancellationToken);
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
 
             ApiKey? matchedKey = null;
 
@@ -191,7 +191,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             {
                 try
                 {
-                    await UpdateLastUsedAsync(matchedKey.Id, CancellationToken.None);
+                    await this.UpdateLastUsedAsync(matchedKey.Id, CancellationToken.None).ConfigureAwait(false);
                 }
                 catch
                 {
@@ -214,8 +214,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                 throw new ArgumentException("Revocation reason is required.", nameof(reason));
             }
 
-            var apiKey = await _context.ApiKeys
-                .FirstOrDefaultAsync(k => k.Id == apiKeyId, cancellationToken);
+            var apiKey = await this._context.ApiKeys
+                .FirstOrDefaultAsync(k => k.Id == apiKeyId, cancellationToken).ConfigureAwait(false);
 
             if (apiKey == null)
             {
@@ -233,7 +233,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             apiKey.RevokedBy = revokedBy;
             apiKey.RevocationReason = reason;
 
-            await _context.SaveChangesAsync(cancellationToken);
+            await this._context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             return true;
         }
 
@@ -243,7 +243,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             bool includeRevoked = false,
             CancellationToken cancellationToken = default)
         {
-            var query = _context.ApiKeys
+            var query = this._context.ApiKeys
                 .Where(k => k.OrganizationId == organizationId);
 
             if (!includeRevoked)
@@ -253,7 +253,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
 
             var keys = await query
                 .OrderByDescending(k => k.CreatedAt)
-                .ToListAsync(cancellationToken);
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
 
             return keys.Select(MapToApiKeyInfo).ToList();
         }
@@ -265,8 +265,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             DateTime to,
             CancellationToken cancellationToken = default)
         {
-            var apiKey = await _context.ApiKeys
-                .FirstOrDefaultAsync(k => k.Id == apiKeyId, cancellationToken);
+            var apiKey = await this._context.ApiKeys
+                .FirstOrDefaultAsync(k => k.Id == apiKeyId, cancellationToken).ConfigureAwait(false);
 
             if (apiKey == null)
             {
@@ -283,7 +283,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                 FailedRequests = 0,
                 From = from,
                 To = to,
-                LastUsedAt = apiKey.LastUsedAt
+                LastUsedAt = apiKey.LastUsedAt,
             };
         }
 
@@ -292,13 +292,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             Guid apiKeyId,
             CancellationToken cancellationToken = default)
         {
-            var apiKey = await _context.ApiKeys
-                .FirstOrDefaultAsync(k => k.Id == apiKeyId, cancellationToken);
+            var apiKey = await this._context.ApiKeys
+                .FirstOrDefaultAsync(k => k.Id == apiKeyId, cancellationToken).ConfigureAwait(false);
 
             if (apiKey != null)
             {
                 apiKey.LastUsedAt = DateTime.UtcNow;
-                await _context.SaveChangesAsync(cancellationToken);
+                await this._context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -436,7 +436,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                 LastUsedAt = apiKey.LastUsedAt,
                 CreatedAt = apiKey.CreatedAt,
                 RevokedAt = apiKey.RevokedAt,
-                RevocationReason = apiKey.RevocationReason
+                RevocationReason = apiKey.RevocationReason,
             };
         }
 

@@ -24,7 +24,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
         public ComplianceProviderFactory(SynaxisDbContext dbContext)
         {
             if (dbContext == null)
+            {
                 throw new ArgumentNullException(nameof(dbContext));
+            }
 
             // Initialize providers
             var gdprProvider = new GdprComplianceProvider(dbContext);
@@ -43,7 +45,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                 ["BR"] = lgpdProvider,
                 ["sa-east-1"] = lgpdProvider,
                 ["br-south-1"] = lgpdProvider,
-                ["sa-saopaulo-1"] = lgpdProvider
+                ["sa-saopaulo-1"] = lgpdProvider,
             };
 
             // Default to GDPR as it's most stringent
@@ -59,19 +61,27 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
         public IComplianceProvider GetProvider(string region)
         {
             if (string.IsNullOrWhiteSpace(region))
+            {
                 return this._defaultProvider;
+            }
 
             // Try exact match first
-            if (_providers.TryGetValue(region, out var provider))
+            if (this._providers.TryGetValue(region, out var provider))
+            {
                 return provider;
+            }
 
             // Try to match by region prefix (e.g., "eu-" matches GDPR, "sa-" or "br-" matches LGPD)
             if (region.StartsWith("eu-", StringComparison.OrdinalIgnoreCase))
+            {
                 return this._providers["EU"];
+            }
 
             if (region.StartsWith("sa-", StringComparison.OrdinalIgnoreCase) ||
                 region.StartsWith("br-", StringComparison.OrdinalIgnoreCase))
+            {
                 return this._providers["BR"];
+            }
 
             // Fallback to most stringent (GDPR)
             return this._defaultProvider;
@@ -85,12 +95,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
         public IComplianceProvider GetProviderByRegulation(string regulationCode)
         {
             if (string.IsNullOrWhiteSpace(regulationCode))
+            {
                 return this._defaultProvider;
+            }
 
-            var provider = _providers.Values.FirstOrDefault(p =>
+            var provider = this._providers.Values.FirstOrDefault(p =>
                 p.RegulationCode.Equals(regulationCode, StringComparison.OrdinalIgnoreCase));
 
-            return provider ?? _defaultProvider;
+            return provider ?? this._defaultProvider;
         }
 
         /// <summary>
@@ -110,12 +122,16 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
         public void RegisterProvider(string region, IComplianceProvider provider)
         {
             if (string.IsNullOrWhiteSpace(region))
+            {
                 throw new ArgumentException("Region cannot be null or empty", nameof(region));
+            }
 
             if (provider == null)
+            {
                 throw new ArgumentNullException(nameof(provider));
+            }
 
-            _providers[region] = provider;
+            this._providers[region] = provider;
         }
 
         /// <summary>
@@ -126,7 +142,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
         public bool HasProvider(string region)
         {
             if (string.IsNullOrWhiteSpace(region))
+            {
                 return false;
+            }
 
             return this._providers.ContainsKey(region);
         }

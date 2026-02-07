@@ -16,7 +16,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
 
         public MockHttpHandler(MockProviderResponses? responses = null)
         {
-            _responses = responses ?? new MockProviderResponses();
+            this._responses = responses ?? new MockProviderResponses();
         }
 
         protected override async Task<HttpResponseMessage> SendAsync(
@@ -32,25 +32,25 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
             // Handle chat completions endpoint
             if (requestUri.Contains("/openai/v1/chat/completions") && requestMethod == "POST")
             {
-                return await HandleChatCompletionsRequest(request, cancellationToken);
+                return await this.HandleChatCompletionsRequest(request, cancellationToken);
             }
 
             // Handle legacy completions endpoint
             if (requestUri.Contains("/openai/v1/completions") && requestMethod == "POST")
             {
-                return await HandleLegacyCompletionsRequest(request, cancellationToken);
+                return await this.HandleLegacyCompletionsRequest(request, cancellationToken);
             }
 
             // Handle models endpoint
             if (requestUri.Contains("/openai/v1/models") && requestMethod == "GET")
             {
-                return HandleModelsRequest();
+                return this.HandleModelsRequest();
             }
 
             // Return 404 for unhandled endpoints
             return new HttpResponseMessage(System.Net.HttpStatusCode.NotFound)
             {
-                Content = new StringContent("{\"error\": {\"message\": \"Endpoint not found in mock\", \"type\": \"invalid_request_error\"}}")
+                Content = new StringContent("{\"error\": {\"message\": \"Endpoint not found in mock\", \"type\": \"invalid_request_error\"}}"),
             };
         }
 
@@ -67,7 +67,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                 }
 
                 var model = ExtractModelFromChatRequest(content);
-                var mockResponse = _responses.GetChatCompletionResponse(model);
+                var mockResponse = this._responses.GetChatCompletionResponse(model);
 
                 if (IsStreamingRequest(content))
                 {
@@ -98,7 +98,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                 }
 
                 var model = ExtractModelFromLegacyRequest(content);
-                var mockResponse = _responses.GetLegacyCompletionResponse(model);
+                var mockResponse = this._responses.GetLegacyCompletionResponse(model);
 
                 if (IsStreamingRequest(content))
                 {
@@ -118,7 +118,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
 
         private HttpResponseMessage HandleModelsRequest()
         {
-            var models = _responses.GetAvailableModels();
+            var models = this._responses.GetAvailableModels();
             return CreateJsonResponse(models, System.Net.HttpStatusCode.OK);
         }
 
@@ -193,12 +193,12 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                     message = message,
                     type = "mock_error",
                     code = "mock_error_code"
-                }
+                },
             });
 
             return new HttpResponseMessage(statusCode)
             {
-                Content = new StringContent(errorContent, System.Text.Encoding.UTF8, "application/json")
+                Content = new StringContent(errorContent, System.Text.Encoding.UTF8, "application/json"),
             };
         }
     }

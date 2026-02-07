@@ -18,7 +18,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
 
         public MockProviderTests(ITestOutputHelper output)
         {
-            _output = output ?? throw new ArgumentNullException(nameof(output));
+            this._output = output ?? throw new ArgumentNullException(nameof(output));
         }
 
         [Fact]
@@ -28,24 +28,24 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
             var mockHandler = new MockHttpHandler();
             var client = new HttpClient(mockHandler)
             {
-                BaseAddress = new System.Uri("http://localhost")
+                BaseAddress = new System.Uri("http://localhost"),
             };
 
             var requestPayload = new
             {
                 model = "llama-3.1-70b-versatile",
                 messages = new[] { new { role = "user", content = "Reply with exactly one word: OK" } },
-                max_tokens = 5
+                max_tokens = 5,
             };
 
             // Act
-            _output.WriteLine("Testing mock chat completion...");
+            this._output.WriteLine("Testing mock chat completion...");
             var response = await client.PostAsJsonAsync("/openai/v1/chat/completions", requestPayload);
             var content = await response.Content.ReadAsStringAsync();
 
             // Assert
-            _output.WriteLine($"Status Code: {response.StatusCode}");
-            _output.WriteLine($"Response: {content}");
+            this._output.WriteLine($"Status Code: {response.StatusCode}");
+            this._output.WriteLine($"Response: {content}");
 
             Assert.True(response.IsSuccessStatusCode, "Mock should return success status");
             Assert.Contains("\"choices\"", content, StringComparison.OrdinalIgnoreCase);
@@ -59,24 +59,24 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
             var mockHandler = new MockHttpHandler();
             var client = new HttpClient(mockHandler)
             {
-                BaseAddress = new System.Uri("http://localhost")
+                BaseAddress = new System.Uri("http://localhost"),
             };
 
             var requestPayload = new
             {
                 model = "deepseek-chat",
                 prompt = "Reply with exactly one word: OK",
-                max_tokens = 5
+                max_tokens = 5,
             };
 
             // Act
-            _output.WriteLine("Testing mock legacy completion...");
+            this._output.WriteLine("Testing mock legacy completion...");
             var response = await client.PostAsJsonAsync("/openai/v1/completions", requestPayload);
             var content = await response.Content.ReadAsStringAsync();
 
             // Assert
-            _output.WriteLine($"Status Code: {response.StatusCode}");
-            _output.WriteLine($"Response: {content}");
+            this._output.WriteLine($"Status Code: {response.StatusCode}");
+            this._output.WriteLine($"Response: {content}");
 
             Assert.True(response.IsSuccessStatusCode, "Mock should return success status");
             Assert.Contains("\"text\"", content, StringComparison.OrdinalIgnoreCase);
@@ -90,17 +90,17 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
             var mockHandler = new MockHttpHandler();
             var client = new HttpClient(mockHandler)
             {
-                BaseAddress = new System.Uri("http://localhost")
+                BaseAddress = new System.Uri("http://localhost"),
             };
 
             // Act
-            _output.WriteLine("Testing mock models endpoint...");
+            this._output.WriteLine("Testing mock models endpoint...");
             var response = await client.GetAsync("/openai/v1/models");
             var content = await response.Content.ReadAsStringAsync();
 
             // Assert
-            _output.WriteLine($"Status Code: {response.StatusCode}");
-            _output.WriteLine($"Response: {content}");
+            this._output.WriteLine($"Status Code: {response.StatusCode}");
+            this._output.WriteLine($"Response: {content}");
 
             Assert.True(response.IsSuccessStatusCode, "Mock should return success status");
             Assert.Contains("\"data\"", content, StringComparison.OrdinalIgnoreCase);
@@ -114,23 +114,23 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
             var mockHandler = new MockHttpHandler();
             var client = new HttpClient(mockHandler)
             {
-                BaseAddress = new System.Uri("http://localhost")
+                BaseAddress = new System.Uri("http://localhost"),
             };
 
             var requestPayload = new
             {
                 model = "gpt-4o",
                 messages = new[] { new { role = "user", content = "Say hello" } },
-                stream = true
+                stream = true,
             };
 
             // Act
-            _output.WriteLine("Testing mock streaming response...");
+            this._output.WriteLine("Testing mock streaming response...");
             var response = await client.PostAsJsonAsync("/openai/v1/chat/completions", requestPayload);
 
             // Assert
-            _output.WriteLine($"Status Code: {response.StatusCode}");
-            _output.WriteLine($"Content-Type: {response.Content.Headers.ContentType}");
+            this._output.WriteLine($"Status Code: {response.StatusCode}");
+            this._output.WriteLine($"Content-Type: {response.Content.Headers.ContentType}");
 
             Assert.True(response.IsSuccessStatusCode, "Mock should return success status");
             Assert.Equal("text/event-stream", response.Content.Headers.ContentType?.MediaType);

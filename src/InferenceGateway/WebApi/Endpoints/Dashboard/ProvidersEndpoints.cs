@@ -57,8 +57,15 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
                         var tokensValue = db.StringGet(tokensKey);
                         var requestsValue = db.StringGet(requestsKey);
 
-                        if (tokensValue.HasValue) int.TryParse(tokensValue.ToString(), System.Globalization.CultureInfo.InvariantCulture, out totalTokens);
-                        if (requestsValue.HasValue) int.TryParse(requestsValue.ToString(), System.Globalization.CultureInfo.InvariantCulture, out requests);
+                        if (tokensValue.HasValue)
+                        {
+                            int.TryParse(tokensValue.ToString(), System.Globalization.CultureInfo.InvariantCulture, out totalTokens);
+                        }
+
+                        if (requestsValue.HasValue)
+                        {
+                            int.TryParse(requestsValue.ToString(), System.Globalization.CultureInfo.InvariantCulture, out requests);
+                        }
                     }
                     catch
                     {
@@ -87,13 +94,13 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
                         {
                             TotalTokens = totalTokens,
                             Requests = requests
-                        }
+                        },
                     });
                 }
 
                 return Results.Json(new ProvidersListResponse
                 {
-                    Providers = providers
+                    Providers = providers,
                 });
             })
             .WithTags("Dashboard")
@@ -143,7 +150,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
                 return Results.Json(new ProviderStatusResponse
                 {
                     Status = status,
-                    LastChecked = lastChecked.ToString("O")
+                    LastChecked = lastChecked.ToString("O"),
                 });
             })
             .WithTags("Dashboard")
@@ -175,7 +182,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
 
                 return Results.Json(new ProviderConfigUpdateResponse
                 {
-                    Success = true
+                    Success = true,
                 });
             })
             .WithTags("Dashboard")

@@ -25,30 +25,30 @@ public class HealthMonitoringAgentTests
 
     public HealthMonitoringAgentTests()
     {
-        _serviceProviderMock = new Mock<IServiceProvider>();
-        _scopeMock = new Mock<IServiceScope>();
-        _scopeFactoryMock = new Mock<IServiceScopeFactory>();
-        _dbMock = new Mock<ControlPlaneDbContext>();
-        _healthToolMock = new Mock<IHealthTool>();
-        _alertToolMock = new Mock<IAlertTool>();
-        _auditToolMock = new Mock<IAuditTool>();
-        _loggerMock = new Mock<ILogger<HealthMonitoringAgent>>();
+        this._serviceProviderMock = new Mock<IServiceProvider>();
+        this._scopeMock = new Mock<IServiceScope>();
+        this._scopeFactoryMock = new Mock<IServiceScopeFactory>();
+        this._dbMock = new Mock<ControlPlaneDbContext>();
+        this._healthToolMock = new Mock<IHealthTool>();
+        this._alertToolMock = new Mock<IAlertTool>();
+        this._auditToolMock = new Mock<IAuditTool>();
+        this._loggerMock = new Mock<ILogger<HealthMonitoringAgent>>();
 
-        _scopeMock.Setup(s => s.ServiceProvider).Returns(_serviceProviderMock.Object);
-        _serviceProviderMock.Setup(sp => sp.GetService(typeof(IServiceScopeFactory)))
-            .Returns(_scopeFactoryMock.Object);
-        _serviceProviderMock.Setup(sp => sp.GetService(typeof(ControlPlaneDbContext)))
-            .Returns(_dbMock.Object);
-        _serviceProviderMock.Setup(sp => sp.GetService(typeof(IHealthTool)))
-            .Returns(_healthToolMock.Object);
-        _serviceProviderMock.Setup(sp => sp.GetService(typeof(IAlertTool)))
-            .Returns(_alertToolMock.Object);
-        _serviceProviderMock.Setup(sp => sp.GetService(typeof(IAuditTool)))
-            .Returns(_auditToolMock.Object);
+        this._scopeMock.Setup(s => s.ServiceProvider).Returns(this._serviceProviderMock.Object);
+        this._serviceProviderMock.Setup(sp => sp.GetService(typeof(IServiceScopeFactory)))
+            .Returns(this._scopeFactoryMock.Object);
+        this._serviceProviderMock.Setup(sp => sp.GetService(typeof(ControlPlaneDbContext)))
+            .Returns(this._dbMock.Object);
+        this._serviceProviderMock.Setup(sp => sp.GetService(typeof(IHealthTool)))
+            .Returns(this._healthToolMock.Object);
+        this._serviceProviderMock.Setup(sp => sp.GetService(typeof(IAlertTool)))
+            .Returns(this._alertToolMock.Object);
+        this._serviceProviderMock.Setup(sp => sp.GetService(typeof(IAuditTool)))
+            .Returns(this._auditToolMock.Object);
 
-        _scopeFactoryMock.Setup(f => f.CreateScope()).Returns(_scopeMock.Object);
+        this._scopeFactoryMock.Setup(f => f.CreateScope()).Returns(this._scopeMock.Object);
 
-        _agent = new HealthMonitoringAgent(_serviceProviderMock.Object, _loggerMock.Object);
+        this._agent = new HealthMonitoringAgent(this._serviceProviderMock.Object, this._loggerMock.Object);
     }
 
     [Fact]
@@ -59,7 +59,7 @@ public class HealthMonitoringAgentTests
         contextMock.Setup(c => c.CancellationToken).Returns(CancellationToken.None);
 
         // Act
-        await _agent.Execute(contextMock.Object);
+        await this._agent.Execute(contextMock.Object);
 
         // Assert
         Assert.True(true); // Test that execution completes
@@ -73,10 +73,10 @@ public class HealthMonitoringAgentTests
         contextMock.Setup(c => c.CancellationToken).Returns(CancellationToken.None);
 
         // Act
-        await _agent.Execute(contextMock.Object);
+        await this._agent.Execute(contextMock.Object);
 
         // Assert
-        _loggerMock.Verify(
+        this._loggerMock.Verify(
             x => x.Log(
                 LogLevel.Information,
                 It.IsAny<EventId>(),

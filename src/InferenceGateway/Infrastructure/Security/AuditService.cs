@@ -32,11 +32,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
                 UserId = userId,
                 Action = action,
                 NewValues = payload != null ? JsonSerializer.Serialize(payload) : null,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
             };
 
-            _dbContext.AuditLogs.Add(log);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            this._dbContext.AuditLogs.Add(log);
+            await this._dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 }

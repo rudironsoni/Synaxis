@@ -10,6 +10,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
     public interface ITokenStore
     {
         Task<List<AntigravityAccount>> LoadAsync();
+
         Task SaveAsync(List<AntigravityAccount> accounts);
     }
 }

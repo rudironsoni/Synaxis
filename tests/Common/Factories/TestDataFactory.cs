@@ -7,13 +7,13 @@ namespace Synaxis.Common.Tests.Factories;
 public static class TestDataFactory
 {
     public static ChatMessage CreateUserMessage(string content = "Hello, world!")
-        => new (ChatRole.User, content);
+        => new(ChatRole.User, content);
 
     public static ChatMessage CreateAssistantMessage(string content = "Mock response")
-        => new (ChatRole.Assistant, content);
+        => new(ChatRole.Assistant, content);
 
     public static ChatMessage CreateSystemMessage(string content = "You are a helpful assistant")
-        => new (ChatRole.System, content);
+        => new(ChatRole.System, content);
 
     public static List<ChatMessage> CreateConversation(params string[] userMessages)
     {
@@ -39,7 +39,7 @@ public static class TestDataFactory
             Type = type,
             Tier = tier,
             Models = models?.ToList() ?? ["gpt-4", "gpt-3.5-turbo"],
-            Enabled = enabled
+            Enabled = enabled,
         };
     }
 
@@ -56,7 +56,7 @@ public static class TestDataFactory
             Provider = provider,
             Streaming = streaming,
             Tools = tools,
-            Vision = vision
+            Vision = vision,
         };
     }
 
@@ -70,7 +70,7 @@ public static class TestDataFactory
             Id = id ?? Guid.NewGuid(),
             Name = name,
             Status = status,
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow,
         };
     }
 
@@ -86,7 +86,7 @@ public static class TestDataFactory
             Role = role,
             AuthProvider = "dev",
             ProviderUserId = email,
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow,
         };
     }
 
@@ -98,7 +98,7 @@ public static class TestDataFactory
         {
             Id = id ?? Guid.NewGuid(),
             Name = name,
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow,
         };
     }
 
@@ -113,7 +113,7 @@ public static class TestDataFactory
             {
                 ["groq"] = CreateProviderConfig("groq", "groq", 0, ["llama-3.1-70b-versatile"]),
                 ["openai"] = CreateProviderConfig("openai", "openai", 1, ["gpt-4", "gpt-3.5-turbo"]),
-                ["deepseek"] = CreateProviderConfig("deepseek", "openai", 1, ["deepseek-chat"], enabled: true)
+                ["deepseek"] = CreateProviderConfig("deepseek", "openai", 1, ["deepseek-chat"], enabled: true),
             },
             CanonicalModels =
             [
@@ -127,7 +127,7 @@ public static class TestDataFactory
                 {
                     Candidates = ["deepseek-chat"]
                 }
-            }
+            },
         };
     }
 }

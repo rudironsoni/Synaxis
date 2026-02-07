@@ -128,13 +128,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Routing
         {
             try
             {
-                if (!_config.Providers.TryGetValue(providerKey, out var providerConfig))
+                if (!this._config.Providers.TryGetValue(providerKey, out var providerConfig))
                 {
-                    _logger.LogDebug("Provider '{ProviderKey}' not found in configuration, allowing request.", providerKey);
+                    this._logger.LogDebug("Provider '{ProviderKey}' not found in configuration, allowing request.", providerKey);
                     return true;
                 }
 
-                var db = _redis.GetDatabase();
+                var db = this._redis.GetDatabase();
                 var now = DateTimeOffset.UtcNow;
                 var currentMinute = new DateTimeOffset(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0, now.Offset).ToUnixTimeSeconds();
 
@@ -155,25 +155,25 @@ namespace Synaxis.InferenceGateway.Infrastructure.Routing
                     CheckQuotaLuaScript,
                     new RedisKey[] { rpmKey, tpmKey },
                     new RedisValue[] { maxRpm ?? -1, maxTpm ?? -1 }
-                );
+                ).ConfigureAwait(false);
 
                 var allowed = (long)result == 1;
 
                 if (!allowed)
                 {
                     // Log which limit was exceeded (we need to check again for logging purposes)
-                    var currentRpm = await db.StringGetAsync(rpmKey);
-                    var currentTpm = await db.StringGetAsync(tpmKey);
+                    var currentRpm = await db.StringGetAsync(rpmKey).ConfigureAwait(false);
+                    var currentTpm = await db.StringGetAsync(tpmKey).ConfigureAwait(false);
                     var rpmValue = currentRpm.HasValue ? (long)currentRpm : 0;
                     var tpmValue = currentTpm.HasValue ? (long)currentTpm : 0;
 
                     if (maxthis.Rpm.HasValue && rpmValue >= maxRpm.Value)
                     {
-                        _logger.LogWarning("Provider '{ProviderKey}' exceeded RPM limit: {CurrentRpm}/{MaxRpm}", providerKey, rpmValue, maxRpm.Value);
+                        this._logger.LogWarning("Provider '{ProviderKey}' exceeded RPM limit: {CurrentRpm}/{MaxRpm}", providerKey, rpmValue, maxRpm.Value);
                     }
                     else if (maxthis.Tpm.HasValue && tpmValue >= maxTpm.Value)
                     {
-                        _logger.LogWarning("Provider '{ProviderKey}' exceeded TPM limit: {CurrentTpm}/{MaxTpm}", providerKey, tpmValue, maxTpm.Value);
+                        this._logger.LogWarning("Provider '{ProviderKey}' exceeded TPM limit: {CurrentTpm}/{MaxTpm}", providerKey, tpmValue, maxTpm.Value);
                     }
                 }
 
@@ -181,7 +181,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Routing
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to check quota for provider '{ProviderKey}'. Allowing request as fallback.", providerKey);
+                this._logger.LogError(ex, "Failed to check quota for provider '{ProviderKey}'. Allowing request as fallback.", providerKey);
                 return true;
             }
         }
@@ -204,7 +204,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Routing
         {
             try
             {
-                var db = _redis.GetDatabase();
+                var db = this._redis.GetDatabase();
                 var now = DateTimeOffset.UtcNow;
                 var currentMinute = new DateTimeOffset(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0, now.Offset).ToUnixTimeSeconds();
 
@@ -225,15 +225,15 @@ namespace Synaxis.InferenceGateway.Infrastructure.Routing
                         groupMaxRpm ?? -1,
                         groupMaxTpm ?? -1,
                         orgMaxRpm ?? -1,
-                        orgMaxTpm ?? -1
+                        orgMaxTpm ?? -1,
                     }
-                );
+                ).ConfigureAwait(false);
 
                 var allowed = (long)result == 1;
 
                 if (!allowed)
                 {
-                    _logger.LogWarning(
+                    this._logger.LogWarning(
                         "Hierarchical quota exceeded for Org: {OrgId}, Group: {GroupId}, User: {UserId}",
                         organizationId, groupId, userId);
                 }
@@ -242,7 +242,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Routing
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex,
+                this._logger.LogError(ex,
                     "Failed to check hierarchical quota for Org: {OrgId}, Group: {GroupId}, User: {UserId}. Allowing request as fallback.",
                     organizationId, groupId, userId);
                 return true;
@@ -251,28 +251,28 @@ namespace Synaxis.InferenceGateway.Infrastructure.Routing
 
         public Task<bool> IsHealthyAsync(string providerKey, CancellationToken cancellationToken = default)
         {
-            return CheckQuotaAsync(providerKey, cancellationToken);
+            return this.CheckQuotaAsync(providerKey, cancellationToken);
         }
 
         public async Task RecordUsageAsync(string providerKey, long inputTokens, long outputTokens, CancellationToken cancellationToken = default)
         {
             try
             {
-                var db = _redis.GetDatabase();
+                var db = this._redis.GetDatabase();
                 var now = DateTimeOffset.UtcNow;
                 var currentMinute = new DateTimeOffset(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0, now.Offset).ToUnixTimeSeconds();
 
                 var tpmKey = $"ratelimit:{providerKey}:tpm:{currentMinute}";
                 var totalTokens = inputTokens + outputTokens;
 
-                await db.StringIncrementAsync(tpmKey, totalTokens);
-                await db.KeyExpireAsync(tpmKey, TimeSpan.FromMinutes(1));
+                await db.StringIncrementAsync(tpmKey, totalTokens).ConfigureAwait(false);
+                await db.KeyExpireAsync(tpmKey, TimeSpan.FromMinutes(1)).ConfigureAwait(false);
 
-                await db.StringIncrementAsync($"quota:{providerKey}:tokens", totalTokens);
+                await db.StringIncrementAsync($"quota:{providerKey}:tokens", totalTokens).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Failed to record usage for provider '{ProviderKey}'.", providerKey);
+                this._logger.LogWarning(ex, "Failed to record usage for provider '{ProviderKey}'.", providerKey);
             }
         }
     }

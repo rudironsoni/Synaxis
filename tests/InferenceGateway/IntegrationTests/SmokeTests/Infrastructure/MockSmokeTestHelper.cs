@@ -19,7 +19,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
             var mockHandler = new MockHttpHandler();
             return new HttpClient(mockHandler)
             {
-                BaseAddress = new Uri("http://localhost")
+                BaseAddress = new Uri("http://localhost"),
             };
         }
 
@@ -33,7 +33,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
             var mockHandler = new MockHttpHandler(customResponses);
             return new HttpClient(mockHandler)
             {
-                BaseAddress = new Uri("http://localhost")
+                BaseAddress = new Uri("http://localhost"),
             };
         }
 
@@ -50,7 +50,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                 UseMocks = useMocks,
                 EnableDetailedLogging = true,
                 DefaultTimeoutMs = 30000,
-                EnableCircuitBreaker = false // Not needed for mocks
+                EnableCircuitBreaker = false, // Not needed for mocks
             };
         }
 

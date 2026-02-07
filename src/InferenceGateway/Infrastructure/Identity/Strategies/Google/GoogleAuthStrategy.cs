@@ -68,7 +68,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
 
                 var parameters = new Dictionary<string, string>
                 {
-                    ["client_id"] = _settings.ClientId,
+                    ["client_id"] = this._settings.ClientId,
                     ["response_type"] = "code",
                     ["redirect_uri"] = "urn:ietf:wg:oauth:2.0:oob", // out-of-band
                     ["scope"] = string.Join(" ", Scopes),
@@ -76,7 +76,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
                     ["code_challenge_method"] = "S256",
                     ["state"] = state,
                     ["access_type"] = "offline",
-                    ["prompt"] = "consent"
+                    ["prompt"] = "consent",
                 };
 
                 var url = AuthorizationEndpoint + "?" + BuildQueryString(parameters);
@@ -84,7 +84,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to initiate Google auth flow");
+                this._logger.LogError(ex, "Failed to initiate Google auth flow");
                 return Task.FromResult(new AuthResult { Status = "Error", Message = ex.Message });
             }
         }
@@ -95,22 +95,29 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
             {
                 var pkce = DecodeState(state);
 
-                var token = await ExchangeCodeForTokenAsync(code, pkce.Verifier, ct).ConfigureAwait(false);
-                var email = await FetchUserEmailAsync(token.AccessToken, ct).ConfigureAwait(false);
+                var token = await this.ExchangeCodeForTokenAsync(code, pkce.Verifier, ct).ConfigureAwait(false);
+                var email = await this.FetchUserEmailAsync(token.AccessToken, ct).ConfigureAwait(false);
 
                 // Resolve project id by probing cloudcode endpoints
-                var projectId = await FetchProjectIdAsync(token.AccessToken, ct).ConfigureAwait(false);
+                var projectId = await this.FetchProjectIdAsync(token.AccessToken, ct).ConfigureAwait(false);
 
                 var result = new AuthResult
                 {
                     Status = "Completed",
                     TokenResponse = token,
                     VerificationUri = null,
-                    UserCode = null
+                    UserCode = null,
                 };
 
-                if (!string.IsNullOrWhiteSpace(email)) result.Message = email;
-                if (!string.IsNullOrWhiteSpace(projectId)) result.UserCode = projectId; // reuse UserCode field to carry project id metadata
+                if (!string.IsNullOrWhiteSpace(email))
+                {
+                    result.Message = email;
+                }
+
+                if (!string.IsNullOrWhiteSpace(projectId))
+                {
+                    result.UserCode = projectId; // reuse UserCode field to carry project id metadata
+                }
 
                 // Create and notify account
                 var account = new IdentityAccount
@@ -120,33 +127,38 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
                     Email = email,
                     AccessToken = token.AccessToken,
                     RefreshToken = token.RefreshToken,
-                    Properties = new Dictionary<string, string> { ["ProjectId"] = projectId }
+                    Properties = new Dictionary<string, string> { ["ProjectId"] = projectId },
                 };
                 if (token.ExpiresInthis.Seconds.HasValue)
+                {
                     account.ExpiresAt = DateTimeOffset.UtcNow.AddSeconds(token.ExpiresInSeconds.Value);
+                }
 
-                AccountAuthenticated?.Invoke(this, new AccountAuthenticatedEventArgs(account));
+                this.AccountAuthenticated?.Invoke(this, new AccountAuthenticatedEventArgs(account));
 
                 return result;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to complete Google auth flow");
+                this._logger.LogError(ex, "Failed to complete Google auth flow");
                 return new AuthResult { Status = "Error", Message = ex.Message };
             }
         }
 
         public async Task<TokenResponse> RefreshTokenAsync(IdentityAccount account, CancellationToken ct)
         {
-            if (string.IsNullOrWhiteSpace(account.RefreshToken)) throw new InvalidOperationException("Missing refresh token");
+            if (string.IsNullOrWhiteSpace(account.RefreshToken))
+            {
+                throw new InvalidOperationException("Missing refresh token");
+            }
 
-            using var http = _httpClientFactory.CreateClient();
+            using var http = this._httpClientFactory.CreateClient();
             using var content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                ["client_id"] = _settings.ClientId,
-                ["client_secret"] = _settings.ClientSecret,
+                ["client_id"] = this._settings.ClientId,
+                ["client_secret"] = this._settings.ClientSecret,
                 ["refresh_token"] = account.RefreshToken,
-                ["grant_type"] = "refresh_token"
+                ["grant_type"] = "refresh_token",
             });
 
             using var resp = await http.PostAsync(TokenEndpoint, content, ct).ConfigureAwait(false);
@@ -157,7 +169,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
             }
 
             var tp = JsonSerializer.Deserialize<TokenPayload>(payload);
-            if (tp == null || string.IsNullOrWhiteSpace(tp.AccessToken)) throw new InvalidOperationException("Token refresh failed: missing access token");
+            if (tp == null || string.IsNullOrWhiteSpace(tp.AccessToken))
+            {
+                throw new InvalidOperationException("Token refresh failed: missing access token");
+            }
 
             return new TokenResponse
             {
@@ -169,40 +184,49 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
 
         private async Task<TokenResponse> ExchangeCodeForTokenAsync(string code, string verifier, CancellationToken ct)
         {
-            using var http = _httpClientFactory.CreateClient();
+            using var http = this._httpClientFactory.CreateClient();
             using var content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                ["client_id"] = _settings.ClientId,
-                ["client_secret"] = _settings.ClientSecret,
+                ["client_id"] = this._settings.ClientId,
+                ["client_secret"] = this._settings.ClientSecret,
                 ["code"] = code,
                 ["grant_type"] = "authorization_code",
                 ["redirect_uri"] = "urn:ietf:wg:oauth:2.0:oob",
-                ["code_verifier"] = verifier
+                ["code_verifier"] = verifier,
             });
 
             using var resp = await http.PostAsync(TokenEndpoint, content, ct).ConfigureAwait(false);
             var payload = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
-            if (!resp.IsSuccessStatusCode) throw new InvalidOperationException($"Token exchange failed: {payload}");
+            if (!resp.IsSuccessStatusCode)
+            {
+                throw new InvalidOperationException($"Token exchange failed: {payload}");
+            }
 
             var tp = JsonSerializer.Deserialize<TokenPayload>(payload);
             if (tp == null || string.IsNullOrWhiteSpace(tp.AccessToken) || string.IsNullOrWhiteSpace(tp.RefreshToken))
+            {
                 throw new InvalidOperationException("Token exchange failed: missing tokens");
+            }
 
             return new TokenResponse
             {
                 AccessToken = tp.AccessToken,
                 RefreshToken = tp.RefreshToken,
-                ExpiresInSeconds = tp.ExpiresIn
+                ExpiresInSeconds = tp.ExpiresIn,
             };
         }
 
         private async Task<string> FetchUserEmailAsync(string accessToken, CancellationToken ct)
         {
-            using var http = _httpClientFactory.CreateClient();
+            using var http = this._httpClientFactory.CreateClient();
             using var req = new HttpRequestMessage(HttpMethod.Get, UserInfoEndpoint);
             req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
             using var resp = await http.SendAsync(req, ct).ConfigureAwait(false);
-            if (!resp.IsSuccessStatusCode) return string.Empty;
+            if (!resp.IsSuccessStatusCode)
+            {
+                return string.Empty;
+            }
+
             var payload = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
             var ui = JsonSerializer.Deserialize<UserInfoPayload>(payload);
             return ui?.Email ?? string.Empty;
@@ -216,7 +240,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
                 ["Content-Type"] = "application/json",
                 ["User-Agent"] = "google-api-nodejs-client/9.15.1",
                 ["X-Goog-Api-Client"] = "google-cloud-sdk vscode_cloudshelleditor/0.1",
-                ["Client-Metadata"] = "{\"ideType\":\"IDE_UNSPECIFIED\",\"platform\":\"PLATFORM_UNSPECIFIED\",\"pluginType\":\"GEMINI\"}"
+                ["Client-Metadata"] = "{\"ideType\":\"IDE_UNSPECIFIED\",\"platform\":\"PLATFORM_UNSPECIFIED\",\"pluginType\":\"GEMINI\"}",
             };
 
             var endpoints = new List<string>(LoadEndpoints);
@@ -226,7 +250,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
                 var url = $"{endpoint}/v1internal:loadCodeAssist";
                 try
                 {
-                    using var http = _httpClientFactory.CreateClient();
+                    using var http = this._httpClientFactory.CreateClient();
                     using var request = new HttpRequestMessage(HttpMethod.Post, url);
                     foreach (var header in loadHeaders)
                     {
@@ -242,14 +266,21 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
 
                     request.Content = new StringContent("{\"metadata\":{\"ideType\":\"IDE_UNSPECIFIED\",\"platform\":\"PLATFORM_UNSPECIFIED\",\"pluginType\":\"GEMINI\"}}", Encoding.UTF8, "application/json");
                     using var resp = await http.SendAsync(request, ct).ConfigureAwait(false);
-                    if (!resp.IsSuccessStatusCode) continue;
+                    if (!resp.IsSuccessStatusCode)
+                    {
+                        continue;
+                    }
+
                     var payload = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
                     var projectId = ExtractProjectId(payload);
-                    if (!string.IsNullOrWhiteSpace(projectId)) return projectId;
+                    if (!string.IsNullOrWhiteSpace(projectId))
+                    {
+                        return projectId;
+                    }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogDebug(ex, "Failed to probe endpoint {Endpoint}", endpoint);
+                    this._logger.LogDebug(ex, "Failed to probe endpoint {Endpoint}", endpoint);
                 }
             }
 
@@ -290,7 +321,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
         {
             var json = Encoding.UTF8.GetString(Base64UrlDecode(state));
             var parsed = JsonSerializer.Deserialize<PkceState>(json);
-            if (parsed == null || string.IsNullOrWhiteSpace(parsed.Verifier)) throw new InvalidOperationException("Missing PKCE verifier in state.");
+            if (parsed == null || string.IsNullOrWhiteSpace(parsed.Verifier))
+            {
+                throw new InvalidOperationException("Missing PKCE verifier in state.");
+            }
+
             parsed.ProjectId ??= string.Empty;
             return parsed;
         }
@@ -309,8 +344,15 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
                 using var doc = JsonDocument.Parse(payload);
                 if (doc.RootElement.TryGetProperty("cloudaicompanionProject", out var projectElement))
                 {
-                    if (projectElement.ValueKind == JsonValueKind.String) return projectElement.GetString() ?? string.Empty;
-                    if (projectElement.ValueKind == JsonValueKind.Object && projectElement.TryGetProperty("id", out var idElement)) return idElement.GetString() ?? string.Empty;
+                    if (projectElement.ValueKind == JsonValueKind.String)
+                    {
+                        return projectElement.GetString() ?? string.Empty;
+                    }
+
+                    if (projectElement.ValueKind == JsonValueKind.Object && projectElement.TryGetProperty("id", out var idElement))
+                    {
+                        return idElement.GetString() ?? string.Empty;
+                    }
                 }
             }
             catch (JsonException) { }
@@ -321,13 +363,16 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
         private sealed class PkceState
         {
             [JsonPropertyName("verifier")] public string Verifier { get; set; } = string.Empty;
+
             [JsonPropertyName("projectId")] public string? ProjectId { get; set; }
         }
 
         private sealed class TokenPayload
         {
             [JsonPropertyName("access_token")] public string AccessToken { get; set; } = string.Empty;
+
             [JsonPropertyName("expires_in")] public int ExpiresIn { get; set; }
+
             [JsonPropertyName("refresh_token")] public string? RefreshToken { get; set; }
         }
 

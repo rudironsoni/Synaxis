@@ -16,6 +16,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
     public class GitHubAuthStrategy : IAuthStrategy
     {
         public event EventHandler<AccountAuthenticatedEventArgs>? AccountAuthenticated;
+
         public const string ClientId = "178c6fc778ccc68e1d6a";
 
         private readonly HttpClient _http;
@@ -38,11 +39,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
             var body = new System.Collections.Generic.Dictionary<string, string>
             {
                 ["client_id"] = ClientId,
-                ["scope"] = "repo read:org copilot"
+                ["scope"] = "repo read:org copilot",
             };
             req.Content = new FormUrlEncodedContent(body);
 
-            using var resp = await _http.SendAsync(req, ct).ConfigureAwait(false);
+            using var resp = await this._http.SendAsync(req, ct).ConfigureAwait(false);
             var txt = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
 
             try
@@ -53,21 +54,24 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
                 var verificationUri = root.GetProperty("verification_uri").GetString();
                 var deviceCode = root.GetProperty("device_code").GetString();
                 var interval = 5;
-                if (root.TryGetProperty("interval", out var iv)) interval = iv.GetInt32();
+                if (root.TryGetProperty("interval", out var iv))
+                {
+                    interval = iv.GetInt32();
+                }
 
                 // start background polling
-                _ = _deviceFlowService.StartPollingAsync(deviceCode ?? string.Empty, interval, OnTokenReceived, ct);
+                _ = this._deviceFlowService.StartPollingAsync(deviceCode ?? string.Empty, interval, this.OnTokenReceived, ct);
 
                 return new AuthResult
                 {
                     Status = "Pending",
                     UserCode = userCode,
-                    VerificationUri = verificationUri
+                    VerificationUri = verificationUri,
                 };
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to initiate GitHub device flow");
+                this._logger.LogError(ex, "Failed to initiate GitHub device flow");
                 return new AuthResult { Status = "Error", Message = ex.Message };
             }
         }
@@ -86,11 +90,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
             {
                 ["client_id"] = ClientId,
                 ["grant_type"] = "refresh_token",
-                ["refresh_token"] = account.RefreshToken ?? string.Empty
+                ["refresh_token"] = account.RefreshToken ?? string.Empty,
             };
             req.Content = new FormUrlEncodedContent(body);
 
-            using var resp = await _http.SendAsync(req, ct).ConfigureAwait(false);
+            using var resp = await this._http.SendAsync(req, ct).ConfigureAwait(false);
             var txt = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
 
             try
@@ -98,14 +102,26 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
                 using var doc = JsonDocument.Parse(txt);
                 var root = doc.RootElement;
                 var tr = new TokenResponse();
-                if (root.TryGetProperty("access_token", out var at)) tr.AccessToken = at.GetString() ?? string.Empty;
-                if (root.TryGetProperty("refresh_token", out var rt)) tr.RefreshToken = rt.GetString();
-                if (root.TryGetProperty("expires_in", out var ex)) tr.ExpiresInSeconds = ex.GetInt32();
+                if (root.TryGetProperty("access_token", out var at))
+                {
+                    tr.AccessToken = at.GetString() ?? string.Empty;
+                }
+
+                if (root.TryGetProperty("refresh_token", out var rt))
+                {
+                    tr.RefreshToken = rt.GetString();
+                }
+
+                if (root.TryGetProperty("expires_in", out var ex))
+                {
+                    tr.ExpiresInSeconds = ex.GetInt32();
+                }
+
                 return tr;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to refresh GitHub token: {Text}", txt);
+                this._logger.LogError(ex, "Failed to refresh GitHub token: {Text}", txt);
                 throw;
             }
         }
@@ -120,20 +136,22 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
                     Provider = "github",
                     Id = "github-user",
                     AccessToken = token.AccessToken,
-                    RefreshToken = token.RefreshToken
+                    RefreshToken = token.RefreshToken,
                 };
 
                 if (token.ExpiresInthis.Seconds.HasValue)
+                {
                     acc.ExpiresAt = DateTimeOffset.UtcNow.AddSeconds(token.ExpiresInSeconds.Value);
+                }
 
                 // Notify subscribers that an account was authenticated
                 try
                 {
-                    AccountAuthenticated?.Invoke(this, new AccountAuthenticatedEventArgs(acc));
+                    this.AccountAuthenticated?.Invoke(this, new AccountAuthenticatedEventArgs(acc));
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error invoking AccountAuthenticated event");
+                    this._logger.LogError(ex, "Error invoking AccountAuthenticated event");
                 }
 
                 // Write to gh config
@@ -141,7 +159,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error handling received GitHub token");
+                this._logger.LogError(ex, "Error handling received GitHub token");
             }
         }
     }

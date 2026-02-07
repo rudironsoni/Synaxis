@@ -20,20 +20,20 @@ public class TokenOptimizationConfigurationResolverTests : IAsyncLifetime
     public Task InitializeAsync()
     {
         // Setup in-memory database for testing
-        _dbOptions = new DbContextOptionsBuilder<OptimizationDbContext>()
+        this._dbOptions = new DbContextOptionsBuilder<OptimizationDbContext>()
             .UseInMemoryDatabase(databaseName: $"TokenOptimizationTests_{Guid.NewGuid()}")
             .Options;
 
-        _dbContext = new OptimizationDbContext(_dbOptions);
+        this._dbContext = new OptimizationDbContext(this._dbOptions);
         return Task.CompletedTask;
     }
 
     public async Task DisposeAsync()
     {
-        if (_dbContext != null)
+        if (this._dbContext != null)
         {
-            await _dbContext.Database.EnsureDeletedAsync();
-            await _dbContext.DisposeAsync();
+            await this._dbContext.Database.EnsureDeletedAsync();
+            await this._dbContext.DisposeAsync();
         }
     }
 
@@ -53,13 +53,13 @@ public class TokenOptimizationConfigurationResolverTests : IAsyncLifetime
             EnableSemanticCache = false,
             SemanticCacheSimilarityThreshold = 0.85,
             CacheTtlMinutes = 60,
-            UpdatedAt = DateTimeOffset.UtcNow
+            UpdatedAt = DateTimeOffset.UtcNow,
         };
 
-        await _dbContext.TokenOptimizationConfigurations.AddAsync(config);
-        await _dbContext.SaveChangesAsync();
+        await this._dbContext.TokenOptimizationConfigurations.AddAsync(config);
+        await this._dbContext.SaveChangesAsync();
 
-        var resolver = new TokenOptimizationConfigurationResolver(_dbContext);
+        var resolver = new TokenOptimizationConfigurationResolver(this._dbContext);
 
         // Act
         var result = await resolver.GetConfigurationAsync(providerId, CancellationToken.None);
@@ -78,7 +78,7 @@ public class TokenOptimizationConfigurationResolverTests : IAsyncLifetime
     public async Task GetConfigurationAsync_MissingProvider_ReturnsNull()
     {
         // Arrange
-        var resolver = new TokenOptimizationConfigurationResolver(_dbContext);
+        var resolver = new TokenOptimizationConfigurationResolver(this._dbContext);
 
         // Act
         var result = await resolver.GetConfigurationAsync("nonexistent-provider", CancellationToken.None);
@@ -91,7 +91,7 @@ public class TokenOptimizationConfigurationResolverTests : IAsyncLifetime
     public async Task CreateConfigurationAsync_NewProvider_CreatesSuccessfully()
     {
         // Arrange
-        var resolver = new TokenOptimizationConfigurationResolver(_dbContext);
+        var resolver = new TokenOptimizationConfigurationResolver(this._dbContext);
         var config = new TokenOptimizationConfiguration
         {
             ProviderId = "anthropic-claude",
@@ -103,14 +103,14 @@ public class TokenOptimizationConfigurationResolverTests : IAsyncLifetime
             EnableSemanticCache = true,
             SemanticCacheSimilarityThreshold = 0.9,
             CacheTtlMinutes = 120,
-            UpdatedAt = DateTimeOffset.UtcNow
+            UpdatedAt = DateTimeOffset.UtcNow,
         };
 
         // Act
         await resolver.CreateConfigurationAsync(config, CancellationToken.None);
 
         // Assert
-        var saved = await _dbContext.TokenOptimizationConfigurations
+        var saved = await this._dbContext.TokenOptimizationConfigurations
             .FirstOrDefaultAsync(c => c.ProviderId == "anthropic-claude");
 
         Assert.NotNull(saved);
@@ -132,14 +132,14 @@ public class TokenOptimizationConfigurationResolverTests : IAsyncLifetime
             EnablePromptCaching = false,
             MaxContextTokens = 4000,
             CompressionStrategy = "none",
-            UpdatedAt = DateTimeOffset.UtcNow.AddHours(-1)
+            UpdatedAt = DateTimeOffset.UtcNow.AddHours(-1),
         };
 
-        await _dbContext.TokenOptimizationConfigurations.AddAsync(original);
-        await _dbContext.SaveChangesAsync();
-        _dbContext.Entry(original).State = EntityState.Detached;
+        await this._dbContext.TokenOptimizationConfigurations.AddAsync(original);
+        await this._dbContext.SaveChangesAsync();
+        this._dbContext.Entry(original).State = EntityState.Detached;
 
-        var resolver = new TokenOptimizationConfigurationResolver(_dbContext);
+        var resolver = new TokenOptimizationConfigurationResolver(this._dbContext);
 
         // Act
         var updated = new TokenOptimizationConfiguration
@@ -150,13 +150,13 @@ public class TokenOptimizationConfigurationResolverTests : IAsyncLifetime
             CompressionStrategy = "sliding-window",
             EnableConversationCompression = true,
             TargetCompressionRatio = 0.6,
-            UpdatedAt = DateTimeOffset.UtcNow
+            UpdatedAt = DateTimeOffset.UtcNow,
         };
 
         await resolver.UpdateConfigurationAsync(updated, CancellationToken.None);
 
         // Assert
-        var saved = await _dbContext.TokenOptimizationConfigurations
+        var saved = await this._dbContext.TokenOptimizationConfigurations
             .FirstOrDefaultAsync(c => c.ProviderId == providerId);
 
         Assert.NotNull(saved);
@@ -176,19 +176,19 @@ public class TokenOptimizationConfigurationResolverTests : IAsyncLifetime
             ProviderId = providerId,
             EnablePromptCaching = true,
             MaxContextTokens = 8000,
-            UpdatedAt = DateTimeOffset.UtcNow
+            UpdatedAt = DateTimeOffset.UtcNow,
         };
 
-        await _dbContext.TokenOptimizationConfigurations.AddAsync(config);
-        await _dbContext.SaveChangesAsync();
+        await this._dbContext.TokenOptimizationConfigurations.AddAsync(config);
+        await this._dbContext.SaveChangesAsync();
 
-        var resolver = new TokenOptimizationConfigurationResolver(_dbContext);
+        var resolver = new TokenOptimizationConfigurationResolver(this._dbContext);
 
         // Act
         await resolver.DeleteConfigurationAsync(providerId, CancellationToken.None);
 
         // Assert
-        var deleted = await _dbContext.TokenOptimizationConfigurations
+        var deleted = await this._dbContext.TokenOptimizationConfigurations
             .FirstOrDefaultAsync(c => c.ProviderId == providerId);
 
         Assert.Null(deleted);
@@ -203,29 +203,29 @@ public class TokenOptimizationConfigurationResolverTests : IAsyncLifetime
             ProviderId = "provider-1",
             EnablePromptCaching = true,
             MaxContextTokens = 8000,
-            UpdatedAt = DateTimeOffset.UtcNow
+            UpdatedAt = DateTimeOffset.UtcNow,
         };
         var config2 = new TokenOptimizationConfiguration
         {
             ProviderId = "provider-2",
             EnablePromptCaching = false,
             MaxContextTokens = 4000,
-            UpdatedAt = DateTimeOffset.UtcNow
+            UpdatedAt = DateTimeOffset.UtcNow,
         };
         var config3 = new TokenOptimizationConfiguration
         {
             ProviderId = "provider-3",
             EnablePromptCaching = true,
             MaxContextTokens = 16000,
-            UpdatedAt = DateTimeOffset.UtcNow
+            UpdatedAt = DateTimeOffset.UtcNow,
         };
 
-        await _dbContext.TokenOptimizationConfigurations.AddAsync(config1);
-        await _dbContext.TokenOptimizationConfigurations.AddAsync(config2);
-        await _dbContext.TokenOptimizationConfigurations.AddAsync(config3);
-        await _dbContext.SaveChangesAsync();
+        await this._dbContext.TokenOptimizationConfigurations.AddAsync(config1);
+        await this._dbContext.TokenOptimizationConfigurations.AddAsync(config2);
+        await this._dbContext.TokenOptimizationConfigurations.AddAsync(config3);
+        await this._dbContext.SaveChangesAsync();
 
-        var resolver = new TokenOptimizationConfigurationResolver(_dbContext);
+        var resolver = new TokenOptimizationConfigurationResolver(this._dbContext);
 
         // Act
         var result = await resolver.GetAllConfigurationsAsync(CancellationToken.None);
@@ -247,29 +247,29 @@ public class TokenOptimizationConfigurationResolverTests : IAsyncLifetime
             ProviderId = "provider-sw-1",
             CompressionStrategy = "sliding-window",
             MaxContextTokens = 8000,
-            UpdatedAt = DateTimeOffset.UtcNow
+            UpdatedAt = DateTimeOffset.UtcNow,
         };
         var config2 = new TokenOptimizationConfiguration
         {
             ProviderId = "provider-sw-2",
             CompressionStrategy = "sliding-window",
             MaxContextTokens = 4000,
-            UpdatedAt = DateTimeOffset.UtcNow
+            UpdatedAt = DateTimeOffset.UtcNow,
         };
         var config3 = new TokenOptimizationConfiguration
         {
             ProviderId = "provider-none",
             CompressionStrategy = "none",
             MaxContextTokens = 16000,
-            UpdatedAt = DateTimeOffset.UtcNow
+            UpdatedAt = DateTimeOffset.UtcNow,
         };
 
-        await _dbContext.TokenOptimizationConfigurations.AddAsync(config1);
-        await _dbContext.TokenOptimizationConfigurations.AddAsync(config2);
-        await _dbContext.TokenOptimizationConfigurations.AddAsync(config3);
-        await _dbContext.SaveChangesAsync();
+        await this._dbContext.TokenOptimizationConfigurations.AddAsync(config1);
+        await this._dbContext.TokenOptimizationConfigurations.AddAsync(config2);
+        await this._dbContext.TokenOptimizationConfigurations.AddAsync(config3);
+        await this._dbContext.SaveChangesAsync();
 
-        var resolver = new TokenOptimizationConfigurationResolver(_dbContext);
+        var resolver = new TokenOptimizationConfigurationResolver(this._dbContext);
 
         // Act
         var result = await resolver.GetConfigurationsByStrategyAsync("sliding-window", CancellationToken.None);
@@ -289,29 +289,29 @@ public class TokenOptimizationConfigurationResolverTests : IAsyncLifetime
             ProviderId = "provider-cache-1",
             EnablePromptCaching = true,
             MaxContextTokens = 8000,
-            UpdatedAt = DateTimeOffset.UtcNow
+            UpdatedAt = DateTimeOffset.UtcNow,
         };
         var config2 = new TokenOptimizationConfiguration
         {
             ProviderId = "provider-cache-2",
             EnablePromptCaching = true,
             MaxContextTokens = 4000,
-            UpdatedAt = DateTimeOffset.UtcNow
+            UpdatedAt = DateTimeOffset.UtcNow,
         };
         var config3 = new TokenOptimizationConfiguration
         {
             ProviderId = "provider-no-cache",
             EnablePromptCaching = false,
             MaxContextTokens = 16000,
-            UpdatedAt = DateTimeOffset.UtcNow
+            UpdatedAt = DateTimeOffset.UtcNow,
         };
 
-        await _dbContext.TokenOptimizationConfigurations.AddAsync(config1);
-        await _dbContext.TokenOptimizationConfigurations.AddAsync(config2);
-        await _dbContext.TokenOptimizationConfigurations.AddAsync(config3);
-        await _dbContext.SaveChangesAsync();
+        await this._dbContext.TokenOptimizationConfigurations.AddAsync(config1);
+        await this._dbContext.TokenOptimizationConfigurations.AddAsync(config2);
+        await this._dbContext.TokenOptimizationConfigurations.AddAsync(config3);
+        await this._dbContext.SaveChangesAsync();
 
-        var resolver = new TokenOptimizationConfigurationResolver(_dbContext);
+        var resolver = new TokenOptimizationConfigurationResolver(this._dbContext);
 
         // Act
         var result = await resolver.GetConfigurationsWithCachingEnabledAsync(CancellationToken.None);
@@ -332,15 +332,15 @@ public class TokenOptimizationConfigurationResolverTests : IAsyncLifetime
             ProviderId = providerId,
             EnablePromptCaching = false,
             MaxContextTokens = 4000,
-            UpdatedAt = DateTimeOffset.UtcNow
+            UpdatedAt = DateTimeOffset.UtcNow,
         };
 
-        await _dbContext.TokenOptimizationConfigurations.AddAsync(config);
-        await _dbContext.SaveChangesAsync();
+        await this._dbContext.TokenOptimizationConfigurations.AddAsync(config);
+        await this._dbContext.SaveChangesAsync();
 
         // Create two separate contexts to simulate concurrent access
-        var context1 = new OptimizationDbContext(_dbOptions);
-        var context2 = new OptimizationDbContext(_dbOptions);
+        var context1 = new OptimizationDbContext(this._dbOptions);
+        var context2 = new OptimizationDbContext(this._dbOptions);
 
         var resolver1 = new TokenOptimizationConfigurationResolver(context1);
         var resolver2 = new TokenOptimizationConfigurationResolver(context2);
@@ -351,7 +351,7 @@ public class TokenOptimizationConfigurationResolverTests : IAsyncLifetime
             ProviderId = providerId,
             EnablePromptCaching = true,
             MaxContextTokens = 8000,
-            UpdatedAt = DateTimeOffset.UtcNow
+            UpdatedAt = DateTimeOffset.UtcNow,
         };
 
         var update2 = new TokenOptimizationConfiguration
@@ -359,14 +359,14 @@ public class TokenOptimizationConfigurationResolverTests : IAsyncLifetime
             ProviderId = providerId,
             EnablePromptCaching = true,
             MaxContextTokens = 16000,
-            UpdatedAt = DateTimeOffset.UtcNow.AddSeconds(1)
+            UpdatedAt = DateTimeOffset.UtcNow.AddSeconds(1),
         };
 
         await resolver1.UpdateConfigurationAsync(update1, CancellationToken.None);
         await resolver2.UpdateConfigurationAsync(update2, CancellationToken.None);
 
         // Assert - Last write wins
-        var final = await _dbContext.TokenOptimizationConfigurations
+        var final = await this._dbContext.TokenOptimizationConfigurations
             .FirstOrDefaultAsync(c => c.ProviderId == providerId);
 
         Assert.NotNull(final);
@@ -380,7 +380,7 @@ public class TokenOptimizationConfigurationResolverTests : IAsyncLifetime
     public async Task BulkOperations_PerformEfficiently()
     {
         // Arrange
-        var resolver = new TokenOptimizationConfigurationResolver(_dbContext);
+        var resolver = new TokenOptimizationConfigurationResolver(this._dbContext);
         var configs = new List<TokenOptimizationConfiguration>();
 
         for (int i = 0; i < 100; i++)
@@ -391,16 +391,16 @@ public class TokenOptimizationConfigurationResolverTests : IAsyncLifetime
                 EnablePromptCaching = i % 2 == 0,
                 MaxContextTokens = 4000 + (i * 100),
                 CompressionStrategy = i % 3 == 0 ? "sliding-window" : "none",
-                UpdatedAt = DateTimeOffset.UtcNow
+                UpdatedAt = DateTimeOffset.UtcNow,
             });
         }
 
         // Act
         foreach (var config in configs)
         {
-            await _dbContext.TokenOptimizationConfigurations.AddAsync(config);
+            await this._dbContext.TokenOptimizationConfigurations.AddAsync(config);
         }
-        await _dbContext.SaveChangesAsync();
+        await this._dbContext.SaveChangesAsync();
 
         var result = await resolver.GetAllConfigurationsAsync(CancellationToken.None);
 
@@ -414,14 +414,14 @@ public class TokenOptimizationConfigurationResolverTests : IAsyncLifetime
     public async Task ConfigurationValidation_EnforcesConstraints()
     {
         // Arrange
-        var resolver = new TokenOptimizationConfigurationResolver(_dbContext);
+        var resolver = new TokenOptimizationConfigurationResolver(this._dbContext);
 
         // Act & Assert - Null ProviderId should fail
         var invalidConfig = new TokenOptimizationConfiguration
         {
             ProviderId = null!,
             MaxContextTokens = 8000,
-            UpdatedAt = DateTimeOffset.UtcNow
+            UpdatedAt = DateTimeOffset.UtcNow,
         };
 
         await Assert.ThrowsAsync<DbUpdateException>(async () =>
@@ -443,17 +443,17 @@ public class TokenOptimizationConfigurationResolverTests : IAsyncLifetime
                 EnablePromptCaching = true,
                 MaxContextTokens = 8000,
                 CompressionStrategy = "sliding-window",
-                UpdatedAt = DateTimeOffset.UtcNow
+                UpdatedAt = DateTimeOffset.UtcNow,
             });
         }
 
         foreach (var config in configs)
         {
-            await _dbContext.TokenOptimizationConfigurations.AddAsync(config);
+            await this._dbContext.TokenOptimizationConfigurations.AddAsync(config);
         }
-        await _dbContext.SaveChangesAsync();
+        await this._dbContext.SaveChangesAsync();
 
-        var resolver = new TokenOptimizationConfigurationResolver(_dbContext);
+        var resolver = new TokenOptimizationConfigurationResolver(this._dbContext);
 
         // Act - Query should complete quickly even with large dataset
         var startTime = DateTime.UtcNow;
@@ -476,7 +476,7 @@ public class OptimizationDbContext : DbContext
     {
     }
 
-    public DbSet<TokenOptimizationConfiguration> TokenOptimizationConfigurations => Set<TokenOptimizationConfiguration>();
+    public DbSet<TokenOptimizationConfiguration> TokenOptimizationConfigurations => this.Set<TokenOptimizationConfiguration>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -498,14 +498,14 @@ public class TokenOptimizationConfigurationResolver
 
     public TokenOptimizationConfigurationResolver(OptimizationDbContext dbContext)
     {
-        _dbContext = dbContext;
+        this._dbContext = dbContext;
     }
 
     public async Task<TokenOptimizationConfiguration?> GetConfigurationAsync(
         string providerId,
         CancellationToken cancellationToken)
     {
-        return await _dbContext.TokenOptimizationConfigurations
+        return await this._dbContext.TokenOptimizationConfigurations
             .AsNoTracking()
             .FirstOrDefaultAsync(c => c.ProviderId == providerId, cancellationToken);
     }
@@ -514,36 +514,36 @@ public class TokenOptimizationConfigurationResolver
         TokenOptimizationConfiguration configuration,
         CancellationToken cancellationToken)
     {
-        await _dbContext.TokenOptimizationConfigurations.AddAsync(configuration, cancellationToken);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await this._dbContext.TokenOptimizationConfigurations.AddAsync(configuration, cancellationToken);
+        await this._dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task UpdateConfigurationAsync(
         TokenOptimizationConfiguration configuration,
         CancellationToken cancellationToken)
     {
-        _dbContext.TokenOptimizationConfigurations.Update(configuration);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        this._dbContext.TokenOptimizationConfigurations.Update(configuration);
+        await this._dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task DeleteConfigurationAsync(
         string providerId,
         CancellationToken cancellationToken)
     {
-        var config = await _dbContext.TokenOptimizationConfigurations
+        var config = await this._dbContext.TokenOptimizationConfigurations
             .FirstOrDefaultAsync(c => c.ProviderId == providerId, cancellationToken);
 
         if (config != null)
         {
-            _dbContext.TokenOptimizationConfigurations.Remove(config);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            this._dbContext.TokenOptimizationConfigurations.Remove(config);
+            await this._dbContext.SaveChangesAsync(cancellationToken);
         }
     }
 
     public async Task<List<TokenOptimizationConfiguration>> GetAllConfigurationsAsync(
         CancellationToken cancellationToken)
     {
-        return await _dbContext.TokenOptimizationConfigurations
+        return await this._dbContext.TokenOptimizationConfigurations
             .AsNoTracking()
             .ToListAsync(cancellationToken);
     }
@@ -552,7 +552,7 @@ public class TokenOptimizationConfigurationResolver
         string strategy,
         CancellationToken cancellationToken)
     {
-        return await _dbContext.TokenOptimizationConfigurations
+        return await this._dbContext.TokenOptimizationConfigurations
             .AsNoTracking()
             .Where(c => c.CompressionStrategy == strategy)
             .ToListAsync(cancellationToken);
@@ -561,7 +561,7 @@ public class TokenOptimizationConfigurationResolver
     public async Task<List<TokenOptimizationConfiguration>> GetConfigurationsWithCachingEnabledAsync(
         CancellationToken cancellationToken)
     {
-        return await _dbContext.TokenOptimizationConfigurations
+        return await this._dbContext.TokenOptimizationConfigurations
             .AsNoTracking()
             .Where(c => c.EnablePromptCaching)
             .ToListAsync(cancellationToken);
@@ -574,13 +574,22 @@ public class TokenOptimizationConfigurationResolver
 public class TokenOptimizationConfiguration
 {
     public string ProviderId { get; set; } = string.Empty;
+
     public bool EnablePromptCaching { get; set; }
+
     public bool EnableConversationCompression { get; set; }
+
     public string? CompressionStrategy { get; set; }
+
     public int MaxContextTokens { get; set; }
+
     public double TargetCompressionRatio { get; set; }
+
     public bool EnableSemanticCache { get; set; }
+
     public double SemanticCacheSimilarityThreshold { get; set; }
+
     public int CacheTtlMinutes { get; set; }
+
     public DateTimeOffset UpdatedAt { get; set; }
 }

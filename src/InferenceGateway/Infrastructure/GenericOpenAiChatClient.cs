@@ -22,7 +22,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
         {
             var options = new OpenAIClientOptions
             {
-                Endpoint = endpoint
+                Endpoint = endpoint,
             };
 
             if (httpClient != null)
@@ -58,7 +58,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
 
         public void Dispose()
         {
-            _innerClient.Dispose();
+            this._innerClient.Dispose();
         }
 
         private class CustomHeaderPolicy : PipelinePolicy
@@ -72,7 +72,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
 
             public override void Process(PipelineMessage message, IReadOnlyList<PipelinePolicy> pipeline, int currentIndex)
             {
-                foreach (var header in _headers)
+                foreach (var header in this._headers)
                 {
                     message.Request.Headers.Set(header.Key, header.Value);
                 }
@@ -81,7 +81,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
 
             public override async ValueTask ProcessAsync(PipelineMessage message, IReadOnlyList<PipelinePolicy> pipeline, int currentIndex)
             {
-                foreach (var header in _headers)
+                foreach (var header in this._headers)
                 {
                     message.Request.Headers.Set(header.Key, header.Value);
                 }

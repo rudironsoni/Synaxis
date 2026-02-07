@@ -17,9 +17,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
 
         public ProviderModelSmokeTests(SynaxisWebApplicationFactory factory, ITestOutputHelper output)
         {
-            _factory = factory ?? throw new ArgumentNullException(nameof(factory));
-            _output = output ?? throw new ArgumentNullException(nameof(output));
-            _factory.OutputHelper = output;
+            this._factory = factory ?? throw new ArgumentNullException(nameof(factory));
+            this._output = output ?? throw new ArgumentNullException(nameof(output));
+            this._factory.OutputHelper = output;
         }
 
         [Theory]
@@ -31,13 +31,20 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
 
             // Use mock client for deterministic testing instead of real provider calls
             var client = MockSmokeTestHelper.CreateMockClient();
-            var executor = new SmokeTestExecutor(client, new SmokeTestOptions(), _output);
+            var executor = new SmokeTestExecutor(client, new SmokeTestOptions(), this._output);
 
             var result = await executor.ExecuteAsync(testCase);
 
-            _output.WriteLine($"Provider={testCase.Provider} Model={testCase.Model} Success={result.Success} TimeMs={result.ResponseTime.TotalMilliseconds} Attempts={result.AttemptCount}");
-            if (!string.IsNullOrEmpty(result.Error)) _output.WriteLine($"Error: {result.Error}");
-            if (!string.IsNullOrEmpty(result.ResponseSnippet)) _output.WriteLine($"Snippet: {result.ResponseSnippet}");
+            this._output.WriteLine($"Provider={testCase.Provider} Model={testCase.Model} Success={result.Success} TimeMs={result.ResponseTime.TotalMilliseconds} Attempts={result.AttemptCount}");
+            if (!string.IsNullOrEmpty(result.Error))
+            {
+                this._output.WriteLine($"Error: {result.Error}");
+            }
+
+            if (!string.IsNullOrEmpty(result.ResponseSnippet))
+            {
+                this._output.WriteLine($"Snippet: {result.ResponseSnippet}");
+            }
 
             Assert.True(result.Success, $"Smoke test failed for {testCase.Provider}/{testCase.Model}: {result.Error}");
         }
@@ -51,13 +58,20 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
 
             // Use mock client for deterministic testing instead of real provider calls
             var client = MockSmokeTestHelper.CreateMockClient();
-            var executor = new SmokeTestExecutor(client, new SmokeTestOptions(), _output);
+            var executor = new SmokeTestExecutor(client, new SmokeTestOptions(), this._output);
 
             var result = await executor.ExecuteAsync(testCase);
 
-            _output.WriteLine($"Provider={testCase.Provider} Model={testCase.Model} Success={result.Success} TimeMs={result.ResponseTime.TotalMilliseconds} Attempts={result.AttemptCount}");
-            if (!string.IsNullOrEmpty(result.Error)) _output.WriteLine($"Error: {result.Error}");
-            if (!string.IsNullOrEmpty(result.ResponseSnippet)) _output.WriteLine($"Snippet: {result.ResponseSnippet}");
+            this._output.WriteLine($"Provider={testCase.Provider} Model={testCase.Model} Success={result.Success} TimeMs={result.ResponseTime.TotalMilliseconds} Attempts={result.AttemptCount}");
+            if (!string.IsNullOrEmpty(result.Error))
+            {
+                this._output.WriteLine($"Error: {result.Error}");
+            }
+
+            if (!string.IsNullOrEmpty(result.ResponseSnippet))
+            {
+                this._output.WriteLine($"Snippet: {result.ResponseSnippet}");
+            }
 
             Assert.True(result.Success, $"Smoke test failed for {testCase.Provider}/{testCase.Model}: {result.Error}");
         }

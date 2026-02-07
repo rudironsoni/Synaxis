@@ -12,7 +12,7 @@ public class ProviderRegistryTests
 
     public ProviderRegistryTests()
     {
-        _configMock = new Mock<IOptions<SynaxisConfiguration>>();
+        this._configMock = new Mock<IOptions<SynaxisConfiguration>>();
 
         var config = new SynaxisConfiguration
         {
@@ -22,12 +22,12 @@ public class ProviderRegistryTests
                 ["openai"] = new ProviderConfig { Type = "openai", Tier = 1, Models = ["gpt-4", "gpt-3.5-turbo"], Enabled = true },
                 ["deepseek"] = new ProviderConfig { Type = "openai", Tier = 2, Models = ["deepseek-chat"], Enabled = true },
                 ["disabled-provider"] = new ProviderConfig { Type = "openai", Tier = 3, Models = ["disabled-model"], Enabled = false }
-            }
+            },
         };
 
-        _configMock.Setup(x => x.Value).Returns(config);
+        this._configMock.Setup(x => x.Value).Returns(config);
 
-        _registry = new ProviderRegistry(_configMock.Object);
+        this._registry = new ProviderRegistry(this._configMock.Object);
     }
 
     [Fact]
@@ -37,7 +37,7 @@ public class ProviderRegistryTests
         var modelId = "gpt-4";
 
         // Act
-        var result = _registry.GetCandidates(modelId).ToList();
+        var result = this._registry.GetCandidates(modelId).ToList();
 
         // Assert
         Assert.Single(result);
@@ -52,7 +52,7 @@ public class ProviderRegistryTests
         var modelId = "any-model";
 
         // Act
-        var result = _registry.GetCandidates(modelId).ToList();
+        var result = this._registry.GetCandidates(modelId).ToList();
 
         // Assert
         Assert.Single(result);
@@ -67,7 +67,7 @@ public class ProviderRegistryTests
         var modelId = "gpt-3.5-turbo";
 
         // Act
-        var result = _registry.GetCandidates(modelId).ToList();
+        var result = this._registry.GetCandidates(modelId).ToList();
 
         // Assert
         Assert.Single(result);
@@ -82,7 +82,7 @@ public class ProviderRegistryTests
         var modelId = "non-existent-model";
 
         // Act
-        var result = _registry.GetCandidates(modelId).ToList();
+        var result = this._registry.GetCandidates(modelId).ToList();
 
         // Assert
         // Should return wildcard provider (groq) since no exact matches exist
@@ -98,7 +98,7 @@ public class ProviderRegistryTests
         var modelId = "disabled-model";
 
         // Act
-        var result = _registry.GetCandidates(modelId).ToList();
+        var result = this._registry.GetCandidates(modelId).ToList();
 
         // Assert
         // Should return wildcard provider (groq) since disabled provider is excluded
@@ -114,7 +114,7 @@ public class ProviderRegistryTests
         var providerKey = "openai";
 
         // Act
-        var result = _registry.GetProvider(providerKey);
+        var result = this._registry.GetProvider(providerKey);
 
         // Assert
         Assert.NotNull(result);
@@ -130,7 +130,7 @@ public class ProviderRegistryTests
         var providerKey = "non-existent-provider";
 
         // Act
-        var result = _registry.GetProvider(providerKey);
+        var result = this._registry.GetProvider(providerKey);
 
         // Assert
         Assert.Null(result);
@@ -143,7 +143,7 @@ public class ProviderRegistryTests
         var providerKey = "disabled-provider";
 
         // Act
-        var result = _registry.GetProvider(providerKey);
+        var result = this._registry.GetProvider(providerKey);
 
         // Assert
         Assert.Null(result);
@@ -156,7 +156,7 @@ public class ProviderRegistryTests
         var providerKey = "openai";
 
         // Act
-        var result = _registry.GetProvider(providerKey);
+        var result = this._registry.GetProvider(providerKey);
 
         // Assert
         Assert.NotNull(result);
@@ -194,7 +194,7 @@ public class ProviderRegistryTests
         var modelId = "GPT-4"; // Different case
 
         // Act
-        var result = _registry.GetCandidates(modelId).ToList();
+        var result = this._registry.GetCandidates(modelId).ToList();
 
         // Assert
         Assert.Single(result);
@@ -208,7 +208,7 @@ public class ProviderRegistryTests
         var modelId = "";
 
         // Act
-        var result = _registry.GetCandidates(modelId).ToList();
+        var result = this._registry.GetCandidates(modelId).ToList();
 
         // Assert
         Assert.Single(result);
@@ -222,7 +222,7 @@ public class ProviderRegistryTests
         string modelId = null!;
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => _registry.GetCandidates(modelId));
+        Assert.Throws<ArgumentNullException>(() => this._registry.GetCandidates(modelId));
     }
 
     [Fact]
@@ -232,7 +232,7 @@ public class ProviderRegistryTests
         string providerKey = null!;
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => _registry.GetProvider(providerKey));
+        Assert.Throws<ArgumentNullException>(() => this._registry.GetProvider(providerKey));
     }
 
     [Fact]
@@ -242,7 +242,7 @@ public class ProviderRegistryTests
         var providerKey = "";
 
         // Act
-        var result = _registry.GetProvider(providerKey);
+        var result = this._registry.GetProvider(providerKey);
 
         // Assert
         Assert.Null(result);

@@ -16,8 +16,8 @@ public class SecurityHeadersMiddlewareTests
 
     public SecurityHeadersMiddlewareTests()
     {
-        _mockLogger = new Mock<ILogger<SecurityHeadersMiddleware>>();
-        _mockEnvironment = new Mock<IWebHostEnvironment>();
+        this._mockLogger = new Mock<ILogger<SecurityHeadersMiddleware>>();
+        this._mockEnvironment = new Mock<IWebHostEnvironment>();
     }
 
     [Fact]
@@ -32,9 +32,9 @@ public class SecurityHeadersMiddlewareTests
             return Task.CompletedTask;
         };
 
-        _mockEnvironment.Setup(e => e.IsDevelopment()).Returns(false);
+        this._mockEnvironment.Setup(e => e.IsDevelopment()).Returns(false);
 
-        var middleware = new SecurityHeadersMiddleware(next, _mockLogger.Object, _mockEnvironment.Object);
+        var middleware = new SecurityHeadersMiddleware(next, this._mockLogger.Object, this._mockEnvironment.Object);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -59,9 +59,9 @@ public class SecurityHeadersMiddlewareTests
         var context = new DefaultHttpContext();
         RequestDelegate next = (ctx) => Task.CompletedTask;
 
-        _mockEnvironment.Setup(e => e.IsDevelopment()).Returns(false);
+        this._mockEnvironment.Setup(e => e.IsDevelopment()).Returns(false);
 
-        var middleware = new SecurityHeadersMiddleware(next, _mockLogger.Object, _mockEnvironment.Object);
+        var middleware = new SecurityHeadersMiddleware(next, this._mockLogger.Object, this._mockEnvironment.Object);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -81,9 +81,9 @@ public class SecurityHeadersMiddlewareTests
         var context = new DefaultHttpContext();
         RequestDelegate next = (ctx) => Task.CompletedTask;
 
-        _mockEnvironment.Setup(e => e.IsDevelopment()).Returns(true);
+        this._mockEnvironment.Setup(e => e.IsDevelopment()).Returns(true);
 
-        var middleware = new SecurityHeadersMiddleware(next, _mockLogger.Object, _mockEnvironment.Object);
+        var middleware = new SecurityHeadersMiddleware(next, this._mockLogger.Object, this._mockEnvironment.Object);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -102,9 +102,9 @@ public class SecurityHeadersMiddlewareTests
 
         RequestDelegate next = (ctx) => Task.CompletedTask;
 
-        _mockEnvironment.Setup(e => e.IsDevelopment()).Returns(false);
+        this._mockEnvironment.Setup(e => e.IsDevelopment()).Returns(false);
 
-        var middleware = new SecurityHeadersMiddleware(next, _mockLogger.Object, _mockEnvironment.Object);
+        var middleware = new SecurityHeadersMiddleware(next, this._mockLogger.Object, this._mockEnvironment.Object);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -121,9 +121,9 @@ public class SecurityHeadersMiddlewareTests
         var context = new DefaultHttpContext();
         RequestDelegate next = (ctx) => Task.CompletedTask;
 
-        _mockEnvironment.Setup(e => e.IsDevelopment()).Returns(false);
+        this._mockEnvironment.Setup(e => e.IsDevelopment()).Returns(false);
 
-        var middleware = new SecurityHeadersMiddleware(next, _mockLogger.Object, _mockEnvironment.Object);
+        var middleware = new SecurityHeadersMiddleware(next, this._mockLogger.Object, this._mockEnvironment.Object);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -143,9 +143,9 @@ public class SecurityHeadersMiddlewareTests
         var context = new DefaultHttpContext();
         RequestDelegate next = (ctx) => Task.CompletedTask;
 
-        _mockEnvironment.Setup(e => e.IsDevelopment()).Returns(true);
+        this._mockEnvironment.Setup(e => e.IsDevelopment()).Returns(true);
 
-        var middleware = new SecurityHeadersMiddleware(next, _mockLogger.Object, _mockEnvironment.Object);
+        var middleware = new SecurityHeadersMiddleware(next, this._mockLogger.Object, this._mockEnvironment.Object);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -163,9 +163,9 @@ public class SecurityHeadersMiddlewareTests
         var context = new DefaultHttpContext();
         RequestDelegate next = (ctx) => Task.CompletedTask;
 
-        _mockEnvironment.Setup(e => e.IsDevelopment()).Returns(false);
+        this._mockEnvironment.Setup(e => e.IsDevelopment()).Returns(false);
 
-        var middleware = new SecurityHeadersMiddleware(next, _mockLogger.Object, _mockEnvironment.Object);
+        var middleware = new SecurityHeadersMiddleware(next, this._mockLogger.Object, this._mockEnvironment.Object);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -182,9 +182,9 @@ public class SecurityHeadersMiddlewareTests
         var context = new DefaultHttpContext();
         RequestDelegate next = (ctx) => Task.CompletedTask;
 
-        _mockEnvironment.Setup(e => e.IsDevelopment()).Returns(false);
+        this._mockEnvironment.Setup(e => e.IsDevelopment()).Returns(false);
 
-        var middleware = new SecurityHeadersMiddleware(next, _mockLogger.Object, _mockEnvironment.Object);
+        var middleware = new SecurityHeadersMiddleware(next, this._mockLogger.Object, this._mockEnvironment.Object);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -209,9 +209,9 @@ public class SecurityHeadersMiddlewareTests
             return Task.CompletedTask;
         };
 
-        _mockEnvironment.Setup(e => e.IsDevelopment()).Returns(false);
+        this._mockEnvironment.Setup(e => e.IsDevelopment()).Returns(false);
 
-        var middleware = new SecurityHeadersMiddleware(next, _mockLogger.Object, _mockEnvironment.Object);
+        var middleware = new SecurityHeadersMiddleware(next, this._mockLogger.Object, this._mockEnvironment.Object);
 
         // Act
         await middleware.InvokeAsync(context);

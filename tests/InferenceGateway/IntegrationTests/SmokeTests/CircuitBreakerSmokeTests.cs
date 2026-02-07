@@ -32,10 +32,10 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
 
         public CircuitBreakerSmokeTests(SynaxisWebApplicationFactory factory, ITestOutputHelper output)
         {
-            _factory = factory ?? throw new ArgumentNullException(nameof(factory));
-            _output = output ?? throw new ArgumentNullException(nameof(output));
-            _factory.OutputHelper = output;
-            _circuitBreaker = LoadCircuitBreakerState();
+            this._factory = factory ?? throw new ArgumentNullException(nameof(factory));
+            this._output = output ?? throw new ArgumentNullException(nameof(output));
+            this._factory.OutputHelper = output;
+            this._circuitBreaker = this.LoadCircuitBreakerState();
         }
 
         [Theory]
@@ -44,38 +44,45 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
         public async Task ChatCompletions_RealProviderSmokeTest(string provider, string model, string canonicalId, EndpointType endpoint)
         {
             // Skip if circuit breaker is open
-            if (_circuitBreaker.IsOpen(provider))
+            if (this._circuitBreaker.IsOpen(provider))
             {
-                _output.WriteLine($"Circuit breaker is open for {provider}, skipping test");
+                this._output.WriteLine($"Circuit breaker is open for {provider}, skipping test");
                 return;
             }
 
             var testCase = new SmokeTestCase(provider, model, canonicalId, endpoint);
 
             // Use real HTTP client for real provider tests
-            var client = _factory.CreateClient();
-            var executor = new SmokeTestExecutor(client, new SmokeTestOptions(), _output);
+            var client = this._factory.CreateClient();
+            var executor = new SmokeTestExecutor(client, new SmokeTestOptions(), this._output);
 
             var result = await executor.ExecuteAsync(testCase);
 
-            _output.WriteLine($"Provider={testCase.Provider} Model={testCase.Model} Success={result.Success} TimeMs={result.ResponseTime.TotalMilliseconds} Attempts={result.AttemptCount}");
-            if (!string.IsNullOrEmpty(result.Error)) _output.WriteLine($"Error: {result.Error}");
-            if (!string.IsNullOrEmpty(result.ResponseSnippet)) _output.WriteLine($"Snippet: {result.ResponseSnippet}");
+            this._output.WriteLine($"Provider={testCase.Provider} Model={testCase.Model} Success={result.Success} TimeMs={result.ResponseTime.TotalMilliseconds} Attempts={result.AttemptCount}");
+            if (!string.IsNullOrEmpty(result.Error))
+            {
+                this._output.WriteLine($"Error: {result.Error}");
+            }
+
+            if (!string.IsNullOrEmpty(result.ResponseSnippet))
+            {
+                this._output.WriteLine($"Snippet: {result.ResponseSnippet}");
+            }
 
             if (result.Success)
             {
-                _circuitBreaker.RecordSuccess(provider);
+                this._circuitBreaker.RecordSuccess(provider);
             }
             else
             {
-                _circuitBreaker.RecordFailure(provider);
+                this._circuitBreaker.RecordFailure(provider);
             }
 
-            SaveCircuitBreakerState();
+            this.SaveCircuitBreakerState();
 
             // Don't assert on success for real providers - they may be flaky
             // Just record the result for circuit breaker tracking
-            _output.WriteLine($"Test completed for {provider}: {(result.Success ? "Success" : "Failed")}");
+            this._output.WriteLine($"Test completed for {provider}: {(result.Success ? "Success" : "Failed")}");
         }
 
         public static IEnumerable<object[]> GetRepresentativeProviderCases()
@@ -85,9 +92,15 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
             foreach (var providerName in RepresentativeProviders)
             {
                 var providerSection = configuration.GetSection($"Synaxis:InferenceGateway:Providers:{providerName}");
-                if (!providerSection.Exists()) continue;
+                if (!providerSection.Exists())
+                {
+                    continue;
+                }
 
-                if (!providerSection.GetValue<bool>("Enabled")) continue;
+                if (!providerSection.GetValue<bool>("Enabled"))
+                {
+                    continue;
+                }
 
                 // Skip providers with placeholder API keys
                 var apiKey = providerSection.GetValue<string>("Key");
@@ -104,7 +117,10 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
                 foreach (var modelItem in modelsSection.GetChildren())
                 {
                     var modelName = modelItem.Value;
-                    if (string.IsNullOrEmpty(modelName)) continue;
+                    if (string.IsNullOrEmpty(modelName))
+                    {
+                        continue;
+                    }
 
                     var canonicalId = FindCanonicalId(configuration, providerName, modelName) ?? modelName;
 
@@ -126,8 +142,15 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
                 {
                     var appsettings = Path.Combine(webApiPath, "appsettings.json");
                     var appsettingsDev = Path.Combine(webApiPath, "appsettings.Development.json");
-                    if (File.Exists(appsettings)) builder.AddJsonFile(appsettings, optional: true, reloadOnChange: false);
-                    if (File.Exists(appsettingsDev)) builder.AddJsonFile(appsettingsDev, optional: true, reloadOnChange: false);
+                    if (File.Exists(appsettings))
+                    {
+                        builder.AddJsonFile(appsettings, optional: true, reloadOnChange: false);
+                    }
+
+                    if (File.Exists(appsettingsDev))
+                    {
+                        builder.AddJsonFile(appsettingsDev, optional: true, reloadOnChange: false);
+                    }
                 }
             }
 
@@ -141,7 +164,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
             {
                 { "Synaxis:InferenceGateway:Providers:Groq:Key", Environment.GetEnvironmentVariable("GROQ_API_KEY") },
                 { "Synaxis:InferenceGateway:Providers:Cohere:Key", Environment.GetEnvironmentVariable("COHERE_API_KEY") },
-                { "Synaxis:InferenceGateway:Providers:OpenRouter:Key", Environment.GetEnvironmentVariable("OPENROUTER_API_KEY") }
+                { "Synaxis:InferenceGateway:Providers:OpenRouter:Key", Environment.GetEnvironmentVariable("OPENROUTER_API_KEY") },
             };
 
             var filteredMapping = envMapping.Where(kv => !string.IsNullOrEmpty(kv.Value))
@@ -155,7 +178,10 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
         private static string? FindCanonicalId(IConfigurationRoot config, string provider, string modelPath)
         {
             var canonicals = config.GetSection("Synaxis:InferenceGateway:CanonicalModels");
-            if (!canonicals.Exists()) return null;
+            if (!canonicals.Exists())
+            {
+                return null;
+            }
 
             foreach (var item in canonicals.GetChildren())
             {
@@ -176,9 +202,17 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
             var dir = new DirectoryInfo(AppContext.BaseDirectory ?? Directory.GetCurrentDirectory());
             while (dir != null)
             {
-                if (dir.GetFiles("*.sln").Any()) return dir.FullName;
+                if (dir.GetFiles("*.sln").Any())
+                {
+                    return dir.FullName;
+                }
+
                 var src = Path.Combine(dir.FullName, "src");
-                if (Directory.Exists(src)) return dir.FullName;
+                if (Directory.Exists(src))
+                {
+                    return dir.FullName;
+                }
+
                 dir = dir.Parent;
             }
 
@@ -197,7 +231,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
                 }
                 catch (Exception ex)
                 {
-                    _output.WriteLine($"Failed to load circuit breaker state: {ex.Message}");
+                    this._output.WriteLine($"Failed to load circuit breaker state: {ex.Message}");
                 }
             }
 
@@ -215,12 +249,12 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
 
             try
             {
-                var json = JsonSerializer.Serialize(_circuitBreaker, new JsonSerializerOptions { WriteIndented = true });
+                var json = JsonSerializer.Serialize(this._circuitBreaker, new JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(statePath, json);
             }
             catch (Exception ex)
             {
-                _output.WriteLine($"Failed to save circuit breaker state: {ex.Message}");
+                this._output.WriteLine($"Failed to save circuit breaker state: {ex.Message}");
             }
         }
 
@@ -238,11 +272,11 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
     public class CircuitBreakerState
     {
         private const int FailureThreshold = 3;
-        private readonly Dictionary<string, ProviderState> _providerStates = new ();
+        private readonly Dictionary<string, ProviderState> _providerStates = new();
 
         public bool IsOpen(string provider)
         {
-            if (!_providerStates.TryGetValue(provider, out var state))
+            if (!this._providerStates.TryGetValue(provider, out var state))
             {
                 return false;
             }
@@ -252,10 +286,10 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
 
         public void RecordSuccess(string provider)
         {
-            if (!_providerStates.TryGetValue(provider, out var state))
+            if (!this._providerStates.TryGetValue(provider, out var state))
             {
                 state = new ProviderState();
-                _providerStates[provider] = state;
+                this._providerStates[provider] = state;
             }
 
             state.ConsecutiveFailures = 0;
@@ -264,17 +298,17 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
 
         public void RecordFailure(string provider)
         {
-            if (!_providerStates.TryGetValue(provider, out var state))
+            if (!this._providerStates.TryGetValue(provider, out var state))
             {
                 state = new ProviderState();
-                _providerStates[provider] = state;
+                this._providerStates[provider] = state;
             }
 
             state.ConsecutiveFailures++;
             state.LastFailure = DateTime.UtcNow;
         }
 
-        public Dictionary<string, ProviderState> ProviderStates => _providerStates;
+        public Dictionary<string, ProviderState> ProviderStates => this._providerStates;
     }
 
     /// <summary>
@@ -283,7 +317,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
     public class ProviderState
     {
         public int ConsecutiveFailures { get; set; }
+
         public DateTime? LastSuccess { get; set; }
+
         public DateTime? LastFailure { get; set; }
     }
 }

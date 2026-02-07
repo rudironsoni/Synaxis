@@ -42,16 +42,16 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity
             CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            ThrowIfDisposed();
+            this.ThrowIfDisposed();
 
-            var normalizedEmail = NormalizeEmail(email);
+            var normalizedEmail = this.NormalizeEmail(email);
 
-            return await Users
+            return await this.Users
                 .Where(u => u.NormalizedEmail == normalizedEmail && u.DeletedAt == null)
                 .Where(u => u.OrganizationMemberships.Any(m =>
                     m.OrganizationId == organizationId &&
                     m.Status == "Active"))
-                .FirstOrDefaultAsync(cancellationToken);
+                .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -65,14 +65,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity
             CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            ThrowIfDisposed();
+            this.ThrowIfDisposed();
 
-            return await Context.UserOrganizationMemberships
+            return await this.Context.UserOrganizationMemberships
                 .Where(m => m.UserId == userId && m.Status == "Active")
                 .Include(m => m.Organization)
                 .Where(m => m.Organization.DeletedAt == null)
                 .Select(m => m.Organization)
-                .ToListAsync(cancellationToken);
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -83,16 +83,16 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity
             CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            ThrowIfDisposed();
+            this.ThrowIfDisposed();
 
             if (!Guid.TryParse(userId, out var id))
             {
                 return null;
             }
 
-            return await Users
+            return await this.Users
                 .Where(u => u.Id == id && u.DeletedAt == null)
-                .FirstOrDefaultAsync(cancellationToken);
+                .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -103,11 +103,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity
             CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            ThrowIfDisposed();
+            this.ThrowIfDisposed();
 
-            return await Users
+            return await this.Users
                 .Where(u => u.NormalizedEmail == normalizedEmail && u.DeletedAt == null)
-                .FirstOrDefaultAsync(cancellationToken);
+                .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -118,11 +118,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity
             CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            ThrowIfDisposed();
+            this.ThrowIfDisposed();
 
-            return await Users
+            return await this.Users
                 .Where(u => u.NormalizedUserName == normalizedUserName && u.DeletedAt == null)
-                .FirstOrDefaultAsync(cancellationToken);
+                .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -133,22 +133,22 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity
             CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            ThrowIfDisposed();
+            this.ThrowIfDisposed();
 
-            var role = await Context.Roles
+            var role = await this.Context.Roles
                 .Where(r => r.NormalizedName == normalizedRoleName)
-                .FirstOrDefaultAsync(cancellationToken);
+                .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
             if (role == null)
             {
                 return new List<SynaxisUser>();
             }
 
-            return await (from user in Users
-                          join userRole in Context.UserRoles on user.Id equals userRole.UserId
+            return await (from user in this.Users
+                          join userRole in this.Context.UserRoles on user.Id equals userRole.UserId
                           where userRole.RoleId == role.Id && user.DeletedAt == null
                           select user)
-                .ToListAsync(cancellationToken);
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>

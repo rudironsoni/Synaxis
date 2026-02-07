@@ -21,17 +21,17 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
 
         public JwtServiceTests()
         {
-            _config = new SynaxisConfiguration
+            this._config = new SynaxisConfiguration
             {
                 JwtSecret = "THIS_IS_A_VERY_LONG_SECRET_KEY_FOR_TESTING_PURPOSES_ONLY_1234567890",
                 JwtIssuer = "TestIssuer",
-                JwtAudience = "TestAudience"
+                JwtAudience = "TestAudience",
             };
 
-            _mockConfig = new Mock<IOptions<SynaxisConfiguration>>();
-            _mockConfig.Setup(c => c.Value).Returns(_config);
+            this._mockConfig = new Mock<IOptions<SynaxisConfiguration>>();
+            this._mockConfig.Setup(c => c.Value).Returns(this._config);
 
-            _jwtService = new JwtService(_mockConfig.Object);
+            this._jwtService = new JwtService(this._mockConfig.Object);
         }
 
         [Fact]
@@ -53,28 +53,28 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
                 Id = Guid.NewGuid(),
                 TenantId = Guid.NewGuid(),
                 Email = "test@example.com",
-                Role = UserRole.Developer
+                Role = UserRole.Developer,
             };
 
             // Act
-            var token = _jwtService.GenerateToken(user);
+            var token = this._jwtService.GenerateToken(user);
 
             // Assert
             Assert.False(string.IsNullOrEmpty(token));
 
             // Validate the token
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_config.JwtSecret!);
+            var key = Encoding.ASCII.GetBytes(this._config.JwtSecret!);
             var validationParameters = new TokenValidationParameters
             {
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(key),
                 ValidateIssuer = true,
-                ValidIssuer = _config.JwtIssuer,
+                ValidIssuer = this._config.JwtIssuer,
                 ValidateAudience = true,
-                ValidAudience = _config.JwtAudience,
+                ValidAudience = this._config.JwtAudience,
                 ValidateLifetime = true,
-                ClockSkew = TimeSpan.Zero
+                ClockSkew = TimeSpan.Zero,
             };
 
             var principal = tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
@@ -88,17 +88,17 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
         public void GenerateToken_WithEmptyJwtSecret_ThrowsInvalidOperationException()
         {
             // Arrange
-            _config.JwtSecret = "";
+            this._config.JwtSecret = "";
             var user = new User
             {
                 Id = Guid.NewGuid(),
                 TenantId = Guid.NewGuid(),
                 Email = "test@example.com",
-                Role = UserRole.Developer
+                Role = UserRole.Developer,
             };
 
             // Act & Assert
-            var exception = Assert.Throws<InvalidOperationException>(() => _jwtService.GenerateToken(user));
+            var exception = Assert.Throws<InvalidOperationException>(() => this._jwtService.GenerateToken(user));
             Assert.Equal("Synaxis:InferenceGateway:JwtSecret must be configured.", exception.Message);
         }
 
@@ -106,17 +106,17 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
         public void GenerateToken_WithWhitespaceJwtSecret_ThrowsInvalidOperationException()
         {
             // Arrange
-            _config.JwtSecret = "   ";
+            this._config.JwtSecret = "   ";
             var user = new User
             {
                 Id = Guid.NewGuid(),
                 TenantId = Guid.NewGuid(),
                 Email = "test@example.com",
-                Role = UserRole.Developer
+                Role = UserRole.Developer,
             };
 
             // Act & Assert
-            var exception = Assert.Throws<InvalidOperationException>(() => _jwtService.GenerateToken(user));
+            var exception = Assert.Throws<InvalidOperationException>(() => this._jwtService.GenerateToken(user));
             Assert.Equal("Synaxis:InferenceGateway:JwtSecret must be configured.", exception.Message);
         }
 
@@ -124,17 +124,17 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
         public void GenerateToken_WithNullJwtSecret_ThrowsInvalidOperationException()
         {
             // Arrange
-            _config.JwtSecret = null;
+            this._config.JwtSecret = null;
             var user = new User
             {
                 Id = Guid.NewGuid(),
                 TenantId = Guid.NewGuid(),
                 Email = "test@example.com",
-                Role = UserRole.Developer
+                Role = UserRole.Developer,
             };
 
             // Act & Assert
-            var exception = Assert.Throws<InvalidOperationException>(() => _jwtService.GenerateToken(user));
+            var exception = Assert.Throws<InvalidOperationException>(() => this._jwtService.GenerateToken(user));
             Assert.Equal("Synaxis:InferenceGateway:JwtSecret must be configured.", exception.Message);
         }
 
@@ -147,11 +147,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
                 Id = Guid.NewGuid(),
                 TenantId = Guid.NewGuid(),
                 Email = "test@example.com",
-                Role = UserRole.Developer
+                Role = UserRole.Developer,
             };
 
             // Act
-            var token = _jwtService.GenerateToken(user);
+            var token = this._jwtService.GenerateToken(user);
             var tokenHandler = new JwtSecurityTokenHandler();
             var jwtToken = tokenHandler.ReadJwtToken(token);
 
@@ -171,36 +171,36 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
                 Id = Guid.NewGuid(),
                 TenantId = Guid.NewGuid(),
                 Email = "test@example.com",
-                Role = UserRole.Developer
+                Role = UserRole.Developer,
             };
 
             // Act
-            var token = _jwtService.GenerateToken(user);
+            var token = this._jwtService.GenerateToken(user);
             var tokenHandler = new JwtSecurityTokenHandler();
             var jwtToken = tokenHandler.ReadJwtToken(token);
 
             // Assert
-            Assert.Equal(_config.JwtIssuer, jwtToken.Issuer);
-            Assert.Equal(_config.JwtAudience, jwtToken.Audiences.First());
+            Assert.Equal(this._config.JwtIssuer, jwtToken.Issuer);
+            Assert.Equal(this._config.JwtAudience, jwtToken.Audiences.First());
         }
 
         [Fact]
         public void GenerateToken_WithNullIssuerAndAudience_UsesDefaults()
         {
             // Arrange
-            _config.JwtIssuer = null;
-            _config.JwtAudience = null;
+            this._config.JwtIssuer = null;
+            this._config.JwtAudience = null;
 
             var user = new User
             {
                 Id = Guid.NewGuid(),
                 TenantId = Guid.NewGuid(),
                 Email = "test@example.com",
-                Role = UserRole.Developer
+                Role = UserRole.Developer,
             };
 
             // Act
-            var token = _jwtService.GenerateToken(user);
+            var token = this._jwtService.GenerateToken(user);
             var tokenHandler = new JwtSecurityTokenHandler();
             var jwtToken = tokenHandler.ReadJwtToken(token);
 

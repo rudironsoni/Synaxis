@@ -30,8 +30,8 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             RequestDelegate next,
             ILogger<AuditMiddleware> logger)
         {
-            _next = next ?? throw new ArgumentNullException(nameof(next));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._next = next ?? throw new ArgumentNullException(nameof(next));
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 context.Request.Path.StartsWithSegments("/openapi") ||
                 context.Request.Path.Value?.Contains("swagger", StringComparison.OrdinalIgnoreCase) == true)
             {
-                await _next(context);
+                await this._next(context);
                 return;
             }
 
@@ -61,7 +61,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             var userAgent = context.Request.Headers["User-Agent"].ToString();
 
             // Log request start
-            _logger.LogInformation(
+            this._logger.LogInformation(
                 "API Request Started: {RequestId} {Method} {Path}{Query} from {ClientIp}",
                 requestId, requestMethod, requestPath, requestQuery, clientIp);
 
@@ -74,7 +74,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 context.Response.Body = responseBodyStream;
 
                 // Process the request
-                await _next(context);
+                await this._next(context);
 
                 stopwatch.Stop();
 
@@ -88,7 +88,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                               statusCode >= 400 ? LogLevel.Warning :
                               LogLevel.Information;
 
-                _logger.Log(logLevel,
+                this._logger.Log(logLevel,
                     "API Request Completed: {RequestId} {Method} {Path} -> {StatusCode} in {Duration}ms | " +
                     "OrgId: {OrgId} | UserId: {UserId} | ApiKeyId: {ApiKeyId} | " +
                     "Region: {UserRegion} | CrossBorder: {CrossBorder} | " +
@@ -106,7 +106,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             {
                 stopwatch.Stop();
 
-                _logger.LogError(ex,
+                this._logger.LogError(ex,
                     "API Request Failed: {RequestId} {Method} {Path} after {Duration}ms | " +
                     "OrgId: {OrgId} | Error: {ErrorMessage}",
                     requestId, requestMethod, requestPath, stopwatch.ElapsedMilliseconds,

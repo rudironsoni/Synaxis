@@ -20,8 +20,8 @@ public class RequestFingerprinterTests : TestBase
 
     public RequestFingerprinterTests()
     {
-        _mockFingerprinter = new Mock<IRequestFingerprinter>();
-        _mockContextProvider = new Mock<IRequestContextProvider>();
+        this._mockFingerprinter = new Mock<IRequestFingerprinter>();
+        this._mockContextProvider = new Mock<IRequestContextProvider>();
     }
 
     [Fact]
@@ -32,31 +32,31 @@ public class RequestFingerprinterTests : TestBase
         {
             new ChatMessage(ChatRole.User, "Hello"),
             new ChatMessage(ChatRole.Assistant, "Hi there!"),
-            new ChatMessage(ChatRole.User, "How are you?")
+            new ChatMessage(ChatRole.User, "How are you?"),
         };
         var options = new ChatOptions
         {
             ModelId = "gpt-4",
             Temperature = 0.7,
-            MaxOutputTokens = 1000
+            MaxOutputTokens = 1000,
         };
 
         var expectedHash = "abc123def456";
 
-        _mockFingerprinter
+        this._mockFingerprinter
             .Setup(x => x.ComputeFingerprint(messages, options))
             .Returns(expectedHash);
 
         // Act
-        var hash1 = _mockFingerprinter.Object.ComputeFingerprint(messages, options);
-        var hash2 = _mockFingerprinter.Object.ComputeFingerprint(messages, options);
+        var hash1 = this._mockFingerprinter.Object.ComputeFingerprint(messages, options);
+        var hash2 = this._mockFingerprinter.Object.ComputeFingerprint(messages, options);
 
         // Assert
         Assert.Equal(expectedHash, hash1);
         Assert.Equal(expectedHash, hash2);
         Assert.Equal(hash1, hash2);
 
-        _mockFingerprinter.Verify(
+        this._mockFingerprinter.Verify(
             x => x.ComputeFingerprint(messages, options),
             Times.Exactly(2));
     }
@@ -69,17 +69,17 @@ public class RequestFingerprinterTests : TestBase
         var messages2 = new[] { new ChatMessage(ChatRole.User, "Goodbye") };
         var options = new ChatOptions { ModelId = "gpt-4" };
 
-        _mockFingerprinter
+        this._mockFingerprinter
             .Setup(x => x.ComputeFingerprint(messages1, options))
             .Returns("hash1");
 
-        _mockFingerprinter
+        this._mockFingerprinter
             .Setup(x => x.ComputeFingerprint(messages2, options))
             .Returns("hash2");
 
         // Act
-        var hash1 = _mockFingerprinter.Object.ComputeFingerprint(messages1, options);
-        var hash2 = _mockFingerprinter.Object.ComputeFingerprint(messages2, options);
+        var hash1 = this._mockFingerprinter.Object.ComputeFingerprint(messages1, options);
+        var hash2 = this._mockFingerprinter.Object.ComputeFingerprint(messages2, options);
 
         // Assert
         Assert.NotEqual(hash1, hash2);
@@ -93,17 +93,17 @@ public class RequestFingerprinterTests : TestBase
         var options1 = new ChatOptions { ModelId = "gpt-4", Temperature = 0.7 };
         var options2 = new ChatOptions { ModelId = "gpt-4", Temperature = 0.0 };
 
-        _mockFingerprinter
+        this._mockFingerprinter
             .Setup(x => x.ComputeFingerprint(messages, options1))
             .Returns("hash_temp_07");
 
-        _mockFingerprinter
+        this._mockFingerprinter
             .Setup(x => x.ComputeFingerprint(messages, options2))
             .Returns("hash_temp_00");
 
         // Act
-        var hash1 = _mockFingerprinter.Object.ComputeFingerprint(messages, options1);
-        var hash2 = _mockFingerprinter.Object.ComputeFingerprint(messages, options2);
+        var hash1 = this._mockFingerprinter.Object.ComputeFingerprint(messages, options1);
+        var hash2 = this._mockFingerprinter.Object.ComputeFingerprint(messages, options2);
 
         // Assert
         Assert.NotEqual(hash1, hash2);
@@ -119,25 +119,25 @@ public class RequestFingerprinterTests : TestBase
             ModelId = "gpt-4",
             Temperature = 0.7,
             MaxOutputTokens = 1000,
-            TopP = 0.9
+            TopP = 0.9,
         };
         var options2 = new ChatOptions
         {
             TopP = 0.9,
             ModelId = "gpt-4",
             MaxOutputTokens = 1000,
-            Temperature = 0.7
+            Temperature = 0.7,
         };
 
         var expectedHash = "normalized_hash";
 
-        _mockFingerprinter
+        this._mockFingerprinter
             .Setup(x => x.ComputeFingerprint(messages, It.IsAny<ChatOptions>()))
             .Returns(expectedHash);
 
         // Act
-        var hash1 = _mockFingerprinter.Object.ComputeFingerprint(messages, options1);
-        var hash2 = _mockFingerprinter.Object.ComputeFingerprint(messages, options2);
+        var hash1 = this._mockFingerprinter.Object.ComputeFingerprint(messages, options1);
+        var hash2 = this._mockFingerprinter.Object.ComputeFingerprint(messages, options2);
 
         // Assert - Implementation should normalize options ordering
         Assert.Equal(expectedHash, hash1);
@@ -149,23 +149,23 @@ public class RequestFingerprinterTests : TestBase
     public void ComputeSessionId_HeaderProvided_UsesHeader()
     {
         // Arrange
-        var context = CreateMockHttpContext("session-header-123");
+        var context = this.CreateMockHttpContext("session-header-123");
 
-        _mockContextProvider
+        this._mockContextProvider
             .Setup(x => x.GetCurrentContext())
             .Returns(context.Object);
 
-        _mockFingerprinter
+        this._mockFingerprinter
             .Setup(x => x.ComputeSessionId(context.Object))
             .Returns("session-header-123");
 
         // Act
-        var sessionId = _mockFingerprinter.Object.ComputeSessionId(context.Object);
+        var sessionId = this._mockFingerprinter.Object.ComputeSessionId(context.Object);
 
         // Assert
         Assert.Equal("session-header-123", sessionId);
 
-        _mockFingerprinter.Verify(
+        this._mockFingerprinter.Verify(
             x => x.ComputeSessionId(context.Object),
             Times.Once);
     }
@@ -174,17 +174,17 @@ public class RequestFingerprinterTests : TestBase
     public void ComputeSessionId_NoHeader_UsesIpAndUa()
     {
         // Arrange
-        var context = CreateMockHttpContext(
+        var context = this.CreateMockHttpContext(
             sessionHeader: null,
             ipAddress: "192.168.1.1",
             userAgent: "Mozilla/5.0");
 
-        _mockFingerprinter
+        this._mockFingerprinter
             .Setup(x => x.ComputeSessionId(context.Object))
             .Returns("ip-ua-hash-abc123");
 
         // Act
-        var sessionId = _mockFingerprinter.Object.ComputeSessionId(context.Object);
+        var sessionId = this._mockFingerprinter.Object.ComputeSessionId(context.Object);
 
         // Assert
         Assert.NotNull(sessionId);
@@ -196,17 +196,17 @@ public class RequestFingerprinterTests : TestBase
     public void ComputeSessionId_NoHeaderNoIp_UsesContent()
     {
         // Arrange
-        var context = CreateMockHttpContext(
+        var context = this.CreateMockHttpContext(
             sessionHeader: null,
             ipAddress: null,
             userAgent: null);
 
-        _mockFingerprinter
+        this._mockFingerprinter
             .Setup(x => x.ComputeSessionId(context.Object))
             .Returns("content-based-hash-xyz789");
 
         // Act
-        var sessionId = _mockFingerprinter.Object.ComputeSessionId(context.Object);
+        var sessionId = this._mockFingerprinter.Object.ComputeSessionId(context.Object);
 
         // Assert
         Assert.NotNull(sessionId);
@@ -218,18 +218,18 @@ public class RequestFingerprinterTests : TestBase
     public void ComputeSessionId_AllNull_GeneratesRandom()
     {
         // Arrange
-        var context = CreateMockHttpContext(
+        var context = this.CreateMockHttpContext(
             sessionHeader: null,
             ipAddress: null,
             userAgent: null);
 
-        _mockFingerprinter
+        this._mockFingerprinter
             .Setup(x => x.ComputeSessionId(context.Object))
             .Returns(() => Guid.NewGuid().ToString());
 
         // Act
-        var sessionId1 = _mockFingerprinter.Object.ComputeSessionId(context.Object);
-        var sessionId2 = _mockFingerprinter.Object.ComputeSessionId(context.Object);
+        var sessionId1 = this._mockFingerprinter.Object.ComputeSessionId(context.Object);
+        var sessionId2 = this._mockFingerprinter.Object.ComputeSessionId(context.Object);
 
         // Assert
         Assert.NotNull(sessionId1);
@@ -244,14 +244,14 @@ public class RequestFingerprinterTests : TestBase
     public void ComputeSessionId_SanitizesSpecialCharacters()
     {
         // Arrange
-        var context = CreateMockHttpContext("session/../../../etc/passwd");
+        var context = this.CreateMockHttpContext("session/../../../etc/passwd");
 
-        _mockFingerprinter
+        this._mockFingerprinter
             .Setup(x => x.ComputeSessionId(context.Object))
             .Returns("session_etc_passwd");
 
         // Act
-        var sessionId = _mockFingerprinter.Object.ComputeSessionId(context.Object);
+        var sessionId = this._mockFingerprinter.Object.ComputeSessionId(context.Object);
 
         // Assert
         Assert.NotNull(sessionId);
@@ -275,13 +275,13 @@ public class RequestFingerprinterTests : TestBase
         var options = new ChatOptions { ModelId = "gpt-4" };
         var expectedHash = "large-content-hash";
 
-        _mockFingerprinter
+        this._mockFingerprinter
             .Setup(x => x.ComputeFingerprint(largeMessages, options))
             .Returns(expectedHash);
 
         // Act
         var startTime = DateTime.UtcNow;
-        var hash = _mockFingerprinter.Object.ComputeFingerprint(largeMessages, options);
+        var hash = this._mockFingerprinter.Object.ComputeFingerprint(largeMessages, options);
         var elapsed = DateTime.UtcNow - startTime;
 
         // Assert

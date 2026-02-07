@@ -17,7 +17,7 @@ public class EntityTests
             KeyHash = "hashed-key-value",
             Name = "Test API Key",
             Status = ApiKeyStatus.Active,
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow,
         };
 
         // Assert
@@ -51,7 +51,7 @@ public class EntityTests
         var apiKey = new ApiKey
         {
             Id = Guid.NewGuid(),
-            ProjectId = Guid.NewGuid()
+            ProjectId = Guid.NewGuid(),
         };
 
         // Act & Assert
@@ -71,7 +71,7 @@ public class EntityTests
             UserId = Guid.NewGuid(),
             Action = "user.login",
             PayloadJson = "{\"ip\":\"127.0.0.1\"}",
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow,
         };
 
         // Assert
@@ -100,7 +100,7 @@ public class EntityTests
         // Arrange
         var auditLog = new AuditLog
         {
-            PayloadJson = "{\"userId\":\"123\",\"action\":\"login\"}"
+            PayloadJson = "{\"userId\":\"123\",\"action\":\"login\"}",
         };
 
         // Act
@@ -132,7 +132,7 @@ public class EntityTests
             SupportsReasoning = false,
             SupportsVision = false,
             SupportsAudio = false,
-            SupportsStructuredOutput = true
+            SupportsStructuredOutput = true,
         };
 
         // Assert
@@ -161,7 +161,7 @@ public class EntityTests
         var providerModel = new ProviderModel
         {
             ProviderId = "nvidia",
-            ProviderSpecificId = "nvidia/llama-3.3-70b"
+            ProviderSpecificId = "nvidia/llama-3.3-70b",
         };
 
         // Act
@@ -180,7 +180,7 @@ public class EntityTests
         {
             SupportsTools = true,
             SupportsVision = true,
-            SupportsStructuredOutput = true
+            SupportsStructuredOutput = true,
         };
 
         // Assert
@@ -204,7 +204,7 @@ public class EntityTests
             RefreshTokenEncrypted = new byte[] { 6, 7, 8, 9, 10 },
             ExpiresAt = DateTimeOffset.UtcNow.AddHours(1),
             Status = OAuthAccountStatus.Active,
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow,
         };
 
         // Assert
@@ -224,7 +224,7 @@ public class EntityTests
         // Arrange
         var oauthAccount = new OAuthAccount
         {
-            AccessTokenEncrypted = new byte[] { 1, 2, 3 }
+            AccessTokenEncrypted = new byte[] { 1, 2, 3 },
         };
 
         // Assert
@@ -253,7 +253,7 @@ public class EntityTests
             Provider = "openai",
             Model = "gpt-4",
             CostPerToken = 0.03m,
-            FreeTier = false
+            FreeTier = false,
         };
 
         // Assert
@@ -269,7 +269,7 @@ public class EntityTests
         // Arrange
         var modelCost = new ModelCost
         {
-            CostPerToken = 0.001m
+            CostPerToken = 0.001m,
         };
 
         // Act
@@ -293,7 +293,7 @@ public class EntityTests
             OverrideInputPrice = 0.0005m,
             OverrideOutputPrice = 0.001m,
             RateLimitRPM = 1000,
-            RateLimitTPM = 100000
+            RateLimitTPM = 100000,
         };
 
         // Assert
@@ -330,7 +330,7 @@ public class EntityTests
             Name = "Test Tenant",
             Region = TenantRegion.Us,
             Status = TenantStatus.Active,
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow,
         };
 
         // Assert
@@ -364,7 +364,7 @@ public class EntityTests
             TenantId = Guid.NewGuid(),
             Name = "Test Project",
             Status = ProjectStatus.Active,
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow,
         };
 
         // Assert
@@ -389,7 +389,7 @@ public class EntityTests
             InputTokens = 1000,
             OutputTokens = 500,
             CostEstimate = 0.015m,
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow,
         };
 
         // Assert
@@ -417,7 +417,7 @@ public class EntityTests
             Reason = "Model not available",
             Mitigation = "Use fallback model",
             Status = DeviationStatus.Closed,
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow,
         };
 
         // Assert
@@ -440,7 +440,7 @@ public class EntityTests
             Id = Guid.NewGuid(),
             TenantId = Guid.NewGuid(),
             Alias = "fast-model",
-            TargetModel = "llama-3.3-70b"
+            TargetModel = "llama-3.3-70b",
         };
 
         // Assert
@@ -459,7 +459,7 @@ public class EntityTests
             Id = Guid.NewGuid(),
             TenantId = Guid.NewGuid(),
             Name = "Smart Combo",
-            OrderedModelsJson = "[\"model1\",\"model2\"]"
+            OrderedModelsJson = "[\"model1\",\"model2\"]",
         };
 
         // Assert
@@ -480,7 +480,7 @@ public class EntityTests
             Provider = "openai",
             AccountId = "acc-123",
             Status = ProviderAccountStatus.Active,
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow,
         };
 
         // Assert
@@ -508,7 +508,7 @@ public class EntityTests
             Provider = "openai",
             LatencyMs = 1500,
             StatusCode = 200,
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow,
         };
 
         // Assert
@@ -535,7 +535,7 @@ public class EntityTests
             Provider = "openai",
             AccountId = "acc-123",
             QuotaJson = "{\"tokens\":100000}",
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow,
         };
 
         // Assert
@@ -556,7 +556,7 @@ public class EntityTests
             TenantId = "tenant-123",
             GlobalModelId = "gpt-4",
             AllowedRPM = 1000,
-            MonthlyBudget = 1000.50m
+            MonthlyBudget = 1000.50m,
         };
 
         // Assert

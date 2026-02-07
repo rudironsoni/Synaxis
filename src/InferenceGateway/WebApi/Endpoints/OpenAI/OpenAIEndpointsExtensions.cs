@@ -47,7 +47,10 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
             {
                 // 1. Parse Request
                 var request = await OpenAIRequestParser.ParseAsync(context, ct, allowEmptyModel: false, allowEmptyMessages: false);
-                if (request == null) return Results.BadRequest("Invalid request body");
+                if (request == null)
+                {
+                    return Results.BadRequest("Invalid request body");
+                }
 
                 // 2. Map Messages
                 var messages = OpenAIRequestMapper.ToChatMessages(request);
@@ -68,7 +71,10 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                     {
                         var content = update.Text;
 
-                        if (string.IsNullOrEmpty(content)) continue;
+                        if (string.IsNullOrEmpty(content))
+                        {
+                            continue;
+                        }
 
                         var chunk = new ChatCompletionChunk
                         {
@@ -84,7 +90,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                                 Delta = new ChatCompletionChunkDelta { Content = content },
                                 FinishReason = null
                             }
-                            }
+                            },
                         };
                         await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(chunk)}\n\n", ct);
                         await context.Response.Body.FlushAsync(ct);
@@ -104,7 +110,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                             Delta = new ChatCompletionChunkDelta(),
                             FinishReason = "stop"
                         }
-                        }
+                        },
                     };
                     await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(finalChunk)}\n\n", ct);
                     await context.Response.WriteAsync("data: [DONE]\n\n", ct);
@@ -137,14 +143,14 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                                 Content = content,
                             },
                             FinishReason = "stop"
-                        }
+                        },
                         },
                         Usage = new ChatCompletionUsage
                         {
                             PromptTokens = 0,
                             CompletionTokens = 0,
                             TotalTokens = 0
-                        }
+                        },
                     };
 
                     return Results.Json(openAIResponse);
@@ -165,7 +171,10 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
             {
                 var request = await OpenAIRequestParser.ParseAsync(context, ct, allowEmptyModel: true, allowEmptyMessages: true);
 
-                if (request == null) return Results.BadRequest("Invalid request body");
+                if (request == null)
+                {
+                    return Results.BadRequest("Invalid request body");
+                }
 
                 // Store the parsed request in HTTP context so RoutingAgent doesn't re-parse
                 context.Items["ParsedOpenAIRequest"] = request;
@@ -187,7 +196,10 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                     {
                         var content = update.Text;
 
-                        if (string.IsNullOrEmpty(content)) continue;
+                        if (string.IsNullOrEmpty(content))
+                        {
+                            continue;
+                        }
 
                         var chunk = new ResponseStreamChunk
                         {
@@ -195,7 +207,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                             Object = "response.output_item.delta",
                             Created = created,
                             Model = request.Model ?? "default",
-                            Delta = new ResponseDelta { Content = content }
+                            Delta = new ResponseDelta { Content = content },
                         };
                         await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(chunk, ModelJsonContext.Options)}\n\n", ct);
                         await context.Response.Body.FlushAsync(ct);
@@ -207,7 +219,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                         Object = "response.completed",
                         Created = created,
                         Model = request.Model ?? "default",
-                        Delta = new ResponseDelta()
+                        Delta = new ResponseDelta(),
                     };
                     await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(finalChunk, ModelJsonContext.Options)}\n\n", ct);
                     await context.Response.WriteAsync("data: [DONE]\n\n", ct);
@@ -242,7 +254,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                                 }
                             }
                         }
-                        }
+                        },
                     };
 
                     return Results.Json(openAIResponse, ModelJsonContext.Options);

@@ -28,8 +28,8 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         /// <param name="logger">The logger instance.</param>
         public OpenAIErrorHandlerMiddleware(RequestDelegate next, ILogger<OpenAIErrorHandlerMiddleware> logger)
         {
-            _next = next;
-            _logger = logger;
+            this._next = next;
+            this._logger = logger;
         }
 
         /// <summary>
@@ -41,11 +41,14 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         {
             try
             {
-                await _next(context);
+                await this._next(context);
             }
             catch (Exception ex)
             {
-                if (context.Response.HasStarted) throw;
+                if (context.Response.HasStarted)
+                {
+                    throw;
+                }
 
                 var requestId = context.Request.Headers["X-Request-ID"].FirstOrDefault()
                              ?? context.Request.Headers["x-request-id"].FirstOrDefault()
@@ -53,7 +56,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
 
                 var isStreamingRequest = IsStreamingRequest(context);
 
-                _logger.LogError(ex, "Unhandled exception caught. RequestId: {RequestId}, Path: {Path}, Method: {Method}, IsStreaming: {IsStreaming}",
+                this._logger.LogError(ex, "Unhandled exception caught. RequestId: {RequestId}, Path: {Path}, Method: {Method}, IsStreaming: {IsStreaming}",
                     requestId, context.Request.Path, context.Request.Method, isStreamingRequest);
 
                 // Special handling for AggregateException produced by the router
@@ -64,7 +67,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     var summaries = new List<string>();
                     var statusCodes = new List<int>();
 
-                    _logger.LogError(ex, "AggregateException caught. RequestId: {RequestId}, Path: {Path}, Inner exceptions: {InnerExceptionCount}",
+                    this._logger.LogError(ex, "AggregateException caught. RequestId: {RequestId}, Path: {Path}, Inner exceptions: {InnerExceptionCount}",
                         requestId, context.Request.Path, flat.InnerExceptions.Count);
 
                     foreach (var inner in flat.InnerExceptions)
@@ -94,9 +97,18 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                                 try
                                 {
                                     var val = statusProp.GetValue(inner);
-                                    if (val is int i) status = i;
-                                    else if (val is HttpStatusCode hc) status = (int)hc;
-                                    else if (val is System.Net.HttpStatusCode hcc) status = (int)hcc;
+                                    if (val is int i)
+                                    {
+                                        status = i;
+                                    }
+                                    else if (val is HttpStatusCode hc)
+                                    {
+                                        status = (int)hc;
+                                    }
+                                    else if (val is System.Net.HttpStatusCode hcc)
+                                    {
+                                        status = (int)hcc;
+                                    }
                                 }
                                 catch
                                 {
@@ -109,7 +121,10 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
 
                         // Clean up message: remove newlines for summary
                         var cleanMsg = inner.Message?.Replace("\r", "")?.Replace("\n", " ") ?? "Unknown error";
-                        if (cleanMsg.Length > 100) cleanMsg = cleanMsg.Substring(0, 97) + "...";
+                        if (cleanMsg.Length > 100)
+                        {
+                            cleanMsg = cleanMsg.Substring(0, 97) + "...";
+                        }
 
                         summaries.Add($"[{provider}: {status} - {cleanMsg}]");
 
@@ -117,7 +132,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                         {
                             provider,
                             message = inner.Message,
-                            status = status
+                            status = status,
                         });
                     }
 
@@ -155,7 +170,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                                 code = "upstream_routing_failure",
                                 details = details,
                                 request_id = requestId
-                            }
+                            },
                         };
 
                         await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(errorEvent)}\n\n");
@@ -173,7 +188,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                                 code = "upstream_routing_failure",
                                 details = details,
                                 request_id = requestId
-                            }
+                            },
                         };
 
                         await context.Response.WriteAsync(JsonSerializer.Serialize(error));
@@ -199,7 +214,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     statusCode = (int)ErrorCodeMappings.GetStatusCode(errorCode);
                 }
 
-                _logger.LogError(ex, "Exception caught. RequestId: {RequestId}, Path: {Path}, ErrorCode: {ErrorCode}, ErrorType: {ErrorType}, ExceptionType: {ExceptionType}, Message: {ExceptionMessage}",
+                this._logger.LogError(ex, "Exception caught. RequestId: {RequestId}, Path: {Path}, ErrorCode: {ErrorCode}, ErrorType: {ErrorType}, ExceptionType: {ExceptionType}, Message: {ExceptionMessage}",
                     requestId, context.Request.Path, errorCode, errorType, ex.GetType().Name, ex.Message);
 
                 context.Response.StatusCode = statusCode;
@@ -217,7 +232,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                             param = (string?)null,
                             code = errorCode,
                             request_id = requestId
-                        }
+                        },
                     };
 
                     await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(errorEvent)}\n\n");
@@ -236,7 +251,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                             param = (string?)null,
                             code = errorCode,
                             request_id = requestId
-                        }
+                        },
                     };
 
                     await context.Response.WriteAsync(JsonSerializer.Serialize(singleError));

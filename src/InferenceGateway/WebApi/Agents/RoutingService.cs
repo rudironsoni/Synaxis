@@ -35,9 +35,9 @@ namespace Synaxis.InferenceGateway.WebApi.Agents
         /// <param name="httpContextAccessor">The HTTP context accessor.</param>
         public RoutingService(IChatClient chatClient, ITranslationPipeline translator, IHttpContextAccessor httpContextAccessor)
         {
-            _chatClient = chatClient;
-            _translator = translator;
-            _httpContextAccessor = httpContextAccessor;
+            this._chatClient = chatClient;
+            this._translator = translator;
+            this._httpContextAccessor = httpContextAccessor;
         }
 
         /// <summary>
@@ -51,7 +51,7 @@ namespace Synaxis.InferenceGateway.WebApi.Agents
         /// <returns>The agent response.</returns>
         public async Task<AgentsAI.AgentResponse> HandleAsync(OpenAIRequest openAIRequest, IEnumerable<ChatMessage> messages, AgentsAI.AgentThread? thread = null, AgentsAI.AgentRunOptions? options = null, CancellationToken cancellationToken = default)
         {
-            var httpContext = _httpContextAccessor.HttpContext;
+            var httpContext = this._httpContextAccessor.HttpContext;
 
             // 1. Input is already parsed and passed as arguments
 
@@ -59,22 +59,22 @@ namespace Synaxis.InferenceGateway.WebApi.Agents
             var canonicalRequest = OpenAIRequestMapper.ToCanonicalRequest(openAIRequest, messages);
 
             // 3. Translate Request
-            var translatedRequest = _translator.TranslateRequest(canonicalRequest);
+            var translatedRequest = this._translator.TranslateRequest(canonicalRequest);
 
             // 4. Prepare Options
             var chatOptions = new ChatOptions { ModelId = translatedRequest.model };
 
             // 5. Execute
-            var response = await _chatClient.GetResponseAsync(translatedRequest.messages, chatOptions, cancellationToken);
+            var response = await this._chatClient.GetResponseAsync(translatedRequest.messages, chatOptions, cancellationToken);
 
             // 6. Translate Response
             var message = response.Messages.FirstOrDefault() ?? new ChatMessage(ChatRole.Assistant, "");
             var toolCalls = message.Contents.OfType<FunctionCallContent>().ToList();
             var canonicalResponse = new CanonicalResponse(message.Text, toolCalls);
-            var translatedResponse = _translator.TranslateResponse(canonicalResponse);
+            var translatedResponse = this._translator.TranslateResponse(canonicalResponse);
 
             // 7. Log Routing Context
-            LogRoutingContext(httpContext, openAIRequest.Model, response.AdditionalProperties);
+            this.LogRoutingContext(httpContext, openAIRequest.Model, response.AdditionalProperties);
 
             // 8. Build Agent Response
             var agentMessage = new ChatMessage(ChatRole.Assistant, translatedResponse.content);
@@ -100,15 +100,15 @@ namespace Synaxis.InferenceGateway.WebApi.Agents
         /// <returns>The agent response updates.</returns>
         public async IAsyncEnumerable<AgentsAI.AgentResponseUpdate> HandleStreamingAsync(OpenAIRequest openAIRequest, IEnumerable<ChatMessage> messages, AgentsAI.AgentThread? thread = null, AgentsAI.AgentRunOptions? options = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            var httpContext = _httpContextAccessor.HttpContext;
+            var httpContext = this._httpContextAccessor.HttpContext;
 
             var canonicalRequest = OpenAIRequestMapper.ToCanonicalRequest(openAIRequest, messages);
-            var translatedRequest = _translator.TranslateRequest(canonicalRequest);
+            var translatedRequest = this._translator.TranslateRequest(canonicalRequest);
             var chatOptions = new ChatOptions { ModelId = translatedRequest.model };
 
-            await foreach (var update in _chatClient.GetStreamingResponseAsync(translatedRequest.messages, chatOptions, cancellationToken))
+            await foreach (var update in this._chatClient.GetStreamingResponseAsync(translatedRequest.messages, chatOptions, cancellationToken))
             {
-                var translatedUpdate = _translator.TranslateUpdate(update);
+                var translatedUpdate = this._translator.TranslateUpdate(update);
                 yield return new AgentsAI.AgentResponseUpdate(translatedUpdate);
             }
         }

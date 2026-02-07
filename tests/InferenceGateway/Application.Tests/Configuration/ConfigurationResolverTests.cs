@@ -23,8 +23,8 @@ public class ConfigurationResolverTests : IDisposable
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
 
-        _context = new SynaxisDbContext(options);
-        _resolver = new ConfigurationResolver(_context);
+        this._context = new SynaxisDbContext(options);
+        this._resolver = new ConfigurationResolver(this._context);
     }
 
     [Fact]
@@ -41,14 +41,14 @@ public class ConfigurationResolverTests : IDisposable
             DisplayName = "Test",
             Slug = "test",
             Status = "Active",
-            PlanTier = "Free"
+            PlanTier = "Free",
         };
 
         var orgSettings = new OrganizationSettings
         {
             OrganizationId = orgId,
             DefaultRateLimitRpm = 100,
-            DefaultRateLimitTpm = 10000
+            DefaultRateLimitTpm = 10000,
         };
 
         var membership = new UserOrganizationMembership
@@ -59,16 +59,16 @@ public class ConfigurationResolverTests : IDisposable
             OrganizationRole = "Member",
             RateLimitRpm = 50,
             RateLimitTpm = 5000,
-            Status = "Active"
+            Status = "Active",
         };
 
-        _context.Organizations.Add(org);
-        _context.OrganizationSettings.Add(orgSettings);
-        _context.UserOrganizationMemberships.Add(membership);
-        await _context.SaveChangesAsync();
+        this._context.Organizations.Add(org);
+        this._context.OrganizationSettings.Add(orgSettings);
+        this._context.UserOrganizationMemberships.Add(membership);
+        await this._context.SaveChangesAsync();
 
         // Act
-        var result = await _resolver.GetRateLimitsAsync(userId, orgId);
+        var result = await this._resolver.GetRateLimitsAsync(userId, orgId);
 
         // Assert
         Assert.Equal(50, result.RequestsPerMinute);
@@ -91,7 +91,7 @@ public class ConfigurationResolverTests : IDisposable
             DisplayName = "Test",
             Slug = "test",
             Status = "Active",
-            PlanTier = "Free"
+            PlanTier = "Free",
         };
 
         var group = new Group
@@ -102,7 +102,7 @@ public class ConfigurationResolverTests : IDisposable
             Slug = "test-group",
             Status = "Active",
             RateLimitRpm = 75,
-            RateLimitTpm = 7500
+            RateLimitTpm = 7500,
         };
 
         var membership = new UserOrganizationMembership
@@ -112,16 +112,16 @@ public class ConfigurationResolverTests : IDisposable
             OrganizationId = orgId,
             OrganizationRole = "Member",
             PrimaryGroupId = groupId,
-            Status = "Active"
+            Status = "Active",
         };
 
-        _context.Organizations.Add(org);
-        _context.Groups.Add(group);
-        _context.UserOrganizationMemberships.Add(membership);
-        await _context.SaveChangesAsync();
+        this._context.Organizations.Add(org);
+        this._context.Groups.Add(group);
+        this._context.UserOrganizationMemberships.Add(membership);
+        await this._context.SaveChangesAsync();
 
         // Act
-        var result = await _resolver.GetRateLimitsAsync(userId, orgId);
+        var result = await this._resolver.GetRateLimitsAsync(userId, orgId);
 
         // Assert
         Assert.Equal(75, result.RequestsPerMinute);
@@ -144,7 +144,7 @@ public class ConfigurationResolverTests : IDisposable
             DisplayName = "Test Provider",
             ProviderType = "OpenAI",
             DefaultInputCostPer1MTokens = 1.0m,
-            DefaultOutputCostPer1MTokens = 2.0m
+            DefaultOutputCostPer1MTokens = 2.0m,
         };
 
         var model = new Model
@@ -152,7 +152,7 @@ public class ConfigurationResolverTests : IDisposable
             Id = modelId,
             ProviderId = providerId,
             CanonicalId = "test-model",
-            DisplayName = "Test Model"
+            DisplayName = "Test Model",
         };
 
         var orgModel = new OrganizationModel
@@ -161,16 +161,16 @@ public class ConfigurationResolverTests : IDisposable
             OrganizationId = orgId,
             ModelId = modelId,
             InputCostPer1MTokens = 0.5m,
-            OutputCostPer1MTokens = 1.0m
+            OutputCostPer1MTokens = 1.0m,
         };
 
-        _context.Providers.Add(provider);
-        _context.Models.Add(model);
-        _context.OrganizationModels.Add(orgModel);
-        await _context.SaveChangesAsync();
+        this._context.Providers.Add(provider);
+        this._context.Models.Add(model);
+        this._context.OrganizationModels.Add(orgModel);
+        await this._context.SaveChangesAsync();
 
         // Act
-        var result = await _resolver.GetEffectiveCostPer1MTokensAsync(orgId, providerId, modelId);
+        var result = await this._resolver.GetEffectiveCostPer1MTokensAsync(orgId, providerId, modelId);
 
         // Assert
         Assert.Equal(0.5m, result.InputCostPer1MTokens);
@@ -192,13 +192,13 @@ public class ConfigurationResolverTests : IDisposable
             DisplayName = "Test",
             Slug = "test",
             Status = "Active",
-            PlanTier = "Free"
+            PlanTier = "Free",
         };
 
         var orgSettings = new OrganizationSettings
         {
             OrganizationId = orgId,
-            AllowAutoOptimization = true
+            AllowAutoOptimization = true,
         };
 
         var membership = new UserOrganizationMembership
@@ -208,16 +208,16 @@ public class ConfigurationResolverTests : IDisposable
             OrganizationId = orgId,
             OrganizationRole = "Member",
             AllowAutoOptimization = false,
-            Status = "Active"
+            Status = "Active",
         };
 
-        _context.Organizations.Add(org);
-        _context.OrganizationSettings.Add(orgSettings);
-        _context.UserOrganizationMemberships.Add(membership);
-        await _context.SaveChangesAsync();
+        this._context.Organizations.Add(org);
+        this._context.OrganizationSettings.Add(orgSettings);
+        this._context.UserOrganizationMemberships.Add(membership);
+        await this._context.SaveChangesAsync();
 
         // Act
-        var result = await _resolver.ShouldAutoOptimizeAsync(userId, orgId);
+        var result = await this._resolver.ShouldAutoOptimizeAsync(userId, orgId);
 
         // Assert
         Assert.False(result);
@@ -231,7 +231,7 @@ public class ConfigurationResolverTests : IDisposable
         var orgId = Guid.NewGuid();
 
         // Act
-        var result = await _resolver.ShouldAutoOptimizeAsync(userId, orgId);
+        var result = await this._resolver.ShouldAutoOptimizeAsync(userId, orgId);
 
         // Assert
         Assert.True(result);
@@ -239,7 +239,7 @@ public class ConfigurationResolverTests : IDisposable
 
     public void Dispose()
     {
-        _context.Database.EnsureDeleted();
-        _context.Dispose();
+        this._context.Database.EnsureDeleted();
+        this._context.Dispose();
     }
 }

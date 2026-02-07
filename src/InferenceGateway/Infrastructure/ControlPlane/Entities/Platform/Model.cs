@@ -10,16 +10,27 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Platform
     public class Model
     {
         public Guid Id { get; set; }
+
         public Guid ProviderId { get; set; }
+
         public required string CanonicalId { get; set; }
+
         public required string DisplayName { get; set; }
+
         public string? Description { get; set; }
+
         public int? ContextWindowTokens { get; set; }
+
         public int? MaxOutputTokens { get; set; }
+
         public bool SupportsStreaming { get; set; }
+
         public bool SupportsTools { get; set; }
+
         public bool SupportsVision { get; set; }
+
         public bool IsActive { get; set; } = true;
+
         public bool IsPublic { get; set; } = true;
 
         // Navigation properties

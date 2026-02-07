@@ -27,8 +27,8 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             RequestDelegate next,
             ILogger<UsageTrackingMiddleware> logger)
         {
-            _next = next ?? throw new ArgumentNullException(nameof(next));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._next = next ?? throw new ArgumentNullException(nameof(next));
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         /// <summary>
@@ -43,7 +43,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
 
             try
             {
-                await _next(context);
+                await this._next(context);
             }
             finally
             {
@@ -60,7 +60,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
 
                 context.Items["UsageData"] = usageData;
 
-                _logger.LogInformation("Request tracked: {Method} {Path} - {StatusCode} in {DurationMs}ms from {ClientIp}",
+                this._logger.LogInformation("Request tracked: {Method} {Path} - {StatusCode} in {DurationMs}ms from {ClientIp}",
                     usageData.Method, usageData.Path, usageData.StatusCode, usageData.DurationMs, usageData.ClientIp);
             }
         }

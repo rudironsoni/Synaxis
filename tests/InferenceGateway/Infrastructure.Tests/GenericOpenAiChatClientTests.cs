@@ -16,7 +16,7 @@ public class GenericOpenAiChatClientTests
     public void Constructor_SetsUpOpenAIClientWithCorrectParameters()
     {
         // Arrange & Act
-        var client = new GenericOpenAiChatClient(TestApiKey, TestEndpoint, TestModelId);
+        var client = new GenericOpenAiChatClient(TestApiKey, this.TestEndpoint, TestModelId);
 
         // Assert
         Assert.NotNull(client.Metadata);
@@ -29,11 +29,11 @@ public class GenericOpenAiChatClientTests
         var customHeaders = new Dictionary<string, string>
         {
             ["X-Custom-Header"] = "custom-value",
-            ["X-Another-Header"] = "another-value"
+            ["X-Another-Header"] = "another-value",
         };
 
         // Act
-        var client = new GenericOpenAiChatClient(TestApiKey, TestEndpoint, TestModelId, customHeaders);
+        var client = new GenericOpenAiChatClient(TestApiKey, this.TestEndpoint, TestModelId, customHeaders);
 
         // Assert
         Assert.NotNull(client.Metadata);
@@ -46,7 +46,7 @@ public class GenericOpenAiChatClientTests
         var emptyHeaders = new Dictionary<string, string>();
 
         // Act
-        var client = new GenericOpenAiChatClient(TestApiKey, TestEndpoint, TestModelId, emptyHeaders);
+        var client = new GenericOpenAiChatClient(TestApiKey, this.TestEndpoint, TestModelId, emptyHeaders);
 
         // Assert
         Assert.NotNull(client.Metadata);
@@ -56,7 +56,7 @@ public class GenericOpenAiChatClientTests
     public void Constructor_WithNullCustomHeaders_HandlesGracefully()
     {
         // Act
-        var client = new GenericOpenAiChatClient(TestApiKey, TestEndpoint, TestModelId, null);
+        var client = new GenericOpenAiChatClient(TestApiKey, this.TestEndpoint, TestModelId, null);
 
         // Assert
         Assert.NotNull(client.Metadata);
@@ -66,7 +66,7 @@ public class GenericOpenAiChatClientTests
     public void Dispose_DisposesClient()
     {
         // Arrange
-        var client = new GenericOpenAiChatClient(TestApiKey, TestEndpoint, TestModelId);
+        var client = new GenericOpenAiChatClient(TestApiKey, this.TestEndpoint, TestModelId);
 
         // Act
         client.Dispose();
@@ -79,7 +79,7 @@ public class GenericOpenAiChatClientTests
     public void Metadata_ReturnsProviderMetadata()
     {
         // Arrange
-        var client = new GenericOpenAiChatClient(TestApiKey, TestEndpoint, TestModelId);
+        var client = new GenericOpenAiChatClient(TestApiKey, this.TestEndpoint, TestModelId);
 
         // Act
         var metadata = client.Metadata;
@@ -92,7 +92,7 @@ public class GenericOpenAiChatClientTests
     public void GetService_CanRetrieveChatClient()
     {
         // Arrange
-        var client = new GenericOpenAiChatClient(TestApiKey, TestEndpoint, TestModelId);
+        var client = new GenericOpenAiChatClient(TestApiKey, this.TestEndpoint, TestModelId);
 
         // Act
         var result = client.GetService(typeof(object));
@@ -105,7 +105,7 @@ public class GenericOpenAiChatClientTests
     public void GetService_WithServiceKey_ReturnsNullForUnknownKey()
     {
         // Arrange
-        var client = new GenericOpenAiChatClient(TestApiKey, TestEndpoint, TestModelId);
+        var client = new GenericOpenAiChatClient(TestApiKey, this.TestEndpoint, TestModelId);
         var serviceKey = "unknown-key";
 
         // Act
@@ -121,7 +121,7 @@ public class GenericOpenAiChatClientTests
         // Act & Assert
         // The OpenAIClient constructor will throw ArgumentNullException for null API key
         Assert.Throws<ArgumentNullException>(() =>
-            new GenericOpenAiChatClient(null!, TestEndpoint, TestModelId));
+            new GenericOpenAiChatClient(null!, this.TestEndpoint, TestModelId));
     }
 
     [Fact]
@@ -139,6 +139,6 @@ public class GenericOpenAiChatClientTests
     {
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() =>
-            new GenericOpenAiChatClient(TestApiKey, TestEndpoint, null!));
+            new GenericOpenAiChatClient(TestApiKey, this.TestEndpoint, null!));
     }
 }

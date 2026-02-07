@@ -22,10 +22,10 @@ public class RedisConversationStoreTests
 
     public RedisConversationStoreTests()
     {
-        _mockRedis = new Mock<IConnectionMultiplexer>();
-        _mockDatabase = new Mock<IDatabase>();
-        _mockRedis.Setup(r => r.GetDatabase(It.IsAny<int>(), It.IsAny<object>())).Returns(_mockDatabase.Object);
-        _cancellationToken = CancellationToken.None;
+        this._mockRedis = new Mock<IConnectionMultiplexer>();
+        this._mockDatabase = new Mock<IDatabase>();
+        this._mockRedis.Setup(r => r.GetDatabase(It.IsAny<int>(), It.IsAny<object>())).Returns(this._mockDatabase.Object);
+        this._cancellationToken = CancellationToken.None;
     }
 
     [Fact]
@@ -39,19 +39,19 @@ public class RedisConversationStoreTests
         {
             new () { Role = "user", Content = "Hello", Timestamp = DateTimeOffset.UtcNow.AddMinutes(-10) },
             new () { Role = "assistant", Content = "Hi there!", Timestamp = DateTimeOffset.UtcNow.AddMinutes(-9) },
-            new () { Role = "user", Content = "How are you?", Timestamp = DateTimeOffset.UtcNow.AddMinutes(-8) }
+            new () { Role = "user", Content = "How are you?", Timestamp = DateTimeOffset.UtcNow.AddMinutes(-8) },
         };
 
         var redisValues = messages.Select(m => (RedisValue)JsonSerializer.Serialize(m)).ToArray();
 
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.ListRangeAsync(key, 0, -1, It.IsAny<CommandFlags>()))
             .ReturnsAsync(redisValues);
 
-        var store = new RedisConversationStore(_mockRedis.Object);
+        var store = new RedisConversationStore(this._mockRedis.Object);
 
         // Act
-        var result = await store.GetFullHistoryAsync(sessionId, _cancellationToken);
+        var result = await store.GetFullHistoryAsync(sessionId, this._cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -60,7 +60,7 @@ public class RedisConversationStoreTests
         Assert.Equal("Hi there!", result[1].Content);
         Assert.Equal("How are you?", result[2].Content);
 
-        _mockDatabase.Verify(
+        this._mockDatabase.Verify(
             db => db.ListRangeAsync(key, 0, -1, It.IsAny<CommandFlags>()),
             Times.Once);
     }
@@ -72,20 +72,20 @@ public class RedisConversationStoreTests
         var sessionId = "session-nonexistent";
         var key = $"conversation:{sessionId}:messages";
 
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.ListRangeAsync(key, 0, -1, It.IsAny<CommandFlags>()))
             .ReturnsAsync(Array.Empty<RedisValue>());
 
-        var store = new RedisConversationStore(_mockRedis.Object);
+        var store = new RedisConversationStore(this._mockRedis.Object);
 
         // Act
-        var result = await store.GetFullHistoryAsync(sessionId, _cancellationToken);
+        var result = await store.GetFullHistoryAsync(sessionId, this._cancellationToken);
 
         // Assert
         Assert.NotNull(result);
         Assert.Empty(result);
 
-        _mockDatabase.Verify(
+        this._mockDatabase.Verify(
             db => db.ListRangeAsync(key, 0, -1, It.IsAny<CommandFlags>()),
             Times.Once);
     }
@@ -102,10 +102,10 @@ public class RedisConversationStoreTests
         {
             Role = "user",
             Content = "New message",
-            Timestamp = DateTimeOffset.UtcNow
+            Timestamp = DateTimeOffset.UtcNow,
         };
 
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.ListRightPushAsync(
                 key,
                 It.IsAny<RedisValue>(),
@@ -113,17 +113,17 @@ public class RedisConversationStoreTests
                 CommandFlags.None))
             .ReturnsAsync(1);
 
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.KeyExpireAsync(key, ttl, ExpireWhen.Always, CommandFlags.None))
             .ReturnsAsync(true);
 
-        var store = new RedisConversationStore(_mockRedis.Object);
+        var store = new RedisConversationStore(this._mockRedis.Object);
 
         // Act
-        await store.AppendMessageAsync(sessionId, message, ttl, _cancellationToken);
+        await store.AppendMessageAsync(sessionId, message, ttl, this._cancellationToken);
 
         // Assert
-        _mockDatabase.Verify(
+        this._mockDatabase.Verify(
             db => db.ListRightPushAsync(
                 key,
                 It.Is<RedisValue>(v => v.ToString().Contains("New message")),
@@ -131,7 +131,7 @@ public class RedisConversationStoreTests
                 CommandFlags.None),
             Times.Once);
 
-        _mockDatabase.Verify(
+        this._mockDatabase.Verify(
             db => db.KeyExpireAsync(key, ttl, ExpireWhen.Always, CommandFlags.None),
             Times.Once);
     }
@@ -152,24 +152,24 @@ public class RedisConversationStoreTests
             {
                 Role = i % 2 == 0 ? "user" : "assistant",
                 Content = $"Message {i}",
-                Timestamp = DateTimeOffset.UtcNow.AddMinutes(-20 + i)
+                Timestamp = DateTimeOffset.UtcNow.AddMinutes(-20 + i),
             });
         }
 
         var redisValues = messages.Select(m => (RedisValue)JsonSerializer.Serialize(m)).ToArray();
 
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.ListRangeAsync(key, 0, -1, It.IsAny<CommandFlags>()))
             .ReturnsAsync(redisValues);
 
-        var store = new RedisConversationStore(_mockRedis.Object);
+        var store = new RedisConversationStore(this._mockRedis.Object);
 
         // Act
         var result = await store.GetCompressedForProviderAsync(
             sessionId,
             providerStrategy,
             maxTokens,
-            _cancellationToken);
+            this._cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -177,7 +177,7 @@ public class RedisConversationStoreTests
         Assert.True(result.Count <= messages.Count);
         Assert.True(result.Count > 0);
 
-        _mockDatabase.Verify(
+        this._mockDatabase.Verify(
             db => db.ListRangeAsync(key, 0, -1, It.IsAny<CommandFlags>()),
             Times.Once);
     }
@@ -190,7 +190,7 @@ public class RedisConversationStoreTests
         var messageKey = $"conversation:{sessionId}:messages";
         var metadataKey = $"conversation:{sessionId}:metadata";
 
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.KeyDeleteAsync(
                 It.Is<RedisKey[]>(keys =>
                     keys.Any(k => k.ToString() == messageKey) &&
@@ -198,13 +198,13 @@ public class RedisConversationStoreTests
                 It.IsAny<CommandFlags>()))
             .ReturnsAsync(2);
 
-        var store = new RedisConversationStore(_mockRedis.Object);
+        var store = new RedisConversationStore(this._mockRedis.Object);
 
         // Act
-        await store.ClearSessionAsync(sessionId, _cancellationToken);
+        await store.ClearSessionAsync(sessionId, this._cancellationToken);
 
         // Assert
-        _mockDatabase.Verify(
+        this._mockDatabase.Verify(
             db => db.KeyDeleteAsync(
                 It.Is<RedisKey[]>(keys =>
                     keys.Any(k => k.ToString() == messageKey) &&
@@ -228,20 +228,20 @@ public class RedisConversationStoreTests
             {
                 Role = i % 2 == 0 ? "user" : "assistant",
                 Content = $"This is message number {i} with some substantial content to simulate real conversations.",
-                Timestamp = DateTimeOffset.UtcNow.AddMinutes(-100 + i)
+                Timestamp = DateTimeOffset.UtcNow.AddMinutes(-100 + i),
             });
         }
 
         var redisValues = messages.Select(m => (RedisValue)JsonSerializer.Serialize(m)).ToArray();
 
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.ListRangeAsync(key, 0, -1, It.IsAny<CommandFlags>()))
             .ReturnsAsync(redisValues);
 
-        var store = new RedisConversationStore(_mockRedis.Object);
+        var store = new RedisConversationStore(this._mockRedis.Object);
 
         // Act
-        var result = await store.GetFullHistoryAsync(sessionId, _cancellationToken);
+        var result = await store.GetFullHistoryAsync(sessionId, this._cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -257,14 +257,14 @@ public class RedisConversationStoreTests
         var sessionId = "session-123";
         var key = $"conversation:{sessionId}:messages";
 
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.ListRangeAsync(key, 0, -1, It.IsAny<CommandFlags>()))
             .ThrowsAsync(new RedisConnectionException(ConnectionFailureType.UnableToConnect, "Connection failed"));
 
-        var store = new RedisConversationStore(_mockRedis.Object);
+        var store = new RedisConversationStore(this._mockRedis.Object);
 
         // Act
-        var result = await store.GetFullHistoryAsync(sessionId, _cancellationToken);
+        var result = await store.GetFullHistoryAsync(sessionId, this._cancellationToken);
 
         // Assert - Should fail open and return empty list rather than throwing
         Assert.NotNull(result);
@@ -288,12 +288,12 @@ public class RedisConversationStoreTests
             {
                 { "model", "gpt-4" },
                 { "temperature", "0.7" }
-            }
+            },
         };
 
         RedisValue capturedValue = RedisValue.Null;
 
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.ListRightPushAsync(
                 key,
                 It.IsAny<RedisValue>(),
@@ -302,19 +302,19 @@ public class RedisConversationStoreTests
             .Callback<RedisKey, RedisValue, When, CommandFlags>((k, v, w, f) => capturedValue = v)
             .ReturnsAsync(1);
 
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.KeyExpireAsync(key, ttl, ExpireWhen.Always, CommandFlags.None))
             .ReturnsAsync(true);
 
-        _mockDatabase
+        this._mockDatabase
             .Setup(db => db.ListRangeAsync(key, 0, -1, It.IsAny<CommandFlags>()))
             .ReturnsAsync(() => new[] { capturedValue });
 
-        var store = new RedisConversationStore(_mockRedis.Object);
+        var store = new RedisConversationStore(this._mockRedis.Object);
 
         // Act - Append and retrieve
-        await store.AppendMessageAsync(sessionId, originalMessage, ttl, _cancellationToken);
-        var result = await store.GetFullHistoryAsync(sessionId, _cancellationToken);
+        await store.AppendMessageAsync(sessionId, originalMessage, ttl, this._cancellationToken);
+        var result = await store.GetFullHistoryAsync(sessionId, this._cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -335,8 +335,11 @@ public class RedisConversationStoreTests
 public interface IConversationStore
 {
     Task<List<ConversationMessage>> GetFullHistoryAsync(string sessionId, CancellationToken cancellationToken);
+
     Task AppendMessageAsync(string sessionId, ConversationMessage message, TimeSpan ttl, CancellationToken cancellationToken);
+
     Task<List<ConversationMessage>> GetCompressedForProviderAsync(string sessionId, string strategy, int maxTokens, CancellationToken cancellationToken);
+
     Task ClearSessionAsync(string sessionId, CancellationToken cancellationToken);
 }
 
@@ -349,14 +352,14 @@ public class RedisConversationStore : IConversationStore
 
     public RedisConversationStore(IConnectionMultiplexer redis)
     {
-        _redis = redis;
+        this._redis = redis;
     }
 
     public async Task<List<ConversationMessage>> GetFullHistoryAsync(string sessionId, CancellationToken cancellationToken)
     {
         try
         {
-            var db = _redis.GetDatabase();
+            var db = this._redis.GetDatabase();
             var key = $"conversation:{sessionId}:messages";
             var values = await db.ListRangeAsync(key);
 
@@ -384,7 +387,7 @@ public class RedisConversationStore : IConversationStore
 
     public async Task AppendMessageAsync(string sessionId, ConversationMessage message, TimeSpan ttl, CancellationToken cancellationToken)
     {
-        var db = _redis.GetDatabase();
+        var db = this._redis.GetDatabase();
         var key = $"conversation:{sessionId}:messages";
         var serialized = JsonSerializer.Serialize(message);
 
@@ -398,7 +401,7 @@ public class RedisConversationStore : IConversationStore
         int maxTokens,
         CancellationToken cancellationToken)
     {
-        var fullHistory = await GetFullHistoryAsync(sessionId, cancellationToken);
+        var fullHistory = await this.GetFullHistoryAsync(sessionId, cancellationToken);
 
         // Simple sliding window compression for testing
         // In production, this would use actual token counting and sophisticated strategies
@@ -415,11 +418,11 @@ public class RedisConversationStore : IConversationStore
 
     public async Task ClearSessionAsync(string sessionId, CancellationToken cancellationToken)
     {
-        var db = _redis.GetDatabase();
+        var db = this._redis.GetDatabase();
         var keys = new RedisKey[]
         {
             $"conversation:{sessionId}:messages",
-            $"conversation:{sessionId}:metadata"
+            $"conversation:{sessionId}:metadata",
         };
 
         await db.KeyDeleteAsync(keys);
@@ -432,7 +435,10 @@ public class RedisConversationStore : IConversationStore
 public class ConversationMessage
 {
     public string Role { get; set; } = string.Empty;
+
     public string Content { get; set; } = string.Empty;
+
     public DateTimeOffset Timestamp { get; set; }
+
     public Dictionary<string, string>? Metadata { get; set; }
 }

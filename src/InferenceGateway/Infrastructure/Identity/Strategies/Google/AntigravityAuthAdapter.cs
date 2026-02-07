@@ -28,7 +28,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
         public string StartAuthFlow(string redirectUrl)
         {
             // IdentityManager.StartAuth is async; call synchronously by waiting on the Task
-            var auth = _identityManager.StartAuth("google").GetAwaiter().GetResult();
+            var auth = this._identityManager.StartAuth("google").GetAwaiter().GetResult();
             return auth?.VerificationUri ?? string.Empty;
         }
 
@@ -40,7 +40,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
 
         public async Task<string> GetTokenAsync(CancellationToken cancellationToken = default)
         {
-            var t = await _identityManager.GetToken("google", cancellationToken).ConfigureAwait(false);
+            var t = await this._identityManager.GetToken("google", cancellationToken).ConfigureAwait(false);
             return t ?? string.Empty;
         }
     }

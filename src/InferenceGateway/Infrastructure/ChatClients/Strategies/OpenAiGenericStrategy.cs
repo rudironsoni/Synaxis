@@ -12,9 +12,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.ChatClients.Strategies
 
     public class OpenAiGenericStrategy : IChatClientStrategy
     {
-        private static readonly HashSet<string> SupportedTypes = new ()
+        private static readonly HashSet<string> SupportedTypes = new()
         {
-            "OpenAI", "Groq", "OpenRouter", "Pollinations", "Gemini", "Nvidia", "HuggingFace", "Cohere"
+            "OpenAI", "Groq", "OpenRouter", "Pollinations", "Gemini", "Nvidia", "HuggingFace", "Cohere",
         };
 
         public bool CanHandle(string providerType) => SupportedTypes.Contains(providerType);
@@ -25,7 +25,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ChatClients.Strategies
             ChatOptions options,
             CancellationToken ct)
         {
-            return await client.GetResponseAsync(messages, options, ct);
+            return await client.GetResponseAsync(messages, options, ct).ConfigureAwait(false);
         }
 
         public IAsyncEnumerable<ChatResponseUpdate> ExecuteStreamingAsync(

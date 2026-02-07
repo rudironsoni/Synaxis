@@ -8,7 +8,7 @@ public class TokenOptimizationConfigValidatorTests
 
     public TokenOptimizationConfigValidatorTests()
     {
-        _validator = new TokenOptimizationConfigValidator();
+        this._validator = new TokenOptimizationConfigValidator();
     }
 
     [Fact]
@@ -21,11 +21,11 @@ public class TokenOptimizationConfigValidatorTests
             CacheTtlSeconds = 3600,
             CompressionStrategy = "gzip",
             EnableCaching = true,
-            EnableCompression = true
+            EnableCompression = true,
         };
 
         // Act
-        var result = _validator.Validate(config, ConfigurationLevel.System);
+        var result = this._validator.Validate(config, ConfigurationLevel.System);
 
         // Assert
         Assert.True(result.IsValid);
@@ -40,11 +40,11 @@ public class TokenOptimizationConfigValidatorTests
         {
             SimilarityThreshold = 0.49, // Below minimum of 0.5
             CacheTtlSeconds = 3600,
-            CompressionStrategy = "gzip"
+            CompressionStrategy = "gzip",
         };
 
         // Act
-        var resultLow = _validator.Validate(configLow, ConfigurationLevel.System);
+        var resultLow = this._validator.Validate(configLow, ConfigurationLevel.System);
 
         // Assert
         Assert.False(resultLow.IsValid);
@@ -55,11 +55,11 @@ public class TokenOptimizationConfigValidatorTests
         {
             SimilarityThreshold = 1.01, // Above maximum of 1.0
             CacheTtlSeconds = 3600,
-            CompressionStrategy = "gzip"
+            CompressionStrategy = "gzip",
         };
 
         // Act
-        var resultHigh = _validator.Validate(configHigh, ConfigurationLevel.System);
+        var resultHigh = this._validator.Validate(configHigh, ConfigurationLevel.System);
 
         // Assert
         Assert.False(resultHigh.IsValid);
@@ -73,11 +73,11 @@ public class TokenOptimizationConfigValidatorTests
         var config = new TokenOptimizationConfig
         {
             SimilarityThreshold = 0.65, // Below user minimum of 0.7
-            CacheTtlSeconds = 3600
+            CacheTtlSeconds = 3600,
         };
 
         // Act
-        var result = _validator.Validate(config, ConfigurationLevel.User);
+        var result = this._validator.Validate(config, ConfigurationLevel.User);
 
         // Assert
         Assert.False(result.IsValid);
@@ -95,11 +95,11 @@ public class TokenOptimizationConfigValidatorTests
         {
             SimilarityThreshold = 0.85,
             CacheTtlSeconds = 7200, // Within valid range (60-86400)
-            CompressionStrategy = "gzip"
+            CompressionStrategy = "gzip",
         };
 
         // Act
-        var result = _validator.Validate(config, ConfigurationLevel.Tenant);
+        var result = this._validator.Validate(config, ConfigurationLevel.Tenant);
 
         // Assert
         Assert.True(result.IsValid);
@@ -114,11 +114,11 @@ public class TokenOptimizationConfigValidatorTests
         {
             SimilarityThreshold = 0.85,
             CacheTtlSeconds = 3600,
-            CompressionStrategy = "invalid-compression" // Invalid strategy
+            CompressionStrategy = "invalid-compression", // Invalid strategy
         };
 
         // Act
-        var result = _validator.Validate(config, ConfigurationLevel.System);
+        var result = this._validator.Validate(config, ConfigurationLevel.System);
 
         // Assert
         Assert.False(result.IsValid);
@@ -137,11 +137,11 @@ public class TokenOptimizationConfigValidatorTests
             SimilarityThreshold = 0.85,
             CacheTtlSeconds = 3600,
             CompressionStrategy = "gzip", // System-only setting
-            MaxConcurrentRequests = 100 // System-only setting
+            MaxConcurrentRequests = 100, // System-only setting
         };
 
         // Act
-        var result = _validator.Validate(config, ConfigurationLevel.User);
+        var result = this._validator.Validate(config, ConfigurationLevel.User);
 
         // Assert
         Assert.False(result.IsValid);
@@ -163,11 +163,11 @@ public class TokenOptimizationConfigValidatorTests
             CacheTtlSeconds = 7200,
             CompressionStrategy = "brotli", // Tenants can set this
             EnableCaching = true,
-            EnableCompression = true
+            EnableCompression = true,
         };
 
         // Act
-        var result = _validator.Validate(config, ConfigurationLevel.Tenant);
+        var result = this._validator.Validate(config, ConfigurationLevel.Tenant);
 
         // Assert
         Assert.True(result.IsValid);
@@ -186,11 +186,11 @@ public class TokenOptimizationConfigValidatorTests
             EnableCaching = true,
             EnableCompression = true,
             MaxConcurrentRequests = 50,
-            MaxTokensPerRequest = 4096
+            MaxTokensPerRequest = 4096,
         };
 
         // Act
-        var result = _validator.Validate(config, ConfigurationLevel.System);
+        var result = this._validator.Validate(config, ConfigurationLevel.System);
 
         // Assert
         Assert.True(result.IsValid);

@@ -28,8 +28,8 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             RequestDelegate next,
             ILogger<QuotaMiddleware> logger)
         {
-            _next = next ?? throw new ArgumentNullException(nameof(next));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._next = next ?? throw new ArgumentNullException(nameof(next));
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         /// <summary>
@@ -47,14 +47,14 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     context.Request.Path.StartsWithSegments("/openapi") ||
                     context.Request.Path.StartsWithSegments("/identity"))
                 {
-                    await _next(context);
+                    await this._next(context);
                     return;
                 }
 
                 // Only enforce quotas if tenant context is established
                 if (tenantContext.OrganizationId == null)
                 {
-                    await _next(context);
+                    await this._next(context);
                     return;
                 }
 
@@ -64,7 +64,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     MetricType = "requests",
                     IncrementBy = 1,
                     TimeGranularity = "minute",
-                    WindowType = WindowType.Sliding
+                    WindowType = WindowType.Sliding,
                 };
 
                 QuotaResult quotaResult;
@@ -86,7 +86,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 switch (quotaResult.Action)
                 {
                     case QuotaAction.Block:
-                        _logger.LogWarning(
+                        this._logger.LogWarning(
                             "Request blocked due to quota exhaustion. OrgId: {OrgId}, Reason: {Reason}",
                             tenantContext.OrganizationId, quotaResult.Reason);
 
@@ -98,12 +98,12 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                                 message = quotaResult.Reason ?? "Quota exceeded",
                                 type = "quota_exceeded",
                                 code = "QUOTA_EXHAUSTED"
-                            }
+                            },
                         });
                         return;
 
                     case QuotaAction.Throttle:
-                        _logger.LogWarning(
+                        this._logger.LogWarning(
                             "Request throttled due to rate limit. OrgId: {OrgId}, Limit: {Limit}, Current: {Current}",
                             tenantContext.OrganizationId,
                             quotaResult.Details?.Limit,
@@ -132,12 +132,12 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                                 type = "rate_limit_exceeded",
                                 code = "RATE_LIMIT_EXCEEDED",
                                 retry_after = quotaResult.Details?.RetryAfter?.TotalSeconds
-                            }
+                            },
                         });
                         return;
 
                     case QuotaAction.CreditCharge:
-                        _logger.LogInformation(
+                        this._logger.LogInformation(
                             "Request will incur credit charge. OrgId: {OrgId}, Amount: {Amount}",
                             tenantContext.OrganizationId, quotaResult.CreditCharge);
 
@@ -157,7 +157,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 // Store quota info in context for usage tracking
                 context.Items["QuotaResult"] = quotaResult;
 
-                await _next(context);
+                await this._next(context);
 
                 // After request completes, increment usage
                 if (context.Response.StatusCode < 400)
@@ -170,14 +170,14 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                             VirtualKeyId = tenantContext.ApiKeyId,
                             MetricType = "requests",
                             Value = 1,
-                            Model = context.Items["ModelName"] as string
+                            Model = context.Items["ModelName"] as string,
                         });
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred during quota enforcement");
-                await _next(context);
+                this._logger.LogError(ex, "Error occurred during quota enforcement");
+                await this._next(context);
             }
         }
     }

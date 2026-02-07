@@ -20,19 +20,19 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
 
         public SmokeTestExecutor(HttpClient httpClient, SmokeTestOptions options, ITestOutputHelper output)
         {
-            _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-            _options = options ?? throw new ArgumentNullException(nameof(options));
-            _output = output ?? throw new ArgumentNullException(nameof(output));
+            this._httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+            this._options = options ?? throw new ArgumentNullException(nameof(options));
+            this._output = output ?? throw new ArgumentNullException(nameof(output));
         }
 
         public async Task<SmokeTestResult> ExecuteAsync(SmokeTestCase testCase)
         {
-            var timeoutMs = testCase.TimeoutMs != 0 ? testCase.TimeoutMs : _options.DefaultTimeoutMs;
-            var maxRetries = testCase.MaxRetries != 0 ? testCase.MaxRetries : _options.MaxRetries;
+            var timeoutMs = testCase.TimeoutMs != 0 ? testCase.TimeoutMs : this._options.DefaultTimeoutMs;
+            var maxRetries = testCase.MaxRetries != 0 ? testCase.MaxRetries : this._options.MaxRetries;
 
             using var cts = new CancellationTokenSource(timeoutMs);
 
-            var retryPolicy = new RetryPolicy(maxRetries, _options.InitialRetryDelayMs, _options.RetryBackoffMultiplier);
+            var retryPolicy = new RetryPolicy(maxRetries, this._options.InitialRetryDelayMs, this._options.RetryBackoffMultiplier);
 
             int attempt = 0;
             var sw = new Stopwatch();
@@ -43,7 +43,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                 {
                     attempt++;
                     sw.Start();
-                    var res = await ExecuteSingleAttemptAsync(testCase, cts.Token).ConfigureAwait(false);
+                    var res = await this.ExecuteSingleAttemptAsync(testCase, cts.Token).ConfigureAwait(false);
                     sw.Stop();
                     // If not success and retryable, throw to trigger retry
                     if (!res.Success && IsRetryableStatus(res.Error))
@@ -55,21 +55,28 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                 }, ex => IsRetryableException(ex)).ConfigureAwait(false);
 
                 // Ensure response time is captured
-                return result with { AttemptCount = attempt, ResponseTime = TimeSpan.FromMilliseconds(sw.ElapsedMilliseconds) };
+                return result with { this.AttemptCount = attempt, this.ResponseTime = TimeSpan.FromMilliseconds(sw.ElapsedMilliseconds) };
             }
             catch (Exception ex)
             {
                 sw.Stop();
-                _output.WriteLine($"Smoke test failed for {testCase.Provider}/{testCase.Model}: {ex.Message}");
+                this._output.WriteLine($"Smoke test failed for {testCase.Provider}/{testCase.Model}: {ex.Message}");
                 return new SmokeTestResult(testCase, false, TimeSpan.FromMilliseconds(sw.ElapsedMilliseconds), ex.Message, null, attempt);
             }
         }
 
         private static bool IsRetryableStatus(string? error)
         {
-            if (string.IsNullOrEmpty(error)) return false;
+            if (string.IsNullOrEmpty(error))
+            {
+                return false;
+            }
             // check for status codes in message
-            if (error.Contains("429") || error.Contains("502") || error.Contains("503")) return true;
+            if (error.Contains("429") || error.Contains("502") || error.Contains("503"))
+            {
+                return true;
+            }
+
             return false;
         }
 
@@ -91,10 +98,10 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                     {
                         model = modelToSend,
                         messages = new[] { new { role = "user", content = "Reply with exactly one word: OK" } },
-                        max_tokens = 5
+                        max_tokens = 5,
                     };
 
-                    response = await _httpClient.PostAsJsonAsync("/openai/v1/chat/completions", payload, cancellationToken).ConfigureAwait(false);
+                    response = await this._httpClient.PostAsJsonAsync("/openai/v1/chat/completions", payload, cancellationToken).ConfigureAwait(false);
                 }
                 else
                 {
@@ -104,10 +111,10 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                     {
                         model = modelToSend2,
                         prompt = "Reply with exactly one word: OK",
-                        max_tokens = 5
+                        max_tokens = 5,
                     };
 
-                    response = await _httpClient.PostAsJsonAsync("/openai/v1/completions", payload, cancellationToken).ConfigureAwait(false);
+                    response = await this._httpClient.PostAsJsonAsync("/openai/v1/completions", payload, cancellationToken).ConfigureAwait(false);
                 }
 
                 var content = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
@@ -140,8 +147,15 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                 if (doc.RootElement.TryGetProperty("choices", out var choices) && choices.GetArrayLength() > 0)
                 {
                     var first = choices[0];
-                    if (first.TryGetProperty("text", out var text)) return text.GetString();
-                    if (first.TryGetProperty("message", out var message) && message.TryGetProperty("content", out var contentEl)) return contentEl.GetString();
+                    if (first.TryGetProperty("text", out var text))
+                    {
+                        return text.GetString();
+                    }
+
+                    if (first.TryGetProperty("message", out var message) && message.TryGetProperty("content", out var contentEl))
+                    {
+                        return contentEl.GetString();
+                    }
                 }
             }
             catch
@@ -158,11 +172,18 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
             {
                 // examine message for status codes
                 var msg = hre.Message;
-                if (msg.Contains("429") || msg.Contains("502") || msg.Contains("503")) return true;
+                if (msg.Contains("429") || msg.Contains("502") || msg.Contains("503"))
+                {
+                    return true;
+                }
+
                 return true; // treat network errors as retryable
             }
 
-            if (ex is TaskCanceledException) return true; // timeout
+            if (ex is TaskCanceledException)
+            {
+                return true; // timeout
+            }
 
             return false;
         }

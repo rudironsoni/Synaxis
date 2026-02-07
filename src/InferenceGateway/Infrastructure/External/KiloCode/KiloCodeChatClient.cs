@@ -24,7 +24,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.KiloCode
             {
                 { "X-KiloCode-EditorName", "Synaxis" },
                 { "X-KiloCode-Version", "1.0.0" },
-                { "X-KiloCode-TaskId", "synaxis-inference" }
+                { "X-KiloCode-TaskId", "synaxis-inference" },
             };
         }
     }

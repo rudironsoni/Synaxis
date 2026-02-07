@@ -19,7 +19,9 @@ public static class TestDatabaseSeeder
     {
         var providersSection = config.GetSection("Synaxis:InferenceGateway:Providers");
         if (!providersSection.Exists())
+        {
             return;
+        }
 
         var providerSections = providersSection.GetChildren().ToList();
 
@@ -30,7 +32,9 @@ public static class TestDatabaseSeeder
             var providerKey = providerSection.Key;
             var enabled = providerSection.GetValue<bool>("Enabled");
             if (!enabled)
+            {
                 continue;
+            }
 
             var models = providerSection.GetSection("Models").Get<string[]>() ?? new string[0];
 
@@ -46,12 +50,16 @@ public static class TestDatabaseSeeder
                     {
                         var mapped = providerMap.GetValue<string>(modelName);
                         if (!string.IsNullOrEmpty(mapped))
+                        {
                             canonicalId = mapped;
+                        }
                     }
                 }
 
                 if (processedGlobalIds.Contains(canonicalId))
+                {
                     continue;
+                }
 
                 // Upsert GlobalModel
                 var global = await context.GlobalModels.FindAsync(canonicalId);
@@ -63,7 +71,7 @@ public static class TestDatabaseSeeder
                         Name = canonicalId,
                         Family = "test-seeded",
                         InputPrice = 0m,
-                        OutputPrice = 0m
+                        OutputPrice = 0m,
                     };
                     await context.GlobalModels.AddAsync(global);
                 }
@@ -90,7 +98,9 @@ public static class TestDatabaseSeeder
             var providerKey = providerSection.Key;
             var enabled = providerSection.GetValue<bool>("Enabled");
             if (!enabled)
+            {
                 continue;
+            }
 
             var models = providerSection.GetSection("Models").Get<string[]>() ?? new string[0];
 
@@ -106,7 +116,9 @@ public static class TestDatabaseSeeder
                     {
                         var mapped = providerMap.GetValue<string>(modelName);
                         if (!string.IsNullOrEmpty(mapped))
+                        {
                             canonicalId = mapped;
+                        }
                     }
                 }
 
@@ -121,7 +133,7 @@ public static class TestDatabaseSeeder
                         ProviderId = providerKey,
                         GlobalModelId = canonicalId,
                         ProviderSpecificId = modelName,
-                        IsAvailable = true
+                        IsAvailable = true,
                     };
                     await context.ProviderModels.AddAsync(providerModel);
                 }

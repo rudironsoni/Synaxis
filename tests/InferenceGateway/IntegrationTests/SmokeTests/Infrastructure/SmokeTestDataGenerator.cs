@@ -21,11 +21,17 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
             var configuration = BuildConfiguration();
 
             var providersSection = configuration.GetSection("Synaxis:InferenceGateway:Providers");
-            if (!providersSection.Exists()) yield break;
+            if (!providersSection.Exists())
+            {
+                yield break;
+            }
 
             foreach (var providerSection in providersSection.GetChildren())
             {
-                if (!providerSection.GetValue<bool>("Enabled")) continue;
+                if (!providerSection.GetValue<bool>("Enabled"))
+                {
+                    continue;
+                }
 
                 var providerName = providerSection.Key;
 
@@ -44,7 +50,10 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                 foreach (var modelItem in modelsSection.GetChildren())
                 {
                     var modelName = modelItem.Value;
-                    if (string.IsNullOrEmpty(modelName)) continue;
+                    if (string.IsNullOrEmpty(modelName))
+                    {
+                        continue;
+                    }
 
                     var canonicalId = FindCanonicalId(configuration, providerName, modelName) ?? modelName;
 
@@ -67,8 +76,15 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                 {
                     var appsettings = Path.Combine(webApiPath, "appsettings.json");
                     var appsettingsDev = Path.Combine(webApiPath, "appsettings.Development.json");
-                    if (File.Exists(appsettings)) builder.AddJsonFile(appsettings, optional: true, reloadOnChange: false);
-                    if (File.Exists(appsettingsDev)) builder.AddJsonFile(appsettingsDev, optional: true, reloadOnChange: false);
+                    if (File.Exists(appsettings))
+                    {
+                        builder.AddJsonFile(appsettings, optional: true, reloadOnChange: false);
+                    }
+
+                    if (File.Exists(appsettingsDev))
+                    {
+                        builder.AddJsonFile(appsettingsDev, optional: true, reloadOnChange: false);
+                    }
                 }
             }
 
@@ -88,7 +104,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                 { "Synaxis:InferenceGateway:Providers:OpenRouter:Key", Environment.GetEnvironmentVariable("OPENROUTER_API_KEY") },
                 { "Synaxis:InferenceGateway:Providers:NVIDIA:Key", Environment.GetEnvironmentVariable("NVIDIA_API_KEY") },
                 { "Synaxis:InferenceGateway:Providers:HuggingFace:Key", Environment.GetEnvironmentVariable("HUGGINGFACE_API_KEY") },
-                { "Synaxis:InferenceGateway:Providers:KiloCode:Key", Environment.GetEnvironmentVariable("KILOCODE_API_KEY") }
+                { "Synaxis:InferenceGateway:Providers:KiloCode:Key", Environment.GetEnvironmentVariable("KILOCODE_API_KEY") },
             };
 
             // Filter out null or empty values so we don't overwrite other config values with nulls
@@ -103,7 +119,10 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
         private static string? FindCanonicalId(IConfigurationRoot config, string provider, string modelPath)
         {
             var canonicals = config.GetSection("Synaxis:InferenceGateway:CanonicalModels");
-            if (!canonicals.Exists()) return null;
+            if (!canonicals.Exists())
+            {
+                return null;
+            }
 
             foreach (var item in canonicals.GetChildren())
             {
@@ -125,9 +144,17 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
             var dir = new DirectoryInfo(AppContext.BaseDirectory ?? Directory.GetCurrentDirectory());
             while (dir != null)
             {
-                if (dir.GetFiles("*.sln").Any()) return dir.FullName;
+                if (dir.GetFiles("*.sln").Any())
+                {
+                    return dir.FullName;
+                }
+
                 var src = Path.Combine(dir.FullName, "src");
-                if (Directory.Exists(src)) return dir.FullName;
+                if (Directory.Exists(src))
+                {
+                    return dir.FullName;
+                }
+
                 dir = dir.Parent;
             }
 

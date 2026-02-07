@@ -12,8 +12,8 @@ public class RequestIdMiddlewareTests
 
     public RequestIdMiddlewareTests()
     {
-        _mockNext = new Mock<RequestDelegate>();
-        _middleware = new RequestIdMiddleware(_mockNext.Object);
+        this._mockNext = new Mock<RequestDelegate>();
+        this._middleware = new RequestIdMiddleware(this._mockNext.Object);
     }
 
     [Fact]
@@ -22,14 +22,14 @@ public class RequestIdMiddlewareTests
         // Arrange
         var context = new DefaultHttpContext();
         context.Request.Headers["X-Request-ID"] = "test-request-id";
-        _mockNext.Setup(next => next(It.IsAny<HttpContext>())).Returns(Task.CompletedTask);
+        this._mockNext.Setup(next => next(It.IsAny<HttpContext>())).Returns(Task.CompletedTask);
 
         // Act
-        await _middleware.InvokeAsync(context);
+        await this._middleware.InvokeAsync(context);
 
         // Assert
         Assert.Equal("test-request-id", context.Response.Headers["X-Request-ID"]);
-        _mockNext.Verify(next => next(context), Times.Once);
+        this._mockNext.Verify(next => next(context), Times.Once);
     }
 
     [Fact]
@@ -38,14 +38,14 @@ public class RequestIdMiddlewareTests
         // Arrange
         var context = new DefaultHttpContext();
         context.Request.Headers["x-request-id"] = "test-request-id-lowercase";
-        _mockNext.Setup(next => next(It.IsAny<HttpContext>())).Returns(Task.CompletedTask);
+        this._mockNext.Setup(next => next(It.IsAny<HttpContext>())).Returns(Task.CompletedTask);
 
         // Act
-        await _middleware.InvokeAsync(context);
+        await this._middleware.InvokeAsync(context);
 
         // Assert
         Assert.Equal("test-request-id-lowercase", context.Response.Headers["X-Request-ID"]);
-        _mockNext.Verify(next => next(context), Times.Once);
+        this._mockNext.Verify(next => next(context), Times.Once);
     }
 
     [Fact]
@@ -54,14 +54,14 @@ public class RequestIdMiddlewareTests
         // Arrange
         var context = new DefaultHttpContext();
         var traceId = context.TraceIdentifier;
-        _mockNext.Setup(next => next(It.IsAny<HttpContext>())).Returns(Task.CompletedTask);
+        this._mockNext.Setup(next => next(It.IsAny<HttpContext>())).Returns(Task.CompletedTask);
 
         // Act
-        await _middleware.InvokeAsync(context);
+        await this._middleware.InvokeAsync(context);
 
         // Assert
         Assert.Equal(traceId, context.Response.Headers["X-Request-ID"]);
-        _mockNext.Verify(next => next(context), Times.Once);
+        this._mockNext.Verify(next => next(context), Times.Once);
     }
 
     [Fact]
@@ -72,14 +72,14 @@ public class RequestIdMiddlewareTests
         // ASP.NET Core headers are case-insensitive, so the second assignment overwrites the first
         context.Request.Headers["X-Request-ID"] = "uppercase-request-id";
         context.Request.Headers["x-request-id"] = "lowercase-request-id";
-        _mockNext.Setup(next => next(It.IsAny<HttpContext>())).Returns(Task.CompletedTask);
+        this._mockNext.Setup(next => next(It.IsAny<HttpContext>())).Returns(Task.CompletedTask);
 
         // Act
-        await _middleware.InvokeAsync(context);
+        await this._middleware.InvokeAsync(context);
 
         // Assert
         Assert.Equal("lowercase-request-id", context.Response.Headers["X-Request-ID"]);
-        _mockNext.Verify(next => next(context), Times.Once);
+        this._mockNext.Verify(next => next(context), Times.Once);
     }
 
     [Fact]
@@ -87,12 +87,12 @@ public class RequestIdMiddlewareTests
     {
         // Arrange
         var context = new DefaultHttpContext();
-        _mockNext.Setup(next => next(It.IsAny<HttpContext>())).Returns(Task.CompletedTask);
+        this._mockNext.Setup(next => next(It.IsAny<HttpContext>())).Returns(Task.CompletedTask);
 
         // Act
-        await _middleware.InvokeAsync(context);
+        await this._middleware.InvokeAsync(context);
 
         // Assert
-        _mockNext.Verify(next => next(context), Times.Once);
+        this._mockNext.Verify(next => next(context), Times.Once);
     }
 }

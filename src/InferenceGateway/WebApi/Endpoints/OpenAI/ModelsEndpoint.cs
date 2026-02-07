@@ -47,7 +47,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                             Vision = cm.Vision,
                             StructuredOutput = cm.StructuredOutput,
                             LogProbs = cm.LogProbs
-                        }
+                        },
                     });
                 }
 
@@ -61,7 +61,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                         OwnedBy = "synaxis",
                         Provider = "synaxis",
                         ModelPath = alias.Key,
-                        Capabilities = new ModelCapabilitiesDto()
+                        Capabilities = new ModelCapabilitiesDto(),
                     });
                 }
 
@@ -75,7 +75,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                         Type = p.Value.Type,
                         Enabled = p.Value.Enabled,
                         Tier = p.Value.Tier
-                    }).ToList()
+                    }).ToList(),
                 };
 
                 return Results.Json(response, ModelJsonContext.Options);
@@ -104,7 +104,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                             Vision = cm.Vision,
                             StructuredOutput = cm.StructuredOutput,
                             LogProbs = cm.LogProbs
-                        }
+                        },
                     }, ModelJsonContext.Options);
                 }
 
@@ -118,7 +118,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                         OwnedBy = "synaxis",
                         Provider = "synaxis",
                         ModelPath = id,
-                        Capabilities = new ModelCapabilitiesDto()
+                        Capabilities = new ModelCapabilitiesDto(),
                     }, ModelJsonContext.Options);
                 }
 
@@ -130,7 +130,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                         type = "invalid_request_error",
                         param = "model",
                         code = "model_not_found"
-                    }
+                    },
                 }, ModelJsonContext.Options, statusCode: 404);
             })
             .WithTags("Models")
@@ -266,10 +266,10 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
         /// <summary>
         /// Gets the JSON serializer options for model DTOs.
         /// </summary>
-        public static readonly System.Text.Json.JsonSerializerOptions Options = new ()
+        public static readonly System.Text.Json.JsonSerializerOptions Options = new()
         {
             PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.SnakeCaseLower,
-            PropertyNameCaseInsensitive = true
+            PropertyNameCaseInsensitive = true,
         };
     }
 }
