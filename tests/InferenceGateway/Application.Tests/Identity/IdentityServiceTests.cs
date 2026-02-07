@@ -86,10 +86,8 @@ public class IdentityServiceTests : IDisposable
 
         // Assert
         Assert.True(result.Success);
-        Assert.NotNull(result.User);
-        Assert.NotNull(result.Organization);
-        Assert.Equal("test@example.com", result.User.Email);
-        Assert.Equal("Test Organization", result.Organization.DisplayName);
+        Assert.NotNull(result.UserId);
+        Assert.NotNull(result.OrganizationId);
 
         // Verify database state
         var org = await this._context.Organizations.FirstOrDefaultAsync();
