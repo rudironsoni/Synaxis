@@ -30,7 +30,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
 
         public bool ValidateKey(string key, string hash)
         {
-            var computed = HashKey(key);
+            var computed = this.HashKey(key);
             // Constant time comparison
             return CryptographicOperations.FixedTimeEquals(
                 Encoding.UTF8.GetBytes(computed),

@@ -33,9 +33,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
         public async Task Execute(IJobExecutionContext context)
         {
             var correlationId = Guid.NewGuid().ToString("N")[..8];
-            _logger.LogInformation("[HealthMonitoring][{CorrelationId}] Starting health check", correlationId);
+            this._logger.LogInformation("[HealthMonitoring][{CorrelationId}] Starting health check", correlationId);
 
-            using var scope = _serviceProvider.CreateScope();
+            using var scope = this._serviceProvider.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
             var healthTool = scope.ServiceProvider.GetRequiredService<IHealthTool>();
             var alertTool = scope.ServiceProvider.GetRequiredService<IAlertTool>();
@@ -48,7 +48,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                     $"SELECT \"Id\", \"OrganizationId\", \"IsEnabled\", \"HealthCheckEnabled\" FROM operations.\"OrganizationProviders\" WHERE \"IsEnabled\" = true AND \"HealthCheckEnabled\" = true"
                 ).ToListAsync(context.CancellationToken);
 
-                _logger.LogInformation("[HealthMonitoring][{CorrelationId}] Checking {Count} providers", correlationId, orgProviders.Count);
+                this._logger.LogInformation("[HealthMonitoring][{CorrelationId}] Checking {Count} providers", correlationId, orgProviders.Count);
 
                 int checkedCount = 0;
                 int unhealthyCount = 0;
@@ -63,14 +63,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                         // Skip if in cooldown
                         if (health.IsInCooldown && health.CooldownUntil > DateTime.UtcNow)
                         {
-                            _logger.LogDebug("[HealthMonitoring][{CorrelationId}] Provider {ProviderId} in cooldown until {Until}",
+                            this._logger.LogDebug("[HealthMonitoring][{CorrelationId}] Provider {ProviderId} in cooldown until {Until}",
                                 correlationId, provider.Id, health.CooldownUntil);
                             continue;
                         }
 
                         // Perform actual health check (simplified - just check if provider exists)
                         // In real implementation, this would make test API call to provider
-                        bool isHealthy = await PerformHealthCheckAsync(provider.Id, context.CancellationToken);
+                        bool isHealthy = await this.PerformHealthCheckAsync(provider.Id, context.CancellationToken);
 
                         if (!isHealthy)
                         {
@@ -128,18 +128,18 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "[HealthMonitoring][{CorrelationId}] Error checking provider {ProviderId}",
+                        this._logger.LogError(ex, "[HealthMonitoring][{CorrelationId}] Error checking provider {ProviderId}",
                             correlationId, provider.Id);
                     }
                 }
 
-                _logger.LogInformation(
+                this._logger.LogInformation(
                     "[HealthMonitoring][{CorrelationId}] Completed: Checked={Checked}, Unhealthy={Unhealthy}",
                     correlationId, checkedCount, unhealthyCount);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "[HealthMonitoring][{CorrelationId}] Job failed", correlationId);
+                this._logger.LogError(ex, "[HealthMonitoring][{CorrelationId}] Job failed", correlationId);
             }
         }
 
@@ -156,8 +156,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
         private class OrgProviderDto
         {
             public Guid Id { get; set; }
+
             public Guid OrganizationId { get; set; }
+
             public bool IsEnabled { get; set; }
+
             public bool HealthCheckEnabled { get; set; }
         }
     }

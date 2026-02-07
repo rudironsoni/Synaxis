@@ -40,7 +40,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
             {
                 // Query from Operations schema
                 var health = await _db.Database.SqlQuery<ProviderHealthDto>(
-                    $"SELECT \"IsHealthy\", \"HealthScore\", \"ConsecutiveFailures\", \"IsInCooldown\", \"CooldownUntil\" FROM operations.\"ProviderHealthStatus\" WHERE \"OrganizationProviderId\" = {providerId} ORDER BY \"LastCheckedAt\" DESC LIMIT 1").FirstOrDefaultAsync(ct);
+                    $"SELECT \"IsHealthy\", \"HealthScore\", \"ConsecutiveFailures\", \"IsInCooldown\", \"CooldownUntil\" FROM operations.\"ProviderHealthStatus\" WHERE \"OrganizationProviderId\" = {providerId} ORDER BY \"LastCheckedAt\" DESC LIMIT 1").FirstOrDefaultAsync(ct).ConfigureAwait(false);
 
                 if (health == null)
                 {
@@ -80,7 +80,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
 
                 await _db.Database.ExecuteSqlAsync(
                     $"UPDATE operations.\"ProviderHealthStatus\" SET \"IsHealthy\" = false, \"ConsecutiveFailures\" = {consecutiveFailures}, \"LastErrorMessage\" = {reason}, \"IsInCooldown\" = true, \"CooldownUntil\" = {cooldownUntil}, \"LastCheckedAt\" = {DateTime.UtcNow} WHERE \"OrganizationProviderId\" = {providerId}",
-                    ct);
+                    ct).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -101,7 +101,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
             {
                 await _db.Database.ExecuteSqlAsync(
                     $"UPDATE operations.\"ProviderHealthStatus\" SET \"IsHealthy\" = true, \"ConsecutiveFailures\" = 0, \"IsInCooldown\" = false, \"CooldownUntil\" = NULL, \"LastSuccessAt\" = {DateTime.UtcNow}, \"LastCheckedAt\" = {DateTime.UtcNow} WHERE \"OrganizationProviderId\" = {providerId}",
-                    ct);
+                    ct).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -122,7 +122,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
             {
                 await _db.Database.ExecuteSqlAsync(
                     $"UPDATE operations.\"ProviderHealthStatus\" SET \"IsHealthy\" = true, \"HealthScore\" = 1.0, \"ConsecutiveFailures\" = 0, \"IsInCooldown\" = false, \"CooldownUntil\" = NULL, \"LastCheckedAt\" = {DateTime.UtcNow} WHERE \"OrganizationProviderId\" = {providerId}",
-                    ct);
+                    ct).ConfigureAwait(false);
             }
             catch (Exception ex)
             {

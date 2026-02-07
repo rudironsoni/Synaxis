@@ -105,7 +105,9 @@ public class CompressionProperties
                 var systemMessages = messages.Where(m => m.Role == "system").ToList();
 
                 if (systemMessages.Count == 0)
+                {
                     return true.Label("No system messages to preserve");
+                }
 
                 // Act
                 var result = compressor.CompressAsync(
@@ -184,7 +186,9 @@ public class FingerprintProperties
             {
                 // Skip if messages are identical
                 if (MessagesEqual(messages1, messages2))
+                {
                     return true.Label("Messages are identical - skipped");
+                }
 
                 // Arrange
                 var fingerprinter = new TestRequestFingerprinter();
@@ -210,7 +214,9 @@ public class FingerprintProperties
             {
                 // Skip if options are effectively identical
                 if (OptionsEqual(options1, options2))
+                {
                     return true.Label("Options are identical - skipped");
+                }
 
                 // Arrange
                 var fingerprinter = new TestRequestFingerprinter();
@@ -249,19 +255,33 @@ public class FingerprintProperties
 
     private static bool MessagesEqual(IList<ChatMessage> m1, IList<ChatMessage> m2)
     {
-        if (m1.Count != m2.Count) return false;
+        if (m1.Count != m2.Count)
+        {
+            return false;
+        }
+
         for (int i = 0; i < m1.Count; i++)
         {
             if (m1[i].Role != m2[i].Role || m1[i].Text != m2[i].Text)
+            {
                 return false;
+            }
         }
         return true;
     }
 
     private static bool OptionsEqual(ChatOptions? o1, ChatOptions? o2)
     {
-        if (o1 == null && o2 == null) return true;
-        if (o1 == null || o2 == null) return false;
+        if (o1 == null && o2 == null)
+        {
+            return true;
+        }
+
+        if (o1 == null || o2 == null)
+        {
+            return false;
+        }
+
         return o1.ModelId == o2.ModelId &&
                Math.Abs((o1.Temperature ?? 0) - (o2.Temperature ?? 0)) < 0.0001 &&
                o1.MaxOutputTokens == o2.MaxOutputTokens;
@@ -325,7 +345,9 @@ public class SessionIdProperties
             (sessionHeader, ipAddress) =>
             {
                 if (string.IsNullOrEmpty(sessionHeader))
+                {
                     return true.Label("No session header - skipped");
+                }
 
                 // Arrange
                 var fingerprinter = new TestRequestFingerprinter();
@@ -333,7 +355,7 @@ public class SessionIdProperties
                 {
                     SessionHeader = sessionHeader,
                     IpAddress = ipAddress,
-                    UserAgent = "TestAgent"
+                    UserAgent = "TestAgent",
                 });
 
                 // Act
@@ -384,7 +406,7 @@ public class ConfigResolutionProperties
                 // Arrange
                 var config = new TokenOptimizationConfig
                 {
-                    SimilarityThreshold = userThreshold
+                    SimilarityThreshold = userThreshold,
                 };
 
                 // Assert: Should always be in valid range
@@ -403,7 +425,7 @@ public class ConfigResolutionProperties
                 // Arrange
                 var config = new TokenOptimizationConfig
                 {
-                    CacheTtlSeconds = cacheTtl
+                    CacheTtlSeconds = cacheTtl,
                 };
 
                 // Assert: Should always be in valid range
@@ -425,7 +447,7 @@ public class ConfigResolutionProperties
                     CompressionStrategy = strategy,
                     SimilarityThreshold = 0.85,
                     EnableCaching = true,
-                    EnableCompression = true
+                    EnableCompression = true,
                 };
 
                 var validator = new TokenOptimizationConfigValidator();
@@ -452,7 +474,7 @@ public class ConfigResolutionProperties
                     SimilarityThreshold = 0.85,
                     EnableCaching = true,
                     EnableCompression = true,
-                    MaxConcurrentRequests = maxConcurrentRequests
+                    MaxConcurrentRequests = maxConcurrentRequests,
                 };
 
                 var validator = new TokenOptimizationConfigValidator();
@@ -542,7 +564,7 @@ public static class MessageListArbitrary
         var gen = from systemMsg in Gen.Constant(new ConversationMessage
         {
             Role = "system",
-            Content = "You are a helpful assistant."
+            Content = "You are a helpful assistant.",
         })
                   from count in Gen.Choose(0, 15)
                   from messages in Gen.ArrayOf(count, ConversationMessageGen())
@@ -573,7 +595,7 @@ public static class MessageListArbitrary
                select new ConversationMessage
                {
                    Role = role,
-                   Content = content
+                   Content = content,
                };
     }
 
@@ -605,7 +627,7 @@ public static class ChatOptionsArbitrary
             {
                 ModelId = modelId,
                 Temperature = (float)temp,
-                MaxOutputTokens = maxTokens
+                MaxOutputTokens = maxTokens,
             });
 
         return Arb.From(gen);
@@ -626,7 +648,7 @@ public static class SessionDataArbitrary
                   {
                       SessionHeader = sessionHeader,
                       IpAddress = ipAddress,
-                      UserAgent = userAgent
+                      UserAgent = userAgent,
                   };
 
         return Arb.From(gen);
@@ -648,7 +670,7 @@ public class TestConversationCompressor : IConversationCompressor
         CompressionStrategy strategy,
         CancellationToken cancellationToken)
     {
-        var originalTokens = messages.Sum(m => EstimateTokens(m.Content));
+        var originalTokens = messages.Sum(m => this.EstimateTokens(m.Content));
 
         if (originalTokens <= tokenThreshold || messages.Count == 0)
         {
@@ -659,7 +681,7 @@ public class TestConversationCompressor : IConversationCompressor
                 CompressedTokenCount = originalTokens,
                 CompressionRatio = 1.0,
                 StrategyUsed = strategy,
-                WasCompressed = false
+                WasCompressed = false,
             });
         }
 
@@ -669,12 +691,12 @@ public class TestConversationCompressor : IConversationCompressor
 
         var compressedMessages = new List<ConversationMessage>(systemMessages);
         var targetTokens = (int)(tokenThreshold * 0.8); // Leave some buffer
-        var currentTokens = systemMessages.Sum(m => EstimateTokens(m.Content));
+        var currentTokens = systemMessages.Sum(m => this.EstimateTokens(m.Content));
 
         // Add recent messages until we hit the target
         for (int i = otherMessages.Count - 1; i >= 0 && currentTokens < targetTokens; i--)
         {
-            var msgTokens = EstimateTokens(otherMessages[i].Content);
+            var msgTokens = this.EstimateTokens(otherMessages[i].Content);
             if (currentTokens + msgTokens <= targetTokens)
             {
                 compressedMessages.Insert(systemMessages.Count, otherMessages[i]);
@@ -689,13 +711,17 @@ public class TestConversationCompressor : IConversationCompressor
             CompressedTokenCount = currentTokens,
             CompressionRatio = originalTokens > 0 ? (double)currentTokens / originalTokens : 1.0,
             StrategyUsed = strategy,
-            WasCompressed = true
+            WasCompressed = true,
         });
     }
 
     public int EstimateTokens(string text)
     {
-        if (string.IsNullOrEmpty(text)) return 0;
+        if (string.IsNullOrEmpty(text))
+        {
+            return 0;
+        }
+
         return (int)Math.Ceiling(text.Length / 4.0); // Simple approximation
     }
 }
@@ -747,7 +773,9 @@ public class TestRequestFingerprinter : IRequestFingerprinter
 public class SessionData
 {
     public string? SessionHeader { get; set; }
+
     public string? IpAddress { get; set; }
+
     public string? UserAgent { get; set; }
 }
 

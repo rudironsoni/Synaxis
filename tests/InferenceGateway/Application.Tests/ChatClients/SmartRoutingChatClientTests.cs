@@ -29,14 +29,14 @@ public class SmartRoutingChatClientTests : TestBase
 
     public SmartRoutingChatClientTests()
     {
-        _chatClientFactoryMock = new Mock<IChatClientFactory>();
-        _smartRouterMock = new Mock<ISmartRouter>();
-        _healthStoreMock = new Mock<IHealthStore>();
-        _quotaTrackerMock = new Mock<IQuotaTracker>();
-        _pipelineProviderMock = new Mock<ResiliencePipelineProvider<string>>();
-        _strategiesMock = new Mock<IEnumerable<IChatClientStrategy>>();
-        _activitySource = new ActivitySource("Test");
-        _loggerMock = CreateMockLogger<SmartRoutingChatClient>();
+        this._chatClientFactoryMock = new Mock<IChatClientFactory>();
+        this._smartRouterMock = new Mock<ISmartRouter>();
+        this._healthStoreMock = new Mock<IHealthStore>();
+        this._quotaTrackerMock = new Mock<IQuotaTracker>();
+        this._pipelineProviderMock = new Mock<ResiliencePipelineProvider<string>>();
+        this._strategiesMock = new Mock<IEnumerable<IChatClientStrategy>>();
+        this._activitySource = new ActivitySource("Test");
+        this._loggerMock = this.CreateMockLogger<SmartRoutingChatClient>();
 
         // Setup pipeline provider to return a pipeline with retry support
         var pipeline = new ResiliencePipelineBuilder()
@@ -44,21 +44,21 @@ public class SmartRoutingChatClientTests : TestBase
             {
                 MaxRetryAttempts = 3,
                 Delay = TimeSpan.FromMilliseconds(10),
-                BackoffType = DelayBackoffType.Constant
+                BackoffType = DelayBackoffType.Constant,
             })
             .Build();
-        _pipelineProviderMock.Setup(x => x.GetPipeline("provider-retry"))
+        this._pipelineProviderMock.Setup(x => x.GetPipeline("provider-retry"))
             .Returns(pipeline);
 
-        _client = new SmartRoutingChatClient(
-            _chatClientFactoryMock.Object,
-            _smartRouterMock.Object,
-            _healthStoreMock.Object,
-            _quotaTrackerMock.Object,
-            _pipelineProviderMock.Object,
-            _strategiesMock.Object,
-            _activitySource,
-            _loggerMock.Object);
+        this._client = new SmartRoutingChatClient(
+            this._chatClientFactoryMock.Object,
+            this._smartRouterMock.Object,
+            this._healthStoreMock.Object,
+            this._quotaTrackerMock.Object,
+            this._pipelineProviderMock.Object,
+            this._strategiesMock.Object,
+            this._activitySource,
+            this._loggerMock.Object);
     }
 
     [Fact]
@@ -72,16 +72,16 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = CreateMockChatClient();
+        var mockChatClient = this.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
 
-        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
+        this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<EnrichedCandidate> { candidate });
-        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+        this._quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+        this._chatClientFactoryMock.Setup(x => x.GetClient("openai"))
             .Returns(mockChatClient.Object);
-        _strategiesMock.Setup(x => x.GetEnumerator())
+        this._strategiesMock.Setup(x => x.GetEnumerator())
             .Returns(new List<IChatClientStrategy> { mockStrategy.Object }.GetEnumerator());
         mockStrategy.Setup(x => x.CanHandle("openai"))
             .Returns(true);
@@ -89,7 +89,7 @@ public class SmartRoutingChatClientTests : TestBase
             .ReturnsAsync(new ChatResponse(new ChatMessage(ChatRole.Assistant, "Hello there!")));
 
         // Act
-        var result = await _client.GetResponseAsync(messages, options);
+        var result = await this._client.GetResponseAsync(messages, options);
 
         // Assert
         Assert.NotNull(result);
@@ -113,21 +113,21 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "llama-3.1-70b-versatile");
 
-        var mockChatClient1 = CreateMockChatClient();
-        var mockChatClient2 = CreateMockChatClient("Fallback response");
+        var mockChatClient1 = this.CreateMockChatClient();
+        var mockChatClient2 = this.CreateMockChatClient("Fallback response");
         var mockStrategy = new Mock<IChatClientStrategy>();
 
-        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
+        this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<EnrichedCandidate> { candidate1, candidate2 });
-        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+        this._quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
-        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("groq", It.IsAny<CancellationToken>()))
+        this._quotaTrackerMock.Setup(x => x.IsHealthyAsync("groq", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+        this._chatClientFactoryMock.Setup(x => x.GetClient("openai"))
             .Returns(mockChatClient1.Object);
-        _chatClientFactoryMock.Setup(x => x.GetClient("groq"))
+        this._chatClientFactoryMock.Setup(x => x.GetClient("groq"))
             .Returns(mockChatClient2.Object);
-        _strategiesMock.Setup(x => x.GetEnumerator())
+        this._strategiesMock.Setup(x => x.GetEnumerator())
             .Returns(new List<IChatClientStrategy> { mockStrategy.Object }.GetEnumerator());
         mockStrategy.Setup(x => x.CanHandle(It.IsAny<string>()))
             .Returns(true);
@@ -137,7 +137,7 @@ public class SmartRoutingChatClientTests : TestBase
             .ReturnsAsync(new ChatResponse(new ChatMessage(ChatRole.Assistant, "Fallback response")));
 
         // Act
-        var result = await _client.GetResponseAsync(messages, options);
+        var result = await this._client.GetResponseAsync(messages, options);
 
         // Assert
         Assert.NotNull(result);
@@ -156,14 +156,14 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = CreateMockChatClient();
+        var mockChatClient = this.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
 
-        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
+        this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<EnrichedCandidate> { candidate });
-        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+        this._quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+        this._chatClientFactoryMock.Setup(x => x.GetClient("openai"))
             .Returns(mockChatClient.Object);
 
         var cts = new CancellationTokenSource();
@@ -171,7 +171,7 @@ public class SmartRoutingChatClientTests : TestBase
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<AggregateException>(async () =>
-            await _client.GetResponseAsync(messages, options, cts.Token));
+            await this._client.GetResponseAsync(messages, options, cts.Token));
 
         Assert.Contains("All providers failed for model 'gpt-4'", exception.Message);
     }
@@ -187,14 +187,14 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = CreateMockChatClient();
+        var mockChatClient = this.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
 
-        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
+        this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<EnrichedCandidate> { candidate });
-        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+        this._quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+        this._chatClientFactoryMock.Setup(x => x.GetClient("openai"))
             .Returns(mockChatClient.Object);
 
         // Create a real list instead of mocking IEnumerable
@@ -202,29 +202,29 @@ public class SmartRoutingChatClientTests : TestBase
 
         // Create a new client with the real list
         var clientWithStrategy = new SmartRoutingChatClient(
-            _chatClientFactoryMock.Object,
-            _smartRouterMock.Object,
-            _healthStoreMock.Object,
-            _quotaTrackerMock.Object,
-            _pipelineProviderMock.Object,
+            this._chatClientFactoryMock.Object,
+            this._smartRouterMock.Object,
+            this._healthStoreMock.Object,
+            this._quotaTrackerMock.Object,
+            this._pipelineProviderMock.Object,
             strategiesList,
-            _activitySource,
-            _loggerMock.Object);
+            this._activitySource,
+            this._loggerMock.Object);
 
         mockStrategy.Setup(x => x.CanHandle("openai"))
             .Returns(true);
         mockStrategy.Setup(x => x.ExecuteAsync(mockChatClient.Object, It.IsAny<List<ChatMessage>>(), It.IsAny<ChatOptions>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ChatResponse(new ChatMessage(ChatRole.Assistant, "Hello there!"))
             {
-                Usage = new UsageDetails { InputTokenCount = 10, OutputTokenCount = 20 }
+                Usage = new UsageDetails { InputTokenCount = 10, OutputTokenCount = 20 },
             });
 
         // Act
         await clientWithStrategy.GetResponseAsync(messages, options);
 
         // Assert
-        _healthStoreMock.Verify(x => x.MarkSuccessAsync("openai", It.IsAny<CancellationToken>()), Times.Once);
-        _quotaTrackerMock.Verify(x => x.RecordUsageAsync("openai", It.IsAny<long>(), It.IsAny<long>(), It.IsAny<CancellationToken>()), Times.Once);
+        this._healthStoreMock.Verify(x => x.MarkSuccessAsync("openai", It.IsAny<CancellationToken>()), Times.Once);
+        this._quotaTrackerMock.Verify(x => x.RecordUsageAsync("openai", It.IsAny<long>(), It.IsAny<long>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -238,16 +238,16 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = CreateMockChatClient();
+        var mockChatClient = this.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
 
-        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
+        this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<EnrichedCandidate> { candidate });
-        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+        this._quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+        this._chatClientFactoryMock.Setup(x => x.GetClient("openai"))
             .Returns(mockChatClient.Object);
-        _strategiesMock.Setup(x => x.GetEnumerator())
+        this._strategiesMock.Setup(x => x.GetEnumerator())
             .Returns(new List<IChatClientStrategy> { mockStrategy.Object }.GetEnumerator());
         mockStrategy.Setup(x => x.CanHandle("openai"))
             .Returns(true);
@@ -255,8 +255,8 @@ public class SmartRoutingChatClientTests : TestBase
             .ThrowsAsync(new Exception("Provider failed"));
 
         // Act & Assert
-        await Assert.ThrowsAsync<AggregateException>(() => _client.GetResponseAsync(messages, options));
-        _healthStoreMock.Verify(x => x.MarkFailureAsync("openai", It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+        await Assert.ThrowsAsync<AggregateException>(() => this._client.GetResponseAsync(messages, options));
+        this._healthStoreMock.Verify(x => x.MarkFailureAsync("openai", It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()), Times.AtLeastOnce);
     }
 
     [Fact]
@@ -270,16 +270,16 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = CreateMockStreamingChatClient("Hello", " there!");
+        var mockChatClient = this.CreateMockStreamingChatClient("Hello", " there!");
         var mockStrategy = new Mock<IChatClientStrategy>();
 
-        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", true, It.IsAny<CancellationToken>()))
+        this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", true, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<EnrichedCandidate> { candidate });
-        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+        this._quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+        this._chatClientFactoryMock.Setup(x => x.GetClient("openai"))
             .Returns(mockChatClient.Object);
-        _strategiesMock.Setup(x => x.GetEnumerator())
+        this._strategiesMock.Setup(x => x.GetEnumerator())
             .Returns(new List<IChatClientStrategy> { mockStrategy.Object }.GetEnumerator());
         mockStrategy.Setup(x => x.CanHandle("openai"))
             .Returns(true);
@@ -287,7 +287,7 @@ public class SmartRoutingChatClientTests : TestBase
             .Returns(GenerateStreamingResponse(new[] { "Hello", " there!" }));
 
         // Act
-        var stream = _client.GetStreamingResponseAsync(messages, options);
+        var stream = this._client.GetStreamingResponseAsync(messages, options);
         var results = new List<ChatResponseUpdate>();
         await foreach (var update in stream)
         {
@@ -315,21 +315,21 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "llama-3.1-70b-versatile");
 
-        var mockChatClient1 = CreateMockStreamingChatClient();
-        var mockChatClient2 = CreateMockStreamingChatClient("Fallback", " response");
+        var mockChatClient1 = this.CreateMockStreamingChatClient();
+        var mockChatClient2 = this.CreateMockStreamingChatClient("Fallback", " response");
         var mockStrategy = new Mock<IChatClientStrategy>();
 
-        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", true, It.IsAny<CancellationToken>()))
+        this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", true, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<EnrichedCandidate> { candidate1, candidate2 });
-        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+        this._quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
-        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("groq", It.IsAny<CancellationToken>()))
+        this._quotaTrackerMock.Setup(x => x.IsHealthyAsync("groq", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+        this._chatClientFactoryMock.Setup(x => x.GetClient("openai"))
             .Returns(mockChatClient1.Object);
-        _chatClientFactoryMock.Setup(x => x.GetClient("groq"))
+        this._chatClientFactoryMock.Setup(x => x.GetClient("groq"))
             .Returns(mockChatClient2.Object);
-        _strategiesMock.Setup(x => x.GetEnumerator())
+        this._strategiesMock.Setup(x => x.GetEnumerator())
             .Returns(new List<IChatClientStrategy> { mockStrategy.Object }.GetEnumerator());
         mockStrategy.Setup(x => x.CanHandle(It.IsAny<string>()))
             .Returns(true);
@@ -339,7 +339,7 @@ public class SmartRoutingChatClientTests : TestBase
             .Returns(GenerateStreamingResponse(new[] { "Fallback", " response" }));
 
         // Act
-        var stream = _client.GetStreamingResponseAsync(messages, options);
+        var stream = this._client.GetStreamingResponseAsync(messages, options);
         var results = new List<ChatResponseUpdate>();
         await foreach (var update in stream)
         {
@@ -363,11 +363,11 @@ public class SmartRoutingChatClientTests : TestBase
         cts.Cancel();
 
         // Setup mock to throw OperationCanceledException when token is cancelled
-        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
+        this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new OperationCanceledException(cts.Token));
 
         // Act & Assert
-        await Assert.ThrowsAsync<OperationCanceledException>(() => _client.GetResponseAsync(messages, options, cts.Token));
+        await Assert.ThrowsAsync<OperationCanceledException>(() => this._client.GetResponseAsync(messages, options, cts.Token));
     }
 
     [Fact]
@@ -381,17 +381,17 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = CreateMockChatClient();
+        var mockChatClient = this.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
         var callCount = 0;
 
-        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
+        this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<EnrichedCandidate> { candidate });
-        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+        this._quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+        this._chatClientFactoryMock.Setup(x => x.GetClient("openai"))
             .Returns(mockChatClient.Object);
-        _strategiesMock.Setup(x => x.GetEnumerator())
+        this._strategiesMock.Setup(x => x.GetEnumerator())
             .Returns(new List<IChatClientStrategy> { mockStrategy.Object }.GetEnumerator());
         mockStrategy.Setup(x => x.CanHandle("openai"))
             .Returns(true);
@@ -400,12 +400,15 @@ public class SmartRoutingChatClientTests : TestBase
             {
                 callCount++;
                 if (callCount == 1)
+                {
                     throw new Exception("Transient error");
+                }
+
                 return Task.FromResult(new ChatResponse(new ChatMessage(ChatRole.Assistant, "Success after retry")));
             });
 
         // Act
-        var result = await _client.GetResponseAsync(messages, options);
+        var result = await this._client.GetResponseAsync(messages, options);
 
         // Assert
         Assert.Equal("Success after retry", result.Messages.First().Text);
@@ -423,13 +426,13 @@ public class SmartRoutingChatClientTests : TestBase
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => new SmartRoutingChatClient(
             factory,
-            _smartRouterMock.Object,
-            _healthStoreMock.Object,
-            _quotaTrackerMock.Object,
-            _pipelineProviderMock.Object,
-            _strategiesMock.Object,
-            _activitySource,
-            _loggerMock.Object));
+            this._smartRouterMock.Object,
+            this._healthStoreMock.Object,
+            this._quotaTrackerMock.Object,
+            this._pipelineProviderMock.Object,
+            this._strategiesMock.Object,
+            this._activitySource,
+            this._loggerMock.Object));
     }
 
     [Fact]
@@ -440,14 +443,14 @@ public class SmartRoutingChatClientTests : TestBase
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => new SmartRoutingChatClient(
-            _chatClientFactoryMock.Object,
+            this._chatClientFactoryMock.Object,
             router,
-            _healthStoreMock.Object,
-            _quotaTrackerMock.Object,
-            _pipelineProviderMock.Object,
-            _strategiesMock.Object,
-            _activitySource,
-            _loggerMock.Object));
+            this._healthStoreMock.Object,
+            this._quotaTrackerMock.Object,
+            this._pipelineProviderMock.Object,
+            this._strategiesMock.Object,
+            this._activitySource,
+            this._loggerMock.Object));
     }
 
     [Fact]
@@ -458,14 +461,14 @@ public class SmartRoutingChatClientTests : TestBase
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => new SmartRoutingChatClient(
-            _chatClientFactoryMock.Object,
-            _smartRouterMock.Object,
+            this._chatClientFactoryMock.Object,
+            this._smartRouterMock.Object,
             healthStore,
-            _quotaTrackerMock.Object,
-            _pipelineProviderMock.Object,
-            _strategiesMock.Object,
-            _activitySource,
-            _loggerMock.Object));
+            this._quotaTrackerMock.Object,
+            this._pipelineProviderMock.Object,
+            this._strategiesMock.Object,
+            this._activitySource,
+            this._loggerMock.Object));
     }
 
     [Fact]
@@ -476,14 +479,14 @@ public class SmartRoutingChatClientTests : TestBase
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => new SmartRoutingChatClient(
-            _chatClientFactoryMock.Object,
-            _smartRouterMock.Object,
-            _healthStoreMock.Object,
+            this._chatClientFactoryMock.Object,
+            this._smartRouterMock.Object,
+            this._healthStoreMock.Object,
             quotaTracker,
-            _pipelineProviderMock.Object,
-            _strategiesMock.Object,
-            _activitySource,
-            _loggerMock.Object));
+            this._pipelineProviderMock.Object,
+            this._strategiesMock.Object,
+            this._activitySource,
+            this._loggerMock.Object));
     }
 
     [Fact]
@@ -494,14 +497,14 @@ public class SmartRoutingChatClientTests : TestBase
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => new SmartRoutingChatClient(
-            _chatClientFactoryMock.Object,
-            _smartRouterMock.Object,
-            _healthStoreMock.Object,
-            _quotaTrackerMock.Object,
+            this._chatClientFactoryMock.Object,
+            this._smartRouterMock.Object,
+            this._healthStoreMock.Object,
+            this._quotaTrackerMock.Object,
             pipelineProvider,
-            _strategiesMock.Object,
-            _activitySource,
-            _loggerMock.Object));
+            this._strategiesMock.Object,
+            this._activitySource,
+            this._loggerMock.Object));
     }
 
     [Fact]
@@ -512,14 +515,14 @@ public class SmartRoutingChatClientTests : TestBase
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => new SmartRoutingChatClient(
-            _chatClientFactoryMock.Object,
-            _smartRouterMock.Object,
-            _healthStoreMock.Object,
-            _quotaTrackerMock.Object,
-            _pipelineProviderMock.Object,
+            this._chatClientFactoryMock.Object,
+            this._smartRouterMock.Object,
+            this._healthStoreMock.Object,
+            this._quotaTrackerMock.Object,
+            this._pipelineProviderMock.Object,
             strategies,
-            _activitySource,
-            _loggerMock.Object));
+            this._activitySource,
+            this._loggerMock.Object));
     }
 
     [Fact]
@@ -530,14 +533,14 @@ public class SmartRoutingChatClientTests : TestBase
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => new SmartRoutingChatClient(
-            _chatClientFactoryMock.Object,
-            _smartRouterMock.Object,
-            _healthStoreMock.Object,
-            _quotaTrackerMock.Object,
-            _pipelineProviderMock.Object,
-            _strategiesMock.Object,
+            this._chatClientFactoryMock.Object,
+            this._smartRouterMock.Object,
+            this._healthStoreMock.Object,
+            this._quotaTrackerMock.Object,
+            this._pipelineProviderMock.Object,
+            this._strategiesMock.Object,
             activitySource,
-            _loggerMock.Object));
+            this._loggerMock.Object));
     }
 
     [Fact]
@@ -548,13 +551,13 @@ public class SmartRoutingChatClientTests : TestBase
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => new SmartRoutingChatClient(
-            _chatClientFactoryMock.Object,
-            _smartRouterMock.Object,
-            _healthStoreMock.Object,
-            _quotaTrackerMock.Object,
-            _pipelineProviderMock.Object,
-            _strategiesMock.Object,
-            _activitySource,
+            this._chatClientFactoryMock.Object,
+            this._smartRouterMock.Object,
+            this._healthStoreMock.Object,
+            this._quotaTrackerMock.Object,
+            this._pipelineProviderMock.Object,
+            this._strategiesMock.Object,
+            this._activitySource,
             logger));
     }
 
@@ -577,15 +580,15 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "llama-3.1-70b-versatile");
 
-        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
+        this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<EnrichedCandidate> { candidate1, candidate2 });
-        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+        this._quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
-        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("groq", It.IsAny<CancellationToken>()))
+        this._quotaTrackerMock.Setup(x => x.IsHealthyAsync("groq", It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<AggregateException>(() => _client.GetResponseAsync(messages, options));
+        var exception = await Assert.ThrowsAsync<AggregateException>(() => this._client.GetResponseAsync(messages, options));
         Assert.Contains("All providers failed for model 'gpt-4'", exception.Message);
     }
 
@@ -600,19 +603,19 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = CreateMockChatClient();
+        var mockChatClient = this.CreateMockChatClient();
 
-        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
+        this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<EnrichedCandidate> { candidate });
-        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+        this._quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+        this._chatClientFactoryMock.Setup(x => x.GetClient("openai"))
             .Returns(mockChatClient.Object);
-        _strategiesMock.Setup(x => x.GetEnumerator())
+        this._strategiesMock.Setup(x => x.GetEnumerator())
             .Returns(new List<IChatClientStrategy>().GetEnumerator());
 
         // Act & Assert - The exception is wrapped in AggregateException because all providers fail
-        var aggException = await Assert.ThrowsAsync<AggregateException>(() => _client.GetResponseAsync(messages, options));
+        var aggException = await Assert.ThrowsAsync<AggregateException>(() => this._client.GetResponseAsync(messages, options));
         var innerException = Assert.IsType<InvalidOperationException>(aggException.InnerException);
         Assert.Equal("No chat client strategies available", innerException.Message);
     }
@@ -628,27 +631,27 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = CreateMockChatClient();
+        var mockChatClient = this.CreateMockChatClient();
         var mockStrategy1 = new Mock<IChatClientStrategy>();
         var mockStrategy2 = new Mock<IChatClientStrategy>();
 
-        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
+        this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<EnrichedCandidate> { candidate });
-        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+        this._quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+        this._chatClientFactoryMock.Setup(x => x.GetClient("openai"))
             .Returns(mockChatClient.Object);
 
         var strategiesList = new List<IChatClientStrategy> { mockStrategy1.Object, mockStrategy2.Object };
         var clientWithStrategies = new SmartRoutingChatClient(
-            _chatClientFactoryMock.Object,
-            _smartRouterMock.Object,
-            _healthStoreMock.Object,
-            _quotaTrackerMock.Object,
-            _pipelineProviderMock.Object,
+            this._chatClientFactoryMock.Object,
+            this._smartRouterMock.Object,
+            this._healthStoreMock.Object,
+            this._quotaTrackerMock.Object,
+            this._pipelineProviderMock.Object,
             strategiesList,
-            _activitySource,
-            _loggerMock.Object);
+            this._activitySource,
+            this._loggerMock.Object);
 
         mockStrategy1.Setup(x => x.CanHandle("openai"))
             .Returns(false);
@@ -676,15 +679,15 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
+        this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<EnrichedCandidate> { candidate });
-        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("unknown", It.IsAny<CancellationToken>()))
+        this._quotaTrackerMock.Setup(x => x.IsHealthyAsync("unknown", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _chatClientFactoryMock.Setup(x => x.GetClient("unknown"))
+        this._chatClientFactoryMock.Setup(x => x.GetClient("unknown"))
             .Returns((IChatClient?)null);
 
         // Act & Assert - The exception is wrapped in AggregateException
-        var aggException = await Assert.ThrowsAsync<AggregateException>(() => _client.GetResponseAsync(messages, options));
+        var aggException = await Assert.ThrowsAsync<AggregateException>(() => this._client.GetResponseAsync(messages, options));
         var innerException = Assert.IsType<InvalidOperationException>(aggException.InnerException);
         Assert.Contains("Provider 'unknown' not registered", innerException.Message);
     }
@@ -700,41 +703,41 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = CreateMockChatClient();
+        var mockChatClient = this.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
 
-        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
+        this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<EnrichedCandidate> { candidate });
-        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+        this._quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+        this._chatClientFactoryMock.Setup(x => x.GetClient("openai"))
             .Returns(mockChatClient.Object);
 
         var strategiesList = new List<IChatClientStrategy> { mockStrategy.Object };
         var clientWithStrategy = new SmartRoutingChatClient(
-            _chatClientFactoryMock.Object,
-            _smartRouterMock.Object,
-            _healthStoreMock.Object,
-            _quotaTrackerMock.Object,
-            _pipelineProviderMock.Object,
+            this._chatClientFactoryMock.Object,
+            this._smartRouterMock.Object,
+            this._healthStoreMock.Object,
+            this._quotaTrackerMock.Object,
+            this._pipelineProviderMock.Object,
             strategiesList,
-            _activitySource,
-            _loggerMock.Object);
+            this._activitySource,
+            this._loggerMock.Object);
 
         mockStrategy.Setup(x => x.CanHandle("openai"))
             .Returns(true);
         mockStrategy.Setup(x => x.ExecuteAsync(mockChatClient.Object, It.IsAny<List<ChatMessage>>(), It.IsAny<ChatOptions>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ChatResponse(new ChatMessage(ChatRole.Assistant, "Hello there!"))
             {
-                Usage = new UsageDetails { InputTokenCount = 0, OutputTokenCount = 0 }
+                Usage = new UsageDetails { InputTokenCount = 0, OutputTokenCount = 0 },
             });
 
         // Act
         await clientWithStrategy.GetResponseAsync(messages, options);
 
         // Assert
-        _healthStoreMock.Verify(x => x.MarkSuccessAsync("openai", It.IsAny<CancellationToken>()), Times.Once);
-        _quotaTrackerMock.Verify(x => x.RecordUsageAsync(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<long>(), It.IsAny<CancellationToken>()), Times.Never);
+        this._healthStoreMock.Verify(x => x.MarkSuccessAsync("openai", It.IsAny<CancellationToken>()), Times.Once);
+        this._quotaTrackerMock.Verify(x => x.RecordUsageAsync(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<long>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -748,35 +751,35 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = CreateMockChatClient();
+        var mockChatClient = this.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
 
-        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
+        this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<EnrichedCandidate> { candidate });
-        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+        this._quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+        this._chatClientFactoryMock.Setup(x => x.GetClient("openai"))
             .Returns(mockChatClient.Object);
-        _healthStoreMock.Setup(x => x.MarkSuccessAsync("openai", It.IsAny<CancellationToken>()))
+        this._healthStoreMock.Setup(x => x.MarkSuccessAsync("openai", It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception("Health store error"));
 
         var strategiesList = new List<IChatClientStrategy> { mockStrategy.Object };
         var clientWithStrategy = new SmartRoutingChatClient(
-            _chatClientFactoryMock.Object,
-            _smartRouterMock.Object,
-            _healthStoreMock.Object,
-            _quotaTrackerMock.Object,
-            _pipelineProviderMock.Object,
+            this._chatClientFactoryMock.Object,
+            this._smartRouterMock.Object,
+            this._healthStoreMock.Object,
+            this._quotaTrackerMock.Object,
+            this._pipelineProviderMock.Object,
             strategiesList,
-            _activitySource,
-            _loggerMock.Object);
+            this._activitySource,
+            this._loggerMock.Object);
 
         mockStrategy.Setup(x => x.CanHandle("openai"))
             .Returns(true);
         mockStrategy.Setup(x => x.ExecuteAsync(mockChatClient.Object, It.IsAny<List<ChatMessage>>(), It.IsAny<ChatOptions>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ChatResponse(new ChatMessage(ChatRole.Assistant, "Hello there!"))
             {
-                Usage = new UsageDetails { InputTokenCount = 10, OutputTokenCount = 20 }
+                Usage = new UsageDetails { InputTokenCount = 10, OutputTokenCount = 20 },
             });
 
         // Act
@@ -784,7 +787,7 @@ public class SmartRoutingChatClientTests : TestBase
 
         // Assert
         Assert.NotNull(result);
-        _loggerMock.Verify(x => x.Log(
+        this._loggerMock.Verify(x => x.Log(
             LogLevel.Warning,
             It.IsAny<EventId>(),
             It.IsAny<It.IsAnyType>(),
@@ -804,26 +807,26 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "default");
 
-        var mockChatClient = CreateMockChatClient();
+        var mockChatClient = this.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
 
-        _smartRouterMock.Setup(x => x.GetCandidatesAsync("default", false, It.IsAny<CancellationToken>()))
+        this._smartRouterMock.Setup(x => x.GetCandidatesAsync("default", false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<EnrichedCandidate> { candidate });
-        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+        this._quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+        this._chatClientFactoryMock.Setup(x => x.GetClient("openai"))
             .Returns(mockChatClient.Object);
 
         var strategiesList = new List<IChatClientStrategy> { mockStrategy.Object };
         var clientWithStrategy = new SmartRoutingChatClient(
-            _chatClientFactoryMock.Object,
-            _smartRouterMock.Object,
-            _healthStoreMock.Object,
-            _quotaTrackerMock.Object,
-            _pipelineProviderMock.Object,
+            this._chatClientFactoryMock.Object,
+            this._smartRouterMock.Object,
+            this._healthStoreMock.Object,
+            this._quotaTrackerMock.Object,
+            this._pipelineProviderMock.Object,
             strategiesList,
-            _activitySource,
-            _loggerMock.Object);
+            this._activitySource,
+            this._loggerMock.Object);
 
         mockStrategy.Setup(x => x.CanHandle("openai"))
             .Returns(true);
@@ -835,7 +838,7 @@ public class SmartRoutingChatClientTests : TestBase
 
         // Assert
         Assert.NotNull(result);
-        _smartRouterMock.Verify(x => x.GetCandidatesAsync("default", false, It.IsAny<CancellationToken>()), Times.Once);
+        this._smartRouterMock.Verify(x => x.GetCandidatesAsync("default", false, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -849,26 +852,26 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = CreateMockChatClient();
+        var mockChatClient = this.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
 
-        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
+        this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<EnrichedCandidate> { candidate });
-        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+        this._quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+        this._chatClientFactoryMock.Setup(x => x.GetClient("openai"))
             .Returns(mockChatClient.Object);
 
         var strategiesList = new List<IChatClientStrategy> { mockStrategy.Object };
         var clientWithStrategy = new SmartRoutingChatClient(
-            _chatClientFactoryMock.Object,
-            _smartRouterMock.Object,
-            _healthStoreMock.Object,
-            _quotaTrackerMock.Object,
-            _pipelineProviderMock.Object,
+            this._chatClientFactoryMock.Object,
+            this._smartRouterMock.Object,
+            this._healthStoreMock.Object,
+            this._quotaTrackerMock.Object,
+            this._pipelineProviderMock.Object,
             strategiesList,
-            _activitySource,
-            _loggerMock.Object);
+            this._activitySource,
+            this._loggerMock.Object);
 
         var response = new ChatResponse(new ChatMessage(ChatRole.Assistant, "Hello there!"));
         // AdditionalProperties is null by default
@@ -909,17 +912,17 @@ public class SmartRoutingChatClientTests : TestBase
 
         var mockStrategy = new Mock<IChatClientStrategy>();
 
-        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", true, It.IsAny<CancellationToken>()))
+        this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", true, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<EnrichedCandidate> { candidate1, candidate2 });
-        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+        this._quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("groq", It.IsAny<CancellationToken>()))
+        this._quotaTrackerMock.Setup(x => x.IsHealthyAsync("groq", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
-            .Returns(CreateMockChatClient().Object);
-        _chatClientFactoryMock.Setup(x => x.GetClient("groq"))
-            .Returns(CreateMockChatClient().Object);
-        _strategiesMock.Setup(x => x.GetEnumerator())
+        this._chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+            .Returns(this.CreateMockChatClient().Object);
+        this._chatClientFactoryMock.Setup(x => x.GetClient("groq"))
+            .Returns(this.CreateMockChatClient().Object);
+        this._strategiesMock.Setup(x => x.GetEnumerator())
             .Returns(new List<IChatClientStrategy> { mockStrategy.Object }.GetEnumerator());
         mockStrategy.Setup(x => x.CanHandle(It.IsAny<string>()))
             .Returns(true);
@@ -960,17 +963,17 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "llama-3.1-70b-versatile");
 
-        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", true, It.IsAny<CancellationToken>()))
+        this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", true, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<EnrichedCandidate> { candidate1, candidate2 });
-        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+        this._quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
-        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("groq", It.IsAny<CancellationToken>()))
+        this._quotaTrackerMock.Setup(x => x.IsHealthyAsync("groq", It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<AggregateException>(async () =>
         {
-            var stream = _client.GetStreamingResponseAsync(messages, options);
+            var stream = this._client.GetStreamingResponseAsync(messages, options);
             await foreach (var _ in stream) { }
         });
         Assert.Contains("All providers failed to initiate stream for model 'gpt-4'", exception.Message);
@@ -987,21 +990,21 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = CreateMockChatClient();
+        var mockChatClient = this.CreateMockChatClient();
 
-        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", true, It.IsAny<CancellationToken>()))
+        this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", true, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<EnrichedCandidate> { candidate });
-        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+        this._quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+        this._chatClientFactoryMock.Setup(x => x.GetClient("openai"))
             .Returns(mockChatClient.Object);
-        _strategiesMock.Setup(x => x.GetEnumerator())
+        this._strategiesMock.Setup(x => x.GetEnumerator())
             .Returns(new List<IChatClientStrategy>().GetEnumerator());
 
         // Act & Assert - Exception is wrapped in AggregateException
         var aggException = await Assert.ThrowsAsync<AggregateException>(async () =>
         {
-            var stream = _client.GetStreamingResponseAsync(messages, options);
+            var stream = this._client.GetStreamingResponseAsync(messages, options);
             await foreach (var _ in stream) { }
         });
         var innerException = Assert.IsType<InvalidOperationException>(aggException.InnerException);
@@ -1019,17 +1022,17 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", true, It.IsAny<CancellationToken>()))
+        this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", true, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<EnrichedCandidate> { candidate });
-        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("unknown", It.IsAny<CancellationToken>()))
+        this._quotaTrackerMock.Setup(x => x.IsHealthyAsync("unknown", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _chatClientFactoryMock.Setup(x => x.GetClient("unknown"))
+        this._chatClientFactoryMock.Setup(x => x.GetClient("unknown"))
             .Returns((IChatClient?)null);
 
         // Act & Assert - Exception is wrapped in AggregateException
         var aggException = await Assert.ThrowsAsync<AggregateException>(async () =>
         {
-            var stream = _client.GetStreamingResponseAsync(messages, options);
+            var stream = this._client.GetStreamingResponseAsync(messages, options);
             await foreach (var _ in stream) { }
         });
         var innerException = Assert.IsType<InvalidOperationException>(aggException.InnerException);
@@ -1047,16 +1050,16 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4-turbo");
 
-        var mockChatClient = CreateMockChatClient();
+        var mockChatClient = this.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
 
-        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", true, It.IsAny<CancellationToken>()))
+        this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", true, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<EnrichedCandidate> { candidate });
-        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+        this._quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+        this._chatClientFactoryMock.Setup(x => x.GetClient("openai"))
             .Returns(mockChatClient.Object);
-        _strategiesMock.Setup(x => x.GetEnumerator())
+        this._strategiesMock.Setup(x => x.GetEnumerator())
             .Returns(new List<IChatClientStrategy> { mockStrategy.Object }.GetEnumerator());
         mockStrategy.Setup(x => x.CanHandle("openai"))
             .Returns(true);
@@ -1064,7 +1067,7 @@ public class SmartRoutingChatClientTests : TestBase
             .Returns(GenerateStreamingResponse(new[] { "Hello", " World" }));
 
         // Act
-        var stream = _client.GetStreamingResponseAsync(messages, options);
+        var stream = this._client.GetStreamingResponseAsync(messages, options);
         var results = new List<ChatResponseUpdate>();
         await foreach (var update in stream)
         {
@@ -1088,16 +1091,16 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = CreateMockChatClient();
+        var mockChatClient = this.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
 
-        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", true, It.IsAny<CancellationToken>()))
+        this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", true, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<EnrichedCandidate> { candidate });
-        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+        this._quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+        this._chatClientFactoryMock.Setup(x => x.GetClient("openai"))
             .Returns(mockChatClient.Object);
-        _strategiesMock.Setup(x => x.GetEnumerator())
+        this._strategiesMock.Setup(x => x.GetEnumerator())
             .Returns(new List<IChatClientStrategy> { mockStrategy.Object }.GetEnumerator());
         mockStrategy.Setup(x => x.CanHandle("openai"))
             .Returns(true);
@@ -1115,7 +1118,7 @@ public class SmartRoutingChatClientTests : TestBase
             .Returns(GenerateUpdateWithoutProperties());
 
         // Act
-        var stream = _client.GetStreamingResponseAsync(messages, options);
+        var stream = this._client.GetStreamingResponseAsync(messages, options);
         var results = new List<ChatResponseUpdate>();
         await foreach (var update in stream)
         {
@@ -1139,16 +1142,16 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "default");
 
-        var mockChatClient = CreateMockChatClient();
+        var mockChatClient = this.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
 
-        _smartRouterMock.Setup(x => x.GetCandidatesAsync("default", true, It.IsAny<CancellationToken>()))
+        this._smartRouterMock.Setup(x => x.GetCandidatesAsync("default", true, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<EnrichedCandidate> { candidate });
-        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+        this._quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+        this._chatClientFactoryMock.Setup(x => x.GetClient("openai"))
             .Returns(mockChatClient.Object);
-        _strategiesMock.Setup(x => x.GetEnumerator())
+        this._strategiesMock.Setup(x => x.GetEnumerator())
             .Returns(new List<IChatClientStrategy> { mockStrategy.Object }.GetEnumerator());
         mockStrategy.Setup(x => x.CanHandle("openai"))
             .Returns(true);
@@ -1156,7 +1159,7 @@ public class SmartRoutingChatClientTests : TestBase
             .Returns(GenerateStreamingResponse(new[] { "Hello" }));
 
         // Act
-        var stream = _client.GetStreamingResponseAsync(messages, options);
+        var stream = this._client.GetStreamingResponseAsync(messages, options);
         var results = new List<ChatResponseUpdate>();
         await foreach (var update in stream)
         {
@@ -1165,7 +1168,7 @@ public class SmartRoutingChatClientTests : TestBase
 
         // Assert
         Assert.Single(results);
-        _smartRouterMock.Verify(x => x.GetCandidatesAsync("default", true, It.IsAny<CancellationToken>()), Times.Once);
+        this._smartRouterMock.Verify(x => x.GetCandidatesAsync("default", true, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     #endregion
@@ -1183,18 +1186,18 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = CreateMockChatClient();
+        var mockChatClient = this.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
         var exception = new Exception("Rate limited");
         exception.Data["StatusCode"] = 429;
 
-        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
+        this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<EnrichedCandidate> { candidate });
-        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+        this._quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+        this._chatClientFactoryMock.Setup(x => x.GetClient("openai"))
             .Returns(mockChatClient.Object);
-        _strategiesMock.Setup(x => x.GetEnumerator())
+        this._strategiesMock.Setup(x => x.GetEnumerator())
             .Returns(new List<IChatClientStrategy> { mockStrategy.Object }.GetEnumerator());
         mockStrategy.Setup(x => x.CanHandle("openai"))
             .Returns(true);
@@ -1202,9 +1205,9 @@ public class SmartRoutingChatClientTests : TestBase
             .ThrowsAsync(exception);
 
         // Act & Assert
-        await Assert.ThrowsAsync<AggregateException>(() => _client.GetResponseAsync(messages, options));
+        await Assert.ThrowsAsync<AggregateException>(() => this._client.GetResponseAsync(messages, options));
         // MarkFailureAsync is called twice: once in rotation loop, once in ExecuteCandidateAsync
-        _healthStoreMock.Verify(x => x.MarkFailureAsync("openai", TimeSpan.FromSeconds(60), It.IsAny<CancellationToken>()), Times.Exactly(2));
+        this._healthStoreMock.Verify(x => x.MarkFailureAsync("openai", TimeSpan.FromSeconds(60), It.IsAny<CancellationToken>()), Times.Exactly(2));
     }
 
     [Fact]
@@ -1218,18 +1221,18 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = CreateMockChatClient();
+        var mockChatClient = this.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
         var exception = new Exception("Unauthorized");
         exception.Data["StatusCode"] = 401;
 
-        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
+        this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<EnrichedCandidate> { candidate });
-        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+        this._quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+        this._chatClientFactoryMock.Setup(x => x.GetClient("openai"))
             .Returns(mockChatClient.Object);
-        _strategiesMock.Setup(x => x.GetEnumerator())
+        this._strategiesMock.Setup(x => x.GetEnumerator())
             .Returns(new List<IChatClientStrategy> { mockStrategy.Object }.GetEnumerator());
         mockStrategy.Setup(x => x.CanHandle("openai"))
             .Returns(true);
@@ -1237,9 +1240,9 @@ public class SmartRoutingChatClientTests : TestBase
             .ThrowsAsync(exception);
 
         // Act & Assert
-        await Assert.ThrowsAsync<AggregateException>(() => _client.GetResponseAsync(messages, options));
+        await Assert.ThrowsAsync<AggregateException>(() => this._client.GetResponseAsync(messages, options));
         // MarkFailureAsync is called twice: once in rotation loop, once in ExecuteCandidateAsync
-        _healthStoreMock.Verify(x => x.MarkFailureAsync("openai", TimeSpan.FromHours(1), It.IsAny<CancellationToken>()), Times.Exactly(2));
+        this._healthStoreMock.Verify(x => x.MarkFailureAsync("openai", TimeSpan.FromHours(1), It.IsAny<CancellationToken>()), Times.Exactly(2));
     }
 
     [Fact]
@@ -1253,18 +1256,18 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = CreateMockChatClient();
+        var mockChatClient = this.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
         var exception = new Exception("Bad Request");
         exception.Data["StatusCode"] = 400;
 
-        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
+        this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<EnrichedCandidate> { candidate });
-        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+        this._quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+        this._chatClientFactoryMock.Setup(x => x.GetClient("openai"))
             .Returns(mockChatClient.Object);
-        _strategiesMock.Setup(x => x.GetEnumerator())
+        this._strategiesMock.Setup(x => x.GetEnumerator())
             .Returns(new List<IChatClientStrategy> { mockStrategy.Object }.GetEnumerator());
         mockStrategy.Setup(x => x.CanHandle("openai"))
             .Returns(true);
@@ -1272,8 +1275,8 @@ public class SmartRoutingChatClientTests : TestBase
             .ThrowsAsync(exception);
 
         // Act & Assert
-        await Assert.ThrowsAsync<AggregateException>(() => _client.GetResponseAsync(messages, options));
-        _healthStoreMock.Verify(x => x.MarkFailureAsync(It.IsAny<string>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()), Times.Never);
+        await Assert.ThrowsAsync<AggregateException>(() => this._client.GetResponseAsync(messages, options));
+        this._healthStoreMock.Verify(x => x.MarkFailureAsync(It.IsAny<string>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -1287,18 +1290,18 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = CreateMockChatClient();
+        var mockChatClient = this.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
         var exception = new Exception("Not Found");
         exception.Data["StatusCode"] = 404;
 
-        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
+        this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<EnrichedCandidate> { candidate });
-        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+        this._quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+        this._chatClientFactoryMock.Setup(x => x.GetClient("openai"))
             .Returns(mockChatClient.Object);
-        _strategiesMock.Setup(x => x.GetEnumerator())
+        this._strategiesMock.Setup(x => x.GetEnumerator())
             .Returns(new List<IChatClientStrategy> { mockStrategy.Object }.GetEnumerator());
         mockStrategy.Setup(x => x.CanHandle("openai"))
             .Returns(true);
@@ -1306,8 +1309,8 @@ public class SmartRoutingChatClientTests : TestBase
             .ThrowsAsync(exception);
 
         // Act & Assert
-        await Assert.ThrowsAsync<AggregateException>(() => _client.GetResponseAsync(messages, options));
-        _healthStoreMock.Verify(x => x.MarkFailureAsync(It.IsAny<string>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()), Times.Never);
+        await Assert.ThrowsAsync<AggregateException>(() => this._client.GetResponseAsync(messages, options));
+        this._healthStoreMock.Verify(x => x.MarkFailureAsync(It.IsAny<string>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -1321,18 +1324,18 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = CreateMockChatClient();
+        var mockChatClient = this.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
         var exception = new Exception("Server Error");
         exception.Data["StatusCode"] = 500;
 
-        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
+        this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<EnrichedCandidate> { candidate });
-        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+        this._quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+        this._chatClientFactoryMock.Setup(x => x.GetClient("openai"))
             .Returns(mockChatClient.Object);
-        _strategiesMock.Setup(x => x.GetEnumerator())
+        this._strategiesMock.Setup(x => x.GetEnumerator())
             .Returns(new List<IChatClientStrategy> { mockStrategy.Object }.GetEnumerator());
         mockStrategy.Setup(x => x.CanHandle("openai"))
             .Returns(true);
@@ -1340,9 +1343,9 @@ public class SmartRoutingChatClientTests : TestBase
             .ThrowsAsync(exception);
 
         // Act & Assert
-        await Assert.ThrowsAsync<AggregateException>(() => _client.GetResponseAsync(messages, options));
+        await Assert.ThrowsAsync<AggregateException>(() => this._client.GetResponseAsync(messages, options));
         // MarkFailureAsync is called twice: once in rotation loop, once in ExecuteCandidateAsync
-        _healthStoreMock.Verify(x => x.MarkFailureAsync("openai", TimeSpan.FromSeconds(30), It.IsAny<CancellationToken>()), Times.Exactly(2));
+        this._healthStoreMock.Verify(x => x.MarkFailureAsync("openai", TimeSpan.FromSeconds(30), It.IsAny<CancellationToken>()), Times.Exactly(2));
     }
 
     [Fact]
@@ -1356,16 +1359,16 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = CreateMockChatClient();
+        var mockChatClient = this.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
 
-        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
+        this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<EnrichedCandidate> { candidate });
-        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+        this._quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+        this._chatClientFactoryMock.Setup(x => x.GetClient("openai"))
             .Returns(mockChatClient.Object);
-        _strategiesMock.Setup(x => x.GetEnumerator())
+        this._strategiesMock.Setup(x => x.GetEnumerator())
             .Returns(new List<IChatClientStrategy> { mockStrategy.Object }.GetEnumerator());
         mockStrategy.Setup(x => x.CanHandle("openai"))
             .Returns(true);
@@ -1373,9 +1376,9 @@ public class SmartRoutingChatClientTests : TestBase
             .ThrowsAsync(new Exception("Generic error without status code"));
 
         // Act & Assert
-        await Assert.ThrowsAsync<AggregateException>(() => _client.GetResponseAsync(messages, options));
+        await Assert.ThrowsAsync<AggregateException>(() => this._client.GetResponseAsync(messages, options));
         // MarkFailureAsync is called twice: once in rotation loop, once in ExecuteCandidateAsync
-        _healthStoreMock.Verify(x => x.MarkFailureAsync("openai", TimeSpan.FromSeconds(30), It.IsAny<CancellationToken>()), Times.Exactly(2));
+        this._healthStoreMock.Verify(x => x.MarkFailureAsync("openai", TimeSpan.FromSeconds(30), It.IsAny<CancellationToken>()), Times.Exactly(2));
     }
 
     [Fact]
@@ -1389,18 +1392,18 @@ public class SmartRoutingChatClientTests : TestBase
             null,
             "gpt-4");
 
-        var mockChatClient = CreateMockChatClient();
+        var mockChatClient = this.CreateMockChatClient();
         var mockStrategy = new Mock<IChatClientStrategy>();
         var innerException = new Exception("Inner error with 429");
         var outerException = new Exception("Outer error", innerException);
 
-        _smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
+        this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<EnrichedCandidate> { candidate });
-        _quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
+        this._quotaTrackerMock.Setup(x => x.IsHealthyAsync("openai", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _chatClientFactoryMock.Setup(x => x.GetClient("openai"))
+        this._chatClientFactoryMock.Setup(x => x.GetClient("openai"))
             .Returns(mockChatClient.Object);
-        _strategiesMock.Setup(x => x.GetEnumerator())
+        this._strategiesMock.Setup(x => x.GetEnumerator())
             .Returns(new List<IChatClientStrategy> { mockStrategy.Object }.GetEnumerator());
         mockStrategy.Setup(x => x.CanHandle("openai"))
             .Returns(true);
@@ -1408,10 +1411,10 @@ public class SmartRoutingChatClientTests : TestBase
             .ThrowsAsync(outerException);
 
         // Act & Assert
-        await Assert.ThrowsAsync<AggregateException>(() => _client.GetResponseAsync(messages, options));
+        await Assert.ThrowsAsync<AggregateException>(() => this._client.GetResponseAsync(messages, options));
         // Should apply 60 second cooldown for 429 extracted from inner exception message
         // MarkFailureAsync is called twice: once in rotation loop, once in ExecuteCandidateAsync
-        _healthStoreMock.Verify(x => x.MarkFailureAsync("openai", TimeSpan.FromSeconds(60), It.IsAny<CancellationToken>()), Times.Exactly(2));
+        this._healthStoreMock.Verify(x => x.MarkFailureAsync("openai", TimeSpan.FromSeconds(60), It.IsAny<CancellationToken>()), Times.Exactly(2));
     }
 
     #endregion
@@ -1423,11 +1426,11 @@ public class SmartRoutingChatClientTests : TestBase
     {
         // Arrange
         var expectedService = new object();
-        _chatClientFactoryMock.Setup(x => x.GetService(typeof(string), null))
+        this._chatClientFactoryMock.Setup(x => x.GetService(typeof(string), null))
             .Returns(expectedService);
 
         // Act
-        var result = _client.GetService(typeof(string), null);
+        var result = this._client.GetService(typeof(string), null);
 
         // Assert
         Assert.Equal(expectedService, result);
@@ -1438,11 +1441,11 @@ public class SmartRoutingChatClientTests : TestBase
     {
         // Arrange
         var expectedService = new object();
-        _chatClientFactoryMock.Setup(x => x.GetService(typeof(string), "key"))
+        this._chatClientFactoryMock.Setup(x => x.GetService(typeof(string), "key"))
             .Returns(expectedService);
 
         // Act
-        var result = _client.GetService(typeof(string), "key");
+        var result = this._client.GetService(typeof(string), "key");
 
         // Assert
         Assert.Equal(expectedService, result);
@@ -1452,7 +1455,7 @@ public class SmartRoutingChatClientTests : TestBase
     public void Dispose_DoesNotThrow()
     {
         // Act & Assert
-        var exception = Record.Exception(() => _client.Dispose());
+        var exception = Record.Exception(() => this._client.Dispose());
         Assert.Null(exception);
     }
 
@@ -1464,7 +1467,7 @@ public class SmartRoutingChatClientTests : TestBase
     public void Metadata_ReturnsCorrectValue()
     {
         // Assert
-        Assert.NotNull(_client.Metadata);
+        Assert.NotNull(this._client.Metadata);
     }
 
     #endregion

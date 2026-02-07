@@ -51,7 +51,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                 {
                     ModelId = resolution.canonicalId.ToString(),
                     MaxOutputTokens = request.MaxTokens,
-                    Temperature = (float?)request.Temperature
+                    Temperature = (float?)request.Temperature,
                 };
 
                 if (request.Stream)
@@ -68,7 +68,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                             choices = new[]
                             {
                             new { text = update.Text, index = 0, finish_reason = update.FinishReason?.ToString().ToLowerInvariant() }
-                            }
+                            },
                         };
                         await ctx.Response.WriteAsync($"data: {JsonSerializer.Serialize(chunk)}\n\n");
                         await ctx.Response.Body.FlushAsync();
@@ -88,9 +88,9 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                         model = resolution.canonicalId.ToString(),
                         choices = new[]
                         {
-                        new { text = response.Text, index = 0, finish_reason = response.FinishReason?.ToString().ToLowerInvariant() ?? "stop" }
+                        new { text = response.Text, index = 0, finish_reason = response.FinishReason?.ToString().ToLowerInvariant() ?? "stop" },
                         },
-                        usage = new { prompt_tokens = response.Usage?.InputTokenCount ?? 0, completion_tokens = response.Usage?.OutputTokenCount ?? 0, total_tokens = (response.Usage?.InputTokenCount ?? 0) + (response.Usage?.OutputTokenCount ?? 0) }
+                        usage = new { prompt_tokens = response.Usage?.InputTokenCount ?? 0, completion_tokens = response.Usage?.OutputTokenCount ?? 0, total_tokens = (response.Usage?.InputTokenCount ?? 0) + (response.Usage?.OutputTokenCount ?? 0) },
                     });
                 }
             })

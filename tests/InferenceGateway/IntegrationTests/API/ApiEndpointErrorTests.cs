@@ -18,9 +18,9 @@ public class ApiEndpointErrorTests : IClassFixture<SynaxisWebApplicationFactory>
 
     public ApiEndpointErrorTests(SynaxisWebApplicationFactory factory, ITestOutputHelper output)
     {
-        _factory = factory;
-        _factory.OutputHelper = output;
-        _client = _factory.WithWebHostBuilder(builder =>
+        this._factory = factory;
+        this._factory.OutputHelper = output;
+        this._client = this._factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureAppConfiguration((context, config) =>
             {
@@ -62,16 +62,16 @@ public class ApiEndpointErrorTests : IClassFixture<SynaxisWebApplicationFactory>
             messages = new[]
             {
                 new { role = "user", content = "Hello" }
-            }
+            },
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/openai/v1/chat/completions", request);
+        var response = await this._client.PostAsJsonAsync("/openai/v1/chat/completions", request);
 
         // Assert - Current behavior: Invalid model returns 400 (not 404)
         // This test documents the current behavior, not the desired behavior
         var content = await response.Content.ReadAsStringAsync();
-        _factory.OutputHelper?.WriteLine($"Response: {content}");
+        this._factory.OutputHelper?.WriteLine($"Response: {content}");
         // The API returns 400 for invalid model (no providers available)
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Contains("no providers available", content.ToLowerInvariant());
@@ -86,16 +86,16 @@ public class ApiEndpointErrorTests : IClassFixture<SynaxisWebApplicationFactory>
             messages = new[]
             {
                 new { role = "user", content = "Hello" }
-            }
+            },
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/openai/v1/chat/completions", request);
+        var response = await this._client.PostAsJsonAsync("/openai/v1/chat/completions", request);
 
         // Assert - Current behavior: Missing model defaults to "default" and returns 400 if no providers found
         // This test documents the current behavior, not the desired behavior
         var content = await response.Content.ReadAsStringAsync();
-        _factory.OutputHelper?.WriteLine($"Response: {content}");
+        this._factory.OutputHelper?.WriteLine($"Response: {content}");
         // The API returns 400 because "default" model has no providers configured
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -106,16 +106,16 @@ public class ApiEndpointErrorTests : IClassFixture<SynaxisWebApplicationFactory>
         // Arrange
         var request = new
         {
-            model = "test-alias"
+            model = "test-alias",
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/openai/v1/chat/completions", request);
+        var response = await this._client.PostAsJsonAsync("/openai/v1/chat/completions", request);
 
         // Assert - Updated behavior: Missing messages field returns 400 with validation error
         // Validation is now implemented via [Required] attribute
         var content = await response.Content.ReadAsStringAsync();
-        _factory.OutputHelper?.WriteLine($"Response: {content}");
+        this._factory.OutputHelper?.WriteLine($"Response: {content}");
         // The API returns 400 with appropriate error message
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Contains("At least one message is required", content);
@@ -128,16 +128,16 @@ public class ApiEndpointErrorTests : IClassFixture<SynaxisWebApplicationFactory>
         var request = new
         {
             model = "test-alias",
-            messages = Array.Empty<object>()
+            messages = Array.Empty<object>(),
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/openai/v1/chat/completions", request);
+        var response = await this._client.PostAsJsonAsync("/openai/v1/chat/completions", request);
 
         // Assert - Updated behavior: Empty messages array returns 400 with validation error
         // Validation is now implemented via [MinLength(1)] attribute
         var content = await response.Content.ReadAsStringAsync();
-        _factory.OutputHelper?.WriteLine($"Response: {content}");
+        this._factory.OutputHelper?.WriteLine($"Response: {content}");
         // The API returns 400 with appropriate error message
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Contains("At least one message is required", content);
@@ -153,16 +153,16 @@ public class ApiEndpointErrorTests : IClassFixture<SynaxisWebApplicationFactory>
             messages = new[]
             {
                 new { content = "Hello" } // Missing role
-            }
+            },
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/openai/v1/chat/completions", request);
+        var response = await this._client.PostAsJsonAsync("/openai/v1/chat/completions", request);
 
         // Assert - Current behavior: Missing role causes 400 with generic error message
         // This test documents the current behavior, not the desired behavior
         var content = await response.Content.ReadAsStringAsync();
-        _factory.OutputHelper?.WriteLine($"Response: {content}");
+        this._factory.OutputHelper?.WriteLine($"Response: {content}");
         // The API returns 400 but error message doesn't mention "role"
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         // Error message is specific: "Message role is required"
@@ -179,16 +179,16 @@ public class ApiEndpointErrorTests : IClassFixture<SynaxisWebApplicationFactory>
             messages = new[]
             {
                 new { role = "user" } // Missing content
-            }
+            },
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/openai/v1/chat/completions", request);
+        var response = await this._client.PostAsJsonAsync("/openai/v1/chat/completions", request);
 
         // Assert - Current behavior: Missing content defaults to empty string, returns 200
         // This test documents the current behavior, not the desired behavior
         var content = await response.Content.ReadAsStringAsync();
-        _factory.OutputHelper?.WriteLine($"Response: {content}");
+        this._factory.OutputHelper?.WriteLine($"Response: {content}");
         // The API returns 200 with empty content (validation not implemented)
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
@@ -202,16 +202,16 @@ public class ApiEndpointErrorTests : IClassFixture<SynaxisWebApplicationFactory>
             model = "test-alias",
             messages = new[]
             {
-                new { role = "user", content = "Hello" }
+                new { role = "user", content = "Hello" },
             },
-            stream = "true" // String instead of boolean
+            stream = "true", // String instead of boolean
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/openai/v1/chat/completions", request);
+        var response = await this._client.PostAsJsonAsync("/openai/v1/chat/completions", request);
 
         var content = await response.Content.ReadAsStringAsync();
-        _factory.OutputHelper?.WriteLine($"Response: {content}");
+        this._factory.OutputHelper?.WriteLine($"Response: {content}");
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
@@ -224,16 +224,16 @@ public class ApiEndpointErrorTests : IClassFixture<SynaxisWebApplicationFactory>
             model = "test-alias",
             messages = new[]
             {
-                new { role = "user", content = "Hello" }
+                new { role = "user", content = "Hello" },
             },
-            temperature = 3.0 // Out of valid range (0.0 to 2.0)
+            temperature = 3.0, // Out of valid range (0.0 to 2.0)
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/openai/v1/chat/completions", request);
+        var response = await this._client.PostAsJsonAsync("/openai/v1/chat/completions", request);
 
         var content = await response.Content.ReadAsStringAsync();
-        _factory.OutputHelper?.WriteLine($"Response: {content}");
+        this._factory.OutputHelper?.WriteLine($"Response: {content}");
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
@@ -246,16 +246,16 @@ public class ApiEndpointErrorTests : IClassFixture<SynaxisWebApplicationFactory>
             model = "test-alias",
             messages = new[]
             {
-                new { role = "user", content = "Hello" }
+                new { role = "user", content = "Hello" },
             },
-            max_tokens = -10 // Negative value
+            max_tokens = -10, // Negative value
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/openai/v1/chat/completions", request);
+        var response = await this._client.PostAsJsonAsync("/openai/v1/chat/completions", request);
 
         var content = await response.Content.ReadAsStringAsync();
-        _factory.OutputHelper?.WriteLine($"Response: {content}");
+        this._factory.OutputHelper?.WriteLine($"Response: {content}");
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
@@ -267,10 +267,10 @@ public class ApiEndpointErrorTests : IClassFixture<SynaxisWebApplicationFactory>
         var content = new StringContent(malformedJson, Encoding.UTF8, "application/json");
 
         // Act
-        var response = await _client.PostAsync("/openai/v1/chat/completions", content);
+        var response = await this._client.PostAsync("/openai/v1/chat/completions", content);
 
         var responseContent = await response.Content.ReadAsStringAsync();
-        _factory.OutputHelper?.WriteLine($"Response: {responseContent}");
+        this._factory.OutputHelper?.WriteLine($"Response: {responseContent}");
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
@@ -283,18 +283,18 @@ public class ApiEndpointErrorTests : IClassFixture<SynaxisWebApplicationFactory>
             model = "test-provider/no-stream", // Non-streaming model
             messages = new[]
             {
-                new { role = "user", content = "Hello" }
+                new { role = "user", content = "Hello" },
             },
-            stream = true // Request streaming on non-streaming model
+            stream = true, // Request streaming on non-streaming model
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/openai/v1/chat/completions", request);
+        var response = await this._client.PostAsJsonAsync("/openai/v1/chat/completions", request);
 
         // Assert - Current behavior: Streaming on non-streaming model returns 400
         // This test documents the current behavior, which is actually correct
         var content = await response.Content.ReadAsStringAsync();
-        _factory.OutputHelper?.WriteLine($"Response: {content}");
+        this._factory.OutputHelper?.WriteLine($"Response: {content}");
         // The API correctly returns 400 for capability mismatch
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Contains("no providers available", content.ToLowerInvariant());
@@ -309,7 +309,7 @@ public class MockChatClient : IChatClient
     {
         return Task.FromResult(new ChatResponse(new ChatMessage(ChatRole.Assistant, "Hello from mock!"))
         {
-            Usage = new UsageDetails { InputTokenCount = 10, OutputTokenCount = 5 }
+            Usage = new UsageDetails { InputTokenCount = 10, OutputTokenCount = 5 },
         });
     }
 
@@ -322,6 +322,7 @@ public class MockChatClient : IChatClient
     }
 
     public void Dispose() { }
+
     public object? GetService(Type serviceType, object? serviceKey = null) => null;
 }
 
@@ -343,7 +344,7 @@ public class MockProviderRegistry : IProviderRegistry
             {
                 Key = "test-provider",
                 Tier = 1,
-                Models = new List<string> { "test/model", "test/no-stream" }
+                Models = new List<string> { "test/model", "test/no-stream" },
             };
         }
         return null;

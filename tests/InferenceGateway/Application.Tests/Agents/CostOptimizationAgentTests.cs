@@ -20,9 +20,9 @@ public class CostOptimizationAgentTests
 
     public CostOptimizationAgentTests()
     {
-        _serviceProviderMock = new Mock<IServiceProvider>();
-        _loggerMock = new Mock<ILogger<CostOptimizationAgent>>();
-        _agent = new CostOptimizationAgent(_serviceProviderMock.Object, _loggerMock.Object);
+        this._serviceProviderMock = new Mock<IServiceProvider>();
+        this._loggerMock = new Mock<ILogger<CostOptimizationAgent>>();
+        this._agent = new CostOptimizationAgent(this._serviceProviderMock.Object, this._loggerMock.Object);
     }
 
     [Fact]
@@ -37,21 +37,21 @@ public class CostOptimizationAgentTests
         var routingToolMock = new Mock<IRoutingTool>();
         var auditToolMock = new Mock<IAuditTool>();
 
-        scopeMock.Setup(s => s.ServiceProvider).Returns(_serviceProviderMock.Object);
-        _serviceProviderMock.Setup(sp => sp.GetService(typeof(ControlPlaneDbContext)))
+        scopeMock.Setup(s => s.ServiceProvider).Returns(this._serviceProviderMock.Object);
+        this._serviceProviderMock.Setup(sp => sp.GetService(typeof(ControlPlaneDbContext)))
             .Returns(dbMock.Object);
-        _serviceProviderMock.Setup(sp => sp.GetService(typeof(IRoutingTool)))
+        this._serviceProviderMock.Setup(sp => sp.GetService(typeof(IRoutingTool)))
             .Returns(routingToolMock.Object);
-        _serviceProviderMock.Setup(sp => sp.GetService(typeof(IAuditTool)))
+        this._serviceProviderMock.Setup(sp => sp.GetService(typeof(IAuditTool)))
             .Returns(auditToolMock.Object);
 
         var scopeFactoryMock = new Mock<IServiceScopeFactory>();
         scopeFactoryMock.Setup(f => f.CreateScope()).Returns(scopeMock.Object);
-        _serviceProviderMock.Setup(sp => sp.GetService(typeof(IServiceScopeFactory)))
+        this._serviceProviderMock.Setup(sp => sp.GetService(typeof(IServiceScopeFactory)))
             .Returns(scopeFactoryMock.Object);
 
         // Act
-        await _agent.Execute(contextMock.Object);
+        await this._agent.Execute(contextMock.Object);
 
         // Assert
         Assert.True(true); // Test that execution completes
@@ -69,24 +69,24 @@ public class CostOptimizationAgentTests
         var routingToolMock = new Mock<IRoutingTool>();
         var auditToolMock = new Mock<IAuditTool>();
 
-        scopeMock.Setup(s => s.ServiceProvider).Returns(_serviceProviderMock.Object);
-        _serviceProviderMock.Setup(sp => sp.GetService(typeof(ControlPlaneDbContext)))
+        scopeMock.Setup(s => s.ServiceProvider).Returns(this._serviceProviderMock.Object);
+        this._serviceProviderMock.Setup(sp => sp.GetService(typeof(ControlPlaneDbContext)))
             .Returns(dbMock.Object);
-        _serviceProviderMock.Setup(sp => sp.GetService(typeof(IRoutingTool)))
+        this._serviceProviderMock.Setup(sp => sp.GetService(typeof(IRoutingTool)))
             .Returns(routingToolMock.Object);
-        _serviceProviderMock.Setup(sp => sp.GetService(typeof(IAuditTool)))
+        this._serviceProviderMock.Setup(sp => sp.GetService(typeof(IAuditTool)))
             .Returns(auditToolMock.Object);
 
         var scopeFactoryMock = new Mock<IServiceScopeFactory>();
         scopeFactoryMock.Setup(f => f.CreateScope()).Returns(scopeMock.Object);
-        _serviceProviderMock.Setup(sp => sp.GetService(typeof(IServiceScopeFactory)))
+        this._serviceProviderMock.Setup(sp => sp.GetService(typeof(IServiceScopeFactory)))
             .Returns(scopeFactoryMock.Object);
 
         // Act
-        await _agent.Execute(contextMock.Object);
+        await this._agent.Execute(contextMock.Object);
 
         // Assert
-        _loggerMock.Verify(
+        this._loggerMock.Verify(
             x => x.Log(
                 LogLevel.Information,
                 It.IsAny<EventId>(),

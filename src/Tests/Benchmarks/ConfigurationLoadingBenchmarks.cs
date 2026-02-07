@@ -18,17 +18,17 @@ public class ConfigurationLoadingBenchmarks
     [GlobalSetup]
     public void Setup()
     {
-        _smallConfig = CreateConfiguration(1, 1, 1);
-        _mediumConfig = CreateConfiguration(5, 5, 5);
-        _largeConfig = CreateConfiguration(13, 10, 10);
-        _configWithEnvVars = CreateConfigurationWithEnvironmentVariables(13, 10, 10);
+        this._smallConfig = this.CreateConfiguration(1, 1, 1);
+        this._mediumConfig = this.CreateConfiguration(5, 5, 5);
+        this._largeConfig = this.CreateConfiguration(13, 10, 10);
+        this._configWithEnvVars = this.CreateConfigurationWithEnvironmentVariables(13, 10, 10);
     }
 
     [Benchmark]
     public SynaxisConfiguration Bind_SmallConfiguration()
     {
         var config = new SynaxisConfiguration();
-        _smallConfig.GetSection("Synaxis:InferenceGateway").Bind(config);
+        this._smallConfig.GetSection("Synaxis:InferenceGateway").Bind(config);
         return config;
     }
 
@@ -36,7 +36,7 @@ public class ConfigurationLoadingBenchmarks
     public SynaxisConfiguration Bind_MediumConfiguration()
     {
         var config = new SynaxisConfiguration();
-        _mediumConfig.GetSection("Synaxis:InferenceGateway").Bind(config);
+        this._mediumConfig.GetSection("Synaxis:InferenceGateway").Bind(config);
         return config;
     }
 
@@ -44,7 +44,7 @@ public class ConfigurationLoadingBenchmarks
     public SynaxisConfiguration Bind_LargeConfiguration()
     {
         var config = new SynaxisConfiguration();
-        _largeConfig.GetSection("Synaxis:InferenceGateway").Bind(config);
+        this._largeConfig.GetSection("Synaxis:InferenceGateway").Bind(config);
         return config;
     }
 
@@ -52,32 +52,32 @@ public class ConfigurationLoadingBenchmarks
     public SynaxisConfiguration Bind_ConfigurationWithEnvironmentVariables()
     {
         var config = new SynaxisConfiguration();
-        _configWithEnvVars.GetSection("Synaxis:InferenceGateway").Bind(config);
+        this._configWithEnvVars.GetSection("Synaxis:InferenceGateway").Bind(config);
         return config;
     }
 
     [Benchmark]
     public string GetProviderKey_SmallConfiguration()
     {
-        return _smallConfig["Synaxis:InferenceGateway:Providers:groq:Key"] ?? string.Empty;
+        return this._smallConfig["Synaxis:InferenceGateway:Providers:groq:Key"] ?? string.Empty;
     }
 
     [Benchmark]
     public string GetProviderKey_LargeConfiguration()
     {
-        return _largeConfig["Synaxis:InferenceGateway:Providers:provider-12:Key"] ?? string.Empty;
+        return this._largeConfig["Synaxis:InferenceGateway:Providers:provider-12:Key"] ?? string.Empty;
     }
 
     [Benchmark]
     public string GetJwtSecret()
     {
-        return _largeConfig["Synaxis:InferenceGateway:JwtSecret"] ?? string.Empty;
+        return this._largeConfig["Synaxis:InferenceGateway:JwtSecret"] ?? string.Empty;
     }
 
     [Benchmark]
     public string[] GetAllProviderKeys()
     {
-        var providers = _largeConfig.GetSection("Synaxis:InferenceGateway:Providers").GetChildren();
+        var providers = this._largeConfig.GetSection("Synaxis:InferenceGateway:Providers").GetChildren();
         var keys = new string[providers.Count()];
         int i = 0;
         foreach (var provider in providers)
@@ -97,7 +97,7 @@ public class ConfigurationLoadingBenchmarks
             ["Synaxis:InferenceGateway:JwtIssuer"] = "test-issuer",
             ["Synaxis:InferenceGateway:JwtAudience"] = "test-audience",
             ["Synaxis:InferenceGateway:MasterKey"] = "test-master-key",
-            ["Synaxis:InferenceGateway:MaxRequestBodySize"] = "31457280"
+            ["Synaxis:InferenceGateway:MaxRequestBodySize"] = "31457280",
         };
 
         for (int i = 0; i < providerCount; i++)
@@ -141,7 +141,7 @@ public class ConfigurationLoadingBenchmarks
             ["Synaxis:InferenceGateway:JwtSecret"] = "test-jwt-secret",
             ["Synaxis:InferenceGateway:JwtIssuer"] = "test-issuer",
             ["Synaxis:InferenceGateway:JwtAudience"] = "test-audience",
-            ["Synaxis:InferenceGateway:MasterKey"] = "test-master-key"
+            ["Synaxis:InferenceGateway:MasterKey"] = "test-master-key",
         };
 
         for (int i = 0; i < providerCount; i++)
@@ -178,7 +178,7 @@ public class ConfigurationLoadingBenchmarks
         {
             ["SYNAXIS__INFERENCEGATEWAY__PROVIDERS__PROVIDER-0__KEY"] = "env-api-key-0",
             ["SYNAXIS__INFERENCEGATEWAY__PROVIDERS__PROVIDER-1__KEY"] = "env-api-key-1",
-            ["SYNAXIS__INFERENCEGATEWAY__JWTSECRET"] = "env-jwt-secret"
+            ["SYNAXIS__INFERENCEGATEWAY__JWTSECRET"] = "env-jwt-secret",
         };
 
         builder.AddInMemoryCollection(envVars);

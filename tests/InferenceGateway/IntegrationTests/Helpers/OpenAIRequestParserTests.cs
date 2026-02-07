@@ -65,7 +65,7 @@ public class OpenAIRequestParserTests
             messages = new[]
             {
                 new { role = "user", content = "Hello" }
-            }
+            },
         });
         var context = CreateHttpContextWithBody(json);
 
@@ -90,7 +90,7 @@ public class OpenAIRequestParserTests
             messages = new[]
             {
                 new { role = "user", content = "Hello" }
-            }
+            },
         });
         var context = CreateHttpContextWithBody(json, contentLength: json.Length);
 
@@ -127,7 +127,7 @@ public class OpenAIRequestParserTests
             messages = new[]
             {
                 new { role = "user", content = "Hello" }
-            }
+            },
         });
         var context = CreateHttpContextWithBody(json);
 
@@ -150,7 +150,7 @@ public class OpenAIRequestParserTests
             messages = new[]
             {
                 new { role = "user", content = "Hello" }
-            }
+            },
         });
         var context = CreateHttpContextWithBody(json);
 
@@ -172,13 +172,13 @@ public class OpenAIRequestParserTests
             messages = new[]
             {
                 new { role = "system", content = "You are helpful" },
-                new { role = "user", content = "Hello" }
+                new { role = "user", content = "Hello" },
             },
             temperature = 0.7,
             top_p = 0.9,
             max_tokens = 100,
             stream = true,
-            stop = "STOP"
+            stop = "STOP",
         });
         var context = CreateHttpContextWithBody(json);
 
@@ -204,7 +204,7 @@ public class OpenAIRequestParserTests
             model = "gpt-4",
             messages = new[]
             {
-                new { role = "user", content = "What's the weather?" }
+                new { role = "user", content = "What's the weather?" },
             },
             tools = new[]
             {
@@ -217,7 +217,7 @@ public class OpenAIRequestParserTests
                         description = "Get weather information"
                     }
                 }
-            }
+            },
         });
         var context = CreateHttpContextWithBody(json);
 
@@ -241,9 +241,9 @@ public class OpenAIRequestParserTests
             model = "gpt-4",
             messages = new[]
             {
-                new { role = "user", content = "Generate JSON" }
+                new { role = "user", content = "Generate JSON" },
             },
-            response_format = new { type = "json_object" }
+            response_format = new { type = "json_object" },
         });
         var context = CreateHttpContextWithBody(json);
 
@@ -324,7 +324,7 @@ public class OpenAIRequestParserTests
             messages = new[]
             {
                 new { role = "system", content = "You are a helpful assistant" }
-            }
+            },
         });
         var context = CreateHttpContextWithBody(json);
 
@@ -348,7 +348,7 @@ public class OpenAIRequestParserTests
             messages = new[]
             {
                 new { role = "assistant", content = "Hello! How can I help you?" }
-            }
+            },
         });
         var context = CreateHttpContextWithBody(json);
 
@@ -371,7 +371,7 @@ public class OpenAIRequestParserTests
             messages = new[]
             {
                 new { role = "tool", content = "Tool result", tool_call_id = "call_123" }
-            }
+            },
         });
         var context = CreateHttpContextWithBody(json);
 
@@ -398,7 +398,7 @@ public class OpenAIRequestParserTests
                 new { role = "user", content = "Hello" },
                 new { role = "assistant", content = "Hi there" },
                 new { role = "user", content = "How are you?" }
-            }
+            },
         });
         var context = CreateHttpContextWithBody(json);
 
@@ -424,7 +424,7 @@ public class OpenAIRequestParserTests
             messages = new[]
             {
                 new { role = "user", content = "Hello", name = "John" }
-            }
+            },
         });
         var context = CreateHttpContextWithBody(json);
 
@@ -444,7 +444,7 @@ public class OpenAIRequestParserTests
         var json = JsonSerializer.Serialize(new
         {
             model = "gpt-4",
-            messages = new object[] { }
+            messages = new object[] { },
         });
         var context = CreateHttpContextWithBody(json);
 
@@ -493,7 +493,7 @@ public class OpenAIRequestParserTests
         var json = JsonSerializer.Serialize(new
         {
             model = "gpt-4",
-            messages = new[] { new { role = "user", content = "Hello" } }
+            messages = new[] { new { role = "user", content = "Hello" } },
         });
         var context = CreateHttpContextWithBody(json, contentLength: json.Length);
 
@@ -525,7 +525,7 @@ public class OpenAIRequestParserTests
         var json = JsonSerializer.Serialize(new
         {
             model = "gpt-4",
-            messages = new[] { new { role = "user", content = "Hello" } }
+            messages = new[] { new { role = "user", content = "Hello" } },
         });
         var context = CreateHttpContextWithBody(json, contentLength: json.Length, maxBodySize: customMaxSize);
 
@@ -544,7 +544,7 @@ public class OpenAIRequestParserTests
         var json = JsonSerializer.Serialize(new
         {
             model = "gpt-4",
-            messages = new[] { new { role = "user", content = "Hello world this is a long message that exceeds the limit" } }
+            messages = new[] { new { role = "user", content = "Hello world this is a long message that exceeds the limit" } },
         });
         // Don't pass Content-Length so it goes through chunked reading path
         var context = CreateHttpContextWithBody(json, contentLength: null, maxBodySize: customMaxSize);
@@ -566,7 +566,7 @@ public class OpenAIRequestParserTests
         var json = JsonSerializer.Serialize(new
         {
             model = "gpt-4",
-            messages = new[] { new { role = "user", content = "Hello" } }
+            messages = new[] { new { role = "user", content = "Hello" } },
         });
         var context = CreateHttpContextWithBody(json, contentLength: json.Length, throwOnConfig: true);
 
@@ -584,7 +584,7 @@ public class OpenAIRequestParserTests
         var json = JsonSerializer.Serialize(new
         {
             model = "gpt-4",
-            messages = new[] { new { role = "user", content = "Hello" } }
+            messages = new[] { new { role = "user", content = "Hello" } },
         });
         var context = CreateHttpContextWithBody(json, contentLength: json.Length, nullOptions: true);
 
@@ -606,7 +606,7 @@ public class OpenAIRequestParserTests
         var json = JsonSerializer.Serialize(new
         {
             model = "gpt-4",
-            messages = new[] { new { role = "user", content = "Hello" } }
+            messages = new[] { new { role = "user", content = "Hello" } },
         });
         var context = CreateHttpContextWithBody(json);
 
@@ -629,7 +629,7 @@ public class OpenAIRequestParserTests
         var json = JsonSerializer.Serialize(new
         {
             model = "gpt-4",
-            messages = new[] { new { role = "user", content = "Hello" } }
+            messages = new[] { new { role = "user", content = "Hello" } },
         });
         var context = CreateHttpContextWithBody(json, contentLength: null);
 
@@ -649,7 +649,7 @@ public class OpenAIRequestParserTests
         var json = JsonSerializer.Serialize(new
         {
             model = "gpt-4",
-            messages = new[] { new { role = "user", content = longContent } }
+            messages = new[] { new { role = "user", content = longContent } },
         });
         var context = CreateHttpContextWithBody(json);
 
@@ -669,7 +669,7 @@ public class OpenAIRequestParserTests
         var json = JsonSerializer.Serialize(new
         {
             model = "gpt-4",
-            messages = new[] { new { role = "user", content = unicodeContent } }
+            messages = new[] { new { role = "user", content = unicodeContent } },
         });
         var context = CreateHttpContextWithBody(json);
 
@@ -689,7 +689,7 @@ public class OpenAIRequestParserTests
         var json = JsonSerializer.Serialize(new
         {
             model = "gpt-4",
-            messages = new[] { new { role = "user", content = nestedContent } }
+            messages = new[] { new { role = "user", content = nestedContent } },
         });
         var context = CreateHttpContextWithBody(json);
 
@@ -709,7 +709,7 @@ public class OpenAIRequestParserTests
         {
             model = "gpt-4",
             messages = new[] { new { role = "user", content = "Hello" } },
-            stop = new[] { "STOP", "END", "HALT" }
+            stop = new[] { "STOP", "END", "HALT" },
         });
         var context = CreateHttpContextWithBody(json);
 
@@ -729,7 +729,7 @@ public class OpenAIRequestParserTests
         {
             model = "gpt-4",
             messages = new[] { new { role = "user", content = "Hello" } },
-            tool_choice = new { type = "function", function = new { name = "get_weather" } }
+            tool_choice = new { type = "function", function = new { name = "get_weather" } },
         });
         var context = CreateHttpContextWithBody(json);
 
@@ -749,7 +749,7 @@ public class OpenAIRequestParserTests
         {
             model = "gpt-4",
             messages = new[] { new { role = "user", content = "Hello" } },
-            max_tokens = 0
+            max_tokens = 0,
         });
         var context = CreateHttpContextWithBody(json);
 
@@ -768,7 +768,7 @@ public class OpenAIRequestParserTests
         {
             model = "gpt-4",
             messages = new[] { new { role = "user", content = "Hello" } },
-            temperature = 0.0
+            temperature = 0.0,
         });
         var context = CreateHttpContextWithBody(json);
 
@@ -818,7 +818,7 @@ public class OpenAIRequestParserTests
         {
             var config = new SynaxisConfiguration
             {
-                MaxRequestBodySize = maxBodySize.Value
+                MaxRequestBodySize = maxBodySize.Value,
             };
             services.Configure<SynaxisConfiguration>(opts =>
             {

@@ -24,23 +24,23 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                 entry.Id = Guid.NewGuid();
             }
 
-            _dbContext.Deviations.Add(entry);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            this._dbContext.Deviations.Add(entry);
+            await this._dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<IReadOnlyList<DeviationEntry>> ListAsync(Guid tenantId, CancellationToken cancellationToken = default)
         {
-            return await _dbContext.Deviations
+            return await this._dbContext.Deviations
                 .AsNoTracking()
                 .Where(d => d.TenantId == tenantId)
                 .OrderByDescending(d => d.CreatedAt)
-                .ToListAsync(cancellationToken);
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
         public async Task UpdateStatusAsync(Guid deviationId, DeviationStatus status, CancellationToken cancellationToken = default)
         {
-            var deviation = await _dbContext.Deviations
-                .FirstOrDefaultAsync(d => d.Id == deviationId, cancellationToken);
+            var deviation = await this._dbContext.Deviations
+                .FirstOrDefaultAsync(d => d.Id == deviationId, cancellationToken).ConfigureAwait(false);
 
             if (deviation == null)
             {
@@ -48,7 +48,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
             }
 
             deviation.Status = status;
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await this._dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 }

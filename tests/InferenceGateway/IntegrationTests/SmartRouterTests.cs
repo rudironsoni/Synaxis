@@ -29,19 +29,19 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
         public SmartRouterTests(ITestOutputHelper output)
         {
-            _output = output ?? throw new ArgumentNullException(nameof(output));
-            _mockModelResolver = new Mock<IModelResolver>();
-            _mockCostService = new Mock<ICostService>();
-            _mockHealthStore = new Mock<IHealthStore>();
-            _mockQuotaTracker = new Mock<IQuotaTracker>();
-            _mockLogger = new Mock<ILogger<SmartRouter>>();
+            this._output = output ?? throw new ArgumentNullException(nameof(output));
+            this._mockModelResolver = new Mock<IModelResolver>();
+            this._mockCostService = new Mock<ICostService>();
+            this._mockHealthStore = new Mock<IHealthStore>();
+            this._mockQuotaTracker = new Mock<IQuotaTracker>();
+            this._mockLogger = new Mock<ILogger<SmartRouter>>();
 
-            _smartRouter = new SmartRouter(
-                _mockModelResolver.Object,
-                _mockCostService.Object,
-                _mockHealthStore.Object,
-                _mockQuotaTracker.Object,
-                _mockLogger.Object
+            this._smartRouter = new SmartRouter(
+                this._mockModelResolver.Object,
+                this._mockCostService.Object,
+                this._mockHealthStore.Object,
+                this._mockQuotaTracker.Object,
+                this._mockLogger.Object
             );
         }
 
@@ -57,16 +57,16 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 new CanonicalModelId(modelId, modelId),
                 new List<ProviderConfig>());
 
-            _mockModelResolver
+            this._mockModelResolver
                 .Setup(x => x.ResolveAsync(modelId, EndpointKind.ChatCompletions, It.IsAny<RequiredCapabilities>()))
                 .ReturnsAsync(resolutionResult);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
-                _smartRouter.GetCandidatesAsync(modelId, streaming, cancellationToken));
+                this._smartRouter.GetCandidatesAsync(modelId, streaming, cancellationToken));
 
             Assert.Contains("No providers available for model 'unknown-model'", exception.Message);
-            _mockLogger.Verify(
+            this._mockLogger.Verify(
                 x => x.Log(
                     LogLevel.Warning,
                     It.IsAny<EventId>(),
@@ -87,39 +87,39 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var candidates = new List<ProviderConfig>
             {
                 new ProviderConfig { Key = "healthy-provider", Tier = 0 },
-                new ProviderConfig { Key = "unhealthy-provider", Tier = 1 }
+                new ProviderConfig { Key = "unhealthy-provider", Tier = 1 },
             };
 
             var resolutionResult = new ResolutionResult(modelId,
                 new CanonicalModelId(modelId, modelId),
                 candidates);
 
-            _mockModelResolver
+            this._mockModelResolver
                 .Setup(x => x.ResolveAsync(modelId, EndpointKind.ChatCompletions, It.IsAny<RequiredCapabilities>()))
                 .ReturnsAsync(resolutionResult);
 
-            _mockHealthStore
+            this._mockHealthStore
                 .Setup(x => x.IsHealthyAsync("healthy-provider", cancellationToken))
                 .ReturnsAsync(true);
-            _mockHealthStore
+            this._mockHealthStore
                 .Setup(x => x.IsHealthyAsync("unhealthy-provider", cancellationToken))
                 .ReturnsAsync(false);
 
-            _mockQuotaTracker
+            this._mockQuotaTracker
                 .Setup(x => x.CheckQuotaAsync(It.IsAny<string>(), cancellationToken))
                 .ReturnsAsync(true);
 
-            _mockCostService
+            this._mockCostService
                 .Setup(x => x.GetCostAsync(It.IsAny<string>(), modelId, cancellationToken))
                 .ReturnsAsync(new ModelCost { Provider = "healthy-provider", Model = modelId, CostPerToken = 0.001m });
 
             // Act
-            var result = await _smartRouter.GetCandidatesAsync(modelId, streaming, cancellationToken);
+            var result = await this._smartRouter.GetCandidatesAsync(modelId, streaming, cancellationToken);
 
             // Assert
             Assert.Single(result);
             Assert.Equal("healthy-provider", result[0].Key);
-            _mockLogger.Verify(
+            this._mockLogger.Verify(
                 x => x.Log(
                     LogLevel.Debug,
                     It.IsAny<EventId>(),
@@ -140,39 +140,39 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var candidates = new List<ProviderConfig>
             {
                 new ProviderConfig { Key = "within-quota-provider", Tier = 0 },
-                new ProviderConfig { Key = "exceeded-quota-provider", Tier = 1 }
+                new ProviderConfig { Key = "exceeded-quota-provider", Tier = 1 },
             };
 
             var resolutionResult = new ResolutionResult(modelId,
                 new CanonicalModelId(modelId, modelId),
                 candidates);
 
-            _mockModelResolver
+            this._mockModelResolver
                 .Setup(x => x.ResolveAsync(modelId, EndpointKind.ChatCompletions, It.IsAny<RequiredCapabilities>()))
                 .ReturnsAsync(resolutionResult);
 
-            _mockHealthStore
+            this._mockHealthStore
                 .Setup(x => x.IsHealthyAsync(It.IsAny<string>(), cancellationToken))
                 .ReturnsAsync(true);
 
-            _mockQuotaTracker
+            this._mockQuotaTracker
                 .Setup(x => x.CheckQuotaAsync("within-quota-provider", cancellationToken))
                 .ReturnsAsync(true);
-            _mockQuotaTracker
+            this._mockQuotaTracker
                 .Setup(x => x.CheckQuotaAsync("exceeded-quota-provider", cancellationToken))
                 .ReturnsAsync(false);
 
-            _mockCostService
+            this._mockCostService
                 .Setup(x => x.GetCostAsync(It.IsAny<string>(), modelId, cancellationToken))
                 .ReturnsAsync(new ModelCost { Provider = "within-quota-provider", Model = modelId, CostPerToken = 0.001m });
 
             // Act
-            var result = await _smartRouter.GetCandidatesAsync(modelId, streaming, cancellationToken);
+            var result = await this._smartRouter.GetCandidatesAsync(modelId, streaming, cancellationToken);
 
             // Assert
             Assert.Single(result);
             Assert.Equal("within-quota-provider", result[0].Key);
-            _mockLogger.Verify(
+            this._mockLogger.Verify(
                 x => x.Log(
                     LogLevel.Debug,
                     It.IsAny<EventId>(),
@@ -195,39 +195,39 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 new ProviderConfig { Key = "paid-tier1", Tier = 1 },
                 new ProviderConfig { Key = "free-tier2", Tier = 2 },
                 new ProviderConfig { Key = "free-tier1", Tier = 1 },
-                new ProviderConfig { Key = "paid-tier2", Tier = 2 }
+                new ProviderConfig { Key = "paid-tier2", Tier = 2 },
             };
 
             var resolutionResult = new ResolutionResult(modelId,
                 new CanonicalModelId(modelId, modelId),
                 candidates);
 
-            _mockModelResolver
+            this._mockModelResolver
                 .Setup(x => x.ResolveAsync(modelId, EndpointKind.ChatCompletions, It.IsAny<RequiredCapabilities>()))
                 .ReturnsAsync(resolutionResult);
 
-            _mockHealthStore
+            this._mockHealthStore
                 .Setup(x => x.IsHealthyAsync(It.IsAny<string>(), cancellationToken))
                 .ReturnsAsync(true);
-            _mockQuotaTracker
+            this._mockQuotaTracker
                 .Setup(x => x.CheckQuotaAsync(It.IsAny<string>(), cancellationToken))
                 .ReturnsAsync(true);
 
-            _mockCostService
+            this._mockCostService
                 .Setup(x => x.GetCostAsync("paid-tier1", modelId, cancellationToken))
                 .ReturnsAsync(new ModelCost { CostPerToken = 0.002m, FreeTier = false });
-            _mockCostService
+            this._mockCostService
                 .Setup(x => x.GetCostAsync("free-tier2", modelId, cancellationToken))
                 .ReturnsAsync(new ModelCost { CostPerToken = 0.000m, FreeTier = true });
-            _mockCostService
+            this._mockCostService
                 .Setup(x => x.GetCostAsync("free-tier1", modelId, cancellationToken))
                 .ReturnsAsync(new ModelCost { CostPerToken = 0.000m, FreeTier = true });
-            _mockCostService
+            this._mockCostService
                 .Setup(x => x.GetCostAsync("paid-tier2", modelId, cancellationToken))
                 .ReturnsAsync(new ModelCost { CostPerToken = 0.001m, FreeTier = false });
 
             // Act
-            var result = await _smartRouter.GetCandidatesAsync(modelId, streaming, cancellationToken);
+            var result = await this._smartRouter.GetCandidatesAsync(modelId, streaming, cancellationToken);
 
             // Assert - should be sorted: free first (by cost), then paid (by cost), then by tier
             Assert.Equal(4, result.Count);
@@ -261,16 +261,16 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 new CanonicalModelId(modelId, modelId),
                 new List<ProviderConfig>());
 
-            _mockModelResolver
+            this._mockModelResolver
                 .Setup(x => x.ResolveAsync(modelId, EndpointKind.ChatCompletions, It.IsAny<RequiredCapabilities>()))
                 .ReturnsAsync(resolutionResult);
 
             // Act
             await Assert.ThrowsAsync<ArgumentException>(() =>
-                _smartRouter.GetCandidatesAsync(modelId, streaming, cancellationToken));
+                this._smartRouter.GetCandidatesAsync(modelId, streaming, cancellationToken));
 
             // Assert - Verify that capabilities were passed through
-            _mockModelResolver.Verify(
+            this._mockModelResolver.Verify(
                 x => x.ResolveAsync(
                     modelId,
                     EndpointKind.ChatCompletions,
@@ -288,29 +288,29 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             var candidates = new List<ProviderConfig>
             {
-                new ProviderConfig { Key = "provider-without-cost", Tier = 0 }
+                new ProviderConfig { Key = "provider-without-cost", Tier = 0 },
             };
 
             var resolutionResult = new ResolutionResult(modelId,
                 new CanonicalModelId(modelId, modelId),
                 candidates);
 
-            _mockModelResolver
+            this._mockModelResolver
                 .Setup(x => x.ResolveAsync(modelId, EndpointKind.ChatCompletions, It.IsAny<RequiredCapabilities>()))
                 .ReturnsAsync(resolutionResult);
 
-            _mockHealthStore
+            this._mockHealthStore
                 .Setup(x => x.IsHealthyAsync(It.IsAny<string>(), cancellationToken))
                 .ReturnsAsync(true);
-            _mockQuotaTracker
+            this._mockQuotaTracker
                 .Setup(x => x.CheckQuotaAsync(It.IsAny<string>(), cancellationToken))
                 .ReturnsAsync(true);
-            _mockCostService
+            this._mockCostService
                 .Setup(x => x.GetCostAsync(It.IsAny<string>(), modelId, cancellationToken))
                 .ReturnsAsync((ModelCost?)null);
 
             // Act
-            var result = await _smartRouter.GetCandidatesAsync(modelId, streaming, cancellationToken);
+            var result = await this._smartRouter.GetCandidatesAsync(modelId, streaming, cancellationToken);
 
             // Assert
             Assert.Single(result);

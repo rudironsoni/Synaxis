@@ -53,7 +53,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
                 Id = "1",
                 Provider = "TestProvider",
                 AccessToken = "token-123",
-                ExpiresAt = DateTimeOffset.UtcNow.AddHours(1)
+                ExpiresAt = DateTimeOffset.UtcNow.AddHours(1),
             };
 
             await manager.AddOrUpdateAccountAsync(acc);
@@ -72,7 +72,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
             {
                 AccessToken = "new-token",
                 RefreshToken = "new-refresh",
-                ExpiresInSeconds = 3600
+                ExpiresInSeconds = 3600,
             };
 
             mockStrat.Setup(s => s.RefreshTokenAsync(It.IsAny<IdentityAccount>(), It.IsAny<CancellationToken>()))
@@ -84,7 +84,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
                 Provider = "TestProvider",
                 AccessToken = "old-token",
                 RefreshToken = "refresh-1",
-                ExpiresAt = DateTimeOffset.UtcNow.AddHours(-1) // expired
+                ExpiresAt = DateTimeOffset.UtcNow.AddHours(-1), // expired
             };
 
             var mockStore = new Mock<ISecureTokenStore>();
@@ -115,7 +115,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
             {
                 AccessToken = "new-access-token",
                 RefreshToken = "new-refresh-token",
-                ExpiresInSeconds = 7200
+                ExpiresInSeconds = 7200,
             };
 
             mockStrat.Setup(s => s.RefreshTokenAsync(It.IsAny<IdentityAccount>(), It.IsAny<CancellationToken>()))
@@ -129,7 +129,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
                 Provider = "TestProvider",
                 AccessToken = "old-token",
                 RefreshToken = "valid-refresh-token",
-                ExpiresAt = DateTimeOffset.UtcNow.AddMinutes(-5) // expired
+                ExpiresAt = DateTimeOffset.UtcNow.AddMinutes(-5), // expired
             };
 
             await manager.AddOrUpdateAccountAsync(account);
@@ -161,7 +161,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
                 Provider = "TestProvider",
                 AccessToken = "old-token",
                 RefreshToken = "expired-refresh-token",
-                ExpiresAt = DateTimeOffset.UtcNow.AddHours(-1)
+                ExpiresAt = DateTimeOffset.UtcNow.AddHours(-1),
             };
 
             await manager.AddOrUpdateAccountAsync(account);
@@ -202,7 +202,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
                 Id = "1",
                 Provider = "TestProvider",
                 AccessToken = "test-token",
-                Email = "test@example.com"
+                Email = "test@example.com",
             };
 
             await manager.AddOrUpdateAccountAsync(account);
@@ -242,7 +242,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
                 Id = "1",
                 Provider = "NewProvider",
                 AccessToken = "new-token",
-                Email = "new@example.com"
+                Email = "new@example.com",
             };
 
             await manager.AddOrUpdateAccountAsync(account);
@@ -261,7 +261,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
             {
                 Id = "1",
                 Provider = "TestProvider",
-                AccessToken = "existing-token"
+                AccessToken = "existing-token",
             };
 
             mockStore.Setup(s => s.LoadAsync()).ReturnsAsync(new List<IdentityAccount> { existingAccount });
@@ -277,7 +277,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
             {
                 Id = "1",
                 Provider = "TestProvider",
-                AccessToken = ""
+                AccessToken = "",
             };
 
             await manager.AddOrUpdateAccountAsync(newAccount);
@@ -296,7 +296,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
             var authResult = new AuthResult
             {
                 Status = "Success",
-                Message = "Authentication completed"
+                Message = "Authentication completed",
             };
 
             mockStrat.Setup(s => s.CompleteFlowAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))

@@ -20,9 +20,9 @@ public class SecurityAuditAgentTests
 
     public SecurityAuditAgentTests()
     {
-        _serviceProviderMock = new Mock<IServiceProvider>();
-        _loggerMock = new Mock<ILogger<SecurityAuditAgent>>();
-        _agent = new SecurityAuditAgent(_serviceProviderMock.Object, _loggerMock.Object);
+        this._serviceProviderMock = new Mock<IServiceProvider>();
+        this._loggerMock = new Mock<ILogger<SecurityAuditAgent>>();
+        this._agent = new SecurityAuditAgent(this._serviceProviderMock.Object, this._loggerMock.Object);
     }
 
     [Fact]
@@ -38,23 +38,23 @@ public class SecurityAuditAgentTests
         var alertToolMock = new Mock<IAlertTool>();
         var auditToolMock = new Mock<IAuditTool>();
 
-        scopeMock.Setup(s => s.ServiceProvider).Returns(_serviceProviderMock.Object);
-        _serviceProviderMock.Setup(sp => sp.GetService(typeof(ControlPlaneDbContext)))
+        scopeMock.Setup(s => s.ServiceProvider).Returns(this._serviceProviderMock.Object);
+        this._serviceProviderMock.Setup(sp => sp.GetService(typeof(ControlPlaneDbContext)))
             .Returns(dbMock.Object);
-        _serviceProviderMock.Setup(sp => sp.GetService(typeof(IConfiguration)))
+        this._serviceProviderMock.Setup(sp => sp.GetService(typeof(IConfiguration)))
             .Returns(configMock.Object);
-        _serviceProviderMock.Setup(sp => sp.GetService(typeof(IAlertTool)))
+        this._serviceProviderMock.Setup(sp => sp.GetService(typeof(IAlertTool)))
             .Returns(alertToolMock.Object);
-        _serviceProviderMock.Setup(sp => sp.GetService(typeof(IAuditTool)))
+        this._serviceProviderMock.Setup(sp => sp.GetService(typeof(IAuditTool)))
             .Returns(auditToolMock.Object);
 
         var scopeFactoryMock = new Mock<IServiceScopeFactory>();
         scopeFactoryMock.Setup(f => f.CreateScope()).Returns(scopeMock.Object);
-        _serviceProviderMock.Setup(sp => sp.GetService(typeof(IServiceScopeFactory)))
+        this._serviceProviderMock.Setup(sp => sp.GetService(typeof(IServiceScopeFactory)))
             .Returns(scopeFactoryMock.Object);
 
         // Act
-        await _agent.Execute(contextMock.Object);
+        await this._agent.Execute(contextMock.Object);
 
         // Assert
         Assert.True(true); // Test that execution completes
@@ -73,26 +73,26 @@ public class SecurityAuditAgentTests
         var alertToolMock = new Mock<IAlertTool>();
         var auditToolMock = new Mock<IAuditTool>();
 
-        scopeMock.Setup(s => s.ServiceProvider).Returns(_serviceProviderMock.Object);
-        _serviceProviderMock.Setup(sp => sp.GetService(typeof(ControlPlaneDbContext)))
+        scopeMock.Setup(s => s.ServiceProvider).Returns(this._serviceProviderMock.Object);
+        this._serviceProviderMock.Setup(sp => sp.GetService(typeof(ControlPlaneDbContext)))
             .Returns(dbMock.Object);
-        _serviceProviderMock.Setup(sp => sp.GetService(typeof(IConfiguration)))
+        this._serviceProviderMock.Setup(sp => sp.GetService(typeof(IConfiguration)))
             .Returns(configMock.Object);
-        _serviceProviderMock.Setup(sp => sp.GetService(typeof(IAlertTool)))
+        this._serviceProviderMock.Setup(sp => sp.GetService(typeof(IAlertTool)))
             .Returns(alertToolMock.Object);
-        _serviceProviderMock.Setup(sp => sp.GetService(typeof(IAuditTool)))
+        this._serviceProviderMock.Setup(sp => sp.GetService(typeof(IAuditTool)))
             .Returns(auditToolMock.Object);
 
         var scopeFactoryMock = new Mock<IServiceScopeFactory>();
         scopeFactoryMock.Setup(f => f.CreateScope()).Returns(scopeMock.Object);
-        _serviceProviderMock.Setup(sp => sp.GetService(typeof(IServiceScopeFactory)))
+        this._serviceProviderMock.Setup(sp => sp.GetService(typeof(IServiceScopeFactory)))
             .Returns(scopeFactoryMock.Object);
 
         // Act
-        await _agent.Execute(contextMock.Object);
+        await this._agent.Execute(contextMock.Object);
 
         // Assert
-        _loggerMock.Verify(
+        this._loggerMock.Verify(
             x => x.Log(
                 LogLevel.Information,
                 It.IsAny<EventId>(),

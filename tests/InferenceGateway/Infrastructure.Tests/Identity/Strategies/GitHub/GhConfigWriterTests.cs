@@ -13,24 +13,24 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
 
         public GhConfigWriterTests()
         {
-            _origHome = Environment.GetEnvironmentVariable("HOME") ?? string.Empty;
-            _tempHome = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-            Directory.CreateDirectory(_tempHome);
-            Environment.SetEnvironmentVariable("HOME", _tempHome);
+            this._origHome = Environment.GetEnvironmentVariable("HOME") ?? string.Empty;
+            this._tempHome = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            Directory.CreateDirectory(this._tempHome);
+            Environment.SetEnvironmentVariable("HOME", this._tempHome);
         }
 
         public void Dispose()
         {
-            Environment.SetEnvironmentVariable("HOME", _origHome);
-            if (Directory.Exists(_tempHome))
+            Environment.SetEnvironmentVariable("HOME", this._origHome);
+            if (Directory.Exists(this._tempHome))
             {
-                Directory.Delete(_tempHome, recursive: true);
+                Directory.Delete(this._tempHome, recursive: true);
             }
         }
 
         private string GetConfigPath()
         {
-            return Path.Combine(_tempHome, ".config", "gh", "hosts.yml");
+            return Path.Combine(this._tempHome, ".config", "gh", "hosts.yml");
         }
 
         [Fact]
@@ -39,7 +39,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             var token = "ghp_testtoken123";
             await GhConfigWriter.WriteTokenAsync(token);
 
-            var configPath = GetConfigPath();
+            var configPath = this.GetConfigPath();
             Assert.True(File.Exists(configPath));
             var content = await File.ReadAllTextAsync(configPath);
             Assert.Contains("github.com:", content);
@@ -53,7 +53,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             var customUser = "custom-user";
             await GhConfigWriter.WriteTokenAsync(token, customUser);
 
-            var content = await File.ReadAllTextAsync(GetConfigPath());
+            var content = await File.ReadAllTextAsync(this.GetConfigPath());
             Assert.Contains($"user: {customUser}", content);
         }
 
@@ -62,7 +62,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
         {
             var oldToken = "ghp_oldtoken";
             var newToken = "ghp_newtoken";
-            var configPath = GetConfigPath();
+            var configPath = this.GetConfigPath();
             Directory.CreateDirectory(Path.GetDirectoryName(configPath)!);
             await File.WriteAllTextAsync(configPath, $@"github.com:
   user: old-user
@@ -79,7 +79,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
         public async Task WriteTokenAsync_PreservesOtherHosts()
         {
             var githubToken = "ghp_githubtoken";
-            var configPath = GetConfigPath();
+            var configPath = this.GetConfigPath();
             Directory.CreateDirectory(Path.GetDirectoryName(configPath)!);
             await File.WriteAllTextAsync(configPath, @"enterprise.github.com:
   user: enterprise-user
@@ -97,7 +97,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
         public async Task WriteTokenAsync_InitializesEmptyFile_WhenFileIsCorrupted()
         {
             var token = "ghp_testtoken789";
-            var configPath = GetConfigPath();
+            var configPath = this.GetConfigPath();
             Directory.CreateDirectory(Path.GetDirectoryName(configPath)!);
             await File.WriteAllTextAsync(configPath, "   ");
 
@@ -112,7 +112,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
         public async Task WriteTokenAsync_AppendsBlock_WhenNoExistingGithubBlock()
         {
             var token = "ghp_testtokenabc";
-            var configPath = GetConfigPath();
+            var configPath = this.GetConfigPath();
             Directory.CreateDirectory(Path.GetDirectoryName(configPath)!);
             await File.WriteAllTextAsync(configPath, @"gitlab.com:
   user: gitlab-user
@@ -130,7 +130,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
         public async Task WriteTokenAsync_HandlesMixedLineEndings()
         {
             var token = "ghp_testtokendef";
-            var configPath = GetConfigPath();
+            var configPath = this.GetConfigPath();
             Directory.CreateDirectory(Path.GetDirectoryName(configPath)!);
             await File.WriteAllTextAsync(configPath, "github.com:\r\n  user: test\r\n  oauth_token: old");
 
@@ -144,7 +144,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
         public async Task WriteTokenAsync_CreatesDirectory_WhenNotExists()
         {
             var token = "ghp_testtokenghi";
-            var configDir = Path.Combine(_tempHome, ".config", "gh");
+            var configDir = Path.Combine(this._tempHome, ".config", "gh");
             Assert.False(Directory.Exists(configDir));
 
             await GhConfigWriter.WriteTokenAsync(token);
@@ -159,7 +159,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             var token = "ghp_special=token-with_underscores.and+dots";
             await GhConfigWriter.WriteTokenAsync(token);
 
-            var content = await File.ReadAllTextAsync(GetConfigPath());
+            var content = await File.ReadAllTextAsync(this.GetConfigPath());
             Assert.Contains($"oauth_token: {token}", content);
         }
 
@@ -169,7 +169,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             var oldUser = "old-user";
             var newUser = "new-user";
             var newToken = "ghp_newtokenxyz";
-            var configPath = GetConfigPath();
+            var configPath = this.GetConfigPath();
             Directory.CreateDirectory(Path.GetDirectoryName(configPath)!);
             await File.WriteAllTextAsync(configPath, $@"github.com:
   user: {oldUser}

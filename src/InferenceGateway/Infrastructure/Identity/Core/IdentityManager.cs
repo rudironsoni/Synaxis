@@ -31,24 +31,24 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
             // Subscribe to account authenticated events from strategies
             try
             {
-                foreach (var s in _strategies)
+                foreach (var s in this._strategies)
                 {
                     s.AccountAuthenticated += async (sender, eventArgs) =>
                     {
                         try
                         {
-                            await AddOrUpdateAccountAsync(eventArgs.Account).ConfigureAwait(false);
+                            await this.AddOrUpdateAccountAsync(eventArgs.Account).ConfigureAwait(false);
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogError(ex, "Error adding/updating account from strategy event");
+                            this._logger.LogError(ex, "Error adding/updating account from strategy event");
                         }
                     };
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to subscribe to auth strategy events");
+                this._logger.LogError(ex, "Failed to subscribe to auth strategy events");
             }
 
             // Load existing accounts from store synchronously at startup
@@ -56,21 +56,21 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
             {
                 try
                 {
-                    var loaded = await _store.LoadAsync().ConfigureAwait(false);
-                    lock (_lock)
+                    var loaded = await this._store.LoadAsync().ConfigureAwait(false);
+                    lock (this._lock)
                     {
-                        _accounts.Clear();
+                        this._accounts.Clear();
                         if (loaded != null)
                         {
-                            _accounts.AddRange(loaded);
+                            this._accounts.AddRange(loaded);
                         }
                     }
-                    _initialLoadComplete.TrySetResult(true);
+                    this._initialLoadComplete.TrySetResult(true);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to load identity accounts from store");
-                    _initialLoadComplete.TrySetException(ex);
+                    this._logger.LogError(ex, "Failed to load identity accounts from store");
+                    this._initialLoadComplete.TrySetException(ex);
                 }
             });
         }
@@ -78,13 +78,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
         public Task StartAsync(CancellationToken cancellationToken)
         {
             // Start a timer to refresh tokens periodically
-            this._timer = new Timer(async _ => await RefreshLoopAsync(), null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
+            this._timer = new Timer(async _ => await this.RefreshLoopAsync(), null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1)).ConfigureAwait(false);
             return Task.CompletedTask;
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            _timer?.Change(Timeout.Infinite, 0);
+            this._timer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
 
@@ -99,44 +99,50 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
 
         public void Dispose()
         {
-            _timer?.Dispose();
+            this._timer?.Dispose();
         }
 
         private async Task RefreshLoopAsync()
         {
             List<IdentityAccount> toRefresh;
-            lock (_lock)
+            lock (this._lock)
             {
                 var now = DateTimeOffset.UtcNow;
-                toRefresh = _accounts.Where(a => a.ExpiresAt.HasValue && a.RefreshToken != null && a.ExpiresAt.Value <= now.AddMinutes(5)).ToList();
+                toRefresh = this._accounts.Where(a => a.ExpiresAt.HasValue && a.RefreshToken != null && a.ExpiresAt.Value <= now.AddMinutes(5)).ToList();
             }
 
             foreach (var acc in toRefresh)
             {
                 try
                 {
-                    var strat = FindStrategyForProvider(acc.Provider);
+                    var strat = this.FindStrategyForProvider(acc.Provider);
                     if (strat == null)
                     {
-                        _logger.LogWarning("No auth strategy found for provider {Provider}", acc.Provider);
+                        this._logger.LogWarning("No auth strategy found for provider {Provider}", acc.Provider);
                         continue;
                     }
 
                     var tokenResp = await strat.RefreshTokenAsync(acc, CancellationToken.None).ConfigureAwait(false);
                     if (tokenResp != null)
                     {
-                        lock (_lock)
+                        lock (this._lock)
                         {
                             acc.AccessToken = tokenResp.AccessToken ?? acc.AccessToken;
-                            if (!string.IsNullOrEmpty(tokenResp.RefreshToken)) acc.RefreshToken = tokenResp.RefreshToken;
+                            if (!string.IsNullOrEmpty(tokenResp.RefreshToken))
+                            {
+                                acc.RefreshToken = tokenResp.RefreshToken;
+                            }
+
                             if (tokenResp.ExpiresInthis.Seconds.HasValue)
+                            {
                                 acc.ExpiresAt = DateTimeOffset.UtcNow.AddSeconds(tokenResp.ExpiresInSeconds.Value);
+                            }
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error refreshing token for provider {Provider}", acc.Provider);
+                    this._logger.LogError(ex, "Error refreshing token for provider {Provider}", acc.Provider);
                 }
             }
 
@@ -144,28 +150,34 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
             try
             {
                 List<IdentityAccount> snapshot;
-                lock (_lock)
+                lock (this._lock)
                 {
-                    snapshot = _accounts.Select(a => a).ToList();
+                    snapshot = this._accounts.Select(a => a).ToList();
                 }
-                await _store.SaveAsync(snapshot).ConfigureAwait(false);
+                await this._store.SaveAsync(snapshot).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to save accounts after refresh loop");
+                this._logger.LogError(ex, "Failed to save accounts after refresh loop");
             }
         }
 
         private IAuthStrategy? FindStrategyForProvider(string provider)
         {
-            if (string.IsNullOrEmpty(provider)) return null;
+            if (string.IsNullOrEmpty(provider))
+            {
+                return null;
+            }
+
             var prov = provider.Trim();
             // Try exact match on type name or substring match
-            foreach (var s in _strategies)
+            foreach (var s in this._strategies)
             {
                 var name = s.GetType().Name;
                 if (string.Equals(name, prov, StringComparison.OrdinalIgnoreCase) || name.Contains(prov, StringComparison.OrdinalIgnoreCase))
+                {
                     return s;
+                }
             }
 
             // Fallback: return first strategy
@@ -174,10 +186,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
 
         public async Task<AuthResult?> StartAuth(string provider, CancellationToken ct = default)
         {
-            var strat = FindStrategyForProvider(provider);
+            var strat = this.FindStrategyForProvider(provider);
             if (strat == null)
             {
-                _logger.LogWarning("No strategy found for provider {Provider}", provider);
+                this._logger.LogWarning("No strategy found for provider {Provider}", provider);
                 return new AuthResult { Status = "Error", Message = "No strategy found" };
             }
 
@@ -187,10 +199,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
         // New helper to complete auth from external callers by provider
         public async Task<AuthResult> CompleteAuth(string provider, string code, string state)
         {
-            var strat = FindStrategyForProvider(provider);
+            var strat = this.FindStrategyForProvider(provider);
             if (strat == null)
             {
-                _logger.LogWarning("No strategy found for provider {Provider}", provider);
+                this._logger.LogWarning("No strategy found for provider {Provider}", provider);
                 throw new InvalidOperationException("No strategy found");
             }
 
@@ -200,40 +212,48 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
         public async Task<string?> GetToken(string provider, CancellationToken ct = default)
         {
             IdentityAccount? acc;
-            lock (_lock)
+            lock (this._lock)
             {
-                acc = _accounts.FirstOrDefault(a => string.Equals(a.Provider, provider, StringComparison.OrdinalIgnoreCase));
+                acc = this._accounts.FirstOrDefault(a => string.Equals(a.Provider, provider, StringComparison.OrdinalIgnoreCase));
             }
 
             if (acc == null)
+            {
                 return null;
+            }
 
             var now = DateTimeOffset.UtcNow;
             if (acc.ExpiresAt.HasValue && acc.ExpiresAt.Value <= now && !string.IsNullOrEmpty(acc.RefreshToken))
             {
                 try
                 {
-                    var strat = FindStrategyForProvider(provider);
+                    var strat = this.FindStrategyForProvider(provider);
                     if (strat != null)
                     {
                         var tokenResp = await strat.RefreshTokenAsync(acc, ct).ConfigureAwait(false);
                         if (tokenResp != null)
                         {
-                            lock (_lock)
+                            lock (this._lock)
                             {
                                 acc.AccessToken = tokenResp.AccessToken ?? acc.AccessToken;
-                                if (!string.IsNullOrEmpty(tokenResp.RefreshToken)) acc.RefreshToken = tokenResp.RefreshToken;
+                                if (!string.IsNullOrEmpty(tokenResp.RefreshToken))
+                                {
+                                    acc.RefreshToken = tokenResp.RefreshToken;
+                                }
+
                                 if (tokenResp.ExpiresInthis.Seconds.HasValue)
+                                {
                                     acc.ExpiresAt = DateTimeOffset.UtcNow.AddSeconds(tokenResp.ExpiresInSeconds.Value);
+                                }
                             }
 
-                            await _store.SaveAsync(_accounts.Select(a => a).ToList()).ConfigureAwait(false);
+                            await this._store.SaveAsync(this._accounts.Select(a => a).ToList()).ConfigureAwait(false);
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed refreshing token for provider {Provider}", provider);
+                    this._logger.LogError(ex, "Failed refreshing token for provider {Provider}", provider);
                 }
             }
 

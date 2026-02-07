@@ -27,26 +27,36 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
         }
 
         // Platform Schema (tenant-agnostic)
-        public DbSet<Provider> Providers => Set<Provider>();
-        public DbSet<Model> Models => Set<Model>();
+        public DbSet<Provider> Providers => this.Set<Provider>();
+
+        public DbSet<Model> Models => this.Set<Model>();
 
         // Identity Schema (multi-tenant)
-        public DbSet<Organization> Organizations => Set<Organization>();
-        public DbSet<OrganizationSettings> OrganizationSettings => Set<OrganizationSettings>();
-        public DbSet<Group> Groups => Set<Group>();
-        public DbSet<UserRole> UserRoleAssignments => Set<UserRole>();
-        public DbSet<UserOrganizationMembership> UserOrganizationMemberships => Set<UserOrganizationMembership>();
-        public DbSet<UserGroupMembership> UserGroupMemberships => Set<UserGroupMembership>();
+        public DbSet<Organization> Organizations => this.Set<Organization>();
+
+        public DbSet<OrganizationSettings> OrganizationSettings => this.Set<OrganizationSettings>();
+
+        public DbSet<Group> Groups => this.Set<Group>();
+
+        public DbSet<UserRole> UserRoleAssignments => this.Set<UserRole>();
+
+        public DbSet<UserOrganizationMembership> UserOrganizationMemberships => this.Set<UserOrganizationMembership>();
+
+        public DbSet<UserGroupMembership> UserGroupMemberships => this.Set<UserGroupMembership>();
 
         // Operations Schema (runtime)
-        public DbSet<OrganizationProvider> OrganizationProviders => Set<OrganizationProvider>();
-        public DbSet<OrganizationModel> OrganizationModels => Set<OrganizationModel>();
-        public DbSet<RoutingStrategy> RoutingStrategies => Set<RoutingStrategy>();
-        public DbSet<ProviderHealthStatus> ProviderHealthStatuses => Set<ProviderHealthStatus>();
-        public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
+        public DbSet<OrganizationProvider> OrganizationProviders => this.Set<OrganizationProvider>();
+
+        public DbSet<OrganizationModel> OrganizationModels => this.Set<OrganizationModel>();
+
+        public DbSet<RoutingStrategy> RoutingStrategies => this.Set<RoutingStrategy>();
+
+        public DbSet<ProviderHealthStatus> ProviderHealthStatuses => this.Set<ProviderHealthStatus>();
+
+        public DbSet<ApiKey> ApiKeys => this.Set<ApiKey>();
 
         // Audit Schema (logs)
-        public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+        public DbSet<AuditLog> AuditLogs => this.Set<AuditLog>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

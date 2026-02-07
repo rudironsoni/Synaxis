@@ -15,33 +15,33 @@ public class ModelsEndpointDebugTests : IClassFixture<SynaxisWebApplicationFacto
 
     public ModelsEndpointDebugTests(SynaxisWebApplicationFactory factory, ITestOutputHelper output)
     {
-        _factory = factory;
-        _client = factory.CreateClient();
-        _output = output;
+        this._factory = factory;
+        this._client = factory.CreateClient();
+        this._output = output;
     }
 
     [Fact]
     public async Task Debug_GetModels_ReturnsList()
     {
-        var response = await _client.GetAsync("/openai/v1/models");
+        var response = await this._client.GetAsync("/openai/v1/models");
         var content = await response.Content.ReadAsStringAsync();
 
-        _output.WriteLine("Response Status: {0}", response.StatusCode);
-        _output.WriteLine("Response Content: {0}", content);
+        this._output.WriteLine("Response Status: {0}", response.StatusCode);
+        this._output.WriteLine("Response Content: {0}", content);
 
         response.EnsureSuccessStatusCode();
 
         var json = JsonSerializer.Deserialize<JsonElement>(content);
-        _output.WriteLine("Parsed JSON object type: {0}", json.GetProperty("object").GetString());
+        this._output.WriteLine("Parsed JSON object type: {0}", json.GetProperty("object").GetString());
 
         var data = json.GetProperty("data");
-        _output.WriteLine("Number of models: {0}", data.GetArrayLength());
+        this._output.WriteLine("Number of models: {0}", data.GetArrayLength());
 
         if (data.GetArrayLength() > 0)
         {
             var firstModel = data.EnumerateArray().First();
-            _output.WriteLine("First model ID: {0}", firstModel.GetProperty("id").GetString());
-            _output.WriteLine("First model owned_by: {0}", firstModel.GetProperty("owned_by").GetString());
+            this._output.WriteLine("First model ID: {0}", firstModel.GetProperty("id").GetString());
+            this._output.WriteLine("First model owned_by: {0}", firstModel.GetProperty("owned_by").GetString());
         }
 
         Assert.True(data.GetArrayLength() > 0);
@@ -50,19 +50,19 @@ public class ModelsEndpointDebugTests : IClassFixture<SynaxisWebApplicationFacto
     [Fact]
     public async Task Debug_GetModelById_WithSimpleId()
     {
-        var listResponse = await _client.GetAsync("/openai/v1/models");
+        var listResponse = await this._client.GetAsync("/openai/v1/models");
         listResponse.EnsureSuccessStatusCode();
         var listContent = await listResponse.Content.ReadFromJsonAsync<JsonElement>();
         var firstModel = listContent.GetProperty("data").EnumerateArray().First();
         var firstModelId = firstModel.GetProperty("id").GetString();
 
-        _output.WriteLine("Testing with model ID: {0}", firstModelId);
+        this._output.WriteLine("Testing with model ID: {0}", firstModelId);
 
-        var response = await _client.GetAsync($"/openai/v1/models/{firstModelId}");
+        var response = await this._client.GetAsync($"/openai/v1/models/{firstModelId}");
         var responseContent = await response.Content.ReadAsStringAsync();
 
-        _output.WriteLine("Response Status: {0}", response.StatusCode);
-        _output.WriteLine("Response Content: {0}", responseContent);
+        this._output.WriteLine("Response Status: {0}", response.StatusCode);
+        this._output.WriteLine("Response Content: {0}", responseContent);
 
         response.EnsureSuccessStatusCode();
     }

@@ -21,26 +21,26 @@ public class AdminUiE2ETests : IAsyncLifetime
     public async Task InitializeAsync()
     {
         // Check if server is available before running E2E tests
-        _serverAvailable = await CheckServerAvailabilityAsync();
-        if (!_serverAvailable)
+        this._serverAvailable = await this.CheckServerAvailabilityAsync();
+        if (!this._serverAvailable)
         {
             return; // Skip initialization if server is not available
         }
 
-        _playwright = await Playwright.CreateAsync();
-        _browser = await _playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+        this._playwright = await Playwright.CreateAsync();
+        this._browser = await this._playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
         {
-            Headless = true
+            Headless = true,
         });
 
-        _context = await _browser.NewContextAsync(new BrowserNewContextOptions
+        this._context = await this._browser.NewContextAsync(new BrowserNewContextOptions
         {
-            BaseURL = _baseUrl
+            BaseURL = this._baseUrl,
         });
 
-        _api = await _playwright.APIRequest.NewContextAsync(new APIRequestNewContextOptions
+        this._api = await this._playwright.APIRequest.NewContextAsync(new APIRequestNewContextOptions
         {
-            BaseURL = _baseUrl
+            BaseURL = this._baseUrl,
         });
     }
 
@@ -49,7 +49,7 @@ public class AdminUiE2ETests : IAsyncLifetime
         try
         {
             using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(3) };
-            var response = await client.GetAsync($"{_baseUrl}/health/liveness");
+            var response = await client.GetAsync($"{this._baseUrl}/health/liveness");
             return response.IsSuccessStatusCode;
         }
         catch
@@ -60,18 +60,21 @@ public class AdminUiE2ETests : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
-        if (!_serverAvailable) return;
+        if (!this._serverAvailable)
+        {
+            return;
+        }
 
-        await _context.CloseAsync();
-        await _browser.CloseAsync();
-        _playwright.Dispose();
+        await this._context.CloseAsync();
+        await this._browser.CloseAsync();
+        this._playwright.Dispose();
     }
 
     [Fact]
     public async Task AdminLogin_ValidJWT_AllowsAccessToAdminPanel()
     {
         // Skip if server is not available
-        if (!_serverAvailable)
+        if (!this._serverAvailable)
         {
             Assert.True(true, "Skipped - server not available");
             return;
@@ -79,7 +82,7 @@ public class AdminUiE2ETests : IAsyncLifetime
 
         // Arrange
         var validToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiZW1haWwiOiJhZG1pbkBleGFtcGxlLmNvbSJ9.signature";
-        var page = await _context.NewPageAsync();
+        var page = await this._context.NewPageAsync();
 
         // Act
         await page.GotoAsync("/admin/login");
@@ -97,15 +100,15 @@ public class AdminUiE2ETests : IAsyncLifetime
     public async Task AdminShell_DisplaysNavigationMenu()
     {
         // Skip if server is not available
-        if (!_serverAvailable)
+        if (!this._serverAvailable)
         {
             Assert.True(true, "Skipped - server not available");
             return;
         }
 
         // Arrange
-        var page = await _context.NewPageAsync();
-        await SetJwtToken(page, "valid-jwt-token");
+        var page = await this._context.NewPageAsync();
+        await this.SetJwtToken(page, "valid-jwt-token");
 
         // Act
         await page.GotoAsync("/admin");
@@ -122,15 +125,15 @@ public class AdminUiE2ETests : IAsyncLifetime
     public async Task ProviderConfig_DisplaysAllProviders()
     {
         // Skip if server is not available
-        if (!_serverAvailable)
+        if (!this._serverAvailable)
         {
             Assert.True(true, "Skipped - server not available");
             return;
         }
 
         // Arrange
-        var page = await _context.NewPageAsync();
-        await SetJwtToken(page, "valid-jwt-token");
+        var page = await this._context.NewPageAsync();
+        await this.SetJwtToken(page, "valid-jwt-token");
         await page.GotoAsync("/admin/providers");
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
@@ -147,15 +150,15 @@ public class AdminUiE2ETests : IAsyncLifetime
     public async Task ProviderConfig_CanToggleProvider()
     {
         // Skip if server is not available
-        if (!_serverAvailable)
+        if (!this._serverAvailable)
         {
             Assert.True(true, "Skipped - server not available");
             return;
         }
 
         // Arrange
-        var page = await _context.NewPageAsync();
-        await SetJwtToken(page, "valid-jwt-token");
+        var page = await this._context.NewPageAsync();
+        await this.SetJwtToken(page, "valid-jwt-token");
         await page.GotoAsync("/admin/providers");
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await page.WaitForSelectorAsync("text=Groq", new() { Timeout = 5000 });
@@ -172,15 +175,15 @@ public class AdminUiE2ETests : IAsyncLifetime
     public async Task HealthDashboard_DisplaysServiceHealth()
     {
         // Skip if server is not available
-        if (!_serverAvailable)
+        if (!this._serverAvailable)
         {
             Assert.True(true, "Skipped - server not available");
             return;
         }
 
         // Arrange
-        var page = await _context.NewPageAsync();
-        await SetJwtToken(page, "valid-jwt-token");
+        var page = await this._context.NewPageAsync();
+        await this.SetJwtToken(page, "valid-jwt-token");
         await page.GotoAsync("/admin/health");
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
@@ -197,15 +200,15 @@ public class AdminUiE2ETests : IAsyncLifetime
     public async Task HealthDashboard_AutoRefreshes()
     {
         // Skip if server is not available
-        if (!_serverAvailable)
+        if (!this._serverAvailable)
         {
             Assert.True(true, "Skipped - server not available");
             return;
         }
 
         // Arrange
-        var page = await _context.NewPageAsync();
-        await SetJwtToken(page, "valid-jwt-token");
+        var page = await this._context.NewPageAsync();
+        await this.SetJwtToken(page, "valid-jwt-token");
         await page.GotoAsync("/admin/health");
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
@@ -220,15 +223,15 @@ public class AdminUiE2ETests : IAsyncLifetime
     public async Task AdminLogout_RedirectsToLogin()
     {
         // Skip if server is not available
-        if (!_serverAvailable)
+        if (!this._serverAvailable)
         {
             Assert.True(true, "Skipped - server not available");
             return;
         }
 
         // Arrange
-        var page = await _context.NewPageAsync();
-        await SetJwtToken(page, "valid-jwt-token");
+        var page = await this._context.NewPageAsync();
+        await this.SetJwtToken(page, "valid-jwt-token");
         await page.GotoAsync("/admin");
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
@@ -245,14 +248,14 @@ public class AdminUiE2ETests : IAsyncLifetime
     public async Task UnauthenticatedAccess_RedirectsToLogin()
     {
         // Skip if server is not available
-        if (!_serverAvailable)
+        if (!this._serverAvailable)
         {
             Assert.True(true, "Skipped - server not available");
             return;
         }
 
         // Arrange
-        var page = await _context.NewPageAsync();
+        var page = await this._context.NewPageAsync();
 
         // Act - Try to access admin without login
         await page.GotoAsync("/admin/health");
@@ -266,15 +269,15 @@ public class AdminUiE2ETests : IAsyncLifetime
     public async Task AdminSettings_SavesChanges()
     {
         // Skip if server is not available
-        if (!_serverAvailable)
+        if (!this._serverAvailable)
         {
             Assert.True(true, "Skipped - server not available");
             return;
         }
 
         // Arrange
-        var page = await _context.NewPageAsync();
-        await SetJwtToken(page, "valid-jwt-token");
+        var page = await this._context.NewPageAsync();
+        await this.SetJwtToken(page, "valid-jwt-token");
         await page.GotoAsync("/admin/settings");
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 

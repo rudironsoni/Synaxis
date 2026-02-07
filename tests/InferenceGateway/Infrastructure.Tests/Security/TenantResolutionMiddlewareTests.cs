@@ -26,12 +26,12 @@ public class TenantResolutionMiddlewareTests
 
     public TenantResolutionMiddlewareTests()
     {
-        _mockNext = new Mock<RequestDelegate>();
-        _mockLogger = new Mock<ILogger<TenantResolutionMiddleware>>();
-        _mockTenantContext = new Mock<ITenantContext>();
-        _mockApiKeyService = new Mock<IApiKeyService>();
-        _middleware = new TenantResolutionMiddleware(_mockNext.Object, _mockLogger.Object);
-        _httpContext = new DefaultHttpContext();
+        this._mockNext = new Mock<RequestDelegate>();
+        this._mockLogger = new Mock<ILogger<TenantResolutionMiddleware>>();
+        this._mockTenantContext = new Mock<ITenantContext>();
+        this._mockApiKeyService = new Mock<IApiKeyService>();
+        this._middleware = new TenantResolutionMiddleware(this._mockNext.Object, this._mockLogger.Object);
+        this._httpContext = new DefaultHttpContext();
     }
 
     #region Constructor Tests
@@ -40,7 +40,7 @@ public class TenantResolutionMiddlewareTests
     public void Constructor_WithNullNext_ShouldThrowArgumentNullException()
     {
         // Act & Assert
-        var act = () => new TenantResolutionMiddleware(null!, _mockLogger.Object);
+        var act = () => new TenantResolutionMiddleware(null!, this._mockLogger.Object);
         act.Should().Throw<ArgumentNullException>().WithParameterName("next");
     }
 
@@ -48,7 +48,7 @@ public class TenantResolutionMiddlewareTests
     public void Constructor_WithNullLogger_ShouldThrowArgumentNullException()
     {
         // Act & Assert
-        var act = () => new TenantResolutionMiddleware(_mockNext.Object, null!);
+        var act = () => new TenantResolutionMiddleware(this._mockNext.Object, null!);
         act.Should().Throw<ArgumentNullException>().WithParameterName("logger");
     }
 
@@ -64,9 +64,9 @@ public class TenantResolutionMiddlewareTests
         var apiKeyId = Guid.NewGuid();
         var apiKey = "synaxis_build_testkey1234567890_abcdefghijklmnop";
 
-        _httpContext.Request.Headers["Authorization"] = $"Bearer {apiKey}";
+        this._httpContext.Request.Headers["Authorization"] = $"Bearer {apiKey}";
 
-        _mockApiKeyService
+        this._mockApiKeyService
             .Setup(s => s.ValidateApiKeyAsync(apiKey, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ApiKeyValidationResult
             {
@@ -75,22 +75,22 @@ public class TenantResolutionMiddlewareTests
                 ApiKeyId = apiKeyId,
                 Scopes = new[] { "read", "write" },
                 RateLimitRpm = 100,
-                RateLimitTpm = 10000
+                RateLimitTpm = 10000,
             });
 
         // Act
-        await _middleware.InvokeAsync(_httpContext, _mockTenantContext.Object, _mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
 
         // Assert
-        _mockTenantContext.Verify(t => t.SetApiKeyContext(
+        this._mockTenantContext.Verify(t => t.SetApiKeyContext(
             orgId,
             apiKeyId,
             It.Is<string[]>(s => s.SequenceEqual(new[] { "read", "write" })),
             100,
             10000), Times.Once);
 
-        _mockNext.Verify(n => n(_httpContext), Times.Once);
-        _httpContext.Response.StatusCode.Should().Be(StatusCodes.Status200OK);
+        this._mockNext.Verify(n => n(this._httpContext), Times.Once);
+        this._httpContext.Response.StatusCode.Should().Be(StatusCodes.Status200OK);
     }
 
     [Fact]
@@ -98,23 +98,23 @@ public class TenantResolutionMiddlewareTests
     {
         // Arrange
         var apiKey = "synaxis_build_invalidkey";
-        _httpContext.Request.Headers["Authorization"] = $"Bearer {apiKey}";
+        this._httpContext.Request.Headers["Authorization"] = $"Bearer {apiKey}";
 
-        _mockApiKeyService
+        this._mockApiKeyService
             .Setup(s => s.ValidateApiKeyAsync(apiKey, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ApiKeyValidationResult
             {
                 IsValid = false,
-                ErrorMessage = "Invalid API key"
+                ErrorMessage = "Invalid API key",
             });
 
         // Act
-        await _middleware.InvokeAsync(_httpContext, _mockTenantContext.Object, _mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
 
         // Assert
-        _httpContext.Response.StatusCode.Should().Be(StatusCodes.Status401Unauthorized);
-        _mockNext.Verify(n => n(It.IsAny<HttpContext>()), Times.Never);
-        _mockTenantContext.Verify(t => t.SetApiKeyContext(
+        this._httpContext.Response.StatusCode.Should().Be(StatusCodes.Status401Unauthorized);
+        this._mockNext.Verify(n => n(It.IsAny<HttpContext>()), Times.Never);
+        this._mockTenantContext.Verify(t => t.SetApiKeyContext(
             It.IsAny<Guid>(),
             It.IsAny<Guid>(),
             It.IsAny<string[]>(),
@@ -127,21 +127,21 @@ public class TenantResolutionMiddlewareTests
     {
         // Arrange
         var apiKey = "synaxis_build_revokedkey";
-        _httpContext.Request.Headers["Authorization"] = $"Bearer {apiKey}";
+        this._httpContext.Request.Headers["Authorization"] = $"Bearer {apiKey}";
 
-        _mockApiKeyService
+        this._mockApiKeyService
             .Setup(s => s.ValidateApiKeyAsync(apiKey, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ApiKeyValidationResult
             {
                 IsValid = false,
-                ErrorMessage = "API key has been revoked"
+                ErrorMessage = "API key has been revoked",
             });
 
         // Act
-        await _middleware.InvokeAsync(_httpContext, _mockTenantContext.Object, _mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
 
         // Assert
-        _httpContext.Response.StatusCode.Should().Be(StatusCodes.Status401Unauthorized);
+        this._httpContext.Response.StatusCode.Should().Be(StatusCodes.Status401Unauthorized);
     }
 
     [Fact]
@@ -152,23 +152,23 @@ public class TenantResolutionMiddlewareTests
         var apiKeyId = Guid.NewGuid();
         var apiKey = "synaxis_build_testprefix1234567890_secretpart123456";
 
-        _httpContext.Request.Headers["Authorization"] = $"Bearer {apiKey}";
+        this._httpContext.Request.Headers["Authorization"] = $"Bearer {apiKey}";
 
-        _mockApiKeyService
+        this._mockApiKeyService
             .Setup(s => s.ValidateApiKeyAsync(apiKey, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ApiKeyValidationResult
             {
                 IsValid = true,
                 OrganizationId = orgId,
                 ApiKeyId = apiKeyId,
-                Scopes = Array.Empty<string>()
+                Scopes = Array.Empty<string>(),
             });
 
         // Act
-        await _middleware.InvokeAsync(_httpContext, _mockTenantContext.Object, _mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
 
         // Assert
-        _mockApiKeyService.Verify(s => s.ValidateApiKeyAsync(
+        this._mockApiKeyService.Verify(s => s.ValidateApiKeyAsync(
             apiKey, // Full key should be passed for validation
             It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -185,29 +185,29 @@ public class TenantResolutionMiddlewareTests
         var userId = Guid.NewGuid();
         var jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U";
 
-        _httpContext.Request.Headers["Authorization"] = $"Bearer {jwtToken}";
+        this._httpContext.Request.Headers["Authorization"] = $"Bearer {jwtToken}";
 
         // Set up authenticated user with claims
         var claims = new[]
         {
             new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
             new Claim("organization_id", orgId.ToString()),
-            new Claim("scope", "read write admin")
+            new Claim("scope", "read write admin"),
         };
         var identity = new ClaimsIdentity(claims, "TestAuth");
-        _httpContext.User = new ClaimsPrincipal(identity);
+        this._httpContext.User = new ClaimsPrincipal(identity);
 
         // Act
-        await _middleware.InvokeAsync(_httpContext, _mockTenantContext.Object, _mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
 
         // Assert
-        _mockTenantContext.Verify(t => t.SetJwtContext(
+        this._mockTenantContext.Verify(t => t.SetJwtContext(
             orgId,
             userId,
             It.Is<string[]>(s => s.SequenceEqual(new[] { "read", "write", "admin" }))), Times.Once);
 
-        _mockNext.Verify(n => n(_httpContext), Times.Once);
-        _httpContext.Response.StatusCode.Should().Be(StatusCodes.Status200OK);
+        this._mockNext.Verify(n => n(this._httpContext), Times.Once);
+        this._httpContext.Response.StatusCode.Should().Be(StatusCodes.Status200OK);
     }
 
     [Fact]
@@ -217,22 +217,22 @@ public class TenantResolutionMiddlewareTests
         var userId = Guid.NewGuid();
         var jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U";
 
-        _httpContext.Request.Headers["Authorization"] = $"Bearer {jwtToken}";
+        this._httpContext.Request.Headers["Authorization"] = $"Bearer {jwtToken}";
 
         // Set up authenticated user without organization_id claim
         var claims = new[]
         {
-            new Claim(ClaimTypes.NameIdentifier, userId.ToString())
+            new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
         };
         var identity = new ClaimsIdentity(claims, "TestAuth");
-        _httpContext.User = new ClaimsPrincipal(identity);
+        this._httpContext.User = new ClaimsPrincipal(identity);
 
         // Act
-        await _middleware.InvokeAsync(_httpContext, _mockTenantContext.Object, _mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
 
         // Assert
-        _httpContext.Response.StatusCode.Should().Be(StatusCodes.Status401Unauthorized);
-        _mockNext.Verify(n => n(It.IsAny<HttpContext>()), Times.Never);
+        this._httpContext.Response.StatusCode.Should().Be(StatusCodes.Status401Unauthorized);
+        this._mockNext.Verify(n => n(It.IsAny<HttpContext>()), Times.Never);
     }
 
     [Fact]
@@ -242,22 +242,22 @@ public class TenantResolutionMiddlewareTests
         var orgId = Guid.NewGuid();
         var jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U";
 
-        _httpContext.Request.Headers["Authorization"] = $"Bearer {jwtToken}";
+        this._httpContext.Request.Headers["Authorization"] = $"Bearer {jwtToken}";
 
         // Set up authenticated user without user_id claim
         var claims = new[]
         {
-            new Claim("organization_id", orgId.ToString())
+            new Claim("organization_id", orgId.ToString()),
         };
         var identity = new ClaimsIdentity(claims, "TestAuth");
-        _httpContext.User = new ClaimsPrincipal(identity);
+        this._httpContext.User = new ClaimsPrincipal(identity);
 
         // Act
-        await _middleware.InvokeAsync(_httpContext, _mockTenantContext.Object, _mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
 
         // Assert
-        _httpContext.Response.StatusCode.Should().Be(StatusCodes.Status401Unauthorized);
-        _mockNext.Verify(n => n(It.IsAny<HttpContext>()), Times.Never);
+        this._httpContext.Response.StatusCode.Should().Be(StatusCodes.Status401Unauthorized);
+        this._mockNext.Verify(n => n(It.IsAny<HttpContext>()), Times.Never);
     }
 
     [Fact]
@@ -267,22 +267,22 @@ public class TenantResolutionMiddlewareTests
         var userId = Guid.NewGuid();
         var jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U";
 
-        _httpContext.Request.Headers["Authorization"] = $"Bearer {jwtToken}";
+        this._httpContext.Request.Headers["Authorization"] = $"Bearer {jwtToken}";
 
         // Set up authenticated user with invalid organization_id
         var claims = new[]
         {
             new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-            new Claim("organization_id", "not-a-guid")
+            new Claim("organization_id", "not-a-guid"),
         };
         var identity = new ClaimsIdentity(claims, "TestAuth");
-        _httpContext.User = new ClaimsPrincipal(identity);
+        this._httpContext.User = new ClaimsPrincipal(identity);
 
         // Act
-        await _middleware.InvokeAsync(_httpContext, _mockTenantContext.Object, _mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
 
         // Assert
-        _httpContext.Response.StatusCode.Should().Be(StatusCodes.Status401Unauthorized);
+        this._httpContext.Response.StatusCode.Should().Be(StatusCodes.Status401Unauthorized);
     }
 
     [Fact]
@@ -293,27 +293,27 @@ public class TenantResolutionMiddlewareTests
         var userId = Guid.NewGuid();
         var jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U";
 
-        _httpContext.Request.Headers["Authorization"] = $"Bearer {jwtToken}";
+        this._httpContext.Request.Headers["Authorization"] = $"Bearer {jwtToken}";
 
         // Use alternative claim names: "sub" and "org_id"
         var claims = new[]
         {
             new Claim("sub", userId.ToString()),
-            new Claim("org_id", orgId.ToString())
+            new Claim("org_id", orgId.ToString()),
         };
         var identity = new ClaimsIdentity(claims, "TestAuth");
-        _httpContext.User = new ClaimsPrincipal(identity);
+        this._httpContext.User = new ClaimsPrincipal(identity);
 
         // Act
-        await _middleware.InvokeAsync(_httpContext, _mockTenantContext.Object, _mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
 
         // Assert
-        _mockTenantContext.Verify(t => t.SetJwtContext(
+        this._mockTenantContext.Verify(t => t.SetJwtContext(
             orgId,
             userId,
             It.IsAny<string[]>()), Times.Once);
 
-        _httpContext.Response.StatusCode.Should().Be(StatusCodes.Status200OK);
+        this._httpContext.Response.StatusCode.Should().Be(StatusCodes.Status200OK);
     }
 
     [Fact]
@@ -324,21 +324,21 @@ public class TenantResolutionMiddlewareTests
         var userId = Guid.NewGuid();
         var jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U";
 
-        _httpContext.Request.Headers["Authorization"] = $"Bearer {jwtToken}";
+        this._httpContext.Request.Headers["Authorization"] = $"Bearer {jwtToken}";
 
         var claims = new[]
         {
             new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-            new Claim("organization_id", orgId.ToString())
+            new Claim("organization_id", orgId.ToString()),
         };
         var identity = new ClaimsIdentity(claims, "TestAuth");
-        _httpContext.User = new ClaimsPrincipal(identity);
+        this._httpContext.User = new ClaimsPrincipal(identity);
 
         // Act
-        await _middleware.InvokeAsync(_httpContext, _mockTenantContext.Object, _mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
 
         // Assert
-        _mockTenantContext.Verify(t => t.SetJwtContext(
+        this._mockTenantContext.Verify(t => t.SetJwtContext(
             orgId,
             userId,
             It.Is<string[]>(s => s.Length == 0)), Times.Once);
@@ -350,16 +350,16 @@ public class TenantResolutionMiddlewareTests
         // Arrange
         var jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U";
 
-        _httpContext.Request.Headers["Authorization"] = $"Bearer {jwtToken}";
+        this._httpContext.Request.Headers["Authorization"] = $"Bearer {jwtToken}";
 
         // User is not authenticated
-        _httpContext.User = new ClaimsPrincipal(new ClaimsIdentity());
+        this._httpContext.User = new ClaimsPrincipal(new ClaimsIdentity());
 
         // Act
-        await _middleware.InvokeAsync(_httpContext, _mockTenantContext.Object, _mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
 
         // Assert
-        _httpContext.Response.StatusCode.Should().Be(StatusCodes.Status401Unauthorized);
+        this._httpContext.Response.StatusCode.Should().Be(StatusCodes.Status401Unauthorized);
     }
 
     #endregion
@@ -373,38 +373,38 @@ public class TenantResolutionMiddlewareTests
         // No Authorization header set
 
         // Act
-        await _middleware.InvokeAsync(_httpContext, _mockTenantContext.Object, _mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
 
         // Assert
-        _mockNext.Verify(n => n(_httpContext), Times.Once);
-        _httpContext.Response.StatusCode.Should().Be(StatusCodes.Status200OK);
+        this._mockNext.Verify(n => n(this._httpContext), Times.Once);
+        this._httpContext.Response.StatusCode.Should().Be(StatusCodes.Status200OK);
     }
 
     [Fact]
     public async Task InvokeAsync_WithEmptyAuthorizationHeader_ShouldCallNext()
     {
         // Arrange
-        _httpContext.Request.Headers["Authorization"] = "";
+        this._httpContext.Request.Headers["Authorization"] = "";
 
         // Act
-        await _middleware.InvokeAsync(_httpContext, _mockTenantContext.Object, _mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
 
         // Assert
-        _mockNext.Verify(n => n(_httpContext), Times.Once);
+        this._mockNext.Verify(n => n(this._httpContext), Times.Once);
     }
 
     [Fact]
     public async Task InvokeAsync_WithNonBearerScheme_ShouldReturn401()
     {
         // Arrange
-        _httpContext.Request.Headers["Authorization"] = "Basic dXNlcjpwYXNz";
+        this._httpContext.Request.Headers["Authorization"] = "Basic dXNlcjpwYXNz";
 
         // Act
-        await _middleware.InvokeAsync(_httpContext, _mockTenantContext.Object, _mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
 
         // Assert
-        _httpContext.Response.StatusCode.Should().Be(StatusCodes.Status401Unauthorized);
-        _mockNext.Verify(n => n(It.IsAny<HttpContext>()), Times.Never);
+        this._httpContext.Response.StatusCode.Should().Be(StatusCodes.Status401Unauthorized);
+        this._mockNext.Verify(n => n(It.IsAny<HttpContext>()), Times.Never);
     }
 
     [Fact]
@@ -415,23 +415,23 @@ public class TenantResolutionMiddlewareTests
         var apiKeyId = Guid.NewGuid();
         var apiKey = "synaxis_build_testkey";
 
-        _httpContext.Request.Headers["Authorization"] = $"bearer {apiKey}"; // lowercase
+        this._httpContext.Request.Headers["Authorization"] = $"bearer {apiKey}"; // lowercase
 
-        _mockApiKeyService
+        this._mockApiKeyService
             .Setup(s => s.ValidateApiKeyAsync(apiKey, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ApiKeyValidationResult
             {
                 IsValid = true,
                 OrganizationId = orgId,
                 ApiKeyId = apiKeyId,
-                Scopes = Array.Empty<string>()
+                Scopes = Array.Empty<string>(),
             });
 
         // Act
-        await _middleware.InvokeAsync(_httpContext, _mockTenantContext.Object, _mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
 
         // Assert
-        _httpContext.Response.StatusCode.Should().Be(StatusCodes.Status200OK);
+        this._httpContext.Response.StatusCode.Should().Be(StatusCodes.Status200OK);
     }
 
     [Fact]
@@ -442,23 +442,23 @@ public class TenantResolutionMiddlewareTests
         var apiKeyId = Guid.NewGuid();
         var apiKey = "synaxis_build_testkey";
 
-        _httpContext.Request.Headers["Authorization"] = $"Bearer   {apiKey}  "; // extra spaces
+        this._httpContext.Request.Headers["Authorization"] = $"Bearer   {apiKey}  "; // extra spaces
 
-        _mockApiKeyService
+        this._mockApiKeyService
             .Setup(s => s.ValidateApiKeyAsync(apiKey, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ApiKeyValidationResult
             {
                 IsValid = true,
                 OrganizationId = orgId,
                 ApiKeyId = apiKeyId,
-                Scopes = Array.Empty<string>()
+                Scopes = Array.Empty<string>(),
             });
 
         // Act
-        await _middleware.InvokeAsync(_httpContext, _mockTenantContext.Object, _mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
 
         // Assert
-        _httpContext.Response.StatusCode.Should().Be(StatusCodes.Status200OK);
+        this._httpContext.Response.StatusCode.Should().Be(StatusCodes.Status200OK);
     }
 
     #endregion
@@ -470,18 +470,18 @@ public class TenantResolutionMiddlewareTests
     {
         // Arrange
         var apiKey = "synaxis_build_testkey";
-        _httpContext.Request.Headers["Authorization"] = $"Bearer {apiKey}";
+        this._httpContext.Request.Headers["Authorization"] = $"Bearer {apiKey}";
 
-        _mockApiKeyService
+        this._mockApiKeyService
             .Setup(s => s.ValidateApiKeyAsync(apiKey, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception("Database connection failed"));
 
         // Act
-        await _middleware.InvokeAsync(_httpContext, _mockTenantContext.Object, _mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
 
         // Assert
-        _httpContext.Response.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
-        _mockNext.Verify(n => n(It.IsAny<HttpContext>()), Times.Never);
+        this._httpContext.Response.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+        this._mockNext.Verify(n => n(It.IsAny<HttpContext>()), Times.Never);
     }
 
     [Fact]
@@ -489,23 +489,23 @@ public class TenantResolutionMiddlewareTests
     {
         // Arrange
         var apiKey = "synaxis_build_testkey";
-        _httpContext.Request.Headers["Authorization"] = $"Bearer {apiKey}";
+        this._httpContext.Request.Headers["Authorization"] = $"Bearer {apiKey}";
 
-        _mockApiKeyService
+        this._mockApiKeyService
             .Setup(s => s.ValidateApiKeyAsync(apiKey, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ApiKeyValidationResult
             {
                 IsValid = true,
                 OrganizationId = null, // Missing required field
                 ApiKeyId = Guid.NewGuid(),
-                Scopes = Array.Empty<string>()
+                Scopes = Array.Empty<string>(),
             });
 
         // Act
-        await _middleware.InvokeAsync(_httpContext, _mockTenantContext.Object, _mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
 
         // Assert
-        _httpContext.Response.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+        this._httpContext.Response.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
     }
 
     [Fact]
@@ -513,23 +513,23 @@ public class TenantResolutionMiddlewareTests
     {
         // Arrange
         var apiKey = "synaxis_build_testkey";
-        _httpContext.Request.Headers["Authorization"] = $"Bearer {apiKey}";
+        this._httpContext.Request.Headers["Authorization"] = $"Bearer {apiKey}";
 
-        _mockApiKeyService
+        this._mockApiKeyService
             .Setup(s => s.ValidateApiKeyAsync(apiKey, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ApiKeyValidationResult
             {
                 IsValid = true,
                 OrganizationId = Guid.NewGuid(),
                 ApiKeyId = null, // Missing required field
-                Scopes = Array.Empty<string>()
+                Scopes = Array.Empty<string>(),
             });
 
         // Act
-        await _middleware.InvokeAsync(_httpContext, _mockTenantContext.Object, _mockApiKeyService.Object);
+        await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
 
         // Assert
-        _httpContext.Response.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+        this._httpContext.Response.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
     }
 
     #endregion

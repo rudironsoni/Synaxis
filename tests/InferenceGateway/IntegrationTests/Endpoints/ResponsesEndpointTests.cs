@@ -20,8 +20,8 @@ public class ResponsesEndpointTests : IClassFixture<SynaxisWebApplicationFactory
 
     public ResponsesEndpointTests(SynaxisWebApplicationFactory factory)
     {
-        _factory = factory;
-        _client = factory.WithWebHostBuilder(builder =>
+        this._factory = factory;
+        this._client = factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureAppConfiguration((context, config) =>
             {
@@ -61,10 +61,10 @@ public class ResponsesEndpointTests : IClassFixture<SynaxisWebApplicationFactory
         var request = new
         {
             model = "test-alias",
-            messages = new[] { new { role = "user", content = "Hello" } }
+            messages = new[] { new { role = "user", content = "Hello" } },
         };
 
-        var response = await _client.PostAsJsonAsync("/openai/v1/responses", request);
+        var response = await this._client.PostAsJsonAsync("/openai/v1/responses", request);
 
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -74,13 +74,13 @@ public class ResponsesEndpointTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task PostResponses_WithAuth_ReturnsResponse()
     {
-        var token = await GetAuthTokenAsync();
-        var authenticatedClient = CreateAuthenticatedClient(token);
+        var token = await this.GetAuthTokenAsync();
+        var authenticatedClient = this.CreateAuthenticatedClient(token);
 
         var request = new
         {
             model = "test-alias",
-            messages = new[] { new { role = "user", content = "Hello" } }
+            messages = new[] { new { role = "user", content = "Hello" } },
         };
 
         var response = await authenticatedClient.PostAsJsonAsync("/openai/v1/responses", request);
@@ -95,13 +95,13 @@ public class ResponsesEndpointTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task PostResponses_WithAuth_ContainsOutput()
     {
-        var token = await GetAuthTokenAsync();
-        var authenticatedClient = CreateAuthenticatedClient(token);
+        var token = await this.GetAuthTokenAsync();
+        var authenticatedClient = this.CreateAuthenticatedClient(token);
 
         var request = new
         {
             model = "test-alias",
-            messages = new[] { new { role = "user", content = "Hello" } }
+            messages = new[] { new { role = "user", content = "Hello" } },
         };
 
         var response = await authenticatedClient.PostAsJsonAsync("/openai/v1/responses", request);
@@ -116,13 +116,13 @@ public class ResponsesEndpointTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task PostResponses_WithAuth_OutputHasMessage()
     {
-        var token = await GetAuthTokenAsync();
-        var authenticatedClient = CreateAuthenticatedClient(token);
+        var token = await this.GetAuthTokenAsync();
+        var authenticatedClient = this.CreateAuthenticatedClient(token);
 
         var request = new
         {
             model = "test-alias",
-            messages = new[] { new { role = "user", content = "Hello" } }
+            messages = new[] { new { role = "user", content = "Hello" } },
         };
 
         var response = await authenticatedClient.PostAsJsonAsync("/openai/v1/responses", request);
@@ -139,13 +139,13 @@ public class ResponsesEndpointTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task PostResponses_WithAuth_ContentHasText()
     {
-        var token = await GetAuthTokenAsync();
-        var authenticatedClient = CreateAuthenticatedClient(token);
+        var token = await this.GetAuthTokenAsync();
+        var authenticatedClient = this.CreateAuthenticatedClient(token);
 
         var request = new
         {
             model = "test-alias",
-            messages = new[] { new { role = "user", content = "Hello" } }
+            messages = new[] { new { role = "user", content = "Hello" } },
         };
 
         var response = await authenticatedClient.PostAsJsonAsync("/openai/v1/responses", request);
@@ -166,14 +166,14 @@ public class ResponsesEndpointTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task PostResponses_WithStreaming_ReturnsStream()
     {
-        var token = await GetAuthTokenAsync();
-        var authenticatedClient = CreateAuthenticatedClient(token);
+        var token = await this.GetAuthTokenAsync();
+        var authenticatedClient = this.CreateAuthenticatedClient(token);
 
         var request = new
         {
             model = "test-alias",
             messages = new[] { new { role = "user", content = "Hello" } },
-            stream = true
+            stream = true,
         };
 
         var response = await authenticatedClient.PostAsJsonAsync("/openai/v1/responses", request);
@@ -185,13 +185,13 @@ public class ResponsesEndpointTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task PostResponses_EmptyModel_UsesDefault()
     {
-        var token = await GetAuthTokenAsync();
-        var authenticatedClient = CreateAuthenticatedClient(token);
+        var token = await this.GetAuthTokenAsync();
+        var authenticatedClient = this.CreateAuthenticatedClient(token);
 
         var request = new
         {
             model = "",
-            messages = new[] { new { role = "user", content = "Hello" } }
+            messages = new[] { new { role = "user", content = "Hello" } },
         };
 
         var response = await authenticatedClient.PostAsJsonAsync("/openai/v1/responses", request);
@@ -204,12 +204,12 @@ public class ResponsesEndpointTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task PostResponses_MissingMessages_ReturnsResponse()
     {
-        var token = await GetAuthTokenAsync();
-        var authenticatedClient = CreateAuthenticatedClient(token);
+        var token = await this.GetAuthTokenAsync();
+        var authenticatedClient = this.CreateAuthenticatedClient(token);
 
         var request = new
         {
-            model = "test-alias"
+            model = "test-alias",
         };
 
         var response = await authenticatedClient.PostAsJsonAsync("/openai/v1/responses", request);
@@ -222,7 +222,7 @@ public class ResponsesEndpointTests : IClassFixture<SynaxisWebApplicationFactory
     private async Task<string> GetAuthTokenAsync()
     {
         var loginRequest = new { Email = "test@example.com" };
-        var response = await _client.PostAsJsonAsync("/auth/dev-login", loginRequest);
+        var response = await this._client.PostAsJsonAsync("/auth/dev-login", loginRequest);
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -231,7 +231,7 @@ public class ResponsesEndpointTests : IClassFixture<SynaxisWebApplicationFactory
 
     private HttpClient CreateAuthenticatedClient(string token)
     {
-        var client = _factory.WithWebHostBuilder(builder =>
+        var client = this._factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureAppConfiguration((context, config) =>
             {

@@ -89,6 +89,8 @@ public static class TestContainerFactory
 public interface ITestContainer : IAsyncDisposable
 {
     Task StartAsync(CancellationToken ct = default);
+
     Task StopAsync(CancellationToken ct = default);
+
     string GetConnectionString();
 }

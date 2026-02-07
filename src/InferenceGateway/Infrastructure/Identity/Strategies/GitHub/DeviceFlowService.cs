@@ -29,8 +29,15 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
         /// </summary>
         public virtual Task StartPollingAsync(string deviceCode, int intervalSeconds, Func<TokenResponse, Task> onSuccess, CancellationToken ct)
         {
-            if (string.IsNullOrEmpty(deviceCode)) throw new ArgumentNullException(nameof(deviceCode));
-            if (onSuccess == null) throw new ArgumentNullException(nameof(onSuccess));
+            if (string.IsNullOrEmpty(deviceCode))
+            {
+                throw new ArgumentNullException(nameof(deviceCode));
+            }
+
+            if (onSuccess == null)
+            {
+                throw new ArgumentNullException(nameof(onSuccess));
+            }
 
             // Run background polling
             return Task.Run(async () =>
@@ -48,15 +55,15 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
                         {
                             ["client_id"] = GitHubAuthStrategy.ClientId,
                             ["device_code"] = deviceCode,
-                            ["grant_type"] = "urn:ietf:params:oauth:grant-type:device_code"
+                            ["grant_type"] = "urn:ietf:params:oauth:grant-type:device_code",
                         };
                         req.Content = new FormUrlEncodedContent(body);
 
-                        using var resp = await _http.SendAsync(req, ct).ConfigureAwait(false);
+                        using var resp = await this._http.SendAsync(req, ct).ConfigureAwait(false);
                         var txt = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
                         if (string.IsNullOrEmpty(txt))
                         {
-                            _logger.LogWarning("Empty response when polling GitHub device token endpoint");
+                            this._logger.LogWarning("Empty response when polling GitHub device token endpoint");
                         }
 
                         try
@@ -67,10 +74,17 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
                             {
                                 var tr = new TokenResponse
                                 {
-                                    AccessToken = at.GetString() ?? string.Empty
+                                    AccessToken = at.GetString() ?? string.Empty,
                                 };
-                                if (root.TryGetProperty("refresh_token", out var rt)) tr.RefreshToken = rt.GetString();
-                                if (root.TryGetProperty("expires_in", out var ex)) tr.ExpiresInSeconds = ex.GetInt32();
+                                if (root.TryGetProperty("refresh_token", out var rt))
+                                {
+                                    tr.RefreshToken = rt.GetString();
+                                }
+
+                                if (root.TryGetProperty("expires_in", out var ex))
+                                {
+                                    tr.ExpiresInSeconds = ex.GetInt32();
+                                }
 
                                 await onSuccess(tr).ConfigureAwait(false);
                                 break;
@@ -90,14 +104,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
                                     case "expired_token":
                                     case "access_denied":
                                     default:
-                                        _logger.LogWarning("Device flow polling stopped due to error: {Error}", errVal);
+                                        this._logger.LogWarning("Device flow polling stopped due to error: {Error}", errVal);
                                         return;
                                 }
                             }
                         }
                         catch (JsonException jex)
                         {
-                            _logger.LogError(jex, "Failed to parse GitHub device token response: {Text}", txt);
+                            this._logger.LogError(jex, "Failed to parse GitHub device token response: {Text}", txt);
                         }
                     }
                     catch (OperationCanceledException) when (ct.IsCancellationRequested)
@@ -106,7 +120,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Error while polling GitHub device token endpoint");
+                        this._logger.LogError(ex, "Error while polling GitHub device token endpoint");
                         // break on unexpected errors
                         break;
                     }

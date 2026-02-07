@@ -13,14 +13,14 @@ public class ProvidersEndpointTests : IClassFixture<SynaxisWebApplicationFactory
 
     public ProvidersEndpointTests(SynaxisWebApplicationFactory factory)
     {
-        _factory = factory;
-        _client = factory.CreateClient();
+        this._factory = factory;
+        this._client = factory.CreateClient();
     }
 
     [Fact]
     public async Task GetProviders_ReturnsProvidersList()
     {
-        var response = await _client.GetAsync("/api/providers");
+        var response = await this._client.GetAsync("/api/providers");
 
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -32,7 +32,7 @@ public class ProvidersEndpointTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task GetProviders_ReturnsProvidersWithRequiredFields()
     {
-        var response = await _client.GetAsync("/api/providers");
+        var response = await this._client.GetAsync("/api/providers");
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -52,7 +52,7 @@ public class ProvidersEndpointTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task GetProviders_StatusIsHealthyOrUnhealthy()
     {
-        var response = await _client.GetAsync("/api/providers");
+        var response = await this._client.GetAsync("/api/providers");
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -71,7 +71,7 @@ public class ProvidersEndpointTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task GetProviders_UsageHasRequiredFields()
     {
-        var response = await _client.GetAsync("/api/providers");
+        var response = await this._client.GetAsync("/api/providers");
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -89,14 +89,14 @@ public class ProvidersEndpointTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task GetProviderStatus_ValidProvider_ReturnsStatus()
     {
-        var providersResponse = await _client.GetAsync("/api/providers");
+        var providersResponse = await this._client.GetAsync("/api/providers");
         providersResponse.EnsureSuccessStatusCode();
 
         var providersContent = await providersResponse.Content.ReadFromJsonAsync<JsonElement>();
         var providers = providersContent.GetProperty("providers").EnumerateArray().ToList();
         var providerId = providers.First().GetProperty("id").GetString();
 
-        var response = await _client.GetAsync($"/api/providers/{providerId}/status");
+        var response = await this._client.GetAsync($"/api/providers/{providerId}/status");
 
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -113,7 +113,7 @@ public class ProvidersEndpointTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task GetProviderStatus_InvalidProvider_ReturnsNotFound()
     {
-        var response = await _client.GetAsync("/api/providers/nonexistent/status");
+        var response = await this._client.GetAsync("/api/providers/nonexistent/status");
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
@@ -121,7 +121,7 @@ public class ProvidersEndpointTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task UpdateProviderConfig_ValidProvider_UpdatesSuccessfully()
     {
-        var providersResponse = await _client.GetAsync("/api/providers");
+        var providersResponse = await this._client.GetAsync("/api/providers");
         providersResponse.EnsureSuccessStatusCode();
 
         var providersContent = await providersResponse.Content.ReadFromJsonAsync<JsonElement>();
@@ -129,7 +129,7 @@ public class ProvidersEndpointTests : IClassFixture<SynaxisWebApplicationFactory
         var providerId = providers.First().GetProperty("id").GetString();
 
         var updateRequest = new { enabled = true, tier = 1 };
-        var response = await _client.PutAsJsonAsync($"/api/providers/{providerId}/config", updateRequest);
+        var response = await this._client.PutAsJsonAsync($"/api/providers/{providerId}/config", updateRequest);
 
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -142,7 +142,7 @@ public class ProvidersEndpointTests : IClassFixture<SynaxisWebApplicationFactory
     public async Task UpdateProviderConfig_InvalidProvider_ReturnsNotFound()
     {
         var updateRequest = new { enabled = true, tier = 1 };
-        var response = await _client.PutAsJsonAsync("/api/providers/nonexistent/config", updateRequest);
+        var response = await this._client.PutAsJsonAsync("/api/providers/nonexistent/config", updateRequest);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
@@ -150,7 +150,7 @@ public class ProvidersEndpointTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task UpdateProviderConfig_EnabledOnly_UpdatesSuccessfully()
     {
-        var providersResponse = await _client.GetAsync("/api/providers");
+        var providersResponse = await this._client.GetAsync("/api/providers");
         providersResponse.EnsureSuccessStatusCode();
 
         var providersContent = await providersResponse.Content.ReadFromJsonAsync<JsonElement>();
@@ -158,7 +158,7 @@ public class ProvidersEndpointTests : IClassFixture<SynaxisWebApplicationFactory
         var providerId = providers.First().GetProperty("id").GetString();
 
         var updateRequest = new { enabled = false };
-        var response = await _client.PutAsJsonAsync($"/api/providers/{providerId}/config", updateRequest);
+        var response = await this._client.PutAsJsonAsync($"/api/providers/{providerId}/config", updateRequest);
 
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -170,7 +170,7 @@ public class ProvidersEndpointTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task UpdateProviderConfig_TierOnly_UpdatesSuccessfully()
     {
-        var providersResponse = await _client.GetAsync("/api/providers");
+        var providersResponse = await this._client.GetAsync("/api/providers");
         providersResponse.EnsureSuccessStatusCode();
 
         var providersContent = await providersResponse.Content.ReadFromJsonAsync<JsonElement>();
@@ -178,7 +178,7 @@ public class ProvidersEndpointTests : IClassFixture<SynaxisWebApplicationFactory
         var providerId = providers.First().GetProperty("id").GetString();
 
         var updateRequest = new { tier = 2 };
-        var response = await _client.PutAsJsonAsync($"/api/providers/{providerId}/config", updateRequest);
+        var response = await this._client.PutAsJsonAsync($"/api/providers/{providerId}/config", updateRequest);
 
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -190,7 +190,7 @@ public class ProvidersEndpointTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task GetProviders_MatchesExpectedResponseFormat()
     {
-        var response = await _client.GetAsync("/api/providers");
+        var response = await this._client.GetAsync("/api/providers");
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
@@ -220,18 +220,18 @@ public class ProvidersEndpointTests : IClassFixture<SynaxisWebApplicationFactory
     [Fact]
     public async Task ProvidersEndpoints_AreAccessibleWithoutAuth()
     {
-        var getProvidersResponse = await _client.GetAsync("/api/providers");
+        var getProvidersResponse = await this._client.GetAsync("/api/providers");
         Assert.Equal(HttpStatusCode.OK, getProvidersResponse.StatusCode);
 
         var providersContent = await getProvidersResponse.Content.ReadFromJsonAsync<JsonElement>();
         var providers = providersContent.GetProperty("providers").EnumerateArray().ToList();
         var providerId = providers.First().GetProperty("id").GetString();
 
-        var getStatusResponse = await _client.GetAsync($"/api/providers/{providerId}/status");
+        var getStatusResponse = await this._client.GetAsync($"/api/providers/{providerId}/status");
         Assert.Equal(HttpStatusCode.OK, getStatusResponse.StatusCode);
 
         var updateRequest = new { enabled = true };
-        var putConfigResponse = await _client.PutAsJsonAsync($"/api/providers/{providerId}/config", updateRequest);
+        var putConfigResponse = await this._client.PutAsJsonAsync($"/api/providers/{providerId}/config", updateRequest);
         Assert.Equal(HttpStatusCode.OK, putConfigResponse.StatusCode);
     }
 }

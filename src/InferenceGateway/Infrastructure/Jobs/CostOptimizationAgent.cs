@@ -36,9 +36,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
         public async Task Execute(IJobExecutionContext context)
         {
             var correlationId = Guid.NewGuid().ToString("N")[..8];
-            _logger.LogInformation("[CostOptimization][{CorrelationId}] Starting ULTRA MISER MODE optimization", correlationId);
+            this._logger.LogInformation("[CostOptimization][{CorrelationId}] Starting ULTRA MISER MODE optimization", correlationId);
 
-            using var scope = _serviceProvider.CreateScope();
+            using var scope = this._serviceProvider.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
             var routingTool = scope.ServiceProvider.GetRequiredService<IRoutingTool>();
             var auditTool = scope.ServiceProvider.GetRequiredService<IAuditTool>();
@@ -55,11 +55,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                         OrganizationId = g.Key.TenantId,
                         Model = g.Key.Model,
                         Provider = g.Key.Provider,
-                        RequestCount = g.Count()
+                        RequestCount = g.Count(),
                     })
                     .ToListAsync(context.CancellationToken);
 
-                _logger.LogInformation("[CostOptimization][{CorrelationId}] Found {Count} active routes",
+                this._logger.LogInformation("[CostOptimization][{CorrelationId}] Found {Count} active routes",
                     correlationId, activeRoutes.Count);
 
                 int optimizedCount = 0;
@@ -79,7 +79,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
 
                         if (currentCost == null)
                         {
-                            _logger.LogDebug("[CostOptimization][{CorrelationId}] No cost data for {Provider}/{Model}",
+                            this._logger.LogDebug("[CostOptimization][{CorrelationId}] No cost data for {Provider}/{Model}",
                                 correlationId, route.Provider, route.Model);
                             continue;
                         }
@@ -90,13 +90,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                         // ULTRA MISER MODE: Never switch from free to paid
                         if (currentIsFree)
                         {
-                            _logger.LogDebug("[CostOptimization][{CorrelationId}] {Provider}/{Model} already free, skipping",
+                            this._logger.LogDebug("[CostOptimization][{CorrelationId}] {Provider}/{Model} already free, skipping",
                                 correlationId, route.Provider, route.Model);
                             continue;
                         }
 
                         // Find alternative providers for this model
-                        var alternatives = await FindAlternativeProvidersAsync(
+                        var alternatives = await this.FindAlternativeProvidersAsync(
                             db,
                             route.OrganizationId,
                             route.Model!,
@@ -107,7 +107,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                         var freeAlternative = alternatives.FirstOrDefault(a => a.IsFree && a.IsHealthy);
                         if (freeAlternative != null)
                         {
-                            _logger.LogInformation(
+                            this._logger.LogInformation(
                                 "[CostOptimization][{CorrelationId}] ULTRA MISER: Found FREE alternative! {Old} → {New} for model {Model}",
                                 correlationId, route.Provider, freeAlternative.Provider, route.Model);
 
@@ -150,7 +150,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                             // Require >20% savings
                             if (savings > 0.20m)
                             {
-                                _logger.LogInformation(
+                                this._logger.LogInformation(
                                     "[CostOptimization][{CorrelationId}] Found {Savings:P0} savings: {Old} → {New} for model {Model}",
                                     correlationId, savings, route.Provider, alternative.Provider, route.Model);
 
@@ -183,18 +183,18 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "[CostOptimization][{CorrelationId}] Error optimizing route {Provider}/{Model}",
+                        this._logger.LogError(ex, "[CostOptimization][{CorrelationId}] Error optimizing route {Provider}/{Model}",
                             correlationId, route.Provider, route.Model);
                     }
                 }
 
-                _logger.LogInformation(
+                this._logger.LogInformation(
                     "[CostOptimization][{CorrelationId}] Completed: Optimized={Optimized}, Total Savings=${Savings:F4}",
                     correlationId, optimizedCount, totalSavings);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "[CostOptimization][{CorrelationId}] Job failed", correlationId);
+                this._logger.LogError(ex, "[CostOptimization][{CorrelationId}] Job failed", correlationId);
             }
         }
 
@@ -237,7 +237,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                     Provider = alt.ProviderId,
                     CostPerToken = cost?.CostPerToken ?? 0m,
                     IsFree = cost?.FreeTier ?? false,
-                    IsHealthy = health?.IsHealthy ?? true
+                    IsHealthy = health?.IsHealthy ?? true,
                 });
             }
 
@@ -248,15 +248,20 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
         private class ProviderAlternative
         {
             public string Provider { get; set; } = string.Empty;
+
             public decimal CostPerToken { get; set; }
+
             public bool IsFree { get; set; }
+
             public bool IsHealthy { get; set; }
         }
 
         private class OrgProviderDto
         {
             public Guid Id { get; set; }
+
             public Guid ProviderId { get; set; }
+
             public bool IsEnabled { get; set; }
         }
 

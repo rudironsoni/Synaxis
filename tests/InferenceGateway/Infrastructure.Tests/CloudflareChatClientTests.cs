@@ -79,7 +79,7 @@ public class CloudflareChatClientTests
             .ReturnsAsync(new HttpResponseMessage
             {
                 StatusCode = HttpStatusCode.OK,
-                Content = new StringContent(responseJson)
+                Content = new StringContent(responseJson),
             });
 
         var httpClient = new HttpClient(handlerMock.Object);
@@ -110,7 +110,7 @@ public class CloudflareChatClientTests
             .ReturnsAsync(new HttpResponseMessage
             {
                 StatusCode = HttpStatusCode.OK,
-                Content = new StringContent(responseJson)
+                Content = new StringContent(responseJson),
             });
 
         var httpClient = new HttpClient(handlerMock.Object);
@@ -140,7 +140,7 @@ public class CloudflareChatClientTests
             .ReturnsAsync(new HttpResponseMessage
             {
                 StatusCode = HttpStatusCode.BadRequest,
-                Content = new StringContent("{\"error\": \"Bad request\"}")
+                Content = new StringContent("{\"error\": \"Bad request\"}"),
             });
 
         var httpClient = new HttpClient(handlerMock.Object);
@@ -166,7 +166,7 @@ public class CloudflareChatClientTests
             .ReturnsAsync(new HttpResponseMessage
             {
                 StatusCode = HttpStatusCode.OK,
-                Content = new StringContent(responseJson)
+                Content = new StringContent(responseJson),
             });
 
         var httpClient = new HttpClient(handlerMock.Object);
@@ -177,7 +177,7 @@ public class CloudflareChatClientTests
             new ChatMessage(ChatRole.System, "You are a helpful assistant"),
             new ChatMessage(ChatRole.User, "Hello"),
             new ChatMessage(ChatRole.Assistant, "Hi there!"),
-            new ChatMessage(ChatRole.User, "How are you?")
+            new ChatMessage(ChatRole.User, "How are you?"),
         };
 
         // Act
@@ -202,7 +202,7 @@ public class CloudflareChatClientTests
             .ReturnsAsync(new HttpResponseMessage
             {
                 StatusCode = HttpStatusCode.OK,
-                Content = new StringContent(responseJson)
+                Content = new StringContent(responseJson),
             });
 
         var httpClient = new HttpClient(handlerMock.Object);
@@ -230,7 +230,7 @@ public class CloudflareChatClientTests
             .ReturnsAsync(new HttpResponseMessage
             {
                 StatusCode = HttpStatusCode.OK,
-                Content = streamContent
+                Content = streamContent,
             });
 
         var httpClient = new HttpClient(handlerMock.Object);
@@ -264,7 +264,7 @@ public class CloudflareChatClientTests
             .ReturnsAsync(new HttpResponseMessage
             {
                 StatusCode = HttpStatusCode.OK,
-                Content = streamContent
+                Content = streamContent,
             });
 
         var httpClient = new HttpClient(handlerMock.Object);
@@ -297,7 +297,7 @@ public class CloudflareChatClientTests
             .ReturnsAsync(new HttpResponseMessage
             {
                 StatusCode = HttpStatusCode.OK,
-                Content = streamContent
+                Content = streamContent,
             });
 
         var httpClient = new HttpClient(handlerMock.Object);
@@ -330,7 +330,7 @@ public class CloudflareChatClientTests
             .ReturnsAsync(new HttpResponseMessage
             {
                 StatusCode = HttpStatusCode.OK,
-                Content = streamContent
+                Content = streamContent,
             });
 
         var httpClient = new HttpClient(handlerMock.Object);

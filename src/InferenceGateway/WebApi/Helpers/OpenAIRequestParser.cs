@@ -25,7 +25,10 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
         /// <returns>The parsed OpenAI request, or null if parsing failed.</returns>
         public static async Task<OpenAIRequest?> ParseAsync(HttpContext? context, CancellationToken cancellationToken = default, bool allowEmptyModel = false, bool allowEmptyMessages = false)
         {
-            if (context == null) return null;
+            if (context == null)
+            {
+                return null;
+            }
 
             // Resolve configured max request body size from DI. Fall back to 10 MB if not available.
             long MaxBodySize = 10L * 1024 * 1024; // 10 MB default
@@ -90,7 +93,10 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
             // Reset the request body position so subsequent middleware can read it.
             context.Request.Body.Position = 0;
 
-            if (string.IsNullOrWhiteSpace(body)) return null;
+            if (string.IsNullOrWhiteSpace(body))
+            {
+                return null;
+            }
 
             try
             {

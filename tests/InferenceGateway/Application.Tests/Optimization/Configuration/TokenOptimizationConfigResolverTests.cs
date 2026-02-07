@@ -16,18 +16,18 @@ public class TokenOptimizationConfigResolverTests : IDisposable
             .UseInMemoryDatabase($"TokenOptimizationTestDb_{Guid.NewGuid()}")
             .Options;
 
-        _dbContext = new TestTokenOptimizationDbContext(options);
-        _dbContextFactoryMock = new Mock<IDbContextFactory<TestTokenOptimizationDbContext>>();
-        _dbContextFactoryMock.Setup(x => x.CreateDbContext()).Returns(_dbContext);
-        _dbContextFactoryMock.Setup(x => x.CreateDbContextAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(_dbContext);
+        this._dbContext = new TestTokenOptimizationDbContext(options);
+        this._dbContextFactoryMock = new Mock<IDbContextFactory<TestTokenOptimizationDbContext>>();
+        this._dbContextFactoryMock.Setup(x => x.CreateDbContext()).Returns(this._dbContext);
+        this._dbContextFactoryMock.Setup(x => x.CreateDbContextAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(this._dbContext);
 
-        _resolver = new TokenOptimizationConfigurationResolver(_dbContextFactoryMock.Object);
+        this._resolver = new TokenOptimizationConfigurationResolver(this._dbContextFactoryMock.Object);
     }
 
     public void Dispose()
     {
-        _dbContext?.Dispose();
+        this._dbContext?.Dispose();
     }
 
     [Fact]
@@ -38,7 +38,7 @@ public class TokenOptimizationConfigResolverTests : IDisposable
         var userId = Guid.NewGuid();
 
         // Act
-        var config = await _resolver.ResolveAsync(tenantId, userId);
+        var config = await this._resolver.ResolveAsync(tenantId, userId);
 
         // Assert
         Assert.NotNull(config);
@@ -61,13 +61,13 @@ public class TokenOptimizationConfigResolverTests : IDisposable
             TenantId = tenantId,
             SimilarityThreshold = 0.90,
             CacheTtlSeconds = 7200,
-            EnableCaching = true
+            EnableCaching = true,
         };
-        _dbContext.TenantTokenOptimizationConfigs.Add(tenantConfig);
-        await _dbContext.SaveChangesAsync();
+        this._dbContext.TenantTokenOptimizationConfigs.Add(tenantConfig);
+        await this._dbContext.SaveChangesAsync();
 
         // Act
-        var config = await _resolver.ResolveAsync(tenantId, userId);
+        var config = await this._resolver.ResolveAsync(tenantId, userId);
 
         // Assert
         Assert.NotNull(config);
@@ -88,13 +88,13 @@ public class TokenOptimizationConfigResolverTests : IDisposable
         {
             UserId = userId,
             SimilarityThreshold = 0.95,
-            EnableCaching = false
+            EnableCaching = false,
         };
-        _dbContext.UserTokenOptimizationConfigs.Add(userConfig);
-        await _dbContext.SaveChangesAsync();
+        this._dbContext.UserTokenOptimizationConfigs.Add(userConfig);
+        await this._dbContext.SaveChangesAsync();
 
         // Act
-        var config = await _resolver.ResolveAsync(tenantId, userId);
+        var config = await this._resolver.ResolveAsync(tenantId, userId);
 
         // Assert
         Assert.NotNull(config);
@@ -115,22 +115,22 @@ public class TokenOptimizationConfigResolverTests : IDisposable
             TenantId = tenantId,
             SimilarityThreshold = 0.80,
             CacheTtlSeconds = 5400,
-            EnableCaching = true
+            EnableCaching = true,
         };
-        _dbContext.TenantTokenOptimizationConfigs.Add(tenantConfig);
+        this._dbContext.TenantTokenOptimizationConfigs.Add(tenantConfig);
 
         // Seed user configuration (should override tenant)
         var userConfig = new UserTokenOptimizationConfig
         {
             UserId = userId,
             SimilarityThreshold = 0.92,
-            EnableCaching = false
+            EnableCaching = false,
         };
-        _dbContext.UserTokenOptimizationConfigs.Add(userConfig);
-        await _dbContext.SaveChangesAsync();
+        this._dbContext.UserTokenOptimizationConfigs.Add(userConfig);
+        await this._dbContext.SaveChangesAsync();
 
         // Act
-        var config = await _resolver.ResolveAsync(tenantId, userId);
+        var config = await this._resolver.ResolveAsync(tenantId, userId);
 
         // Assert
         Assert.NotNull(config);
@@ -153,23 +153,23 @@ public class TokenOptimizationConfigResolverTests : IDisposable
             SimilarityThreshold = 0.88,
             CacheTtlSeconds = 4800,
             CompressionStrategy = "brotli",
-            EnableCaching = true
+            EnableCaching = true,
         };
-        _dbContext.TenantTokenOptimizationConfigs.Add(tenantConfig);
+        this._dbContext.TenantTokenOptimizationConfigs.Add(tenantConfig);
 
         // Seed user configuration with only partial overrides (nulls should inherit)
         var userConfig = new UserTokenOptimizationConfig
         {
             UserId = userId,
             SimilarityThreshold = null, // Should inherit from tenant
-            EnableCaching = false // Override
+            EnableCaching = false, // Override
             // CacheTtlSeconds not set, should inherit from tenant
         };
-        _dbContext.UserTokenOptimizationConfigs.Add(userConfig);
-        await _dbContext.SaveChangesAsync();
+        this._dbContext.UserTokenOptimizationConfigs.Add(userConfig);
+        await this._dbContext.SaveChangesAsync();
 
         // Act
-        var config = await _resolver.ResolveAsync(tenantId, userId);
+        var config = await this._resolver.ResolveAsync(tenantId, userId);
 
         // Assert
         Assert.NotNull(config);
@@ -189,13 +189,13 @@ public class TokenOptimizationConfigResolverTests : IDisposable
         {
             TenantId = tenantId,
             SimilarityThreshold = 0.87,
-            CacheTtlSeconds = 7200
+            CacheTtlSeconds = 7200,
         };
-        _dbContext.TenantTokenOptimizationConfigs.Add(tenantConfig);
-        await _dbContext.SaveChangesAsync();
+        this._dbContext.TenantTokenOptimizationConfigs.Add(tenantConfig);
+        await this._dbContext.SaveChangesAsync();
 
         // Act
-        var config = await _resolver.GetTenantConfigAsync(tenantId);
+        var config = await this._resolver.GetTenantConfigAsync(tenantId);
 
         // Assert
         Assert.NotNull(config);
@@ -213,13 +213,13 @@ public class TokenOptimizationConfigResolverTests : IDisposable
         {
             UserId = userId,
             SimilarityThreshold = 0.93,
-            EnableCaching = true
+            EnableCaching = true,
         };
-        _dbContext.UserTokenOptimizationConfigs.Add(userConfig);
-        await _dbContext.SaveChangesAsync();
+        this._dbContext.UserTokenOptimizationConfigs.Add(userConfig);
+        await this._dbContext.SaveChangesAsync();
 
         // Act
-        var config = await _resolver.GetUserConfigAsync(userId);
+        var config = await this._resolver.GetUserConfigAsync(userId);
 
         // Assert
         Assert.NotNull(config);
@@ -231,7 +231,7 @@ public class TokenOptimizationConfigResolverTests : IDisposable
     public void GetSystemConfig_ReturnsRawConfiguration()
     {
         // Act
-        var config = _resolver.GetSystemConfig();
+        var config = this._resolver.GetSystemConfig();
 
         // Assert
         Assert.NotNull(config);
@@ -253,15 +253,15 @@ public class TokenOptimizationConfigResolverTests : IDisposable
         var tenantConfig = new TenantTokenOptimizationConfig
         {
             TenantId = tenantId,
-            SimilarityThreshold = 0.90
+            SimilarityThreshold = 0.90,
             // MaxConcurrentRequests is system-only and cannot be set here
         };
-        _dbContext.TenantTokenOptimizationConfigs.Add(tenantConfig);
-        await _dbContext.SaveChangesAsync();
+        this._dbContext.TenantTokenOptimizationConfigs.Add(tenantConfig);
+        await this._dbContext.SaveChangesAsync();
 
         // Act
-        var config = await _resolver.ResolveAsync(tenantId, userId);
-        var systemConfig = _resolver.GetSystemConfig();
+        var config = await this._resolver.ResolveAsync(tenantId, userId);
+        var systemConfig = this._resolver.GetSystemConfig();
 
         // Assert
         Assert.NotNull(config);
@@ -282,38 +282,38 @@ public class TokenOptimizationConfigResolverTests : IDisposable
         var tenantConfig = new TenantTokenOptimizationConfig
         {
             TenantId = tenantId,
-            SimilarityThreshold = 0.88
+            SimilarityThreshold = 0.88,
         };
-        _dbContext.TenantTokenOptimizationConfigs.Add(tenantConfig);
+        this._dbContext.TenantTokenOptimizationConfigs.Add(tenantConfig);
 
         var userConfig1 = new UserTokenOptimizationConfig
         {
             UserId = userId1,
-            SimilarityThreshold = 0.90
+            SimilarityThreshold = 0.90,
         };
         var userConfig2 = new UserTokenOptimizationConfig
         {
             UserId = userId2,
-            SimilarityThreshold = 0.95
+            SimilarityThreshold = 0.95,
         };
         var userConfig3 = new UserTokenOptimizationConfig
         {
             UserId = userId3,
-            SimilarityThreshold = 0.80
+            SimilarityThreshold = 0.80,
         };
-        _dbContext.UserTokenOptimizationConfigs.Add(userConfig1);
-        _dbContext.UserTokenOptimizationConfigs.Add(userConfig2);
-        _dbContext.UserTokenOptimizationConfigs.Add(userConfig3);
-        await _dbContext.SaveChangesAsync();
+        this._dbContext.UserTokenOptimizationConfigs.Add(userConfig1);
+        this._dbContext.UserTokenOptimizationConfigs.Add(userConfig2);
+        this._dbContext.UserTokenOptimizationConfigs.Add(userConfig3);
+        await this._dbContext.SaveChangesAsync();
 
         // Act - Resolve concurrently
         var tasks = new[]
         {
-            Task.Run(async () => await _resolver.ResolveAsync(tenantId, userId1)),
-            Task.Run(async () => await _resolver.ResolveAsync(tenantId, userId2)),
-            Task.Run(async () => await _resolver.ResolveAsync(tenantId, userId3)),
-            Task.Run(async () => await _resolver.ResolveAsync(tenantId, userId1)),
-            Task.Run(async () => await _resolver.ResolveAsync(tenantId, userId2))
+            Task.Run(async () => await this._resolver.ResolveAsync(tenantId, userId1)),
+            Task.Run(async () => await this._resolver.ResolveAsync(tenantId, userId2)),
+            Task.Run(async () => await this._resolver.ResolveAsync(tenantId, userId3)),
+            Task.Run(async () => await this._resolver.ResolveAsync(tenantId, userId1)),
+            Task.Run(async () => await this._resolver.ResolveAsync(tenantId, userId2)),
         };
 
         var configs = await Task.WhenAll(tasks);

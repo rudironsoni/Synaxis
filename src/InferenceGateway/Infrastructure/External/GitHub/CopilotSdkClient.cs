@@ -18,8 +18,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
     public interface ICopilotSdkAdapter : IDisposable
     {
         ChatClientMetadata Metadata { get; }
+
         Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default);
+
         IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default);
+
         object? GetService(Type serviceType, object? serviceKey = null);
     }
 
@@ -61,7 +64,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
 
         public void Dispose()
         {
-            _adapter.Dispose();
+            this._adapter.Dispose();
         }
     }
 }

@@ -276,7 +276,7 @@ try
             ValidateIssuer = !builder.Environment.IsDevelopment(),
             ValidateAudience = !builder.Environment.IsDevelopment(),
             ValidIssuer = builder.Configuration["Synaxis:InferenceGateway:JwtIssuer"] ?? "Synaxis",
-            ValidAudience = builder.Configuration["Synaxis:InferenceGateway:JwtAudience"] ?? "Synaxis"
+            ValidAudience = builder.Configuration["Synaxis:InferenceGateway:JwtAudience"] ?? "Synaxis",
         };
 
         // Enable JWT authentication for WebSocket connections (SignalR)
@@ -294,7 +294,7 @@ try
                 }
 
                 return Task.CompletedTask;
-            }
+            },
         };
     });
 
@@ -427,12 +427,12 @@ try
 
     app.MapHealthChecks("/health/liveness", new HealthCheckOptions
     {
-        Predicate = r => r.Tags.Contains("liveness")
+        Predicate = r => r.Tags.Contains("liveness"),
     });
 
     app.MapHealthChecks("/health/readiness", new HealthCheckOptions
     {
-        Predicate = r => r.Tags.Contains("readiness")
+        Predicate = r => r.Tags.Contains("readiness"),
     });
 
     await app.RunAsync();

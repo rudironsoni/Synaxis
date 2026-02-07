@@ -135,7 +135,7 @@ namespace Synaxis.Core.Contracts
         /// <param name="message">The success message.</param>
         /// <returns>A successful failover result.</returns>
         public static FailoverResult Succeeded(string targetRegion, string message)
-            => new () { Success = true, TargetRegion = targetRegion, Message = message };
+            => new() { Success = true, TargetRegion = targetRegion, Message = message };
 
         /// <summary>
         /// Creates a failed failover result.
@@ -143,7 +143,7 @@ namespace Synaxis.Core.Contracts
         /// <param name="message">The failure message.</param>
         /// <returns>A failed failover result.</returns>
         public static FailoverResult Failed(string message)
-            => new () { Success = false, Message = message };
+            => new() { Success = false, Message = message };
 
         /// <summary>
         /// Creates a failover result that requires consent.
@@ -152,6 +152,6 @@ namespace Synaxis.Core.Contracts
         /// <param name="consentUrl">The consent URL.</param>
         /// <returns>A failover result requiring consent.</returns>
         public static FailoverResult NeedsConsent(string targetRegion, string consentUrl)
-            => new () { Success = false, TargetRegion = targetRegion, ConsentRequired = true, ConsentUrl = consentUrl };
+            => new() { Success = false, TargetRegion = targetRegion, ConsentRequired = true, ConsentUrl = consentUrl };
     }
 }

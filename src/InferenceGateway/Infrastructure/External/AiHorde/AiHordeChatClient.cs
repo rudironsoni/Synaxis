@@ -35,34 +35,40 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.AiHorde
 
         public async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
         {
-            var prompt = BuildPrompt(chatMessages);
+            var prompt = this.BuildPrompt(chatMessages);
 
             var request = new { prompt = prompt, models = new[] { "stable" } };
 
             using var httpRequest = new HttpRequestMessage(HttpMethod.Post, GenerateUrl);
-            httpRequest.Headers.TryAddWithoutValidation("apikey", _apiKey);
+            httpRequest.Headers.TryAddWithoutValidation("apikey", this._apiKey);
             httpRequest.Content = JsonContent.Create(request);
 
-            using var response = await _httpClient.SendAsync(httpRequest, cancellationToken);
+            using var response = await this._httpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
-            var genResp = await response.Content.ReadFromJsonAsync<GenerateResponse>(cancellationToken: cancellationToken);
+            var genResp = await response.Content.ReadFromJsonAsync<GenerateResponse>(cancellationToken: cancellationToken).ConfigureAwait(false);
             if (genResp == null || string.IsNullOrEmpty(genResp.Id))
+            {
                 return new ChatResponse(new List<ChatMessage>());
+            }
 
             var id = genResp.Id;
 
             // Poll status until done
             while (!cancellationToken.IsCancellationRequested)
             {
-                await Task.Delay(200, cancellationToken);
+                await Task.Delay(200, cancellationToken).ConfigureAwait(false);
                 using var statusReq = new HttpRequestMessage(HttpMethod.Get, string.Format(StatusUrlTemplate, id));
-                statusReq.Headers.TryAddWithoutValidation("apikey", _apiKey);
-                using var statusResp = await _httpClient.SendAsync(statusReq, cancellationToken);
+                statusReq.Headers.TryAddWithoutValidation("apikey", this._apiKey);
+                using var statusResp = await this._httpClient.SendAsync(statusReq, cancellationToken).ConfigureAwait(false);
                 statusResp.EnsureSuccessStatusCode();
 
-                var status = await statusResp.Content.ReadFromJsonAsync<StatusResponse>(cancellationToken: cancellationToken);
-                if (status == null) break;
+                var status = await statusResp.Content.ReadFromJsonAsync<StatusResponse>(cancellationToken: cancellationToken).ConfigureAwait(false);
+                if (status == null)
+                {
+                    break;
+                }
+
                 if (status.Done)
                 {
                     var text = status?.Text ?? string.Empty;
@@ -78,29 +84,36 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.AiHorde
         public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             // We'll implement polling and yield final result when ready
-            var prompt = BuildPrompt(chatMessages);
+            var prompt = this.BuildPrompt(chatMessages);
             var request = new { prompt = prompt, models = new[] { "stable" } };
 
             using var httpRequest = new HttpRequestMessage(HttpMethod.Post, GenerateUrl);
-            httpRequest.Headers.TryAddWithoutValidation("apikey", _apiKey);
+            httpRequest.Headers.TryAddWithoutValidation("apikey", this._apiKey);
             httpRequest.Content = JsonContent.Create(request);
 
-            using var response = await _httpClient.SendAsync(httpRequest, cancellationToken);
+            using var response = await this._httpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
-            var genResp = await response.Content.ReadFromJsonAsync<GenerateResponse>(cancellationToken: cancellationToken);
-            if (genResp == null || string.IsNullOrEmpty(genResp.Id)) yield break;
+            var genResp = await response.Content.ReadFromJsonAsync<GenerateResponse>(cancellationToken: cancellationToken).ConfigureAwait(false);
+            if (genResp == null || string.IsNullOrEmpty(genResp.Id))
+            {
+                yield break;
+            }
 
             var id = genResp.Id;
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                await Task.Delay(200, cancellationToken);
+                await Task.Delay(200, cancellationToken).ConfigureAwait(false);
                 using var statusReq = new HttpRequestMessage(HttpMethod.Get, string.Format(StatusUrlTemplate, id));
-                statusReq.Headers.TryAddWithoutValidation("apikey", _apiKey);
-                using var statusResp = await _httpClient.SendAsync(statusReq, cancellationToken);
+                statusReq.Headers.TryAddWithoutValidation("apikey", this._apiKey);
+                using var statusResp = await this._httpClient.SendAsync(statusReq, cancellationToken).ConfigureAwait(false);
                 statusResp.EnsureSuccessStatusCode();
-                var status = await statusResp.Content.ReadFromJsonAsync<StatusResponse>(cancellationToken: cancellationToken);
-                if (status == null) yield break;
+                var status = await statusResp.Content.ReadFromJsonAsync<StatusResponse>(cancellationToken: cancellationToken).ConfigureAwait(false);
+                if (status == null)
+                {
+                    yield break;
+                }
+
                 if (status.Done)
                 {
                     var text = status.Text ?? string.Empty;

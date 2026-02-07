@@ -23,8 +23,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
     public class AntigravityAccount
     {
         public string Email { get; set; } = string.Empty;
+
         public string ProjectId { get; set; } = string.Empty;
-        public TokenResponse Token { get; set; } = new ();
+
+        public TokenResponse Token { get; set; } = new();
     }
 
     /// <summary>
@@ -47,24 +49,25 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
             "https://www.googleapis.com/auth/userinfo.email",
             "https://www.googleapis.com/auth/userinfo.profile",
             "https://www.googleapis.com/auth/cclog",
-            "https://www.googleapis.com/auth/experimentsandconfigs"
+            "https://www.googleapis.com/auth/experimentsandconfigs",
         };
+
         private static readonly string[] LoadEndpoints =
         {
             "https://cloudcode-pa.googleapis.com",
             "https://daily-cloudcode-pa.sandbox.googleapis.com",
-            "https://autopush-cloudcode-pa.sandbox.googleapis.com"
+            "https://autopush-cloudcode-pa.sandbox.googleapis.com",
         };
 
         private static readonly string[] FallbackEndpoints =
         {
             "https://daily-cloudcode-pa.sandbox.googleapis.com",
             "https://autopush-cloudcode-pa.sandbox.googleapis.com",
-            "https://cloudcode-pa.googleapis.com"
+            "https://cloudcode-pa.googleapis.com",
         };
 
-        private List<AntigravityAccount> _accounts = new ();
-        private readonly SemaphoreSlim _authLock = new (1, 1);
+        private List<AntigravityAccount> _accounts = new();
+        private readonly SemaphoreSlim _authLock = new(1, 1);
         private int _requestCount = 0;
 
         // New constructor that accepts a token store
@@ -122,7 +125,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
                     {
                         Email = "env-var-user@system",
                         ProjectId = parsed.ProjectId,
-                        Token = new TokenResponse { RefreshToken = parsed.RefreshToken, ExpiresInSeconds = 0, IssuedUtc = DateTime.UtcNow.AddHours(-1) }
+                        Token = new TokenResponse { RefreshToken = parsed.RefreshToken, ExpiresInSeconds = 0, IssuedUtc = DateTime.UtcNow.AddHours(-1) },
                     });
                 }
 
@@ -146,11 +149,18 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
                     }
                 }
 
-                if (this._accounts.Count == 0) throw new InvalidOperationException("Authentication failed.");
+                if (this._accounts.Count == 0)
+                {
+                    throw new InvalidOperationException("Authentication failed.");
+                }
 
                 // Round-Robin Selection
                 var index = Interlocked.Increment(ref this._requestCount) % this._accounts.Count;
-                if (index < 0) index = -index; // Handle overflow
+                if (index < 0)
+                {
+                    index = -index; // Handle overflow
+                }
+
                 var account = this._accounts[index];
 
                 // Check Expiry & Refresh
@@ -171,7 +181,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
         public IEnumerable<AccountInfo> ListAccounts()
         {
             // Thread-safe read (copy list reference)
-            var accounts = _accounts.ToList();
+            var accounts = this._accounts.ToList();
             return accounts.Select(a => new AccountInfo(a.Email, !a.Token.IsStale));
         }
 
@@ -179,13 +189,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
         {
             var verifier = GenerateCodeVerifier();
             var challenge = GenerateCodeChallenge(verifier);
-            var state = EncodeState(new PkceState { Verifier = verifier, ProjectId = _projectId });
-            return BuildAuthorizationUrl(redirectUrl, challenge, state);
+            var state = EncodeState(new PkceState { Verifier = verifier, ProjectId = this._projectId });
+            return this.BuildAuthorizationUrl(redirectUrl, challenge, state);
         }
 
         public async Task CompleteAuthFlowAsync(string code, string redirectUrl, string? state = null)
         {
-            await _authLock.WaitAsync();
+            await this._authLock.WaitAsync();
             try
             {
                 if (string.IsNullOrWhiteSpace(code))
@@ -199,8 +209,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
                 }
 
                 var pkceState = DecodeState(state);
-                var token = await ExchangeCodeForTokenAsync(code, redirectUrl, pkceState.Verifier, CancellationToken.None);
-                var email = await FetchUserEmailAsync(token.AccessToken, CancellationToken.None);
+                var token = await this.ExchangeCodeForTokenAsync(code, redirectUrl, pkceState.Verifier, CancellationToken.None);
+                var email = await this.FetchUserEmailAsync(token.AccessToken, CancellationToken.None);
                 if (string.IsNullOrWhiteSpace(email))
                 {
                     email = "unknown@user";
@@ -209,7 +219,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
                 var projectId = pkceState.ProjectId;
                 if (string.IsNullOrWhiteSpace(projectId))
                 {
-                    projectId = await FetchProjectIdAsync(token.AccessToken, CancellationToken.None);
+                    projectId = await this.FetchProjectIdAsync(token.AccessToken, CancellationToken.None);
                 }
 
                 if (string.IsNullOrWhiteSpace(projectId))
@@ -218,24 +228,24 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
                 }
 
                 // Update or Add
-                var existing = _accounts.FirstOrDefault(a => a.Email == email);
+                var existing = this._accounts.FirstOrDefault(a => a.Email == email);
                 if (existing != null)
                 {
                     existing.Token = token;
                     existing.ProjectId = projectId;
-                    _logger.LogInformation("Updated token for {Email}", email);
+                    this._logger.LogInformation("Updated token for {Email}", email);
                 }
                 else
                 {
-                    _accounts.Add(new AntigravityAccount { Email = email, ProjectId = projectId, Token = token });
-                    _logger.LogInformation("Added new account: {Email}", email);
+                    this._accounts.Add(new AntigravityAccount { Email = email, ProjectId = projectId, Token = token });
+                    this._logger.LogInformation("Added new account: {Email}", email);
                 }
 
-                await _tokenStore.SaveAsync(_accounts);
+                await this._tokenStore.SaveAsync(this._accounts);
             }
             finally
             {
-                _authLock.Release();
+                this._authLock.Release();
             }
         }
 
@@ -246,7 +256,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
                 throw new InvalidOperationException("Missing refresh token for account.");
             }
 
-            var newToken = await RefreshTokenAsync(account.Token.RefreshToken, cancellationToken);
+            var newToken = await this.RefreshTokenAsync(account.Token.RefreshToken, cancellationToken);
             if (string.IsNullOrWhiteSpace(newToken.RefreshToken))
             {
                 newToken.RefreshToken = account.Token.RefreshToken;
@@ -256,14 +266,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
 
             // We don't necessarily need to save on every refresh (performance), but it's safer to do so
             // to persist the new access token/expiry.
-            await _tokenStore.SaveAsync(_accounts);
+            await this._tokenStore.SaveAsync(this._accounts);
         }
 
         // Legacy Interactive Login (kept for CLI convenience)
         private async Task InteractiveLoginAsync(CancellationToken cancellationToken)
         {
             var redirectUri = "http://localhost:51121/oauth/antigravity/callback";
-            var url = StartAuthFlow(redirectUri);
+            var url = this.StartAuthFlow(redirectUri);
 
             Console.WriteLine("----------------------------------------------------------------");
             Console.WriteLine("ANTIGRAVITY AUTHENTICATION REQUIRED");
@@ -289,14 +299,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
                 throw new InvalidOperationException("The redirect URL must include both code and state parameters.");
             }
 
-            await CompleteAuthFlowAsync(code, redirectUri, state);
+            await this.CompleteAuthFlowAsync(code, redirectUri, state);
         }
 
         private string BuildAuthorizationUrl(string redirectUrl, string codeChallenge, string state)
         {
             var parameters = new Dictionary<string, string>
             {
-                ["client_id"] = _settings.ClientId,
+                ["client_id"] = this._settings.ClientId,
                 ["response_type"] = "code",
                 ["redirect_uri"] = redirectUrl,
                 ["scope"] = string.Join(" ", Scopes),
@@ -304,7 +314,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
                 ["code_challenge_method"] = "S256",
                 ["state"] = state,
                 ["access_type"] = "offline",
-                ["prompt"] = "consent"
+                ["prompt"] = "consent",
             };
 
             return $"{AuthorizationEndpoint}?{BuildQueryString(parameters)}";
@@ -369,15 +379,15 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
             string verifier,
             CancellationToken cancellationToken)
         {
-            using var httpClient = CreateHttpClient();
+            using var httpClient = this.CreateHttpClient();
             using var content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                ["client_id"] = _settings.ClientId,
-                ["client_secret"] = _settings.ClientSecret,
+                ["client_id"] = this._settings.ClientId,
+                ["client_secret"] = this._settings.ClientSecret,
                 ["code"] = code,
                 ["grant_type"] = "authorization_code",
                 ["redirect_uri"] = redirectUrl,
-                ["code_verifier"] = verifier
+                ["code_verifier"] = verifier,
             });
 
             using var response = await httpClient.PostAsync(TokenEndpoint, content, cancellationToken);
@@ -403,19 +413,19 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
                 AccessToken = tokenPayload.AccessToken,
                 RefreshToken = tokenPayload.RefreshToken,
                 ExpiresInSeconds = tokenPayload.ExpiresIn,
-                IssuedUtc = DateTime.UtcNow
+                IssuedUtc = DateTime.UtcNow,
             };
         }
 
         private async Task<TokenResponse> RefreshTokenAsync(string refreshToken, CancellationToken cancellationToken)
         {
-            using var httpClient = CreateHttpClient();
+            using var httpClient = this.CreateHttpClient();
             using var content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                ["client_id"] = _settings.ClientId,
-                ["client_secret"] = _settings.ClientSecret,
+                ["client_id"] = this._settings.ClientId,
+                ["client_secret"] = this._settings.ClientSecret,
                 ["refresh_token"] = refreshToken,
-                ["grant_type"] = "refresh_token"
+                ["grant_type"] = "refresh_token",
             });
 
             using var response = await httpClient.PostAsync(TokenEndpoint, content, cancellationToken);
@@ -436,13 +446,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
                 AccessToken = tokenPayload.AccessToken,
                 RefreshToken = tokenPayload.RefreshToken ?? refreshToken,
                 ExpiresInSeconds = tokenPayload.ExpiresIn,
-                IssuedUtc = DateTime.UtcNow
+                IssuedUtc = DateTime.UtcNow,
             };
         }
 
         private async Task<string> FetchUserEmailAsync(string accessToken, CancellationToken cancellationToken)
         {
-            using var httpClient = CreateHttpClient();
+            using var httpClient = this.CreateHttpClient();
             using var request = new HttpRequestMessage(HttpMethod.Get, UserInfoEndpoint);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
@@ -465,7 +475,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
                 ["Content-Type"] = "application/json",
                 ["User-Agent"] = "google-api-nodejs-client/9.15.1",
                 ["X-Goog-Api-Client"] = "google-cloud-sdk vscode_cloudshelleditor/0.1",
-                ["Client-Metadata"] = "{\"ideType\":\"IDE_UNSPECIFIED\",\"platform\":\"PLATFORM_UNSPECIFIED\",\"pluginType\":\"GEMINI\"}"
+                ["Client-Metadata"] = "{\"ideType\":\"IDE_UNSPECIFIED\",\"platform\":\"PLATFORM_UNSPECIFIED\",\"pluginType\":\"GEMINI\"}",
             };
 
             var endpoints = LoadEndpoints.Concat(FallbackEndpoints).Distinct().ToArray();
@@ -474,7 +484,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
                 var url = $"{endpoint}/v1internal:loadCodeAssist";
                 try
                 {
-                    using var httpClient = CreateHttpClient();
+                    using var httpClient = this.CreateHttpClient();
                     using var request = new HttpRequestMessage(HttpMethod.Post, url);
                     foreach (var header in loadHeaders)
                     {
@@ -508,7 +518,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Failed to resolve project ID from {Endpoint}", endpoint);
+                    this._logger.LogWarning(ex, "Failed to resolve project ID from {Endpoint}", endpoint);
                 }
             }
 
@@ -568,13 +578,16 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
         private sealed class PkceState
         {
             [JsonPropertyName("verifier")] public string Verifier { get; set; } = string.Empty;
+
             [JsonPropertyName("projectId")] public string? ProjectId { get; set; }
         }
 
         private sealed class TokenPayload
         {
             [JsonPropertyName("access_token")] public string AccessToken { get; set; } = string.Empty;
+
             [JsonPropertyName("expires_in")] public int ExpiresIn { get; set; }
+
             [JsonPropertyName("refresh_token")] public string? RefreshToken { get; set; }
         }
 

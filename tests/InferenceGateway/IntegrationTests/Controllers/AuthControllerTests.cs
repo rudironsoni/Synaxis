@@ -22,10 +22,10 @@ public class AuthControllerTests : IClassFixture<SynaxisWebApplicationFactory>
 
     public AuthControllerTests(SynaxisWebApplicationFactory factory, ITestOutputHelper output)
     {
-        _factory = factory;
-        _factory.OutputHelper = output;
-        _output = output;
-        _client = _factory.CreateClient();
+        this._factory = factory;
+        this._factory.OutputHelper = output;
+        this._output = output;
+        this._client = this._factory.CreateClient();
     }
 
     [Fact]
@@ -34,7 +34,7 @@ public class AuthControllerTests : IClassFixture<SynaxisWebApplicationFactory>
         var email = $"newuser_{Guid.NewGuid()}@example.com";
         var request = new { Email = email };
 
-        var response = await _client.PostAsJsonAsync("/auth/dev-login", request);
+        var response = await this._client.PostAsJsonAsync("/auth/dev-login", request);
 
         response.EnsureSuccessStatusCode();
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -49,7 +49,7 @@ public class AuthControllerTests : IClassFixture<SynaxisWebApplicationFactory>
         Assert.Contains(".", token);
 
         // Verify user was created in database
-        var scope = _factory.Services.CreateScope();
+        var scope = this._factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
         var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
 
@@ -73,13 +73,13 @@ public class AuthControllerTests : IClassFixture<SynaxisWebApplicationFactory>
         // First, create a user
         var email = $"existing_{Guid.NewGuid()}@example.com";
         var firstRequest = new { Email = email };
-        var firstResponse = await _client.PostAsJsonAsync("/auth/dev-login", firstRequest);
+        var firstResponse = await this._client.PostAsJsonAsync("/auth/dev-login", firstRequest);
         firstResponse.EnsureSuccessStatusCode();
         var firstContent = await firstResponse.Content.ReadFromJsonAsync<JsonElement>();
         var firstToken = firstContent.GetProperty("token").GetString();
 
         // Get user details
-        var scope = _factory.Services.CreateScope();
+        var scope = this._factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
         var user = await dbContext.Users.FirstAsync(u => u.Email == email);
         var userId = user.Id;
@@ -87,7 +87,7 @@ public class AuthControllerTests : IClassFixture<SynaxisWebApplicationFactory>
 
         // Login again with same email
         var secondRequest = new { Email = email };
-        var secondResponse = await _client.PostAsJsonAsync("/auth/dev-login", secondRequest);
+        var secondResponse = await this._client.PostAsJsonAsync("/auth/dev-login", secondRequest);
 
         secondResponse.EnsureSuccessStatusCode();
         var secondContent = await secondResponse.Content.ReadFromJsonAsync<JsonElement>();
@@ -112,14 +112,14 @@ public class AuthControllerTests : IClassFixture<SynaxisWebApplicationFactory>
         var email = $"claims_{Guid.NewGuid()}@example.com";
         var request = new { Email = email };
 
-        var response = await _client.PostAsJsonAsync("/auth/dev-login", request);
+        var response = await this._client.PostAsJsonAsync("/auth/dev-login", request);
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
         var token = content.GetProperty("token").GetString();
 
         // Get user from database
-        var scope = _factory.Services.CreateScope();
+        var scope = this._factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
         var user = await dbContext.Users.FirstAsync(u => u.Email == email);
 
@@ -139,7 +139,7 @@ public class AuthControllerTests : IClassFixture<SynaxisWebApplicationFactory>
         var email = $"expiration_{Guid.NewGuid()}@example.com";
         var request = new { Email = email };
 
-        var response = await _client.PostAsJsonAsync("/auth/dev-login", request);
+        var response = await this._client.PostAsJsonAsync("/auth/dev-login", request);
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -163,15 +163,15 @@ public class AuthControllerTests : IClassFixture<SynaxisWebApplicationFactory>
         var email2 = $"user2_{Guid.NewGuid()}@example.com";
 
         // Login first user
-        var response1 = await _client.PostAsJsonAsync("/auth/dev-login", new { Email = email1 });
+        var response1 = await this._client.PostAsJsonAsync("/auth/dev-login", new { Email = email1 });
         response1.EnsureSuccessStatusCode();
 
         // Login second user
-        var response2 = await _client.PostAsJsonAsync("/auth/dev-login", new { Email = email2 });
+        var response2 = await this._client.PostAsJsonAsync("/auth/dev-login", new { Email = email2 });
         response2.EnsureSuccessStatusCode();
 
         // Verify both users have different tenants
-        var scope = _factory.Services.CreateScope();
+        var scope = this._factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
 
         var user1 = await dbContext.Users.FirstAsync(u => u.Email == email1);
@@ -194,11 +194,11 @@ public class AuthControllerTests : IClassFixture<SynaxisWebApplicationFactory>
         var email = $"owner_{Guid.NewGuid()}@example.com";
         var request = new { Email = email };
 
-        var response = await _client.PostAsJsonAsync("/auth/dev-login", request);
+        var response = await this._client.PostAsJsonAsync("/auth/dev-login", request);
         response.EnsureSuccessStatusCode();
 
         // Verify user has Owner role
-        var scope = _factory.Services.CreateScope();
+        var scope = this._factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
         var user = await dbContext.Users.FirstAsync(u => u.Email == email);
 
@@ -211,11 +211,11 @@ public class AuthControllerTests : IClassFixture<SynaxisWebApplicationFactory>
         var email = $"provider_{Guid.NewGuid()}@example.com";
         var request = new { Email = email };
 
-        var response = await _client.PostAsJsonAsync("/auth/dev-login", request);
+        var response = await this._client.PostAsJsonAsync("/auth/dev-login", request);
         response.EnsureSuccessStatusCode();
 
         // Verify auth provider and provider user ID
-        var scope = _factory.Services.CreateScope();
+        var scope = this._factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
         var user = await dbContext.Users.FirstAsync(u => u.Email == email);
 
@@ -229,7 +229,7 @@ public class AuthControllerTests : IClassFixture<SynaxisWebApplicationFactory>
         var email = $"json_{Guid.NewGuid()}@example.com";
         var request = new { Email = email };
 
-        var response = await _client.PostAsJsonAsync("/auth/dev-login", request);
+        var response = await this._client.PostAsJsonAsync("/auth/dev-login", request);
         response.EnsureSuccessStatusCode();
 
         var json = await response.Content.ReadAsStringAsync();
@@ -250,12 +250,12 @@ public class AuthControllerTests : IClassFixture<SynaxisWebApplicationFactory>
         var email = $"not-an-email-{Guid.NewGuid()}";
         var request = new { Email = email };
 
-        var response = await _client.PostAsJsonAsync("/auth/dev-login", request);
+        var response = await this._client.PostAsJsonAsync("/auth/dev-login", request);
 
         // The endpoint accepts any string as email in dev mode
         response.EnsureSuccessStatusCode();
 
-        var scope = _factory.Services.CreateScope();
+        var scope = this._factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ControlPlaneDbContext>();
         var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
 
@@ -268,13 +268,13 @@ public class AuthControllerTests : IClassFixture<SynaxisWebApplicationFactory>
     {
         var request = new { Email = "" };
 
-        var response = await _client.PostAsJsonAsync("/auth/dev-login", request);
+        var response = await this._client.PostAsJsonAsync("/auth/dev-login", request);
 
         // Empty email should result in bad request or error
         // Depending on implementation, this may return 400 or still create a user
         // Let's see what happens and document it
-        _output.WriteLine($"Response status: {response.StatusCode}");
+        this._output.WriteLine($"Response status: {response.StatusCode}");
         var content = await response.Content.ReadAsStringAsync();
-        _output.WriteLine($"Response content: {content}");
+        this._output.WriteLine($"Response content: {content}");
     }
 }

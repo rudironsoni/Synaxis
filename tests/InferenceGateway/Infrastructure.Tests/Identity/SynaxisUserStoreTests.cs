@@ -22,8 +22,8 @@ public class SynaxisUserStoreTests : IDisposable
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
 
-        _context = new SynaxisDbContext(options);
-        _store = new SynaxisUserStore(_context);
+        this._context = new SynaxisDbContext(options);
+        this._store = new SynaxisUserStore(this._context);
     }
 
     [Fact]
@@ -39,7 +39,7 @@ public class SynaxisUserStoreTests : IDisposable
             Email = "test@example.com",
             NormalizedEmail = "TEST@EXAMPLE.COM",
             UserName = "test@example.com",
-            Status = "Active"
+            Status = "Active",
         };
 
         var org = new Organization
@@ -49,7 +49,7 @@ public class SynaxisUserStoreTests : IDisposable
             DisplayName = "Test",
             Slug = "test",
             Status = "Active",
-            PlanTier = "Free"
+            PlanTier = "Free",
         };
 
         var membership = new UserOrganizationMembership
@@ -58,16 +58,16 @@ public class SynaxisUserStoreTests : IDisposable
             UserId = userId,
             OrganizationId = orgId,
             OrganizationRole = "Member",
-            Status = "Active"
+            Status = "Active",
         };
 
-        _context.Users.Add(user);
-        _context.Organizations.Add(org);
-        _context.UserOrganizationMemberships.Add(membership);
-        await _context.SaveChangesAsync();
+        this._context.Users.Add(user);
+        this._context.Organizations.Add(org);
+        this._context.UserOrganizationMemberships.Add(membership);
+        await this._context.SaveChangesAsync();
 
         // Act
-        var result = await _store.FindByEmailInOrganizationAsync("test@example.com", orgId);
+        var result = await this._store.FindByEmailInOrganizationAsync("test@example.com", orgId);
 
         // Assert
         Assert.NotNull(result);
@@ -88,7 +88,7 @@ public class SynaxisUserStoreTests : IDisposable
             NormalizedEmail = "DELETED@EXAMPLE.COM",
             UserName = "deleted@example.com",
             Status = "Deactivated",
-            DeletedAt = DateTime.UtcNow
+            DeletedAt = DateTime.UtcNow,
         };
 
         var org = new Organization
@@ -98,7 +98,7 @@ public class SynaxisUserStoreTests : IDisposable
             DisplayName = "Test",
             Slug = "test",
             Status = "Active",
-            PlanTier = "Free"
+            PlanTier = "Free",
         };
 
         var membership = new UserOrganizationMembership
@@ -107,16 +107,16 @@ public class SynaxisUserStoreTests : IDisposable
             UserId = userId,
             OrganizationId = orgId,
             OrganizationRole = "Member",
-            Status = "Active"
+            Status = "Active",
         };
 
-        _context.Users.Add(user);
-        _context.Organizations.Add(org);
-        _context.UserOrganizationMemberships.Add(membership);
-        await _context.SaveChangesAsync();
+        this._context.Users.Add(user);
+        this._context.Organizations.Add(org);
+        this._context.UserOrganizationMemberships.Add(membership);
+        await this._context.SaveChangesAsync();
 
         // Act
-        var result = await _store.FindByEmailInOrganizationAsync("deleted@example.com", orgId);
+        var result = await this._store.FindByEmailInOrganizationAsync("deleted@example.com", orgId);
 
         // Assert - should be null because user is soft deleted
         Assert.Null(result);
@@ -135,7 +135,7 @@ public class SynaxisUserStoreTests : IDisposable
             Id = userId,
             Email = "test@example.com",
             UserName = "test@example.com",
-            Status = "Active"
+            Status = "Active",
         };
 
         var org1 = new Organization
@@ -145,7 +145,7 @@ public class SynaxisUserStoreTests : IDisposable
             DisplayName = "Org 1",
             Slug = "org-1",
             Status = "Active",
-            PlanTier = "Free"
+            PlanTier = "Free",
         };
 
         var org2 = new Organization
@@ -155,7 +155,7 @@ public class SynaxisUserStoreTests : IDisposable
             DisplayName = "Org 2",
             Slug = "org-2",
             Status = "Active",
-            PlanTier = "Free"
+            PlanTier = "Free",
         };
 
         var membership1 = new UserOrganizationMembership
@@ -164,7 +164,7 @@ public class SynaxisUserStoreTests : IDisposable
             UserId = userId,
             OrganizationId = org1Id,
             OrganizationRole = "Owner",
-            Status = "Active"
+            Status = "Active",
         };
 
         var membership2 = new UserOrganizationMembership
@@ -173,18 +173,18 @@ public class SynaxisUserStoreTests : IDisposable
             UserId = userId,
             OrganizationId = org2Id,
             OrganizationRole = "Member",
-            Status = "Active"
+            Status = "Active",
         };
 
-        _context.Users.Add(user);
-        _context.Organizations.Add(org1);
-        _context.Organizations.Add(org2);
-        _context.UserOrganizationMemberships.Add(membership1);
-        _context.UserOrganizationMemberships.Add(membership2);
-        await _context.SaveChangesAsync();
+        this._context.Users.Add(user);
+        this._context.Organizations.Add(org1);
+        this._context.Organizations.Add(org2);
+        this._context.UserOrganizationMemberships.Add(membership1);
+        this._context.UserOrganizationMemberships.Add(membership2);
+        await this._context.SaveChangesAsync();
 
         // Act
-        var result = await _store.GetOrganizationsAsync(userId);
+        var result = await this._store.GetOrganizationsAsync(userId);
 
         // Assert
         Assert.Equal(2, result.Count);
@@ -204,14 +204,14 @@ public class SynaxisUserStoreTests : IDisposable
             Email = "deleted@example.com",
             UserName = "deleted@example.com",
             Status = "Deactivated",
-            DeletedAt = DateTime.UtcNow
+            DeletedAt = DateTime.UtcNow,
         };
 
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
+        this._context.Users.Add(user);
+        await this._context.SaveChangesAsync();
 
         // Act
-        var result = await _store.FindByIdAsync(userId.ToString());
+        var result = await this._store.FindByIdAsync(userId.ToString());
 
         // Assert
         Assert.Null(result);
@@ -219,8 +219,8 @@ public class SynaxisUserStoreTests : IDisposable
 
     public void Dispose()
     {
-        _context.Database.EnsureDeleted();
-        _context.Dispose();
-        _store.Dispose();
+        this._context.Database.EnsureDeleted();
+        this._context.Dispose();
+        this._store.Dispose();
     }
 }

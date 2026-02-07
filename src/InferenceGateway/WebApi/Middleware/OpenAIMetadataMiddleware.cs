@@ -20,7 +20,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         /// <param name="next">The next middleware delegate.</param>
         public OpenAIMetadataMiddleware(RequestDelegate next)
         {
-            _next = next;
+            this._next = next;
         }
 
         /// <summary>
@@ -54,7 +54,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 return Task.CompletedTask;
             });
 
-            await _next(context);
+            await this._next(context);
         }
     }
 

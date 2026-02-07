@@ -16,14 +16,14 @@ public class AdminEndpointsTests : IClassFixture<SynaxisWebApplicationFactory>
 
     public AdminEndpointsTests(SynaxisWebApplicationFactory factory)
     {
-        _factory = factory;
-        _client = factory.CreateClient();
+        this._factory = factory;
+        this._client = factory.CreateClient();
     }
 
     private async Task<string> GetAuthTokenAsync()
     {
         var loginRequest = new { Email = "admin@test.com" };
-        var response = await _client.PostAsJsonAsync("/auth/dev-login", loginRequest);
+        var response = await this._client.PostAsJsonAsync("/auth/dev-login", loginRequest);
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -32,13 +32,13 @@ public class AdminEndpointsTests : IClassFixture<SynaxisWebApplicationFactory>
 
     private HttpClient CreateAuthenticatedClient()
     {
-        return _factory.CreateClient();
+        return this._factory.CreateClient();
     }
 
     [Fact]
     public async Task GetProviders_WithoutAuth_ReturnsUnauthorized()
     {
-        var response = await _client.GetAsync("/admin/providers");
+        var response = await this._client.GetAsync("/admin/providers");
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
@@ -46,8 +46,8 @@ public class AdminEndpointsTests : IClassFixture<SynaxisWebApplicationFactory>
     [Fact]
     public async Task GetProviders_WithAuth_ReturnsProviders()
     {
-        var token = await GetAuthTokenAsync();
-        var authenticatedClient = CreateAuthenticatedClient();
+        var token = await this.GetAuthTokenAsync();
+        var authenticatedClient = this.CreateAuthenticatedClient();
         authenticatedClient.DefaultRequestHeaders.Authorization =
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
@@ -61,8 +61,8 @@ public class AdminEndpointsTests : IClassFixture<SynaxisWebApplicationFactory>
     [Fact]
     public async Task GetProviders_WithAuth_ContainsProviderFields()
     {
-        var token = await GetAuthTokenAsync();
-        var authenticatedClient = CreateAuthenticatedClient();
+        var token = await this.GetAuthTokenAsync();
+        var authenticatedClient = this.CreateAuthenticatedClient();
         authenticatedClient.DefaultRequestHeaders.Authorization =
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
@@ -88,7 +88,7 @@ public class AdminEndpointsTests : IClassFixture<SynaxisWebApplicationFactory>
     public async Task UpdateProvider_WithoutAuth_ReturnsUnauthorized()
     {
         var updateRequest = new { enabled = false };
-        var response = await _client.PutAsJsonAsync("/admin/providers/groq", updateRequest);
+        var response = await this._client.PutAsJsonAsync("/admin/providers/groq", updateRequest);
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
@@ -96,8 +96,8 @@ public class AdminEndpointsTests : IClassFixture<SynaxisWebApplicationFactory>
     [Fact]
     public async Task UpdateProvider_WithAuth_UpdatesProvider()
     {
-        var token = await GetAuthTokenAsync();
-        var authenticatedClient = CreateAuthenticatedClient();
+        var token = await this.GetAuthTokenAsync();
+        var authenticatedClient = this.CreateAuthenticatedClient();
         authenticatedClient.DefaultRequestHeaders.Authorization =
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
@@ -119,8 +119,8 @@ public class AdminEndpointsTests : IClassFixture<SynaxisWebApplicationFactory>
     [Fact]
     public async Task UpdateProvider_WithAuth_InvalidProvider_ReturnsNotFound()
     {
-        var token = await GetAuthTokenAsync();
-        var authenticatedClient = CreateAuthenticatedClient();
+        var token = await this.GetAuthTokenAsync();
+        var authenticatedClient = this.CreateAuthenticatedClient();
         authenticatedClient.DefaultRequestHeaders.Authorization =
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
@@ -133,8 +133,8 @@ public class AdminEndpointsTests : IClassFixture<SynaxisWebApplicationFactory>
     [Fact]
     public async Task UpdateProvider_WithAuth_UpdatesApiKey()
     {
-        var token = await GetAuthTokenAsync();
-        var authenticatedClient = CreateAuthenticatedClient();
+        var token = await this.GetAuthTokenAsync();
+        var authenticatedClient = this.CreateAuthenticatedClient();
         authenticatedClient.DefaultRequestHeaders.Authorization =
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
@@ -156,7 +156,7 @@ public class AdminEndpointsTests : IClassFixture<SynaxisWebApplicationFactory>
     [Fact]
     public async Task GetHealth_WithoutAuth_ReturnsUnauthorized()
     {
-        var response = await _client.GetAsync("/admin/health");
+        var response = await this._client.GetAsync("/admin/health");
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
@@ -164,8 +164,8 @@ public class AdminEndpointsTests : IClassFixture<SynaxisWebApplicationFactory>
     [Fact]
     public async Task GetHealth_WithAuth_ReturnsHealthData()
     {
-        var token = await GetAuthTokenAsync();
-        var authenticatedClient = CreateAuthenticatedClient();
+        var token = await this.GetAuthTokenAsync();
+        var authenticatedClient = this.CreateAuthenticatedClient();
         authenticatedClient.DefaultRequestHeaders.Authorization =
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
@@ -183,8 +183,8 @@ public class AdminEndpointsTests : IClassFixture<SynaxisWebApplicationFactory>
     [Fact]
     public async Task GetHealth_WithAuth_ContainsServices()
     {
-        var token = await GetAuthTokenAsync();
-        var authenticatedClient = CreateAuthenticatedClient();
+        var token = await this.GetAuthTokenAsync();
+        var authenticatedClient = this.CreateAuthenticatedClient();
         authenticatedClient.DefaultRequestHeaders.Authorization =
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
@@ -206,8 +206,8 @@ public class AdminEndpointsTests : IClassFixture<SynaxisWebApplicationFactory>
     [Fact]
     public async Task GetHealth_WithAuth_ContainsProviders()
     {
-        var token = await GetAuthTokenAsync();
-        var authenticatedClient = CreateAuthenticatedClient();
+        var token = await this.GetAuthTokenAsync();
+        var authenticatedClient = this.CreateAuthenticatedClient();
         authenticatedClient.DefaultRequestHeaders.Authorization =
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
@@ -223,8 +223,8 @@ public class AdminEndpointsTests : IClassFixture<SynaxisWebApplicationFactory>
     [Fact]
     public async Task GetHealth_WithAuth_HasValidOverallStatus()
     {
-        var token = await GetAuthTokenAsync();
-        var authenticatedClient = CreateAuthenticatedClient();
+        var token = await this.GetAuthTokenAsync();
+        var authenticatedClient = this.CreateAuthenticatedClient();
         authenticatedClient.DefaultRequestHeaders.Authorization =
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
@@ -241,8 +241,8 @@ public class AdminEndpointsTests : IClassFixture<SynaxisWebApplicationFactory>
     [Fact]
     public async Task GetProviders_WithAuth_ProviderHasModels()
     {
-        var token = await GetAuthTokenAsync();
-        var authenticatedClient = CreateAuthenticatedClient();
+        var token = await this.GetAuthTokenAsync();
+        var authenticatedClient = this.CreateAuthenticatedClient();
         authenticatedClient.DefaultRequestHeaders.Authorization =
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
@@ -264,8 +264,8 @@ public class AdminEndpointsTests : IClassFixture<SynaxisWebApplicationFactory>
     [Fact]
     public async Task UpdateProvider_WithAuth_UpdatesTier()
     {
-        var token = await GetAuthTokenAsync();
-        var authenticatedClient = CreateAuthenticatedClient();
+        var token = await this.GetAuthTokenAsync();
+        var authenticatedClient = this.CreateAuthenticatedClient();
         authenticatedClient.DefaultRequestHeaders.Authorization =
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
@@ -287,8 +287,8 @@ public class AdminEndpointsTests : IClassFixture<SynaxisWebApplicationFactory>
     [Fact]
     public async Task UpdateProvider_WithAuth_UpdatesEndpoint()
     {
-        var token = await GetAuthTokenAsync();
-        var authenticatedClient = CreateAuthenticatedClient();
+        var token = await this.GetAuthTokenAsync();
+        var authenticatedClient = this.CreateAuthenticatedClient();
         authenticatedClient.DefaultRequestHeaders.Authorization =
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
@@ -310,8 +310,8 @@ public class AdminEndpointsTests : IClassFixture<SynaxisWebApplicationFactory>
     [Fact]
     public async Task AdminEndpoints_HaveCorrectTags()
     {
-        var token = await GetAuthTokenAsync();
-        var authenticatedClient = CreateAuthenticatedClient();
+        var token = await this.GetAuthTokenAsync();
+        var authenticatedClient = this.CreateAuthenticatedClient();
         authenticatedClient.DefaultRequestHeaders.Authorization =
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 

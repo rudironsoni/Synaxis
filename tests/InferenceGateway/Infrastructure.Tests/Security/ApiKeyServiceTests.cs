@@ -26,15 +26,15 @@ public class ApiKeyServiceTests : IAsyncLifetime
             .UseInMemoryDatabase(databaseName: $"ApiKeyServiceTests_{Guid.NewGuid()}")
             .Options;
 
-        _dbContext = new SynaxisDbContext(options);
-        _apiKeyService = new ApiKeyService(_dbContext);
+        this._dbContext = new SynaxisDbContext(options);
+        this._apiKeyService = new ApiKeyService(this._dbContext);
     }
 
     public Task InitializeAsync() => Task.CompletedTask;
 
     public async Task DisposeAsync()
     {
-        await _dbContext.DisposeAsync();
+        await this._dbContext.DisposeAsync();
     }
 
     #region GenerateApiKeyAsync Tests
@@ -47,11 +47,11 @@ public class ApiKeyServiceTests : IAsyncLifetime
         {
             OrganizationId = Guid.NewGuid(),
             Name = "Test API Key",
-            Scopes = new[] { "read", "write" }
+            Scopes = new[] { "read", "write" },
         };
 
         // Act
-        var response = await _apiKeyService.GenerateApiKeyAsync(request);
+        var response = await this._apiKeyService.GenerateApiKeyAsync(request);
 
         // Assert
         response.Should().NotBeNull();
@@ -70,18 +70,18 @@ public class ApiKeyServiceTests : IAsyncLifetime
         var request1 = new GenerateApiKeyRequest
         {
             OrganizationId = Guid.NewGuid(),
-            Name = "API Key 1"
+            Name = "API Key 1",
         };
 
         var request2 = new GenerateApiKeyRequest
         {
             OrganizationId = Guid.NewGuid(),
-            Name = "API Key 2"
+            Name = "API Key 2",
         };
 
         // Act
-        var response1 = await _apiKeyService.GenerateApiKeyAsync(request1);
-        var response2 = await _apiKeyService.GenerateApiKeyAsync(request2);
+        var response1 = await this._apiKeyService.GenerateApiKeyAsync(request1);
+        var response2 = await this._apiKeyService.GenerateApiKeyAsync(request2);
 
         // Assert
         response1.ApiKey.Should().NotBe(response2.ApiKey);
@@ -95,14 +95,14 @@ public class ApiKeyServiceTests : IAsyncLifetime
         var request = new GenerateApiKeyRequest
         {
             OrganizationId = Guid.NewGuid(),
-            Name = "Test API Key"
+            Name = "Test API Key",
         };
 
         // Act
-        var response = await _apiKeyService.GenerateApiKeyAsync(request);
+        var response = await this._apiKeyService.GenerateApiKeyAsync(request);
 
         // Assert
-        var storedKey = await _dbContext.ApiKeys.FindAsync(response.Id);
+        var storedKey = await this._dbContext.ApiKeys.FindAsync(response.Id);
         storedKey.Should().NotBeNull();
         storedKey!.KeyHash.Should().NotBeNullOrEmpty();
 
@@ -120,14 +120,14 @@ public class ApiKeyServiceTests : IAsyncLifetime
         var request = new GenerateApiKeyRequest
         {
             OrganizationId = Guid.NewGuid(),
-            Name = "Test API Key"
+            Name = "Test API Key",
         };
 
         // Act
-        var response = await _apiKeyService.GenerateApiKeyAsync(request);
+        var response = await this._apiKeyService.GenerateApiKeyAsync(request);
 
         // Assert
-        var storedKey = await _dbContext.ApiKeys.FindAsync(response.Id);
+        var storedKey = await this._dbContext.ApiKeys.FindAsync(response.Id);
         storedKey.Should().NotBeNull();
         storedKey!.KeyPrefix.Should().Be(response.Prefix);
         storedKey.KeyPrefix.Should().StartWith("synaxis_");
@@ -145,14 +145,14 @@ public class ApiKeyServiceTests : IAsyncLifetime
         {
             OrganizationId = Guid.NewGuid(),
             Name = "Test API Key",
-            ExpiresAt = expiresAt
+            ExpiresAt = expiresAt,
         };
 
         // Act
-        var response = await _apiKeyService.GenerateApiKeyAsync(request);
+        var response = await this._apiKeyService.GenerateApiKeyAsync(request);
 
         // Assert
-        var storedKey = await _dbContext.ApiKeys.FindAsync(response.Id);
+        var storedKey = await this._dbContext.ApiKeys.FindAsync(response.Id);
         storedKey.Should().NotBeNull();
         storedKey!.ExpiresAt.Should().BeCloseTo(expiresAt, TimeSpan.FromSeconds(1));
         response.ExpiresAt.Should().BeCloseTo(expiresAt, TimeSpan.FromSeconds(1));
@@ -167,14 +167,14 @@ public class ApiKeyServiceTests : IAsyncLifetime
             OrganizationId = Guid.NewGuid(),
             Name = "Test API Key",
             RateLimitRpm = 100,
-            RateLimitTpm = 10000
+            RateLimitTpm = 10000,
         };
 
         // Act
-        var response = await _apiKeyService.GenerateApiKeyAsync(request);
+        var response = await this._apiKeyService.GenerateApiKeyAsync(request);
 
         // Assert
-        var storedKey = await _dbContext.ApiKeys.FindAsync(response.Id);
+        var storedKey = await this._dbContext.ApiKeys.FindAsync(response.Id);
         storedKey.Should().NotBeNull();
         storedKey!.RateLimitRpm.Should().Be(100);
         storedKey.RateLimitTpm.Should().Be(10000);
@@ -187,14 +187,14 @@ public class ApiKeyServiceTests : IAsyncLifetime
         var request = new GenerateApiKeyRequest
         {
             OrganizationId = Guid.NewGuid(),
-            Name = "Test API Key"
+            Name = "Test API Key",
         };
 
         // Act
-        var response = await _apiKeyService.GenerateApiKeyAsync(request);
+        var response = await this._apiKeyService.GenerateApiKeyAsync(request);
 
         // Assert
-        var storedKey = await _dbContext.ApiKeys.FindAsync(response.Id);
+        var storedKey = await this._dbContext.ApiKeys.FindAsync(response.Id);
         storedKey.Should().NotBeNull();
         storedKey!.IsActive.Should().BeTrue();
     }
@@ -211,12 +211,12 @@ public class ApiKeyServiceTests : IAsyncLifetime
         {
             OrganizationId = Guid.NewGuid(),
             Name = "Test API Key",
-            Scopes = new[] { "read", "write" }
+            Scopes = new[] { "read", "write" },
         };
-        var generated = await _apiKeyService.GenerateApiKeyAsync(request);
+        var generated = await this._apiKeyService.GenerateApiKeyAsync(request);
 
         // Act
-        var result = await _apiKeyService.ValidateApiKeyAsync(generated.ApiKey);
+        var result = await this._apiKeyService.ValidateApiKeyAsync(generated.ApiKey);
 
         // Assert
         result.Should().NotBeNull();
@@ -234,7 +234,7 @@ public class ApiKeyServiceTests : IAsyncLifetime
         var invalidKey = "synaxis_invalidkey1234567890_1234567890";
 
         // Act
-        var result = await _apiKeyService.ValidateApiKeyAsync(invalidKey);
+        var result = await this._apiKeyService.ValidateApiKeyAsync(invalidKey);
 
         // Assert
         result.Should().NotBeNull();
@@ -251,13 +251,13 @@ public class ApiKeyServiceTests : IAsyncLifetime
         var request = new GenerateApiKeyRequest
         {
             OrganizationId = Guid.NewGuid(),
-            Name = "Test API Key"
+            Name = "Test API Key",
         };
-        var generated = await _apiKeyService.GenerateApiKeyAsync(request);
-        await _apiKeyService.RevokeApiKeyAsync(generated.Id, "Test revocation");
+        var generated = await this._apiKeyService.GenerateApiKeyAsync(request);
+        await this._apiKeyService.RevokeApiKeyAsync(generated.Id, "Test revocation");
 
         // Act
-        var result = await _apiKeyService.ValidateApiKeyAsync(generated.ApiKey);
+        var result = await this._apiKeyService.ValidateApiKeyAsync(generated.ApiKey);
 
         // Assert
         result.Should().NotBeNull();
@@ -273,12 +273,12 @@ public class ApiKeyServiceTests : IAsyncLifetime
         {
             OrganizationId = Guid.NewGuid(),
             Name = "Test API Key",
-            ExpiresAt = DateTime.UtcNow.AddDays(-1) // Expired yesterday
+            ExpiresAt = DateTime.UtcNow.AddDays(-1), // Expired yesterday
         };
-        var generated = await _apiKeyService.GenerateApiKeyAsync(request);
+        var generated = await this._apiKeyService.GenerateApiKeyAsync(request);
 
         // Act
-        var result = await _apiKeyService.ValidateApiKeyAsync(generated.ApiKey);
+        var result = await this._apiKeyService.ValidateApiKeyAsync(generated.ApiKey);
 
         // Assert
         result.Should().NotBeNull();
@@ -293,17 +293,17 @@ public class ApiKeyServiceTests : IAsyncLifetime
         var request = new GenerateApiKeyRequest
         {
             OrganizationId = Guid.NewGuid(),
-            Name = "Test API Key"
+            Name = "Test API Key",
         };
-        var generated = await _apiKeyService.GenerateApiKeyAsync(request);
+        var generated = await this._apiKeyService.GenerateApiKeyAsync(request);
 
         // Manually deactivate the key
-        var key = await _dbContext.ApiKeys.FindAsync(generated.Id);
+        var key = await this._dbContext.ApiKeys.FindAsync(generated.Id);
         key!.IsActive = false;
-        await _dbContext.SaveChangesAsync();
+        await this._dbContext.SaveChangesAsync();
 
         // Act
-        var result = await _apiKeyService.ValidateApiKeyAsync(generated.ApiKey);
+        var result = await this._apiKeyService.ValidateApiKeyAsync(generated.ApiKey);
 
         // Assert
         result.Should().NotBeNull();
@@ -318,7 +318,7 @@ public class ApiKeyServiceTests : IAsyncLifetime
         var invalidKey = "invalid_prefix_key";
 
         // Act
-        var result = await _apiKeyService.ValidateApiKeyAsync(invalidKey);
+        var result = await this._apiKeyService.ValidateApiKeyAsync(invalidKey);
 
         // Assert
         result.Should().NotBeNull();
@@ -333,15 +333,15 @@ public class ApiKeyServiceTests : IAsyncLifetime
         var request = new GenerateApiKeyRequest
         {
             OrganizationId = Guid.NewGuid(),
-            Name = "Test API Key"
+            Name = "Test API Key",
         };
-        var generated = await _apiKeyService.GenerateApiKeyAsync(request);
+        var generated = await this._apiKeyService.GenerateApiKeyAsync(request);
 
         // Create a key with same prefix but different secret
         var wrongKey = generated.ApiKey.Substring(0, generated.Prefix.Length + 1) + "wrongsecretpart";
 
         // Act
-        var result = await _apiKeyService.ValidateApiKeyAsync(wrongKey);
+        var result = await this._apiKeyService.ValidateApiKeyAsync(wrongKey);
 
         // Assert
         result.Should().NotBeNull();
@@ -358,12 +358,12 @@ public class ApiKeyServiceTests : IAsyncLifetime
             OrganizationId = Guid.NewGuid(),
             Name = "Test API Key",
             RateLimitRpm = 150,
-            RateLimitTpm = 15000
+            RateLimitTpm = 15000,
         };
-        var generated = await _apiKeyService.GenerateApiKeyAsync(request);
+        var generated = await this._apiKeyService.GenerateApiKeyAsync(request);
 
         // Act
-        var result = await _apiKeyService.ValidateApiKeyAsync(generated.ApiKey);
+        var result = await this._apiKeyService.ValidateApiKeyAsync(generated.ApiKey);
 
         // Assert
         result.Should().NotBeNull();
@@ -383,13 +383,13 @@ public class ApiKeyServiceTests : IAsyncLifetime
         var request = new GenerateApiKeyRequest
         {
             OrganizationId = Guid.NewGuid(),
-            Name = "Test API Key"
+            Name = "Test API Key",
         };
-        var generated = await _apiKeyService.GenerateApiKeyAsync(request);
+        var generated = await this._apiKeyService.GenerateApiKeyAsync(request);
         var revokedBy = Guid.NewGuid();
 
         // Act
-        var result = await _apiKeyService.RevokeApiKeyAsync(
+        var result = await this._apiKeyService.RevokeApiKeyAsync(
             generated.Id,
             "Security policy violation",
             revokedBy);
@@ -397,7 +397,7 @@ public class ApiKeyServiceTests : IAsyncLifetime
         // Assert
         result.Should().BeTrue();
 
-        var revokedKey = await _dbContext.ApiKeys.FindAsync(generated.Id);
+        var revokedKey = await this._dbContext.ApiKeys.FindAsync(generated.Id);
         revokedKey.Should().NotBeNull();
         revokedKey!.IsActive.Should().BeFalse();
         revokedKey.RevokedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
@@ -412,7 +412,7 @@ public class ApiKeyServiceTests : IAsyncLifetime
         var nonExistentKeyId = Guid.NewGuid();
 
         // Act
-        var result = await _apiKeyService.RevokeApiKeyAsync(
+        var result = await this._apiKeyService.RevokeApiKeyAsync(
             nonExistentKeyId,
             "Test reason");
 
@@ -427,22 +427,22 @@ public class ApiKeyServiceTests : IAsyncLifetime
         var request = new GenerateApiKeyRequest
         {
             OrganizationId = Guid.NewGuid(),
-            Name = "Test API Key"
+            Name = "Test API Key",
         };
-        var generated = await _apiKeyService.GenerateApiKeyAsync(request);
+        var generated = await this._apiKeyService.GenerateApiKeyAsync(request);
 
         // Revoke once
-        await _apiKeyService.RevokeApiKeyAsync(generated.Id, "First revocation");
+        await this._apiKeyService.RevokeApiKeyAsync(generated.Id, "First revocation");
 
         // Act - Revoke again
-        var result = await _apiKeyService.RevokeApiKeyAsync(
+        var result = await this._apiKeyService.RevokeApiKeyAsync(
             generated.Id,
             "Second revocation");
 
         // Assert
         result.Should().BeFalse();
 
-        var key = await _dbContext.ApiKeys.FindAsync(generated.Id);
+        var key = await this._dbContext.ApiKeys.FindAsync(generated.Id);
         key!.RevocationReason.Should().Be("First revocation"); // Original reason preserved
     }
 
@@ -453,19 +453,19 @@ public class ApiKeyServiceTests : IAsyncLifetime
         var request = new GenerateApiKeyRequest
         {
             OrganizationId = Guid.NewGuid(),
-            Name = "Test API Key"
+            Name = "Test API Key",
         };
-        var generated = await _apiKeyService.GenerateApiKeyAsync(request);
+        var generated = await this._apiKeyService.GenerateApiKeyAsync(request);
 
         // Act
-        var result = await _apiKeyService.RevokeApiKeyAsync(
+        var result = await this._apiKeyService.RevokeApiKeyAsync(
             generated.Id,
             "Automated revocation");
 
         // Assert
         result.Should().BeTrue();
 
-        var revokedKey = await _dbContext.ApiKeys.FindAsync(generated.Id);
+        var revokedKey = await this._dbContext.ApiKeys.FindAsync(generated.Id);
         revokedKey.Should().NotBeNull();
         revokedKey!.IsActive.Should().BeFalse();
         revokedKey.RevokedBy.Should().BeNull();
@@ -482,20 +482,20 @@ public class ApiKeyServiceTests : IAsyncLifetime
         // Arrange
         var orgId = Guid.NewGuid();
 
-        await _apiKeyService.GenerateApiKeyAsync(new GenerateApiKeyRequest
+        await this._apiKeyService.GenerateApiKeyAsync(new GenerateApiKeyRequest
         {
             OrganizationId = orgId,
-            Name = "Key 1"
+            Name = "Key 1",
         });
 
-        await _apiKeyService.GenerateApiKeyAsync(new GenerateApiKeyRequest
+        await this._apiKeyService.GenerateApiKeyAsync(new GenerateApiKeyRequest
         {
             OrganizationId = orgId,
-            Name = "Key 2"
+            Name = "Key 2",
         });
 
         // Act
-        var keys = await _apiKeyService.ListApiKeysAsync(orgId);
+        var keys = await this._apiKeyService.ListApiKeysAsync(orgId);
 
         // Assert
         keys.Should().HaveCount(2);
@@ -508,22 +508,22 @@ public class ApiKeyServiceTests : IAsyncLifetime
         // Arrange
         var orgId = Guid.NewGuid();
 
-        var key1 = await _apiKeyService.GenerateApiKeyAsync(new GenerateApiKeyRequest
+        var key1 = await this._apiKeyService.GenerateApiKeyAsync(new GenerateApiKeyRequest
         {
             OrganizationId = orgId,
-            Name = "Active Key"
+            Name = "Active Key",
         });
 
-        var key2 = await _apiKeyService.GenerateApiKeyAsync(new GenerateApiKeyRequest
+        var key2 = await this._apiKeyService.GenerateApiKeyAsync(new GenerateApiKeyRequest
         {
             OrganizationId = orgId,
-            Name = "Revoked Key"
+            Name = "Revoked Key",
         });
 
-        await _apiKeyService.RevokeApiKeyAsync(key2.Id, "Test");
+        await this._apiKeyService.RevokeApiKeyAsync(key2.Id, "Test");
 
         // Act
-        var keys = await _apiKeyService.ListApiKeysAsync(orgId, includeRevoked: false);
+        var keys = await this._apiKeyService.ListApiKeysAsync(orgId, includeRevoked: false);
 
         // Assert
         keys.Should().HaveCount(1);
@@ -536,22 +536,22 @@ public class ApiKeyServiceTests : IAsyncLifetime
         // Arrange
         var orgId = Guid.NewGuid();
 
-        var key1 = await _apiKeyService.GenerateApiKeyAsync(new GenerateApiKeyRequest
+        var key1 = await this._apiKeyService.GenerateApiKeyAsync(new GenerateApiKeyRequest
         {
             OrganizationId = orgId,
-            Name = "Active Key"
+            Name = "Active Key",
         });
 
-        var key2 = await _apiKeyService.GenerateApiKeyAsync(new GenerateApiKeyRequest
+        var key2 = await this._apiKeyService.GenerateApiKeyAsync(new GenerateApiKeyRequest
         {
             OrganizationId = orgId,
-            Name = "Revoked Key"
+            Name = "Revoked Key",
         });
 
-        await _apiKeyService.RevokeApiKeyAsync(key2.Id, "Test");
+        await this._apiKeyService.RevokeApiKeyAsync(key2.Id, "Test");
 
         // Act
-        var keys = await _apiKeyService.ListApiKeysAsync(orgId, includeRevoked: true);
+        var keys = await this._apiKeyService.ListApiKeysAsync(orgId, includeRevoked: true);
 
         // Assert
         keys.Should().HaveCount(2);
@@ -563,14 +563,14 @@ public class ApiKeyServiceTests : IAsyncLifetime
         // Arrange
         var orgId = Guid.NewGuid();
 
-        await _apiKeyService.GenerateApiKeyAsync(new GenerateApiKeyRequest
+        await this._apiKeyService.GenerateApiKeyAsync(new GenerateApiKeyRequest
         {
             OrganizationId = orgId,
-            Name = "Test Key"
+            Name = "Test Key",
         });
 
         // Act
-        var keys = await _apiKeyService.ListApiKeysAsync(orgId);
+        var keys = await this._apiKeyService.ListApiKeysAsync(orgId);
 
         // Assert
         keys.Should().HaveCount(1);
@@ -589,18 +589,18 @@ public class ApiKeyServiceTests : IAsyncLifetime
         var request = new GenerateApiKeyRequest
         {
             OrganizationId = Guid.NewGuid(),
-            Name = "Test API Key"
+            Name = "Test API Key",
         };
-        var generated = await _apiKeyService.GenerateApiKeyAsync(request);
+        var generated = await this._apiKeyService.GenerateApiKeyAsync(request);
 
         var beforeUpdate = DateTime.UtcNow;
         await Task.Delay(100); // Small delay to ensure timestamp difference
 
         // Act
-        await _apiKeyService.UpdateLastUsedAsync(generated.Id);
+        await this._apiKeyService.UpdateLastUsedAsync(generated.Id);
 
         // Assert
-        var updatedKey = await _dbContext.ApiKeys.FindAsync(generated.Id);
+        var updatedKey = await this._dbContext.ApiKeys.FindAsync(generated.Id);
         updatedKey.Should().NotBeNull();
         updatedKey!.LastUsedAt.Should().NotBeNull();
         updatedKey.LastUsedAt.Should().BeAfter(beforeUpdate);
@@ -613,7 +613,7 @@ public class ApiKeyServiceTests : IAsyncLifetime
         var nonExistentKeyId = Guid.NewGuid();
 
         // Act
-        var act = async () => await _apiKeyService.UpdateLastUsedAsync(nonExistentKeyId);
+        var act = async () => await this._apiKeyService.UpdateLastUsedAsync(nonExistentKeyId);
 
         // Assert
         await act.Should().NotThrowAsync();

@@ -18,9 +18,9 @@ public class ModelResolverTests
 
     public ModelResolverTests()
     {
-        _configMock = new Mock<IOptions<SynaxisConfiguration>>();
-        _registryMock = new Mock<IProviderRegistry>();
-        _storeMock = new Mock<IControlPlaneStore>();
+        this._configMock = new Mock<IOptions<SynaxisConfiguration>>();
+        this._registryMock = new Mock<IProviderRegistry>();
+        this._storeMock = new Mock<IControlPlaneStore>();
 
         var config = new SynaxisConfiguration
         {
@@ -28,24 +28,24 @@ public class ModelResolverTests
             {
                 ["groq"] = new ProviderConfig { Type = "groq", Tier = 0, Models = ["llama-3.1-70b-versatile"], Enabled = true },
                 ["openai"] = new ProviderConfig { Type = "openai", Tier = 1, Models = ["gpt-4"], Enabled = true },
-                ["deepseek"] = new ProviderConfig { Type = "openai", Tier = 2, Models = ["deepseek-chat"], Enabled = true }
+                ["deepseek"] = new ProviderConfig { Type = "openai", Tier = 2, Models = ["deepseek-chat"], Enabled = true },
             },
             CanonicalModels = new List<CanonicalModelConfig>
             {
                 new CanonicalModelConfig { Id = "llama-3.1-70b-versatile", Provider = "groq", ModelPath = "llama-3.1-70b-versatile", Streaming = true },
                 new CanonicalModelConfig { Id = "gpt-4", Provider = "openai", ModelPath = "gpt-4", Streaming = true },
-                new CanonicalModelConfig { Id = "deepseek-chat", Provider = "deepseek", ModelPath = "deepseek-chat", Streaming = true }
+                new CanonicalModelConfig { Id = "deepseek-chat", Provider = "deepseek", ModelPath = "deepseek-chat", Streaming = true },
             },
             Aliases = new Dictionary<string, AliasConfig>
             {
                 ["default"] = new AliasConfig { Candidates = ["gpt-4", "llama-3.1-70b-versatile"] },
                 ["fast"] = new AliasConfig { Candidates = ["llama-3.1-70b-versatile"] }
-            }
+            },
         };
 
-        _configMock.Setup(x => x.Value).Returns(config);
+        this._configMock.Setup(x => x.Value).Returns(config);
 
-        _resolver = new ModelResolver(_configMock.Object, _registryMock.Object, _storeMock.Object);
+        this._resolver = new ModelResolver(this._configMock.Object, this._registryMock.Object, this._storeMock.Object);
     }
 
     [Fact]
@@ -53,11 +53,11 @@ public class ModelResolverTests
     {
         // Arrange
         var modelId = "gpt-4";
-        _registryMock.Setup(x => x.GetCandidates("gpt-4"))
+        this._registryMock.Setup(x => x.GetCandidates("gpt-4"))
             .Returns([("openai", 1)]);
 
         // Act
-        var result = _resolver.Resolve(modelId);
+        var result = this._resolver.Resolve(modelId);
 
         // Assert
         Assert.Equal(modelId, result.OriginalModelId);
@@ -72,11 +72,11 @@ public class ModelResolverTests
     {
         // Arrange
         var modelId = "invalid-model";
-        _registryMock.Setup(x => x.GetCandidates("invalid-model"))
+        this._registryMock.Setup(x => x.GetCandidates("invalid-model"))
             .Returns([]);
 
         // Act
-        var result = _resolver.Resolve(modelId);
+        var result = this._resolver.Resolve(modelId);
 
         // Assert
         Assert.Equal(modelId, result.OriginalModelId);
@@ -88,11 +88,11 @@ public class ModelResolverTests
     {
         // Arrange
         var modelId = "default";
-        _registryMock.Setup(x => x.GetCandidates("gpt-4"))
+        this._registryMock.Setup(x => x.GetCandidates("gpt-4"))
             .Returns([("openai", 1)]);
 
         // Act
-        var result = _resolver.Resolve(modelId);
+        var result = this._resolver.Resolve(modelId);
 
         // Assert
         Assert.Equal(modelId, result.OriginalModelId);
@@ -106,13 +106,13 @@ public class ModelResolverTests
     {
         // Arrange
         var modelId = "default";
-        _registryMock.Setup(x => x.GetCandidates("gpt-4"))
+        this._registryMock.Setup(x => x.GetCandidates("gpt-4"))
             .Returns([("openai", 1)]);
-        _registryMock.Setup(x => x.GetCandidates("llama-3.1-70b-versatile"))
+        this._registryMock.Setup(x => x.GetCandidates("llama-3.1-70b-versatile"))
             .Returns([("groq", 0)]);
 
         // Act
-        var result = _resolver.Resolve(modelId);
+        var result = this._resolver.Resolve(modelId);
 
         // Assert
         Assert.Equal(modelId, result.OriginalModelId);
@@ -126,13 +126,13 @@ public class ModelResolverTests
     {
         // Arrange
         var modelId = "default";
-        _registryMock.Setup(x => x.GetCandidates("gpt-4"))
+        this._registryMock.Setup(x => x.GetCandidates("gpt-4"))
             .Returns([]);
-        _registryMock.Setup(x => x.GetCandidates("llama-3.1-70b-versatile"))
+        this._registryMock.Setup(x => x.GetCandidates("llama-3.1-70b-versatile"))
             .Returns([]);
 
         // Act
-        var result = _resolver.Resolve(modelId);
+        var result = this._resolver.Resolve(modelId);
 
         // Assert
         Assert.Equal(modelId, result.OriginalModelId);
@@ -144,11 +144,11 @@ public class ModelResolverTests
     {
         // Arrange
         var modelId = "deepseek-chat";
-        _registryMock.Setup(x => x.GetCandidates("deepseek-chat"))
+        this._registryMock.Setup(x => x.GetCandidates("deepseek-chat"))
             .Returns([("deepseek", 2), ("openai", 1)]);
 
         // Act
-        var result = _resolver.Resolve(modelId);
+        var result = this._resolver.Resolve(modelId);
 
         // Assert
         Assert.Equal(modelId, result.OriginalModelId);
@@ -164,11 +164,11 @@ public class ModelResolverTests
         // Arrange
         var modelId = "gpt-4";
         var required = new RequiredCapabilities { Streaming = true };
-        _registryMock.Setup(x => x.GetCandidates("gpt-4"))
+        this._registryMock.Setup(x => x.GetCandidates("gpt-4"))
             .Returns([("openai", 1)]);
 
         // Act
-        var result = _resolver.Resolve(modelId, required);
+        var result = this._resolver.Resolve(modelId, required);
 
         // Assert
         Assert.Equal(modelId, result.OriginalModelId);
@@ -181,11 +181,11 @@ public class ModelResolverTests
         // Arrange
         var modelId = "gpt-4";
         var required = new RequiredCapabilities { Streaming = false, Tools = true };
-        _registryMock.Setup(x => x.GetCandidates("gpt-4"))
+        this._registryMock.Setup(x => x.GetCandidates("gpt-4"))
             .Returns([("openai", 1)]);
 
         // Act
-        var result = _resolver.Resolve(modelId, required);
+        var result = this._resolver.Resolve(modelId, required);
 
         // Assert
         Assert.Equal(modelId, result.OriginalModelId);
@@ -199,7 +199,7 @@ public class ModelResolverTests
         string modelId = null!;
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => _resolver.Resolve(modelId));
+        Assert.Throws<ArgumentNullException>(() => this._resolver.Resolve(modelId));
     }
 
     [Fact]
@@ -207,11 +207,11 @@ public class ModelResolverTests
     {
         // Arrange
         var modelId = "";
-        _registryMock.Setup(x => x.GetCandidates(""))
+        this._registryMock.Setup(x => x.GetCandidates(""))
             .Returns([]);
 
         // Act
-        var result = _resolver.Resolve(modelId);
+        var result = this._resolver.Resolve(modelId);
 
         // Assert
         Assert.Equal(modelId, result.OriginalModelId);
@@ -228,14 +228,14 @@ public class ModelResolverTests
             Id = "gpt-4",
             ProviderModels = [
                 new ProviderModel { ProviderId = "openai", ProviderSpecificId = "gpt-4" }
-            ]
+            ],
         };
 
-        _storeMock.Setup(x => x.GetGlobalModelAsync(modelId))
+        this._storeMock.Setup(x => x.GetGlobalModelAsync(modelId))
             .ReturnsAsync(globalModel);
 
         // Act
-        var result = await _resolver.ResolveAsync(modelId, EndpointKind.ChatCompletions);
+        var result = await this._resolver.ResolveAsync(modelId, EndpointKind.ChatCompletions);
 
         // Assert
         Assert.Equal(modelId, result.OriginalModelId);
@@ -254,14 +254,14 @@ public class ModelResolverTests
             Id = "gpt-4",
             ProviderModels = [
                 new ProviderModel { ProviderId = "disabled-provider", ProviderSpecificId = "gpt-4" }
-            ]
+            ],
         };
 
-        _storeMock.Setup(x => x.GetGlobalModelAsync(modelId))
+        this._storeMock.Setup(x => x.GetGlobalModelAsync(modelId))
             .ReturnsAsync(globalModel);
 
         // Act
-        var result = await _resolver.ResolveAsync(modelId, EndpointKind.ChatCompletions);
+        var result = await this._resolver.ResolveAsync(modelId, EndpointKind.ChatCompletions);
 
         // Assert
         Assert.Equal(modelId, result.OriginalModelId);
@@ -276,15 +276,15 @@ public class ModelResolverTests
         var tenantId = Guid.NewGuid();
         var alias = new ModelAlias { TargetModel = "gpt-4" };
 
-        _storeMock.Setup(x => x.GetGlobalModelAsync(modelId))
+        this._storeMock.Setup(x => x.GetGlobalModelAsync(modelId))
             .ReturnsAsync((GlobalModel?)null);
-        _storeMock.Setup(x => x.GetAliasAsync(tenantId, modelId))
+        this._storeMock.Setup(x => x.GetAliasAsync(tenantId, modelId))
             .ReturnsAsync(alias);
-        _registryMock.Setup(x => x.GetCandidates("gpt-4"))
+        this._registryMock.Setup(x => x.GetCandidates("gpt-4"))
             .Returns([("openai", 1)]);
 
         // Act
-        var result = await _resolver.ResolveAsync(modelId, EndpointKind.ChatCompletions, tenantId: tenantId);
+        var result = await this._resolver.ResolveAsync(modelId, EndpointKind.ChatCompletions, tenantId: tenantId);
 
         // Assert
         Assert.Equal(modelId, result.OriginalModelId);
@@ -301,15 +301,15 @@ public class ModelResolverTests
         var tenantId = Guid.NewGuid();
         var combo = new ModelCombo { OrderedModelsJson = "[\"gpt-4\", \"llama-3.1-70b-versatile\"]" };
 
-        _storeMock.Setup(x => x.GetGlobalModelAsync(modelId))
+        this._storeMock.Setup(x => x.GetGlobalModelAsync(modelId))
             .ReturnsAsync((GlobalModel?)null);
-        _storeMock.Setup(x => x.GetComboAsync(tenantId, modelId))
+        this._storeMock.Setup(x => x.GetComboAsync(tenantId, modelId))
             .ReturnsAsync(combo);
-        _registryMock.Setup(x => x.GetCandidates("gpt-4"))
+        this._registryMock.Setup(x => x.GetCandidates("gpt-4"))
             .Returns([("openai", 1)]);
 
         // Act
-        var result = await _resolver.ResolveAsync(modelId, EndpointKind.ChatCompletions, tenantId: tenantId);
+        var result = await this._resolver.ResolveAsync(modelId, EndpointKind.ChatCompletions, tenantId: tenantId);
 
         // Assert
         Assert.Equal(modelId, result.OriginalModelId);
@@ -326,13 +326,13 @@ public class ModelResolverTests
         var tenantId = Guid.NewGuid();
         var combo = new ModelCombo { OrderedModelsJson = "invalid-json" };
 
-        _storeMock.Setup(x => x.GetGlobalModelAsync(modelId))
+        this._storeMock.Setup(x => x.GetGlobalModelAsync(modelId))
             .ReturnsAsync((GlobalModel?)null);
-        _storeMock.Setup(x => x.GetComboAsync(tenantId, modelId))
+        this._storeMock.Setup(x => x.GetComboAsync(tenantId, modelId))
             .ReturnsAsync(combo);
 
         // Act
-        var result = await _resolver.ResolveAsync(modelId, EndpointKind.ChatCompletions, tenantId: tenantId);
+        var result = await this._resolver.ResolveAsync(modelId, EndpointKind.ChatCompletions, tenantId: tenantId);
 
         // Assert
         Assert.Equal(modelId, result.OriginalModelId);
@@ -348,7 +348,7 @@ public class ModelResolverTests
         IOptions<SynaxisConfiguration> config = null!;
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new ModelResolver(config, _registryMock.Object, _storeMock.Object));
+        Assert.Throws<ArgumentNullException>(() => new ModelResolver(config, this._registryMock.Object, this._storeMock.Object));
     }
 
     [Fact]
@@ -358,7 +358,7 @@ public class ModelResolverTests
         IProviderRegistry registry = null!;
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new ModelResolver(_configMock.Object, registry, _storeMock.Object));
+        Assert.Throws<ArgumentNullException>(() => new ModelResolver(this._configMock.Object, registry, this._storeMock.Object));
     }
 
     [Fact]
@@ -368,6 +368,6 @@ public class ModelResolverTests
         IControlPlaneStore store = null!;
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new ModelResolver(_configMock.Object, _registryMock.Object, store));
+        Assert.Throws<ArgumentNullException>(() => new ModelResolver(this._configMock.Object, this._registryMock.Object, store));
     }
 }

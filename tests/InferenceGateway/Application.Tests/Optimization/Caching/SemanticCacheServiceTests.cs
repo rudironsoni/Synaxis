@@ -17,8 +17,8 @@ public class SemanticCacheServiceTests
 
     public SemanticCacheServiceTests()
     {
-        _mockCacheService = new Mock<ISemanticCacheService>();
-        _cancellationToken = CancellationToken.None;
+        this._mockCacheService = new Mock<ISemanticCacheService>();
+        this._cancellationToken = CancellationToken.None;
     }
 
     [Fact]
@@ -35,16 +35,16 @@ public class SemanticCacheServiceTests
             IsHit = true,
             Response = "The capital of France is Paris.",
             SimilarityScore = 1.0,
-            CachedAt = DateTimeOffset.UtcNow.AddMinutes(-5)
+            CachedAt = DateTimeOffset.UtcNow.AddMinutes(-5),
         };
 
-        _mockCacheService
-            .Setup(x => x.TryGetCachedAsync(query, sessionId, model, temperature, _cancellationToken))
+        this._mockCacheService
+            .Setup(x => x.TryGetCachedAsync(query, sessionId, model, temperature, this._cancellationToken))
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await _mockCacheService.Object.TryGetCachedAsync(
-            query, sessionId, model, temperature, _cancellationToken);
+        var result = await this._mockCacheService.Object.TryGetCachedAsync(
+            query, sessionId, model, temperature, this._cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -53,8 +53,8 @@ public class SemanticCacheServiceTests
         Assert.Equal(1.0, result.SimilarityScore);
         Assert.True(result.CachedAt < DateTimeOffset.UtcNow);
 
-        _mockCacheService.Verify(
-            x => x.TryGetCachedAsync(query, sessionId, model, temperature, _cancellationToken),
+        this._mockCacheService.Verify(
+            x => x.TryGetCachedAsync(query, sessionId, model, temperature, this._cancellationToken),
             Times.Once);
     }
 
@@ -72,16 +72,16 @@ public class SemanticCacheServiceTests
             IsHit = true,
             Response = "The capital of France is Paris.",
             SimilarityScore = 0.95, // High similarity but not exact match
-            CachedAt = DateTimeOffset.UtcNow.AddMinutes(-10)
+            CachedAt = DateTimeOffset.UtcNow.AddMinutes(-10),
         };
 
-        _mockCacheService
-            .Setup(x => x.TryGetCachedAsync(query, sessionId, model, temperature, _cancellationToken))
+        this._mockCacheService
+            .Setup(x => x.TryGetCachedAsync(query, sessionId, model, temperature, this._cancellationToken))
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await _mockCacheService.Object.TryGetCachedAsync(
-            query, sessionId, model, temperature, _cancellationToken);
+        var result = await this._mockCacheService.Object.TryGetCachedAsync(
+            query, sessionId, model, temperature, this._cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -90,8 +90,8 @@ public class SemanticCacheServiceTests
         Assert.True(result.SimilarityScore >= 0.8); // Above semantic threshold
         Assert.True(result.SimilarityScore < 1.0);
 
-        _mockCacheService.Verify(
-            x => x.TryGetCachedAsync(query, sessionId, model, temperature, _cancellationToken),
+        this._mockCacheService.Verify(
+            x => x.TryGetCachedAsync(query, sessionId, model, temperature, this._cancellationToken),
             Times.Once);
     }
 
@@ -110,16 +110,16 @@ public class SemanticCacheServiceTests
             IsHit = false,
             Response = null,
             SimilarityScore = 0.0,
-            QueryEmbedding = new float[] { 0.1f, 0.2f, 0.3f }
+            QueryEmbedding = new float[] { 0.1f, 0.2f, 0.3f },
         };
 
-        _mockCacheService
-            .Setup(x => x.TryGetCachedAsync(query, sessionId2, model, temperature, _cancellationToken))
+        this._mockCacheService
+            .Setup(x => x.TryGetCachedAsync(query, sessionId2, model, temperature, this._cancellationToken))
             .ReturnsAsync(missResponse);
 
         // Act
-        var result = await _mockCacheService.Object.TryGetCachedAsync(
-            query, sessionId2, model, temperature, _cancellationToken);
+        var result = await this._mockCacheService.Object.TryGetCachedAsync(
+            query, sessionId2, model, temperature, this._cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -128,8 +128,8 @@ public class SemanticCacheServiceTests
         Assert.Equal(0.0, result.SimilarityScore);
         Assert.NotNull(result.QueryEmbedding);
 
-        _mockCacheService.Verify(
-            x => x.TryGetCachedAsync(query, sessionId2, model, temperature, _cancellationToken),
+        this._mockCacheService.Verify(
+            x => x.TryGetCachedAsync(query, sessionId2, model, temperature, this._cancellationToken),
             Times.Once);
     }
 
@@ -148,24 +148,24 @@ public class SemanticCacheServiceTests
             IsHit = false,
             Response = null,
             SimilarityScore = 0.0,
-            QueryEmbedding = new float[] { 0.1f, 0.2f, 0.3f }
+            QueryEmbedding = new float[] { 0.1f, 0.2f, 0.3f },
         };
 
-        _mockCacheService
-            .Setup(x => x.TryGetCachedAsync(query, sessionId, model2, temperature, _cancellationToken))
+        this._mockCacheService
+            .Setup(x => x.TryGetCachedAsync(query, sessionId, model2, temperature, this._cancellationToken))
             .ReturnsAsync(missResponse);
 
         // Act
-        var result = await _mockCacheService.Object.TryGetCachedAsync(
-            query, sessionId, model2, temperature, _cancellationToken);
+        var result = await this._mockCacheService.Object.TryGetCachedAsync(
+            query, sessionId, model2, temperature, this._cancellationToken);
 
         // Assert
         Assert.NotNull(result);
         Assert.False(result.IsHit);
         Assert.Null(result.Response);
 
-        _mockCacheService.Verify(
-            x => x.TryGetCachedAsync(query, sessionId, model2, temperature, _cancellationToken),
+        this._mockCacheService.Verify(
+            x => x.TryGetCachedAsync(query, sessionId, model2, temperature, this._cancellationToken),
             Times.Once);
     }
 
@@ -184,24 +184,24 @@ public class SemanticCacheServiceTests
             IsHit = false,
             Response = null,
             SimilarityScore = 0.0,
-            QueryEmbedding = new float[] { 0.1f, 0.2f, 0.3f }
+            QueryEmbedding = new float[] { 0.1f, 0.2f, 0.3f },
         };
 
-        _mockCacheService
-            .Setup(x => x.TryGetCachedAsync(query, sessionId, model, temperature2, _cancellationToken))
+        this._mockCacheService
+            .Setup(x => x.TryGetCachedAsync(query, sessionId, model, temperature2, this._cancellationToken))
             .ReturnsAsync(missResponse);
 
         // Act
-        var result = await _mockCacheService.Object.TryGetCachedAsync(
-            query, sessionId, model, temperature2, _cancellationToken);
+        var result = await this._mockCacheService.Object.TryGetCachedAsync(
+            query, sessionId, model, temperature2, this._cancellationToken);
 
         // Assert
         Assert.NotNull(result);
         Assert.False(result.IsHit);
         Assert.Null(result.Response);
 
-        _mockCacheService.Verify(
-            x => x.TryGetCachedAsync(query, sessionId, model, temperature2, _cancellationToken),
+        this._mockCacheService.Verify(
+            x => x.TryGetCachedAsync(query, sessionId, model, temperature2, this._cancellationToken),
             Times.Once);
     }
 
@@ -219,16 +219,16 @@ public class SemanticCacheServiceTests
             IsHit = false,
             Response = null,
             SimilarityScore = 0.0,
-            QueryEmbedding = new float[] { 0.1f, 0.2f, 0.3f, 0.4f, 0.5f }
+            QueryEmbedding = new float[] { 0.1f, 0.2f, 0.3f, 0.4f, 0.5f },
         };
 
-        _mockCacheService
-            .Setup(x => x.TryGetCachedAsync(query, sessionId, model, temperature, _cancellationToken))
+        this._mockCacheService
+            .Setup(x => x.TryGetCachedAsync(query, sessionId, model, temperature, this._cancellationToken))
             .ReturnsAsync(missResponse);
 
         // Act
-        var result = await _mockCacheService.Object.TryGetCachedAsync(
-            query, sessionId, model, temperature, _cancellationToken);
+        var result = await this._mockCacheService.Object.TryGetCachedAsync(
+            query, sessionId, model, temperature, this._cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -238,8 +238,8 @@ public class SemanticCacheServiceTests
         Assert.NotEmpty(result.QueryEmbedding);
         Assert.Equal(5, result.QueryEmbedding.Length);
 
-        _mockCacheService.Verify(
-            x => x.TryGetCachedAsync(query, sessionId, model, temperature, _cancellationToken),
+        this._mockCacheService.Verify(
+            x => x.TryGetCachedAsync(query, sessionId, model, temperature, this._cancellationToken),
             Times.Once);
     }
 
@@ -254,17 +254,17 @@ public class SemanticCacheServiceTests
         var temperature = 0.7;
         var embedding = new float[] { 0.1f, 0.2f, 0.3f };
 
-        _mockCacheService
-            .Setup(x => x.StoreAsync(query, response, sessionId, model, temperature, embedding, _cancellationToken))
+        this._mockCacheService
+            .Setup(x => x.StoreAsync(query, response, sessionId, model, temperature, embedding, this._cancellationToken))
             .Returns(Task.CompletedTask);
 
         // Act
-        await _mockCacheService.Object.StoreAsync(
-            query, response, sessionId, model, temperature, embedding, _cancellationToken);
+        await this._mockCacheService.Object.StoreAsync(
+            query, response, sessionId, model, temperature, embedding, this._cancellationToken);
 
         // Assert
-        _mockCacheService.Verify(
-            x => x.StoreAsync(query, response, sessionId, model, temperature, embedding, _cancellationToken),
+        this._mockCacheService.Verify(
+            x => x.StoreAsync(query, response, sessionId, model, temperature, embedding, this._cancellationToken),
             Times.Once);
     }
 
@@ -280,7 +280,7 @@ public class SemanticCacheServiceTests
         var embedding = new float[] { 0.1f, 0.2f, 0.3f };
 
         // Mock should not be called for error responses
-        _mockCacheService
+        this._mockCacheService
             .Setup(x => x.StoreAsync(
                 It.IsAny<string>(),
                 It.Is<string>(r => r.StartsWith("Error:")),
@@ -297,8 +297,8 @@ public class SemanticCacheServiceTests
         // Verify that storing error responses would throw
         await Assert.ThrowsAsync<InvalidOperationException>(async () =>
         {
-            await _mockCacheService.Object.StoreAsync(
-                query, errorResponse, sessionId, model, temperature, embedding, _cancellationToken);
+            await this._mockCacheService.Object.StoreAsync(
+                query, errorResponse, sessionId, model, temperature, embedding, this._cancellationToken);
         });
     }
 
@@ -308,19 +308,19 @@ public class SemanticCacheServiceTests
         // Arrange
         var sessionId = "session-123";
 
-        _mockCacheService
-            .Setup(x => x.InvalidateSessionAsync(sessionId, _cancellationToken))
+        this._mockCacheService
+            .Setup(x => x.InvalidateSessionAsync(sessionId, this._cancellationToken))
             .ReturnsAsync(5); // Returns count of invalidated entries
 
         // Act
-        var invalidatedCount = await _mockCacheService.Object.InvalidateSessionAsync(
-            sessionId, _cancellationToken);
+        var invalidatedCount = await this._mockCacheService.Object.InvalidateSessionAsync(
+            sessionId, this._cancellationToken);
 
         // Assert
         Assert.Equal(5, invalidatedCount);
 
-        _mockCacheService.Verify(
-            x => x.InvalidateSessionAsync(sessionId, _cancellationToken),
+        this._mockCacheService.Verify(
+            x => x.InvalidateSessionAsync(sessionId, this._cancellationToken),
             Times.Once);
     }
 
@@ -338,19 +338,19 @@ public class SemanticCacheServiceTests
             IsHit = true,
             Response = "The capital of France is Paris.",
             SimilarityScore = 1.0,
-            CachedAt = DateTimeOffset.UtcNow
+            CachedAt = DateTimeOffset.UtcNow,
         };
 
-        _mockCacheService
-            .Setup(x => x.TryGetCachedAsync(query, sessionId, model, temperature, _cancellationToken))
+        this._mockCacheService
+            .Setup(x => x.TryGetCachedAsync(query, sessionId, model, temperature, this._cancellationToken))
             .ReturnsAsync(hitResponse);
 
         // Act - Simulate concurrent access
         var tasks = new Task<CacheResult>[10];
         for (int i = 0; i < 10; i++)
         {
-            tasks[i] = _mockCacheService.Object.TryGetCachedAsync(
-                query, sessionId, model, temperature, _cancellationToken);
+            tasks[i] = this._mockCacheService.Object.TryGetCachedAsync(
+                query, sessionId, model, temperature, this._cancellationToken);
         }
 
         var results = await Task.WhenAll(tasks);
@@ -364,8 +364,8 @@ public class SemanticCacheServiceTests
             Assert.Equal("The capital of France is Paris.", r.Response);
         });
 
-        _mockCacheService.Verify(
-            x => x.TryGetCachedAsync(query, sessionId, model, temperature, _cancellationToken),
+        this._mockCacheService.Verify(
+            x => x.TryGetCachedAsync(query, sessionId, model, temperature, this._cancellationToken),
             Times.Exactly(10));
     }
 
@@ -378,15 +378,15 @@ public class SemanticCacheServiceTests
         var model = "gpt-4";
         var temperature = 0.7;
 
-        _mockCacheService
-            .Setup(x => x.TryGetCachedAsync(query!, sessionId, model, temperature, _cancellationToken))
+        this._mockCacheService
+            .Setup(x => x.TryGetCachedAsync(query!, sessionId, model, temperature, this._cancellationToken))
             .ThrowsAsync(new ArgumentNullException(nameof(query)));
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentNullException>(async () =>
         {
-            await _mockCacheService.Object.TryGetCachedAsync(
-                query!, sessionId, model, temperature, _cancellationToken);
+            await this._mockCacheService.Object.TryGetCachedAsync(
+                query!, sessionId, model, temperature, this._cancellationToken);
         });
     }
 
@@ -403,16 +403,16 @@ public class SemanticCacheServiceTests
         {
             IsHit = false,
             Response = null,
-            SimilarityScore = 0.0
+            SimilarityScore = 0.0,
         };
 
-        _mockCacheService
-            .Setup(x => x.TryGetCachedAsync(query, sessionId, model, temperature, _cancellationToken))
+        this._mockCacheService
+            .Setup(x => x.TryGetCachedAsync(query, sessionId, model, temperature, this._cancellationToken))
             .ReturnsAsync(missResponse);
 
         // Act
-        var result = await _mockCacheService.Object.TryGetCachedAsync(
-            query, sessionId, model, temperature, _cancellationToken);
+        var result = await this._mockCacheService.Object.TryGetCachedAsync(
+            query, sessionId, model, temperature, this._cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -430,17 +430,17 @@ public class SemanticCacheServiceTests
         var temperature = 0.7;
         float[]? embedding = null;
 
-        _mockCacheService
-            .Setup(x => x.StoreAsync(query, response, sessionId, model, temperature, null, _cancellationToken))
+        this._mockCacheService
+            .Setup(x => x.StoreAsync(query, response, sessionId, model, temperature, null, this._cancellationToken))
             .Returns(Task.CompletedTask);
 
         // Act
-        await _mockCacheService.Object.StoreAsync(
-            query, response, sessionId, model, temperature, embedding, _cancellationToken);
+        await this._mockCacheService.Object.StoreAsync(
+            query, response, sessionId, model, temperature, embedding, this._cancellationToken);
 
         // Assert
-        _mockCacheService.Verify(
-            x => x.StoreAsync(query, response, sessionId, model, temperature, null, _cancellationToken),
+        this._mockCacheService.Verify(
+            x => x.StoreAsync(query, response, sessionId, model, temperature, null, this._cancellationToken),
             Times.Once);
     }
 
@@ -450,13 +450,13 @@ public class SemanticCacheServiceTests
         // Arrange
         var sessionId = "non-existent-session";
 
-        _mockCacheService
-            .Setup(x => x.InvalidateSessionAsync(sessionId, _cancellationToken))
+        this._mockCacheService
+            .Setup(x => x.InvalidateSessionAsync(sessionId, this._cancellationToken))
             .ReturnsAsync(0);
 
         // Act
-        var invalidatedCount = await _mockCacheService.Object.InvalidateSessionAsync(
-            sessionId, _cancellationToken);
+        var invalidatedCount = await this._mockCacheService.Object.InvalidateSessionAsync(
+            sessionId, this._cancellationToken);
 
         // Assert
         Assert.Equal(0, invalidatedCount);
@@ -473,14 +473,14 @@ public class SemanticCacheServiceTests
         var cts = new CancellationTokenSource();
         cts.Cancel();
 
-        _mockCacheService
+        this._mockCacheService
             .Setup(x => x.TryGetCachedAsync(query, sessionId, model, temperature, cts.Token))
             .ThrowsAsync(new OperationCanceledException());
 
         // Act & Assert
         await Assert.ThrowsAsync<OperationCanceledException>(async () =>
         {
-            await _mockCacheService.Object.TryGetCachedAsync(
+            await this._mockCacheService.Object.TryGetCachedAsync(
                 query, sessionId, model, temperature, cts.Token);
         });
     }
@@ -492,9 +492,13 @@ public class SemanticCacheServiceTests
 public class CacheResult
 {
     public bool IsHit { get; set; }
+
     public string? Response { get; set; }
+
     public double SimilarityScore { get; set; }
+
     public DateTimeOffset CachedAt { get; set; }
+
     public float[]? QueryEmbedding { get; set; }
 }
 
