@@ -208,7 +208,7 @@ public class JsonSerializationBenchmarks
     public class ChatCompletionRequest
     {
         public string Model { get; set; } = string.Empty;
-        public List<ChatMessage> Messages { get; set; } = new();
+        public List<ChatMessage> Messages { get; set; } = new ();
         public double? Temperature { get; set; }
         public int? MaxTokens { get; set; }
         public bool? Stream { get; set; }
@@ -220,7 +220,7 @@ public class JsonSerializationBenchmarks
         public string Object { get; set; } = string.Empty;
         public long Created { get; set; }
         public string Model { get; set; } = string.Empty;
-        public List<Choice> Choices { get; set; } = new();
+        public List<Choice> Choices { get; set; } = new ();
         public Usage? Usage { get; set; }
     }
 

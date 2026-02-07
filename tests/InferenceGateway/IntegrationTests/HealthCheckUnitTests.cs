@@ -34,7 +34,7 @@ public class HealthCheckUnitTests
             },
             CanonicalModels = new List<CanonicalModelConfig>
             {
-                new() { Id = "model-x", Provider = "MissingProvider", ModelPath = "model-x" }
+                new () { Id = "model-x", Provider = "MissingProvider", ModelPath = "model-x" }
             }
         };
 
@@ -55,7 +55,7 @@ public class HealthCheckUnitTests
             },
             CanonicalModels = new List<CanonicalModelConfig>
             {
-                new() { Id = "model-a", Provider = "ProviderA", ModelPath = "model-a" }
+                new () { Id = "model-a", Provider = "ProviderA", ModelPath = "model-a" }
             },
             Aliases = new Dictionary<string, AliasConfig>
             {
@@ -80,7 +80,7 @@ public class HealthCheckUnitTests
             },
             CanonicalModels = new List<CanonicalModelConfig>
             {
-                new() { Id = "model-a", Provider = "ProviderA", ModelPath = "model-a" }
+                new () { Id = "model-a", Provider = "ProviderA", ModelPath = "model-a" }
             },
             Aliases = new Dictionary<string, AliasConfig>
             {
@@ -155,7 +155,7 @@ public class HealthCheckUnitTests
     private sealed class LocalHttpServer : IAsyncDisposable
     {
         private readonly TcpListener _listener;
-        private readonly CancellationTokenSource _cts = new();
+        private readonly CancellationTokenSource _cts = new ();
         private Task _acceptTask;
 
         private LocalHttpServer(TcpListener listener)

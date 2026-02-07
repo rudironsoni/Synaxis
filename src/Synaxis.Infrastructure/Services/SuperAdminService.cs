@@ -27,14 +27,14 @@ namespace Synaxis.Infrastructure.Services
         private readonly string _currentRegion;
         
         // Configuration - should come from IConfiguration in production
-        private readonly Dictionary<string, string> _regionEndpoints = new()
+        private readonly Dictionary<string, string> _regionEndpoints = new ()
         {
             { "us-east-1", "https://api-us.synaxis.io" },
             { "eu-west-1", "https://api-eu.synaxis.io" },
             { "sa-east-1", "https://api-br.synaxis.io" }
         };
         
-        private readonly HashSet<string> _allowedIpRanges = new()
+        private readonly HashSet<string> _allowedIpRanges = new ()
         {
             "10.0.0.0/8",
             "172.16.0.0/12",
