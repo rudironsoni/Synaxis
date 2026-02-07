@@ -2,12 +2,12 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
+namespace Synaxis.Benchmarks;
+
+using System.Text.Json;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Diagnosers;
-using System.Text.Json;
 using Synaxis.InferenceGateway.Application.Configuration;
-
-namespace Synaxis.Benchmarks;
 
 [MemoryDiagnoser]
 [SimpleJob(warmupCount: 3, iterationCount: 10)]
@@ -93,58 +93,58 @@ public class JsonSerializationBenchmarks
     [Benchmark]
     public ChatCompletionRequest Deserialize_SmallRequest()
     {
-        return JsonSerializer.Deserialize<ChatCompletionRequest>(this._smallRequestJson, this._options)!;
+        return JsonSerializer.Deserialize<ChatCompletionRequest>(this._smallRequestJson, this._options) !;
     }
 
     [Benchmark]
     public ChatCompletionRequest Deserialize_MediumRequest()
     {
-        return JsonSerializer.Deserialize<ChatCompletionRequest>(this._mediumRequestJson, this._options)!;
+        return JsonSerializer.Deserialize<ChatCompletionRequest>(this._mediumRequestJson, this._options) !;
     }
 
     [Benchmark]
     public ChatCompletionRequest Deserialize_LargeRequest()
     {
-        return JsonSerializer.Deserialize<ChatCompletionRequest>(this._largeRequestJson, this._options)!;
+        return JsonSerializer.Deserialize<ChatCompletionRequest>(this._largeRequestJson, this._options) !;
     }
 
     [Benchmark]
     public ChatCompletionResponse Deserialize_SmallResponse()
     {
-        return JsonSerializer.Deserialize<ChatCompletionResponse>(this._smallResponseJson, this._options)!;
+        return JsonSerializer.Deserialize<ChatCompletionResponse>(this._smallResponseJson, this._options) !;
     }
 
     [Benchmark]
     public ChatCompletionResponse Deserialize_MediumResponse()
     {
-        return JsonSerializer.Deserialize<ChatCompletionResponse>(this._mediumResponseJson, this._options)!;
+        return JsonSerializer.Deserialize<ChatCompletionResponse>(this._mediumResponseJson, this._options) !;
     }
 
     [Benchmark]
     public ChatCompletionResponse Deserialize_LargeResponse()
     {
-        return JsonSerializer.Deserialize<ChatCompletionResponse>(this._largeResponseJson, this._options)!;
+        return JsonSerializer.Deserialize<ChatCompletionResponse>(this._largeResponseJson, this._options) !;
     }
 
     [Benchmark]
     public ChatCompletionRequest SerializeDeserialize_SmallRequest()
     {
         var json = JsonSerializer.Serialize(this._smallRequest, this._options);
-        return JsonSerializer.Deserialize<ChatCompletionRequest>(json, this._options)!;
+        return JsonSerializer.Deserialize<ChatCompletionRequest>(json, this._options) !;
     }
 
     [Benchmark]
     public ChatCompletionRequest SerializeDeserialize_MediumRequest()
     {
         var json = JsonSerializer.Serialize(this._mediumRequest, this._options);
-        return JsonSerializer.Deserialize<ChatCompletionRequest>(json, this._options)!;
+        return JsonSerializer.Deserialize<ChatCompletionRequest>(json, this._options) !;
     }
 
     [Benchmark]
     public ChatCompletionRequest SerializeDeserialize_LargeRequest()
     {
         var json = JsonSerializer.Serialize(this._largeRequest, this._options);
-        return JsonSerializer.Deserialize<ChatCompletionRequest>(json, this._options)!;
+        return JsonSerializer.Deserialize<ChatCompletionRequest>(json, this._options) !;
     }
 
     private ChatCompletionRequest CreateChatCompletionRequest(int messageCount)
@@ -195,16 +195,16 @@ public class JsonSerializationBenchmarks
                     Message = new ChatMessage
                     {
                         Role = "assistant",
-                        Content = "This is the final assistant response with detailed content."
+                        Content = "This is the final assistant response with detailed content.",
                     },
-                    FinishReason = "stop"
+                    FinishReason = "stop",
                 },
             },
             Usage = new Usage
             {
                 PromptTokens = 100 * messageCount,
                 CompletionTokens = 50 * messageCount,
-                TotalTokens = 150 * messageCount
+                TotalTokens = 150 * messageCount,
             },
         };
     }
@@ -213,7 +213,7 @@ public class JsonSerializationBenchmarks
     {
         public string Model { get; set; } = string.Empty;
 
-        public List<ChatMessage> Messages { get; set; } = new ();
+        public IReadOnlyList<ChatMessage> Messages { get; set; } = new List<ChatMessage>();
 
         public double? Temperature { get; set; }
 
@@ -232,7 +232,7 @@ public class JsonSerializationBenchmarks
 
         public string Model { get; set; } = string.Empty;
 
-        public List<Choice> Choices { get; set; } = new ();
+        public IReadOnlyList<Choice> Choices { get; set; } = new List<Choice>();
 
         public Usage? Usage { get; set; }
     }
