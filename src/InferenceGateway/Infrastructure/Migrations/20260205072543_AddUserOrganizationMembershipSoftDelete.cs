@@ -13,6 +13,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
     public partial class AddUserOrganizationMembershipSoftDelete : Migration
     {
         /// <inheritdoc />
+#pragma warning disable MA0051 // Method is too long - Migrations are inherently complex
+#pragma warning disable MA0051 // Method is too long - Migrations are inherently complex
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
@@ -50,7 +52,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 table: "OrganizationSettings",
                 type: "uuid",
                 nullable: false,
-                defaultValue: new Guid("00000000-0000-0000-0000-000000000000"),
+                defaultValue: Guid.Empty,
                 oldClrType: typeof(Guid),
                 oldType: "uuid",
                 oldNullable: true);
@@ -125,8 +127,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 table: "UserOrganizationMemberships",
                 column: "DeletedAt");
         }
+#pragma warning restore MA0051 // Method is too long
 
         /// <inheritdoc />
+#pragma warning disable MA0051 // Method is too long - Migrations are inherently complex
+#pragma warning restore MA0051 // Method is too long
+
+#pragma warning disable MA0051 // Method is too long - Migrations are inherently complex
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropIndex(
@@ -230,5 +237,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Restrict);
         }
+#pragma warning restore MA0051 // Method is too long
     }
 }
+#pragma warning restore MA0051 // Method is too long

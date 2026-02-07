@@ -20,7 +20,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
 
             var mockStore = new Mock<ISecureTokenStore>();
             mockStore.Setup(s => s.LoadAsync()).ReturnsAsync(new List<IdentityAccount>());
-            mockStore.Setup(s => s.SaveAsync(It.IsAny<List<IdentityAccount>>())).Returns(Task.CompletedTask);
+            mockStore.Setup(s => s.SaveAsync(It.IsAny<IList<IdentityAccount>>())).Returns(Task.CompletedTask);
 
             var logger = new Mock<ILogger<IdentityManager>>();
 
@@ -42,7 +42,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
 
             var mockStore = new Mock<ISecureTokenStore>();
             mockStore.Setup(s => s.LoadAsync()).ReturnsAsync(new List<IdentityAccount>());
-            mockStore.Setup(s => s.SaveAsync(It.IsAny<List<IdentityAccount>>())).Returns(Task.CompletedTask);
+            mockStore.Setup(s => s.SaveAsync(It.IsAny<IList<IdentityAccount>>())).Returns(Task.CompletedTask);
 
             var logger = new Mock<ILogger<IdentityManager>>();
 
@@ -89,7 +89,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
 
             var mockStore = new Mock<ISecureTokenStore>();
             mockStore.Setup(s => s.LoadAsync()).ReturnsAsync(new List<IdentityAccount> { acc });
-            mockStore.Setup(s => s.SaveAsync(It.IsAny<List<IdentityAccount>>())).Returns(Task.CompletedTask);
+            mockStore.Setup(s => s.SaveAsync(It.IsAny<IList<IdentityAccount>>())).Returns(Task.CompletedTask);
 
             var logger = new Mock<ILogger<IdentityManager>>();
 
@@ -101,7 +101,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
 
             Assert.Equal("new-token", token);
             mockStrat.Verify(s => s.RefreshTokenAsync(It.IsAny<IdentityAccount>(), It.IsAny<CancellationToken>()), Times.Once);
-            mockStore.Verify(s => s.SaveAsync(It.IsAny<List<IdentityAccount>>()), Times.AtLeastOnce);
+            mockStore.Verify(s => s.SaveAsync(It.IsAny<IList<IdentityAccount>>()), Times.AtLeastOnce);
         }
 
         [Fact]
@@ -189,8 +189,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
             var logger = new Mock<ILogger<IdentityManager>>();
 
             var storedAccounts = new List<IdentityAccount>();
-            mockStore.Setup(s => s.SaveAsync(It.IsAny<List<IdentityAccount>>()))
-                .Callback<List<IdentityAccount>>(accounts => storedAccounts.AddRange(accounts))
+            mockStore.Setup(s => s.SaveAsync(It.IsAny<IList<IdentityAccount>>()))
+                .Callback<IList<IdentityAccount>>(accounts => storedAccounts.AddRange(accounts))
                 .Returns(Task.CompletedTask);
             mockStore.Setup(s => s.LoadAsync())
                 .ReturnsAsync(storedAccounts);
@@ -233,7 +233,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
             var mockStore = new Mock<ISecureTokenStore>();
             var logger = new Mock<ILogger<IdentityManager>>();
 
-            mockStore.Setup(s => s.SaveAsync(It.IsAny<List<IdentityAccount>>())).Returns(Task.CompletedTask);
+            mockStore.Setup(s => s.SaveAsync(It.IsAny<IList<IdentityAccount>>())).Returns(Task.CompletedTask);
 
             var manager = new IdentityManager(new[] { mockStrat.Object }, mockStore.Object, logger.Object);
 
@@ -247,7 +247,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
 
             await manager.AddOrUpdateAccountAsync(account);
 
-            mockStore.Verify(s => s.SaveAsync(It.IsAny<List<IdentityAccount>>()), Times.AtLeastOnce);
+            mockStore.Verify(s => s.SaveAsync(It.IsAny<IList<IdentityAccount>>()), Times.AtLeastOnce);
         }
 
         [Fact]

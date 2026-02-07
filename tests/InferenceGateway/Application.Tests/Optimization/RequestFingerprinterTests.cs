@@ -37,7 +37,7 @@ public class RequestFingerprinterTests : TestBase
         var options = new ChatOptions
         {
             ModelId = "gpt-4",
-            Temperature = 0.7,
+            Temperature = 0.7f,
             MaxOutputTokens = 1000,
         };
 
@@ -90,8 +90,8 @@ public class RequestFingerprinterTests : TestBase
     {
         // Arrange
         var messages = new[] { new ChatMessage(ChatRole.User, "Hello") };
-        var options1 = new ChatOptions { ModelId = "gpt-4", Temperature = 0.7 };
-        var options2 = new ChatOptions { ModelId = "gpt-4", Temperature = 0.0 };
+        var options1 = new ChatOptions { ModelId = "gpt-4", Temperature = 0.7f };
+        var options2 = new ChatOptions { ModelId = "gpt-4", Temperature = 0.0f };
 
         this._mockFingerprinter
             .Setup(x => x.ComputeFingerprint(messages, options1))
@@ -117,16 +117,16 @@ public class RequestFingerprinterTests : TestBase
         var options1 = new ChatOptions
         {
             ModelId = "gpt-4",
-            Temperature = 0.7,
+            Temperature = 0.7f,
             MaxOutputTokens = 1000,
-            TopP = 0.9,
+            TopP = 0.9f,
         };
         var options2 = new ChatOptions
         {
-            TopP = 0.9,
+            TopP = 0.9f,
             ModelId = "gpt-4",
             MaxOutputTokens = 1000,
-            Temperature = 0.7,
+            Temperature = 0.7f,
         };
 
         var expectedHash = "normalized_hash";

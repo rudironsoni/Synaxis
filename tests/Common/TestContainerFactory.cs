@@ -28,7 +28,7 @@ public static class TestContainerFactory
         //     .WithPortBinding(6333, true)
         //     .Build();
 
-        throw new NotImplementedException(
+        throw new NotSupportedException(
             "Testcontainers.Qdrant package is required. " +
             "Install via: dotnet add package Testcontainers.Qdrant");
     }
@@ -51,7 +51,7 @@ public static class TestContainerFactory
         //     .WithPortBinding(6379, true)
         //     .Build();
 
-        throw new NotImplementedException(
+        throw new NotSupportedException(
             "Testcontainers.Redis package is required. " +
             "Install via: dotnet add package Testcontainers.Redis");
     }
@@ -76,21 +76,9 @@ public static class TestContainerFactory
         //     .WithPassword("test")
         //     .Build();
 
-        throw new NotImplementedException(
+        throw new NotSupportedException(
             "Testcontainers.PostgreSql package is required. " +
             "Install via: dotnet add package Testcontainers.PostgreSql");
     }
 }
 
-/// <summary>
-/// Stub interface for test containers.
-/// Replace with actual Testcontainers.IContainer when packages are installed.
-/// </summary>
-public interface ITestContainer : IAsyncDisposable
-{
-    Task StartAsync(CancellationToken ct = default);
-
-    Task StopAsync(CancellationToken ct = default);
-
-    string GetConnectionString();
-}

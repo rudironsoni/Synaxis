@@ -12,13 +12,26 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity
     /// </summary>
     public class Role : IdentityRole<Guid>
     {
+        /// <summary>
+        /// Gets or sets a value indicating whether this is a system role.
+        /// </summary>
         public bool IsSystemRole { get; set; }
 
+        /// <summary>
+        /// Gets or sets the OrganizationId.
+        /// </summary>
         public Guid? OrganizationId { get; set; }
 
+        /// <summary>
+        /// Gets or sets the Description.
+        /// </summary>
         public string? Description { get; set; }
 
         // Navigation properties
+
+        /// <summary>
+        /// Gets or sets the Organization.
+        /// </summary>
         public Organization? Organization { get; set; }
     }
 }

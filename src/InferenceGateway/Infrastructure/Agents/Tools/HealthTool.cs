@@ -39,7 +39,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
             try
             {
                 // Query from Operations schema
-                var health = await _db.Database.SqlQuery<ProviderHealthDto>(
+                var health = await this._db.Database.SqlQuery<ProviderHealthDto>(
                     $"SELECT \"IsHealthy\", \"HealthScore\", \"ConsecutiveFailures\", \"IsInCooldown\", \"CooldownUntil\" FROM operations.\"ProviderHealthStatus\" WHERE \"OrganizationProviderId\" = {providerId} ORDER BY \"LastCheckedAt\" DESC LIMIT 1").FirstOrDefaultAsync(ct).ConfigureAwait(false);
 
                 if (health == null)
@@ -56,7 +56,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to check health");
+                this._logger.LogError(ex, "Failed to check health");
                 return new HealthCheckResult(false, 0m, 0, false, null);
             }
         }
@@ -78,13 +78,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
                 var cooldownMinutes = Math.Min(Math.Pow(2, consecutiveFailures - 1), 60);
                 var cooldownUntil = DateTime.UtcNow.AddMinutes(cooldownMinutes);
 
-                await _db.Database.ExecuteSqlAsync(
+                await this._db.Database.ExecuteSqlAsync(
                     $"UPDATE operations.\"ProviderHealthStatus\" SET \"IsHealthy\" = false, \"ConsecutiveFailures\" = {consecutiveFailures}, \"LastErrorMessage\" = {reason}, \"IsInCooldown\" = true, \"CooldownUntil\" = {cooldownUntil}, \"LastCheckedAt\" = {DateTime.UtcNow} WHERE \"OrganizationProviderId\" = {providerId}",
                     ct).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to mark unhealthy");
+                this._logger.LogError(ex, "Failed to mark unhealthy");
             }
         }
 
@@ -99,13 +99,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
         {
             try
             {
-                await _db.Database.ExecuteSqlAsync(
+                await this._db.Database.ExecuteSqlAsync(
                     $"UPDATE operations.\"ProviderHealthStatus\" SET \"IsHealthy\" = true, \"ConsecutiveFailures\" = 0, \"IsInCooldown\" = false, \"CooldownUntil\" = NULL, \"LastSuccessAt\" = {DateTime.UtcNow}, \"LastCheckedAt\" = {DateTime.UtcNow} WHERE \"OrganizationProviderId\" = {providerId}",
                     ct).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to mark healthy");
+                this._logger.LogError(ex, "Failed to mark healthy");
             }
         }
 
@@ -120,13 +120,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
         {
             try
             {
-                await _db.Database.ExecuteSqlAsync(
+                await this._db.Database.ExecuteSqlAsync(
                     $"UPDATE operations.\"ProviderHealthStatus\" SET \"IsHealthy\" = true, \"HealthScore\" = 1.0, \"ConsecutiveFailures\" = 0, \"IsInCooldown\" = false, \"CooldownUntil\" = NULL, \"LastCheckedAt\" = {DateTime.UtcNow} WHERE \"OrganizationProviderId\" = {providerId}",
                     ct).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to reset health");
+                this._logger.LogError(ex, "Failed to reset health");
             }
         }
 

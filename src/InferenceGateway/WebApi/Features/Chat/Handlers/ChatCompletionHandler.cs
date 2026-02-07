@@ -4,13 +4,13 @@
 
 namespace Synaxis.InferenceGateway.WebApi.Features.Chat.Handlers
 {
+    using System.Collections.Generic;
+    using System.Threading;
+    using System.Threading.Tasks;
     using Mediator;
     using Microsoft.Agents.AI;
     using Synaxis.InferenceGateway.WebApi.Agents;
     using Synaxis.InferenceGateway.WebApi.Features.Chat.Commands;
-    using System.Collections.Generic;
-    using System.Threading;
-    using System.Threading.Tasks;
 
     /// <summary>
     /// Handler for chat completion requests.
@@ -52,5 +52,4 @@ namespace Synaxis.InferenceGateway.WebApi.Features.Chat.Handlers
             return this._agent.RunStreamingAsync(request.Messages, cancellationToken: cancellationToken);
         }
     }
-
 }

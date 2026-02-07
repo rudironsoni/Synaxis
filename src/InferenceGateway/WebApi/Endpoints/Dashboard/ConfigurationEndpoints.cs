@@ -4,14 +4,14 @@
 
 namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Routing;
     using Microsoft.Extensions.Options;
     using Synaxis.InferenceGateway.Application.Configuration;
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
 
     /// <summary>
     /// Endpoints for configuration management.
@@ -29,128 +29,175 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
                 .WithTags("Configuration")
                 .RequireCors("WebApp");
 
+            MapGetModelsEndpoint(configGroup);
+            MapUpdateModelEndpoint(configGroup);
+            MapValidateModelEndpoint(configGroup);
+            MapGetSystemSettingsEndpoint(configGroup);
+            MapGetUserPreferencesEndpoint(configGroup);
+            MapUpdateUserPreferencesEndpoint(configGroup);
+
+            return app;
+        }
+
+        private static void MapGetModelsEndpoint(RouteGroupBuilder configGroup)
+        {
             configGroup.MapGet("/models", (IOptions<SynaxisConfiguration> config) =>
             {
-                var models = config.Value.CanonicalModels.Select(cm =>
-                {
-                    var providerConfig = config.Value.Providers.TryGetValue(cm.Provider, out var providerConfigValue) ? providerConfigValue : null;
-
-                    return new ModelConfigDto
-                    {
-                        Id = cm.Id,
-                        Provider = cm.Provider,
-                        ModelPath = cm.ModelPath,
-                        Enabled = providerConfig?.Enabled ?? false,
-                        Capabilities = new ModelCapabilitiesDto
-                        {
-                            Streaming = cm.Streaming,
-                            Tools = cm.Tools,
-                            Vision = cm.Vision,
-                            StructuredOutput = cm.StructuredOutput,
-                            LogProbs = cm.LogProbs,
-                        },
-                        Priority = providerConfig?.Tier ?? 0,
-                    };
-                }).ToList();
-
+                var models = BuildModelConfigDtos(config.Value);
                 return Results.Ok(new { models });
             })
             .WithSummary("Get all model configurations")
             .WithDescription("Returns a list of all configured models with their capabilities and settings");
+        }
 
+        private static void MapUpdateModelEndpoint(RouteGroupBuilder configGroup)
+        {
             configGroup.MapPut("/models/{id}", (
                 string id,
                 ModelUpdateRequest request,
                 IOptions<SynaxisConfiguration> config) =>
             {
-                var model = config.Value.CanonicalModels.FirstOrDefault(m => string.Equals(m.Id, id, StringComparison.Ordinal));
-                if (model == null)
-                {
-                    return Results.NotFound(new { error = $"Model '{id}' not found" });
-                }
-
-                var providerConfig = config.Value.Providers.TryGetValue(model.Provider, out var providerConfigValue) ? providerConfigValue : null;
-                if (providerConfig == null)
-                {
-                    return Results.NotFound(new { error = $"Provider '{model.Provider}' not found for model '{id}'" });
-                }
-
-                if (request.Enabled.HasValue)
-                {
-                    providerConfig.Enabled = request.Enabled.Value;
-                }
-
-                if (request.Priority.HasValue)
-                {
-                    providerConfig.Tier = request.Priority.Value;
-                }
-
-                return Results.Ok(new { success = true });
+                return UpdateModelConfiguration(id, request, config.Value);
             })
             .WithSummary("Update model configuration")
             .WithDescription("Update configuration for a specific model including enabled status and priority");
+        }
 
+        private static void MapValidateModelEndpoint(RouteGroupBuilder configGroup)
+        {
             configGroup.MapPost("/models", (
                 ModelCreateRequest request,
                 IOptions<SynaxisConfiguration> config) =>
             {
-                if (string.IsNullOrWhiteSpace(request.Model))
-                {
-                    return Results.BadRequest(new { success = false, error = "Model name is required" });
-                }
-
-                var existingModel = config.Value.CanonicalModels.FirstOrDefault(m => string.Equals(m.Id, request.Model, StringComparison.Ordinal));
-                if (existingModel != null)
-                {
-                    return Results.Conflict(new { success = false, error = $"Model '{request.Model}' already exists" });
-                }
-
-                return Results.Ok(new { success = true });
+                return ValidateModelConfiguration(request, config.Value);
             })
             .WithSummary("Validate model configuration")
             .WithDescription("Validate a new model configuration before persistence");
+        }
 
+        private static void MapGetSystemSettingsEndpoint(RouteGroupBuilder configGroup)
+        {
             configGroup.MapGet("/system", (IOptions<SynaxisConfiguration> config) =>
             {
-                var settings = new SystemSettingsDto
-                {
-                    MaxRequestBodySize = config.Value.MaxRequestBodySize,
-                    JwtIssuer = config.Value.JwtIssuer ?? "Synaxis",
-                    JwtAudience = config.Value.JwtAudience ?? "Synaxis",
-                    TotalProviders = config.Value.Providers.Count,
-                    EnabledProviders = config.Value.Providers.Count(p => p.Value.Enabled),
-                    TotalModels = config.Value.CanonicalModels.Count,
-                    TotalAliases = config.Value.Aliases.Count,
-                };
-
+                var settings = BuildSystemSettingsDto(config.Value);
                 return Results.Ok(settings);
             })
             .WithSummary("Get system settings")
             .WithDescription("Returns current system configuration and statistics");
+        }
 
+        private static void MapGetUserPreferencesEndpoint(RouteGroupBuilder configGroup)
+        {
             configGroup.MapGet("/preferences", () =>
             {
-                var preferences = new UserPreferencesDto
-                {
-                    Theme = "dark",
-                    DefaultModel = "default",
-                    StreamingEnabled = true,
-                    NotificationsEnabled = true,
-                };
-
+                var preferences = GetDefaultUserPreferences();
                 return Results.Ok(preferences);
             })
             .WithSummary("Get user preferences")
             .WithDescription("Returns user-specific preferences and settings");
+        }
 
+        private static void MapUpdateUserPreferencesEndpoint(RouteGroupBuilder configGroup)
+        {
             configGroup.MapPut("/preferences", (UserPreferencesUpdateRequest request) =>
             {
                 return Results.Ok(new { success = true });
             })
             .WithSummary("Update user preferences")
             .WithDescription("Update user-specific preferences and settings");
+        }
 
-            return app;
+        private static List<ModelConfigDto> BuildModelConfigDtos(SynaxisConfiguration config)
+        {
+            return config.CanonicalModels.Select(cm =>
+            {
+                var providerConfig = config.Providers.TryGetValue(cm.Provider, out var providerConfigValue) ? providerConfigValue : null;
+
+                return new ModelConfigDto
+                {
+                    Id = cm.Id,
+                    Provider = cm.Provider,
+                    ModelPath = cm.ModelPath,
+                    Enabled = providerConfig?.Enabled ?? false,
+                    Capabilities = new ModelCapabilitiesDto
+                    {
+                        Streaming = cm.Streaming,
+                        Tools = cm.Tools,
+                        Vision = cm.Vision,
+                        StructuredOutput = cm.StructuredOutput,
+                        LogProbs = cm.LogProbs,
+                    },
+                    Priority = providerConfig?.Tier ?? 0,
+                };
+            }).ToList();
+        }
+
+        private static IResult UpdateModelConfiguration(string id, ModelUpdateRequest request, SynaxisConfiguration config)
+        {
+            var model = config.CanonicalModels.FirstOrDefault(m => string.Equals(m.Id, id, StringComparison.Ordinal));
+            if (model == null)
+            {
+                return Results.NotFound(new { error = $"Model '{id}' not found" });
+            }
+
+            var providerConfig = config.Providers.TryGetValue(model.Provider, out var providerConfigValue) ? providerConfigValue : null;
+            if (providerConfig == null)
+            {
+                return Results.NotFound(new { error = $"Provider '{model.Provider}' not found for model '{id}'" });
+            }
+
+            if (request.Enabled.HasValue)
+            {
+                providerConfig.Enabled = request.Enabled.Value;
+            }
+
+            if (request.Priority.HasValue)
+            {
+                providerConfig.Tier = request.Priority.Value;
+            }
+
+            return Results.Ok(new { success = true });
+        }
+
+        private static IResult ValidateModelConfiguration(ModelCreateRequest request, SynaxisConfiguration config)
+        {
+            if (string.IsNullOrWhiteSpace(request.Model))
+            {
+                return Results.BadRequest(new { success = false, error = "Model name is required" });
+            }
+
+            var existingModel = config.CanonicalModels.FirstOrDefault(m => string.Equals(m.Id, request.Model, StringComparison.Ordinal));
+            if (existingModel != null)
+            {
+                return Results.Conflict(new { success = false, error = $"Model '{request.Model}' already exists" });
+            }
+
+            return Results.Ok(new { success = true });
+        }
+
+        private static SystemSettingsDto BuildSystemSettingsDto(SynaxisConfiguration config)
+        {
+            return new SystemSettingsDto
+            {
+                MaxRequestBodySize = config.MaxRequestBodySize,
+                JwtIssuer = config.JwtIssuer ?? "Synaxis",
+                JwtAudience = config.JwtAudience ?? "Synaxis",
+                TotalProviders = config.Providers.Count,
+                EnabledProviders = config.Providers.Count(p => p.Value.Enabled),
+                TotalModels = config.CanonicalModels.Count,
+                TotalAliases = config.Aliases.Count,
+            };
+        }
+
+        private static UserPreferencesDto GetDefaultUserPreferences()
+        {
+            return new UserPreferencesDto
+            {
+                Theme = "dark",
+                DefaultModel = "default",
+                StreamingEnabled = true,
+                NotificationsEnabled = true,
+            };
         }
     }
 

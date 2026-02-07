@@ -20,6 +20,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigurationResolver"/> class.
         /// </summary>
+        /// <param name="context">The database context.</param>
         public ConfigurationResolver(SynaxisDbContext context)
         {
             this._context = context;
@@ -50,61 +51,24 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             CancellationToken cancellationToken = default)
         {
             // 1. Check user membership for user-specific rate limits
-            if (userthis.Id.HasValue && organizationthis.Id.HasValue)
+            var userRateLimits = await this.GetUserRateLimitsAsync(userId, organizationId, cancellationToken).ConfigureAwait(false);
+            if (userRateLimits != null)
             {
-                var membership = await this._context.UserOrganizationMemberships
-                    .FirstOrDefaultAsync(
-                        m => m.UserId == userId.Value && m.OrganizationId == organizationId.Value,
-                        cancellationToken).ConfigureAwait(false);
+                return userRateLimits;
+            }
 
-                if (membership?.Ratethis.LimitRpm.HasValue == true || membership?.Ratethis.LimitTpm.HasValue == true)
-                {
-                    return new RateLimitConfiguration
-                    {
-                        RequestsPerMinute = membership.RateLimitRpm,
-                        TokensPerMinute = membership.RateLimitTpm,
-                        Source = "UserMembership",
-                    };
-                }
-
-                // 2. Check primary group for group-level rate limits
-                if (membership?.Primarythis.GroupId.HasValue == true)
-                {
-                    var group = await this._context.Groups
-                        .FirstOrDefaultAsync(
-                            g => g.Id == membership.PrimaryGroupId.Value,
-                            cancellationToken).ConfigureAwait(false);
-
-                    if (group?.Ratethis.LimitRpm.HasValue == true || group?.Ratethis.LimitTpm.HasValue == true)
-                    {
-                        return new RateLimitConfiguration
-                        {
-                            RequestsPerMinute = group.RateLimitRpm,
-                            TokensPerMinute = group.RateLimitTpm,
-                            Source = "Group",
-                        };
-                    }
-                }
+            // 2. Check primary group for group-level rate limits
+            var groupRateLimits = await this.GetGroupRateLimitsAsync(userId, organizationId, cancellationToken).ConfigureAwait(false);
+            if (groupRateLimits != null)
+            {
+                return groupRateLimits;
             }
 
             // 3. Check organization settings for org-level rate limits
-            if (organizationthis.Id.HasValue)
+            var orgRateLimits = await this.GetOrganizationRateLimitsAsync(organizationId, cancellationToken).ConfigureAwait(false);
+            if (orgRateLimits != null)
             {
-                var orgSettings = await this._context.OrganizationSettings
-                    .FirstOrDefaultAsync(
-                        s => s.OrganizationId == organizationId.Value,
-                        cancellationToken).ConfigureAwait(false);
-
-                if (orgSettings?.DefaultRateLimitRpm > 0 ||
-                    orgSettings?.DefaultRateLimitTpm > 0)
-                {
-                    return new RateLimitConfiguration
-                    {
-                        RequestsPerMinute = orgSettings.DefaultRateLimitRpm,
-                        TokensPerMinute = orgSettings.DefaultRateLimitTpm,
-                        Source = "Organization",
-                    };
-                }
+                return orgRateLimits;
             }
 
             // 4. Return global defaults (unlimited)
@@ -129,8 +93,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                     om => om.OrganizationId == organizationId && om.ModelId == modelId,
                     cancellationToken).ConfigureAwait(false);
 
-            if (orgModel?.InputCostPer1this.MTokens.HasValue == true &&
-                orgModel.OutputCostPer1this.MTokens.HasValue)
+            if (orgModel?.InputCostPer1MTokens.HasValue == true &&
+                orgModel.OutputCostPer1MTokens.HasValue)
             {
                 return new CostConfiguration
                 {
@@ -146,8 +110,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                     op => op.OrganizationId == organizationId && op.ProviderId == providerId,
                     cancellationToken).ConfigureAwait(false);
 
-            if (orgProvider?.InputCostPer1this.MTokens.HasValue == true &&
-                orgProvider.OutputCostPer1this.MTokens.HasValue)
+            if (orgProvider?.InputCostPer1MTokens.HasValue == true &&
+                orgProvider.OutputCostPer1MTokens.HasValue)
             {
                 return new CostConfiguration
                 {
@@ -161,8 +125,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             var provider = await this._context.Providers
                 .FirstOrDefaultAsync(p => p.Id == providerId, cancellationToken).ConfigureAwait(false);
 
-            if (provider?.DefaultInputCostPer1this.MTokens.HasValue == true &&
-                provider.DefaultOutputCostPer1this.MTokens.HasValue)
+            if (provider?.DefaultInputCostPer1MTokens.HasValue == true &&
+                provider.DefaultOutputCostPer1MTokens.HasValue)
             {
                 return new CostConfiguration
                 {
@@ -188,7 +152,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             CancellationToken cancellationToken = default)
         {
             // 1. Check user membership for user-specific setting
-            if (userthis.Id.HasValue && organizationthis.Id.HasValue)
+            if (userId.HasValue && organizationId.HasValue)
             {
                 var membership = await this._context.UserOrganizationMemberships
                     .FirstOrDefaultAsync(
@@ -201,7 +165,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                 }
 
                 // 2. Check primary group for group-level setting
-                if (membership?.Primarythis.GroupId.HasValue == true)
+                if (membership?.PrimaryGroupId.HasValue == true)
                 {
                     var group = await this._context.Groups
                         .FirstOrDefaultAsync(
@@ -216,7 +180,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             }
 
             // 3. Check organization settings for org-level setting
-            if (organizationthis.Id.HasValue)
+            if (organizationId.HasValue)
             {
                 var orgSettings = await this._context.OrganizationSettings
                     .FirstOrDefaultAsync(
@@ -231,6 +195,99 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
 
             // 4. Return global default (true)
             return true;
+        }
+
+        private async Task<RateLimitConfiguration?> GetUserRateLimitsAsync(
+            Guid? userId,
+            Guid? organizationId,
+            CancellationToken cancellationToken)
+        {
+            if (!userId.HasValue || !organizationId.HasValue)
+            {
+                return null;
+            }
+
+            var membership = await this._context.UserOrganizationMemberships
+                .FirstOrDefaultAsync(
+                    m => m.UserId == userId.Value && m.OrganizationId == organizationId.Value,
+                    cancellationToken).ConfigureAwait(false);
+
+            if (membership?.RateLimitRpm.HasValue == true || membership?.RateLimitTpm.HasValue == true)
+            {
+                return new RateLimitConfiguration
+                {
+                    RequestsPerMinute = membership.RateLimitRpm,
+                    TokensPerMinute = membership.RateLimitTpm,
+                    Source = "UserMembership",
+                };
+            }
+
+            return null;
+        }
+
+        private async Task<RateLimitConfiguration?> GetGroupRateLimitsAsync(
+            Guid? userId,
+            Guid? organizationId,
+            CancellationToken cancellationToken)
+        {
+            if (!userId.HasValue || !organizationId.HasValue)
+            {
+                return null;
+            }
+
+            var membership = await this._context.UserOrganizationMemberships
+                .FirstOrDefaultAsync(
+                    m => m.UserId == userId.Value && m.OrganizationId == organizationId.Value,
+                    cancellationToken).ConfigureAwait(false);
+
+            if (membership?.PrimaryGroupId.HasValue != true)
+            {
+                return null;
+            }
+
+            var group = await this._context.Groups
+                .FirstOrDefaultAsync(
+                    g => g.Id == membership.PrimaryGroupId,
+                    cancellationToken).ConfigureAwait(false);
+
+            if (group?.RateLimitRpm.HasValue == true || group?.RateLimitTpm.HasValue == true)
+            {
+                return new RateLimitConfiguration
+                {
+                    RequestsPerMinute = group.RateLimitRpm,
+                    TokensPerMinute = group.RateLimitTpm,
+                    Source = "Group",
+                };
+            }
+
+            return null;
+        }
+
+        private async Task<RateLimitConfiguration?> GetOrganizationRateLimitsAsync(
+            Guid? organizationId,
+            CancellationToken cancellationToken)
+        {
+            if (!organizationId.HasValue)
+            {
+                return null;
+            }
+
+            var orgSettings = await this._context.OrganizationSettings
+                .FirstOrDefaultAsync(
+                    s => s.OrganizationId == organizationId.Value,
+                    cancellationToken).ConfigureAwait(false);
+
+            if (orgSettings?.DefaultRateLimitRpm > 0 || orgSettings?.DefaultRateLimitTpm > 0)
+            {
+                return new RateLimitConfiguration
+                {
+                    RequestsPerMinute = orgSettings.DefaultRateLimitRpm,
+                    TokensPerMinute = orgSettings.DefaultRateLimitTpm,
+                    Source = "Organization",
+                };
+            }
+
+            return null;
         }
     }
 }

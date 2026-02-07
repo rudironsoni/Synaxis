@@ -12,18 +12,27 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
     using Microsoft.Extensions.Logging;
     using Synaxis.InferenceGateway.Application.Configuration;
 
+    /// <summary>
+    /// File-based implementation of ITokenStore for persisting Antigravity tokens.
+    /// </summary>
     public class FileTokenStore : ITokenStore
     {
         private readonly string _path;
         private readonly ILogger<FileTokenStore> _logger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FileTokenStore"/> class.
+        /// </summary>
+        /// <param name="path">The file path for storing tokens.</param>
+        /// <param name="logger">The logger instance.</param>
         public FileTokenStore(string path, ILogger<FileTokenStore> logger)
         {
             this._path = path ?? throw new ArgumentNullException(nameof(path));
             this._logger = logger;
         }
 
-        public async Task<List<AntigravityAccount>> LoadAsync()
+        /// <inheritdoc/>
+        public async Task<IList<AntigravityAccount>> LoadAsync()
         {
             if (!File.Exists(this._path))
             {
@@ -43,7 +52,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
             }
         }
 
-        public async Task SaveAsync(List<AntigravityAccount> accounts)
+        /// <inheritdoc/>
+        public async Task SaveAsync(IList<AntigravityAccount> accounts)
         {
             try
             {

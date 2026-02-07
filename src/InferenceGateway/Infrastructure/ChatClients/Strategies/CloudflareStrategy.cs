@@ -10,11 +10,16 @@ namespace Synaxis.InferenceGateway.Infrastructure.ChatClients.Strategies
     using Microsoft.Extensions.AI;
     using Synaxis.InferenceGateway.Application.ChatClients.Strategies;
 
+    /// <summary>
+    /// CloudflareStrategy class.
+    /// </summary>
     public class CloudflareStrategy : IChatClientStrategy
     {
-        public bool CanHandle(string providerType) => providerType == "Cloudflare";
+        /// <inheritdoc/>
+        public bool CanHandle(string providerType) => string.Equals(providerType, "Cloudflare", System.StringComparison.Ordinal);
 
-        public async Task<ChatResponse> ExecuteAsync(
+        /// <inheritdoc/>
+        public Task<ChatResponse> ExecuteAsync(
             IChatClient client,
             IEnumerable<ChatMessage> messages,
             ChatOptions options,
@@ -26,9 +31,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.ChatClients.Strategies
             // handles protocol details. This strategy exists to allow future
             // provider-specific adjustments (e.g. token limits or option remapping)
             // without changing callers.
-            return await client.GetResponseAsync(messages, options, ct).ConfigureAwait(false);
+            return client.GetResponseAsync(messages, options, ct);
         }
 
+        /// <inheritdoc/>
         public IAsyncEnumerable<ChatResponseUpdate> ExecuteStreamingAsync(
             IChatClient client,
             IEnumerable<ChatMessage> messages,

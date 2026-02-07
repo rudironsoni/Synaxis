@@ -12,14 +12,23 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
     using Synaxis.InferenceGateway.Application.Security;
     using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 
+    /// <summary>
+    /// AesGcmTokenVault class.
+    /// </summary>
     public sealed class AesGcmTokenVault : ITokenVault
     {
         private readonly ControlPlaneDbContext _dbContext;
         private readonly byte[] _masterKey;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AesGcmTokenVault"/> class.
+        /// </summary>
+        /// <param name="dbContext">The database context for accessing tenant data.</param>
+        /// <param name="config">The configuration options containing the master key.</param>
         public AesGcmTokenVault(ControlPlaneDbContext dbContext, IOptions<SynaxisConfiguration> config)
         {
             this._dbContext = dbContext;
+
             // Derive a master key from a configured string. Do not allow an empty or missing master key.
             var masterKeyString = config.Value.MasterKey;
             if (string.IsNullOrWhiteSpace(masterKeyString))
@@ -31,6 +40,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
             this._masterKey = sha.ComputeHash(Encoding.UTF8.GetBytes(masterKeyString));
         }
 
+        /// <inheritdoc/>
         public async Task<byte[]> EncryptAsync(Guid tenantId, string plaintext, CancellationToken cancellationToken = default)
         {
             var tenant = await this._dbContext.Tenants.FindAsync(new object[] { tenantId }, cancellationToken).ConfigureAwait(false);
@@ -43,6 +53,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
             return Encrypt(Encoding.UTF8.GetBytes(plaintext), tenantKey);
         }
 
+        /// <inheritdoc/>
         public async Task<string> DecryptAsync(Guid tenantId, byte[] ciphertext, CancellationToken cancellationToken = default)
         {
             var tenant = await this._dbContext.Tenants.FindAsync(new object[] { tenantId }, cancellationToken).ConfigureAwait(false);
@@ -56,6 +67,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
             return Encoding.UTF8.GetString(plainBytes);
         }
 
+        /// <inheritdoc/>
         public async Task RotateKeyAsync(Guid tenantId, string newKeyBase64, CancellationToken cancellationToken = default)
         {
             var tenant = await this._dbContext.Tenants
@@ -130,7 +142,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
         {
             if (encrypted.Length < 28)
             {
-                throw new ArgumentException("Invalid ciphertext");
+                throw new ArgumentException("Invalid ciphertext", nameof(encrypted));
             }
 
             var nonce = encrypted.AsSpan(0, 12);

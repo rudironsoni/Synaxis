@@ -77,7 +77,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.Goog
             var strat = new GoogleAuthStrategy(settings, httpFactory.Object, logger.Object);
 
             IdentityAccount? emitted = null;
-            strat.AccountAuthenticated += (_, acc) => emitted = acc;
+            strat.AccountAuthenticated += (_, acc) => emitted = acc.Account;
 
             // We need a valid PKCE state value. Call InitiateFlowAsync to get a state value embedded in the URL.
             var init = await strat.InitiateFlowAsync(CancellationToken.None);

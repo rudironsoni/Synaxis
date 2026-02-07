@@ -1,0 +1,48 @@
+// <copyright file="Model.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
+namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Platform
+{
+    /// <summary>
+    /// Represents an AI model in the platform schema (tenant-agnostic).
+    /// </summary>
+    public class Model
+    {
+        /// <summary>
+        /// Gets or sets the Id.
+        /// </summary>
+        public Guid Id { get; set; }
+
+        /// <summary>
+        /// Gets or sets the ProviderId.
+        /// </summary>
+        public Guid ProviderId { get; set; }
+
+        required public string CanonicalId { get; set; }
+
+        required public string DisplayName { get; set; }
+
+        public string? Description { get; set; }
+
+        public int? ContextWindowTokens { get; set; }
+
+        public int? MaxOutputTokens { get; set; }
+
+        public bool SupportsStreaming { get; set; }
+
+        public bool SupportsTools { get; set; }
+
+        public bool SupportsVision { get; set; }
+
+        public bool IsActive { get; set; } = true;
+
+        public bool IsPublic { get; set; } = true;
+
+        // Navigation properties
+        /// <summary>
+        /// Gets or sets the Provider.
+        /// </summary>
+        public Provider Provider { get; set; } = null!;
+    }
+}

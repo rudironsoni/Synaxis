@@ -90,3 +90,7 @@ dotnet_diagnostic.MA0002.severity = suggestion
 # Disable for InferenceGateway where records cause analyzer crashes (AD0001)
 [src/InferenceGateway/**/*.cs]
 dotnet_diagnostic.SA1649.severity = none
+
+# SA1018: Nullable type symbols should not be preceded by a space
+# Disabled to allow SA1011 compliance for nullable array types (e.g., string[] ?)
+dotnet_diagnostic.SA1018.severity = none

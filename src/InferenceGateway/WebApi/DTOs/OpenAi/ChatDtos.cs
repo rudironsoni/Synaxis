@@ -21,7 +21,7 @@ namespace Synaxis.InferenceGateway.WebApi.DTOs.OpenAi
         /// Gets or sets the list of messages.
         /// </summary>
         [JsonPropertyName("messages")]
-        public List<ChatCompletionMessageDto> Messages { get; set; } = new();
+        public IList<ChatCompletionMessageDto> Messages { get; set; } = new List<ChatCompletionMessageDto>();
 
         /// <summary>
         /// Gets or sets a value indicating whether to stream the response.
@@ -51,7 +51,7 @@ namespace Synaxis.InferenceGateway.WebApi.DTOs.OpenAi
         /// Gets or sets the list of tools.
         /// </summary>
         [JsonPropertyName("tools")]
-        public List<object>? Tools { get; set; }
+        public IList<object>? Tools { get; set; }
     }
 
     /// <summary>
@@ -81,7 +81,7 @@ namespace Synaxis.InferenceGateway.WebApi.DTOs.OpenAi
         /// Gets or sets the tool calls.
         /// </summary>
         [JsonPropertyName("tool_calls")]
-        public List<object>? ToolCalls { get; set; }
+        public IList<object>? ToolCalls { get; set; }
     }
 
     /// <summary>
@@ -117,7 +117,7 @@ namespace Synaxis.InferenceGateway.WebApi.DTOs.OpenAi
         /// Gets or sets the list of choices.
         /// </summary>
         [JsonPropertyName("choices")]
-        public List<ChatCompletionChoice> Choices { get; set; } = new();
+        public IList<ChatCompletionChoice> Choices { get; set; } = new List<ChatCompletionChoice>();
 
         /// <summary>
         /// Gets or sets the usage statistics.
@@ -141,7 +141,7 @@ namespace Synaxis.InferenceGateway.WebApi.DTOs.OpenAi
         /// Gets or sets the message.
         /// </summary>
         [JsonPropertyName("message")]
-        public ChatCompletionMessageDto Message { get; set; } = new();
+        public ChatCompletionMessageDto Message { get; set; } = new ChatCompletionMessageDto();
 
         /// <summary>
         /// Gets or sets the finish reason.
@@ -207,7 +207,7 @@ namespace Synaxis.InferenceGateway.WebApi.DTOs.OpenAi
         /// Gets or sets the list of choices.
         /// </summary>
         [JsonPropertyName("choices")]
-        public List<ChatCompletionChunkChoice> Choices { get; set; } = new();
+        public IList<ChatCompletionChunkChoice> Choices { get; set; } = new List<ChatCompletionChunkChoice>();
     }
 
     /// <summary>
@@ -225,7 +225,7 @@ namespace Synaxis.InferenceGateway.WebApi.DTOs.OpenAi
         /// Gets or sets the delta.
         /// </summary>
         [JsonPropertyName("delta")]
-        public ChatCompletionChunkDelta Delta { get; set; } = new();
+        public ChatCompletionChunkDelta Delta { get; set; } = new ChatCompletionChunkDelta();
 
         /// <summary>
         /// Gets or sets the finish reason.
@@ -255,6 +255,6 @@ namespace Synaxis.InferenceGateway.WebApi.DTOs.OpenAi
         /// Gets or sets the tool calls.
         /// </summary>
         [JsonPropertyName("tool_calls")]
-        public List<object>? ToolCalls { get; set; }
+        public IList<object>? ToolCalls { get; set; }
     }
 }

@@ -6,6 +6,7 @@ using Synaxis.InferenceGateway.Application.Identity;
 using Synaxis.InferenceGateway.Application.Identity.Models;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity;
+using Synaxis.InferenceGateway.Infrastructure.Services;
 using Xunit;
 
 namespace Synaxis.InferenceGateway.Application.Tests.Identity;

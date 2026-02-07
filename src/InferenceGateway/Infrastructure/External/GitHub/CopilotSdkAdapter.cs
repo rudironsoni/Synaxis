@@ -14,27 +14,28 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
     using Microsoft.Extensions.Logging;
 
     /// <summary>
-    /// Minimal concrete adapter for the GitHub Copilot SDK.
-    /// The implementation attempts to start the CopilotClient lazily and exposes
-    /// a small, test-friendly surface required by CopilotSdkClient.
-    ///
-    /// Note: The SDK surface varies across versions; to remain resilient we use
-    /// light-weight reflection for optional calls but still expose the underlying
-    /// CopilotClient via GetService so callers can use advanced features when
-    /// available.
+    /// Concrete adapter for the GitHub Copilot SDK.
+    /// Uses lightweight reflection for optional calls to remain resilient across SDK versions.
     /// </summary>
-    public class CopilotSdkAdapter : ICopilotSdkAdapter
+    public sealed class CopilotSdkAdapter : ICopilotSdkAdapter
     {
         private readonly object _client;
         private readonly ILogger<CopilotSdkAdapter>? _logger;
-        private readonly SemaphoreSlim _startLock = new(1, 1);
-        private bool _started;
+        private readonly SemaphoreSlim _startLock = new (1, 1);
+#pragma warning disable S1075 // URIs should not be hardcoded - API endpoint
         private readonly ChatClientMetadata _metadata = new ChatClientMetadata("GitHubCopilot", new Uri("https://copilot.github.com/"), "copilot");
+#pragma warning restore S1075 // URIs should not be hardcoded
         private readonly string _modelId = "copilot";
+        private bool _started;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CopilotSdkAdapter"/> class.
+        /// </summary>
+        /// <param name="logger">Optional logger instance.</param>
         public CopilotSdkAdapter(ILogger<CopilotSdkAdapter>? logger = null)
         {
             this._logger = logger;
+
             // Construct the SDK client via reflection to avoid hard compile-time dependency
             // Authentication is expected to be provided by the environment/CLI.
             object? client = null;
@@ -50,9 +51,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
             {
                 this._logger?.LogDebug(ex, "Failed to create CopilotClient via reflection");
             }
+
             this._client = client ?? new object();
         }
 
+        /// <inheritdoc/>
         public ChatClientMetadata Metadata => this._metadata;
 
         private async Task EnsureStartedAsync()
@@ -69,6 +72,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
                 {
                     return;
                 }
+
                 // Call StartAsync if available on the SDK client.
                 var startMethod = this._client.GetType().GetMethod("StartAsync", BindingFlags.Public | BindingFlags.Instance);
                 if (startMethod != null)
@@ -95,6 +99,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
             }
         }
 
+        /// <inheritdoc/>
         public async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default)
         {
             await this.EnsureStartedAsync().ConfigureAwait(false);
@@ -136,27 +141,30 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Swallow - we'll fallback to a safe response below
+                // Swallow SDK invocation errors and fallback to a safe response below
+                this._logger?.LogDebug(ex, "Failed to invoke SDK GetResponseAsync");
             }
 
             // Fallback behavior: return a simple assistant response indicating
             // Copilot is not available in the current environment.
             var lastUser = messages.LastOrDefault(m => m.Role == ChatRole.User) ?? new ChatMessage(ChatRole.Assistant, string.Empty);
             var fallback = new ChatResponse(new ChatMessage(ChatRole.Assistant, lastUser.Text ?? string.Empty));
+
             // ChatClientMetadata does not expose ModelId; set on response instead
             fallback.ModelId = this._modelId;
             return fallback;
         }
 
+        /// <inheritdoc/>
         public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             await this.EnsureStartedAsync().ConfigureAwait(false);
 
             // Try to use a streaming SDK API if available. We'll invoke via reflection
             // and enumerate the returned IEnumerable outside of the try/catch to avoid
-            // yielding from inside a try block with a catch (which is not allowed).
+            // errors when yielding from a try block that has a catch clause.
             object? invoked = null;
             try
             {
@@ -184,6 +192,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
                     update.Contents.Add(new TextContent(item?.ToString() ?? string.Empty));
                     yield return update;
                 }
+
                 yield break;
             }
 
@@ -194,6 +203,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
             yield return u;
         }
 
+        /// <inheritdoc/>
         public object? GetService(Type serviceType, object? serviceKey = null)
         {
             if (this._client != null)
@@ -204,9 +214,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
                     return this._client;
                 }
             }
+
             return null;
         }
 
+        /// <inheritdoc/>
         public void Dispose()
         {
             try
@@ -225,7 +237,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
                     task?.GetAwaiter().GetResult();
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                // Suppress disposal exceptions during cleanup
+                this._logger?.LogDebug(ex, "Error disposing SDK client");
+            }
         }
     }
 }

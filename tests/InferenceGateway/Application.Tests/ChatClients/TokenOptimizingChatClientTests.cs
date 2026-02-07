@@ -11,6 +11,9 @@ using Xunit;
 using Synaxis.Common.Tests;
 using Synaxis.InferenceGateway.Application.Tests.Optimization;
 using Synaxis.InferenceGateway.Application.Tests.Optimization.Caching;
+using ISemanticCacheService = Synaxis.InferenceGateway.Application.Tests.Optimization.Caching.ISemanticCacheService;
+using IRequestFingerprinter = Synaxis.InferenceGateway.Application.Tests.Optimization.IRequestFingerprinter;
+using IRequestContextProvider = Synaxis.InferenceGateway.Application.Tests.Optimization.IRequestContextProvider;
 
 namespace Synaxis.InferenceGateway.Application.Tests.ChatClients;
 
