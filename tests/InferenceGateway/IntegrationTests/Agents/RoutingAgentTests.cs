@@ -40,7 +40,7 @@ public class RoutingAgentTests
     public async Task RunCoreAsync_DelegatesToChatClient_WithCorrectModel()
     {
         // Arrange
-        var messages = new List<ChatMessage> { new (ChatRole.User, "hello") };
+        var messages = new List<ChatMessage> { new(ChatRole.User, "hello") };
         var modelId = "requested-model";
         var openAIRequest = new OpenAIRequest
         {
