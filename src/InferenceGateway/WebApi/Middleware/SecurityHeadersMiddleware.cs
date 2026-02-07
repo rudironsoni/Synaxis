@@ -39,7 +39,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         /// </summary>
         /// <param name="context">The HTTP context for the current request.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        public async Task InvokeAsync(HttpContext context)
+        public Task InvokeAsync(HttpContext context)
         {
             var response = context.Response;
 
@@ -82,7 +82,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 return Task.CompletedTask;
             });
 
-            await this._next(context).ConfigureAwait(false);
+            return this._next(context);
         }
 
         /// <summary>

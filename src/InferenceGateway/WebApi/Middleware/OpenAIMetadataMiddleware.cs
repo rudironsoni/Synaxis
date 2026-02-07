@@ -28,22 +28,22 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         /// </summary>
         /// <param name="context">The HTTP context.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        public async Task InvokeAsync(HttpContext context)
+        public Task InvokeAsync(HttpContext context)
         {
             context.Response.OnStarting(() =>
             {
                 if (context.Items.TryGetValue("RoutingContext", out var value) && value is RoutingContext rc)
                 {
-                    context.Response.Headers["x-gateway-model-requested"] = rc.RequestedModel;
-                    context.Response.Headers["x-gateway-model-resolved"] = rc.ResolvedCanonicalId;
-                    context.Response.Headers["x-gateway-provider"] = rc.Provider;
+                    context.Response.Headers["x-gateway-model-requested"] = rc.requestedModel;
+                    context.Response.Headers["x-gateway-model-resolved"] = rc.resolvedCanonicalId;
+                    context.Response.Headers["x-gateway-provider"] = rc.provider;
                 }
                 else
                 {
                     // Ensure headers are present even if empty
-                    context.Response.Headers["x-gateway-model-requested"] = "";
-                    context.Response.Headers["x-gateway-model-resolved"] = "";
-                    context.Response.Headers["x-gateway-provider"] = "";
+                    context.Response.Headers["x-gateway-model-requested"] = string.Empty;
+                    context.Response.Headers["x-gateway-model-resolved"] = string.Empty;
+                    context.Response.Headers["x-gateway-provider"] = string.Empty;
                 }
 
                 if (!context.Response.Headers.ContainsKey("x-request-id"))
@@ -54,7 +54,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 return Task.CompletedTask;
             });
 
-            await this._next(context).ConfigureAwait(false);
+            return this._next(context);
         }
     }
 }

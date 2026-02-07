@@ -43,12 +43,23 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Identity
             group.MapGet("/accounts", async (ISecureTokenStore store) =>
             {
                 var accounts = await store.LoadAsync().ConfigureAwait(false);
-                var masked = accounts.Select(a => new
+                var masked = accounts.Select(a =>
                 {
-                    a.Id,
-                    a.Provider,
-                    a.Email,
-                    AccessToken = string.IsNullOrEmpty(a.AccessToken) ? string.Empty : (a.AccessToken.Length <= 8 ? "****" : a.AccessToken.Substring(0, 4) + "...." + a.AccessToken.Substring(a.AccessToken.Length - 4)),
+                    var maskedToken = string.Empty;
+                    if (!string.IsNullOrEmpty(a.AccessToken))
+                    {
+                        maskedToken = a.AccessToken.Length <= 8
+                            ? "****"
+                            : a.AccessToken.Substring(0, 4) + "...." + a.AccessToken.Substring(a.AccessToken.Length - 4);
+                    }
+
+                    return new
+                    {
+                        a.Id,
+                        a.Provider,
+                        a.Email,
+                        AccessToken = maskedToken,
+                    };
                 });
                 return Results.Ok(masked);
             });

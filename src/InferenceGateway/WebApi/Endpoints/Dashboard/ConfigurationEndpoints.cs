@@ -19,10 +19,10 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
     public static class ConfigurationEndpoints
     {
         /// <summary>
-        /// Maps configuration endpoints to the application.
+        /// Maps configuration endpoints to the application for managing models, system settings, and user preferences.
         /// </summary>
         /// <param name="app">The endpoint route builder.</param>
-        /// <returns>The endpoint route builder.</returns>
+        /// <returns>The configured endpoint route builder with configuration routes.</returns>
         public static IEndpointRouteBuilder MapConfigurationEndpoints(this IEndpointRouteBuilder app)
         {
             var configGroup = app.MapGroup("/api/config")

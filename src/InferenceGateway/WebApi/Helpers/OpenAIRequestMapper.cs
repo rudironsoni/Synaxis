@@ -65,7 +65,7 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
                     _ => new ChatRole(msg.Role)
                 };
 
-                var content = msg.Content?.ToString() ?? "";
+                var content = msg.Content?.ToString() ?? string.Empty;
 
                 // Note: This is a simplification. Real OpenAI messages can have array content (multimodal).
                 // Assuming string for now as per current project usage patterns or we'd need deeper parsing.
@@ -117,7 +117,7 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
             var result = new List<AITool>();
             foreach (var tool in tools)
             {
-                if (tool.Type == "function" && tool.Function != null)
+                if (string.Equals(tool.Type, "function", StringComparison.Ordinal) && tool.Function != null)
                 {
                     // We create a function definition using the AIFunctionFactory for metadata purposes.
                     // The actual execution delegate is a dummy since we are just routing.
@@ -144,8 +144,10 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
 
                 if (element.ValueKind == JsonValueKind.Array)
                 {
+#pragma warning disable IDISP004 // Don't ignore created IDisposable
                     var list = new List<string>();
                     foreach (var item in element.EnumerateArray())
+#pragma warning restore IDISP004
                     {
                         if (item.ValueKind == JsonValueKind.String)
                         {

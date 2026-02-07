@@ -36,7 +36,9 @@ namespace Synaxis.InferenceGateway.WebApi.Health
         /// <param name="context">The health check context.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The health check result.</returns>
+#pragma warning disable MA0051 // Method is too long
         public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
+#pragma warning restore MA0051
         {
             var failures = new List<string>();
 
@@ -63,7 +65,7 @@ namespace Synaxis.InferenceGateway.WebApi.Health
 
                 if (endpoints.Count == 0)
                 {
-                    var defaultEndpoint = this.GetDefaultEndpoint(provider.Type);
+                    var defaultEndpoint = GetDefaultEndpoint(provider.Type);
                     if (!string.IsNullOrWhiteSpace(defaultEndpoint))
                     {
                         endpoints.Add(defaultEndpoint);
@@ -85,7 +87,7 @@ namespace Synaxis.InferenceGateway.WebApi.Health
                 {
                     try
                     {
-                        await this.CheckConnectivityAsync(name, endpoint, cancellationToken).ConfigureAwait(false);
+                        await this.CheckConnectivityAsync(endpoint, cancellationToken).ConfigureAwait(false);
                         reachable = true;
                         break;
                     }
@@ -111,14 +113,22 @@ namespace Synaxis.InferenceGateway.WebApi.Health
             return HealthCheckResult.Healthy("All enabled providers are reachable.");
         }
 
-        private async Task CheckConnectivityAsync(string name, string endpoint, CancellationToken ct)
+        private async Task CheckConnectivityAsync(string endpoint, CancellationToken ct)
         {
             var normalized = endpoint.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || endpoint.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
                 ? endpoint
                 : $"https://{endpoint}";
             var uri = new Uri(normalized);
             var host = uri.Host;
-            var port = uri.Port > 0 ? uri.Port : (uri.Scheme == "https" ? 443 : 80);
+            int port;
+            if (uri.Port > 0)
+            {
+                port = uri.Port;
+            }
+            else
+            {
+                port = string.Equals(uri.Scheme, "https", StringComparison.Ordinal) ? 443 : 80;
+            }
 
             // 1. DNS (500ms)
             using var dnsCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
@@ -133,26 +143,34 @@ namespace Synaxis.InferenceGateway.WebApi.Health
             await tcpClient.ConnectAsync(ip, port, tcpCts.Token).ConfigureAwait(false);
 
             // 3. TLS (1200ms) - only if https
-            if (uri.Scheme == "https")
+            if (string.Equals(uri.Scheme, "https", StringComparison.Ordinal))
             {
+#pragma warning disable IDISP001 // Dispose created
+#pragma warning disable IDISP004 // Don't ignore created IDisposable
                 using var tlsCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
                 tlsCts.CancelAfter(TimeSpan.FromMilliseconds(1200));
                 using var sslStream = new SslStream(tcpClient.GetStream(), false);
                 await sslStream.AuthenticateAsClientAsync(new SslClientAuthenticationOptions { TargetHost = host }, tlsCts.Token).ConfigureAwait(false);
+#pragma warning restore IDISP004
+#pragma warning restore IDISP001
             }
 
             // 4. HTTP HEAD (500ms)
+#pragma warning disable IDISP001 // Dispose created
+#pragma warning disable IDISP004 // Don't ignore created IDisposable
             using var httpCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-            httpCts.CancelAfter(TimeSpan.FromMilliseconds(500));
             using var httpClient = new HttpClient { Timeout = TimeSpan.FromMilliseconds(500) };
+            httpCts.CancelAfter(TimeSpan.FromMilliseconds(500));
             var request = new HttpRequestMessage(HttpMethod.Head, uri);
-            var response = await httpClient.SendAsync(request, httpCts.Token).ConfigureAwait(false);
+            _ = await httpClient.SendAsync(request, httpCts.Token).ConfigureAwait(false);
+#pragma warning restore IDISP004
+#pragma warning restore IDISP001
 
             // We don't strictly require 200 OK, just that the server responded.
             // Many APIs return 401/404 on HEAD without tokens, which is fine for connectivity.
         }
 
-        private string? GetDefaultEndpoint(string type) => type?.ToLowerInvariant() switch
+        private static string? GetDefaultEndpoint(string type) => type?.ToLowerInvariant() switch
         {
             "openai" => "https://api.openai.com/v1",
             "groq" => "https://api.groq.com/openai/v1",
