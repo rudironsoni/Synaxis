@@ -81,9 +81,9 @@ public class TokenOptimizationConfigValidatorTests
 
         // Assert
         Assert.False(result.IsValid);
-        Assert.Contains(result.Errors, e => 
-            e.Contains("SimilarityThreshold") && 
-            e.Contains("0.7") && 
+        Assert.Contains(result.Errors, e =>
+            e.Contains("SimilarityThreshold") &&
+            e.Contains("0.7") &&
             e.Contains("user"));
     }
 
@@ -122,9 +122,9 @@ public class TokenOptimizationConfigValidatorTests
 
         // Assert
         Assert.False(result.IsValid);
-        Assert.Contains(result.Errors, e => 
-            e.Contains("CompressionStrategy") && 
-            e.Contains("gzip") && 
+        Assert.Contains(result.Errors, e =>
+            e.Contains("CompressionStrategy") &&
+            e.Contains("gzip") &&
             e.Contains("brotli"));
     }
 
@@ -145,11 +145,11 @@ public class TokenOptimizationConfigValidatorTests
 
         // Assert
         Assert.False(result.IsValid);
-        Assert.Contains(result.Errors, e => 
-            e.Contains("CompressionStrategy") && 
+        Assert.Contains(result.Errors, e =>
+            e.Contains("CompressionStrategy") &&
             e.Contains("user"));
-        Assert.Contains(result.Errors, e => 
-            e.Contains("MaxConcurrentRequests") && 
+        Assert.Contains(result.Errors, e =>
+            e.Contains("MaxConcurrentRequests") &&
             e.Contains("system"));
     }
 

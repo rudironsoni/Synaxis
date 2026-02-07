@@ -540,10 +540,10 @@ public static class MessageListArbitrary
     public static Arbitrary<List<ConversationMessage>> MessagesWithSystem()
     {
         var gen = from systemMsg in Gen.Constant(new ConversationMessage
-                  {
-                      Role = "system",
-                      Content = "You are a helpful assistant."
-                  })
+        {
+            Role = "system",
+            Content = "You are a helpful assistant."
+        })
                   from count in Gen.Choose(0, 15)
                   from messages in Gen.ArrayOf(count, ConversationMessageGen())
                   select new[] { systemMsg }.Concat(messages).ToList();

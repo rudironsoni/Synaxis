@@ -14,7 +14,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
 
         public DeviationRegistry(ControlPlaneDbContext dbContext)
         {
-            _dbContext = dbContext;
+            this._dbContext = dbContext;
         }
 
         public async Task RegisterAsync(DeviationEntry entry, CancellationToken cancellationToken = default)

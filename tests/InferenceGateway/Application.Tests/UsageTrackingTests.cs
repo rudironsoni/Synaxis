@@ -42,7 +42,7 @@ public class UsageTrackingTests
 
         // Assert
         Assert.Equal(expectedResponse, response);
-        
+
         // Verify logger was called with correct cost
         // llama cost: 0.70/1M input, 0.80/1M output
         // (100 * 0.70 / 1,000,000) + (200 * 0.80 / 1,000,000) = 0.00007 + 0.00016 = 0.00023
@@ -64,7 +64,7 @@ public class UsageTrackingTests
         var update = new ChatResponseUpdate();
         update.Contents.Add(new TextContent("Part 1"));
         var updates = new[] { update }.ToAsyncEnumerable();
-        
+
         _innerMock.Setup(c => c.GetStreamingResponseAsync(messages, null, It.IsAny<CancellationToken>()))
             .Returns(updates);
 

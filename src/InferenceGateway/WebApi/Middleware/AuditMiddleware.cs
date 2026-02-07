@@ -19,123 +19,123 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
     public sealed class AuditMiddleware
     {
         private readonly RequestDelegate _next;
-    private readonly ILogger<AuditMiddleware> _logger;
+        private readonly ILogger<AuditMiddleware> _logger;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AuditMiddleware"/> class.
-    /// </summary>
-    /// <param name="next">The next middleware delegate.</param>
-    /// <param name="logger">The logger instance.</param>
-    public AuditMiddleware(
-        RequestDelegate next,
-        ILogger<AuditMiddleware> logger)
-    {
-        _next = next ?? throw new ArgumentNullException(nameof(next));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
-
-    /// <summary>
-    /// Invokes the middleware to log request details.
-    /// </summary>
-    public async Task InvokeAsync(
-        HttpContext context,
-        ITenantContext tenantContext)
-    {
-        // Skip audit logging for health checks and static resources
-        if (context.Request.Path.StartsWithSegments("/health") ||
-            context.Request.Path.StartsWithSegments("/openapi") ||
-            context.Request.Path.Value?.Contains("swagger", StringComparison.OrdinalIgnoreCase) == true)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AuditMiddleware"/> class.
+        /// </summary>
+        /// <param name="next">The next middleware delegate.</param>
+        /// <param name="logger">The logger instance.</param>
+        public AuditMiddleware(
+            RequestDelegate next,
+            ILogger<AuditMiddleware> logger)
         {
-            await _next(context);
-            return;
+            _next = next ?? throw new ArgumentNullException(nameof(next));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        var stopwatch = Stopwatch.StartNew();
-        var requestId = context.Items["RequestId"]?.ToString() ?? Guid.NewGuid().ToString();
-
-        // Capture request details
-        var requestMethod = context.Request.Method;
-        var requestPath = context.Request.Path;
-        var requestQuery = context.Request.QueryString.ToString();
-        var clientIp = GetClientIpAddress(context);
-        var userAgent = context.Request.Headers["User-Agent"].ToString();
-
-        // Log request start
-        _logger.LogInformation(
-            "API Request Started: {RequestId} {Method} {Path}{Query} from {ClientIp}",
-            requestId, requestMethod, requestPath, requestQuery, clientIp);
-
-        // Capture original response body stream
-        var originalBodyStream = context.Response.Body;
-
-        try
+        /// <summary>
+        /// Invokes the middleware to log request details.
+        /// </summary>
+        public async Task InvokeAsync(
+            HttpContext context,
+            ITenantContext tenantContext)
         {
-            using var responseBodyStream = new MemoryStream();
-            context.Response.Body = responseBodyStream;
+            // Skip audit logging for health checks and static resources
+            if (context.Request.Path.StartsWithSegments("/health") ||
+                context.Request.Path.StartsWithSegments("/openapi") ||
+                context.Request.Path.Value?.Contains("swagger", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                await _next(context);
+                return;
+            }
 
-            // Process the request
-            await _next(context);
+            var stopwatch = Stopwatch.StartNew();
+            var requestId = context.Items["RequestId"]?.ToString() ?? Guid.NewGuid().ToString();
 
-            stopwatch.Stop();
+            // Capture request details
+            var requestMethod = context.Request.Method;
+            var requestPath = context.Request.Path;
+            var requestQuery = context.Request.QueryString.ToString();
+            var clientIp = GetClientIpAddress(context);
+            var userAgent = context.Request.Headers["User-Agent"].ToString();
 
-            // Get response details
-            var statusCode = context.Response.StatusCode;
-            var contentType = context.Response.ContentType;
-            var responseSize = responseBodyStream.Length;
+            // Log request start
+            _logger.LogInformation(
+                "API Request Started: {RequestId} {Method} {Path}{Query} from {ClientIp}",
+                requestId, requestMethod, requestPath, requestQuery, clientIp);
 
-            // Log request completion
-            var logLevel = statusCode >= 500 ? LogLevel.Error :
-                          statusCode >= 400 ? LogLevel.Warning :
-                          LogLevel.Information;
+            // Capture original response body stream
+            var originalBodyStream = context.Response.Body;
 
-            _logger.Log(logLevel,
-                "API Request Completed: {RequestId} {Method} {Path} -> {StatusCode} in {Duration}ms | " +
-                "OrgId: {OrgId} | UserId: {UserId} | ApiKeyId: {ApiKeyId} | " +
-                "Region: {UserRegion} | CrossBorder: {CrossBorder} | " +
-                "Size: {ResponseSize} bytes",
-                requestId, requestMethod, requestPath, statusCode, stopwatch.ElapsedMilliseconds,
-                tenantContext.OrganizationId, tenantContext.UserId, tenantContext.ApiKeyId,
-                context.Items["UserRegion"], context.Items["IsCrossBorder"],
-                responseSize);
+            try
+            {
+                using var responseBodyStream = new MemoryStream();
+                context.Response.Body = responseBodyStream;
 
-            // Copy response body back to original stream
-            responseBodyStream.Seek(0, SeekOrigin.Begin);
-            await responseBodyStream.CopyToAsync(originalBodyStream);
+                // Process the request
+                await _next(context);
+
+                stopwatch.Stop();
+
+                // Get response details
+                var statusCode = context.Response.StatusCode;
+                var contentType = context.Response.ContentType;
+                var responseSize = responseBodyStream.Length;
+
+                // Log request completion
+                var logLevel = statusCode >= 500 ? LogLevel.Error :
+                              statusCode >= 400 ? LogLevel.Warning :
+                              LogLevel.Information;
+
+                _logger.Log(logLevel,
+                    "API Request Completed: {RequestId} {Method} {Path} -> {StatusCode} in {Duration}ms | " +
+                    "OrgId: {OrgId} | UserId: {UserId} | ApiKeyId: {ApiKeyId} | " +
+                    "Region: {UserRegion} | CrossBorder: {CrossBorder} | " +
+                    "Size: {ResponseSize} bytes",
+                    requestId, requestMethod, requestPath, statusCode, stopwatch.ElapsedMilliseconds,
+                    tenantContext.OrganizationId, tenantContext.UserId, tenantContext.ApiKeyId,
+                    context.Items["UserRegion"], context.Items["IsCrossBorder"],
+                    responseSize);
+
+                // Copy response body back to original stream
+                responseBodyStream.Seek(0, SeekOrigin.Begin);
+                await responseBodyStream.CopyToAsync(originalBodyStream);
+            }
+            catch (Exception ex)
+            {
+                stopwatch.Stop();
+
+                _logger.LogError(ex,
+                    "API Request Failed: {RequestId} {Method} {Path} after {Duration}ms | " +
+                    "OrgId: {OrgId} | Error: {ErrorMessage}",
+                    requestId, requestMethod, requestPath, stopwatch.ElapsedMilliseconds,
+                    tenantContext.OrganizationId, ex.Message);
+
+                throw;
+            }
+            finally
+            {
+                context.Response.Body = originalBodyStream;
+            }
         }
-        catch (Exception ex)
+
+        private static string GetClientIpAddress(HttpContext context)
         {
-            stopwatch.Stop();
+            var forwardedFor = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            if (!string.IsNullOrEmpty(forwardedFor))
+            {
+                return forwardedFor.Split(',')[0].Trim();
+            }
 
-            _logger.LogError(ex,
-                "API Request Failed: {RequestId} {Method} {Path} after {Duration}ms | " +
-                "OrgId: {OrgId} | Error: {ErrorMessage}",
-                requestId, requestMethod, requestPath, stopwatch.ElapsedMilliseconds,
-                tenantContext.OrganizationId, ex.Message);
+            var realIp = context.Request.Headers["X-Real-IP"].FirstOrDefault();
+            if (!string.IsNullOrEmpty(realIp))
+            {
+                return realIp;
+            }
 
-            throw;
+            return context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
         }
-        finally
-        {
-            context.Response.Body = originalBodyStream;
-        }
-    }
-
-    private static string GetClientIpAddress(HttpContext context)
-    {
-        var forwardedFor = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
-        if (!string.IsNullOrEmpty(forwardedFor))
-        {
-            return forwardedFor.Split(',')[0].Trim();
-        }
-
-        var realIp = context.Request.Headers["X-Real-IP"].FirstOrDefault();
-        if (!string.IsNullOrEmpty(realIp))
-        {
-            return realIp;
-        }
-
-        return context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-    }
     }
 
 }

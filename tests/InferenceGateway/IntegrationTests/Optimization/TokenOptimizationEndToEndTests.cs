@@ -35,12 +35,12 @@ public class TokenOptimizationEndToEndTests : IAsyncLifetime
     {
         _output = output ?? throw new ArgumentNullException(nameof(output));
         _factory = new SynaxisWebApplicationFactory { OutputHelper = output };
-        
+
         _redis = new RedisBuilder()
             .WithImage("redis:7-alpine")
             .WithPortBinding(6379, true)
             .Build();
-            
+
         _qdrant = new QdrantBuilder()
             .WithImage("qdrant/qdrant:latest")
             .WithPortBinding(6333, true)
@@ -68,7 +68,7 @@ public class TokenOptimizationEndToEndTests : IAsyncLifetime
                 {
                     // Override Redis connection to use test container
                     ["ConnectionStrings:Redis"] = $"{_redis.GetConnectionString()},abortConnect=false",
-                    
+
                     // Enable token optimization features
                     ["Synaxis:InferenceGateway:TokenOptimization:Enabled"] = "true",
                     ["Synaxis:InferenceGateway:TokenOptimization:SemanticCache:Enabled"] = "true",
@@ -76,10 +76,10 @@ public class TokenOptimizationEndToEndTests : IAsyncLifetime
                     ["Synaxis:InferenceGateway:TokenOptimization:Compression:Enabled"] = "true",
                     ["Synaxis:InferenceGateway:TokenOptimization:SessionAffinity:Enabled"] = "true",
                     ["Synaxis:InferenceGateway:TokenOptimization:Deduplication:Enabled"] = "true",
-                    
+
                     // Qdrant configuration
                     ["Synaxis:InferenceGateway:TokenOptimization:SemanticCache:QdrantEndpoint"] = $"http://{_qdrant.Hostname}:{_qdrant.GetMappedPublicPort(6333)}",
-                    
+
                     // Test model configuration
                     ["Synaxis:InferenceGateway:CanonicalModels:0:Id"] = "test-provider/gpt-4",
                     ["Synaxis:InferenceGateway:CanonicalModels:0:Provider"] = "test-provider",
@@ -96,7 +96,7 @@ public class TokenOptimizationEndToEndTests : IAsyncLifetime
     public async Task DisposeAsync()
     {
         _client?.Dispose();
-        
+
         if (_redisConnection != null)
         {
             await _redisConnection.CloseAsync();
@@ -144,7 +144,7 @@ public class TokenOptimizationEndToEndTests : IAsyncLifetime
         var db = _redisConnection!.GetDatabase();
         var sessionKey = $"session:test-session-all-features";
         var sessionExists = await db.KeyExistsAsync(sessionKey);
-        
+
         // Session storage depends on implementation - log for verification
         _output.WriteLine($"Session exists in Redis: {sessionExists}");
     }
@@ -186,7 +186,7 @@ public class TokenOptimizationEndToEndTests : IAsyncLifetime
         // Check for cache hit header in real implementation
         // response2.Headers.TryGetValues("x-cache-status", out var cacheStatus);
         // Assert.Contains("hit", cacheStatus?.FirstOrDefault() ?? "miss");
-        
+
         _output.WriteLine($"First response: {firstResponse}");
         _output.WriteLine($"Second response: {secondResponse}");
     }
@@ -219,11 +219,11 @@ public class TokenOptimizationEndToEndTests : IAsyncLifetime
 
         // Assert
         Assert.True(response.IsSuccessStatusCode);
-        
+
         // In real implementation, check compression headers
         // response.Headers.TryGetValues("x-compression-ratio", out var compressionRatio);
         // response.Headers.TryGetValues("x-tokens-saved", out var tokensSaved);
-        
+
         _output.WriteLine("Compression applied to long conversation");
     }
 
@@ -270,7 +270,7 @@ public class TokenOptimizationEndToEndTests : IAsyncLifetime
         // Assert - Same provider used (if session affinity is working)
         _output.WriteLine($"Provider 1: {provider1}");
         _output.WriteLine($"Provider 2: {provider2}");
-        
+
         // In real implementation with multiple providers, assert equality
         // Assert.Equal(provider1, provider2);
     }
@@ -332,18 +332,18 @@ public class TokenOptimizationEndToEndTests : IAsyncLifetime
         // Read stream
         using var stream = await response.Content.ReadAsStreamAsync();
         using var reader = new System.IO.StreamReader(stream);
-        
+
         var lineCount = 0;
         var foundDone = false;
         string? line;
-        
+
         while ((line = await reader.ReadLineAsync()) != null && lineCount < 100)
         {
             if (!string.IsNullOrWhiteSpace(line))
             {
                 _output.WriteLine($"Stream line: {line}");
                 lineCount++;
-                
+
                 if (line.Contains("[DONE]"))
                 {
                     foundDone = true;

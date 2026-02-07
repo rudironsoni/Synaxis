@@ -62,7 +62,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Data.Interceptors
         /// </param>
         public SoftDeleteInterceptor(IHttpContextAccessor? httpContextAccessor = null)
         {
-            _httpContextAccessor = httpContextAccessor;
+            this._httpContextAccessor = httpContextAccessor;
         }
 
         /// <summary>

@@ -16,7 +16,7 @@ public abstract class TokenOptimizationTestBase : TestBase
     protected Mock<IRequestFingerprinter> FingerprinterMock { get; }
     protected Mock<ITokenOptimizationConfigurationResolver> ConfigResolverMock { get; }
     protected Mock<IRequestContextProvider> ContextProviderMock { get; }
-    
+
     protected TokenOptimizationTestBase()
     {
         CacheMock = new Mock<ISemanticCacheService>();
@@ -26,10 +26,10 @@ public abstract class TokenOptimizationTestBase : TestBase
         FingerprinterMock = new Mock<IRequestFingerprinter>();
         ConfigResolverMock = new Mock<ITokenOptimizationConfigurationResolver>();
         ContextProviderMock = new Mock<IRequestContextProvider>();
-        
+
         SetupDefaultMockBehaviors();
     }
-    
+
     /// <summary>
     /// Sets up default behaviors for mocks to avoid null reference exceptions.
     /// Override this method to customize default behaviors in derived classes.
@@ -40,34 +40,34 @@ public abstract class TokenOptimizationTestBase : TestBase
         ConfigResolverMock.Setup(x => x.ResolveAsync(
                 It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(TestDataFactory.CreateOptimizationConfig());
-        
+
         // Default: cache miss
         CacheMock.Setup(x => x.TryGetCachedAsync(
                 It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<string>(), It.IsAny<float?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(SemanticCacheResult.Miss(null));
-        
+
         // Default: no in-flight requests
         DeduplicationMock.Setup(x => x.TryGetInFlightAsync(
                 It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((ChatResponse?)null);
-        
+
         // Default: no session affinity
         SessionStoreMock.Setup(x => x.GetPreferredProviderAsync(
                 It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((string?)null);
-        
+
         // Default: return same messages for compression
         ConversationStoreMock.Setup(x => x.CompressHistoryAsync(
                 It.IsAny<IEnumerable<ChatMessage>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((IEnumerable<ChatMessage> msgs, CancellationToken _) => msgs);
-        
+
         // Default: generate unique fingerprints
         FingerprinterMock.Setup(x => x.GenerateFingerprint(
                 It.IsAny<IEnumerable<ChatMessage>>(), It.IsAny<ChatOptions?>()))
-            .Returns((IEnumerable<ChatMessage> msgs, ChatOptions? opts) => 
+            .Returns((IEnumerable<ChatMessage> msgs, ChatOptions? opts) =>
                 $"fingerprint-{Guid.NewGuid()}");
-        
+
         // Default: return empty context
         ContextProviderMock.Setup(x => x.GetTenantId())
             .Returns("test-tenant");
@@ -88,10 +88,10 @@ public class SemanticCacheResult
     public string? Response { get; init; }
     public float? SimilarityScore { get; init; }
     public float[]? QueryEmbedding { get; init; }
-    
+
     public static SemanticCacheResult Hit(string response, float similarityScore)
         => new() { IsHit = true, Response = response, SimilarityScore = similarityScore };
-    
+
     public static SemanticCacheResult Miss(float[]? embedding)
         => new() { IsHit = false, QueryEmbedding = embedding };
 }
@@ -103,21 +103,21 @@ public class SemanticCacheResult
 public interface ISemanticCacheService
 {
     Task<SemanticCacheResult> TryGetCachedAsync(
-        string query, 
-        string sessionId, 
-        string model, 
-        string tenantId, 
-        float? temperature, 
-        CancellationToken cancellationToken);
-    
-    Task StoreAsync(
-        string query, 
-        string response, 
-        string sessionId, 
-        string model, 
+        string query,
+        string sessionId,
+        string model,
         string tenantId,
-        float? temperature, 
-        float[]? embedding, 
+        float? temperature,
+        CancellationToken cancellationToken);
+
+    Task StoreAsync(
+        string query,
+        string response,
+        string sessionId,
+        string model,
+        string tenantId,
+        float? temperature,
+        float[]? embedding,
         CancellationToken cancellationToken);
 }
 

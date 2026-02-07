@@ -28,14 +28,14 @@ public class RequestFingerprinterTests : TestBase
     public void ComputeFingerprint_SameInput_ReturnsSameHash()
     {
         // Arrange
-        var messages = new[] 
-        { 
+        var messages = new[]
+        {
             new ChatMessage(ChatRole.User, "Hello"),
             new ChatMessage(ChatRole.Assistant, "Hi there!"),
             new ChatMessage(ChatRole.User, "How are you?")
         };
-        var options = new ChatOptions 
-        { 
+        var options = new ChatOptions
+        {
             ModelId = "gpt-4",
             Temperature = 0.7,
             MaxOutputTokens = 1000
@@ -55,7 +55,7 @@ public class RequestFingerprinterTests : TestBase
         Assert.Equal(expectedHash, hash1);
         Assert.Equal(expectedHash, hash2);
         Assert.Equal(hash1, hash2);
-        
+
         _mockFingerprinter.Verify(
             x => x.ComputeFingerprint(messages, options),
             Times.Exactly(2));
@@ -72,7 +72,7 @@ public class RequestFingerprinterTests : TestBase
         _mockFingerprinter
             .Setup(x => x.ComputeFingerprint(messages1, options))
             .Returns("hash1");
-        
+
         _mockFingerprinter
             .Setup(x => x.ComputeFingerprint(messages2, options))
             .Returns("hash2");
@@ -96,7 +96,7 @@ public class RequestFingerprinterTests : TestBase
         _mockFingerprinter
             .Setup(x => x.ComputeFingerprint(messages, options1))
             .Returns("hash_temp_07");
-        
+
         _mockFingerprinter
             .Setup(x => x.ComputeFingerprint(messages, options2))
             .Returns("hash_temp_00");
@@ -114,15 +114,15 @@ public class RequestFingerprinterTests : TestBase
     {
         // Arrange
         var messages = new[] { new ChatMessage(ChatRole.User, "Hello") };
-        var options1 = new ChatOptions 
-        { 
+        var options1 = new ChatOptions
+        {
             ModelId = "gpt-4",
             Temperature = 0.7,
             MaxOutputTokens = 1000,
             TopP = 0.9
         };
-        var options2 = new ChatOptions 
-        { 
+        var options2 = new ChatOptions
+        {
             TopP = 0.9,
             ModelId = "gpt-4",
             MaxOutputTokens = 1000,
@@ -150,7 +150,7 @@ public class RequestFingerprinterTests : TestBase
     {
         // Arrange
         var context = CreateMockHttpContext("session-header-123");
-        
+
         _mockContextProvider
             .Setup(x => x.GetCurrentContext())
             .Returns(context.Object);
@@ -164,7 +164,7 @@ public class RequestFingerprinterTests : TestBase
 
         // Assert
         Assert.Equal("session-header-123", sessionId);
-        
+
         _mockFingerprinter.Verify(
             x => x.ComputeSessionId(context.Object),
             Times.Once);

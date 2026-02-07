@@ -36,10 +36,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             SynaxisDbContext context,
             IConfiguration configuration)
         {
-            _userManager = userManager;
-            _signInManager = signInManager;
-            _context = context;
-            _configuration = configuration;
+            this._userManager = userManager;
+            this._signInManager = signInManager;
+            this._context = context;
+            this._configuration = configuration;
         }
 
         /// <inheritdoc />
@@ -250,7 +250,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             }
 
             // Determine which organization to use
-            var membership = request.OrganizationId.HasValue
+            var membership = request.Organizationthis.Id.HasValue
                 ? memberships.FirstOrDefault(m => m.OrganizationId == request.OrganizationId.Value)
                 : memberships.First();
 

@@ -120,7 +120,7 @@ public class ModelsEndpointTests : IClassFixture<SynaxisWebApplicationFactory>
         // Do not pre-encode the model id; HttpClient will handle URL encoding and the endpoint
         // uses a catch-all route pattern that expects raw segments.
         var response = await _client.GetAsync($"/openai/v1/models/{firstModelId}");
-        
+
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
         Assert.True(content.TryGetProperty("id", out _));
@@ -160,7 +160,7 @@ public class ModelsEndpointTests : IClassFixture<SynaxisWebApplicationFactory>
         var firstModelId = firstModel.GetProperty("id").GetString();
         var response = await _client.GetAsync($"/openai/v1/models/{firstModelId}");
         response.EnsureSuccessStatusCode();
-        
+
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
         Assert.True(content.TryGetProperty("model_path", out var modelPath));
         Assert.False(string.IsNullOrEmpty(modelPath.GetString()));
@@ -176,7 +176,7 @@ public class ModelsEndpointTests : IClassFixture<SynaxisWebApplicationFactory>
         var firstModelId = firstModel.GetProperty("id").GetString();
         var response = await _client.GetAsync($"/openai/v1/models/{firstModelId}");
         response.EnsureSuccessStatusCode();
-        
+
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
         Assert.True(content.TryGetProperty("provider", out var provider));
         Assert.False(string.IsNullOrEmpty(provider.GetString()));

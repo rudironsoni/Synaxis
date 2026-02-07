@@ -53,9 +53,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
 
         public GoogleAuthStrategy(AntigravitySettings settings, IHttpClientFactory httpClientFactory, ILogger<GoogleAuthStrategy> logger)
         {
-            _settings = settings ?? throw new ArgumentNullException(nameof(settings));
-            _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._settings = settings ?? throw new ArgumentNullException(nameof(settings));
+            this._httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public Task<AuthResult> InitiateFlowAsync(CancellationToken ct)
@@ -122,7 +122,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
                     RefreshToken = token.RefreshToken,
                     Properties = new Dictionary<string, string> { ["ProjectId"] = projectId }
                 };
-                if (token.ExpiresInSeconds.HasValue)
+                if (token.ExpiresInthis.Seconds.HasValue)
                     account.ExpiresAt = DateTimeOffset.UtcNow.AddSeconds(token.ExpiresInSeconds.Value);
 
                 AccountAuthenticated?.Invoke(this, new AccountAuthenticatedEventArgs(account));

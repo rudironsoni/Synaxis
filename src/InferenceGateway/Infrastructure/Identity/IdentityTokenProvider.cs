@@ -15,7 +15,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity
 
         public IdentityTokenProvider(IdentityManager manager)
         {
-            _manager = manager;
+            this._manager = manager;
         }
 
         public async Task<string> GetTokenAsync(CancellationToken cancellationToken = default)

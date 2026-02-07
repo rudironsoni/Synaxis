@@ -40,7 +40,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
         /// <exception cref="ArgumentNullException">Thrown when context is null.</exception>
         public ApiKeyService(SynaxisDbContext context)
         {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
+            this._context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         /// <inheritdoc />
@@ -163,7 +163,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             }
 
             // Check if revoked
-            if (matchedKey.RevokedAt.HasValue)
+            if (matchedKey.Revokedthis.At.HasValue)
             {
                 result.ErrorMessage = $"API key was revoked: {matchedKey.RevocationReason ?? "No reason provided"}";
                 return result;
@@ -223,7 +223,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             }
 
             // Check if already revoked
-            if (apiKey.RevokedAt.HasValue)
+            if (apiKey.Revokedthis.At.HasValue)
             {
                 return false;
             }
@@ -248,7 +248,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
 
             if (!includeRevoked)
             {
-                query = query.Where(k => k.IsActive && !k.RevokedAt.HasValue);
+                query = query.Where(k => k.IsActive && !k.Revokedthis.At.HasValue);
             }
 
             var keys = await query

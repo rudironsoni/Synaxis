@@ -22,10 +22,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
         public Guid? ApiKeyId { get; private set; }
 
         /// <inheritdoc/>
-        public bool IsApiKeyAuthenticated => ApiKeyId.HasValue;
+        public bool IsApiKeyAuthenticated => this.ApiKeyId.HasValue;
 
         /// <inheritdoc/>
-        public bool IsJwtAuthenticated => UserId.HasValue;
+        public bool IsJwtAuthenticated => this.UserId.HasValue;
 
         /// <inheritdoc/>
         public string[] Scopes { get; private set; } = Array.Empty<string>();
@@ -39,23 +39,23 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
         /// <inheritdoc/>
         public void SetApiKeyContext(Guid organizationId, Guid apiKeyId, string[] scopes, int? rateLimitRpm, int? rateLimitTpm)
         {
-            OrganizationId = organizationId;
-            ApiKeyId = apiKeyId;
-            Scopes = scopes ?? Array.Empty<string>();
-            RateLimitRpm = rateLimitRpm;
-            RateLimitTpm = rateLimitTpm;
-            UserId = null; // Clear JWT-specific data
+            this.OrganizationId = organizationId;
+            this.ApiKeyId = apiKeyId;
+            this.Scopes = scopes ?? Array.Empty<string>();
+            this.RateLimitRpm = rateLimitRpm;
+            this.RateLimitTpm = rateLimitTpm;
+            this.UserId = null; // Clear JWT-specific data
         }
 
         /// <inheritdoc/>
         public void SetJwtContext(Guid organizationId, Guid userId, string[] scopes)
         {
-            OrganizationId = organizationId;
-            UserId = userId;
-            Scopes = scopes ?? Array.Empty<string>();
-            ApiKeyId = null; // Clear API key-specific data
-            RateLimitRpm = null;
-            RateLimitTpm = null;
+            this.OrganizationId = organizationId;
+            this.UserId = userId;
+            this.Scopes = scopes ?? Array.Empty<string>();
+            this.ApiKeyId = null; // Clear API key-specific data
+            this.RateLimitRpm = null;
+            this.RateLimitTpm = null;
         }
     }
 }

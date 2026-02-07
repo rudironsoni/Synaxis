@@ -22,7 +22,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Middleware
         /// </summary>
         public ApiKeyMiddleware(RequestDelegate next)
         {
-            _next = next;
+            this._next = next;
         }
 
         /// <summary>

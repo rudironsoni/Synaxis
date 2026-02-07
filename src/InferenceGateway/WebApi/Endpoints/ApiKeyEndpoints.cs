@@ -120,8 +120,8 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints
             return this.Ok(usage);
         }
     }    /// <summary>
-    /// Request model for revoking an API key.
-    /// </summary>
+         /// Request model for revoking an API key.
+         /// </summary>
     public class RevokeApiKeyRequest
     {
         /// <summary>

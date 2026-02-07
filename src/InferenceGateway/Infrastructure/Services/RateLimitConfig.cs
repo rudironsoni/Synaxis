@@ -81,9 +81,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
         /// </summary>
         public bool HasLimits()
         {
-            return UserRpm.HasValue || UserTpm.HasValue ||
-                   GroupRpm.HasValue || GroupTpm.HasValue ||
-                   OrganizationRpm.HasValue || OrganizationTpm.HasValue;
+            return this.UserRpm.HasValue || this.UserTpm.HasValue ||
+                   this.GroupRpm.HasValue || this.GroupTpm.HasValue ||
+                   this.OrganizationRpm.HasValue || this.OrganizationTpm.HasValue;
         }
     }
 }

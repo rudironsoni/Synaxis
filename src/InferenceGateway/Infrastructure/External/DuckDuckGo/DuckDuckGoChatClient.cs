@@ -27,12 +27,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.DuckDuckGo
 
         public DuckDuckGoChatClient(HttpClient httpClient, string modelId)
         {
-            _httpClient = httpClient;
-            _modelId = modelId;
-            _metadata = new ChatClientMetadata("DuckDuckGo", new Uri("https://duckduckgo.com/"), modelId);
+            this._httpClient = httpClient;
+            this._modelId = modelId;
+            this._metadata = new ChatClientMetadata("DuckDuckGo", new Uri("https://duckduckgo.com/"), modelId);
         }
 
-        public ChatClientMetadata Metadata => _metadata;
+        public ChatClientMetadata Metadata => this._metadata;
 
         public async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
         {
@@ -57,7 +57,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.DuckDuckGo
             // Update token from response headers for next call
             if (response.Headers.TryGetValues("x-vqd-4", out var vals))
             {
-                _vqdToken = vals.FirstOrDefault();
+                this._vqdToken = vals.FirstOrDefault();
             }
 
             if (!response.IsSuccessStatusCode)
@@ -133,11 +133,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.DuckDuckGo
             using var response = await _httpClient.GetAsync("https://duckduckgo.com/duckchat/v1/status", cancellationToken);
             if (response.Headers.TryGetValues("x-vqd-4", out var vals))
             {
-                _vqdToken = vals.FirstOrDefault();
+                this._vqdToken = vals.FirstOrDefault();
             }
         }
 
-        public void Dispose() => _httpClient.Dispose();
+        public void Dispose() => this._httpClient.Dispose();
         public object? GetService(Type serviceType, object? serviceKey = null) => null;
     }
 }
