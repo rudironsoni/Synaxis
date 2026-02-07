@@ -22,8 +22,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
 
         public ModelsDevSyncJob(IServiceProvider provider, ILogger<ModelsDevSyncJob> logger)
         {
-            _provider = provider;
-            _logger = logger;
+            this._provider = provider;
+            this._logger = logger;
         }
 
         private string Truncate(string? value, int maxLength)

@@ -30,7 +30,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             var userId = Guid.NewGuid();
             var action = "TestAction";
             var payload = new { Property1 = "Value1", Property2 = 123 };
-            
+
             using var dbContext = BuildDbContext();
             var auditService = new AuditService(dbContext);
 
@@ -55,7 +55,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             var userId = Guid.NewGuid();
             var action = "TestAction";
             var payload = new { Property1 = "Value1", Property2 = 123 };
-            
+
             using var dbContext = BuildDbContext();
             var auditService = new AuditService(dbContext);
 
@@ -66,18 +66,18 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             var logs = await dbContext.AuditLogs.ToListAsync();
             Assert.Single(logs);
             var log = logs[0];
-            
+
             Assert.NotEqual(Guid.Empty, log.Id);
             Assert.Equal(tenantId, log.OrganizationId);
             Assert.Equal(userId, log.UserId);
             Assert.Equal(action, log.Action);
             Assert.NotNull(log.NewValues);
-            
+
             // Verify payload was serialized correctly
             var deserializedPayload = JsonSerializer.Deserialize<JsonElement>(log.NewValues!);
             Assert.Equal("Value1", deserializedPayload.GetProperty("Property1").GetString());
             Assert.Equal(123, deserializedPayload.GetProperty("Property2").GetInt32());
-            
+
             // Verify CreatedAt was set
             Assert.True(log.CreatedAt <= DateTimeOffset.UtcNow);
             Assert.True(log.CreatedAt >= DateTimeOffset.UtcNow.AddSeconds(-5)); // Within 5 seconds
@@ -91,7 +91,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             var userId = Guid.NewGuid();
             var action = "TestAction";
             object? payload = null;
-            
+
             using var dbContext = BuildDbContext();
             var auditService = new AuditService(dbContext);
 
@@ -113,7 +113,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             Guid? userId = null;
             var action = "TestAction";
             var payload = new { Property1 = "Value1" };
-            
+
             using var dbContext = BuildDbContext();
             var auditService = new AuditService(dbContext);
 

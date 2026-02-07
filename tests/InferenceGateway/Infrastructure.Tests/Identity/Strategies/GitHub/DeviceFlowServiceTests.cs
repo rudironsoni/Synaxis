@@ -20,20 +20,21 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             var responseJson = "{\"access_token\":\"test-access-token\",\"refresh_token\":\"test-refresh-token\",\"expires_in\":3600}";
             var client = CreateClientReturningJson(HttpStatusCode.OK, responseJson);
             var logger = new Mock<ILogger<DeviceFlowService>>();
-            
+
             var service = new DeviceFlowService(client, logger.Object);
-            
+
             TokenResponse? receivedToken = null;
             var onSuccessCalled = false;
-            
-            var task = service.StartPollingAsync("device-code-123", 1, async (token) => {
+
+            var task = service.StartPollingAsync("device-code-123", 1, async (token) =>
+            {
                 receivedToken = token;
                 onSuccessCalled = true;
                 await Task.CompletedTask;
             }, CancellationToken.None);
-            
+
             await Task.Delay(100);
-            
+
             Assert.True(onSuccessCalled);
             Assert.NotNull(receivedToken);
             Assert.Equal("test-access-token", receivedToken!.AccessToken);
@@ -45,7 +46,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
         public async Task StartPollingAsync_HandlesAuthorizationPending()
         {
             var callCount = 0;
-            var handler = new DelegatingHandlerStub((req, ct) => {
+            var handler = new DelegatingHandlerStub((req, ct) =>
+            {
                 callCount++;
                 string responseJson;
                 if (callCount == 1)
@@ -56,30 +58,31 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
                 {
                     responseJson = "{\"access_token\":\"test-token\",\"expires_in\":3600}";
                 }
-                
+
                 var response = new HttpResponseMessage(HttpStatusCode.OK)
                 {
                     Content = new StringContent(responseJson, Encoding.UTF8, "application/json")
                 };
                 return Task.FromResult(response);
             });
-                  
+
             var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://github.com/") };
             var logger = new Mock<ILogger<DeviceFlowService>>();
-            
+
             var service = new DeviceFlowService(httpClient, logger.Object);
-            
+
             TokenResponse? receivedToken = null;
             var onSuccessCalled = false;
-            
-            var task = service.StartPollingAsync("device-code-123", 1, async (token) => {
+
+            var task = service.StartPollingAsync("device-code-123", 1, async (token) =>
+            {
                 receivedToken = token;
                 onSuccessCalled = true;
                 await Task.CompletedTask;
             }, CancellationToken.None);
-            
+
             await Task.Delay(2500);
-            
+
             Assert.True(onSuccessCalled);
             Assert.NotNull(receivedToken);
             Assert.Equal("test-token", receivedToken!.AccessToken);
@@ -89,7 +92,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
         public async Task StartPollingAsync_HandlesSlowDown()
         {
             var callCount = 0;
-            var handler = new DelegatingHandlerStub((req, ct) => {
+            var handler = new DelegatingHandlerStub((req, ct) =>
+            {
                 callCount++;
                 string responseJson;
                 if (callCount == 1)
@@ -100,30 +104,31 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
                 {
                     responseJson = "{\"access_token\":\"test-token\",\"expires_in\":3600}";
                 }
-                
+
                 var response = new HttpResponseMessage(HttpStatusCode.OK)
                 {
                     Content = new StringContent(responseJson, Encoding.UTF8, "application/json")
                 };
                 return Task.FromResult(response);
             });
-                  
+
             var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://github.com/") };
             var logger = new Mock<ILogger<DeviceFlowService>>();
-            
+
             var service = new DeviceFlowService(httpClient, logger.Object);
-            
+
             TokenResponse? receivedToken = null;
             var onSuccessCalled = false;
-            
-            var task = service.StartPollingAsync("device-code-123", 1, async (token) => {
+
+            var task = service.StartPollingAsync("device-code-123", 1, async (token) =>
+            {
                 receivedToken = token;
                 onSuccessCalled = true;
                 await Task.CompletedTask;
             }, CancellationToken.None);
-            
+
             await Task.Delay(8000);
-            
+
             Assert.True(onSuccessCalled);
             Assert.NotNull(receivedToken);
             Assert.Equal("test-token", receivedToken!.AccessToken);
@@ -135,20 +140,21 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             var responseJson = "{\"error\":\"expired_token\"}";
             var client = CreateClientReturningJson(HttpStatusCode.OK, responseJson);
             var logger = new Mock<ILogger<DeviceFlowService>>();
-            
+
             var service = new DeviceFlowService(client, logger.Object);
-            
+
             TokenResponse? receivedToken = null;
             var onSuccessCalled = false;
-            
-            var task = service.StartPollingAsync("device-code-123", 1, async (token) => {
+
+            var task = service.StartPollingAsync("device-code-123", 1, async (token) =>
+            {
                 receivedToken = token;
                 onSuccessCalled = true;
                 await Task.CompletedTask;
             }, CancellationToken.None);
-            
+
             await Task.Delay(100);
-            
+
             Assert.False(onSuccessCalled);
             Assert.Null(receivedToken);
         }
@@ -159,20 +165,21 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             var responseJson = "{\"error\":\"access_denied\"}";
             var client = CreateClientReturningJson(HttpStatusCode.OK, responseJson);
             var logger = new Mock<ILogger<DeviceFlowService>>();
-            
+
             var service = new DeviceFlowService(client, logger.Object);
-            
+
             TokenResponse? receivedToken = null;
             var onSuccessCalled = false;
-            
-            var task = service.StartPollingAsync("device-code-123", 1, async (token) => {
+
+            var task = service.StartPollingAsync("device-code-123", 1, async (token) =>
+            {
                 receivedToken = token;
                 onSuccessCalled = true;
                 await Task.CompletedTask;
             }, CancellationToken.None);
-            
+
             await Task.Delay(100);
-            
+
             Assert.False(onSuccessCalled);
             Assert.Null(receivedToken);
         }
@@ -180,25 +187,26 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
         [Fact]
         public async Task StartPollingAsync_HandlesNetworkError()
         {
-            var handler = new DelegatingHandlerStub((req, ct) => 
+            var handler = new DelegatingHandlerStub((req, ct) =>
                 throw new HttpRequestException("Network error"));
-                  
+
             var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://github.com/") };
             var logger = new Mock<ILogger<DeviceFlowService>>();
-            
+
             var service = new DeviceFlowService(httpClient, logger.Object);
-            
+
             TokenResponse? receivedToken = null;
             var onSuccessCalled = false;
-            
-            var task = service.StartPollingAsync("device-code-123", 1, async (token) => {
+
+            var task = service.StartPollingAsync("device-code-123", 1, async (token) =>
+            {
                 receivedToken = token;
                 onSuccessCalled = true;
                 await Task.CompletedTask;
             }, CancellationToken.None);
-            
+
             await Task.Delay(100);
-            
+
             Assert.False(onSuccessCalled);
             Assert.Null(receivedToken);
         }
@@ -208,24 +216,25 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
         {
             var client = CreateClientReturningJson(HttpStatusCode.OK, "invalid json");
             var logger = new Mock<ILogger<DeviceFlowService>>();
-            
+
             var service = new DeviceFlowService(client, logger.Object);
-            
+
             TokenResponse? receivedToken = null;
             var onSuccessCalled = false;
-            
-            var task = service.StartPollingAsync("device-code-123", 1, async (token) => {
+
+            var task = service.StartPollingAsync("device-code-123", 1, async (token) =>
+            {
                 receivedToken = token;
                 onSuccessCalled = true;
                 await Task.CompletedTask;
             }, CancellationToken.None);
-            
+
             await Task.Delay(100);
-            
+
             Assert.False(onSuccessCalled);
             Assert.Null(receivedToken);
         }
-        
+
         private static HttpClient CreateClientReturningJson(HttpStatusCode status, string json)
         {
             var handler = new DelegatingHandlerStub((req, ct) =>
@@ -238,7 +247,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             });
             return new HttpClient(handler) { BaseAddress = new Uri("https://example.com") };
         }
-        
+
         private sealed class DelegatingHandlerStub : HttpMessageHandler
         {
             private readonly Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> _handler;

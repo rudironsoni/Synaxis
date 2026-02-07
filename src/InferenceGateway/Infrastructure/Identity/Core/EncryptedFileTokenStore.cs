@@ -18,8 +18,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
 
         public EncryptedFileTokenStore(IDataProtectionProvider provider, string path)
         {
-            _protector = provider.CreateProtector("Synaxis.Identity.TokenStore.v1");
-            _path = path;
+            this._protector = provider.CreateProtector("Synaxis.Identity.TokenStore.v1");
+            this._path = path;
         }
 
         public async Task<List<IdentityAccount>> LoadAsync()

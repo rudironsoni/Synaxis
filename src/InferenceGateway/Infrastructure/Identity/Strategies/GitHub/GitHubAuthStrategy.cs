@@ -25,9 +25,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
 
         public GitHubAuthStrategy(HttpClient http, DeviceFlowService deviceFlowService, ILogger<GitHubAuthStrategy> logger)
         {
-            _http = http ?? throw new ArgumentNullException(nameof(http));
-            _deviceFlowService = deviceFlowService ?? throw new ArgumentNullException(nameof(deviceFlowService));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._http = http ?? throw new ArgumentNullException(nameof(http));
+            this._deviceFlowService = deviceFlowService ?? throw new ArgumentNullException(nameof(deviceFlowService));
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async Task<AuthResult> InitiateFlowAsync(CancellationToken ct)
@@ -123,7 +123,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
                     RefreshToken = token.RefreshToken
                 };
 
-                if (token.ExpiresInSeconds.HasValue)
+                if (token.ExpiresInthis.Seconds.HasValue)
                     acc.ExpiresAt = DateTimeOffset.UtcNow.AddSeconds(token.ExpiresInSeconds.Value);
 
                 // Notify subscribers that an account was authenticated

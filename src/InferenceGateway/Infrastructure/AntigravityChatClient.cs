@@ -41,16 +41,16 @@ namespace Synaxis.InferenceGateway.Infrastructure
             string projectId,
             ITokenProvider tokenProvider)
         {
-            _httpClient = httpClient;
-            _modelId = modelId;
-            _projectId = projectId;
-            _tokenProvider = tokenProvider;
+            this._httpClient = httpClient;
+            this._modelId = modelId;
+            this._projectId = projectId;
+            this._tokenProvider = tokenProvider;
 
             // Prefer the configured BaseAddress on the provided HttpClient when available
-            _metadata = new ChatClientMetadata("Antigravity", _httpClient.BaseAddress ?? new Uri("https://cloudcode-pa.googleapis.com"), modelId);
+            this._metadata = new ChatClientMetadata("Antigravity", this._httpClient.BaseAddress ?? new Uri("https://cloudcode-pa.googleapis.com"), modelId);
         }
 
-        public ChatClientMetadata Metadata => _metadata;
+        public ChatClientMetadata Metadata => this._metadata;
 
         public async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
         {
@@ -194,13 +194,13 @@ namespace Synaxis.InferenceGateway.Infrastructure
             // Handle Thinking Config
             if (options?.AdditionalProperties != null && options.AdditionalProperties.TryGetValue("thinking", out var thinkingObj))
             {
-                 // Assuming thinkingObj is a dictionary or object that can be serialized to ThinkingConfig
-                 // For now, we'll try to extract budget if present, or default
-                 if (thinkingObj is JsonElement je && je.ValueKind == JsonValueKind.Object)
-                 {
-                     // Simple extraction logic or default
-                     config.ThinkingConfig = new ThinkingConfig { IncludeThoughts = true, ThinkingBudget = 2000 };
-                 }
+                // Assuming thinkingObj is a dictionary or object that can be serialized to ThinkingConfig
+                // For now, we'll try to extract budget if present, or default
+                if (thinkingObj is JsonElement je && je.ValueKind == JsonValueKind.Object)
+                {
+                    // Simple extraction logic or default
+                    config.ThinkingConfig = new ThinkingConfig { IncludeThoughts = true, ThinkingBudget = 2000 };
+                }
             }
 
             return new AntigravityRequest
@@ -252,19 +252,19 @@ namespace Synaxis.InferenceGateway.Infrastructure
         public string Model { get; set; } = string.Empty;
 
         [JsonPropertyName("request")]
-        public RequestPayload RequestPayload { get; set; } = new ();
+        public RequestPayload RequestPayload { get; set; } = new();
     }
 
     internal class RequestPayload
     {
         [JsonPropertyName("contents")]
-        public List<Content> Contents { get; set; } = new ();
+        public List<Content> Contents { get; set; } = new();
 
         [JsonPropertyName("systemInstruction")]
         public SystemInstruction? SystemInstruction { get; set; }
 
         [JsonPropertyName("generationConfig")]
-        public GenerationConfig GenerationConfig { get; set; } = new ();
+        public GenerationConfig GenerationConfig { get; set; } = new();
     }
 
     internal class Content
@@ -273,13 +273,13 @@ namespace Synaxis.InferenceGateway.Infrastructure
         public string Role { get; set; } = "user";
 
         [JsonPropertyName("parts")]
-        public List<Part> Parts { get; set; } = new ();
+        public List<Part> Parts { get; set; } = new();
     }
 
     internal class SystemInstruction
     {
         [JsonPropertyName("parts")]
-        public List<Part> Parts { get; set; } = new ();
+        public List<Part> Parts { get; set; } = new();
     }
 
     internal class Part
@@ -327,7 +327,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
     internal class AntigravityResponse
     {
         [JsonPropertyName("candidates")]
-        public List<Candidate> Candidates { get; set; } = new ();
+        public List<Candidate> Candidates { get; set; } = new();
 
         [JsonPropertyName("modelVersion")]
         public string ModelVersion { get; set; } = string.Empty;

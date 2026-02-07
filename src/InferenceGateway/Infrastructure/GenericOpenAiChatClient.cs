@@ -36,24 +36,24 @@ namespace Synaxis.InferenceGateway.Infrastructure
             }
 
             var openAiClient = new OpenAIClient(new ApiKeyCredential(apiKey), options);
-            _innerClient = openAiClient.GetChatClient(modelId).AsIChatClient();
+            this._innerClient = openAiClient.GetChatClient(modelId).AsIChatClient();
         }
 
-        public ChatClientMetadata Metadata => _innerClient.GetService<ChatClientMetadata>() ?? new ChatClientMetadata("OpenAI");
+        public ChatClientMetadata Metadata => this._innerClient.GetService<ChatClientMetadata>() ?? new ChatClientMetadata("OpenAI");
 
         public Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
         {
-            return _innerClient.GetResponseAsync(chatMessages, options, cancellationToken);
+            return this._innerClient.GetResponseAsync(chatMessages, options, cancellationToken);
         }
 
         public IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
         {
-            return _innerClient.GetStreamingResponseAsync(chatMessages, options, cancellationToken);
+            return this._innerClient.GetStreamingResponseAsync(chatMessages, options, cancellationToken);
         }
 
         public object? GetService(Type serviceType, object? serviceKey = null)
         {
-            return _innerClient.GetService(serviceType, serviceKey);
+            return this._innerClient.GetService(serviceType, serviceKey);
         }
 
         public void Dispose()
@@ -67,7 +67,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
 
             public CustomHeaderPolicy(Dictionary<string, string> headers)
             {
-                _headers = headers;
+                this._headers = headers;
             }
 
             public override void Process(PipelineMessage message, IReadOnlyList<PipelinePolicy> pipeline, int currentIndex)

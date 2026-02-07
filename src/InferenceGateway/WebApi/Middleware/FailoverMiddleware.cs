@@ -16,165 +16,165 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
     /// </summary>
     public sealed class FailoverMiddleware
     {
-    private readonly RequestDelegate _next;
-    private readonly ILogger<FailoverMiddleware> _logger;
+        private readonly RequestDelegate _next;
+        private readonly ILogger<FailoverMiddleware> _logger;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="FailoverMiddleware"/> class.
-    /// </summary>
-    /// <param name="next">The next middleware delegate.</param>
-    /// <param name="logger">The logger instance.</param>
-    public FailoverMiddleware(
-        RequestDelegate next,
-        ILogger<FailoverMiddleware> logger)
-    {
-        _next = next ?? throw new ArgumentNullException(nameof(next));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
-
-    /// <summary>
-    /// Invokes the middleware to handle failover.
-    /// </summary>
-    public async Task InvokeAsync(
-        HttpContext context,
-        ITenantContext tenantContext,
-        IFailoverService failoverService,
-        IHealthMonitor healthMonitor,
-        IRegionRouter regionRouter,
-        IGeoIPService geoIPService)
-    {
-        try
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FailoverMiddleware"/> class.
+        /// </summary>
+        /// <param name="next">The next middleware delegate.</param>
+        /// <param name="logger">The logger instance.</param>
+        public FailoverMiddleware(
+            RequestDelegate next,
+            ILogger<FailoverMiddleware> logger)
         {
-            // Skip failover for health checks
-            if (context.Request.Path.StartsWithSegments("/health") ||
-                context.Request.Path.StartsWithSegments("/openapi"))
+            _next = next ?? throw new ArgumentNullException(nameof(next));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
+
+        /// <summary>
+        /// Invokes the middleware to handle failover.
+        /// </summary>
+        public async Task InvokeAsync(
+            HttpContext context,
+            ITenantContext tenantContext,
+            IFailoverService failoverService,
+            IHealthMonitor healthMonitor,
+            IRegionRouter regionRouter,
+            IGeoIPService geoIPService)
+        {
+            try
             {
-                await _next(context);
-                return;
-            }
-
-            var currentRegion = Environment.GetEnvironmentVariable("SYNAXIS_REGION") ?? "us-east-1";
-
-            // Check if current region is healthy
-            var isHealthy = await healthMonitor.IsRegionHealthyAsync(currentRegion);
-
-            if (!isHealthy)
-            {
-                _logger.LogWarning(
-                    "Current region {Region} is unhealthy. Attempting failover for OrgId: {OrgId}",
-                    currentRegion, tenantContext.OrganizationId);
-
-                // Get user's location for nearest failover
-                var clientIp = GetClientIpAddress(context);
-                var geoLocation = await geoIPService.GetLocationAsync(clientIp);
-
-                // Get nearest healthy region
-                var failoverRegion = await regionRouter.GetNearestHealthyRegionAsync(currentRegion, geoLocation);
-
-                if (string.IsNullOrEmpty(failoverRegion))
+                // Skip failover for health checks
+                if (context.Request.Path.StartsWithSegments("/health") ||
+                    context.Request.Path.StartsWithSegments("/openapi"))
                 {
-                    _logger.LogError(
-                        "No healthy regions available for failover. Current: {CurrentRegion}",
-                        currentRegion);
-
-                    context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
-                    await context.Response.WriteAsJsonAsync(new
-                    {
-                        error = new
-                        {
-                            message = "Service temporarily unavailable in all regions",
-                            type = "service_unavailable",
-                            code = "NO_HEALTHY_REGIONS"
-                        }
-                    });
+                    await _next(context);
                     return;
                 }
 
-                _logger.LogInformation(
-                    "Failing over from {CurrentRegion} to {FailoverRegion}",
-                    currentRegion, failoverRegion);
+                var currentRegion = Environment.GetEnvironmentVariable("SYNAXIS_REGION") ?? "us-east-1";
 
-                // Update context with failover info
-                context.Items["FailoverActive"] = true;
-                context.Items["FailoverFrom"] = currentRegion;
-                context.Items["FailoverTo"] = failoverRegion;
+                // Check if current region is healthy
+                var isHealthy = await healthMonitor.IsRegionHealthyAsync(currentRegion);
 
-                // Add failover headers
-                context.Response.OnStarting(() =>
+                if (!isHealthy)
                 {
-                    context.Response.Headers["X-Synaxis-Failover"] = "true";
-                    context.Response.Headers["X-Synaxis-Failover-From"] = currentRegion;
-                    context.Response.Headers["X-Synaxis-Failover-To"] = failoverRegion;
-                    return Task.CompletedTask;
-                });
+                    _logger.LogWarning(
+                        "Current region {Region} is unhealthy. Attempting failover for OrgId: {OrgId}",
+                        currentRegion, tenantContext.OrganizationId);
 
-                // If user has data residency requirements, check consent for cross-border failover
-                if (tenantContext.UserId.HasValue)
-                {
-                    var userRegion = await regionRouter.GetUserRegionAsync(tenantContext.UserId.Value);
+                    // Get user's location for nearest failover
+                    var clientIp = GetClientIpAddress(context);
+                    var geoLocation = await geoIPService.GetLocationAsync(clientIp);
 
-                    if (userRegion != failoverRegion)
+                    // Get nearest healthy region
+                    var failoverRegion = await regionRouter.GetNearestHealthyRegionAsync(currentRegion, geoLocation);
+
+                    if (string.IsNullOrEmpty(failoverRegion))
                     {
-                        var requiresConsent = await regionRouter.RequiresCrossBorderConsentAsync(
-                            tenantContext.UserId.Value,
-                            failoverRegion);
+                        _logger.LogError(
+                            "No healthy regions available for failover. Current: {CurrentRegion}",
+                            currentRegion);
 
-                        if (requiresConsent)
+                        context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+                        await context.Response.WriteAsJsonAsync(new
                         {
-                            _logger.LogWarning(
-                                "Failover to {FailoverRegion} requires consent. UserId: {UserId}, UserRegion: {UserRegion}",
-                                failoverRegion, tenantContext.UserId.Value, userRegion);
-
-                            context.Response.StatusCode = StatusCodes.Status451UnavailableForLegalReasons;
-                            await context.Response.WriteAsJsonAsync(new
+                            error = new
                             {
-                                error = new
-                                {
-                                    message = "Failover requires cross-border consent",
-                                    type = "consent_required",
-                                    code = "FAILOVER_CONSENT_REQUIRED",
-                                    user_region = userRegion,
-                                    failover_region = failoverRegion,
-                                    reason = "primary_region_unavailable"
-                                }
-                            });
-                            return;
-                        }
-
-                        // Log cross-border failover transfer
-                        await regionRouter.LogCrossBorderTransferAsync(new CrossBorderTransferContext
-                        {
-                            OrganizationId = tenantContext.OrganizationId!.Value,
-                            UserId = tenantContext.UserId,
-                            FromRegion = userRegion,
-                            ToRegion = failoverRegion,
-                            LegalBasis = "vital_interest", // Failover is for service continuity
-                            Purpose = "disaster_recovery",
-                            DataCategories = new[] { "api_request", "model_inference" }
+                                message = "Service temporarily unavailable in all regions",
+                                type = "service_unavailable",
+                                code = "NO_HEALTHY_REGIONS"
+                            }
                         });
+                        return;
+                    }
+
+                    _logger.LogInformation(
+                        "Failing over from {CurrentRegion} to {FailoverRegion}",
+                        currentRegion, failoverRegion);
+
+                    // Update context with failover info
+                    context.Items["FailoverActive"] = true;
+                    context.Items["FailoverFrom"] = currentRegion;
+                    context.Items["FailoverTo"] = failoverRegion;
+
+                    // Add failover headers
+                    context.Response.OnStarting(() =>
+                    {
+                        context.Response.Headers["X-Synaxis-Failover"] = "true";
+                        context.Response.Headers["X-Synaxis-Failover-From"] = currentRegion;
+                        context.Response.Headers["X-Synaxis-Failover-To"] = failoverRegion;
+                        return Task.CompletedTask;
+                    });
+
+                    // If user has data residency requirements, check consent for cross-border failover
+                    if (tenantContext.UserId.HasValue)
+                    {
+                        var userRegion = await regionRouter.GetUserRegionAsync(tenantContext.UserId.Value);
+
+                        if (userRegion != failoverRegion)
+                        {
+                            var requiresConsent = await regionRouter.RequiresCrossBorderConsentAsync(
+                                tenantContext.UserId.Value,
+                                failoverRegion);
+
+                            if (requiresConsent)
+                            {
+                                _logger.LogWarning(
+                                    "Failover to {FailoverRegion} requires consent. UserId: {UserId}, UserRegion: {UserRegion}",
+                                    failoverRegion, tenantContext.UserId.Value, userRegion);
+
+                                context.Response.StatusCode = StatusCodes.Status451UnavailableForLegalReasons;
+                                await context.Response.WriteAsJsonAsync(new
+                                {
+                                    error = new
+                                    {
+                                        message = "Failover requires cross-border consent",
+                                        type = "consent_required",
+                                        code = "FAILOVER_CONSENT_REQUIRED",
+                                        user_region = userRegion,
+                                        failover_region = failoverRegion,
+                                        reason = "primary_region_unavailable"
+                                    }
+                                });
+                                return;
+                            }
+
+                            // Log cross-border failover transfer
+                            await regionRouter.LogCrossBorderTransferAsync(new CrossBorderTransferContext
+                            {
+                                OrganizationId = tenantContext.OrganizationId!.Value,
+                                UserId = tenantContext.UserId,
+                                FromRegion = userRegion,
+                                ToRegion = failoverRegion,
+                                LegalBasis = "vital_interest", // Failover is for service continuity
+                                Purpose = "disaster_recovery",
+                                DataCategories = new[] { "api_request", "model_inference" }
+                            });
+                        }
                     }
                 }
+
+                await _next(context);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred during failover handling");
+                await _next(context);
+            }
+        }
+
+        private static string GetClientIpAddress(HttpContext context)
+        {
+            var forwardedFor = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            if (!string.IsNullOrEmpty(forwardedFor))
+            {
+                return forwardedFor.Split(',')[0].Trim();
             }
 
-            await _next(context);
+            return context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error occurred during failover handling");
-            await _next(context);
-        }
-    }
-
-    private static string GetClientIpAddress(HttpContext context)
-    {
-        var forwardedFor = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
-        if (!string.IsNullOrEmpty(forwardedFor))
-        {
-            return forwardedFor.Split(',')[0].Trim();
-        }
-
-        return context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-    }
     }
 
 }

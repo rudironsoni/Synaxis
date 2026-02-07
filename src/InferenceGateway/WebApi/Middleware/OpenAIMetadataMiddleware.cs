@@ -29,33 +29,33 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         /// <param name="context">The HTTP context.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
         public async Task InvokeAsync(HttpContext context)
-    {
-        context.Response.OnStarting(() =>
         {
-            if (context.Items.TryGetValue("RoutingContext", out var value) && value is RoutingContext rc)
+            context.Response.OnStarting(() =>
             {
-                context.Response.Headers["x-gateway-model-requested"] = rc.RequestedModel;
-                context.Response.Headers["x-gateway-model-resolved"] = rc.ResolvedCanonicalId;
-                context.Response.Headers["x-gateway-provider"] = rc.Provider;
-            }
-            else
-            {
-                // Ensure headers are present even if empty
-                context.Response.Headers["x-gateway-model-requested"] = "";
-                context.Response.Headers["x-gateway-model-resolved"] = "";
-                context.Response.Headers["x-gateway-provider"] = "";
-            }
+                if (context.Items.TryGetValue("RoutingContext", out var value) && value is RoutingContext rc)
+                {
+                    context.Response.Headers["x-gateway-model-requested"] = rc.RequestedModel;
+                    context.Response.Headers["x-gateway-model-resolved"] = rc.ResolvedCanonicalId;
+                    context.Response.Headers["x-gateway-provider"] = rc.Provider;
+                }
+                else
+                {
+                    // Ensure headers are present even if empty
+                    context.Response.Headers["x-gateway-model-requested"] = "";
+                    context.Response.Headers["x-gateway-model-resolved"] = "";
+                    context.Response.Headers["x-gateway-provider"] = "";
+                }
 
-            if (!context.Response.Headers.ContainsKey("x-request-id"))
-            {
-                context.Response.Headers["x-request-id"] = context.TraceIdentifier;
-            }
+                if (!context.Response.Headers.ContainsKey("x-request-id"))
+                {
+                    context.Response.Headers["x-request-id"] = context.TraceIdentifier;
+                }
 
-            return Task.CompletedTask;
-        });
+                return Task.CompletedTask;
+            });
 
-        await _next(context);
-    }
+            await _next(context);
+        }
     }
 
 }

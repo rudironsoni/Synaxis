@@ -34,7 +34,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
 
         public CopilotSdkAdapter(ILogger<CopilotSdkAdapter>? logger = null)
         {
-            _logger = logger;
+            this._logger = logger;
             // Construct the SDK client via reflection to avoid hard compile-time dependency
             // Authentication is expected to be provided by the environment/CLI.
             object? client = null;
@@ -50,10 +50,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
             {
                 _logger?.LogDebug(ex, "Failed to create CopilotClient via reflection");
             }
-            _client = client ?? new object();
+            this._client = client ?? new object();
         }
 
-        public ChatClientMetadata Metadata => _metadata;
+        public ChatClientMetadata Metadata => this._metadata;
 
         private async Task EnsureStartedAsync()
         {
@@ -77,7 +77,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
                     }
                 }
 
-                _started = true;
+                this._started = true;
             }
             finally
             {
@@ -185,7 +185,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
             if (_client != null)
             {
                 var sdkType = Type.GetType("GitHub.Copilot.Sdk.CopilotClient, GitHub.Copilot.Sdk");
-                if (sdkType != null && serviceType == sdkType) return _client;
+                if (sdkType != null && serviceType == sdkType) return this._client;
             }
             return null;
         }

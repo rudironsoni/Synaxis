@@ -23,11 +23,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
 
         public GitHubCopilotChatClient(ICopilotClient copilotClient, ILogger<GitHubCopilotChatClient>? logger = null)
         {
-            _copilotClient = copilotClient ?? throw new ArgumentNullException(nameof(copilotClient));
-            _logger = logger;
+            this._copilotClient = copilotClient ?? throw new ArgumentNullException(nameof(copilotClient));
+            this._logger = logger;
         }
 
-        public ChatClientMetadata Metadata => _metadata;
+        public ChatClientMetadata Metadata => this._metadata;
 
         public async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
         {
@@ -140,7 +140,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
 
         public object? GetService(Type serviceType, object? serviceKey = null)
         {
-            if (serviceType == typeof(ICopilotClient)) return _copilotClient;
+            if (serviceType == typeof(ICopilotClient)) return this._copilotClient;
             return null;
         }
 

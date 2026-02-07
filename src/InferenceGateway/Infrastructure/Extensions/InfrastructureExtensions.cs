@@ -125,8 +125,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
                 // Ensure settings are valid, or provide defaults/throw if strict
                 if (string.IsNullOrEmpty(settings.ClientId))
                 {
-                     // Fallback or log warning?
-                     // For now, let's assume they are provided or we might fail at runtime.
+                    // Fallback or log warning?
+                    // For now, let's assume they are provided or we might fail at runtime.
                 }
 
                 return new AntigravityAuthManager(

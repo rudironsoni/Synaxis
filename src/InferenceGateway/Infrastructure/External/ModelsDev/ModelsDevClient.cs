@@ -20,8 +20,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.ModelsDev
 
         public ModelsDevClient(HttpClient httpClient, ILogger<ModelsDevClient>? logger = null)
         {
-            _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-            _logger = logger;
+            this._httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+            this._logger = logger;
         }
 
         public async Task<List<ModelDto>> GetAllModelsAsync(CancellationToken ct)

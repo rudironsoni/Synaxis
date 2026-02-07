@@ -24,7 +24,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
     {
         public string Email { get; set; } = string.Empty;
         public string ProjectId { get; set; } = string.Empty;
-        public TokenResponse Token { get; set; } = new ();
+        public TokenResponse Token { get; set; } = new();
     }
 
     /// <summary>
@@ -63,8 +63,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
             "https://cloudcode-pa.googleapis.com"
         };
 
-        private List<AntigravityAccount> _accounts = new ();
-        private readonly SemaphoreSlim _authLock = new (1, 1);
+        private List<AntigravityAccount> _accounts = new();
+        private readonly SemaphoreSlim _authLock = new(1, 1);
         private int _requestCount = 0;
 
         // New constructor that accepts a token store
@@ -75,13 +75,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
             IHttpClientFactory httpClientFactory,
             ITokenStore tokenStore)
         {
-            _projectId = projectId;
-            _settings = settings;
-            _logger = logger;
-            _httpClientFactory = httpClientFactory;
-            _tokenStore = tokenStore ?? throw new ArgumentNullException(nameof(tokenStore));
+            this._projectId = projectId;
+            this._settings = settings;
+            this._logger = logger;
+            this._httpClientFactory = httpClientFactory;
+            this._tokenStore = tokenStore ?? throw new ArgumentNullException(nameof(tokenStore));
 
-            if (string.IsNullOrWhiteSpace(_settings.ClientId) || string.IsNullOrWhiteSpace(_settings.ClientSecret))
+            if (string.IsNullOrWhiteSpace(this._settings.ClientId) || string.IsNullOrWhiteSpace(this._settings.ClientSecret))
             {
                 throw new InvalidOperationException("Antigravity ClientId and ClientSecret must be configured.");
             }
@@ -100,25 +100,25 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
 
         public async Task<string> GetTokenAsync(CancellationToken cancellationToken = default)
         {
-            await _authLock.WaitAsync(cancellationToken);
+            await this._authLock.WaitAsync(cancellationToken);
             try
             {
-                if (_accounts.Count == 0)
+                if (this._accounts.Count == 0)
                 {
-                    var loaded = await _tokenStore.LoadAsync();
+                    var loaded = await this._tokenStore.LoadAsync();
                     if (loaded?.Count > 0)
                     {
-                        _accounts = loaded;
+                        this._accounts = loaded;
                     }
                 }
 
                 // Check for Env Var Refresh Token (Transient Account)
                 var envRefreshToken = Environment.GetEnvironmentVariable("ANTIGRAVITY_REFRESH_TOKEN");
-                if (!string.IsNullOrWhiteSpace(envRefreshToken) && !_accounts.Any(a => a.Token.RefreshToken == envRefreshToken))
+                if (!string.IsNullOrWhiteSpace(envRefreshToken) && !this._accounts.Any(a => a.Token.RefreshToken == envRefreshToken))
                 {
                     var parsed = ParseRefreshToken(envRefreshToken);
-                    _logger.LogInformation("Injecting transient account from environment variable.");
-                    _accounts.Add(new AntigravityAccount
+                    this._logger.LogInformation("Injecting transient account from environment variable.");
+                    this._accounts.Add(new AntigravityAccount
                     {
                         Email = "env-var-user@system",
                         ProjectId = parsed.ProjectId,
@@ -126,9 +126,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
                     });
                 }
 
-                if (_accounts.Count == 0)
+                if (this._accounts.Count == 0)
                 {
-                    _logger.LogInformation("No accounts found. Starting interactive login.");
+                    this._logger.LogInformation("No accounts found. Starting interactive login.");
 
                     // For CLI usage, we can still trigger interactive login if no accounts exist
                     // But for API usage, this might just fail until an account is added via API
@@ -137,34 +137,34 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
                     {
                         // This will block if run in a non-interactive console without input redirection
                         // In a pure API scenario, this might timeout or throw
-                        await InteractiveLoginAsync(cancellationToken);
+                        await this.InteractiveLoginAsync(cancellationToken);
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogWarning(ex, "Interactive login failed or was cancelled. Please add an account via API.");
+                        this._logger.LogWarning(ex, "Interactive login failed or was cancelled. Please add an account via API.");
                         throw new InvalidOperationException("No authenticated accounts available. Please add an account via POST /antigravity/auth/start");
                     }
                 }
 
-                if (_accounts.Count == 0) throw new InvalidOperationException("Authentication failed.");
+                if (this._accounts.Count == 0) throw new InvalidOperationException("Authentication failed.");
 
                 // Round-Robin Selection
-                var index = Interlocked.Increment(ref _requestCount) % _accounts.Count;
+                var index = Interlocked.Increment(ref this._requestCount) % this._accounts.Count;
                 if (index < 0) index = -index; // Handle overflow
-                var account = _accounts[index];
+                var account = this._accounts[index];
 
                 // Check Expiry & Refresh
                 if (account.Token.IsStale)
                 {
-                    _logger.LogInformation("Refreshing token for {Email}...", account.Email);
-                    await RefreshAccountTokenAsync(account, cancellationToken);
+                    this._logger.LogInformation("Refreshing token for {Email}...", account.Email);
+                    await this.RefreshAccountTokenAsync(account, cancellationToken);
                 }
 
                 return account.Token.AccessToken;
             }
             finally
             {
-                _authLock.Release();
+                this._authLock.Release();
             }
         }
 
@@ -231,7 +231,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
                     _logger.LogInformation("Added new account: {Email}", email);
                 }
 
-                    await _tokenStore.SaveAsync(_accounts);
+                await _tokenStore.SaveAsync(_accounts);
             }
             finally
             {
@@ -562,7 +562,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
 
         private HttpClient CreateHttpClient()
         {
-            return _httpClientFactory.CreateClient("Antigravity");
+            return this._httpClientFactory.CreateClient("Antigravity");
         }
 
         private sealed class PkceState

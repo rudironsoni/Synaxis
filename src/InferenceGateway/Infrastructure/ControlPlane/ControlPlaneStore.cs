@@ -14,7 +14,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
 
         public ControlPlaneStore(ControlPlaneDbContext dbContext)
         {
-            _dbContext = dbContext;
+            this._dbContext = dbContext;
         }
 
         public async Task<ModelAlias?> GetAliasAsync(Guid tenantId, string alias, CancellationToken cancellationToken = default)

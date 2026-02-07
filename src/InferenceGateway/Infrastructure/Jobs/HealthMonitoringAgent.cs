@@ -26,8 +26,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
 
         public HealthMonitoringAgent(IServiceProvider serviceProvider, ILogger<HealthMonitoringAgent> logger)
         {
-            _serviceProvider = serviceProvider;
-            _logger = logger;
+            this._serviceProvider = serviceProvider;
+            this._logger = logger;
         }
 
         public async Task Execute(IJobExecutionContext context)
