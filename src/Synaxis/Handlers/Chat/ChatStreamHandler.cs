@@ -1,0 +1,66 @@
+// <copyright file="ChatStreamHandler.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
+namespace Synaxis.Handlers.Chat
+{
+    using System;
+    using System.Collections.Generic;
+    using System.Runtime.CompilerServices;
+    using System.Threading;
+    using Mediator;
+    using Microsoft.Extensions.Logging;
+    using Synaxis.Abstractions.Routing;
+    using Synaxis.Commands.Chat;
+    using Synaxis.Contracts.V1.Messages;
+
+    /// <summary>
+    /// Handles streaming chat completion commands by routing to the appropriate provider.
+    /// </summary>
+    public sealed class ChatStreamHandler : IStreamRequestHandler<ChatStreamCommand, ChatStreamChunk>
+    {
+        private readonly IProviderSelector _providerSelector;
+        private readonly ILogger<ChatStreamHandler> _logger;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ChatStreamHandler"/> class.
+        /// </summary>
+        /// <param name="providerSelector">The provider selector.</param>
+        /// <param name="logger">The logger.</param>
+        public ChatStreamHandler(
+            IProviderSelector providerSelector,
+            ILogger<ChatStreamHandler> logger)
+        {
+            this._providerSelector = providerSelector ?? throw new ArgumentNullException(nameof(providerSelector));
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
+
+        /// <inheritdoc/>
+        public async IAsyncEnumerable<ChatStreamChunk> Handle(
+            ChatStreamCommand request,
+            [EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            if (request is null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+
+            this._logger.LogDebug("Processing streaming chat command for model {Model}", request.Model);
+
+            var providerName = await this._providerSelector.SelectProviderAsync(request, cancellationToken)
+                .ConfigureAwait(false);
+
+            this._logger.LogInformation("Selected provider {Provider} for streaming chat command", providerName);
+
+            // TODO: Resolve provider and invoke streaming ChatAsync
+            // For now, yield a placeholder chunk
+            yield return new ChatStreamChunk
+            {
+                Id = Guid.NewGuid().ToString(),
+                Model = request.Model,
+                Created = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                Choices = Array.Empty<ChatChoice>(),
+            };
+        }
+    }
+}

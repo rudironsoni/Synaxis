@@ -123,3 +123,8 @@ dotnet_diagnostic.SA1018.severity = none
 
 
 
+
+# SA1649: File name must match type name
+# Disable for Synaxis where records cause analyzer crashes (AD0001)
+[src/Synaxis/**/*.cs]
+dotnet_diagnostic.SA1649.severity = none
