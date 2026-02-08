@@ -55,7 +55,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var accounts = await response.Content.ReadFromJsonAsync<List<AccountInfo>>();
             Assert.NotNull(accounts);
             Assert.Single(accounts);
-            Assert.Equal("test@example.com", accounts[0].email, StringComparer.Ordinal);
+            Assert.Equal("test@example.com", accounts[0].Email, StringComparer.Ordinal);
         }
 
         [Fact]

@@ -60,14 +60,14 @@ namespace Synaxis.InferenceGateway.Application.Routing
             var caps = new RequiredCapabilities { Streaming = streaming };
             var resolution = await this.modelResolver.ResolveAsync(modelId, EndpointKind.ChatCompletions, caps).ConfigureAwait(false);
 
-            if (resolution.candidates.Count == 0)
+            if (resolution.Candidates.Count == 0)
             {
                 this.logger.LogWarning("No providers found for model '{ModelId}' with required capabilities.", modelId);
                 throw new ArgumentException($"No providers available for model '{modelId}' with the requested capabilities.", nameof(modelId));
             }
 
             var enriched = new List<EnrichedCandidate>();
-            foreach (var candidate in resolution.candidates)
+            foreach (var candidate in resolution.Candidates)
             {
                 if (!await this.healthStore.IsHealthyAsync(candidate.Key!, cancellationToken).ConfigureAwait(false))
                 {
@@ -81,8 +81,8 @@ namespace Synaxis.InferenceGateway.Application.Routing
                     continue;
                 }
 
-                var cost = await this.costService.GetCostAsync(candidate.Key!, resolution.canonicalId.modelPath, cancellationToken).ConfigureAwait(false);
-                enriched.Add(new EnrichedCandidate(candidate, cost, resolution.canonicalId.modelPath));
+                var cost = await this.costService.GetCostAsync(candidate.Key!, resolution.CanonicalId.ModelPath, cancellationToken).ConfigureAwait(false);
+                enriched.Add(new EnrichedCandidate(candidate, cost, resolution.CanonicalId.ModelPath));
             }
 
             var scoredCandidates = new List<(EnrichedCandidate Candidate, double Score)>();
@@ -96,7 +96,7 @@ namespace Synaxis.InferenceGateway.Application.Routing
             return scoredCandidates
                 .OrderBy(x => x.Candidate.IsFree ? 0 : 1) // Primary sort: free providers first
                 .ThenByDescending(x => x.Score) // Secondary sort: higher score first (incorporates cost)
-                .ThenBy(x => x.Candidate.config.Tier) // Tertiary sort: lower tier as tiebreaker
+                .ThenBy(x => x.Candidate.Config.Tier) // Tertiary sort: lower tier as tiebreaker
                 .Select(x => x.Candidate)
                 .ToList();
         }

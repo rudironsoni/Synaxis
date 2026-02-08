@@ -60,11 +60,11 @@ public class ModelResolverTests
         var result = this._resolver.Resolve(modelId);
 
         // Assert
-        Assert.Equal(modelId, result.originalModelId);
-        Assert.Equal("openai", result.canonicalId.provider);
-        Assert.Equal("gpt-4", result.canonicalId.modelPath);
-        Assert.Single(result.candidates);
-        Assert.Equal("openai", result.candidates[0].Key);
+        Assert.Equal(modelId, result.OriginalModelId);
+        Assert.Equal("openai", result.CanonicalId.Provider);
+        Assert.Equal("gpt-4", result.CanonicalId.ModelPath);
+        Assert.Single(result.Candidates);
+        Assert.Equal("openai", result.Candidates[0].Key);
     }
 
     [Fact]
@@ -79,8 +79,8 @@ public class ModelResolverTests
         var result = this._resolver.Resolve(modelId);
 
         // Assert
-        Assert.Equal(modelId, result.originalModelId);
-        Assert.Empty(result.candidates);
+        Assert.Equal(modelId, result.OriginalModelId);
+        Assert.Empty(result.Candidates);
     }
 
     [Fact]
@@ -95,10 +95,10 @@ public class ModelResolverTests
         var result = this._resolver.Resolve(modelId);
 
         // Assert
-        Assert.Equal(modelId, result.originalModelId);
-        Assert.Equal("openai", result.canonicalId.provider);
-        Assert.Equal("gpt-4", result.canonicalId.modelPath);
-        Assert.Single(result.candidates);
+        Assert.Equal(modelId, result.OriginalModelId);
+        Assert.Equal("openai", result.CanonicalId.Provider);
+        Assert.Equal("gpt-4", result.CanonicalId.ModelPath);
+        Assert.Single(result.Candidates);
     }
 
     [Fact]
@@ -115,10 +115,10 @@ public class ModelResolverTests
         var result = this._resolver.Resolve(modelId);
 
         // Assert
-        Assert.Equal(modelId, result.originalModelId);
-        Assert.Equal("openai", result.canonicalId.provider);
-        Assert.Equal("gpt-4", result.canonicalId.modelPath);
-        Assert.Single(result.candidates);
+        Assert.Equal(modelId, result.OriginalModelId);
+        Assert.Equal("openai", result.CanonicalId.Provider);
+        Assert.Equal("gpt-4", result.CanonicalId.ModelPath);
+        Assert.Single(result.Candidates);
     }
 
     [Fact]
@@ -135,8 +135,8 @@ public class ModelResolverTests
         var result = this._resolver.Resolve(modelId);
 
         // Assert
-        Assert.Equal(modelId, result.originalModelId);
-        Assert.Empty(result.candidates);
+        Assert.Equal(modelId, result.OriginalModelId);
+        Assert.Empty(result.Candidates);
     }
 
     [Fact]
@@ -151,11 +151,11 @@ public class ModelResolverTests
         var result = this._resolver.Resolve(modelId);
 
         // Assert
-        Assert.Equal(modelId, result.originalModelId);
-        Assert.Equal("deepseek", result.canonicalId.provider);
-        Assert.Equal("deepseek-chat", result.canonicalId.modelPath);
-        Assert.Single(result.candidates);
-        Assert.Equal("deepseek", result.candidates[0].Key);
+        Assert.Equal(modelId, result.OriginalModelId);
+        Assert.Equal("deepseek", result.CanonicalId.Provider);
+        Assert.Equal("deepseek-chat", result.CanonicalId.ModelPath);
+        Assert.Single(result.Candidates);
+        Assert.Equal("deepseek", result.Candidates[0].Key);
     }
 
     [Fact]
@@ -171,8 +171,8 @@ public class ModelResolverTests
         var result = this._resolver.Resolve(modelId, required);
 
         // Assert
-        Assert.Equal(modelId, result.originalModelId);
-        Assert.Single(result.candidates);
+        Assert.Equal(modelId, result.OriginalModelId);
+        Assert.Single(result.Candidates);
     }
 
     [Fact]
@@ -188,8 +188,8 @@ public class ModelResolverTests
         var result = this._resolver.Resolve(modelId, required);
 
         // Assert
-        Assert.Equal(modelId, result.originalModelId);
-        Assert.Empty(result.candidates);
+        Assert.Equal(modelId, result.OriginalModelId);
+        Assert.Empty(result.Candidates);
     }
 
     [Fact]
@@ -214,8 +214,8 @@ public class ModelResolverTests
         var result = this._resolver.Resolve(modelId);
 
         // Assert
-        Assert.Equal(modelId, result.originalModelId);
-        Assert.Empty(result.candidates);
+        Assert.Equal(modelId, result.OriginalModelId);
+        Assert.Empty(result.Candidates);
     }
 
     [Fact]
@@ -238,10 +238,10 @@ public class ModelResolverTests
         var result = await this._resolver.ResolveAsync(modelId, EndpointKind.ChatCompletions);
 
         // Assert
-        Assert.Equal(modelId, result.originalModelId);
-        Assert.Equal("gpt-4", result.canonicalId.modelPath);
-        Assert.Single(result.candidates);
-        Assert.Equal("openai", result.candidates[0].Key);
+        Assert.Equal(modelId, result.OriginalModelId);
+        Assert.Equal("gpt-4", result.CanonicalId.ModelPath);
+        Assert.Single(result.Candidates);
+        Assert.Equal("openai", result.Candidates[0].Key);
     }
 
     [Fact]
@@ -264,8 +264,8 @@ public class ModelResolverTests
         var result = await this._resolver.ResolveAsync(modelId, EndpointKind.ChatCompletions);
 
         // Assert
-        Assert.Equal(modelId, result.originalModelId);
-        Assert.Empty(result.candidates);
+        Assert.Equal(modelId, result.OriginalModelId);
+        Assert.Empty(result.Candidates);
     }
 
     [Fact]
@@ -287,10 +287,10 @@ public class ModelResolverTests
         var result = await this._resolver.ResolveAsync(modelId, EndpointKind.ChatCompletions, tenantId: tenantId);
 
         // Assert
-        Assert.Equal(modelId, result.originalModelId);
-        Assert.Equal("openai", result.canonicalId.provider);
-        Assert.Equal("gpt-4", result.canonicalId.modelPath);
-        Assert.Single(result.candidates);
+        Assert.Equal(modelId, result.OriginalModelId);
+        Assert.Equal("openai", result.CanonicalId.Provider);
+        Assert.Equal("gpt-4", result.CanonicalId.ModelPath);
+        Assert.Single(result.Candidates);
     }
 
     [Fact]
@@ -312,10 +312,10 @@ public class ModelResolverTests
         var result = await this._resolver.ResolveAsync(modelId, EndpointKind.ChatCompletions, tenantId: tenantId);
 
         // Assert
-        Assert.Equal(modelId, result.originalModelId);
-        Assert.Equal("openai", result.canonicalId.provider);
-        Assert.Equal("gpt-4", result.canonicalId.modelPath);
-        Assert.Single(result.candidates);
+        Assert.Equal(modelId, result.OriginalModelId);
+        Assert.Equal("openai", result.CanonicalId.Provider);
+        Assert.Equal("gpt-4", result.CanonicalId.ModelPath);
+        Assert.Single(result.Candidates);
     }
 
     [Fact]
@@ -335,10 +335,10 @@ public class ModelResolverTests
         var result = await this._resolver.ResolveAsync(modelId, EndpointKind.ChatCompletions, tenantId: tenantId);
 
         // Assert
-        Assert.Equal(modelId, result.originalModelId);
-        Assert.Equal("unknown", result.canonicalId.provider);
-        Assert.Equal(modelId, result.canonicalId.modelPath);
-        Assert.Empty(result.candidates);
+        Assert.Equal(modelId, result.OriginalModelId);
+        Assert.Equal("unknown", result.CanonicalId.Provider);
+        Assert.Equal(modelId, result.CanonicalId.ModelPath);
+        Assert.Empty(result.Candidates);
     }
 
     [Fact]

@@ -62,18 +62,18 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
 
             var result = await executor.ExecuteAsync(testCase);
 
-            this._output.WriteLine($"Provider={testCase.provider} Model={testCase.model} Success={result.success} TimeMs={result.responseTime.TotalMilliseconds} Attempts={result.attemptCount}");
-            if (!string.IsNullOrEmpty(result.error))
+            this._output.WriteLine($"Provider={testCase.Provider} Model={testCase.Model} Success={result.Success} TimeMs={result.ResponseTime.TotalMilliseconds} Attempts={result.AttemptCount}");
+            if (!string.IsNullOrEmpty(result.Error))
             {
-                this._output.WriteLine($"Error: {result.error}");
+                this._output.WriteLine($"Error: {result.Error}");
             }
 
-            if (!string.IsNullOrEmpty(result.responseSnippet))
+            if (!string.IsNullOrEmpty(result.ResponseSnippet))
             {
-                this._output.WriteLine($"Snippet: {result.responseSnippet}");
+                this._output.WriteLine($"Snippet: {result.ResponseSnippet}");
             }
 
-            if (result.success)
+            if (result.Success)
             {
                 this._circuitBreaker.RecordSuccess(provider);
             }
@@ -86,7 +86,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
 
             // Don't assert on success for real providers - they may be flaky
             // Just record the result for circuit breaker tracking
-            this._output.WriteLine($"Test completed for {provider}: {(result.success ? "Success" : "Failed")}");
+            this._output.WriteLine($"Test completed for {provider}: {(result.Success ? "Success" : "Failed")}");
         }
 
         public static IEnumerable<object[]> GetRepresentativeProviderCases()

@@ -8,12 +8,12 @@ namespace Synaxis.InferenceGateway.Application.ControlPlane.Entities
     /// Tenant-level routing score configuration overrides.
     /// Merges with global config; only specified fields override.
     /// </summary>
-    /// <param name="id">The policy ID.</param>
-    /// <param name="tenantId">The tenant ID.</param>
-    /// <param name="overrides">The policy overrides.</param>
+    /// <param name="Id">The policy ID.</param>
+    /// <param name="TenantId">The tenant ID.</param>
+    /// <param name="Overrides">The policy overrides.</param>
     public record TenantRoutingScorePolicy(
-        string id,
-        string tenantId,
-        RoutingScorePolicyOverrides overrides)
-        : RoutingScorePolicyBase(id, "Tenant", tenantId);
+        string Id,
+        string TenantId,
+        RoutingScorePolicyOverrides Overrides)
+        : RoutingScorePolicyBase(Id, "Tenant", TenantId);
 }

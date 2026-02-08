@@ -17,7 +17,7 @@ public class TranslationPipelineTests
 
         var result = pipeline.TranslateRequest(request);
 
-        Assert.Equal("first-model", result.model);
+        Assert.Equal("first-model", result.Model);
     }
 
     [Fact]
@@ -64,7 +64,7 @@ public class TranslationPipelineTests
 
 #pragma warning disable SA1101 // False positive with record 'with' expressions
         public CanonicalRequest Translate(CanonicalRequest request)
-            => request with { model = this._model };
+            => request with { Model = this._model };
 #pragma warning restore SA1101
     }
 

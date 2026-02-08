@@ -31,8 +31,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
 
         public async Task<SmokeTestResult> ExecuteAsync(SmokeTestCase testCase)
         {
-            var timeoutMs = testCase.timeoutMs != 0 ? testCase.timeoutMs : this._options.DefaultTimeoutMs;
-            var maxRetries = testCase.maxRetries != 0 ? testCase.maxRetries : this._options.MaxRetries;
+            var timeoutMs = testCase.TimeoutMs != 0 ? testCase.TimeoutMs : this._options.DefaultTimeoutMs;
+            var maxRetries = testCase.MaxRetries != 0 ? testCase.MaxRetries : this._options.MaxRetries;
 
             using var cts = new CancellationTokenSource(timeoutMs);
 
@@ -52,21 +52,21 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                     sw.Stop();
 
                     // If not success and retryable, throw to trigger retry
-                    if (!res.success && IsRetryableStatus(res.error))
+                    if (!res.Success && IsRetryableStatus(res.Error))
                     {
-                        throw new HttpRequestException(res.error);
+                        throw new HttpRequestException(res.Error);
                     }
 
                     return res;
                 }, ex => IsRetryableException(ex)).ConfigureAwait(false);
 
                 // Ensure response time is captured
-                return result with { attemptCount = attempt, responseTime = TimeSpan.FromMilliseconds(sw.ElapsedMilliseconds) };
+                return result with { AttemptCount = attempt, ResponseTime = TimeSpan.FromMilliseconds(sw.ElapsedMilliseconds) };
             }
             catch (Exception ex)
             {
                 sw.Stop();
-                this._output.WriteLine($"Smoke test failed for {testCase.provider}/{testCase.model}: {ex.Message}");
+                this._output.WriteLine($"Smoke test failed for {testCase.Provider}/{testCase.Model}: {ex.Message}");
                 return new SmokeTestResult(testCase, false, TimeSpan.FromMilliseconds(sw.ElapsedMilliseconds), ex.Message, null, attempt);
             }
         }
@@ -94,12 +94,12 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                 HttpResponseMessage response;
                 object payload;
 
-                if (testCase.endpoint == EndpointType.ChatCompletions)
+                if (testCase.Endpoint == EndpointType.ChatCompletions)
                 {
                     // Use the provider-specific model path (CanonicalId may be provider/model; Smoke tests expect
                     // provider-specific ModelPath when the configuration provides a mapping. Use the CanonicalId
                     // parameter (which may already be the provider-specific path) when available.
-                    var modelToSend = string.IsNullOrEmpty(testCase.canonicalId) ? testCase.model : testCase.canonicalId;
+                    var modelToSend = string.IsNullOrEmpty(testCase.CanonicalId) ? testCase.Model : testCase.CanonicalId;
 
                     payload = new
                     {
@@ -112,7 +112,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                 }
                 else
                 {
-                    var modelToSend2 = string.IsNullOrEmpty(testCase.canonicalId) ? testCase.model : testCase.canonicalId;
+                    var modelToSend2 = string.IsNullOrEmpty(testCase.CanonicalId) ? testCase.Model : testCase.CanonicalId;
 
                     payload = new
                     {

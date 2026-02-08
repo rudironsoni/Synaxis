@@ -8,13 +8,13 @@ namespace Synaxis.InferenceGateway.Application.ControlPlane.Entities
     /// Overrides for routing score configuration.
     /// Nullable properties allow partial overrides (inherit from parent).
     /// </summary>
-    /// <param name="weights">The routing score weights.</param>
-    /// <param name="freeTierBonusPoints">The bonus points for free tier providers.</param>
-    /// <param name="minScoreThreshold">The minimum score threshold.</param>
-    /// <param name="preferFreeByDefault">Whether to prefer free providers by default.</param>
+    /// <param name="Weights">The routing score weights.</param>
+    /// <param name="FreeTierBonusPoints">The bonus points for free tier providers.</param>
+    /// <param name="MinScoreThreshold">The minimum score threshold.</param>
+    /// <param name="PreferFreeByDefault">Whether to prefer free providers by default.</param>
     public record RoutingScorePolicyOverrides(
-        RoutingScoreWeights? weights = null,
-        int? freeTierBonusPoints = null,
-        double? minScoreThreshold = null,
-        bool? preferFreeByDefault = null);
+        RoutingScoreWeights? Weights = null,
+        int? FreeTierBonusPoints = null,
+        double? MinScoreThreshold = null,
+        bool? PreferFreeByDefault = null);
 }

@@ -8,10 +8,10 @@ namespace Synaxis.InferenceGateway.Application.ControlPlane.Entities
     /// Global routing score configuration - system-wide default.
     /// All tenants inherit from this unless overridden.
     /// </summary>
-    /// <param name="id">The policy ID.</param>
-    /// <param name="configuration">The routing score configuration.</param>
+    /// <param name="Id">The policy ID.</param>
+    /// <param name="Configuration">The routing score configuration.</param>
     public record GlobalRoutingScorePolicy(
-        string id,
-        RoutingScoreConfiguration configuration)
-        : RoutingScorePolicyBase(id, "Global", null);
+        string Id,
+        RoutingScoreConfiguration Configuration)
+        : RoutingScorePolicyBase(Id, "Global", null);
 }

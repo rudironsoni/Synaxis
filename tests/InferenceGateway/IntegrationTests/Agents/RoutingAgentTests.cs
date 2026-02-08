@@ -91,9 +91,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Agents
             Assert.True(context.Items.ContainsKey("RoutingContext"));
             var routingContext = context.Items["RoutingContext"] as RoutingContext;
             Assert.NotNull(routingContext);
-            Assert.Equal(modelId, routingContext.requestedModel);
-            Assert.Equal("actual-model-v1", routingContext.resolvedCanonicalId);
-            Assert.Equal("provider-a", routingContext.provider);
+            Assert.Equal(modelId, routingContext.RequestedModel);
+            Assert.Equal("actual-model-v1", routingContext.ResolvedCanonicalId);
+            Assert.Equal("provider-a", routingContext.Provider);
         }
     }
 }

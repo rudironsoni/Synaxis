@@ -40,7 +40,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                 var caps = new RequiredCapabilities { Streaming = request.Stream };
                 var resolution = await resolver.ResolveAsync(request.Model, EndpointKind.LegacyCompletions, caps).ConfigureAwait(false);
 
-                ctx.Items["RoutingContext"] = new RoutingContext(request.Model, resolution.canonicalId.ToString(), resolution.canonicalId.provider);
+                ctx.Items["RoutingContext"] = new RoutingContext(request.Model, resolution.CanonicalId.ToString(), resolution.CanonicalId.Provider);
 
                 if (!TryParsePrompt(request.Prompt, out var promptText, out var parseError))
                 {
@@ -50,7 +50,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                 var messages = new List<ChatMessage> { new ChatMessage(ChatRole.User, promptText) };
                 var options = new ChatOptions
                 {
-                    ModelId = resolution.canonicalId.ToString(),
+                    ModelId = resolution.CanonicalId.ToString(),
                     MaxOutputTokens = request.MaxTokens,
                     Temperature = (float?)request.Temperature,
                 };
@@ -65,7 +65,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                             id = "cmpl-" + Guid.NewGuid(),
                             @object = "text_completion",
                             created = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                            model = resolution.canonicalId.ToString(),
+                            model = resolution.CanonicalId.ToString(),
                             choices = new[]
                             {
                             new { text = update.Text, index = 0, finish_reason = update.FinishReason?.ToString().ToLowerInvariant() },
@@ -86,7 +86,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                         id = "cmpl-" + Guid.NewGuid(),
                         @object = "text_completion",
                         created = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                        model = resolution.canonicalId.ToString(),
+                        model = resolution.CanonicalId.ToString(),
                         choices = new[]
                         {
                         new { text = response.Text, index = 0, finish_reason = response.FinishReason?.ToString().ToLowerInvariant() ?? "stop" },

@@ -109,13 +109,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
         {
             var health = await healthTool.CheckHealthAsync(provider.OrganizationId, provider.Id, ct).ConfigureAwait(false);
 
-            if (health.isInCooldown && health.cooldownUntil > DateTime.UtcNow)
+            if (health.IsInCooldown && health.CooldownUntil > DateTime.UtcNow)
             {
                 this._logger.LogDebug(
                     "[HealthMonitoring][{CorrelationId}] Provider {ProviderId} in cooldown until {Until}",
                     correlationId,
                     provider.Id,
-                    health.cooldownUntil);
+                    health.CooldownUntil);
                 return new CheckResult { Checked = false, Unhealthy = false };
             }
 
@@ -127,7 +127,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                 return new CheckResult { Checked = true, Unhealthy = true };
             }
 
-            if (!health.isHealthy)
+            if (!health.IsHealthy)
             {
                 await HandleProviderRecoveryAsync(provider, health, healthTool, alertTool, auditTool, correlationId, ct).ConfigureAwait(false);
             }
@@ -144,7 +144,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
             string correlationId,
             CancellationToken ct)
         {
-            int consecutiveFailures = health.consecutiveFailures + 1;
+            int consecutiveFailures = health.ConsecutiveFailures + 1;
             await healthTool.MarkUnhealthyAsync(
                 provider.OrganizationId,
                 provider.Id,
@@ -184,7 +184,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
 
             await alertTool.SendAdminAlertAsync(
                 "Provider Recovered",
-                $"Provider {provider.Id} is now healthy after {health.consecutiveFailures} failures",
+                $"Provider {provider.Id} is now healthy after {health.ConsecutiveFailures} failures",
                 AlertSeverity.Info,
                 ct).ConfigureAwait(false);
 
@@ -193,7 +193,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                 "ProviderRecovered",
                 provider.OrganizationId,
                 null,
-                $"Provider {provider.Id} recovered after {health.consecutiveFailures} failures",
+                $"Provider {provider.Id} recovered after {health.ConsecutiveFailures} failures",
                 correlationId,
                 ct).ConfigureAwait(false);
         }
