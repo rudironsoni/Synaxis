@@ -62,7 +62,7 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
                     "user" => ChatRole.User,
                     "assistant" => ChatRole.Assistant,
                     "tool" => ChatRole.Tool,
-                    _ => new ChatRole(msg.Role)
+                    _ => new ChatRole(msg.Role),
                 };
 
                 var content = msg.Content?.ToString() ?? string.Empty;
@@ -139,7 +139,7 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
             {
                 if (element.ValueKind == JsonValueKind.String)
                 {
-                    return new List<string> { element.GetString() ! };
+                    return new List<string> { element.GetString()! };
                 }
 
                 if (element.ValueKind == JsonValueKind.Array)
@@ -151,7 +151,7 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
                     {
                         if (item.ValueKind == JsonValueKind.String)
                         {
-                            list.Add(item.GetString() !);
+                            list.Add(item.GetString()!);
                         }
                     }
 

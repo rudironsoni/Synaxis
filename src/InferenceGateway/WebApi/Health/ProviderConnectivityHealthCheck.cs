@@ -182,7 +182,7 @@ namespace Synaxis.InferenceGateway.WebApi.Health
             "nvidia" => "https://integrate.api.nvidia.com/v1",
             "huggingface" => "https://router.huggingface.co",
             "pollinations" => "https://pollinations.ai",
-            _ => null
+            _ => null,
         };
     }
 }

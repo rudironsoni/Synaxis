@@ -165,6 +165,6 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints
         /// <summary>
         /// Gets or sets the refresh token.
         /// </summary>
-        required public string RefreshToken { get; set; }
+        public required string RefreshToken { get; set; }
     }
 }

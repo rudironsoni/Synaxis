@@ -49,8 +49,8 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateKey(Guid projectId, [FromBody] CreateKeyRequest request, CancellationToken cancellationToken)
         {
-            var userId = Guid.Parse(this.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? this.User.FindFirstValue("sub") !);
-            var tenantId = Guid.Parse(this.User.FindFirstValue("tenantId") !);
+            var userId = Guid.Parse(this.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? this.User.FindFirstValue("sub")!);
+            var tenantId = Guid.Parse(this.User.FindFirstValue("tenantId")!);
 
             var project = await this.dbContext.Projects
                 .FirstOrDefaultAsync(p => p.Id == projectId && p.TenantId == tenantId, cancellationToken)
@@ -93,8 +93,8 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         [HttpDelete("{keyId}")]
         public async Task<IActionResult> RevokeKey(Guid projectId, Guid keyId, CancellationToken cancellationToken)
         {
-            var userId = Guid.Parse(this.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? this.User.FindFirstValue("sub") !);
-            var tenantId = Guid.Parse(this.User.FindFirstValue("tenantId") !);
+            var userId = Guid.Parse(this.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? this.User.FindFirstValue("sub")!);
+            var tenantId = Guid.Parse(this.User.FindFirstValue("tenantId")!);
 
             var apiKey = await this.dbContext.ApiKeys
                 .Include(k => k.Project)

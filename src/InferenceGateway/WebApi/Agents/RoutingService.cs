@@ -45,11 +45,11 @@ namespace Synaxis.InferenceGateway.WebApi.Agents
         /// </summary>
         /// <param name="openAIRequest">The OpenAI request.</param>
         /// <param name="messages">The chat messages.</param>
-        /// <param name="thread">The agent thread.</param>
+        /// <param name="session">The agent session.</param>
         /// <param name="options">The agent run options.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The agent response.</returns>
-        public async Task<AgentsAI.AgentResponse> HandleAsync(OpenAIRequest openAIRequest, IEnumerable<ChatMessage> messages, AgentsAI.AgentThread? thread = null, AgentsAI.AgentRunOptions? options = null, CancellationToken cancellationToken = default)
+        public async Task<AgentsAI.AgentResponse> HandleAsync(OpenAIRequest openAIRequest, IEnumerable<ChatMessage> messages, AgentsAI.AgentSession? session = null, AgentsAI.AgentRunOptions? options = null, CancellationToken cancellationToken = default)
         {
             var httpContext = this._httpContextAccessor.HttpContext;
 
@@ -77,10 +77,10 @@ namespace Synaxis.InferenceGateway.WebApi.Agents
             LogRoutingContext(httpContext, openAIRequest.Model, response.AdditionalProperties);
 
             // 8. Build Agent Response
-            var agentMessage = new ChatMessage(ChatRole.Assistant, translatedResponse.content);
-            if (translatedResponse.toolCalls != null)
+            var agentMessage = new ChatMessage(ChatRole.Assistant, translatedResponse.Content);
+            if (translatedResponse.ToolCalls != null)
             {
-                foreach (var toolCall in translatedResponse.toolCalls)
+                foreach (var toolCall in translatedResponse.ToolCalls)
                 {
                     agentMessage.Contents.Add(toolCall);
                 }
@@ -94,11 +94,11 @@ namespace Synaxis.InferenceGateway.WebApi.Agents
         /// </summary>
         /// <param name="openAIRequest">The OpenAI request.</param>
         /// <param name="messages">The chat messages.</param>
-        /// <param name="thread">The agent thread.</param>
+        /// <param name="session">The agent session.</param>
         /// <param name="options">The agent run options.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The agent response updates.</returns>
-        public async IAsyncEnumerable<AgentsAI.AgentResponseUpdate> HandleStreamingAsync(OpenAIRequest openAIRequest, IEnumerable<ChatMessage> messages, AgentsAI.AgentThread? thread = null, AgentsAI.AgentRunOptions? options = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<AgentsAI.AgentResponseUpdate> HandleStreamingAsync(OpenAIRequest openAIRequest, IEnumerable<ChatMessage> messages, AgentsAI.AgentSession? session = null, AgentsAI.AgentRunOptions? options = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             var canonicalRequest = OpenAIRequestMapper.ToCanonicalRequest(openAIRequest, messages);
             var translatedRequest = this._translator.TranslateRequest(canonicalRequest);

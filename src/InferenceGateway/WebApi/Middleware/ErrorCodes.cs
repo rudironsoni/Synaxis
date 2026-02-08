@@ -174,7 +174,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 ErrorCodes.ServerError => HttpStatusCode.InternalServerError,
 
                 // Default to 500 for unknown error codes
-                _ => HttpStatusCode.InternalServerError
+                _ => HttpStatusCode.InternalServerError,
             };
         }
 
@@ -224,7 +224,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 ErrorCodes.ServerError => "server_error",
 
                 // Default
-                _ => "api_error"
+                _ => "api_error",
             };
         }
     }
