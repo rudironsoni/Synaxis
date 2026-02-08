@@ -43,44 +43,40 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         {
             var response = context.Response;
 
-            response.OnStarting(() =>
+            // Set headers immediately (before calling next middleware)
+            if (!response.HasStarted)
             {
-                if (!response.HasStarted)
+                // Prevent MIME type sniffing
+                response.Headers.Append("X-Content-Type-Options", "nosniff");
+
+                // Prevent clickjacking attacks
+                response.Headers.Append("X-Frame-Options", "DENY");
+
+                // Enable XSS filtering
+                response.Headers.Append("X-XSS-Protection", "1; mode=block");
+
+                // Control referrer information
+                response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
+
+                // Restrict browser features
+                response.Headers.Append("Permissions-Policy", "geolocation=(), microphone=(), camera=(), payment=(), usb=()");
+
+                // HSTS: Force HTTPS in production
+                if (!this._isDevelopment)
                 {
-                    // Prevent MIME type sniffing
-                    response.Headers.Append("X-Content-Type-Options", "nosniff");
-
-                    // Prevent clickjacking attacks
-                    response.Headers.Append("X-Frame-Options", "DENY");
-
-                    // Enable XSS filtering
-                    response.Headers.Append("X-XSS-Protection", "1; mode=block");
-
-                    // Control referrer information
-                    response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
-
-                    // Restrict browser features
-                    response.Headers.Append("Permissions-Policy", "geolocation=(), microphone=(), camera=(), payment=(), usb=()");
-
-                    // HSTS: Force HTTPS in production
-                    if (!this._isDevelopment)
-                    {
-                        response.Headers.Append("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
-                    }
-
-                    // Content Security Policy (CSP)
-                    var csp = BuildContentSecurityPolicy(this._isDevelopment);
-                    response.Headers.Append("Content-Security-Policy", csp);
-
-                    // Remove server identification header for security through obscurity
-                    response.Headers.Remove("Server");
-                    response.Headers.Remove("X-Powered-By");
-
-                    this._logger.LogDebug("Security headers added to response for {Path}", context.Request.Path);
+                    response.Headers.Append("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
                 }
 
-                return Task.CompletedTask;
-            });
+                // Content Security Policy (CSP)
+                var csp = BuildContentSecurityPolicy(this._isDevelopment);
+                response.Headers.Append("Content-Security-Policy", csp);
+
+                // Remove server identification header for security through obscurity
+                response.Headers.Remove("Server");
+                response.Headers.Remove("X-Powered-By");
+
+                this._logger.LogDebug("Security headers added to response for {Path}", context.Request.Path);
+            }
 
             return this._next(context);
         }
