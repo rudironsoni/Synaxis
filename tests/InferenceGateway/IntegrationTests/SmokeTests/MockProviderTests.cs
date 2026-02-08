@@ -1,3 +1,7 @@
+// <copyright file="MockProviderTests.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
 using System;
 using System.Net.Http;
 using System.Net.Http.Json;

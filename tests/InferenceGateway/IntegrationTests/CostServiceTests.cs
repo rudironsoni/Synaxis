@@ -1,3 +1,7 @@
+// <copyright file="CostServiceTests.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
 using System;
 using System.Linq;
 using System.Threading;
@@ -158,7 +162,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             // Act & Assert
             await Assert.ThrowsAsync<OperationCanceledException>(async () =>
-                await service.GetCostAsync("Provider", "model", cancellationToken));
+                await service.GetCostAsync("Provider", "model", cancellationToken).ConfigureAwait(false));
         }
 
         [Fact]
@@ -169,7 +173,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var service = new CostService(dbContext);
 
             // Act
-            var result = await service.GetCostAsync("", "");
+            var result = await service.GetCostAsync(string.Empty, string.Empty);
 
             // Assert
             Assert.Null(result);

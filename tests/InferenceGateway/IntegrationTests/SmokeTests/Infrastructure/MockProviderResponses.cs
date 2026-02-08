@@ -1,3 +1,7 @@
+// <copyright file="MockProviderResponses.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
@@ -92,16 +96,16 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                         Message = new ChatCompletionMessageDto
                         {
                             Role = "assistant",
-                            Content = "Mock response for " + model
+                            Content = "Mock response for " + model,
                         },
-                        FinishReason = "stop"
+                        FinishReason = "stop",
                     },
                 },
                 Usage = new ChatCompletionUsage
                 {
                     PromptTokens = 10,
                     CompletionTokens = 5,
-                    TotalTokens = 15
+                    TotalTokens = 15,
                 },
             };
         }
@@ -120,14 +124,14 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                     {
                         Index = 0,
                         Text = "Mock text completion for " + model,
-                        FinishReason = "stop"
+                        FinishReason = "stop",
                     },
                 },
                 Usage = new LegacyUsage
                 {
                     PromptTokens = 8,
                     CompletionTokens = 6,
-                    TotalTokens = 14
+                    TotalTokens = 14,
                 },
             };
         }
@@ -135,6 +139,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
         private Dictionary<string, ChatCompletionResponse> CreateChatResponses()
         {
             return new Dictionary<string, ChatCompletionResponse>
+(StringComparer.Ordinal)
             {
                 ["llama-3.1-70b-versatile"] = new ChatCompletionResponse
                 {
@@ -150,16 +155,16 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                             Message = new ChatCompletionMessageDto
                             {
                                 Role = "assistant",
-                                Content = "OK"
+                                Content = "OK",
                             },
-                            FinishReason = "stop"
+                            FinishReason = "stop",
                         },
                     },
                     Usage = new ChatCompletionUsage
                     {
                         PromptTokens = 12,
                         CompletionTokens = 2,
-                        TotalTokens = 14
+                        TotalTokens = 14,
                     },
                 },
                 ["deepseek-chat"] = new ChatCompletionResponse
@@ -176,18 +181,19 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                             Message = new ChatCompletionMessageDto
                             {
                                 Role = "assistant",
-                                Content = "OK"
+                                Content = "OK",
                             },
-                            FinishReason = "stop"
+                            FinishReason = "stop",
                         },
                     },
                     Usage = new ChatCompletionUsage
                     {
                         PromptTokens = 10,
                         CompletionTokens = 2,
-                        TotalTokens = 12
+                        TotalTokens = 12,
                     },
                 },
+
                 // Add more provider-specific responses as needed
                 ["gpt-4o"] = new ChatCompletionResponse
                 {
@@ -206,14 +212,14 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                                 Content = "OK"
                             },
                             FinishReason = "stop"
-                        }
+                        },
                     },
                     Usage = new ChatCompletionUsage
                     {
                         PromptTokens = 15,
                         CompletionTokens = 2,
                         TotalTokens = 17
-                    }
+                    },
                 },
             };
         }
@@ -221,6 +227,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
         private Dictionary<string, LegacyCompletionResponse> CreateLegacyResponses()
         {
             return new Dictionary<string, LegacyCompletionResponse>
+(StringComparer.Ordinal)
             {
                 ["llama-3.1-70b-versatile"] = new LegacyCompletionResponse
                 {
@@ -234,14 +241,14 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                         {
                             Index = 0,
                             Text = "OK",
-                            FinishReason = "stop"
+                            FinishReason = "stop",
                         },
                     },
                     Usage = new LegacyUsage
                     {
                         PromptTokens = 11,
                         CompletionTokens = 1,
-                        TotalTokens = 12
+                        TotalTokens = 12,
                     },
                 },
                 ["deepseek-chat"] = new LegacyCompletionResponse
@@ -257,14 +264,14 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                             Index = 0,
                             Text = "OK",
                             FinishReason = "stop"
-                        }
+                        },
                     },
                     Usage = new LegacyUsage
                     {
                         PromptTokens = 9,
                         CompletionTokens = 1,
                         TotalTokens = 10
-                    }
+                    },
                 },
             };
         }
@@ -299,7 +306,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                     Id = "claude-3.5-sonnet",
                     Object = "model",
                     Created = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                    OwnedBy = "Anthropic"
+                    OwnedBy = "Anthropic",
                 },
             };
         }
@@ -316,7 +323,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
 
         public string Model { get; set; } = string.Empty;
 
-        public List<ChatCompletionChoice> Choices { get; set; } = new();
+        public List<ChatCompletionChoice> Choices { get; set; } = new ();
 
         public ChatCompletionUsage? Usage { get; set; }
     }
@@ -325,7 +332,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
     {
         public int Index { get; set; }
 
-        public ChatCompletionMessageDto Message { get; set; } = new();
+        public ChatCompletionMessageDto Message { get; set; } = new ();
 
         public string FinishReason { get; set; } = string.Empty;
     }
@@ -356,7 +363,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
 
         public string Model { get; set; } = string.Empty;
 
-        public List<LegacyCompletionChoice> Choices { get; set; } = new();
+        public List<LegacyCompletionChoice> Choices { get; set; } = new ();
 
         public LegacyUsage? Usage { get; set; }
     }
