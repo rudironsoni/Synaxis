@@ -1,0 +1,9 @@
+{
+  "ProviderStates": {
+    "MockProvider": {
+      "ConsecutiveFailures": 1,
+      "LastSuccess": null,
+      "LastFailure": "2026-02-08T18:44:20.5507489Z"
+    }
+  }
+}
