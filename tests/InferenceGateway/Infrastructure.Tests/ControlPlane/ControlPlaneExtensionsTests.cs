@@ -1,11 +1,15 @@
+// <copyright file="ControlPlaneExtensionsTests.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
+namespace Synaxis.InferenceGateway.Infrastructure.Tests.ControlPlane;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Synaxis.InferenceGateway.Application.ControlPlane;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
-
-namespace Synaxis.InferenceGateway.Infrastructure.Tests.ControlPlane;
 
 public class ControlPlaneExtensionsTests
 {

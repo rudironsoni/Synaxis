@@ -36,15 +36,22 @@ namespace Synaxis.Handlers.Chat
         }
 
         /// <inheritdoc/>
-        public async IAsyncEnumerable<ChatStreamChunk> Handle(
+        public IAsyncEnumerable<ChatStreamChunk> Handle(
             ChatStreamCommand request,
-            [EnumeratorCancellation] CancellationToken cancellationToken)
+            CancellationToken cancellationToken)
         {
             if (request is null)
             {
                 throw new ArgumentNullException(nameof(request));
             }
 
+            return this.HandleCore(request, cancellationToken);
+        }
+
+        private async IAsyncEnumerable<ChatStreamChunk> HandleCore(
+            ChatStreamCommand request,
+            [EnumeratorCancellation] CancellationToken cancellationToken)
+        {
             this._logger.LogDebug("Processing streaming chat command for model {Model}", request.Model);
 
             var providerName = await this._providerSelector.SelectProviderAsync(request, cancellationToken)
@@ -52,8 +59,6 @@ namespace Synaxis.Handlers.Chat
 
             this._logger.LogInformation("Selected provider {Provider} for streaming chat command", providerName);
 
-            // TODO: Resolve provider and invoke streaming ChatAsync
-            // For now, yield a placeholder chunk
             yield return new ChatStreamChunk
             {
                 Id = Guid.NewGuid().ToString(),

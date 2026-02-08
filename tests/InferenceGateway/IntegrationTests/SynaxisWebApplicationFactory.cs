@@ -27,12 +27,10 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 {
     public class SynaxisWebApplicationFactory : WebApplicationFactory<Program>, IAsyncLifetime, ITestOutputHelperAccessor
     {
-        private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
+        private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:16-alpine")
             .Build();
 
-        private readonly RedisContainer _redis = new RedisBuilder()
-            .WithImage("redis:7-alpine")
+        private readonly RedisContainer _redis = new RedisBuilder("redis:7-alpine")
             .Build();
 
         public ITestOutputHelper? OutputHelper { get; set; }

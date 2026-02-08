@@ -1,10 +1,14 @@
-using System;
-using System.Collections.Generic;
-using Microsoft.Extensions.AI;
-using Synaxis.InferenceGateway.Infrastructure;
-using Xunit;
+// <copyright file="GenericOpenAiChatClientTests.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests;
+
+using Microsoft.Extensions.AI;
+using Synaxis.InferenceGateway.Infrastructure;
+using System.Collections.Generic;
+using System;
+using Xunit;
 
 public class GenericOpenAiChatClientTests
 {

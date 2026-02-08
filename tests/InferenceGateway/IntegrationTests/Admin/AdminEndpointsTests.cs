@@ -31,7 +31,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Admin
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadFromJsonAsync<JsonElement>().ConfigureAwait(false);
-            return content.GetProperty("token").GetString() !;
+            return content.GetProperty("token").GetString()!;
         }
 
         private HttpClient CreateAuthenticatedClient()

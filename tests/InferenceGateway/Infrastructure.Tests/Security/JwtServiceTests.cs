@@ -1,18 +1,23 @@
-using System;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
-using System.Security.Claims;
-using System.Text;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using Moq;
-using Synaxis.InferenceGateway.Application.Configuration;
-using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
-using Synaxis.InferenceGateway.Infrastructure.Security;
-using Xunit;
+// <copyright file="JwtServiceTests.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
 {
+    using Microsoft.Extensions.Options;
+    using Microsoft.IdentityModel.Tokens;
+    using Moq;
+    using Synaxis.InferenceGateway.Application.Configuration;
+    using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
+    using Synaxis.InferenceGateway.Infrastructure.Security;
+    using System.IdentityModel.Tokens.Jwt;
+    using System.Linq;
+    using System.Security.Claims;
+    using System.Text;
+    using System;
+    using Xunit;
+
+
     public class JwtServiceTests
     {
         private readonly Mock<IOptions<SynaxisConfiguration>> _mockConfig;

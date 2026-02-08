@@ -62,16 +62,21 @@ namespace Synaxis.Behaviors
 
                 return response;
             }
-            catch (Exception ex)
+            catch (Exception ex) when (this.LogException(ex, messageType, stopwatch))
             {
-                stopwatch.Stop();
-                this._logger.LogError(
-                    ex,
-                    "Error handling {MessageType} after {ElapsedMilliseconds}ms",
-                    messageType,
-                    stopwatch.ElapsedMilliseconds);
                 throw;
             }
+        }
+
+        private bool LogException(Exception ex, string messageType, Stopwatch stopwatch)
+        {
+            stopwatch.Stop();
+            this._logger.LogError(
+                ex,
+                "Error handling {MessageType} after {ElapsedMilliseconds}ms",
+                messageType,
+                stopwatch.ElapsedMilliseconds);
+            return false;
         }
     }
 }

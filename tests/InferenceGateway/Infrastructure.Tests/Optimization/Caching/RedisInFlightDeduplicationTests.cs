@@ -1,11 +1,15 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Moq;
-using StackExchange.Redis;
-using Xunit;
+// <copyright file="RedisInFlightDeduplicationTests.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Optimization.Caching;
+
+using Moq;
+using StackExchange.Redis;
+using System.Threading.Tasks;
+using System.Threading;
+using System;
+using Xunit;
 
 /// <summary>
 /// Unit tests for IInFlightDeduplication Redis implementation
@@ -39,8 +43,10 @@ public class RedisInFlightDeduplicationTests
             .Setup(db => db.StringSetAsync(
                 It.Is<RedisKey>(k => k.ToString() == lockKey),
                 It.IsAny<RedisValue>(),
-                lockTimeout,
-                When.NotExists))
+                It.IsAny<TimeSpan?>(),
+                It.IsAny<bool>(),
+                When.NotExists,
+                CommandFlags.None))
             .ReturnsAsync(true);
 
         // Store result
@@ -48,7 +54,10 @@ public class RedisInFlightDeduplicationTests
             .Setup(db => db.StringSetAsync(
                 It.Is<RedisKey>(k => k.ToString() == resultKey),
                 It.IsAny<RedisValue>(),
-                It.IsAny<TimeSpan?>()))
+                It.IsAny<TimeSpan?>(),
+                It.IsAny<bool>(),
+                It.IsAny<When>(),
+                CommandFlags.None))
             .ReturnsAsync(true);
 
         // Release lock
@@ -80,8 +89,10 @@ public class RedisInFlightDeduplicationTests
             db => db.StringSetAsync(
                 It.Is<RedisKey>(k => k.ToString() == lockKey),
                 It.IsAny<RedisValue>(),
-                lockTimeout,
-                When.NotExists),
+                It.IsAny<TimeSpan?>(),
+                It.IsAny<bool>(),
+                When.NotExists,
+                CommandFlags.None),
             Times.Once);
     }
 
@@ -101,8 +112,10 @@ public class RedisInFlightDeduplicationTests
             .Setup(db => db.StringSetAsync(
                 lockKey,
                 It.IsAny<RedisValue>(),
-                lockTimeout,
-                When.NotExists))
+                It.IsAny<TimeSpan?>(),
+                It.IsAny<bool>(),
+                When.NotExists,
+                CommandFlags.None))
             .ReturnsAsync(() => Interlocked.Increment(ref lockAttempts) == 1);
 
         // After operation completes, result is available
@@ -116,7 +129,10 @@ public class RedisInFlightDeduplicationTests
             .Setup(db => db.StringSetAsync(
                 resultKey,
                 It.IsAny<RedisValue>(),
-                It.IsAny<TimeSpan?>()))
+                It.IsAny<TimeSpan?>(),
+                It.IsAny<bool>(),
+                It.IsAny<When>(),
+                CommandFlags.None))
             .Callback(() => resultAvailable = true)
             .ReturnsAsync(true);
 
@@ -167,8 +183,10 @@ public class RedisInFlightDeduplicationTests
             .Setup(db => db.StringSetAsync(
                 lockKey,
                 It.IsAny<RedisValue>(),
-                lockTimeout,
-                When.NotExists))
+                It.IsAny<TimeSpan?>(),
+                It.IsAny<bool>(),
+                When.NotExists,
+                CommandFlags.None))
             .ReturnsAsync(false);
 
         // No result available yet
@@ -212,8 +230,10 @@ public class RedisInFlightDeduplicationTests
             .Setup(db => db.StringSetAsync(
                 lockKey,
                 It.IsAny<RedisValue>(),
-                lockTimeout,
-                When.NotExists))
+                It.IsAny<TimeSpan?>(),
+                It.IsAny<bool>(),
+                When.NotExists,
+                CommandFlags.None))
             .ReturnsAsync(true);
 
         this._mockDatabase
@@ -224,7 +244,10 @@ public class RedisInFlightDeduplicationTests
             .Setup(db => db.StringSetAsync(
                 It.Is<RedisKey>(k => k.ToString() == resultKey),
                 It.IsAny<RedisValue>(),
-                It.IsAny<TimeSpan?>()))
+                It.IsAny<TimeSpan?>(),
+                It.IsAny<bool>(),
+                It.IsAny<When>(),
+                CommandFlags.None))
             .ReturnsAsync(true);
 
         this._mockDatabase
@@ -253,7 +276,10 @@ public class RedisInFlightDeduplicationTests
             db => db.StringSetAsync(
                 It.Is<RedisKey>(k => k.ToString() == resultKey),
                 It.IsAny<RedisValue>(),
-                It.IsAny<TimeSpan?>()),
+                It.IsAny<TimeSpan?>(),
+                It.IsAny<bool>(),
+                It.IsAny<When>(),
+                CommandFlags.None),
             Times.Once);
     }
 
@@ -270,8 +296,10 @@ public class RedisInFlightDeduplicationTests
             .Setup(db => db.StringSetAsync(
                 lockKey,
                 It.IsAny<RedisValue>(),
-                lockTimeout,
-                When.NotExists))
+                It.IsAny<TimeSpan?>(),
+                It.IsAny<bool>(),
+                When.NotExists,
+                CommandFlags.None))
             .ReturnsAsync(true);
 
         this._mockDatabase
@@ -323,8 +351,10 @@ public class RedisInFlightDeduplicationTests
             .Setup(db => db.StringSetAsync(
                 lockKey,
                 It.IsAny<RedisValue>(),
-                lockTimeout,
-                When.NotExists))
+                It.IsAny<TimeSpan?>(),
+                It.IsAny<bool>(),
+                When.NotExists,
+                CommandFlags.None))
             .ReturnsAsync(true);
 
         this._mockDatabase

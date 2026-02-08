@@ -1,14 +1,19 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using Moq;
-using Xunit;
-using Microsoft.Extensions.Logging;
-using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
+// <copyright file="IdentityManagerTests.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
 {
+    using Microsoft.Extensions.Logging;
+    using Moq;
+    using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
+    using System.Threading;
+    using System;
+    using Xunit;
+
+
     public class IdentityManagerTests
     {
         [Fact]

@@ -1,15 +1,19 @@
-using System.Security.Claims;
+// <copyright file="TenantResolutionMiddlewareTests.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
+namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security;
+
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Synaxis.InferenceGateway.Application.ApiKeys;
 using Synaxis.InferenceGateway.Application.ApiKeys.Models;
+using Synaxis.InferenceGateway.Application.ApiKeys;
 using Synaxis.InferenceGateway.Application.Interfaces;
 using Synaxis.InferenceGateway.WebApi.Middleware;
+using System.Security.Claims;
 using Xunit;
-
-namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security;
 
 /// <summary>
 /// Unit tests for TenantResolutionMiddleware.

@@ -27,8 +27,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Optimization
         {
             this._output = output ?? throw new ArgumentNullException(nameof(output));
 
-            this._qdrant = new QdrantBuilder()
-                .WithImage("qdrant/qdrant:latest")
+            this._qdrant = new QdrantBuilder("qdrant/qdrant:latest")
                 .WithPortBinding(6333, true)
                 .Build();
         }
@@ -347,7 +346,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Optimization
         }
 #pragma warning restore S1172
 
-        private readonly Dictionary<string, string> _cachedEntries = new (StringComparer.Ordinal);
+        private readonly Dictionary<string, string> _cachedEntries = new(StringComparer.Ordinal);
 
         private async Task<int> InvalidateSessionAsync(string sessionId)
         {

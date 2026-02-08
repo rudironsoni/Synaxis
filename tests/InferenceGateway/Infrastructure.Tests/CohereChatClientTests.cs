@@ -1,15 +1,19 @@
-using System.Collections.Generic;
-using System.Net;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.AI;
-using Moq;
-using Moq.Protected;
-using Synaxis.InferenceGateway.Infrastructure;
-using Xunit;
+// <copyright file="CohereChatClientTests.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests;
+
+using Microsoft.Extensions.AI;
+using Moq.Protected;
+using Moq;
+using Synaxis.InferenceGateway.Infrastructure;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Net;
+using System.Threading.Tasks;
+using System.Threading;
+using Xunit;
 
 public class CohereChatClientTests
 {

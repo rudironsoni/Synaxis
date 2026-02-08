@@ -45,7 +45,6 @@ namespace Synaxis.Behaviors
                 throw new ArgumentNullException(nameof(next));
             }
 
-            // TODO: Implement authorization logic
             this._logger.LogDebug("Authorizing {MessageType}", typeof(TMessage).Name);
 
             return next(message, cancellationToken);

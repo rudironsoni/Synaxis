@@ -1,11 +1,15 @@
-using Xunit;
+// <copyright file="SecurityConfigurationValidatorTests.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
+namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security;
+
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Synaxis.InferenceGateway.Infrastructure.Security;
-
-namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security;
+using Xunit;
 
 public class SecurityConfigurationValidatorTests
 {
@@ -213,7 +217,7 @@ public class SecurityConfigurationValidatorTests
         // Assert
         result.IsValid.Should().BeFalse();
         result.HasErrors.Should().BeTrue();
-        result.Errors.Should().HaveCountGreaterOrEqualTo(2);
+        result.Errors.Should().HaveCountGreaterThanOrEqualTo(2);
     }
 
     [Theory]

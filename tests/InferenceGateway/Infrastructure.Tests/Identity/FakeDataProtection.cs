@@ -1,9 +1,14 @@
-using System;
-using System.Text;
-using Microsoft.AspNetCore.DataProtection;
+// <copyright file="FakeDataProtection.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
 {
+    using Microsoft.AspNetCore.DataProtection;
+    using System.Text;
+    using System;
+
+
     internal class FakeDataProtectionProvider : IDataProtectionProvider
     {
         public IDataProtector CreateProtector(string purpose)

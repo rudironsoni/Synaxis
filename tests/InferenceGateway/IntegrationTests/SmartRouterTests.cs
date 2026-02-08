@@ -99,7 +99,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 x => x.Log(
                     LogLevel.Debug,
                     It.IsAny<EventId>(),
-                    It.Is<It.IsAnyType>((v, t) => v.ToString() !.Contains("Skipping unhealthy provider 'unhealthy-provider'")),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Skipping unhealthy provider 'unhealthy-provider'")),
                     It.IsAny<Exception?>(),
                     It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
                 Times.Once);
@@ -153,7 +153,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 x => x.Log(
                     LogLevel.Debug,
                     It.IsAny<EventId>(),
-                    It.Is<It.IsAnyType>((v, t) => v.ToString() !.Contains("Skipping quota-exceeded provider 'exceeded-quota-provider'")),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Skipping quota-exceeded provider 'exceeded-quota-provider'")),
                     It.IsAny<Exception?>(),
                     It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
                 Times.Once);

@@ -40,13 +40,11 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Optimization
             this._output = output ?? throw new ArgumentNullException(nameof(output));
             this._factory = new SynaxisWebApplicationFactory { OutputHelper = output };
 
-            this._redis = new RedisBuilder()
-                .WithImage("redis:7-alpine")
+            this._redis = new RedisBuilder("redis:7-alpine")
                 .WithPortBinding(6379, true)
                 .Build();
 
-            this._qdrant = new QdrantBuilder()
-                .WithImage("qdrant/qdrant:latest")
+            this._qdrant = new QdrantBuilder("qdrant/qdrant:latest")
                 .WithPortBinding(6333, true)
                 .Build();
         }

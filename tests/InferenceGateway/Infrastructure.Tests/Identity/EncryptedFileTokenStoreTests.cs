@@ -1,15 +1,20 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.DataProtection;
-using Moq;
-using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
-using Xunit;
+// <copyright file="EncryptedFileTokenStoreTests.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
 {
+    using Microsoft.AspNetCore.DataProtection;
+    using Moq;
+    using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Text;
+    using System.Threading.Tasks;
+    using System;
+    using Xunit;
+
+
     public class EncryptedFileTokenStoreTests : IDisposable
     {
         private readonly string _tmpPath;

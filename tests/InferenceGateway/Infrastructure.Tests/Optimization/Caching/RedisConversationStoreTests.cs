@@ -1,14 +1,18 @@
-using System;
+// <copyright file="RedisConversationStoreTests.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
+namespace Synaxis.InferenceGateway.Infrastructure.Tests.Optimization.Caching;
+
+using Moq;
+using StackExchange.Redis;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
-using System.Threading;
 using System.Threading.Tasks;
-using Moq;
-using StackExchange.Redis;
+using System.Threading;
+using System;
 using Xunit;
-
-namespace Synaxis.InferenceGateway.Infrastructure.Tests.Optimization.Caching;
 
 /// <summary>
 /// Unit tests for IConversationStore Redis implementation
@@ -37,9 +41,9 @@ public class RedisConversationStoreTests
 
         var messages = new List<ConversationMessage>
         {
-            new () { Role = "user", Content = "Hello", Timestamp = DateTimeOffset.UtcNow.AddMinutes(-10) },
-            new () { Role = "assistant", Content = "Hi there!", Timestamp = DateTimeOffset.UtcNow.AddMinutes(-9) },
-            new () { Role = "user", Content = "How are you?", Timestamp = DateTimeOffset.UtcNow.AddMinutes(-8) },
+            new() { Role = "user", Content = "Hello", Timestamp = DateTimeOffset.UtcNow.AddMinutes(-10) },
+            new() { Role = "assistant", Content = "Hi there!", Timestamp = DateTimeOffset.UtcNow.AddMinutes(-9) },
+            new() { Role = "user", Content = "How are you?", Timestamp = DateTimeOffset.UtcNow.AddMinutes(-8) },
         };
 
         var redisValues = messages.Select(m => (RedisValue)JsonSerializer.Serialize(m)).ToArray();

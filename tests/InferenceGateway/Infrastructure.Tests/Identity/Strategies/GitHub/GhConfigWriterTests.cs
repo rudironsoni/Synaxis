@@ -1,11 +1,16 @@
-using System;
-using System.IO;
-using System.Threading.Tasks;
-using Xunit;
-using Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub;
+// <copyright file="GhConfigWriterTests.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitHub
 {
+    using Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub;
+    using System.IO;
+    using System.Threading.Tasks;
+    using System;
+    using Xunit;
+
+
     public class GhConfigWriterTests : IDisposable
     {
         private readonly string _tempHome;

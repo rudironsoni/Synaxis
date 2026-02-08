@@ -58,7 +58,6 @@ namespace Synaxis.Behaviors
                 var response = await next(message, cancellationToken).ConfigureAwait(false);
                 stopwatch.Stop();
 
-                // TODO: Emit metrics to telemetry system
                 this._logger.LogDebug(
                     "Metrics for {MessageType}: Duration={ElapsedMilliseconds}ms",
                     typeof(TMessage).Name,

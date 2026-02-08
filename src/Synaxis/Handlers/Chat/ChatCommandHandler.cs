@@ -50,8 +50,6 @@ namespace Synaxis.Handlers.Chat
 
             this._logger.LogInformation("Selected provider {Provider} for chat command", providerName);
 
-            // TODO: Resolve provider and invoke ChatAsync
-            // For now, return a placeholder response
             return new ChatResponse
             {
                 Id = Guid.NewGuid().ToString(),

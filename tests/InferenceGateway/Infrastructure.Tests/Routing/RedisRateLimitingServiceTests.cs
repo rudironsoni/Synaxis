@@ -1,11 +1,15 @@
+// <copyright file="RedisRateLimitingServiceTests.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
+namespace Synaxis.InferenceGateway.Infrastructure.Tests.Routing;
+
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using StackExchange.Redis;
 using Synaxis.InferenceGateway.Infrastructure.Services;
 using Xunit;
-
-namespace Synaxis.InferenceGateway.Infrastructure.Tests.Routing;
 
 /// <summary>
 /// Unit tests for RedisRateLimitingService.

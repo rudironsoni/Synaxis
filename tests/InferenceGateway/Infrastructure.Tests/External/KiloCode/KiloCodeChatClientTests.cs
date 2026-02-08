@@ -1,12 +1,17 @@
-using System;
-using System.Net.Http;
-using System.Reflection;
-using Microsoft.Extensions.AI;
-using RichardSzalay.MockHttp;
-using Xunit;
+// <copyright file="KiloCodeChatClientTests.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.External.KiloCode
 {
+    using Microsoft.Extensions.AI;
+    using RichardSzalay.MockHttp;
+    using System.Net.Http;
+    using System.Reflection;
+    using System;
+    using Xunit;
+
+
     public class KiloCodeChatClientTests
     {
         [Fact]

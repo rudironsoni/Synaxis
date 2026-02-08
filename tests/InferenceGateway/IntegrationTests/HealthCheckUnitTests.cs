@@ -39,7 +39,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 },
                 CanonicalModels = new List<CanonicalModelConfig>
             {
-                new () { Id = "model-x", Provider = "MissingProvider", ModelPath = "model-x" },
+                new() { Id = "model-x", Provider = "MissingProvider", ModelPath = "model-x" },
             },
             };
 
@@ -61,7 +61,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 },
                 CanonicalModels = new List<CanonicalModelConfig>
             {
-                new () { Id = "model-a", Provider = "ProviderA", ModelPath = "model-a" },
+                new() { Id = "model-a", Provider = "ProviderA", ModelPath = "model-a" },
             },
                 Aliases = new Dictionary<string, AliasConfig>
 (StringComparer.Ordinal)
@@ -88,7 +88,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 },
                 CanonicalModels = new List<CanonicalModelConfig>
             {
-                new () { Id = "model-a", Provider = "ProviderA", ModelPath = "model-a" },
+                new() { Id = "model-a", Provider = "ProviderA", ModelPath = "model-a" },
             },
                 Aliases = new Dictionary<string, AliasConfig>
 (StringComparer.Ordinal)
@@ -167,7 +167,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         private sealed class LocalHttpServer : IAsyncDisposable
         {
             private readonly TcpListener _listener;
-            private readonly CancellationTokenSource _cts = new ();
+            private readonly CancellationTokenSource _cts = new();
             private readonly Task _acceptTask;
 
             private LocalHttpServer(TcpListener listener)

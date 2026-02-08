@@ -23,46 +23,4 @@ namespace Synaxis.Routing
         /// <inheritdoc/>
         public string StrategyName { get; }
     }
-
-    /// <summary>
-    /// Round-robin routing strategy implementation.
-    /// </summary>
-    public sealed class RoundRobinRoutingStrategy : RoutingStrategy
-    {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="RoundRobinRoutingStrategy"/> class.
-        /// </summary>
-        public RoundRobinRoutingStrategy()
-            : base("RoundRobin")
-        {
-        }
-    }
-
-    /// <summary>
-    /// Least-loaded routing strategy implementation.
-    /// </summary>
-    public sealed class LeastLoadedRoutingStrategy : RoutingStrategy
-    {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="LeastLoadedRoutingStrategy"/> class.
-        /// </summary>
-        public LeastLoadedRoutingStrategy()
-            : base("LeastLoaded")
-        {
-        }
-    }
-
-    /// <summary>
-    /// Priority-based routing strategy implementation.
-    /// </summary>
-    public sealed class PriorityRoutingStrategy : RoutingStrategy
-    {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PriorityRoutingStrategy"/> class.
-        /// </summary>
-        public PriorityRoutingStrategy()
-            : base("Priority")
-        {
-        }
-    }
 }

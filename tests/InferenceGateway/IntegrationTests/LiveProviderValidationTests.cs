@@ -123,17 +123,17 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             var result = await response.Content.ReadFromJsonAsync<ChatCompletionResponse>().ConfigureAwait(false);
             Assert.NotNull(result);
-            Assert.NotEmpty(result.choices);
-            Assert.NotNull(result.choices[0].message.content);
+            Assert.NotEmpty(result.Choices);
+            Assert.NotNull(result.Choices[0].Message.Content);
         }
 
         // Helper records for deserialization matching the Gateway's output
-        public record ChatCompletionResponse(string id, string @object, long created, string model, List<Choice> choices, Usage usage);
+        public record ChatCompletionResponse(string Id, string Object, long Created, string Model, List<Choice> Choices, Usage Usage);
 
-        public record Choice(int index, Message message, string finish_Reason);
+        public record Choice(int Index, Message Message, string FinishReason);
 
-        public record Message(string role, string content);
+        public record Message(string Role, string Content);
 
-        public record Usage(int prompt_Tokens, int completion_Tokens, int total_Tokens);
+        public record Usage(int PromptTokens, int CompletionTokens, int TotalTokens);
     }
 }

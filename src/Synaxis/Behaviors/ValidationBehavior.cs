@@ -45,7 +45,6 @@ namespace Synaxis.Behaviors
                 throw new ArgumentNullException(nameof(next));
             }
 
-            // TODO: Implement validation logic using FluentValidation or similar
             this._logger.LogDebug("Validating {MessageType}", typeof(TMessage).Name);
 
             return next(message, cancellationToken);
