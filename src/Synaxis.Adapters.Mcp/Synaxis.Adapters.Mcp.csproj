@@ -14,11 +14,10 @@
   <ItemGroup>
     <ProjectReference Include="..\Synaxis.Abstractions\Synaxis.Abstractions.csproj" />
     <ProjectReference Include="..\Synaxis.Contracts\Synaxis.Contracts.csproj" />
+    <ProjectReference Include="..\Synaxis\Synaxis.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Mediator.Abstractions" />
-    <PackageReference Include="Mediator.SourceGenerator" PrivateAssets="all" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.Options" />
