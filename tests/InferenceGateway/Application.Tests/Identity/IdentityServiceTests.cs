@@ -14,7 +14,7 @@ namespace Synaxis.InferenceGateway.Application.Tests.Identity;
 /// <summary>
 /// Unit tests for IdentityService.
 /// </summary>
-public class IdentityServiceTests : IDisposable
+public sealed class IdentityServiceTests : IDisposable
 {
     private readonly SynaxisDbContext _context;
     private readonly Mock<UserManager<SynaxisUser>> _userManagerMock;

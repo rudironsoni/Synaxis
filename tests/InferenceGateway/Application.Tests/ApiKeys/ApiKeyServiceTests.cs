@@ -11,7 +11,7 @@ namespace Synaxis.InferenceGateway.Application.Tests.ApiKeys;
 /// <summary>
 /// Unit tests for ApiKeyService.
 /// </summary>
-public class ApiKeyServiceTests : IDisposable
+public sealed class ApiKeyServiceTests : IDisposable
 {
     private readonly SynaxisDbContext _context;
     private readonly ApiKeyService _service;

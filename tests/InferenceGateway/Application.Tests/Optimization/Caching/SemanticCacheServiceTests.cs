@@ -100,7 +100,6 @@ public class SemanticCacheServiceTests
     {
         // Arrange
         var query = "What is the capital of France?";
-        var sessionId1 = "session-123";
         var sessionId2 = "session-456";
         var model = "gpt-4";
         var temperature = 0.7;
@@ -139,7 +138,6 @@ public class SemanticCacheServiceTests
         // Arrange
         var query = "What is the capital of France?";
         var sessionId = "session-123";
-        var model1 = "gpt-4";
         var model2 = "gpt-3.5-turbo";
         var temperature = 0.7;
 
@@ -176,7 +174,6 @@ public class SemanticCacheServiceTests
         var query = "What is the capital of France?";
         var sessionId = "session-123";
         var model = "gpt-4";
-        var temperature1 = 0.7;
         var temperature2 = 0.0;
 
         var missResponse = new CacheResult
@@ -470,7 +467,7 @@ public class SemanticCacheServiceTests
         var sessionId = "session-123";
         var model = "gpt-4";
         var temperature = 0.7;
-        var cts = new CancellationTokenSource();
+        using var cts = new CancellationTokenSource();
         cts.Cancel();
 
         this._mockCacheService
