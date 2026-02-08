@@ -1,3 +1,7 @@
+// <copyright file="MockSmokeTestHelper.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
 using System;
 using System.Net.Http;
 
@@ -13,7 +17,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
         /// Creates an HttpClient configured with mock responses for testing.
         /// Use this instead of the real HttpClient to avoid hitting actual providers.
         /// </summary>
-        /// <returns>HttpClient with mock handler configured</returns>
+        /// <returns>HttpClient with mock handler configured.</returns>
         public static HttpClient CreateMockClient()
         {
             var mockHandler = new MockHttpHandler();
@@ -26,8 +30,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
         /// <summary>
         /// Creates an HttpClient with custom mock responses.
         /// </summary>
-        /// <param name="customResponses">Custom mock responses to use</param>
-        /// <returns>HttpClient with custom mock handler configured</returns>
+        /// <param name="customResponses">Custom mock responses to use.</param>
+        /// <returns>HttpClient with custom mock handler configured.</returns>
         public static HttpClient CreateMockClient(MockProviderResponses customResponses)
         {
             var mockHandler = new MockHttpHandler(customResponses);
@@ -41,8 +45,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
         /// Creates a test configuration that enables mock mode.
         /// This can be used to conditionally use mocks in CI environments.
         /// </summary>
-        /// <param name="useMocks">Whether to use mocks (true) or real providers (false)</param>
-        /// <returns>Configuration object indicating mock mode</returns>
+        /// <param name="useMocks">Whether to use mocks (true) or real providers (false).</param>
+        /// <returns>Configuration object indicating mock mode.</returns>
         public static TestConfiguration CreateTestConfiguration(bool useMocks = true)
         {
             return new TestConfiguration
@@ -58,7 +62,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
         /// Gets the current environment-based configuration.
         /// In CI, defaults to mock mode; in development, can be configured.
         /// </summary>
-        /// <returns>Test configuration based on environment</returns>
+        /// <returns>Test configuration based on environment.</returns>
         public static TestConfiguration GetEnvironmentConfiguration()
         {
             var useMocks = Environment.GetEnvironmentVariable("SYNAPTIC_TEST_MOCKS")?.ToLowerInvariant() switch
@@ -77,22 +81,22 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
     public class TestConfiguration
     {
         /// <summary>
-        /// Whether to use mock providers instead of real ones.
+        /// Gets or sets a value indicating whether whether to use mock providers instead of real ones.
         /// </summary>
         public bool UseMocks { get; set; } = true;
 
         /// <summary>
-        /// Whether to enable detailed logging during test execution.
+        /// Gets or sets a value indicating whether whether to enable detailed logging during test execution.
         /// </summary>
         public bool EnableDetailedLogging { get; set; } = false;
 
         /// <summary>
-        /// Default timeout for test requests in milliseconds.
+        /// Gets or sets default timeout for test requests in milliseconds.
         /// </summary>
         public int DefaultTimeoutMs { get; set; } = 30000;
 
         /// <summary>
-        /// Whether to enable circuit breaker logic for real providers.
+        /// Gets or sets a value indicating whether whether to enable circuit breaker logic for real providers.
         /// This would only apply when UseMocks is false.
         /// </summary>
         public bool EnableCircuitBreaker { get; set; } = false;
