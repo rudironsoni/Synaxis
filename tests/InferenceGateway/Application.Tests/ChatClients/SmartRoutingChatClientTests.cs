@@ -1528,5 +1528,6 @@ public sealed class SmartRoutingChatClientTests : TestBase, IDisposable
     public void Dispose()
     {
         this._activitySource?.Dispose();
+        this._client?.Dispose();
     }
 }
