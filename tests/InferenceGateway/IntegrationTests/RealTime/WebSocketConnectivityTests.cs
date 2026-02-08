@@ -1,10 +1,15 @@
-using System;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.SignalR.Client;
-using Xunit;
+// <copyright file="WebSocketConnectivityTests.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
 namespace Synaxis.InferenceGateway.IntegrationTests.RealTime
 {
+    using System;
+    using System.Threading.Tasks;
+    using Microsoft.AspNetCore.SignalR;
+    using Microsoft.AspNetCore.SignalR.Client;
+    using Xunit;
+
     /// <summary>
     /// Integration tests for WebSocket connectivity and real-time updates.
     /// These tests require the application to be running.
@@ -14,17 +19,17 @@ namespace Synaxis.InferenceGateway.IntegrationTests.RealTime
         private HubConnection? _connection;
         private const string HubUrl = "http://localhost:5000/hubs/synaxis";
 
-        public async Task InitializeAsync()
+        public Task InitializeAsync()
         {
             // Setup can be done here if needed
-            await Task.CompletedTask;
+            return Task.CompletedTask;
         }
 
         public async Task DisposeAsync()
         {
             if (this._connection != null)
             {
-                await this._connection.DisposeAsync();
+                await _connection.DisposeAsync().ConfigureAwait(false);
             }
         }
 
@@ -97,13 +102,12 @@ namespace Synaxis.InferenceGateway.IntegrationTests.RealTime
             // Act - Wait for notification (with timeout)
             var receivedNotification = await Task.WhenAny(
                 tcs.Task,
-                Task.Delay(TimeSpan.FromSeconds(30))
-            ) == tcs.Task;
+                Task.Delay(TimeSpan.FromSeconds(30))) == tcs.Task;
 
             // Assert
             // Note: This will only pass if a health update is sent during the test window
             // In a real scenario, you'd trigger the update from the server side
-            Assert.True(receivedNotification || true, "Either received notification or timeout is acceptable in this test");
+            Assert.True(true, "Either received notification or timeout is acceptable in this test");
         }
 
         [Fact(Skip = "Integration test - requires running application")]
@@ -140,7 +144,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.RealTime
         }
 
         [Fact(Skip = "Integration test - requires running application")]
-        public async Task CannotConnect_WithoutToken()
+        public Task CannotConnect_WithoutToken()
         {
             // Arrange
             this._connection = new HubConnectionBuilder()
@@ -148,7 +152,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.RealTime
                 .Build();
 
             // Act & Assert
-            await Assert.ThrowsAsync<HubException>(async () => await this._connection.StartAsync());
+            return Assert.ThrowsAsync<HubException>(async () => await _connection.StartAsync().ConfigureAwait(false));
         }
     }
 }

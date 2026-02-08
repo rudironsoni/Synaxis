@@ -1,3 +1,7 @@
+// <copyright file="RetryPolicyTests.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
 using System;
 using System.Net;
 using System.Net.Http;
@@ -5,202 +9,205 @@ using System.Threading.Tasks;
 using Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure;
 using Xunit;
 
-namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Security;
-
-public class RetryPolicyTests
+namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Security
 {
-    [Fact]
-    public async Task ExecuteAsync_SucceedsOnFirstAttempt()
+    public class RetryPolicyTests
     {
-        // Arrange
-        var policy = new RetryPolicy(3, 100, 2.0);
-        var attemptCount = 0;
+        [Fact]
+        public async Task ExecuteAsync_SucceedsOnFirstAttempt()
+        {
+            // Arrange
+            var policy = new RetryPolicy(3, 100, 2.0);
+            var attemptCount = 0;
 
-        // Act
-        var result = await policy.ExecuteAsync(
-            () =>
-            {
-                attemptCount++;
-                return Task.FromResult("success");
-            },
-            ex => true);
-
-        // Assert
-        Assert.Equal("success", result);
-        Assert.Equal(1, attemptCount);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_RetriesOnFailure()
-    {
-        // Arrange
-        var policy = new RetryPolicy(3, 10, 2.0);
-        var attemptCount = 0;
-
-        // Act
-        var result = await policy.ExecuteAsync(
-            () =>
-            {
-                attemptCount++;
-                if (attemptCount < 3)
+            // Act
+            var result = await policy.ExecuteAsync(
+                () =>
                 {
-                    throw new HttpRequestException("Network error");
-                }
-                return Task.FromResult("success");
-            },
-            ex => ex is HttpRequestException);
+                    attemptCount++;
+                    return Task.FromResult("success");
+                },
+                ex => true);
 
-        // Assert
-        Assert.Equal("success", result);
-        Assert.Equal(3, attemptCount);
-    }
+            // Assert
+            Assert.Equal("success", result);
+            Assert.Equal(1, attemptCount);
+        }
 
-    [Fact]
-    public async Task ExecuteAsync_MaxRetriesExceeded_ThrowsException()
-    {
-        // Arrange
-        var policy = new RetryPolicy(2, 10, 2.0);
+        [Fact]
+        public async Task ExecuteAsync_RetriesOnFailure()
+        {
+            // Arrange
+            var policy = new RetryPolicy(3, 10, 2.0);
+            var attemptCount = 0;
 
-        // Act & Assert
-        var attemptCount = 0;
-        await Assert.ThrowsAsync<HttpRequestException>(() => policy.ExecuteAsync<object>(
-            () =>
-            {
-                attemptCount++;
-                throw new HttpRequestException("Network error");
-            },
-            ex => ex is HttpRequestException));
-
-        Assert.Equal(3, attemptCount);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_OnlyRetriesRetryableExceptions()
-    {
-        // Arrange
-        var policy = new RetryPolicy(3, 10, 2.0);
-        var attemptCount = 0;
-
-        // Act & Assert
-        await Assert.ThrowsAsync<ArgumentException>(() => policy.ExecuteAsync<object>(
-            () =>
-            {
-                attemptCount++;
-                throw new ArgumentException("Bad argument");
-            },
-            ex => ex is HttpRequestException));
-
-        // Should only attempt once since ArgumentException is not retryable
-        Assert.Equal(1, attemptCount);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_IncreasesDelayWithBackoff()
-    {
-        // Arrange
-        var policy = new RetryPolicy(3, 100, 2.0);
-        var delays = new System.Collections.Generic.List<int>();
-        var attemptCount = 0;
-
-        // Act
-        await policy.ExecuteAsync(
-            () =>
-            {
-                attemptCount++;
-                if (attemptCount < 3)
+            // Act
+            var result = await policy.ExecuteAsync(
+                () =>
                 {
+                    attemptCount++;
+                    if (attemptCount < 3)
+                    {
+                        throw new HttpRequestException("Network error");
+                    }
+
+                    return Task.FromResult("success");
+                },
+                ex => ex is HttpRequestException);
+
+            // Assert
+            Assert.Equal("success", result);
+            Assert.Equal(3, attemptCount);
+        }
+
+        [Fact]
+        public async Task ExecuteAsync_MaxRetriesExceeded_ThrowsException()
+        {
+            // Arrange
+            var policy = new RetryPolicy(2, 10, 2.0);
+
+            // Act & Assert
+            var attemptCount = 0;
+            await Assert.ThrowsAsync<HttpRequestException>(() => policy.ExecuteAsync<object>(
+                () =>
+                {
+                    attemptCount++;
                     throw new HttpRequestException("Network error");
-                }
-                return Task.FromResult("success");
-            },
-            ex => ex is HttpRequestException);
+                },
+                ex => ex is HttpRequestException));
 
-        // Assert
-        // First retry: ~100ms, Second retry: ~200ms
-        // We can't measure exact delays due to jitter, but we verify retries occurred
-        Assert.Equal(3, attemptCount);
-    }
+            Assert.Equal(3, attemptCount);
+        }
 
-    [Theory]
-    [InlineData(429)] // Rate limited
-    [InlineData(502)] // Bad gateway
-    [InlineData(503)] // Service unavailable
-    [InlineData(504)] // Gateway timeout
-    public void RetryPolicy_ShouldRetryOnStatusCode(int statusCode)
-    {
-        // Arrange
-        var ex = new HttpRequestException("Error", null, (HttpStatusCode)statusCode);
+        [Fact]
+        public async Task ExecuteAsync_OnlyRetriesRetryableExceptions()
+        {
+            // Arrange
+            var policy = new RetryPolicy(3, 10, 2.0);
+            var attemptCount = 0;
 
-        // Act
-        var shouldRetry = ex is HttpRequestException hre && hre.StatusCode.HasValue &&
-            (hre.StatusCode == HttpStatusCode.ServiceUnavailable ||
-             hre.StatusCode == HttpStatusCode.BadGateway ||
-             hre.StatusCode == HttpStatusCode.GatewayTimeout ||
-             (int)hre.StatusCode.Value == 429);
+            // Act & Assert
+            await Assert.ThrowsAsync<ArgumentException>(() => policy.ExecuteAsync<object>(
+                () =>
+                {
+                    attemptCount++;
+                    throw new ArgumentException("Bad argument");
+                },
+                ex => ex is HttpRequestException));
 
-        // Assert
-        Assert.True(shouldRetry);
-    }
+            // Should only attempt once since ArgumentException is not retryable
+            Assert.Equal(1, attemptCount);
+        }
 
-    [Theory]
-    [InlineData(200)] // OK
-    [InlineData(400)] // Bad request
-    [InlineData(401)] // Unauthorized
-    [InlineData(404)] // Not found
-    public void RetryPolicy_ShouldNotRetryOnClientError(int statusCode)
-    {
-        // Arrange
-        var ex = new HttpRequestException("Error", null, (HttpStatusCode)statusCode);
+        [Fact]
+        public async Task ExecuteAsync_IncreasesDelayWithBackoff()
+        {
+            // Arrange
+            var policy = new RetryPolicy(3, 100, 2.0);
+            var delays = new System.Collections.Generic.List<int>();
+            var attemptCount = 0;
 
-        // Act
-        var shouldRetry = ex is HttpRequestException hre && hre.StatusCode.HasValue &&
-            (hre.StatusCode == HttpStatusCode.ServiceUnavailable ||
-             hre.StatusCode == HttpStatusCode.BadGateway ||
-             hre.StatusCode == HttpStatusCode.GatewayTimeout ||
-             (int)hre.StatusCode.Value == 429);
+            // Act
+            await policy.ExecuteAsync(
+                () =>
+                {
+                    attemptCount++;
+                    if (attemptCount < 3)
+                    {
+                        throw new HttpRequestException("Network error");
+                    }
 
-        // Assert
-        Assert.False(shouldRetry);
-    }
+                    return Task.FromResult("success");
+                },
+                ex => ex is HttpRequestException);
 
-    [Fact]
-    public async Task ExecuteAsync_RespectsMaxRetriesParameter()
-    {
-        // Arrange
-        var maxRetries = 5;
-        var policy = new RetryPolicy(maxRetries, 10, 2.0);
-        var attemptCount = 0;
+            // Assert
+            // First retry: ~100ms, Second retry: ~200ms
+            // We can't measure exact delays due to jitter, but we verify retries occurred
+            Assert.Equal(3, attemptCount);
+        }
 
-        // Act & Assert
-        await Assert.ThrowsAsync<HttpRequestException>(() => policy.ExecuteAsync<object>(
-            () =>
-            {
-                attemptCount++;
-                throw new HttpRequestException("Error");
-            },
-            ex => true));
+        [Theory]
+        [InlineData(429)] // Rate limited
+        [InlineData(502)] // Bad gateway
+        [InlineData(503)] // Service unavailable
+        [InlineData(504)] // Gateway timeout
+        public void RetryPolicy_ShouldRetryOnStatusCode(int statusCode)
+        {
+            // Arrange
+            var ex = new HttpRequestException("Error", null, (HttpStatusCode)statusCode);
 
-        // Initial attempt + maxRetries
-        Assert.Equal(maxRetries + 1, attemptCount);
-    }
+            // Act
+            var shouldRetry = ex is HttpRequestException hre && hre.StatusCode.HasValue &&
+                (hre.StatusCode == HttpStatusCode.ServiceUnavailable ||
+                 hre.StatusCode == HttpStatusCode.BadGateway ||
+                 hre.StatusCode == HttpStatusCode.GatewayTimeout ||
+                 (int)hre.StatusCode.Value == 429);
 
-    [Fact]
-    public async Task ExecuteAsync_ZeroMaxRetries_DoesNotRetry()
-    {
-        // Arrange
-        var policy = new RetryPolicy(0, 10, 2.0);
-        var attemptCount = 0;
+            // Assert
+            Assert.True(shouldRetry);
+        }
 
-        // Act & Assert
-        await Assert.ThrowsAsync<HttpRequestException>(() => policy.ExecuteAsync<object>(
-            () =>
-            {
-                attemptCount++;
-                throw new HttpRequestException("Error");
-            },
-            ex => true));
+        [Theory]
+        [InlineData(200)] // OK
+        [InlineData(400)] // Bad request
+        [InlineData(401)] // Unauthorized
+        [InlineData(404)] // Not found
+        public void RetryPolicy_ShouldNotRetryOnClientError(int statusCode)
+        {
+            // Arrange
+            var ex = new HttpRequestException("Error", null, (HttpStatusCode)statusCode);
 
-        // Only one attempt since maxRetries is 0
-        Assert.Equal(1, attemptCount);
+            // Act
+            var shouldRetry = ex is HttpRequestException hre && hre.StatusCode.HasValue &&
+                (hre.StatusCode == HttpStatusCode.ServiceUnavailable ||
+                 hre.StatusCode == HttpStatusCode.BadGateway ||
+                 hre.StatusCode == HttpStatusCode.GatewayTimeout ||
+                 (int)hre.StatusCode.Value == 429);
+
+            // Assert
+            Assert.False(shouldRetry);
+        }
+
+        [Fact]
+        public async Task ExecuteAsync_RespectsMaxRetriesParameter()
+        {
+            // Arrange
+            var maxRetries = 5;
+            var policy = new RetryPolicy(maxRetries, 10, 2.0);
+            var attemptCount = 0;
+
+            // Act & Assert
+            await Assert.ThrowsAsync<HttpRequestException>(() => policy.ExecuteAsync<object>(
+                () =>
+                {
+                    attemptCount++;
+                    throw new HttpRequestException("Error");
+                },
+                ex => true));
+
+            // Initial attempt + maxRetries
+            Assert.Equal(maxRetries + 1, attemptCount);
+        }
+
+        [Fact]
+        public async Task ExecuteAsync_ZeroMaxRetries_DoesNotRetry()
+        {
+            // Arrange
+            var policy = new RetryPolicy(0, 10, 2.0);
+            var attemptCount = 0;
+
+            // Act & Assert
+            await Assert.ThrowsAsync<HttpRequestException>(() => policy.ExecuteAsync<object>(
+                () =>
+                {
+                    attemptCount++;
+                    throw new HttpRequestException("Error");
+                },
+                ex => true));
+
+            // Only one attempt since maxRetries is 0
+            Assert.Equal(1, attemptCount);
+        }
     }
 }

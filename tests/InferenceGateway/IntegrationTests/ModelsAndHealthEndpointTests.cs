@@ -1,3 +1,7 @@
+// <copyright file="ModelsAndHealthEndpointTests.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -8,126 +12,129 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Xunit;
 
-namespace Synaxis.InferenceGateway.IntegrationTests;
-
-public class ModelsAndHealthEndpointTests
+namespace Synaxis.InferenceGateway.IntegrationTests
 {
-    private static WebApplicationFactory<Program> CreateFactory(Dictionary<string, string?> settings, bool suppressHealthLogs = false)
+    public class ModelsAndHealthEndpointTests
     {
-        return new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        private static WebApplicationFactory<Program> CreateFactory(Dictionary<string, string?> settings, bool suppressHealthLogs = false)
         {
-            builder.UseEnvironment("Test");
-
-            if (suppressHealthLogs)
+            return new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
             {
-                builder.ConfigureLogging(logging =>
-                {
-                    logging.AddFilter("Microsoft.Extensions.Diagnostics.HealthChecks", LogLevel.None);
-                });
-            }
+                builder.UseEnvironment("Test");
 
-            builder.ConfigureAppConfiguration((_, config) =>
-            {
-                var defaults = new Dictionary<string, string?>
+                if (suppressHealthLogs)
                 {
-                    ["Synaxis:ControlPlane:UseInMemory"] = "true",
-                    ["Synaxis:ControlPlane:ConnectionString"] = "",
-                };
-
-                foreach (var kvp in defaults)
-                {
-                    if (!settings.ContainsKey(kvp.Key))
+                    builder.ConfigureLogging(logging =>
                     {
-                        settings[kvp.Key] = kvp.Value;
-                    }
+                        logging.AddFilter("Microsoft.Extensions.Diagnostics.HealthChecks", LogLevel.None);
+                    });
                 }
 
-                config.AddInMemoryCollection(settings);
+                builder.ConfigureAppConfiguration((_, config) =>
+                {
+                    var defaults = new Dictionary<string, string?>
+(StringComparer.Ordinal)
+                    {
+                        ["Synaxis:ControlPlane:UseInMemory"] = "true",
+                        ["Synaxis:ControlPlane:ConnectionString"] = string.Empty,
+                    };
+
+                    foreach (var kvp in defaults)
+                    {
+                        if (!settings.ContainsKey(kvp.Key))
+                        {
+                            settings[kvp.Key] = kvp.Value;
+                        }
+                    }
+
+                    config.AddInMemoryCollection(settings);
+                });
             });
-        });
-    }
+        }
 
-    [Fact]
-    public async Task Models_ReturnsDefaultCanonicalAndAliases()
-    {
-        var settings = new Dictionary<string, string?>
+        [Fact]
+        public async Task Models_ReturnsDefaultCanonicalAndAliases()
         {
-            ["Synaxis:ControlPlane:UseInMemory"] = "true",
-            ["Synaxis:InferenceGateway:Providers:TestProvider:Type"] = "openai",
-            ["Synaxis:InferenceGateway:Providers:TestProvider:Models:0"] = "test-model",
-            ["Synaxis:InferenceGateway:CanonicalModels:0:Id"] = "test-model",
-            ["Synaxis:InferenceGateway:CanonicalModels:0:Provider"] = "TestProvider",
-            ["Synaxis:InferenceGateway:CanonicalModels:0:ModelPath"] = "test-model",
-            ["Synaxis:InferenceGateway:Aliases:fast:Candidates:0"] = "test-model",
-            ["Synaxis:InferenceGateway:Aliases:default:Candidates:0"] = "test-model",
-        };
+            var settings = new Dictionary<string, string?>
+(StringComparer.Ordinal)
+            {
+                ["Synaxis:ControlPlane:UseInMemory"] = "true",
+                ["Synaxis:InferenceGateway:Providers:TestProvider:Type"] = "openai",
+                ["Synaxis:InferenceGateway:Providers:TestProvider:Models:0"] = "test-model",
+                ["Synaxis:InferenceGateway:CanonicalModels:0:Id"] = "test-model",
+                ["Synaxis:InferenceGateway:CanonicalModels:0:Provider"] = "TestProvider",
+                ["Synaxis:InferenceGateway:CanonicalModels:0:ModelPath"] = "test-model",
+                ["Synaxis:InferenceGateway:Aliases:fast:Candidates:0"] = "test-model",
+                ["Synaxis:InferenceGateway:Aliases:default:Candidates:0"] = "test-model",
+            };
 
-        await using var factory = CreateFactory(settings);
-        using var client = factory.CreateClient();
+            await using var factory = CreateFactory(settings);
+            using var client = factory.CreateClient();
 
-        var response = await client.GetAsync("/openai/v1/models");
+            var response = await client.GetAsync("/openai/v1/models");
 
-        response.EnsureSuccessStatusCode();
-        var payload = await response.Content.ReadFromJsonAsync<ModelListResponse>();
+            response.EnsureSuccessStatusCode();
+            var payload = await response.Content.ReadFromJsonAsync<ModelListResponse>();
 
-        Assert.NotNull(payload);
-        var ids = payload!.Data.Select(m => m.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        Assert.Contains("default", ids);
-        Assert.Contains("test-model", ids);
-        Assert.Contains("fast", ids);
-    }
+            Assert.NotNull(payload);
+            var ids = payload!.Data.Select(m => m.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            Assert.Contains("default", ids);
+            Assert.Contains("test-model", ids);
+            Assert.Contains("fast", ids);
+        }
 
-    [Fact]
-    public async Task Liveness_ReturnsOk()
-    {
-        await using var factory = CreateFactory(new Dictionary<string, string?>());
-        using var client = factory.CreateClient();
-
-        var response = await client.GetAsync("/health/liveness");
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task Readiness_ReturnsUnhealthyWhenRedisUnavailable()
-    {
-        var settings = new Dictionary<string, string?>
+        [Fact]
+        public async Task Liveness_ReturnsOk()
         {
-            ["Synaxis:ControlPlane:UseInMemory"] = "true",
-            ["Synaxis:InferenceGateway:Providers:TestProvider:Enabled"] = "false",
-            ["Synaxis:InferenceGateway:Providers:TestProvider:Type"] = "openai",
-            ["Synaxis:InferenceGateway:Providers:TestProvider:Models:0"] = "test-model",
-            ["Synaxis:InferenceGateway:CanonicalModels:0:Id"] = "test-model",
-            ["Synaxis:InferenceGateway:CanonicalModels:0:Provider"] = "TestProvider",
-            ["Synaxis:InferenceGateway:CanonicalModels:0:ModelPath"] = "test-model",
-            ["Synaxis:InferenceGateway:Aliases:default:Candidates:0"] = "test-model",
-            ["Synaxis:ControlPlane:ConnectionString"] = "",
-            ["ConnectionStrings:Redis"] = "localhost:6379,abortConnect=false,connectTimeout=100,asyncTimeout=100",
-        };
+            await using var factory = CreateFactory(new Dictionary<string, string?>(StringComparer.Ordinal));
+            using var client = factory.CreateClient();
 
-        await using var factory = CreateFactory(settings, suppressHealthLogs: true);
-        using var client = factory.CreateClient();
+            var response = await client.GetAsync("/health/liveness");
 
-        var response = await client.GetAsync("/health/readiness");
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
 
-        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
-    }
+        [Fact]
+        public async Task Readiness_ReturnsUnhealthyWhenRedisUnavailable()
+        {
+            var settings = new Dictionary<string, string?>(StringComparer.Ordinal)
+            {
+                ["Synaxis:ControlPlane:UseInMemory"] = "true",
+                ["Synaxis:InferenceGateway:Providers:TestProvider:Enabled"] = "false",
+                ["Synaxis:InferenceGateway:Providers:TestProvider:Type"] = "openai",
+                ["Synaxis:InferenceGateway:Providers:TestProvider:Models:0"] = "test-model",
+                ["Synaxis:InferenceGateway:CanonicalModels:0:Id"] = "test-model",
+                ["Synaxis:InferenceGateway:CanonicalModels:0:Provider"] = "TestProvider",
+                ["Synaxis:InferenceGateway:CanonicalModels:0:ModelPath"] = "test-model",
+                ["Synaxis:InferenceGateway:Aliases:default:Candidates:0"] = "test-model",
+                ["Synaxis:ControlPlane:ConnectionString"] = string.Empty,
+                ["ConnectionStrings:Redis"] = "localhost:6379,abortConnect=false,connectTimeout=100,asyncTimeout=100",
+            };
 
-    private sealed class ModelListResponse
-    {
-        public string Object { get; set; } = string.Empty;
+            await using var factory = CreateFactory(settings, suppressHealthLogs: true);
+            using var client = factory.CreateClient();
 
-        public List<ModelItem> Data { get; set; } = new();
-    }
+            var response = await client.GetAsync("/health/readiness");
 
-    private sealed class ModelItem
-    {
-        public string Id { get; set; } = string.Empty;
+            Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        }
 
-        public string Object { get; set; } = string.Empty;
+        private sealed class ModelListResponse
+        {
+            public string Object { get; set; } = string.Empty;
 
-        public long Created { get; set; }
+            public List<ModelItem> Data { get; set; } = new ();
+        }
 
-        public string Owned_By { get; set; } = string.Empty;
+        private sealed class ModelItem
+        {
+            public string Id { get; set; } = string.Empty;
+
+            public string Object { get; set; } = string.Empty;
+
+            public long Created { get; set; }
+
+            public string Owned_By { get; set; } = string.Empty;
+        }
     }
 }

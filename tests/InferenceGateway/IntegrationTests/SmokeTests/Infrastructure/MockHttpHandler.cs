@@ -1,3 +1,7 @@
+// <copyright file="MockHttpHandler.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
 using System;
 using System.Net.Http;
 using System.Threading;
@@ -23,26 +27,26 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
             HttpRequestMessage request,
             CancellationToken cancellationToken)
         {
-            var requestUri = request.RequestUri?.ToString() ?? "";
+            var requestUri = request.RequestUri?.ToString() ?? string.Empty;
             var requestMethod = request.Method.Method;
 
             // Log the mock request for debugging
             Console.WriteLine($"[MOCK] {requestMethod} {requestUri}");
 
             // Handle chat completions endpoint
-            if (requestUri.Contains("/openai/v1/chat/completions") && requestMethod == "POST")
+            if (requestUri.Contains("/openai/v1/chat/completions") && string.Equals(requestMethod, "POST", StringComparison.Ordinal))
             {
-                return await this.HandleChatCompletionsRequest(request, cancellationToken);
+                return await HandleChatCompletionsRequest(request, cancellationToken).ConfigureAwait(false);
             }
 
             // Handle legacy completions endpoint
-            if (requestUri.Contains("/openai/v1/completions") && requestMethod == "POST")
+            if (requestUri.Contains("/openai/v1/completions") && string.Equals(requestMethod, "POST", StringComparison.Ordinal))
             {
-                return await this.HandleLegacyCompletionsRequest(request, cancellationToken);
+                return await HandleLegacyCompletionsRequest(request, cancellationToken).ConfigureAwait(false);
             }
 
             // Handle models endpoint
-            if (requestUri.Contains("/openai/v1/models") && requestMethod == "GET")
+            if (requestUri.Contains("/openai/v1/models") && string.Equals(requestMethod, "GET", StringComparison.Ordinal))
             {
                 return this.HandleModelsRequest();
             }
@@ -60,7 +64,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
             {
                 var content = request.Content != null
                     ? await request.Content.ReadAsStringAsync(cancellationToken)
-                    : "";
+.ConfigureAwait(false) : string.Empty;
                 if (string.IsNullOrEmpty(content))
                 {
                     return CreateErrorResponse(System.Net.HttpStatusCode.BadRequest, "Empty request body");
@@ -80,7 +84,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
             }
             catch (Exception ex)
             {
-                return CreateErrorResponse(System.Net.HttpStatusCode.InternalServerError,
+                return CreateErrorResponse(
+                    System.Net.HttpStatusCode.InternalServerError,
                     $"Mock processing error: {ex.Message}");
             }
         }
@@ -91,7 +96,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
             {
                 var content = request.Content != null
                     ? await request.Content.ReadAsStringAsync(cancellationToken)
-                    : "";
+.ConfigureAwait(false) : string.Empty;
                 if (string.IsNullOrEmpty(content))
                 {
                     return CreateErrorResponse(System.Net.HttpStatusCode.BadRequest, "Empty request body");
@@ -111,7 +116,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
             }
             catch (Exception ex)
             {
-                return CreateErrorResponse(System.Net.HttpStatusCode.InternalServerError,
+                return CreateErrorResponse(
+                    System.Net.HttpStatusCode.InternalServerError,
                     $"Mock processing error: {ex.Message}");
             }
         }
@@ -164,8 +170,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
             response.Content = new StringContent(
                 System.Text.Json.JsonSerializer.Serialize(content),
                 System.Text.Encoding.UTF8,
-                "application/json"
-            );
+                "application/json");
             return response;
         }
 
@@ -192,7 +197,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                 {
                     message = message,
                     type = "mock_error",
-                    code = "mock_error_code"
+                    code = "mock_error_code",
                 },
             });
 

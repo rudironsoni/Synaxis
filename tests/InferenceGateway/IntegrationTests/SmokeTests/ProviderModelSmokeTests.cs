@@ -1,3 +1,7 @@
+// <copyright file="ProviderModelSmokeTests.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
 using System;
 using System.Threading.Tasks;
 using Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure;
@@ -35,18 +39,18 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
 
             var result = await executor.ExecuteAsync(testCase);
 
-            this._output.WriteLine($"Provider={testCase.Provider} Model={testCase.Model} Success={result.Success} TimeMs={result.ResponseTime.TotalMilliseconds} Attempts={result.AttemptCount}");
-            if (!string.IsNullOrEmpty(result.Error))
+            this._output.WriteLine($"Provider={testCase.provider} Model={testCase.model} Success={result.success} TimeMs={result.responseTime.TotalMilliseconds} Attempts={result.attemptCount}");
+            if (!string.IsNullOrEmpty(result.error))
             {
-                this._output.WriteLine($"Error: {result.Error}");
+                this._output.WriteLine($"Error: {result.error}");
             }
 
-            if (!string.IsNullOrEmpty(result.ResponseSnippet))
+            if (!string.IsNullOrEmpty(result.responseSnippet))
             {
-                this._output.WriteLine($"Snippet: {result.ResponseSnippet}");
+                this._output.WriteLine($"Snippet: {result.responseSnippet}");
             }
 
-            Assert.True(result.Success, $"Smoke test failed for {testCase.Provider}/{testCase.Model}: {result.Error}");
+            Assert.True(result.success, $"Smoke test failed for {testCase.provider}/{testCase.model}: {result.error}");
         }
 
         [Theory]
@@ -62,20 +66,18 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
 
             var result = await executor.ExecuteAsync(testCase);
 
-            this._output.WriteLine($"Provider={testCase.Provider} Model={testCase.Model} Success={result.Success} TimeMs={result.ResponseTime.TotalMilliseconds} Attempts={result.AttemptCount}");
-            if (!string.IsNullOrEmpty(result.Error))
+            this._output.WriteLine($"Provider={testCase.provider} Model={testCase.model} Success={result.success} TimeMs={result.responseTime.TotalMilliseconds} Attempts={result.attemptCount}");
+            if (!string.IsNullOrEmpty(result.error))
             {
-                this._output.WriteLine($"Error: {result.Error}");
+                this._output.WriteLine($"Error: {result.error}");
             }
 
-            if (!string.IsNullOrEmpty(result.ResponseSnippet))
+            if (!string.IsNullOrEmpty(result.responseSnippet))
             {
-                this._output.WriteLine($"Snippet: {result.ResponseSnippet}");
+                this._output.WriteLine($"Snippet: {result.responseSnippet}");
             }
 
-            Assert.True(result.Success, $"Smoke test failed for {testCase.Provider}/{testCase.Model}: {result.Error}");
+            Assert.True(result.success, $"Smoke test failed for {testCase.provider}/{testCase.model}: {result.error}");
         }
-
-
     }
 }

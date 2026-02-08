@@ -1,10 +1,14 @@
+// <copyright file="RetryPolicyTests.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
 using System;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure;
 using Xunit;
 using Xunit.Abstractions;
-using Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure;
 
 namespace Synaxis.InferenceGateway.IntegrationTests.Security
 {
@@ -31,7 +35,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Security
             int attemptCount = 0;
 
             // Act
-            var result = await policy.ExecuteAsync(async () =>
+            var result = await policy.ExecuteAsync(
+                async () =>
             {
                 attemptCount++;
                 return "success";
@@ -50,13 +55,15 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Security
             int attemptCount = 0;
 
             // Act
-            var result = await policy.ExecuteAsync(async () =>
+            var result = await policy.ExecuteAsync(
+                async () =>
             {
                 attemptCount++;
                 if (attemptCount < 2)
                 {
                     throw new HttpRequestException("Temporary failure");
                 }
+
                 return "success";
             }, ex => ex is HttpRequestException);
 
@@ -76,7 +83,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Security
             // Act
             try
             {
-                await policy.ExecuteAsync(async () =>
+                await policy.ExecuteAsync(
+                    async () =>
                 {
                     attemptCount++;
                     var sw = System.Diagnostics.Stopwatch.StartNew();
@@ -84,6 +92,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Security
                     {
                         throw new HttpRequestException("Temporary failure");
                     }
+
                     sw.Stop();
                     return "success";
                 }, ex => ex is HttpRequestException);
@@ -111,7 +120,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Security
             var sw = System.Diagnostics.Stopwatch.StartNew();
             try
             {
-                await policy.ExecuteAsync(async () =>
+                await policy.ExecuteAsync(
+                    async () =>
                 {
                     attemptCount++;
                     executionTimes.Add(sw.ElapsedMilliseconds);
@@ -119,6 +129,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Security
                     {
                         throw new HttpRequestException("Temporary failure");
                     }
+
                     return "success";
                 }, ex => ex is HttpRequestException);
             }
@@ -126,6 +137,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Security
             {
                 // Expected to fail after max retries
             }
+
             sw.Stop();
 
             // Assert
@@ -143,13 +155,15 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Security
             int attemptCount = 0;
 
             // Act
-            var result = await policy.ExecuteAsync(async () =>
+            var result = await policy.ExecuteAsync(
+                async () =>
             {
                 attemptCount++;
                 if (attemptCount < 2)
                 {
                     throw new HttpRequestException("429 Too Many Requests");
                 }
+
                 return "success";
             }, ex => ex is HttpRequestException hre && hre.Message.Contains("429"));
 
@@ -166,13 +180,15 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Security
             int attemptCount = 0;
 
             // Act
-            var result = await policy.ExecuteAsync(async () =>
+            var result = await policy.ExecuteAsync(
+                async () =>
             {
                 attemptCount++;
                 if (attemptCount < 2)
                 {
                     throw new HttpRequestException("502 Bad Gateway");
                 }
+
                 return "success";
             }, ex => ex is HttpRequestException hre && hre.Message.Contains("502"));
 
@@ -189,13 +205,15 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Security
             int attemptCount = 0;
 
             // Act
-            var result = await policy.ExecuteAsync(async () =>
+            var result = await policy.ExecuteAsync(
+                async () =>
             {
                 attemptCount++;
                 if (attemptCount < 2)
                 {
                     throw new HttpRequestException("503 Service Unavailable");
                 }
+
                 return "success";
             }, ex => ex is HttpRequestException hre && hre.Message.Contains("503"));
 
@@ -212,13 +230,15 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Security
             int attemptCount = 0;
 
             // Act
-            var result = await policy.ExecuteAsync(async () =>
+            var result = await policy.ExecuteAsync(
+                async () =>
             {
                 attemptCount++;
                 if (attemptCount < 2)
                 {
                     throw new HttpRequestException("Network error");
                 }
+
                 return "success";
             }, ex => ex is HttpRequestException);
 
@@ -237,15 +257,16 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Security
             // Act & Assert
             var exception = await Assert.ThrowsAsync<HttpRequestException>(async () =>
             {
-                await policy.ExecuteAsync<string>(async () =>
+                await policy.ExecuteAsync<string>(
+                    async () =>
                 {
                     attemptCount++;
                     throw new HttpRequestException("Always fails");
-                }, ex => false); // Non-retryable error - should not retry
+                }, ex => false).ConfigureAwait(false); // Non-retryable error - should not retry
             });
 
             Assert.Equal(1, attemptCount); // Should not retry
-            Assert.Contains("Always fails", exception.Message);
+            Assert.Contains("Always fails", exception.Message, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -258,16 +279,17 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Security
             // Act & Assert
             var exception = await Assert.ThrowsAsync<HttpRequestException>(async () =>
             {
-                await policy.ExecuteAsync<string>(async () =>
+                await policy.ExecuteAsync<string>(
+                    async () =>
                 {
                     attemptCount++;
                     throw new HttpRequestException("Always fails");
-                }, ex => ex is HttpRequestException);
+                }, ex => ex is HttpRequestException).ConfigureAwait(false);
             });
 
             // Should attempt 1 initial + 3 retries = 4 total attempts
             Assert.Equal(4, attemptCount);
-            Assert.Contains("Always fails", exception.Message);
+            Assert.Contains("Always fails", exception.Message, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -278,13 +300,15 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Security
             int attemptCount = 0;
 
             // Act
-            var result = await policy.ExecuteAsync(async () =>
+            var result = await policy.ExecuteAsync(
+                async () =>
             {
                 attemptCount++;
                 if (attemptCount < 2)
                 {
                     throw new TaskCanceledException("Timeout");
                 }
+
                 return "success";
             }, ex => ex is TaskCanceledException);
 
@@ -303,11 +327,12 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Security
             // Act & Assert
             var exception = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
             {
-                await policy.ExecuteAsync<string>(async () =>
+                await policy.ExecuteAsync<string>(
+                    async () =>
                 {
                     attemptCount++;
                     throw new InvalidOperationException("Non-retryable error");
-                }, ex => ex is HttpRequestException || ex is TaskCanceledException);
+                }, ex => ex is HttpRequestException || ex is TaskCanceledException).ConfigureAwait(false);
             });
 
             Assert.Equal(1, attemptCount); // Should not retry
@@ -324,11 +349,12 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Security
             // Act & Assert
             var exception = await Assert.ThrowsAsync<HttpRequestException>(async () =>
             {
-                await policy.ExecuteAsync<string>(async () =>
+                await policy.ExecuteAsync<string>(
+                    async () =>
                 {
                     attemptCount++;
                     throw new HttpRequestException("Always fails");
-                }, ex => ex is HttpRequestException);
+                }, ex => ex is HttpRequestException).ConfigureAwait(false);
             });
 
             Assert.Equal(1, attemptCount); // Should only attempt once
@@ -345,24 +371,29 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Security
             var sw = System.Diagnostics.Stopwatch.StartNew();
             try
             {
-                await policy.ExecuteAsync(async () =>
-                {
-                    attemptCount++;
-                    if (attemptCount < 3)
+                await policy.ExecuteAsync(
+                    async () =>
                     {
-                        throw new HttpRequestException("Temporary failure");
-                    }
-                    return "success";
-                }, ex => ex is HttpRequestException);
+                        attemptCount++;
+                        if (attemptCount < 3)
+                        {
+                            throw new HttpRequestException("Temporary failure");
+                        }
+
+                        return "success";
+                    },
+                    ex => ex is HttpRequestException);
             }
             catch
             {
                 // Expected to fail after max retries
             }
+
             sw.Stop();
 
             // Assert
             Assert.Equal(3, attemptCount); // 1 initial + 2 retries
+
             // With zero delay, execution should be very fast (< 100ms)
             Assert.True(sw.ElapsedMilliseconds < 100, $"Execution took {sw.ElapsedMilliseconds}ms, expected < 100ms");
         }
@@ -377,15 +408,18 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Security
             // Act
             try
             {
-                await policy.ExecuteAsync(async () =>
-                {
-                    attemptCount++;
-                    if (attemptCount < 4)
+                await policy.ExecuteAsync(
+                    async () =>
                     {
-                        throw new HttpRequestException("Temporary failure");
-                    }
-                    return "success";
-                }, ex => ex is HttpRequestException);
+                        attemptCount++;
+                        if (attemptCount < 4)
+                        {
+                            throw new HttpRequestException("Temporary failure");
+                        }
+
+                        return "success";
+                    },
+                    ex => ex is HttpRequestException);
             }
             catch
             {

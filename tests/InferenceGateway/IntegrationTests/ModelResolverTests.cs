@@ -1,3 +1,7 @@
+// <copyright file="ModelResolverTests.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -97,6 +101,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             // Arrange
             var config = this.CreateValidConfiguration();
             config.Aliases = new Dictionary<string, AliasConfig>
+(StringComparer.Ordinal)
             {
                 ["default"] = new AliasConfig { Candidates = ["llama-3.3-70b-versatile", "deepseek-chat"] },
             };
@@ -136,7 +141,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                     Tools = false,
                     Vision = false,
                     StructuredOutput = false,
-                    LogProbs = false
+                    LogProbs = false,
                 },
             };
             this._mockConfig.Setup(x => x.Value).Returns(config);
@@ -169,7 +174,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 ProviderModels = new List<ProviderModel>
                 {
                     new ProviderModel { ProviderId = "Groq", ProviderSpecificId = "llama-3.3-70b-versatile" },
-                    new ProviderModel { ProviderId = "DeepSeek", ProviderSpecificId = "deepseek-chat" }
+                    new ProviderModel { ProviderId = "DeepSeek", ProviderSpecificId = "deepseek-chat" },
                 },
             };
             this._mockStore.Setup(s => s.GetGlobalModelAsync("llama-3.3-70b-versatile"))
@@ -245,6 +250,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         {
             // Arrange
             var config = this.CreateValidConfiguration();
+
             // Add the combo models to providers
             config.Providers["Provider1"] = new ProviderConfig
             {
@@ -272,6 +278,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 .ReturnsAsync((GlobalModel?)null);
             this._mockStore.Setup(s => s.GetComboAsync(tenantId, "my-combo"))
                 .ReturnsAsync(combo);
+
             // First candidate has providers, so resolver should stop there
             this._mockRegistry.Setup(r => r.GetCandidates("model1"))
                 .Returns(new[] { ("Provider1", 0) });
@@ -295,8 +302,10 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         {
             // Arrange
             var config = this.CreateValidConfiguration();
+
             // Ensure no canonical config exists for this model
             config.CanonicalModels.Clear();
+
             // Add the complex model ID to a provider
             config.Providers["Provider"] = new ProviderConfig
             {
@@ -359,7 +368,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 {
                     Id = "llama-3.3-70b-versatile",
                     Provider = "Groq",
-                    ModelPath = "llama-3.3-70b-versatile"
+                    ModelPath = "llama-3.3-70b-versatile",
                 },
             };
             this._mockConfig.Setup(x => x.Value).Returns(config);
@@ -383,7 +392,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         {
             return new SynaxisConfiguration
             {
-                Providers = new Dictionary<string, ProviderConfig>
+                Providers = new Dictionary<string, ProviderConfig>(StringComparer.Ordinal)
                 {
                     ["Groq"] = new ProviderConfig
                     {
@@ -399,11 +408,11 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                         Key = "DeepSeek",
                         Tier = 1,
                         Models = ["deepseek-chat"],
-                        Type = "openai"
+                        Type = "openai",
                     },
                 },
                 CanonicalModels = new List<CanonicalModelConfig>(),
-                Aliases = new Dictionary<string, AliasConfig>(),
+                Aliases = new Dictionary<string, AliasConfig>(StringComparer.Ordinal),
             };
         }
     }

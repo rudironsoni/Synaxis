@@ -1,26 +1,28 @@
+// <copyright file="JwtServiceTests.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Moq;
-using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
 using Synaxis.InferenceGateway.Application.Configuration;
+using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
 using Synaxis.InferenceGateway.Infrastructure.Security;
 using Xunit;
 using Xunit.Abstractions;
-using Microsoft.IdentityModel.Tokens;
 
 namespace Synaxis.InferenceGateway.IntegrationTests
 {
     public class JwtServiceTests
     {
-        private readonly ITestOutputHelper _output;
-
         public JwtServiceTests(ITestOutputHelper output)
         {
-            this._output = output ?? throw new ArgumentNullException(nameof(output));
+            _ = output ?? throw new ArgumentNullException(nameof(output));
         }
 
         [Fact]
@@ -48,7 +50,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             Assert.NotNull(token);
             Assert.NotEmpty(token);
-            Assert.Contains(".", token);
+            Assert.Contains(".", token, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -79,10 +81,10 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var tokenHandler = new JwtSecurityTokenHandler();
             var jwtToken = tokenHandler.ReadJwtToken(token);
 
-            Assert.Equal(userId.ToString(), jwtToken.Claims.First(c => c.Type == JwtRegisteredClaimNames.Sub).Value);
-            Assert.Equal(user.Email, jwtToken.Claims.First(c => c.Type == JwtRegisteredClaimNames.Email).Value);
-            Assert.Equal("Developer", jwtToken.Claims.First(c => c.Type == "role").Value);
-            Assert.Equal(tenantId.ToString(), jwtToken.Claims.First(c => c.Type == "tenantId").Value);
+            Assert.Equal(userId.ToString(), jwtToken.Claims.First(c => string.Equals(c.Type, JwtRegisteredClaimNames.Sub, StringComparison.Ordinal)).Value);
+            Assert.Equal(user.Email, jwtToken.Claims.First(c => string.Equals(c.Type, JwtRegisteredClaimNames.Email, StringComparison.Ordinal)).Value);
+            Assert.Equal("Developer", jwtToken.Claims.First(c => string.Equals(c.Type, "role", StringComparison.Ordinal)).Value);
+            Assert.Equal(tenantId.ToString(), jwtToken.Claims.First(c => string.Equals(c.Type, "tenantId", StringComparison.Ordinal)).Value);
         }
 
         [Fact]
@@ -212,7 +214,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         {
             var config = new SynaxisConfiguration
             {
-                JwtSecret = "",
+                JwtSecret = string.Empty,
                 JwtIssuer = "Synaxis",
                 JwtAudience = "Synaxis",
             };
@@ -231,7 +233,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var exception = Assert.Throws<InvalidOperationException>(() =>
                 jwtService.GenerateToken(user));
 
-            Assert.Contains("Synaxis:InferenceGateway:JwtSecret must be configured", exception.Message);
+            Assert.Contains("Synaxis:InferenceGateway:JwtSecret must be configured", exception.Message, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -258,7 +260,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var exception = Assert.Throws<InvalidOperationException>(() =>
                 jwtService.GenerateToken(user));
 
-            Assert.Contains("Synaxis:InferenceGateway:JwtSecret must be configured", exception.Message);
+            Assert.Contains("Synaxis:InferenceGateway:JwtSecret must be configured", exception.Message, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -329,9 +331,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var jwtToken2 = tokenHandler.ReadJwtToken(token2);
 
             Assert.NotEqual(
-                jwtToken1.Claims.First(c => c.Type == JwtRegisteredClaimNames.Sub).Value,
-                jwtToken2.Claims.First(c => c.Type == JwtRegisteredClaimNames.Sub).Value
-            );
+                jwtToken1.Claims.First(c => string.Equals(c.Type, JwtRegisteredClaimNames.Sub, StringComparison.Ordinal)).Value,
+                jwtToken2.Claims.First(c => string.Equals(c.Type, JwtRegisteredClaimNames.Sub, StringComparison.Ordinal)).Value);
         }
 
         [Fact]
@@ -364,7 +365,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 var tokenHandler = new JwtSecurityTokenHandler();
                 var jwtToken = tokenHandler.ReadJwtToken(token);
 
-                var roleClaim = jwtToken.Claims.First(c => c.Type == "role").Value;
+                var roleClaim = jwtToken.Claims.First(c => string.Equals(c.Type, "role", StringComparison.Ordinal)).Value;
                 Assert.Equal(role.ToString(), roleClaim);
             }
         }

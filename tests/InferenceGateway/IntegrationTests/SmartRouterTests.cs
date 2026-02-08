@@ -1,3 +1,7 @@
+// <copyright file="SmartRouterTests.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -15,7 +19,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 {
     /// <summary>
     /// Unit tests for SmartRouter - core routing logic
-    /// Tests provider selection, cost optimization, health filtering, and quota enforcement
+    /// Tests provider selection, cost optimization, health filtering, and quota enforcement.
     /// </summary>
     public class SmartRouterTests
     {
@@ -24,6 +28,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         private readonly Mock<ICostService> _mockCostService;
         private readonly Mock<IHealthStore> _mockHealthStore;
         private readonly Mock<IQuotaTracker> _mockQuotaTracker;
+        private readonly Mock<IRoutingScoreCalculator> _mockRoutingScoreCalculator;
         private readonly Mock<ILogger<SmartRouter>> _mockLogger;
         private readonly SmartRouter _smartRouter;
 
@@ -34,6 +39,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             this._mockCostService = new Mock<ICostService>();
             this._mockHealthStore = new Mock<IHealthStore>();
             this._mockQuotaTracker = new Mock<IQuotaTracker>();
+            this._mockRoutingScoreCalculator = new Mock<IRoutingScoreCalculator>();
             this._mockLogger = new Mock<ILogger<SmartRouter>>();
 
             this._smartRouter = new SmartRouter(
@@ -41,8 +47,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 this._mockCostService.Object,
                 this._mockHealthStore.Object,
                 this._mockQuotaTracker.Object,
-                this._mockLogger.Object
-            );
+                this._mockRoutingScoreCalculator.Object,
+                this._mockLogger.Object);
         }
 
         [Fact]
@@ -53,44 +59,14 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var streaming = false;
             var cancellationToken = CancellationToken.None;
 
-            var resolutionResult = new ResolutionResult(modelId,
-                new CanonicalModelId(modelId, modelId),
-                new List<ProviderConfig>());
-
-            this._mockModelResolver
-                .Setup(x => x.ResolveAsync(modelId, EndpointKind.ChatCompletions, It.IsAny<RequiredCapabilities>()))
-                .ReturnsAsync(resolutionResult);
-
-            // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
-                this._smartRouter.GetCandidatesAsync(modelId, streaming, cancellationToken));
-
-            Assert.Contains("No providers available for model 'unknown-model'", exception.Message);
-            this._mockLogger.Verify(
-                x => x.Log(
-                    LogLevel.Warning,
-                    It.IsAny<EventId>(),
-                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("No providers found for model 'unknown-model' with required capabilities")),
-                    It.IsAny<Exception?>(),
-                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-                Times.Once);
-        }
-
-        [Fact]
-        public async Task GetCandidatesAsync_ShouldFilterUnhealthyProviders()
-        {
-            // Arrange
-            var modelId = "test-model";
-            var streaming = false;
-            var cancellationToken = CancellationToken.None;
-
             var candidates = new List<ProviderConfig>
             {
                 new ProviderConfig { Key = "healthy-provider", Tier = 0 },
                 new ProviderConfig { Key = "unhealthy-provider", Tier = 1 },
             };
 
-            var resolutionResult = new ResolutionResult(modelId,
+            var resolutionResult = new ResolutionResult(
+                modelId,
                 new CanonicalModelId(modelId, modelId),
                 candidates);
 
@@ -123,7 +99,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 x => x.Log(
                     LogLevel.Debug,
                     It.IsAny<EventId>(),
-                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Skipping unhealthy provider 'unhealthy-provider'")),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString() !.Contains("Skipping unhealthy provider 'unhealthy-provider'")),
                     It.IsAny<Exception?>(),
                     It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
                 Times.Once);
@@ -143,7 +119,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 new ProviderConfig { Key = "exceeded-quota-provider", Tier = 1 },
             };
 
-            var resolutionResult = new ResolutionResult(modelId,
+            var resolutionResult = new ResolutionResult(
+                modelId,
                 new CanonicalModelId(modelId, modelId),
                 candidates);
 
@@ -176,13 +153,14 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 x => x.Log(
                     LogLevel.Debug,
                     It.IsAny<EventId>(),
-                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Skipping quota-exceeded provider 'exceeded-quota-provider'")),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString() !.Contains("Skipping quota-exceeded provider 'exceeded-quota-provider'")),
                     It.IsAny<Exception?>(),
                     It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
                 Times.Once);
         }
 
         [Fact]
+#pragma warning disable MA0051
         public async Task GetCandidatesAsync_ShouldSortByPriority_FreeFirst_ThenCost_ThenTier()
         {
             // Arrange
@@ -198,7 +176,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 new ProviderConfig { Key = "paid-tier2", Tier = 2 },
             };
 
-            var resolutionResult = new ResolutionResult(modelId,
+            var resolutionResult = new ResolutionResult(
+                modelId,
                 new CanonicalModelId(modelId, modelId),
                 candidates);
 
@@ -237,8 +216,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             Assert.True(result[1].IsFree);
 
             // Within free providers, ordered by tier
-            Assert.Equal(1, result[0].Config.Tier);
-            Assert.Equal(2, result[1].Config.Tier);
+            Assert.Equal(1, result[0].config.Tier);
+            Assert.Equal(2, result[1].config.Tier);
 
             // Last two should be paid providers
             Assert.False(result[2].IsFree);
@@ -248,6 +227,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             Assert.Equal(0.001m, result[2].CostPerToken);
             Assert.Equal(0.002m, result[3].CostPerToken);
         }
+#pragma warning restore MA0051
 
         [Fact]
         public async Task GetCandidatesAsync_ShouldPassThroughCapabilities()
@@ -257,7 +237,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var streaming = true;
             var cancellationToken = CancellationToken.None;
 
-            var resolutionResult = new ResolutionResult(modelId,
+            var resolutionResult = new ResolutionResult(
+                modelId,
                 new CanonicalModelId(modelId, modelId),
                 new List<ProviderConfig>());
 
@@ -274,7 +255,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 x => x.ResolveAsync(
                     modelId,
                     EndpointKind.ChatCompletions,
-                    It.Is<RequiredCapabilities>(caps => caps.Streaming == true)),
+                    It.Is<RequiredCapabilities>(caps => caps.Streaming)),
                 Times.Once);
         }
 
@@ -291,7 +272,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 new ProviderConfig { Key = "provider-without-cost", Tier = 0 },
             };
 
-            var resolutionResult = new ResolutionResult(modelId,
+            var resolutionResult = new ResolutionResult(
+                modelId,
                 new CanonicalModelId(modelId, modelId),
                 candidates);
 

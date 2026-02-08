@@ -1,3 +1,7 @@
+// <copyright file="CircuitBreakerSmokeTests.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,10 +10,10 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
-using Xunit;
-using Xunit.Abstractions;
 using Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure;
 using Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Models;
+using Xunit;
+using Xunit.Abstractions;
 
 namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
 {
@@ -58,18 +62,18 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
 
             var result = await executor.ExecuteAsync(testCase);
 
-            this._output.WriteLine($"Provider={testCase.Provider} Model={testCase.Model} Success={result.Success} TimeMs={result.ResponseTime.TotalMilliseconds} Attempts={result.AttemptCount}");
-            if (!string.IsNullOrEmpty(result.Error))
+            this._output.WriteLine($"Provider={testCase.provider} Model={testCase.model} Success={result.success} TimeMs={result.responseTime.TotalMilliseconds} Attempts={result.attemptCount}");
+            if (!string.IsNullOrEmpty(result.error))
             {
-                this._output.WriteLine($"Error: {result.Error}");
+                this._output.WriteLine($"Error: {result.error}");
             }
 
-            if (!string.IsNullOrEmpty(result.ResponseSnippet))
+            if (!string.IsNullOrEmpty(result.responseSnippet))
             {
-                this._output.WriteLine($"Snippet: {result.ResponseSnippet}");
+                this._output.WriteLine($"Snippet: {result.responseSnippet}");
             }
 
-            if (result.Success)
+            if (result.success)
             {
                 this._circuitBreaker.RecordSuccess(provider);
             }
@@ -82,7 +86,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
 
             // Don't assert on success for real providers - they may be flaky
             // Just record the result for circuit breaker tracking
-            this._output.WriteLine($"Test completed for {provider}: {(result.Success ? "Success" : "Failed")}");
+            this._output.WriteLine($"Test completed for {provider}: {(result.success ? "Success" : "Failed")}");
         }
 
         public static IEnumerable<object[]> GetRepresentativeProviderCases()
@@ -108,7 +112,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
                     apiKey.Contains("REPLACE_WITH", StringComparison.OrdinalIgnoreCase) ||
                     apiKey.Contains("INSERT", StringComparison.OrdinalIgnoreCase) ||
                     apiKey.Contains("CHANGE", StringComparison.OrdinalIgnoreCase) ||
-                    apiKey == "0000000000")
+string.Equals(apiKey, "0000000000", StringComparison.Ordinal))
                 {
                     continue;
                 }
@@ -161,6 +165,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
 
             // Map environment variables to configuration keys
             var envMapping = new Dictionary<string, string?>
+(StringComparer.Ordinal)
             {
                 { "Synaxis:InferenceGateway:Providers:Groq:Key", Environment.GetEnvironmentVariable("GROQ_API_KEY") },
                 { "Synaxis:InferenceGateway:Providers:Cohere:Key", Environment.GetEnvironmentVariable("COHERE_API_KEY") },
@@ -168,7 +173,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
             };
 
             var filteredMapping = envMapping.Where(kv => !string.IsNullOrEmpty(kv.Value))
-                                        .ToDictionary(kv => kv.Key, kv => kv.Value);
+                                        .ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.Ordinal);
 
             builder.AddInMemoryCollection(filteredMapping);
 
@@ -272,7 +277,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
     public class CircuitBreakerState
     {
         private const int FailureThreshold = 3;
-        private readonly Dictionary<string, ProviderState> _providerStates = new();
+        private readonly Dictionary<string, ProviderState> _providerStates = new (StringComparer.Ordinal);
 
         public bool IsOpen(string provider)
         {

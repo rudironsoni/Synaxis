@@ -1,3 +1,7 @@
+// <copyright file="ProviderRoutingIntegrationTests.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,9 +17,9 @@ using Synaxis.InferenceGateway.Application.Configuration;
 using Synaxis.InferenceGateway.Application.ControlPlane;
 using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
 using Synaxis.InferenceGateway.Application.Routing;
+using Synaxis.InferenceGateway.Application.Security;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 using Synaxis.InferenceGateway.Infrastructure.Routing;
-using Synaxis.InferenceGateway.Application.Security;
 using Synaxis.InferenceGateway.Infrastructure.Security;
 using Xunit;
 using Xunit.Abstractions;
@@ -25,7 +29,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
     /// <summary>
     /// Integration tests for the full provider routing pipeline
     /// Tests ModelResolver → SmartRouter → CostService → HealthStore → QuotaTracker working together
-    /// Uses real dependencies with in-memory database for true integration testing
+    /// Uses real dependencies with in-memory database for true integration testing.
     /// </summary>
     public class ProviderRoutingIntegrationTests : IDisposable
     {
@@ -70,11 +74,12 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             mockConfig.Setup(x => x.Value).Returns(new SynaxisConfiguration
             {
                 Providers = new Dictionary<string, ProviderConfig>
+(StringComparer.Ordinal)
                 {
                     ["provider-1"] = new ProviderConfig { Enabled = true, Key = "provider-1", Tier = 0 },
                     ["provider-2"] = new ProviderConfig { Enabled = true, Key = "provider-2", Tier = 1 },
                     ["provider-3"] = new ProviderConfig { Enabled = true, Key = "provider-3", Tier = 2 },
-                    ["fallback-provider"] = new ProviderConfig { Enabled = true, Key = "fallback-provider", Tier = 0 }
+                    ["fallback-provider"] = new ProviderConfig { Enabled = true, Key = "fallback-provider", Tier = 0 },
                 },
             });
 
@@ -123,7 +128,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             // Setup SmartRouter
             var mockLogger = new Mock<ILogger<SmartRouter>>();
-            var smartRouter = new SmartRouter(modelResolver, costService, mockHealthStore.Object, mockQuotaTracker.Object, mockLogger.Object);
+            var smartRouter = new SmartRouter(modelResolver, costService, mockHealthStore.Object, mockQuotaTracker.Object, Mock.Of<IRoutingScoreCalculator>(), mockLogger.Object);
 
             // Act
             var result = await smartRouter.GetCandidatesAsync("test-model", streaming: false, CancellationToken.None);
@@ -167,14 +172,14 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             var modelResolver = new ModelResolver(mockConfig.Object, mockProviderRegistry.Object, mockStore.Object);
             var mockLogger = new Mock<ILogger<SmartRouter>>();
-            var smartRouter = new SmartRouter(modelResolver, costService, mockHealthStore.Object, mockQuotaTracker.Object, mockLogger.Object);
+            var smartRouter = new SmartRouter(modelResolver, costService, mockHealthStore.Object, mockQuotaTracker.Object, Mock.Of<IRoutingScoreCalculator>(), mockLogger.Object);
 
             // Act
             var result = await smartRouter.GetCandidatesAsync("test-model", streaming: false, CancellationToken.None);
 
             // Assert - Should exclude unhealthy provider
             Assert.Equal(2, result.Count);
-            Assert.DoesNotContain(result, r => r.Key == "provider-2");
+            Assert.DoesNotContain(result, r => string.Equals(r.Key, "provider-2", StringComparison.Ordinal));
             Assert.Equal("provider-1", result[0].Key); // Free provider first
             Assert.Equal("provider-3", result[1].Key); // Remaining paid provider
         }
@@ -196,14 +201,14 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             var modelResolver = new ModelResolver(mockConfig.Object, mockProviderRegistry.Object, mockStore.Object);
             var mockLogger = new Mock<ILogger<SmartRouter>>();
-            var smartRouter = new SmartRouter(modelResolver, costService, mockHealthStore.Object, mockQuotaTracker.Object, mockLogger.Object);
+            var smartRouter = new SmartRouter(modelResolver, costService, mockHealthStore.Object, mockQuotaTracker.Object, Mock.Of<IRoutingScoreCalculator>(), mockLogger.Object);
 
             // Act
             var result = await smartRouter.GetCandidatesAsync("test-model", streaming: false, CancellationToken.None);
 
             // Assert - Should exclude quota-exceeded provider
             Assert.Equal(2, result.Count);
-            Assert.DoesNotContain(result, r => r.Key == "provider-3");
+            Assert.DoesNotContain(result, r => string.Equals(r.Key, "provider-3", StringComparison.Ordinal));
             Assert.Equal("provider-1", result[0].Key); // Free provider first
             Assert.Equal("provider-2", result[1].Key); // Remaining paid provider
         }
@@ -226,7 +231,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 ProviderModels = new List<ProviderModel>
                 {
                     new ProviderModel { ProviderId = "provider-1", ProviderSpecificId = "db-model-1" },
-                    new ProviderModel { ProviderId = "provider-2", ProviderSpecificId = "db-model-2" }
+                    new ProviderModel { ProviderId = "provider-2", ProviderSpecificId = "db-model-2" },
                 },
             };
 
@@ -240,7 +245,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             var modelResolver = new ModelResolver(mockConfig.Object, mockProviderRegistry.Object, mockStore.Object);
             var mockLogger = new Mock<ILogger<SmartRouter>>();
-            var smartRouter = new SmartRouter(modelResolver, costService, mockHealthStore.Object, mockQuotaTracker.Object, mockLogger.Object);
+            var smartRouter = new SmartRouter(modelResolver, costService, mockHealthStore.Object, mockQuotaTracker.Object, Mock.Of<IRoutingScoreCalculator>(), mockLogger.Object);
 
             // Act
             var result = await smartRouter.GetCandidatesAsync("database-model", streaming: false, CancellationToken.None);
@@ -270,7 +275,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             var modelResolver = new ModelResolver(mockConfig.Object, mockProviderRegistry.Object, mockStore.Object);
             var mockLogger = new Mock<ILogger<SmartRouter>>();
-            var smartRouter = new SmartRouter(modelResolver, costService, mockHealthStore.Object, mockQuotaTracker.Object, mockLogger.Object);
+            var smartRouter = new SmartRouter(modelResolver, costService, mockHealthStore.Object, mockQuotaTracker.Object, Mock.Of<IRoutingScoreCalculator>(), mockLogger.Object);
 
             // Act
             var result = await smartRouter.GetCandidatesAsync("test-model", streaming: false, CancellationToken.None);
@@ -297,13 +302,13 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             var modelResolver = new ModelResolver(mockConfig.Object, mockProviderRegistry.Object, mockStore.Object);
             var mockLogger = new Mock<ILogger<SmartRouter>>();
-            var smartRouter = new SmartRouter(modelResolver, costService, mockHealthStore.Object, mockQuotaTracker.Object, mockLogger.Object);
+            var smartRouter = new SmartRouter(modelResolver, costService, mockHealthStore.Object, mockQuotaTracker.Object, Mock.Of<IRoutingScoreCalculator>(), mockLogger.Object);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
                 smartRouter.GetCandidatesAsync("unknown-model", streaming: false, CancellationToken.None));
 
-            Assert.Contains("No providers available", exception.Message);
+            Assert.Contains("No providers available", exception.Message, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -319,13 +324,14 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             var modelResolver = new ModelResolver(mockConfig.Object, mockProviderRegistry.Object, mockStore.Object);
             var mockLogger = new Mock<ILogger<SmartRouter>>();
-            var smartRouter = new SmartRouter(modelResolver, costService, mockHealthStore.Object, mockQuotaTracker.Object, mockLogger.Object);
+            var smartRouter = new SmartRouter(modelResolver, costService, mockHealthStore.Object, mockQuotaTracker.Object, Mock.Of<IRoutingScoreCalculator>(), mockLogger.Object);
 
             // Act - Test streaming capability
             var result = await smartRouter.GetCandidatesAsync("test-model", streaming: true, CancellationToken.None);
 
             // Assert - Should pass streaming capability through
             Assert.Equal(3, result.Count);
+
             // The capability is passed to ModelResolver internally
         }
 
