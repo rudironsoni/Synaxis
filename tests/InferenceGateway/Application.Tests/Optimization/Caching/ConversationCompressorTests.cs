@@ -499,7 +499,7 @@ public class ConversationCompressorTests
 
         var threshold = 4000;
         var strategy = CompressionStrategy.Smart;
-        var cts = new CancellationTokenSource();
+        using var cts = new CancellationTokenSource();
         cts.Cancel();
 
         this._mockCompressor
