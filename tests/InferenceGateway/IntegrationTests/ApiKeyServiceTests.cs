@@ -1,6 +1,10 @@
+// <copyright file="ApiKeyServiceTests.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
 using System;
-using System.Text;
 using System.Security.Cryptography;
+using System.Text;
 using Synaxis.InferenceGateway.Infrastructure.Security;
 using Xunit;
 using Xunit.Abstractions;
@@ -9,7 +13,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 {
     /// <summary>
     /// Unit tests for ApiKeyService - API key generation and validation
-    /// Tests cryptographic operations, key format validation, and security hardening
+    /// Tests cryptographic operations, key format validation, and security hardening.
     /// </summary>
     public class ApiKeyServiceTests
     {
@@ -33,8 +37,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             Assert.NotNull(key1);
             Assert.NotNull(key2);
             Assert.NotEqual(key1, key2); // Should be unique
-            Assert.StartsWith("sk-synaxis-", key1);
-            Assert.StartsWith("sk-synaxis-", key2);
+            Assert.StartsWith("sk-synaxis-", key1, StringComparison.Ordinal);
+            Assert.StartsWith("sk-synaxis-", key2, StringComparison.Ordinal);
 
             // Should be 32 bytes + prefix = 32 + 11 characters = 43 characters for hex
             Assert.Equal(43, key1.Length); // "sk-synaxis-" (11) + 32 hex chars = 43
@@ -128,9 +132,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         public void ValidateKey_ShouldReturnFalse_ForEmptyInputs()
         {
             // Arrange & Act
-            var isValid1 = this._apiKeyService.ValidateKey("", "hash");
-            var isValid2 = this._apiKeyService.ValidateKey("key", "");
-            var isValid3 = this._apiKeyService.ValidateKey("", "");
+            var isValid1 = this._apiKeyService.ValidateKey(string.Empty, "hash");
+            var isValid2 = this._apiKeyService.ValidateKey("key", string.Empty);
+            var isValid3 = this._apiKeyService.ValidateKey(string.Empty, string.Empty);
 
             // Assert
             Assert.False(isValid1);
@@ -145,7 +149,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var key = this._apiKeyService.GenerateKey();
 
             // Assert - Always should start with sk-synaxis- and be followed by valid lowercase hex
-            Assert.StartsWith("sk-synaxis-", key);
+            Assert.StartsWith("sk-synaxis-", key, StringComparison.Ordinal);
             Assert.Equal(43, key.Length);
 
             var hexPart = key.Substring(11);
@@ -219,7 +223,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             // Assert
             for (int i = 0; i < 10; i++)
             {
-                Assert.StartsWith("sk-synaxis-", keys[i]);
+                Assert.StartsWith("sk-synaxis-", keys[i], StringComparison.Ordinal);
                 Assert.Equal(43, keys[i].Length);
 
                 // All keys should be unique

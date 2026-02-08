@@ -1,3 +1,7 @@
+// <copyright file="JwtValidationTests.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
@@ -10,256 +14,257 @@ using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
 using Synaxis.InferenceGateway.Infrastructure.Security;
 using Xunit;
 
-namespace Synaxis.InferenceGateway.IntegrationTests.Security;
-
-public class JwtValidationTests
+namespace Synaxis.InferenceGateway.IntegrationTests.Security
 {
-    private readonly SynaxisConfiguration _config;
-
-    public JwtValidationTests()
+    public class JwtValidationTests
     {
-        this._config = new SynaxisConfiguration
+        private readonly SynaxisConfiguration _config;
+
+        public JwtValidationTests()
         {
-            JwtSecret = "THIS_IS_A_VERY_LONG_SECRET_KEY_FOR_TESTING_PURPOSES_ONLY_1234567890",
-            JwtIssuer = "TestIssuer",
-            JwtAudience = "TestAudience",
-        };
-    }
+            this._config = new SynaxisConfiguration
+            {
+                JwtSecret = "THIS_IS_A_VERY_LONG_SECRET_KEY_FOR_TESTING_PURPOSES_ONLY_1234567890",
+                JwtIssuer = "TestIssuer",
+                JwtAudience = "TestAudience",
+            };
+        }
 
-    [Fact]
-    public void ValidateToken_WithValidToken_Succeeds()
-    {
-        var jwtService = new JwtService(Options.Create(this._config));
-        var user = new User
+        [Fact]
+        public void ValidateToken_WithValidToken_Succeeds()
         {
-            Id = Guid.NewGuid(),
-            TenantId = Guid.NewGuid(),
-            Email = "test@example.com",
-            Role = UserRole.Developer,
-        };
+            var jwtService = new JwtService(Options.Create(this._config));
+            var user = new User
+            {
+                Id = Guid.NewGuid(),
+                TenantId = Guid.NewGuid(),
+                Email = "test@example.com",
+                Role = UserRole.Developer,
+            };
 
-        var token = jwtService.GenerateToken(user);
+            var token = jwtService.GenerateToken(user);
 
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.ASCII.GetBytes(this._config.JwtSecret!);
-        var validationParameters = new TokenValidationParameters
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(this._config.JwtSecret!);
+            var validationParameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ValidateIssuer = true,
+                ValidIssuer = this._config.JwtIssuer,
+                ValidateAudience = true,
+                ValidAudience = this._config.JwtAudience,
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero,
+            };
+
+            var principal = tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
+
+            Assert.NotNull(principal.Identity);
+            Assert.True(principal.Identity.IsAuthenticated);
+        }
+
+        [Fact]
+        public void ValidateToken_WithExpiredToken_ThrowsSecurityTokenExpiredException()
         {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(key),
-            ValidateIssuer = true,
-            ValidIssuer = this._config.JwtIssuer,
-            ValidateAudience = true,
-            ValidAudience = this._config.JwtAudience,
-            ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero,
-        };
+            var expiredToken = this.GenerateExpiredToken(this._config);
 
-        var principal = tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(this._config.JwtSecret!);
+            var validationParameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ValidateIssuer = true,
+                ValidIssuer = this._config.JwtIssuer,
+                ValidateAudience = true,
+                ValidAudience = this._config.JwtAudience,
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero,
+            };
 
-        Assert.NotNull(principal.Identity);
-        Assert.True(principal.Identity.IsAuthenticated);
-    }
+            Assert.Throws<SecurityTokenExpiredException>(() => tokenHandler.ValidateToken(expiredToken, validationParameters, out _));
+        }
 
-    [Fact]
-    public void ValidateToken_WithExpiredToken_ThrowsSecurityTokenExpiredException()
-    {
-        var expiredToken = this.GenerateExpiredToken(this._config);
-
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.ASCII.GetBytes(this._config.JwtSecret!);
-        var validationParameters = new TokenValidationParameters
+        [Fact]
+        public void ValidateToken_WithWrongSigningKey_ThrowsSecurityTokenSignatureKeyNotFoundException()
         {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(key),
-            ValidateIssuer = true,
-            ValidIssuer = this._config.JwtIssuer,
-            ValidateAudience = true,
-            ValidAudience = this._config.JwtAudience,
-            ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero,
-        };
+            var wrongConfig = new SynaxisConfiguration
+            {
+                JwtSecret = "DIFFERENT_SECRET_KEY_FOR_TESTING_1234567890",
+                JwtIssuer = "TestIssuer",
+                JwtAudience = "TestAudience",
+            };
 
-        Assert.Throws<SecurityTokenExpiredException>(() => tokenHandler.ValidateToken(expiredToken, validationParameters, out _));
-    }
+            var jwtService = new JwtService(Options.Create(wrongConfig));
+            var user = new User
+            {
+                Id = Guid.NewGuid(),
+                TenantId = Guid.NewGuid(),
+                Email = "test@example.com",
+                Role = UserRole.Developer,
+            };
 
-    [Fact]
-    public void ValidateToken_WithWrongSigningKey_ThrowsSecurityTokenSignatureKeyNotFoundException()
-    {
-        var wrongConfig = new SynaxisConfiguration
+            var token = jwtService.GenerateToken(user);
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(this._config.JwtSecret!);
+            var validationParameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ValidateIssuer = true,
+                ValidIssuer = this._config.JwtIssuer,
+                ValidateAudience = true,
+                ValidAudience = this._config.JwtAudience,
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero,
+            };
+
+            Assert.ThrowsAny<SecurityTokenValidationException>(() => tokenHandler.ValidateToken(token, validationParameters, out _));
+        }
+
+        [Fact]
+        public void ValidateToken_WithInvalidIssuer_ThrowsSecurityTokenInvalidIssuerException()
         {
-            JwtSecret = "DIFFERENT_SECRET_KEY_FOR_TESTING_1234567890",
-            JwtIssuer = "TestIssuer",
-            JwtAudience = "TestAudience",
-        };
+            var token = this.GenerateTokenWithInvalidIssuer(this._config);
 
-        var jwtService = new JwtService(Options.Create(wrongConfig));
-        var user = new User
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(this._config.JwtSecret!);
+            var validationParameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ValidateIssuer = true,
+                ValidIssuer = this._config.JwtIssuer,
+                ValidateAudience = true,
+                ValidAudience = this._config.JwtAudience,
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero,
+            };
+
+            Assert.Throws<SecurityTokenInvalidIssuerException>(() => tokenHandler.ValidateToken(token, validationParameters, out _));
+        }
+
+        [Fact]
+        public void ValidateToken_WithInvalidAudience_ThrowsSecurityTokenInvalidAudienceException()
         {
-            Id = Guid.NewGuid(),
-            TenantId = Guid.NewGuid(),
-            Email = "test@example.com",
-            Role = UserRole.Developer,
-        };
+            var token = this.GenerateTokenWithInvalidAudience(this._config);
 
-        var token = jwtService.GenerateToken(user);
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(this._config.JwtSecret!);
+            var validationParameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ValidateIssuer = true,
+                ValidIssuer = this._config.JwtIssuer,
+                ValidateAudience = true,
+                ValidAudience = this._config.JwtAudience,
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero,
+            };
 
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.ASCII.GetBytes(this._config.JwtSecret!);
-        var validationParameters = new TokenValidationParameters
+            Assert.Throws<SecurityTokenInvalidAudienceException>(() => tokenHandler.ValidateToken(token, validationParameters, out _));
+        }
+
+        [Fact]
+        public void ValidateToken_WithMalformedToken_ThrowsArgumentException()
         {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(key),
-            ValidateIssuer = true,
-            ValidIssuer = this._config.JwtIssuer,
-            ValidateAudience = true,
-            ValidAudience = this._config.JwtAudience,
-            ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero,
-        };
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(this._config.JwtSecret!);
+            var validationParameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ValidateIssuer = true,
+                ValidIssuer = this._config.JwtIssuer,
+                ValidateAudience = true,
+                ValidAudience = this._config.JwtAudience,
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero,
+            };
 
-        Assert.ThrowsAny<SecurityTokenValidationException>(() => tokenHandler.ValidateToken(token, validationParameters, out _));
-    }
+            Assert.ThrowsAny<ArgumentException>(() => tokenHandler.ValidateToken("not.a.valid.jwt.token", validationParameters, out _));
+        }
 
-    [Fact]
-    public void ValidateToken_WithInvalidIssuer_ThrowsSecurityTokenInvalidIssuerException()
-    {
-        var token = this.GenerateTokenWithInvalidIssuer(this._config);
-
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.ASCII.GetBytes(this._config.JwtSecret!);
-        var validationParameters = new TokenValidationParameters
+        private string GenerateExpiredToken(SynaxisConfiguration config)
         {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(key),
-            ValidateIssuer = true,
-            ValidIssuer = this._config.JwtIssuer,
-            ValidateAudience = true,
-            ValidAudience = this._config.JwtAudience,
-            ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero,
-        };
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(config.JwtSecret!);
 
-        Assert.Throws<SecurityTokenInvalidIssuerException>(() => tokenHandler.ValidateToken(token, validationParameters, out _));
-    }
-
-    [Fact]
-    public void ValidateToken_WithInvalidAudience_ThrowsSecurityTokenInvalidAudienceException()
-    {
-        var token = this.GenerateTokenWithInvalidAudience(this._config);
-
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.ASCII.GetBytes(this._config.JwtSecret!);
-        var validationParameters = new TokenValidationParameters
-        {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(key),
-            ValidateIssuer = true,
-            ValidIssuer = this._config.JwtIssuer,
-            ValidateAudience = true,
-            ValidAudience = this._config.JwtAudience,
-            ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero,
-        };
-
-        Assert.Throws<SecurityTokenInvalidAudienceException>(() => tokenHandler.ValidateToken(token, validationParameters, out _));
-    }
-
-    [Fact]
-    public void ValidateToken_WithMalformedToken_ThrowsArgumentException()
-    {
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.ASCII.GetBytes(this._config.JwtSecret!);
-        var validationParameters = new TokenValidationParameters
-        {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(key),
-            ValidateIssuer = true,
-            ValidIssuer = this._config.JwtIssuer,
-            ValidateAudience = true,
-            ValidAudience = this._config.JwtAudience,
-            ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero,
-        };
-
-        Assert.ThrowsAny<ArgumentException>(() => tokenHandler.ValidateToken("not.a.valid.jwt.token", validationParameters, out _));
-    }
-
-    private string GenerateExpiredToken(SynaxisConfiguration config)
-    {
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.ASCII.GetBytes(config.JwtSecret!);
-
-        var claims = new[]
-        {
+            var claims = new[]
+            {
             new Claim(JwtRegisteredClaimNames.Sub, Guid.NewGuid().ToString()),
             new Claim(JwtRegisteredClaimNames.Email, "test@example.com"),
             new Claim("role", UserRole.Developer.ToString()),
             new Claim("tenantId", Guid.NewGuid().ToString()),
-        };
+            };
 
-        var tokenDescriptor = new SecurityTokenDescriptor
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                NotBefore = DateTime.UtcNow.AddDays(-3),
+                Expires = DateTime.UtcNow.AddDays(-1),
+                Issuer = config.JwtIssuer,
+                Audience = config.JwtAudience,
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
+        }
+
+        private string GenerateTokenWithInvalidIssuer(SynaxisConfiguration config)
         {
-            Subject = new ClaimsIdentity(claims),
-            NotBefore = DateTime.UtcNow.AddDays(-3),
-            Expires = DateTime.UtcNow.AddDays(-1),
-            Issuer = config.JwtIssuer,
-            Audience = config.JwtAudience,
-            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
-        };
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(config.JwtSecret!);
 
-        var token = tokenHandler.CreateToken(tokenDescriptor);
-        return tokenHandler.WriteToken(token);
-    }
-
-    private string GenerateTokenWithInvalidIssuer(SynaxisConfiguration config)
-    {
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.ASCII.GetBytes(config.JwtSecret!);
-
-        var claims = new[]
-        {
+            var claims = new[]
+            {
             new Claim(JwtRegisteredClaimNames.Sub, Guid.NewGuid().ToString()),
             new Claim(JwtRegisteredClaimNames.Email, "test@example.com"),
             new Claim("role", UserRole.Developer.ToString()),
             new Claim("tenantId", Guid.NewGuid().ToString()),
-        };
+            };
 
-        var tokenDescriptor = new SecurityTokenDescriptor
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.AddDays(1),
+                Issuer = "WrongIssuer",
+                Audience = config.JwtAudience,
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
+        }
+
+        private string GenerateTokenWithInvalidAudience(SynaxisConfiguration config)
         {
-            Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.UtcNow.AddDays(1),
-            Issuer = "WrongIssuer",
-            Audience = config.JwtAudience,
-            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
-        };
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(config.JwtSecret!);
 
-        var token = tokenHandler.CreateToken(tokenDescriptor);
-        return tokenHandler.WriteToken(token);
-    }
-
-    private string GenerateTokenWithInvalidAudience(SynaxisConfiguration config)
-    {
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.ASCII.GetBytes(config.JwtSecret!);
-
-        var claims = new[]
-        {
+            var claims = new[]
+            {
             new Claim(JwtRegisteredClaimNames.Sub, Guid.NewGuid().ToString()),
             new Claim(JwtRegisteredClaimNames.Email, "test@example.com"),
             new Claim("role", UserRole.Developer.ToString()),
             new Claim("tenantId", Guid.NewGuid().ToString()),
-        };
+            };
 
-        var tokenDescriptor = new SecurityTokenDescriptor
-        {
-            Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.UtcNow.AddDays(1),
-            Issuer = config.JwtIssuer,
-            Audience = "WrongAudience",
-            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
-        };
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.AddDays(1),
+                Issuer = config.JwtIssuer,
+                Audience = "WrongAudience",
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
+            };
 
-        var token = tokenHandler.CreateToken(tokenDescriptor);
-        return tokenHandler.WriteToken(token);
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
+        }
     }
 }

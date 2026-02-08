@@ -1,3 +1,7 @@
+// <copyright file="RetryPolicy.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
 using System;
 using System.Threading.Tasks;
 
@@ -31,6 +35,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                 catch (Exception ex) when (shouldRetry(ex) && attempt < this._maxRetries)
                 {
                     attempt++;
+
                     // Exponential backoff with multiplier and 10% jitter
                     double jitter = 1.0 + ((this._rng.NextDouble() * 0.2) - 0.1); // between 0.9 and 1.1
                     int delayWithJitter = Math.Max(0, (int)(delay * jitter));

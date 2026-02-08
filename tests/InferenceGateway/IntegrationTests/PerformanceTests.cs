@@ -1,3 +1,7 @@
+// <copyright file="PerformanceTests.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -14,9 +18,9 @@ using Synaxis.InferenceGateway.Application.Configuration;
 using Synaxis.InferenceGateway.Application.ControlPlane;
 using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
 using Synaxis.InferenceGateway.Application.Routing;
+using Synaxis.InferenceGateway.Application.Security;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 using Synaxis.InferenceGateway.Infrastructure.Routing;
-using Synaxis.InferenceGateway.Application.Security;
 using Synaxis.InferenceGateway.Infrastructure.Security;
 using Xunit;
 using Xunit.Abstractions;
@@ -26,7 +30,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
     /// <summary>
     /// Performance tests for provider routing logic
     /// Tests throughput, response times, and concurrent load handling
-    /// Uses real dependencies with mocked external calls for realistic performance testing
+    /// Uses real dependencies with mocked external calls for realistic performance testing.
     /// </summary>
     public class PerformanceTests : IDisposable
     {
@@ -84,6 +88,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var config = new SynaxisConfiguration
             {
                 Providers = new Dictionary<string, ProviderConfig>
+(StringComparer.Ordinal)
                 {
                     ["groq"] = new ProviderConfig
                     {
@@ -109,7 +114,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                         Endpoint = "https://api.fireworks.ai/inference/v1",
                         Key = "test-key",
                         Tier = 2,
-                        Models = ["accounts/fireworks/models/llama-v2-7b-chat"]
+                        Models = ["accounts/fireworks/models/llama-v2-7b-chat"],
                     },
                 },
                 CanonicalModels = [
@@ -135,13 +140,15 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                         StructuredOutput = false,
                         LogProbs = false,
                     }
+
                 ],
                 Aliases = new Dictionary<string, AliasConfig>
+(StringComparer.Ordinal)
                 {
                     ["default"] = new AliasConfig
                     {
                         Candidates = ["llama-3.1-70b-versatile", "deepseek-chat"]
-                    }
+                    },
                 },
             };
 
@@ -154,8 +161,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             services.AddScoped<IModelResolver>(provider => new ModelResolver(
                 provider.GetRequiredService<IOptions<SynaxisConfiguration>>(),
                 provider.GetRequiredService<IProviderRegistry>(),
-                provider.GetRequiredService<IControlPlaneStore>()
-            ));
+                provider.GetRequiredService<IControlPlaneStore>()));
 
             this._serviceProvider = services.BuildServiceProvider();
             this._dbContext = this._serviceProvider.GetRequiredService<ControlPlaneDbContext>();
@@ -189,7 +195,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var cancellationToken = CancellationToken.None;
 
             const int concurrentRequests = 100;
-            var tasks = new List<Task<List<EnrichedCandidate>>>();
+            var tasks = new List<Task<IList<EnrichedCandidate>>>();
             var stopwatch = Stopwatch.StartNew();
 
             // Act - Execute concurrent requests
@@ -233,7 +239,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             foreach (var batchSize in batchSizes)
             {
                 var stopwatch = Stopwatch.StartNew();
-                var tasks = new List<Task<List<EnrichedCandidate>>>();
+                var tasks = new List<Task<IList<EnrichedCandidate>>>();
 
                 // Execute batch
                 for (int i = 0; i < batchSize; i++)
@@ -276,7 +282,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             const int requestsPerModel = 25;
             var totalRequests = models.Length * requestsPerModel;
-            var tasks = new List<Task<List<EnrichedCandidate>>>();
+            var tasks = new List<Task<IList<EnrichedCandidate>>>();
             var stopwatch = Stopwatch.StartNew();
 
             // Act - Execute mixed model requests
@@ -354,7 +360,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var stopwatch = Stopwatch.StartNew();
 
             // Act - Cancel immediately and then start request
-            cts.Cancel();
+            await cts.CancelAsync();
             var task = smartRouter.GetCandidatesAsync(modelId, streaming, cts.Token);
 
             // Assert - Should handle cancellation gracefully
@@ -368,7 +374,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
         [Fact]
         [Trait("Category", "Performance")]
-        [Trait("Category", "Flaky")]  // Performance tests can be flaky due to system resource variability
+        [Trait("Category", "Flaky")] // Performance tests can be flaky due to system resource variability
         public async Task RoutingPipeline_ShouldMaintainLowMemoryFootprint()
         {
             // Arrange
@@ -378,7 +384,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var cancellationToken = CancellationToken.None;
 
             const int iterations = 1000;
+#pragma warning disable S1215 // "GC.Collect" should not be called - Required for memory footprint testing
             var initialMemory = GC.GetTotalMemory(true);
+#pragma warning restore S1215
             var stopwatch = Stopwatch.StartNew();
 
             // Act - Execute many requests
@@ -389,12 +397,16 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 // Force garbage collection periodically
                 if (i % 100 == 0)
                 {
+#pragma warning disable S1215 // "GC.Collect" should not be called - Required for memory footprint testing
                     GC.Collect();
                     GC.WaitForPendingFinalizers();
+#pragma warning restore S1215
                 }
             }
 
+#pragma warning disable S1215 // "GC.Collect" should not be called - Required for memory footprint testing
             var finalMemory = GC.GetTotalMemory(true);
+#pragma warning restore S1215
             stopwatch.Stop();
 
             // Assert

@@ -1,118 +1,123 @@
+// <copyright file="ApiErrorHandlingTests.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Xunit.Abstractions;
 
-namespace Synaxis.InferenceGateway.IntegrationTests;
-
-public class ApiErrorHandlingTests : IClassFixture<SynaxisWebApplicationFactory>
+namespace Synaxis.InferenceGateway.IntegrationTests
 {
-    private readonly SynaxisWebApplicationFactory _factory;
-    private readonly HttpClient _client;
-
-    public ApiErrorHandlingTests(SynaxisWebApplicationFactory factory, ITestOutputHelper output)
+    public class ApiErrorHandlingTests : IClassFixture<SynaxisWebApplicationFactory>
     {
-        this._factory = factory;
-        this._factory.OutputHelper = output;
-        this._client = factory.CreateClient();
-    }
+        private readonly SynaxisWebApplicationFactory _factory;
+        private readonly HttpClient _client;
 
-    [Fact]
-    public async Task Get_NonExistentEndpoint_Returns404()
-    {
-        // Act
-        var response = await this._client.GetAsync("/openai/v1/non-existent");
+        public ApiErrorHandlingTests(SynaxisWebApplicationFactory factory, ITestOutputHelper output)
+        {
+            this._factory = factory;
+            this._factory.OutputHelper = output;
+            this._client = factory.CreateClient();
+        }
 
-        // Assert
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-    }
+        [Fact]
+        public async Task Get_NonExistentEndpoint_Returns404()
+        {
+            // Act
+            var response = await this._client.GetAsync("/openai/v1/non-existent");
 
-    [Fact]
-    public async Task Post_InvalidEndpoint_Returns404()
-    {
-        // Act
-        var response = await this._client.PostAsJsonAsync("/openai/v1/invalid", new { });
+            // Assert
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        }
 
-        // Assert
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-    }
+        [Fact]
+        public async Task Post_InvalidEndpoint_Returns404()
+        {
+            // Act
+            var response = await this._client.PostAsJsonAsync("/openai/v1/invalid", new { });
 
-    [Fact]
-    public async Task Get_Models_ReturnsValidJson()
-    {
-        // Act
-        var response = await this._client.GetAsync("/openai/v1/models");
+            // Assert
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        }
 
-        // Assert
-        response.EnsureSuccessStatusCode();
-        var content = await response.Content.ReadAsStringAsync();
-        Assert.False(string.IsNullOrEmpty(content));
+        [Fact]
+        public async Task Get_Models_ReturnsValidJson()
+        {
+            // Act
+            var response = await this._client.GetAsync("/openai/v1/models");
 
-        // Verify it's valid JSON
-        var json = JsonDocument.Parse(content);
-        Assert.True(json.RootElement.TryGetProperty("data", out _));
-    }
+            // Assert
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+            Assert.False(string.IsNullOrEmpty(content));
 
-    [Fact]
-    public async Task Get_ModelById_InvalidModel_Returns404()
-    {
-        // Act
-        var response = await this._client.GetAsync("/openai/v1/models/non-existent-model-12345");
+            // Verify it's valid JSON
+            var json = JsonDocument.Parse(content);
+            Assert.True(json.RootElement.TryGetProperty("data", out _));
+        }
 
-        // Assert
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-    }
+        [Fact]
+        public async Task Get_ModelById_InvalidModel_Returns404()
+        {
+            // Act
+            var response = await this._client.GetAsync("/openai/v1/models/non-existent-model-12345");
 
-    [Fact]
-    public async Task Post_ChatCompletions_MalformedJson_ReturnsError()
-    {
-        // Arrange
-        var content = new StringContent("{invalid json", System.Text.Encoding.UTF8, "application/json");
+            // Assert
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        }
 
-        // Act
-        var response = await this._client.PostAsync("/openai/v1/chat/completions", content);
+        [Fact]
+        public async Task Post_ChatCompletions_MalformedJson_ReturnsError()
+        {
+            // Arrange
+            var content = new StringContent("{invalid json", System.Text.Encoding.UTF8, "application/json");
 
-        // Assert - Malformed JSON returns 400 or 500 depending on middleware
-        Assert.True(
-            response.StatusCode == HttpStatusCode.BadRequest ||
-            response.StatusCode == HttpStatusCode.InternalServerError,
-            $"Expected 400 or 500 but got {(int)response.StatusCode}");
-    }
+            // Act
+            var response = await this._client.PostAsync("/openai/v1/chat/completions", content);
 
-    [Fact]
-    public async Task Post_ChatCompletions_EmptyBody_Returns400()
-    {
-        // Arrange
-        var content = new StringContent("", System.Text.Encoding.UTF8, "application/json");
+            // Assert - Malformed JSON returns 400 or 500 depending on middleware
+            Assert.True(
+                response.StatusCode == HttpStatusCode.BadRequest ||
+                response.StatusCode == HttpStatusCode.InternalServerError,
+                $"Expected 400 or 500 but got {(int)response.StatusCode}");
+        }
 
-        // Act
-        var response = await this._client.PostAsync("/openai/v1/chat/completions", content);
+        [Fact]
+        public async Task Post_ChatCompletions_EmptyBody_Returns400()
+        {
+            // Arrange
+            var content = new StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json");
 
-        // Assert
-        Assert.True(
-            response.StatusCode == HttpStatusCode.BadRequest ||
-            response.StatusCode == HttpStatusCode.UnsupportedMediaType,
-            $"Expected 400 or 415 but got {(int)response.StatusCode}");
-    }
+            // Act
+            var response = await this._client.PostAsync("/openai/v1/chat/completions", content);
 
-    [Fact]
-    public async Task HealthChecks_Liveness_Returns200()
-    {
-        // Act
-        var response = await this._client.GetAsync("/health/liveness");
+            // Assert
+            Assert.True(
+                response.StatusCode == HttpStatusCode.BadRequest ||
+                response.StatusCode == HttpStatusCode.UnsupportedMediaType,
+                $"Expected 400 or 415 but got {(int)response.StatusCode}");
+        }
 
-        // Assert
-        response.EnsureSuccessStatusCode();
-    }
+        [Fact]
+        public async Task HealthChecks_Liveness_Returns200()
+        {
+            // Act
+            var response = await this._client.GetAsync("/health/liveness");
 
-    [Fact]
-    public async Task Response_ContentType_IsApplicationJson()
-    {
-        // Act
-        var response = await this._client.GetAsync("/openai/v1/models");
+            // Assert
+            response.EnsureSuccessStatusCode();
+        }
 
-        // Assert
-        response.EnsureSuccessStatusCode();
-        Assert.Contains("application/json", response.Content.Headers.ContentType?.MediaType ?? "");
+        [Fact]
+        public async Task Response_ContentType_IsApplicationJson()
+        {
+            // Act
+            var response = await this._client.GetAsync("/openai/v1/models");
+
+            // Assert
+            response.EnsureSuccessStatusCode();
+            Assert.Contains("application/json", response.Content.Headers.ContentType?.MediaType ?? string.Empty, StringComparison.Ordinal);
+        }
     }
 }
