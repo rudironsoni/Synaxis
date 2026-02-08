@@ -29,10 +29,10 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
                 EndpointKind.ChatCompletions,
                 modelId,
                 messages.ToList(),
-                tools: MapTools(openAIRequest.Tools),
-                toolChoice: openAIRequest.ToolChoice,
-                responseFormat: openAIRequest.ResponseFormat,
-                additionalOptions: new ChatOptions
+                Tools: MapTools(openAIRequest.Tools),
+                ToolChoice: openAIRequest.ToolChoice,
+                ResponseFormat: openAIRequest.ResponseFormat,
+                AdditionalOptions: new ChatOptions
                 {
                     Temperature = (float?)openAIRequest.Temperature,
                     TopP = (float?)openAIRequest.TopP,

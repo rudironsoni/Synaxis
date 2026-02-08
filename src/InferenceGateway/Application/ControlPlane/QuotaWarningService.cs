@@ -16,6 +16,7 @@ namespace Synaxis.InferenceGateway.Application.ControlPlane
     public class QuotaWarningService : IQuotaWarningService
     {
         private const double WarningThreshold = 0.2; // 20%
+        private readonly IQuotaTracker _quotaTracker;
         private readonly INotificationService notificationService;
         private readonly ILogger<QuotaWarningService> logger;
 
@@ -30,7 +31,7 @@ namespace Synaxis.InferenceGateway.Application.ControlPlane
             INotificationService notificationService,
             ILogger<QuotaWarningService> logger)
         {
-            _ = quotaTracker ?? throw new ArgumentNullException(nameof(quotaTracker));
+            this._quotaTracker = quotaTracker ?? throw new ArgumentNullException(nameof(quotaTracker));
             this.notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
@@ -49,10 +50,11 @@ namespace Synaxis.InferenceGateway.Application.ControlPlane
             string? userId = null,
             CancellationToken cancellationToken = default)
         {
-            // Get actual quota usage from IQuotaTracker
-            // This is interim implementation - IQuotaTracker doesn't have a method to get remaining quota
-            var remainingQuota = 100; // Placeholder
-            var totalQuota = 1000; // Placeholder
+            // Interim implementation: IQuotaTracker interface needs a method to query remaining/total quota
+            // When available, replace placeholder values with: _quotaTracker.GetQuotaAsync(providerKey, ...)
+            _ = this._quotaTracker; // Field stored for future use
+            var remainingQuota = 100; // Placeholder - should come from _quotaTracker
+            var totalQuota = 1000; // Placeholder - should come from _quotaTracker
             var usageRatio = (double)remainingQuota / totalQuota;
 
             if (usageRatio < WarningThreshold)
