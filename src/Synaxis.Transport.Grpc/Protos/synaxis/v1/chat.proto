@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+package synaxis.v1;
+
+import "synaxis/v1/common.proto";
+
+option csharp_namespace = "Synaxis.Transport.Grpc.V1";
+
+// Service for chat completions
+service ChatService {
+  // Creates a non-streaming chat completion
+  rpc CreateCompletion (ChatRequest) returns (ChatResponse);
+  
+  // Creates a streaming chat completion
+  rpc StreamCompletion (ChatRequest) returns (stream ChatStreamChunk);
+}
+
+// Request for chat completion
+message ChatRequest {
+  string model = 1;
+  repeated Message messages = 2;
+  optional double temperature = 3;
+  optional int32 max_tokens = 4;
+  optional string provider = 5;
+}
+
+// A single message in a conversation
+message Message {
+  string role = 1;
+  string content = 2;
+  optional string name = 3;
+}
+
+// Response for non-streaming chat completion
+message ChatResponse {
+  string id = 1;
+  string object = 2;
+  int64 created = 3;
+  string model = 4;
+  repeated Choice choices = 5;
+  optional Usage usage = 6;
+}
+
+// A single choice in a chat response
+message Choice {
+  int32 index = 1;
+  Message message = 2;
+  string finish_reason = 3;
+}
+
+// A chunk in a streaming chat completion
+message ChatStreamChunk {
+  string id = 1;
+  string object = 2;
+  int64 created = 3;
+  string model = 4;
+  repeated ChoiceDelta choices = 5;
+}
+
+// A delta choice in a streaming response
+message ChoiceDelta {
+  int32 index = 1;
+  MessageDelta delta = 2;
+  optional string finish_reason = 3;
+}
+
+// A delta message containing partial content
+message MessageDelta {
+  optional string role = 1;
+  optional string content = 2;
+}

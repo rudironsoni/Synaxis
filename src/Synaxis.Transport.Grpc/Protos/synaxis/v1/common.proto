@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package synaxis.v1;
+
+option csharp_namespace = "Synaxis.Transport.Grpc.V1";
+
+// Represents token usage statistics
+message Usage {
+  int32 prompt_tokens = 1;
+  int32 completion_tokens = 2;
+  int32 total_tokens = 3;
+}

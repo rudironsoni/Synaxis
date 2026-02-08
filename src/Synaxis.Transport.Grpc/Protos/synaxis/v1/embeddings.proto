@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package synaxis.v1;
+
+import "synaxis/v1/common.proto";
+
+option csharp_namespace = "Synaxis.Transport.Grpc.V1";
+
+// Service for generating embeddings
+service EmbeddingsService {
+  // Creates embeddings for the provided input
+  rpc CreateEmbeddings (EmbeddingsRequest) returns (EmbeddingsResponse);
+}
+
+// Request for embeddings
+message EmbeddingsRequest {
+  string model = 1;
+  repeated string input = 2;
+  optional string encoding_format = 3;
+  optional string provider = 4;
+}
+
+// Response for embeddings
+message EmbeddingsResponse {
+  string object = 1;
+  repeated Embedding data = 2;
+  string model = 3;
+  Usage usage = 4;
+}
+
+// A single embedding vector
+message Embedding {
+  string object = 1;
+  int32 index = 2;
+  repeated float embedding = 3;
+}
