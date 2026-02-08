@@ -2,84 +2,85 @@
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace Synaxis.InferenceGateway.Application;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.Extensions.Options;
-using Synaxis.InferenceGateway.Application.Configuration;
-
-/// <summary>
-/// Provider registry implementation.
-/// </summary>
-public class ProviderRegistry : IProviderRegistry
+namespace Synaxis.InferenceGateway.Application
 {
-    private readonly SynaxisConfiguration config;
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using Microsoft.Extensions.Options;
+    using Synaxis.InferenceGateway.Application.Configuration;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ProviderRegistry"/> class.
+    /// Provider registry implementation.
     /// </summary>
-    /// <param name="config">Synaxis configuration options.</param>
-    public ProviderRegistry(IOptions<SynaxisConfiguration> config)
+    public class ProviderRegistry : IProviderRegistry
     {
-        this.config = config?.Value ?? throw new ArgumentNullException(nameof(config));
-    }
+        private readonly SynaxisConfiguration config;
 
-    /// <inheritdoc/>
-    public IEnumerable<(string ServiceKey, int Tier)> GetCandidates(string modelId)
-    {
-        if (modelId == null)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ProviderRegistry"/> class.
+        /// </summary>
+        /// <param name="config">Synaxis configuration options.</param>
+        public ProviderRegistry(IOptions<SynaxisConfiguration> config)
         {
-            throw new ArgumentNullException(nameof(modelId));
+            this.config = config?.Value ?? throw new ArgumentNullException(nameof(config));
         }
 
-        var providers = this.config.Providers?
-            .Where(p => p.Value?.Enabled == true)
-            .ToList() ?? new List<KeyValuePair<string, ProviderConfig>>();
-
-        if (!providers.Any())
+        /// <inheritdoc/>
+        public IEnumerable<(string ServiceKey, int Tier)> GetCandidates(string modelId)
         {
-            return Enumerable.Empty<(string, int)>();
+            if (modelId == null)
+            {
+                throw new ArgumentNullException(nameof(modelId));
+            }
+
+            var providers = this.config.Providers?
+                .Where(p => p.Value?.Enabled == true)
+                .ToList() ?? new List<KeyValuePair<string, ProviderConfig>>();
+
+            if (!providers.Any())
+            {
+                return Enumerable.Empty<(string, int)>();
+            }
+
+            // First, try exact case-insensitive matches
+            var exactMatches = providers
+                .Where(p => p.Value.Models?.Any(m => string.Equals(m, modelId, StringComparison.OrdinalIgnoreCase)) == true)
+                .Select(p => (p.Key, p.Value.Tier));
+
+            if (exactMatches.Any())
+            {
+                return exactMatches;
+            }
+
+            // If no exact matches, try wildcard providers
+            var wildcardMatches = providers
+                .Where(p => p.Value.Models?.Contains("*", StringComparer.Ordinal) == true)
+                .Select(p => (p.Key, p.Value.Tier));
+
+            return wildcardMatches;
         }
 
-        // First, try exact case-insensitive matches
-        var exactMatches = providers
-            .Where(p => p.Value.Models?.Any(m => string.Equals(m, modelId, StringComparison.OrdinalIgnoreCase)) == true)
-            .Select(p => (p.Key, p.Value.Tier));
-
-        if (exactMatches.Any())
+        /// <inheritdoc/>
+        public ProviderConfig? GetProvider(string serviceKey)
         {
-            return exactMatches;
-        }
+            if (serviceKey == null)
+            {
+                throw new ArgumentNullException(nameof(serviceKey));
+            }
 
-        // If no exact matches, try wildcard providers
-        var wildcardMatches = providers
-            .Where(p => p.Value.Models?.Contains("*", StringComparer.Ordinal) == true)
-            .Select(p => (p.Key, p.Value.Tier));
+            if (string.IsNullOrEmpty(serviceKey))
+            {
+                return null;
+            }
 
-        return wildcardMatches;
-    }
+            if (this.config.Providers?.TryGetValue(serviceKey, out var provider) == true && provider?.Enabled == true)
+            {
+                provider.Key = serviceKey;
+                return provider;
+            }
 
-    /// <inheritdoc/>
-    public ProviderConfig? GetProvider(string serviceKey)
-    {
-        if (serviceKey == null)
-        {
-            throw new ArgumentNullException(nameof(serviceKey));
-        }
-
-        if (string.IsNullOrEmpty(serviceKey))
-        {
             return null;
         }
-
-        if (this.config.Providers?.TryGetValue(serviceKey, out var provider) == true && provider?.Enabled == true)
-        {
-            provider.Key = serviceKey;
-            return provider;
-        }
-
-        return null;
     }
 }

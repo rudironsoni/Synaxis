@@ -33,7 +33,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
         /// <param name="reason">The reason for the switch.</param>
         /// <param name="ct">The cancellation token.</param>
         /// <returns>True if successful, false otherwise.</returns>
-        public async Task<bool> SwitchProviderAsync(Guid organizationId, string modelId, string fromProvider, string toProvider, string reason, CancellationToken ct = default)
+        public Task<bool> SwitchProviderAsync(Guid organizationId, string modelId, string fromProvider, string toProvider, string reason, CancellationToken ct = default)
         {
             try
             {
@@ -47,12 +47,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
 
                 // NOTE: Update routing policy to prefer new provider
                 // This would involve updating RoutingPolicy or creating provider preferences
-                return true;
+                return Task.FromResult(true);
             }
             catch (Exception ex)
             {
                 this._logger.LogError(ex, "Failed to switch provider");
-                return false;
+                return Task.FromResult(false);
             }
         }
 
@@ -63,17 +63,17 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
         /// <param name="modelId">The model ID.</param>
         /// <param name="ct">The cancellation token.</param>
         /// <returns>The routing metrics.</returns>
-        public async Task<RoutingMetrics> GetRoutingMetricsAsync(Guid organizationId, string modelId, CancellationToken ct = default)
+        public Task<RoutingMetrics> GetRoutingMetricsAsync(Guid organizationId, string modelId, CancellationToken ct = default)
         {
             try
             {
                 // NOTE: Query RequestLog to get routing metrics
-                return new RoutingMetrics(0, new Dictionary<string, int>(), 0m);
+                return Task.FromResult(new RoutingMetrics(0, new Dictionary<string, int>(), 0m));
             }
             catch (Exception ex)
             {
                 this._logger.LogError(ex, "Failed to get routing metrics");
-                return new RoutingMetrics(0, new Dictionary<string, int>(), 0m);
+                return Task.FromResult(new RoutingMetrics(0, new Dictionary<string, int>(), 0m));
             }
         }
     }

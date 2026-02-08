@@ -62,10 +62,10 @@ namespace Synaxis.InferenceGateway.WebApi.Agents
             var translatedRequest = this._translator.TranslateRequest(canonicalRequest);
 
             // 4. Prepare Options
-            var chatOptions = new ChatOptions { ModelId = translatedRequest.model };
+            var chatOptions = new ChatOptions { ModelId = translatedRequest.Model };
 
             // 5. Execute
-            var response = await this._chatClient.GetResponseAsync(translatedRequest.messages, chatOptions, cancellationToken).ConfigureAwait(false);
+            var response = await this._chatClient.GetResponseAsync(translatedRequest.Messages, chatOptions, cancellationToken).ConfigureAwait(false);
 
             // 6. Translate Response
             var message = response.Messages.FirstOrDefault() ?? new ChatMessage(ChatRole.Assistant, string.Empty);
@@ -102,9 +102,9 @@ namespace Synaxis.InferenceGateway.WebApi.Agents
         {
             var canonicalRequest = OpenAIRequestMapper.ToCanonicalRequest(openAIRequest, messages);
             var translatedRequest = this._translator.TranslateRequest(canonicalRequest);
-            var chatOptions = new ChatOptions { ModelId = translatedRequest.model };
+            var chatOptions = new ChatOptions { ModelId = translatedRequest.Model };
 
-            await foreach (var update in this._chatClient.GetStreamingResponseAsync(translatedRequest.messages, chatOptions, cancellationToken).ConfigureAwait(false))
+            await foreach (var update in this._chatClient.GetStreamingResponseAsync(translatedRequest.Messages, chatOptions, cancellationToken).ConfigureAwait(false))
             {
                 var translatedUpdate = this._translator.TranslateUpdate(update);
                 yield return new AgentsAI.AgentResponseUpdate(translatedUpdate);

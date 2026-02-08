@@ -82,10 +82,10 @@ namespace Synaxis.InferenceGateway.WebApi.Agents
             var translatedRequest = this._translator.TranslateRequest(canonicalRequest);
 
             // 4. Prepare Options
-            var chatOptions = new ChatOptions { ModelId = translatedRequest.model };
+            var chatOptions = new ChatOptions { ModelId = translatedRequest.Model };
 
             // 5. Execute
-            var response = await this._chatClient.GetResponseAsync(translatedRequest.messages, chatOptions, cancellationToken).ConfigureAwait(false);
+            var response = await this._chatClient.GetResponseAsync(translatedRequest.Messages, chatOptions, cancellationToken).ConfigureAwait(false);
 
             // 6. Translate Response
             var message = response.Messages.FirstOrDefault() ?? new ChatMessage(ChatRole.Assistant, string.Empty);
@@ -145,10 +145,10 @@ namespace Synaxis.InferenceGateway.WebApi.Agents
             var translatedRequest = this._translator.TranslateRequest(canonicalRequest);
 
             // 4. Prepare Options
-            var chatOptions = new ChatOptions { ModelId = translatedRequest.model };
+            var chatOptions = new ChatOptions { ModelId = translatedRequest.Model };
 
             // 5. Execute Streaming
-            var updates = this._chatClient.GetStreamingResponseAsync(translatedRequest.messages, chatOptions, cancellationToken);
+            var updates = this._chatClient.GetStreamingResponseAsync(translatedRequest.Messages, chatOptions, cancellationToken);
 
             // 6. Translate and Yield Updates
             await foreach (var update in updates.WithCancellation(cancellationToken).ConfigureAwait(false))
