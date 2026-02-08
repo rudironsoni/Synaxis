@@ -20,7 +20,7 @@ namespace Synaxis.InferenceGateway.Application.Identity.Models
         /// <summary>
         /// Gets or sets the user's email.
         /// </summary>
-        required public string Email { get; set; }
+        public required string Email { get; set; }
 
         /// <summary>
         /// Gets or sets the user's first name.

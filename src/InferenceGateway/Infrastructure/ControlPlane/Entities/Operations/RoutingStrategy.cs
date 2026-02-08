@@ -22,7 +22,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Operatio
         /// <summary>
         /// Gets or sets the name of the routing strategy.
         /// </summary>
-        required public string Name { get; set; }
+        public required string Name { get; set; }
 
         /// <summary>
         /// Gets or sets the description of the routing strategy.
@@ -32,7 +32,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Operatio
         /// <summary>
         /// Gets or sets the type of the routing strategy (e.g., "CostOptimized", "Performance", "Balanced").
         /// </summary>
-        required public string StrategyType { get; set; } = "CostOptimized";
+        public required string StrategyType { get; set; } = "CostOptimized";
 
         /// <summary>
         /// Gets or sets a value indicating whether free providers should be prioritized over paid providers.

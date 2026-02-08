@@ -24,7 +24,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity
         /// <summary>
         /// Gets or sets the user's current status (e.g., Active, Inactive).
         /// </summary>
-        required public string Status { get; set; } = "Active";
+        public required string Status { get; set; } = "Active";
 
         /// <summary>
         /// Gets or sets the timestamp when the user was soft-deleted, or null if not deleted.

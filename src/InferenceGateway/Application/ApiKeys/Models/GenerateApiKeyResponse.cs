@@ -19,17 +19,17 @@ namespace Synaxis.InferenceGateway.Application.ApiKeys.Models
         /// <summary>
         /// Gets or sets the full API key (only returned once at creation).
         /// </summary>
-        required public string ApiKey { get; set; }
+        public required string ApiKey { get; set; }
 
         /// <summary>
         /// Gets or sets the API key name.
         /// </summary>
-        required public string Name { get; set; }
+        public required string Name { get; set; }
 
         /// <summary>
         /// Gets or sets the API key prefix (visible for identification).
         /// </summary>
-        required public string Prefix { get; set; }
+        public required string Prefix { get; set; }
 
         /// <summary>
         /// Gets or sets the scopes.

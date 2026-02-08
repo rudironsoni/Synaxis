@@ -17,17 +17,17 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity
         /// <summary>
         /// Gets or sets the legal name.
         /// </summary>
-        required public string LegalName { get; set; }
+        public required string LegalName { get; set; }
 
         /// <summary>
         /// Gets or sets the display name.
         /// </summary>
-        required public string DisplayName { get; set; }
+        public required string DisplayName { get; set; }
 
         /// <summary>
         /// Gets or sets the URL slug.
         /// </summary>
-        required public string Slug { get; set; }
+        public required string Slug { get; set; }
 
         /// <summary>
         /// Gets or sets the registration number.
@@ -82,12 +82,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity
         /// <summary>
         /// Gets or sets the status.
         /// </summary>
-        required public string Status { get; set; } = "Active";
+        public required string Status { get; set; } = "Active";
 
         /// <summary>
         /// Gets or sets the plan tier.
         /// </summary>
-        required public string PlanTier { get; set; } = "Free";
+        public required string PlanTier { get; set; } = "Free";
 
         /// <summary>
         /// Gets or sets the trial end date.

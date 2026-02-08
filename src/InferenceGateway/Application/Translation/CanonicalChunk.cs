@@ -9,7 +9,7 @@ namespace Synaxis.InferenceGateway.Application.Translation
     /// <summary>
     /// Represents a canonical streaming chunk with content delta and optional tool call deltas.
     /// </summary>
-    /// <param name="contentDelta">The incremental content text.</param>
-    /// <param name="toolCallDeltas">The list of function call content deltas.</param>
-    public sealed record CanonicalChunk(string? contentDelta, IList<FunctionCallContent>? toolCallDeltas = null);
+    /// <param name="ContentDelta">The incremental content text.</param>
+    /// <param name="ToolCallDeltas">The list of function call content deltas.</param>
+    public sealed record CanonicalChunk(string? ContentDelta, IList<FunctionCallContent>? ToolCallDeltas = null);
 }

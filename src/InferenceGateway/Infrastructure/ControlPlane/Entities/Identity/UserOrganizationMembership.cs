@@ -33,7 +33,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity
         /// <summary>
         /// Gets or sets the organization role.
         /// </summary>
-        required public string OrganizationRole { get; set; } = "Member";
+        public required string OrganizationRole { get; set; } = "Member";
 
         /// <summary>
         /// Gets or sets the PrimaryGroupId.
@@ -58,7 +58,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity
         /// <summary>
         /// Gets or sets the membership status.
         /// </summary>
-        required public string Status { get; set; } = "Active";
+        public required string Status { get; set; } = "Active";
 
         /// <summary>
         /// Gets or sets the JoinedAt.

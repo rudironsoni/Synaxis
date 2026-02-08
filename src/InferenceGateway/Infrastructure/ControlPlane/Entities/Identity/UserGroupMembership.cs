@@ -27,7 +27,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity
         /// <summary>
         /// Gets or sets the role of the user within the group (e.g., Member, Admin).
         /// </summary>
-        required public string GroupRole { get; set; } = "Member";
+        public required string GroupRole { get; set; } = "Member";
 
         /// <summary>
         /// Gets or sets a value indicating whether this is the user's primary group membership.

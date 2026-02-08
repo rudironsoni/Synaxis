@@ -17,17 +17,17 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Platform
         /// <summary>
         /// Gets or sets the unique key for the provider (e.g., "openai", "anthropic").
         /// </summary>
-        required public string Key { get; set; }
+        public required string Key { get; set; }
 
         /// <summary>
         /// Gets or sets the display name for the provider.
         /// </summary>
-        required public string DisplayName { get; set; }
+        public required string DisplayName { get; set; }
 
         /// <summary>
         /// Gets or sets the type of the provider (e.g., "OpenAI", "Anthropic").
         /// </summary>
-        required public string ProviderType { get; set; }
+        public required string ProviderType { get; set; }
 
         /// <summary>
         /// Gets or sets the base endpoint URL for the provider's API.

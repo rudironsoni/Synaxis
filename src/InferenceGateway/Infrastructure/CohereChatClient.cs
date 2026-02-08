@@ -27,7 +27,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
         private readonly HttpClient _httpClient;
         private readonly string _modelId;
         private readonly ChatClientMetadata _metadata;
-        private static readonly JsonSerializerOptions _jsonOptions = new ()
+        private static readonly JsonSerializerOptions _jsonOptions = new()
         {
             PropertyNameCaseInsensitive = true,
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,

@@ -15,7 +15,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ChatClients.Strategies
     /// </summary>
     public class OpenAiGenericStrategy : IChatClientStrategy
     {
-        private static readonly HashSet<string> SupportedTypes = new ()
+        private static readonly HashSet<string> SupportedTypes = new()
         {
             "OpenAI", "Groq", "OpenRouter", "Pollinations", "Gemini", "Nvidia", "HuggingFace", "Cohere",
         };
