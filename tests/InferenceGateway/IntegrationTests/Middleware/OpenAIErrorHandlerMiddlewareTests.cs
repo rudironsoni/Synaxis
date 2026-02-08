@@ -317,7 +317,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Middleware
                 x => x.Log(
                     LogLevel.Error,
                     It.IsAny<EventId>(),
-                    It.Is<It.IsAnyType>((v, t) => v.ToString() !.Contains("test-request-id-456")),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("test-request-id-456")),
                     It.IsAny<Exception>(),
                     It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
                 Times.AtLeastOnce);
@@ -391,7 +391,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Middleware
                 x => x.Log(
                     LogLevel.Error,
                     It.IsAny<EventId>(),
-                    It.Is<It.IsAnyType>((v, t) => v.ToString() !.Contains("Inner exceptions: 2")),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Inner exceptions: 2")),
                     It.IsAny<Exception>(),
                     It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
                 Times.Once);
@@ -423,7 +423,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Middleware
             return string.Empty;
         }
 
-        private static readonly JsonSerializerOptions _jsonOptions = new ()
+        private static readonly JsonSerializerOptions _jsonOptions = new()
         {
             PropertyNameCaseInsensitive = true,
             PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,

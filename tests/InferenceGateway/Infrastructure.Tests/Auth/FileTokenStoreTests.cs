@@ -1,15 +1,20 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text.Json;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using Moq;
-using Synaxis.InferenceGateway.Infrastructure.Auth;
-using Xunit;
+// <copyright file="FileTokenStoreTests.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Auth
 {
+    using Microsoft.Extensions.Logging;
+    using Moq;
+    using Synaxis.InferenceGateway.Infrastructure.Auth;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Text.Json;
+    using System.Threading.Tasks;
+    using System;
+    using Xunit;
+
+
     public class FileTokenStoreTests : IDisposable
     {
         private readonly string _tmpPath;

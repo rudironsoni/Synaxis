@@ -1,15 +1,20 @@
-using System;
-using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
-using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
-using Synaxis.InferenceGateway.Infrastructure.Security;
-using Xunit;
+// <copyright file="AuditServiceTests.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
 {
+    using Microsoft.EntityFrameworkCore;
+    using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
+    using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
+    using Synaxis.InferenceGateway.Infrastructure.Security;
+    using System.Text.Json;
+    using System.Threading.Tasks;
+    using System.Threading;
+    using System;
+    using Xunit;
+
+
     public class AuditServiceTests
     {
         [Fact]

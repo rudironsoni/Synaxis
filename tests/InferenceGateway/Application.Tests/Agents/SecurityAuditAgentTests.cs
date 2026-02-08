@@ -38,7 +38,7 @@ public class SecurityAuditAgentTests
         var dbOptions = new DbContextOptionsBuilder<ControlPlaneDbContext>()
             .UseInMemoryDatabase($"SecurityAuditTest_{Guid.NewGuid()}")
             .Options;
-        var db = new ControlPlaneDbContext(dbOptions);
+        using var db = new ControlPlaneDbContext(dbOptions);
         var configMock = new Mock<IConfiguration>();
         var alertToolMock = new Mock<IAlertTool>();
         var auditToolMock = new Mock<IAuditTool>();
@@ -63,9 +63,6 @@ public class SecurityAuditAgentTests
 
         // Assert
         Assert.True(true); // Test that execution completes
-        
-        // Cleanup
-        db.Dispose();
     }
 
     [Fact]
@@ -79,7 +76,7 @@ public class SecurityAuditAgentTests
         var dbOptions = new DbContextOptionsBuilder<ControlPlaneDbContext>()
             .UseInMemoryDatabase($"SecurityAuditTest_{Guid.NewGuid()}")
             .Options;
-        var db = new ControlPlaneDbContext(dbOptions);
+        using var db = new ControlPlaneDbContext(dbOptions);
         var configMock = new Mock<IConfiguration>();
         var alertToolMock = new Mock<IAlertTool>();
         var auditToolMock = new Mock<IAuditTool>();
@@ -111,9 +108,6 @@ public class SecurityAuditAgentTests
                 null,
                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
-        
-        // Cleanup
-        db.Dispose();
     }
 
     [Theory]

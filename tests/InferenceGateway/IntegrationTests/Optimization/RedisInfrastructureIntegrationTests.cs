@@ -29,8 +29,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Optimization
         {
             this._output = output ?? throw new ArgumentNullException(nameof(output));
 
-            this._redis = new RedisBuilder()
-                .WithImage("redis:7-alpine")
+            this._redis = new RedisBuilder("redis:7-alpine")
                 .WithPortBinding(6379, true)
                 .Build();
         }

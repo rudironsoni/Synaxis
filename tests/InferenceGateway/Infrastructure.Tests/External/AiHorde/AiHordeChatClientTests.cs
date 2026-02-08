@@ -1,15 +1,19 @@
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Json;
-using System.Text.Json.Serialization;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.AI;
-using Xunit;
-using Moq;
-using Moq.Protected;
+// <copyright file="AiHordeChatClientTests.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
 namespace Synaxis.InferenceGateway.Infrastructure.External.AiHorde.Tests;
+
+using Microsoft.Extensions.AI;
+using Moq.Protected;
+using Moq;
+using System.Net.Http.Json;
+using System.Net.Http;
+using System.Net;
+using System.Text.Json.Serialization;
+using System.Threading.Tasks;
+using System.Threading;
+using Xunit;
 
 public class AiHordeChatClientTests
 {

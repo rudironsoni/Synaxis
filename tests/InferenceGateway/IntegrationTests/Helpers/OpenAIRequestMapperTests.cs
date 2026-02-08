@@ -24,7 +24,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Helpers
                 TopP = 0.9,
                 MaxTokens = 100,
             };
-            var messages = new List<ChatMessage> { new (ChatRole.User, "Hello") };
+            var messages = new List<ChatMessage> { new(ChatRole.User, "Hello") };
 
             var result = OpenAIRequestMapper.ToCanonicalRequest(openAIRequest, messages);
 
@@ -104,7 +104,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Helpers
                 Messages = new List<OpenAIMessage>(),
                 Tools = new List<OpenAITool>
             {
-                new ()
+                new()
                 {
                     Type = "function",
                     Function = new OpenAIFunction
@@ -252,7 +252,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Helpers
             {
                 Messages = new List<OpenAIMessage>
             {
-                new () { Role = "system", Content = "You are helpful" },
+                new() { Role = "system", Content = "You are helpful" },
             },
             };
 
@@ -270,7 +270,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Helpers
             {
                 Messages = new List<OpenAIMessage>
             {
-                new () { Role = "user", Content = "Hello" },
+                new() { Role = "user", Content = "Hello" },
             },
             };
 
@@ -288,7 +288,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Helpers
             {
                 Messages = new List<OpenAIMessage>
             {
-                new () { Role = "assistant", Content = "Hi there" },
+                new() { Role = "assistant", Content = "Hi there" },
             },
             };
 
@@ -306,7 +306,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Helpers
             {
                 Messages = new List<OpenAIMessage>
             {
-                new () { Role = "tool", Content = "Tool result", ToolCallId = "call_123" },
+                new() { Role = "tool", Content = "Tool result", ToolCallId = "call_123" },
             },
             };
 
@@ -323,7 +323,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Helpers
             {
                 Messages = new List<OpenAIMessage>
             {
-                new () { Role = "custom_role", Content = "Custom content" },
+                new() { Role = "custom_role", Content = "Custom content" },
             },
             };
 
@@ -341,7 +341,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Helpers
             {
                 Messages = new List<OpenAIMessage>
             {
-                new () { Role = "user", Content = "Hello", Name = "John" },
+                new() { Role = "user", Content = "Hello", Name = "John" },
             },
             };
 
@@ -358,7 +358,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Helpers
             {
                 Messages = new List<OpenAIMessage>
             {
-                new () { Role = "user", Content = null },
+                new() { Role = "user", Content = null },
             },
             };
 
@@ -375,13 +375,13 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Helpers
             {
                 Messages = new List<OpenAIMessage>
             {
-                new ()
+                new()
                 {
                     Role = "assistant",
                     Content = "Calling function",
                     ToolCalls = new List<OpenAIToolCall>
                     {
-                        new ()
+                        new()
                         {
                             Id = "call_123",
                             Type = "function",
@@ -414,13 +414,13 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Helpers
             {
                 Messages = new List<OpenAIMessage>
             {
-                new ()
+                new()
                 {
                     Role = "assistant",
                     Content = "Calling multiple functions",
                     ToolCalls = new List<OpenAIToolCall>
                     {
-                        new ()
+                        new()
                         {
                             Id = "call_1",
                             Type = "function",
@@ -430,7 +430,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Helpers
                                 Arguments = "{}"
                             }
                         },
-                        new ()
+                        new()
                         {
                             Id = "call_2",
                             Type = "function",
@@ -459,13 +459,13 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Helpers
             {
                 Messages = new List<OpenAIMessage>
             {
-                new ()
+                new()
                 {
                     Role = "assistant",
                     Content = string.Empty,
                     ToolCalls = new List<OpenAIToolCall>
                     {
-                        new ()
+                        new()
                         {
                             Id = "call_123",
                             Type = "function",
@@ -494,7 +494,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Helpers
             {
                 Messages = new List<OpenAIMessage>
             {
-                new ()
+                new()
                 {
                     Role = "tool",
                     Content = "25 degrees",
@@ -519,7 +519,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Helpers
             {
                 Messages = new List<OpenAIMessage>
             {
-                new ()
+                new()
                 {
                     Role = "tool",
                     Content = "Result",
@@ -543,9 +543,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Helpers
             {
                 Messages = new List<OpenAIMessage>
             {
-                new () { Role = "system", Content = "System prompt" },
-                new () { Role = "user", Content = "User message" },
-                new () { Role = "assistant", Content = "Assistant response" },
+                new() { Role = "system", Content = "System prompt" },
+                new() { Role = "user", Content = "User message" },
+                new() { Role = "assistant", Content = "Assistant response" },
             },
             };
 
@@ -564,7 +564,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Helpers
             {
                 Messages = new List<OpenAIMessage>
             {
-                new ()
+                new()
                 {
                     Role = "assistant",
                     Content = "No tools",
@@ -586,13 +586,13 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Helpers
             {
                 Messages = new List<OpenAIMessage>
             {
-                new ()
+                new()
                 {
                     Role = "assistant",
                     Content = string.Empty,
                     ToolCalls = new List<OpenAIToolCall>
                     {
-                        new ()
+                        new()
                         {
                             Id = "call_123",
                             Type = "function",

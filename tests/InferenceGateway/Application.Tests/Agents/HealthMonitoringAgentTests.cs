@@ -61,7 +61,16 @@ public class HealthMonitoringAgentTests : IDisposable
 
     public void Dispose()
     {
-        this._db?.Dispose();
+        this.Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            this._db?.Dispose();
+        }
     }
 
     [Fact]

@@ -31,7 +31,7 @@ public class TranslationPipelineTests
 
         var result = pipeline.TranslateResponse(response);
 
-        Assert.Equal("first-response", result.content);
+        Assert.Equal("first-response", result.Content);
     }
 
     [Fact]
@@ -83,7 +83,7 @@ public class TranslationPipelineTests
 
 #pragma warning disable SA1101 // False positive with record 'with' expressions
         public CanonicalResponse Translate(CanonicalResponse response)
-            => response with { content = this._content };
+            => response with { Content = this._content };
 #pragma warning restore SA1101
     }
 

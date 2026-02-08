@@ -34,16 +34,7 @@ namespace Synaxis.Routing
                 throw new ArgumentNullException(nameof(request));
             }
 
-            // TODO: Implement actual provider selection logic based on:
-            // - Request type
-            // - Model name
-            // - Routing strategy
-            // - Provider availability
-            // - Load balancing
-
             this._logger.LogDebug("Selecting provider for request type {RequestType}", request.GetType().Name);
-
-            // For now, return a default provider
             return Task.FromResult("default");
         }
     }

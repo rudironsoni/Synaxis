@@ -237,7 +237,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var cancellationToken = CancellationToken.None;
 
             var batchSizes = new[] { 10, 50, 100 };
-            var results = new Dictionary<int, (long totalTime, double throughput)>();
+            var results = new Dictionary<int, (long TotalTime, double Throughput)>();
 
             foreach (var batchSize in batchSizes)
             {
@@ -264,7 +264,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var lastBatch = results[batchSizes[2]];
 
             // Throughput may degrade with larger batches due to overhead - adjust expectation
-            var throughputRatio = lastBatch.throughput / firstBatch.throughput;
+            var throughputRatio = lastBatch.Throughput / firstBatch.Throughput;
             Assert.True(throughputRatio > 0.2, $"Throughput degraded significantly: {throughputRatio:F2}");
         }
 

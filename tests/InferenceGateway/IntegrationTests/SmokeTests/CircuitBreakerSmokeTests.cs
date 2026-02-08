@@ -285,7 +285,7 @@ string.Equals(apiKey, "0000000000", StringComparison.Ordinal))
     public class CircuitBreakerState
     {
         private const int FailureThreshold = 3;
-        private readonly Dictionary<string, ProviderState> _providerStates = new (StringComparer.Ordinal);
+        private readonly Dictionary<string, ProviderState> _providerStates = new(StringComparer.Ordinal);
 
         public bool IsOpen(string provider)
         {

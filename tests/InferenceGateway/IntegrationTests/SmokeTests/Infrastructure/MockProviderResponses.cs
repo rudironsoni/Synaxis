@@ -323,7 +323,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
 
         public string Model { get; set; } = string.Empty;
 
-        public List<ChatCompletionChoice> Choices { get; set; } = new ();
+        public List<ChatCompletionChoice> Choices { get; set; } = new();
 
         public ChatCompletionUsage? Usage { get; set; }
     }
@@ -332,7 +332,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
     {
         public int Index { get; set; }
 
-        public ChatCompletionMessageDto Message { get; set; } = new ();
+        public ChatCompletionMessageDto Message { get; set; } = new();
 
         public string FinishReason { get; set; } = string.Empty;
     }
@@ -363,7 +363,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
 
         public string Model { get; set; } = string.Empty;
 
-        public List<LegacyCompletionChoice> Choices { get; set; } = new ();
+        public List<LegacyCompletionChoice> Choices { get; set; } = new();
 
         public LegacyUsage? Usage { get; set; }
     }

@@ -53,7 +53,7 @@ public sealed class SmartRoutingChatClientTests : TestBase, IDisposable
             .Returns(pipeline);
 
         // Setup fallback orchestrator with default behavior
-        SetupFallbackOrchestrator();
+        this.SetupFallbackOrchestrator();
 
         this._client = new SmartRoutingChatClient(
             this._chatClientFactoryMock.Object,
@@ -100,7 +100,6 @@ public sealed class SmartRoutingChatClientTests : TestBase, IDisposable
                             catch (Exception ex)
                             {
                                 exceptions.Add(ex);
-                                continue;
                             }
                         }
                     }
@@ -139,7 +138,6 @@ public sealed class SmartRoutingChatClientTests : TestBase, IDisposable
                             catch (Exception ex)
                             {
                                 exceptions.Add(ex);
-                                continue;
                             }
                         }
                     }

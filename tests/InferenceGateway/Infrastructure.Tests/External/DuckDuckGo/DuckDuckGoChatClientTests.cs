@@ -1,16 +1,20 @@
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
-using System.Threading.Tasks;
+// <copyright file="DuckDuckGoChatClientTests.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
+namespace Synaxis.InferenceGateway.Infrastructure.Tests.External.DuckDuckGo;
+
+using Microsoft.Extensions.AI;
 using RichardSzalay.MockHttp;
 using Synaxis.InferenceGateway.Infrastructure.External.DuckDuckGo;
 using Synaxis.InferenceGateway.Infrastructure;
-using Microsoft.Extensions.AI;
-using Xunit;
 using System.Collections.Generic;
-
-namespace Synaxis.InferenceGateway.Infrastructure.Tests.External.DuckDuckGo;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Net.Http;
+using System.Net;
+using System.Threading.Tasks;
+using Xunit;
 
 public class DuckDuckGoChatClientTests
 {

@@ -1,21 +1,26 @@
-using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using Moq;
-using Xunit;
-using Synaxis.InferenceGateway.Application.Configuration;
-using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
-using Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google;
+// <copyright file="GoogleAuthStrategyTests.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.Google
 {
+    using Microsoft.Extensions.Logging;
+    using Moq;
+    using Synaxis.InferenceGateway.Application.Configuration;
+    using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
+    using Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google;
+    using System.Collections.Generic;
+    using System.Net.Http.Headers;
+    using System.Net.Http;
+    using System.Net;
+    using System.Text.Json;
+    using System.Text;
+    using System.Threading.Tasks;
+    using System.Threading;
+    using System;
+    using Xunit;
+
+
     public class GoogleAuthStrategyTests
     {
         private AntigravitySettings CreateSettings() => new AntigravitySettings { ClientId = "cid", ClientSecret = "secret" };

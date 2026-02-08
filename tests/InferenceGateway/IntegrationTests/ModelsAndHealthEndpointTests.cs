@@ -137,7 +137,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         {
             public string Object { get; set; } = string.Empty;
 
-            public List<ModelItem> Data { get; set; } = new ();
+            public List<ModelItem> Data { get; set; } = new();
         }
 
         private sealed class ModelItem

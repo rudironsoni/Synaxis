@@ -333,11 +333,11 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
             // Simulate JWT creation that would happen during Google auth
             var claims = new System.Collections.Generic.List<System.Security.Claims.Claim>
         {
-            new (JwtRegisteredClaimNames.Sub, userId.ToString()),
-            new (JwtRegisteredClaimNames.Email, email),
-            new ("role", role.ToString()),
-            new ("tenantId", tenantId.ToString()),
-            new ("authProvider", "google"),
+            new(JwtRegisteredClaimNames.Sub, userId.ToString()),
+            new(JwtRegisteredClaimNames.Email, email),
+            new("role", role.ToString()),
+            new("tenantId", tenantId.ToString()),
+            new("authProvider", "google"),
         };
 
             // Verify all required claims are present

@@ -1,11 +1,15 @@
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
-using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity;
-using Synaxis.InferenceGateway.Infrastructure.Identity;
-using Xunit;
+// <copyright file="SynaxisUserStoreTests.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity;
+
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity;
+using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
+using Synaxis.InferenceGateway.Infrastructure.Identity;
+using Xunit;
 
 /// <summary>
 /// Unit tests for SynaxisUserStore.

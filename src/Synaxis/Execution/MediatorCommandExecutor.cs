@@ -30,7 +30,7 @@ namespace Synaxis.Execution
         }
 
         /// <inheritdoc/>
-        public async ValueTask<TResult> ExecuteAsync(TCommand command, CancellationToken cancellationToken)
+        public ValueTask<TResult> ExecuteAsync(TCommand command, CancellationToken cancellationToken)
         {
             if (command is null)
             {
@@ -43,7 +43,7 @@ namespace Synaxis.Execution
                     $"Command type {typeof(TCommand).Name} does not implement IRequest<{typeof(TResult).Name}>");
             }
 
-            return await this._mediator.Send(request, cancellationToken).ConfigureAwait(false);
+            return this._mediator.Send(request, cancellationToken);
         }
     }
 }

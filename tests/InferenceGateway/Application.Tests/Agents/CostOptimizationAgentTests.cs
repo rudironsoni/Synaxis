@@ -60,9 +60,6 @@ public class CostOptimizationAgentTests
 
         // Assert
         Assert.True(true); // Test that execution completes
-        
-        // Cleanup
-        db.Dispose();
     }
 
     [Fact]
@@ -105,9 +102,6 @@ public class CostOptimizationAgentTests
                 null,
                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
-        
-        // Cleanup
-        db.Dispose();
     }
 
     [Theory]

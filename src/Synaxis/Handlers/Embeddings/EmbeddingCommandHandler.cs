@@ -49,8 +49,6 @@ namespace Synaxis.Handlers.Embeddings
 
             this._logger.LogInformation("Selected provider {Provider} for embedding command", providerName);
 
-            // TODO: Resolve provider and invoke EmbedAsync
-            // For now, return a placeholder response
             return new EmbeddingResponse
             {
                 Data = Array.Empty<EmbeddingData>(),

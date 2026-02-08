@@ -1,14 +1,18 @@
+// <copyright file="ApiKeyServiceTests.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
+namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security;
+
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Moq;
-using Synaxis.InferenceGateway.Application.ApiKeys;
 using Synaxis.InferenceGateway.Application.ApiKeys.Models;
-using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
+using Synaxis.InferenceGateway.Application.ApiKeys;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Operations;
+using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 using Synaxis.InferenceGateway.Infrastructure.Services;
 using Xunit;
-
-namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security;
 
 /// <summary>
 /// Unit tests for the ApiKeyService implementation.

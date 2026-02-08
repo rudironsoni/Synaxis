@@ -1,4 +1,9 @@
-using Xunit;
+// <copyright file="RedisQuotaTrackerTests.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
+namespace Synaxis.InferenceGateway.Infrastructure.Tests.Routing;
+
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -6,8 +11,7 @@ using Moq;
 using StackExchange.Redis;
 using Synaxis.InferenceGateway.Application.Configuration;
 using Synaxis.InferenceGateway.Infrastructure.Routing;
-
-namespace Synaxis.InferenceGateway.Infrastructure.Tests.Routing;
+using Xunit;
 
 public class RedisQuotaTrackerTests
 {

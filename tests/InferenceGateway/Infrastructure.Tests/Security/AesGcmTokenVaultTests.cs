@@ -1,19 +1,24 @@
-using System;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using Moq;
-using Synaxis.InferenceGateway.Application.Configuration;
-using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
-using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
-using Synaxis.InferenceGateway.Infrastructure.Security;
-using Xunit;
+// <copyright file="AesGcmTokenVaultTests.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
 {
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.Options;
+    using Moq;
+    using Synaxis.InferenceGateway.Application.Configuration;
+    using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
+    using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
+    using Synaxis.InferenceGateway.Infrastructure.Security;
+    using System.Security.Cryptography;
+    using System.Text;
+    using System.Threading.Tasks;
+    using System.Threading;
+    using System;
+    using Xunit;
+
+
     public class AesGcmTokenVaultTests
     {
         private const string TestMasterKey = "THIS_IS_A_TEST_MASTER_KEY_FOR_UNIT_TESTS_1234567890";

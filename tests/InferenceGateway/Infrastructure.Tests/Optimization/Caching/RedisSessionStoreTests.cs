@@ -1,11 +1,15 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Moq;
-using StackExchange.Redis;
-using Xunit;
+// <copyright file="RedisSessionStoreTests.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Optimization.Caching;
+
+using Moq;
+using StackExchange.Redis;
+using System.Threading.Tasks;
+using System.Threading;
+using System;
+using Xunit;
 
 /// <summary>
 /// Unit tests for ISessionStore Redis implementation

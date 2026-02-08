@@ -1,19 +1,24 @@
-using System;
-using System.IO;
-using System.Net;
-using System.Net.Http;
-using System.Text;
-using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using Moq;
-using Xunit;
-using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
-using Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub;
+// <copyright file="GitHubAuthStrategyTests.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitHub
 {
+    using Microsoft.Extensions.Logging;
+    using Moq;
+    using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
+    using Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub;
+    using System.IO;
+    using System.Net.Http;
+    using System.Net;
+    using System.Text.Json;
+    using System.Text;
+    using System.Threading.Tasks;
+    using System.Threading;
+    using System;
+    using Xunit;
+
+
     public class GitHubAuthStrategyTests : IDisposable
     {
         private readonly string? _origHome;

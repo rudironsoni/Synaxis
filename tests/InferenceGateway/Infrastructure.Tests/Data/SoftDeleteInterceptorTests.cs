@@ -1,15 +1,19 @@
-using System.Security.Claims;
+// <copyright file="SoftDeleteInterceptorTests.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
+namespace Synaxis.InferenceGateway.Infrastructure.Tests.Data;
+
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Moq;
-using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Operations;
+using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 using Synaxis.InferenceGateway.Infrastructure.Data.Interceptors;
+using System.Security.Claims;
 using Xunit;
-
-namespace Synaxis.InferenceGateway.Infrastructure.Tests.Data;
 
 /// <summary>
 /// Unit tests for SoftDeleteInterceptor.
@@ -133,10 +137,10 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
         // Act
         // Note: Using direct property assignment instead of Remove() due to EF Core InMemory limitations
         group.DeletedAt = DateTime.UtcNow;
-        
+
         // Explicitly mark the DeletedAt property as modified to ensure the interceptor processes it
         this._dbContext.Entry(group).Property(nameof(Group.DeletedAt)).IsModified = true;
-        
+
         await this._dbContext.SaveChangesAsync();
 
         // Clear change tracker to force fresh query from database
