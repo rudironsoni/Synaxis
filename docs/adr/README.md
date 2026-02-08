@@ -45,6 +45,20 @@ An Architecture Decision Record (ADR) captures a single architectural decision a
 - [**ADR-011: Dynamic Model Registry**](./011-dynamic-model-registry.md) _(2026-01-29)_  
   Database-driven model discovery and synchronization, eliminating static configuration maintenance.
 
+### SDK Architecture (February 2026)
+
+- [**ADR-012: SDK-First Package Architecture**](./012-sdk-first-package-architecture.md) _(2026-02-08)_  
+  Multi-tier package structure with strict dependency rules enabling SDK, Gateway, and SaaS consumption patterns.
+
+- [**ADR-013: Transport Abstraction with Mediator**](./013-transport-abstraction-mediator.md) _(2026-02-08)_  
+  CQRS backbone using MartinOthamar.Mediator with ICommandExecutor/IStreamExecutor abstractions for HTTP, gRPC, WebSocket.
+
+- [**ADR-014: Explicit Registration Pattern**](./014-explicit-registration-pattern.md) _(2026-02-08)_  
+  No auto-discovery, explicit DI registration only with AddSynaxisTransport*() and MapSynaxis*() patterns.
+
+- [**ADR-015: Contracts Versioning Strategy**](./015-contracts-versioning-strategy.md) _(2026-02-08)_  
+  Namespace-based versioning (V1.Messages, V2.Messages) with stability tiers and N-1 compatibility guarantees.
+
 ## ADR Format
 
 All ADRs follow this structure:
