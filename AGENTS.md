@@ -4,130 +4,130 @@ Guidelines for AI coding assistants working in the Synaxis codebase.
 
 ## Task Tracking
 
-This project uses **bd** (beads) for issue tracking. Run `bd onboard` to get started.
-
-### Quick Reference
+This project uses **bd** (beads) for issue tracking.
 
 ```bash
 bd ready              # Find available work
 bd show <id>          # View issue details
 bd update <id> --status in_progress  # Claim work
 bd close <id>         # Complete work
-bd sync               # Sync with git
+bd sync               # Sync with git and push
 ```
 
-## Landing the Plane (Session Completion)
+## Session Completion Protocol
 
-**When ending a work session**, you MUST complete ALL steps below. Work is NOT complete until `git push` succeeds.
-
-**MANDATORY WORKFLOW:**
-
-1. **File issues for remaining work** - Create issues for anything that needs follow-up
-2. **Run quality gates** (if code changed) - Tests, linters, builds
-3. **Update issue status** - Close finished work, update in-progress items
-4. **PUSH TO REMOTE** - This is MANDATORY:
-   ```bash
-   git pull --rebase
-   bd sync
-   git push
-   git status  # MUST show "up to date with origin"
-   ```
-5. **Clean up** - Clear stashes, prune remote branches
-6. **Verify** - All changes committed AND pushed
-7. **Hand off** - Provide context for next session
-
-**CRITICAL RULES:**
-- Work is NOT complete until `git push` succeeds
-- NEVER stop before pushing - that leaves work stranded locally
-- NEVER say "ready to push when you are" - YOU must push
-- If push fails, resolve and retry until it succeeds
-
-## Build Commands
+Work is NOT complete until `git push` succeeds:
 
 ```bash
-# Build entire solution
-dotnet build
+git status              # Check what changed
+git add <files>         # Stage changes
+bd sync                 # Commit beads changes
+git commit -m "..."     # Commit code
+bd sync                 # Sync again
+git push                # Push to remote
+git status              # MUST show "up to date"
+```
 
-# Build in Release mode
-dotnet build -c Release
+## Build, Test, and Lint Commands
 
-# Run all tests
-dotnet test
+### Build
+```bash
+dotnet restore Synaxis.sln
+dotnet build Synaxis.sln
+dotnet build Synaxis.sln --configuration Release
+```
 
-# Run a specific test project
+### Test
+```bash
+# All tests
+dotnet test Synaxis.sln
+
+# Specific test project
 dotnet test tests/Synaxis.Tests/
 
-# Run a single test class
+# Single test class
 dotnet test --filter "FullyQualifiedName~RetryPolicyTests"
 
-# Run a single test method
-dotnet test --filter "RetryPolicyTests.ExecuteAsync_WhenActionSucceedsOnFirstAttempt_ReturnsResultImmediately"
+# Single test method
+dotnet test --filter "FullyQualifiedName=RetryPolicyTests.ExecuteAsync_WhenActionSucceedsOnFirstAttempt_ReturnsResultImmediately"
 
-# Run tests with coverage
+# With coverage
 dotnet test --collect:"XPlat Code Coverage" --settings coverlet.runsettings
+```
 
-# Run tests in specific project with verbosity
-dotnet test tests/InferenceGateway.UnitTests/ -v n
+### Lint/Format
+```bash
+dotnet format Synaxis.sln
+dotnet format Synaxis.sln --verify-no-changes
 ```
 
 ## Code Style Guidelines
 
 ### Project Configuration
 - **Target Framework**: .NET 10.0
-- **Nullable**: Enabled (`#nullable enable` or project-level)
+- **Nullable**: Enabled (`<Nullable>enable</Nullable>`)
 - **Implicit Usings**: Enabled
-- **TreatWarningsAsErrors**: True (all warnings are build errors)
+- **TreatWarningsAsErrors**: True
 - **Central Package Management**: Enabled via Directory.Packages.props
 
 ### Naming Conventions
-- **Private fields**: Use underscore prefix (`_fieldName`) - SA1309 disabled
-- **Public members**: PascalCase
-- **Parameters**: camelCase
-- **Local variables**: camelCase
-- **Constants**: PascalCase or UPPER_SNAKE for public constants
-- **Interfaces**: Prefix with `I` (e.g., `IUserService`)
-- **Generic type parameters**: Prefix with `T` (e.g., `TContainer`)
+- **Classes**: `PascalCase` (e.g., `ProviderRoutingService`)
+- **Interfaces**: `PascalCase` with `I` prefix (e.g., `IProviderClient`)
+- **Methods**: `PascalCase`, async methods end with `Async` suffix
+- **Private fields**: `_camelCase` with underscore prefix (e.g., `_logger`)
+- **Properties**: `PascalCase` (e.g., `ProviderName`)
+- **Parameters**: `camelCase`
+- **Constants**: `PascalCase`
 
 ### Formatting
 - **Indentation**: 4 spaces (no tabs)
 - **Encoding**: UTF-8
 - **Line endings**: CRLF for .cs files (Git handles conversion)
-- **Maximum line length**: Not strictly enforced, but keep under 120 characters
+- Use `var` when type is obvious
+- Always use braces (even for single-line blocks)
+- Keep lines under 120 characters
 
-### Imports and Using Statements
+### Imports and Namespaces
 ```csharp
-// Use file-scoped namespaces when possible
-namespace Synaxis.Core.Models;
-
-// Prefer using directives inside namespace declaration
-namespace Synaxis.Core.Models
+// File-scoped namespace with usings INSIDE namespace
+namespace Synaxis.InferenceGateway.WebApi.Controllers
 {
-    using System;
-    using System.Collections.Generic;
-}
+    using Microsoft.AspNetCore.Mvc;
+    using Synaxis.Core.Models;
 
-// Or at top with file-scoped namespace
-using System;
-using Microsoft.Extensions.Logging;
+    public class MyController : ControllerBase
+    {
+        private readonly IService _service;
+
+        public MyController(IService service)
+        {
+            this._service = service;
+        }
+    }
+}
 ```
 
-### Documentation
+### Key Patterns
+- Use `this.` prefix for instance members (fields, methods, properties)
+- Prefer `is` pattern matching: `if (provider is null)` not `if (provider == null)`
+- Use expression-bodied members for simple cases
+- Avoid `async void` (except event handlers)
 - XML documentation required for public APIs
-- Copyright headers allowed but not enforced (SA1636 disabled)
-- Keep comments meaningful and current
+- Copyright headers optional but present in existing files
 
-### Type Organization
-- Multiple DTOs/models allowed per file in `Contracts/`, `Models/`, `Entities/` directories
-- One public class per file elsewhere (SA1402 disabled for specific directories)
-- Member ordering not strictly enforced (SA1201/SA1202/SA1204 disabled)
+### Architecture
+- Clean Architecture: Domain → Application → Infrastructure → WebApi
+- CQRS pattern with Mediator for commands/queries
+- Constructor dependency injection
+- Result pattern for operations that can fail
+- Multiple DTOs/models allowed per file in `Contracts/`, `Models/`, `Entities/`
 
 ### Testing Conventions
 ```csharp
-// Use xUnit with Fact for sync, async Task for async
 public class RetryPolicyTests
 {
     [Fact]
-    public async Task ExecuteAsync_WhenActionSucceedsOnFirstAttempt_ReturnsResultImmediately()
+    public async Task ExecuteAsync_WhenActionSucceeds_ReturnsResultImmediately()
     {
         // Arrange
         var policy = new RetryPolicy(maxRetries: 3);
@@ -141,16 +141,15 @@ public class RetryPolicyTests
 }
 ```
 
+**Test Framework**: xUnit with FluentAssertions, NSubstitute/Moq  
+**Coverage**: Minimum 80% line coverage required
+
 ### Error Handling
 - Use specific exception types, not generic Exception
 - Prefer async/await over ContinueWith
 - Use `ConfigureAwait(false)` in library code
-- Always handle IDisposable properly (IDisposableAnalyzers enabled)
-
-### Async Patterns
-- Method names should end with `Async` for async methods
-- Return `Task` or `Task<T>`, not `void` for async
-- Use `CancellationToken` parameters where appropriate
+- Return structured errors with codes
+- Never expose sensitive data in error messages
 
 ### Analyzers Enabled
 - StyleCop (code style)
@@ -159,112 +158,6 @@ public class RetryPolicyTests
 - AsyncFixer (async/await patterns)
 - IDisposableAnalyzers (resource management)
 - BannedApiAnalyzers (API restrictions)
-
-Use 'bd' for task tracking
-
-## Build, Test, and Lint Commands
-
-### Build
-```bash
-# Restore dependencies
-dotnet restore Synaxis.sln
-
-# Build solution (Debug)
-dotnet build Synaxis.sln
-
-# Build (Release)
-dotnet build Synaxis.sln --configuration Release
-
-# Clean build artifacts
-find . -type d -name "obj" -exec rm -rf {} + 2>/dev/null
-find . -type d -name "bin" -exec rm -rf {} + 2>/dev/null
-```
-
-### Test
-```bash
-# Run all tests
-dotnet test Synaxis.sln
-
-# Run specific test project
-dotnet test tests/Synaxis.Tests/Synaxis.Tests.csproj
-
-# Run specific test class
-dotnet test --filter "FullyQualifiedName~RetryPolicyTests"
-
-# Run single test method
-dotnet test --filter "FullyQualifiedName=RetryPolicyTests.ExecuteAsync_WhenActionSucceedsOnFirstAttempt_ReturnsResultImmediately"
-
-# Run with coverage (requires coverlet)
-dotnet test Synaxis.sln --collect:"XPlat Code Coverage" --results-directory ./coverage
-```
-
-### Lint/Format
-```bash
-# Format code
-dotnet format Synaxis.sln
-
-# Verify formatting without changes
-dotnet format Synaxis.sln --verify-no-changes
-```
-
-## Code Style Guidelines
-
-### C# Standards
-
-**Framework:** .NET 10 with central package management (Directory.Packages.props)
-
-**Build Configuration:** (from Directory.Build.props)
-- `TreatWarningsAsErrors: true`
-- `Nullable: enable`
-- `ImplicitUsings: enable`
-
-**Naming Conventions:**
-- Classes: `PascalCase` (e.g., `ProviderRoutingService`)
-- Interfaces: `PascalCase` with `I` prefix (e.g., `IProviderClient`)
-- Methods: `PascalCase` (e.g., `SendChatRequestAsync`)
-- Private fields: `_camelCase` (e.g., `_logger`)
-- Constants: `PascalCase` (e.g., `MaxRetries`)
-- Properties: `PascalCase` (e.g., `ProviderName`)
-- Async methods: Must end with `Async` suffix
-
-**Code Style Rules:**
-- Use `var` when type is obvious
-- Prefer `is` pattern matching: `if (provider is null)` not `if (provider == null)`
-- Always use braces (even for single-line blocks)
-- Use expression-bodied members for simple cases
-- Avoid `async void` (except event handlers)
-
-**Architecture:**
-- Clean Architecture: Domain → Application → Infrastructure → WebApi
-- CQRS pattern with MediatR for commands/queries
-- Constructor dependency injection
-- Result pattern for operations that can fail
-
-### Testing Standards
-
-**Framework:** xUnit with FluentAssertions, NSubstitute/Moq
-
-**Coverage Requirements:** (from coverlet.runsettings)
-- Minimum 80% line coverage threshold
-- Format: Cobertura
-- Excludes: `[*]Tests*`
-
-**Test Structure:**
-```csharp
-[Fact]
-public async Task MethodName_Scenario_ExpectedResult()
-{
-    // Arrange
-    var mock = new Mock<IService>();
-    var sut = new Service(mock.Object);
-
-    // Act
-    var result = await sut.DoSomethingAsync();
-
-    // Assert
-    result.IsSuccess.Should().BeTrue();
-}
-```
 
 ## Project Structure
 
@@ -288,13 +181,6 @@ Synaxis.sln
 └── Directory.Packages.props    # Central package versions
 ```
 
-## Error Handling
-
-- Use Result pattern for operations that can fail
-- Return structured errors with codes
-- Log errors with appropriate levels
-- Never expose sensitive data in error messages
-
 ## Commit Convention
 
 Follow Conventional Commits:
@@ -308,8 +194,8 @@ Common scopes: `routing`, `providers`, `streaming`, `auth`, `api`, `tests`
 
 ## Important Notes
 
-- Warnings are treated as errors - fix all warnings
-- All tests must pass before merging
-- 80% minimum code coverage required
+- **Warnings are treated as errors** - fix all warnings before committing
+- **All tests must pass** before merging
+- **80% minimum code coverage** required
 - No breaking changes without explicit approval
-- ULTRA MISER MODE™: Optimize for efficiency and cost
+- ULTRA MISER MODE: Optimize for efficiency and cost
