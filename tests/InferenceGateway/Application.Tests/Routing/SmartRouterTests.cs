@@ -31,7 +31,7 @@ public class SmartRouterTests
             .Setup(x => x.CalculateScore(It.IsAny<EnrichedCandidate>(), It.IsAny<string?>(), It.IsAny<string?>()))
             .Returns<EnrichedCandidate, string?, string?>((candidate, _, _) =>
             {
-                var baseScore = 100.0 - candidate.config.Tier;
+                var baseScore = 100.0 - candidate.Config.Tier;
                 return candidate.IsFree ? baseScore + 50.0 : baseScore;
             });
 

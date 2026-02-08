@@ -9,17 +9,17 @@ namespace Synaxis.InferenceGateway.Application.RealTime
     /// <summary>
     /// Real-time notification when cost optimization is applied.
     /// </summary>
-    /// <param name="organizationId">The organization identifier.</param>
-    /// <param name="fromProvider">The name of the provider being switched from.</param>
-    /// <param name="toProvider">The name of the provider being switched to.</param>
-    /// <param name="reason">The reason for the optimization.</param>
-    /// <param name="savingsPer1MTokens">The savings per 1 million tokens.</param>
-    /// <param name="appliedAt">The date and time when the optimization was applied.</param>
+    /// <param name="OrganizationId">The organization identifier.</param>
+    /// <param name="FromProvider">The name of the provider being switched from.</param>
+    /// <param name="ToProvider">The name of the provider being switched to.</param>
+    /// <param name="Reason">The reason for the optimization.</param>
+    /// <param name="SavingsPer1MTokens">The savings per 1 million tokens.</param>
+    /// <param name="AppliedAt">The date and time when the optimization was applied.</param>
     public record CostOptimizationResult(
-        Guid organizationId,
-        string fromProvider,
-        string toProvider,
-        string reason,
-        decimal savingsPer1MTokens,
-        DateTime appliedAt);
+        Guid OrganizationId,
+        string FromProvider,
+        string ToProvider,
+        string Reason,
+        decimal SavingsPer1MTokens,
+        DateTime AppliedAt);
 }

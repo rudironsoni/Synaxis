@@ -9,15 +9,15 @@ namespace Synaxis.InferenceGateway.Application.RealTime
     /// <summary>
     /// Real-time security alert notification.
     /// </summary>
-    /// <param name="organizationId">The organization identifier.</param>
-    /// <param name="alertType">The type of alert (e.g., "weak_secret", "rate_limit_missing").</param>
-    /// <param name="severity">The severity level (e.g., "critical", "warning", "info").</param>
-    /// <param name="message">The alert message.</param>
-    /// <param name="detectedAt">The date and time when the alert was detected.</param>
+    /// <param name="OrganizationId">The organization identifier.</param>
+    /// <param name="AlertType">The type of alert (e.g., "weak_secret", "rate_limit_missing").</param>
+    /// <param name="Severity">The severity level (e.g., "critical", "warning", "info").</param>
+    /// <param name="Message">The alert message.</param>
+    /// <param name="DetectedAt">The date and time when the alert was detected.</param>
     public record SecurityAlert(
-        Guid organizationId,
-        string alertType,
-        string severity,
-        string message,
-        DateTime detectedAt);
+        Guid OrganizationId,
+        string AlertType,
+        string Severity,
+        string Message,
+        DateTime DetectedAt);
 }

@@ -293,10 +293,10 @@ namespace Synaxis.InferenceGateway.Application.ChatClients
             this.logger.LogInformation("Routing request to provider '{ProviderKey}'", candidate.Key);
 
             var routedOptions = originalOptions?.Clone() ?? new ChatOptions();
-            routedOptions.ModelId = candidate.canonicalModelPath;
+            routedOptions.ModelId = candidate.CanonicalModelPath;
 
             var pipeline = this.pipelineProvider.GetPipeline("provider-retry");
-            var strategy = this.strategies.FirstOrDefault(s => s.CanHandle(candidate.config.Type))
+            var strategy = this.strategies.FirstOrDefault(s => s.CanHandle(candidate.Config.Type))
                            ?? this.strategies.FirstOrDefault() ?? throw new InvalidOperationException("No chat client strategies available");
 
             try
@@ -313,14 +313,14 @@ namespace Synaxis.InferenceGateway.Application.ChatClients
                 }
 
                 response.AdditionalProperties["provider_name"] = candidate.Key;
-                response.AdditionalProperties["model_id"] = candidate.canonicalModelPath;
+                response.AdditionalProperties["model_id"] = candidate.CanonicalModelPath;
 
                 await this.RecordMetricsAsync(candidate.Key, response.Usage?.InputTokenCount ?? 0, response.Usage?.OutputTokenCount ?? 0, cancellationToken).ConfigureAwait(false);
                 return response;
             }
             catch (Exception ex)
             {
-                await this.RecordFailureAsync(candidate.Key, candidate.canonicalModelPath, ex, cancellationToken).ConfigureAwait(false);
+                await this.RecordFailureAsync(candidate.Key, candidate.CanonicalModelPath, ex, cancellationToken).ConfigureAwait(false);
                 throw;
             }
         }
@@ -337,10 +337,10 @@ namespace Synaxis.InferenceGateway.Application.ChatClients
             this.logger.LogInformation("Routing streaming request to provider '{ProviderKey}'", candidate.Key);
 
             var routedOptions = originalOptions?.Clone() ?? new ChatOptions();
-            routedOptions.ModelId = candidate.canonicalModelPath;
+            routedOptions.ModelId = candidate.CanonicalModelPath;
 
             var pipeline = this.pipelineProvider.GetPipeline("provider-retry");
-            var strategy = this.strategies.FirstOrDefault(s => s.CanHandle(candidate.config.Type))
+            var strategy = this.strategies.FirstOrDefault(s => s.CanHandle(candidate.Config.Type))
                            ?? this.strategies.FirstOrDefault() ?? throw new InvalidOperationException("No chat client strategies available");
 
             try
@@ -355,11 +355,11 @@ namespace Synaxis.InferenceGateway.Application.ChatClients
                     }, cancellationToken).ConfigureAwait(false);
 
                 // Wrap the stream to add metadata
-                return AddMetadataToStream(stream, candidate.Key, candidate.canonicalModelPath);
+                return AddMetadataToStream(stream, candidate.Key, candidate.CanonicalModelPath);
             }
             catch (Exception ex)
             {
-                await this.RecordFailureAsync(candidate.Key, candidate.canonicalModelPath, ex, cancellationToken).ConfigureAwait(false);
+                await this.RecordFailureAsync(candidate.Key, candidate.CanonicalModelPath, ex, cancellationToken).ConfigureAwait(false);
                 throw;
             }
         }

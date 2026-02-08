@@ -39,18 +39,18 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
 
             var result = await executor.ExecuteAsync(testCase);
 
-            this._output.WriteLine($"Provider={testCase.provider} Model={testCase.model} Success={result.success} TimeMs={result.responseTime.TotalMilliseconds} Attempts={result.attemptCount}");
-            if (!string.IsNullOrEmpty(result.error))
+            this._output.WriteLine($"Provider={testCase.Provider} Model={testCase.Model} Success={result.Success} TimeMs={result.ResponseTime.TotalMilliseconds} Attempts={result.AttemptCount}");
+            if (!string.IsNullOrEmpty(result.Error))
             {
-                this._output.WriteLine($"Error: {result.error}");
+                this._output.WriteLine($"Error: {result.Error}");
             }
 
-            if (!string.IsNullOrEmpty(result.responseSnippet))
+            if (!string.IsNullOrEmpty(result.ResponseSnippet))
             {
-                this._output.WriteLine($"Snippet: {result.responseSnippet}");
+                this._output.WriteLine($"Snippet: {result.ResponseSnippet}");
             }
 
-            Assert.True(result.success, $"Smoke test failed for {testCase.provider}/{testCase.model}: {result.error}");
+            Assert.True(result.Success, $"Smoke test failed for {testCase.Provider}/{testCase.Model}: {result.Error}");
         }
 
         [Theory]
@@ -66,18 +66,18 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests
 
             var result = await executor.ExecuteAsync(testCase);
 
-            this._output.WriteLine($"Provider={testCase.provider} Model={testCase.model} Success={result.success} TimeMs={result.responseTime.TotalMilliseconds} Attempts={result.attemptCount}");
-            if (!string.IsNullOrEmpty(result.error))
+            this._output.WriteLine($"Provider={testCase.Provider} Model={testCase.Model} Success={result.Success} TimeMs={result.ResponseTime.TotalMilliseconds} Attempts={result.AttemptCount}");
+            if (!string.IsNullOrEmpty(result.Error))
             {
-                this._output.WriteLine($"Error: {result.error}");
+                this._output.WriteLine($"Error: {result.Error}");
             }
 
-            if (!string.IsNullOrEmpty(result.responseSnippet))
+            if (!string.IsNullOrEmpty(result.ResponseSnippet))
             {
-                this._output.WriteLine($"Snippet: {result.responseSnippet}");
+                this._output.WriteLine($"Snippet: {result.ResponseSnippet}");
             }
 
-            Assert.True(result.success, $"Smoke test failed for {testCase.provider}/{testCase.model}: {result.error}");
+            Assert.True(result.Success, $"Smoke test failed for {testCase.Provider}/{testCase.Model}: {result.Error}");
         }
     }
 }

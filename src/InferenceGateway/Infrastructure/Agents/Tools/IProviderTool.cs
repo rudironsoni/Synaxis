@@ -41,18 +41,18 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
     /// <summary>
     /// Represents provider status.
     /// </summary>
-    /// <param name="isEnabled">Whether the provider is enabled.</param>
-    /// <param name="isHealthy">Whether the provider is healthy.</param>
-    /// <param name="lastChecked">The last check timestamp.</param>
-    public record ProviderStatus(bool isEnabled, bool isHealthy, DateTime? lastChecked);
+    /// <param name="IsEnabled">Whether the provider is enabled.</param>
+    /// <param name="IsHealthy">Whether the provider is healthy.</param>
+    /// <param name="LastChecked">The last check timestamp.</param>
+    public record ProviderStatus(bool IsEnabled, bool IsHealthy, DateTime? LastChecked);
 
     /// <summary>
     /// Represents provider information.
     /// </summary>
-    /// <param name="id">The provider ID.</param>
-    /// <param name="name">The provider name.</param>
-    /// <param name="isEnabled">Whether the provider is enabled.</param>
-    /// <param name="inputCost">The input cost per token.</param>
-    /// <param name="outputCost">The output cost per token.</param>
-    public record ProviderInfo(Guid id, string name, bool isEnabled, decimal? inputCost, decimal? outputCost);
+    /// <param name="Id">The provider ID.</param>
+    /// <param name="Name">The provider name.</param>
+    /// <param name="IsEnabled">Whether the provider is enabled.</param>
+    /// <param name="InputCost">The input cost per token.</param>
+    /// <param name="OutputCost">The output cost per token.</param>
+    public record ProviderInfo(Guid Id, string Name, bool IsEnabled, decimal? InputCost, decimal? OutputCost);
 }
