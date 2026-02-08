@@ -119,7 +119,7 @@ namespace Synaxis.InferenceGateway.WebApi.Agents
                 properties.TryGetValue("provider_name", out var provider))
             {
                 httpContext.Items["RoutingContext"] = new RoutingContext(
-                    requestedModel ?? string.Empty,
+                    requestedModel ?? "default",
                     resolvedModel?.ToString() ?? string.Empty,
                     provider?.ToString() ?? string.Empty);
             }

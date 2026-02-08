@@ -291,8 +291,11 @@ public class ConversationCompressorTests
         Assert.NotNull(result);
         Assert.True(result.WasCompressed);
 
-        // Verify recent messages are preserved
-        Assert.Equal("User message 19", result.CompressedMessages.Last().Content);
+        // Verify recent messages are preserved - last 6 messages are from indices 34-39
+        // which are: User 17, Response 17, User 18, Response 18, User 19, Response 19
+        Assert.Equal("Response 19", result.CompressedMessages.Last().Content);
+        Assert.Equal("assistant", result.CompressedMessages.Last().Role);
+        Assert.Equal("User message 19", result.CompressedMessages[result.CompressedMessages.Count - 2].Content);
         Assert.Equal("user", result.CompressedMessages[result.CompressedMessages.Count - 2].Role);
 
         this._mockCompressor.Verify(

@@ -15,7 +15,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
     /// <summary>
     /// Manages identity accounts, authentication strategies, and token refresh operations.
     /// </summary>
-    public sealed class IdentityManager : IHostedService, IDisposable
+    public class IdentityManager : IHostedService, IDisposable
     {
         private readonly IEnumerable<IAuthStrategy> _strategies;
         private readonly ISecureTokenStore _store;
@@ -132,7 +132,20 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
         /// <inheritdoc/>
         public void Dispose()
         {
-            this._timer?.Dispose();
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Disposes resources used by the IdentityManager.
+        /// </summary>
+        /// <param name="disposing">True if called from Dispose(), false if called from finalizer.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                this._timer?.Dispose();
+            }
         }
 
         private async Task RefreshLoopAsync()

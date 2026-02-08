@@ -94,7 +94,9 @@ namespace Synaxis.InferenceGateway.Application.Routing
             }
 
             return scoredCandidates
-                .OrderByDescending(x => x.Score)
+                .OrderBy(x => x.Candidate.IsFree ? 0 : 1) // Primary sort: free providers first
+                .ThenByDescending(x => x.Score) // Secondary sort: higher score first (incorporates cost)
+                .ThenBy(x => x.Candidate.config.Tier) // Tertiary sort: lower tier as tiebreaker
                 .Select(x => x.Candidate)
                 .ToList();
         }

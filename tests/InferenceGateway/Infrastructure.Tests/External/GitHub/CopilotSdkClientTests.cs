@@ -55,14 +55,16 @@ public class CopilotSdkClientTests
     }
 
     [Fact]
-    public void Dispose_DisposesAdapter()
+    public void Dispose_DoesNotDisposeInjectedAdapter()
     {
+        // The adapter is injected via DI and should be disposed by the DI container, not the client.
+        // This test verifies that the client follows proper DI disposal patterns.
         var adapterMock = new Mock<Synaxis.InferenceGateway.Infrastructure.External.GitHub.ICopilotSdkAdapter>();
-        adapterMock.Setup(a => a.Dispose());
 
         var client = new Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSdkClient(adapterMock.Object);
         client.Dispose();
 
-        adapterMock.Verify(a => a.Dispose(), Times.Once);
+        // Verify the adapter was NOT disposed by the client
+        adapterMock.Verify(a => a.Dispose(), Times.Never);
     }
 }
