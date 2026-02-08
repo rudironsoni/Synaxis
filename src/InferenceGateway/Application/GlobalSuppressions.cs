@@ -10,3 +10,8 @@ using System.Diagnostics.CodeAnalysis;
     Justification = "StyleCop crashes on record declarations (AD0001 bug)",
     Scope = "namespaceanddescendants",
     Target = "~N:Synaxis.InferenceGateway")]
+
+[assembly: SuppressMessage(
+    "StyleCop.CSharp.SpacingRules",
+    "SA1011:Closing square bracket should be followed by a space",
+    Justification = "Conflicts with SA1018 for nullable arrays; string[]? is correct modern syntax")]
