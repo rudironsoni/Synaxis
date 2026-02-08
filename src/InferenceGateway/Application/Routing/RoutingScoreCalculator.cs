@@ -80,12 +80,23 @@ namespace Synaxis.InferenceGateway.Application.Routing
                 ? RoutingScoreCalculator.NormalizeScore(candidate.config.AverageLatencyMs.Value, 0, 5000, reverse: true)
                 : 0.5;  // Unknown latency = average
 
+            // Cost score: cheaper = better (normalize cost to 0-1, with lower cost being better)
+            // Assume cost range is 0-0.1 per token for most models
+            double costScore = 0.5;  // Default if no cost info
+            if (candidate.cost != null)
+            {
+                var costPerToken = (double)candidate.cost.CostPerToken;
+                costScore = RoutingScoreCalculator.NormalizeScore(costPerToken, 0, 0.1, reverse: true);
+            }
+
             // Calculate weighted score (0-100)
+            // Cost is factored in with low weight (0.1) when models are in same tier
             double weightedScore =
                 (qualityScore * qualityWeight)
                 + (quotaScore * quotaWeight)
                 + (rateLimitSafety * rateLimitWeight)
-                + (latencyScore * latencyWeight);
+                + (latencyScore * latencyWeight)
+                + (costScore * 0.1);  // Cost factor for same-tier sorting
             weightedScore *= 100;
 
             // 2. Add free tier bonus if configured

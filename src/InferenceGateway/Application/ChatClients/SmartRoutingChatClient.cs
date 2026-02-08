@@ -347,17 +347,35 @@ namespace Synaxis.InferenceGateway.Application.ChatClients
             {
                 // We await the *creation* of the stream inside the resilience pipeline
                 // If connection fails, pipeline retries. If stream starts, we return it.
-                return await pipeline.ExecuteAsync(
+                var stream = await pipeline.ExecuteAsync(
                     ct =>
                     {
-                        var stream = strategy.ExecuteStreamingAsync(client, chatMessages.ToList(), routedOptions, ct);
-                        return new ValueTask<IAsyncEnumerable<ChatResponseUpdate>>(stream);
+                        var innerStream = strategy.ExecuteStreamingAsync(client, chatMessages.ToList(), routedOptions, ct);
+                        return new ValueTask<IAsyncEnumerable<ChatResponseUpdate>>(innerStream);
                     }, cancellationToken).ConfigureAwait(false);
+
+                // Wrap the stream to add metadata
+                return AddMetadataToStream(stream, candidate.Key, candidate.canonicalModelPath);
             }
             catch (Exception ex)
             {
                 await this.RecordFailureAsync(candidate.Key, candidate.canonicalModelPath, ex, cancellationToken).ConfigureAwait(false);
                 throw;
+            }
+        }
+
+        private static async IAsyncEnumerable<ChatResponseUpdate> AddMetadataToStream(
+            IAsyncEnumerable<ChatResponseUpdate> stream,
+            string providerName,
+            string modelId)
+        {
+            await foreach (var update in stream.ConfigureAwait(false))
+            {
+                // Add metadata to each update
+                update.AdditionalProperties ??= new AdditionalPropertiesDictionary();
+                update.AdditionalProperties["provider_name"] = providerName;
+                update.AdditionalProperties["model_id"] = modelId;
+                yield return update;
             }
         }
 

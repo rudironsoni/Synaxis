@@ -55,12 +55,12 @@ public class ApiKeyServiceTests : IAsyncLifetime
 
         // Assert
         response.Should().NotBeNull();
-        response.ApiKey.Should().StartWith("synaxis_");
-        response.ApiKey.Split('_').Should().HaveCount(3); // synaxis_{id}_{secret}
+        response.ApiKey.Should().StartWith("synaxis_build_");
+        response.ApiKey.Split('_').Should().HaveCount(4); // synaxis_build_{id}_{secret}
         response.Id.Should().NotBeEmpty();
         response.Name.Should().Be("Test API Key");
         response.Scopes.Should().BeEquivalentTo(new[] { "read", "write" });
-        response.Prefix.Should().StartWith("synaxis_");
+        response.Prefix.Should().StartWith("synaxis_build_");
     }
 
     [Fact]
@@ -130,10 +130,10 @@ public class ApiKeyServiceTests : IAsyncLifetime
         var storedKey = await this._dbContext.ApiKeys.FindAsync(response.Id);
         storedKey.Should().NotBeNull();
         storedKey!.KeyPrefix.Should().Be(response.Prefix);
-        storedKey.KeyPrefix.Should().StartWith("synaxis_");
+        storedKey.KeyPrefix.Should().StartWith("synaxis_build_");
 
         // Prefix should be extractable from the full key
-        response.ApiKey.Should().StartWith("synaxis_");
+        response.ApiKey.Should().StartWith("synaxis_build_");
     }
 
     [Fact]
