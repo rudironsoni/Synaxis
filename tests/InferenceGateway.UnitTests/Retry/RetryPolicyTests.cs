@@ -89,8 +89,7 @@ namespace Synaxis.InferenceGateway.UnitTests.Retry
 
             // Act & Assert
             var caughtException = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => policy.ExecuteAsync(action, shouldRetry)
-            );
+                () => policy.ExecuteAsync(action, shouldRetry));
 
             Assert.Equal(expectedException.Message, caughtException.Message);
             Assert.Equal(maxRetries + 1, attemptCount); // Initial attempt + 2 retries
@@ -114,8 +113,7 @@ namespace Synaxis.InferenceGateway.UnitTests.Retry
 
             // Act & Assert
             var caughtException = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => policy.ExecuteAsync(action, shouldRetry)
-            );
+                () => policy.ExecuteAsync(action, shouldRetry));
 
             Assert.Equal(expectedException.Message, caughtException.Message);
             Assert.Equal(1, attemptCount); // Only called once, no retries
@@ -146,8 +144,7 @@ namespace Synaxis.InferenceGateway.UnitTests.Retry
 
             // Act & Assert
             var caughtException = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => policy.ExecuteAsync(action, shouldRetry)
-            );
+                () => policy.ExecuteAsync(action, shouldRetry));
 
             Assert.Equal("Non-retryable", caughtException.Message);
             Assert.Equal(2, attemptCount); // First attempt + 1 retry (for TimeoutException)
@@ -171,8 +168,7 @@ namespace Synaxis.InferenceGateway.UnitTests.Retry
 
             // Act & Assert
             var caughtException = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => policy.ExecuteAsync(action, shouldRetry)
-            );
+                () => policy.ExecuteAsync(action, shouldRetry));
 
             Assert.Equal(expectedException.Message, caughtException.Message);
             Assert.Equal(1, attemptCount); // Only called once, no retries
