@@ -231,8 +231,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             Assert.True(result[1].IsFree);
 
             // Within free providers, ordered by tier
-            Assert.Equal(1, result[0].config.Tier);
-            Assert.Equal(2, result[1].config.Tier);
+            Assert.Equal(1, result[0].Config.Tier);
+            Assert.Equal(2, result[1].Config.Tier);
 
             // Last two should be paid providers
             Assert.False(result[2].IsFree);

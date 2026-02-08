@@ -37,7 +37,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
             [FromBody] ProviderRequestDto request,
             CancellationToken cancellationToken = default)
         {
-            this.logger.LogInformation("User submitted provider request for '{ProviderKey}'", request.providerKey);
+            this.logger.LogInformation("User submitted provider request for '{ProviderKey}'", request.ProviderKey);
 
             // NOTE: Implement provider request submission (create ProviderRequest entity with status Pending). This is interim implementation.
             await Task.CompletedTask.ConfigureAwait(false);
@@ -45,7 +45,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
             return this.CreatedAtAction(
                 nameof(this.GetProviderRequest),
                 new { requestId = Guid.NewGuid() },
-                new { message = $"Provider request {request.providerKey} submitted for approval" });
+                new { message = $"Provider request {request.ProviderKey} submitted for approval" });
         }
 
         /// <summary>
@@ -73,15 +73,15 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
     /// <summary>
     /// DTO for submitting a provider request.
     /// </summary>
-    /// <param name="providerKey">The provider key.</param>
-    /// <param name="apiKey">The API key.</param>
-    /// <param name="baseUrl">The base URL.</param>
-    /// <param name="displayName">The display name.</param>
-    /// <param name="description">The description.</param>
+    /// <param name="ProviderKey">The provider key.</param>
+    /// <param name="ApiKey">The API key.</param>
+    /// <param name="BaseUrl">The base URL.</param>
+    /// <param name="DisplayName">The display name.</param>
+    /// <param name="Description">The description.</param>
     public record ProviderRequestDto(
-        string providerKey,
-        string apiKey,
-        string baseUrl,
-        string? displayName = null,
-        string? description = null);
+        string ProviderKey,
+        string ApiKey,
+        string BaseUrl,
+        string? DisplayName = null,
+        string? Description = null);
 }

@@ -316,35 +316,35 @@
             <summary>
             Represents the result of a health check.
             </summary>
-            <param name="isHealthy">Whether the provider is healthy.</param>
-            <param name="healthScore">The health score.</param>
-            <param name="consecutiveFailures">The number of consecutive failures.</param>
-            <param name="isInCooldown">Whether the provider is in cooldown.</param>
-            <param name="cooldownUntil">The cooldown end time.</param>
+            <param name="IsHealthy">Whether the provider is healthy.</param>
+            <param name="HealthScore">The health score.</param>
+            <param name="ConsecutiveFailures">The number of consecutive failures.</param>
+            <param name="IsInCooldown">Whether the provider is in cooldown.</param>
+            <param name="CooldownUntil">The cooldown end time.</param>
         </member>
         <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.HealthCheckResult.#ctor(System.Boolean,System.Decimal,System.Int32,System.Boolean,System.Nullable{System.DateTime})">
             <summary>
             Represents the result of a health check.
             </summary>
-            <param name="isHealthy">Whether the provider is healthy.</param>
-            <param name="healthScore">The health score.</param>
-            <param name="consecutiveFailures">The number of consecutive failures.</param>
-            <param name="isInCooldown">Whether the provider is in cooldown.</param>
-            <param name="cooldownUntil">The cooldown end time.</param>
+            <param name="IsHealthy">Whether the provider is healthy.</param>
+            <param name="HealthScore">The health score.</param>
+            <param name="ConsecutiveFailures">The number of consecutive failures.</param>
+            <param name="IsInCooldown">Whether the provider is in cooldown.</param>
+            <param name="CooldownUntil">The cooldown end time.</param>
         </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.HealthCheckResult.isHealthy">
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.HealthCheckResult.IsHealthy">
             <summary>Whether the provider is healthy.</summary>
         </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.HealthCheckResult.healthScore">
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.HealthCheckResult.HealthScore">
             <summary>The health score.</summary>
         </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.HealthCheckResult.consecutiveFailures">
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.HealthCheckResult.ConsecutiveFailures">
             <summary>The number of consecutive failures.</summary>
         </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.HealthCheckResult.isInCooldown">
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.HealthCheckResult.IsInCooldown">
             <summary>Whether the provider is in cooldown.</summary>
         </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.HealthCheckResult.cooldownUntil">
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.HealthCheckResult.CooldownUntil">
             <summary>The cooldown end time.</summary>
         </member>
         <member name="T:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IProviderTool">
@@ -384,60 +384,60 @@
             <summary>
             Represents provider status.
             </summary>
-            <param name="isEnabled">Whether the provider is enabled.</param>
-            <param name="isHealthy">Whether the provider is healthy.</param>
-            <param name="lastChecked">The last check timestamp.</param>
+            <param name="IsEnabled">Whether the provider is enabled.</param>
+            <param name="IsHealthy">Whether the provider is healthy.</param>
+            <param name="LastChecked">The last check timestamp.</param>
         </member>
         <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderStatus.#ctor(System.Boolean,System.Boolean,System.Nullable{System.DateTime})">
             <summary>
             Represents provider status.
             </summary>
-            <param name="isEnabled">Whether the provider is enabled.</param>
-            <param name="isHealthy">Whether the provider is healthy.</param>
-            <param name="lastChecked">The last check timestamp.</param>
+            <param name="IsEnabled">Whether the provider is enabled.</param>
+            <param name="IsHealthy">Whether the provider is healthy.</param>
+            <param name="LastChecked">The last check timestamp.</param>
         </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderStatus.isEnabled">
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderStatus.IsEnabled">
             <summary>Whether the provider is enabled.</summary>
         </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderStatus.isHealthy">
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderStatus.IsHealthy">
             <summary>Whether the provider is healthy.</summary>
         </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderStatus.lastChecked">
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderStatus.LastChecked">
             <summary>The last check timestamp.</summary>
         </member>
         <member name="T:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderInfo">
             <summary>
             Represents provider information.
             </summary>
-            <param name="id">The provider ID.</param>
-            <param name="name">The provider name.</param>
-            <param name="isEnabled">Whether the provider is enabled.</param>
-            <param name="inputCost">The input cost per token.</param>
-            <param name="outputCost">The output cost per token.</param>
+            <param name="Id">The provider ID.</param>
+            <param name="Name">The provider name.</param>
+            <param name="IsEnabled">Whether the provider is enabled.</param>
+            <param name="InputCost">The input cost per token.</param>
+            <param name="OutputCost">The output cost per token.</param>
         </member>
         <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderInfo.#ctor(System.Guid,System.String,System.Boolean,System.Nullable{System.Decimal},System.Nullable{System.Decimal})">
             <summary>
             Represents provider information.
             </summary>
-            <param name="id">The provider ID.</param>
-            <param name="name">The provider name.</param>
-            <param name="isEnabled">Whether the provider is enabled.</param>
-            <param name="inputCost">The input cost per token.</param>
-            <param name="outputCost">The output cost per token.</param>
+            <param name="Id">The provider ID.</param>
+            <param name="Name">The provider name.</param>
+            <param name="IsEnabled">Whether the provider is enabled.</param>
+            <param name="InputCost">The input cost per token.</param>
+            <param name="OutputCost">The output cost per token.</param>
         </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderInfo.id">
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderInfo.Id">
             <summary>The provider ID.</summary>
         </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderInfo.name">
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderInfo.Name">
             <summary>The provider name.</summary>
         </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderInfo.isEnabled">
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderInfo.IsEnabled">
             <summary>Whether the provider is enabled.</summary>
         </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderInfo.inputCost">
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderInfo.InputCost">
             <summary>The input cost per token.</summary>
         </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderInfo.outputCost">
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderInfo.OutputCost">
             <summary>The output cost per token.</summary>
         </member>
         <member name="T:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.IRoutingTool">
@@ -470,25 +470,25 @@
             <summary>
             Represents routing metrics.
             </summary>
-            <param name="totalRequests">The total number of requests.</param>
-            <param name="providerDistribution">Distribution of requests across providers.</param>
-            <param name="averageCost">The average cost per request.</param>
+            <param name="TotalRequests">The total number of requests.</param>
+            <param name="ProviderDistribution">Distribution of requests across providers.</param>
+            <param name="AverageCost">The average cost per request.</param>
         </member>
         <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.RoutingMetrics.#ctor(System.Int32,System.Collections.Generic.IDictionary{System.String,System.Int32},System.Decimal)">
             <summary>
             Represents routing metrics.
             </summary>
-            <param name="totalRequests">The total number of requests.</param>
-            <param name="providerDistribution">Distribution of requests across providers.</param>
-            <param name="averageCost">The average cost per request.</param>
+            <param name="TotalRequests">The total number of requests.</param>
+            <param name="ProviderDistribution">Distribution of requests across providers.</param>
+            <param name="AverageCost">The average cost per request.</param>
         </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.RoutingMetrics.totalRequests">
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.RoutingMetrics.TotalRequests">
             <summary>The total number of requests.</summary>
         </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.RoutingMetrics.providerDistribution">
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.RoutingMetrics.ProviderDistribution">
             <summary>Distribution of requests across providers.</summary>
         </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.RoutingMetrics.averageCost">
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.RoutingMetrics.AverageCost">
             <summary>The average cost per request.</summary>
         </member>
         <member name="T:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.ProviderTool">
@@ -1013,20 +1013,20 @@
             <summary>
             Represents account information for listing purposes.
             </summary>
-            <param name="email">The account email.</param>
-            <param name="isActive">Whether the account is active.</param>
+            <param name="Email">The account email.</param>
+            <param name="IsActive">Whether the account is active.</param>
         </member>
         <member name="M:Synaxis.InferenceGateway.Infrastructure.Auth.AccountInfo.#ctor(System.String,System.Boolean)">
             <summary>
             Represents account information for listing purposes.
             </summary>
-            <param name="email">The account email.</param>
-            <param name="isActive">Whether the account is active.</param>
+            <param name="Email">The account email.</param>
+            <param name="IsActive">Whether the account is active.</param>
         </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.Auth.AccountInfo.email">
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Auth.AccountInfo.Email">
             <summary>The account email.</summary>
         </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.Auth.AccountInfo.isActive">
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Auth.AccountInfo.IsActive">
             <summary>Whether the account is active.</summary>
         </member>
         <member name="T:Synaxis.InferenceGateway.Infrastructure.Auth.IAntigravityAuthManager">

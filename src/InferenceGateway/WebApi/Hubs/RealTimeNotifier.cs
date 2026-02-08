@@ -37,7 +37,7 @@ namespace Synaxis.InferenceGateway.WebApi.Hubs
                 await this._hubContext.Clients.Group(organizationId.ToString())
                     .SendAsync("ProviderHealthChanged", update).ConfigureAwait(false);
 
-                this._logger.LogDebug("Sent ProviderHealthChanged notification to organization {OrganizationId}: {ProviderName} is {Status}", organizationId, update.providerName, update.isHealthy ? "healthy" : "unhealthy");
+                this._logger.LogDebug("Sent ProviderHealthChanged notification to organization {OrganizationId}: {ProviderName} is {Status}", organizationId, update.ProviderName, update.IsHealthy ? "healthy" : "unhealthy");
             }
             catch (Exception ex)
             {
@@ -53,7 +53,7 @@ namespace Synaxis.InferenceGateway.WebApi.Hubs
                 await this._hubContext.Clients.Group(organizationId.ToString())
                     .SendAsync("CostOptimizationApplied", result).ConfigureAwait(false);
 
-                this._logger.LogDebug("Sent CostOptimizationApplied notification to organization {OrganizationId}: {FromProvider} -> {ToProvider}", organizationId, result.fromProvider, result.toProvider);
+                this._logger.LogDebug("Sent CostOptimizationApplied notification to organization {OrganizationId}: {FromProvider} -> {ToProvider}", organizationId, result.FromProvider, result.ToProvider);
             }
             catch (Exception ex)
             {
@@ -69,7 +69,7 @@ namespace Synaxis.InferenceGateway.WebApi.Hubs
                 await this._hubContext.Clients.Group(organizationId.ToString())
                     .SendAsync("ModelDiscovered", result).ConfigureAwait(false);
 
-                this._logger.LogDebug("Sent ModelDiscovered notification to organization {OrganizationId}: {ModelName}", organizationId, result.displayName);
+                this._logger.LogDebug("Sent ModelDiscovered notification to organization {OrganizationId}: {ModelName}", organizationId, result.DisplayName);
             }
             catch (Exception ex)
             {
@@ -85,7 +85,7 @@ namespace Synaxis.InferenceGateway.WebApi.Hubs
                 await this._hubContext.Clients.Group(organizationId.ToString())
                     .SendAsync("SecurityAlert", alert).ConfigureAwait(false);
 
-                this._logger.LogInformation("Sent SecurityAlert notification to organization {OrganizationId}: {AlertType} - {Severity}", organizationId, alert.alertType, alert.severity);
+                this._logger.LogInformation("Sent SecurityAlert notification to organization {OrganizationId}: {AlertType} - {Severity}", organizationId, alert.AlertType, alert.Severity);
             }
             catch (Exception ex)
             {
@@ -101,7 +101,7 @@ namespace Synaxis.InferenceGateway.WebApi.Hubs
                 await this._hubContext.Clients.Group(organizationId.ToString())
                     .SendAsync("AuditEvent", @event).ConfigureAwait(false);
 
-                this._logger.LogDebug("Sent AuditEvent notification to organization {OrganizationId}: {Action} on {EntityType}", organizationId, @event.action, @event.entityType);
+                this._logger.LogDebug("Sent AuditEvent notification to organization {OrganizationId}: {Action} on {EntityType}", organizationId, @event.Action, @event.EntityType);
             }
             catch (Exception ex)
             {

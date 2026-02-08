@@ -61,11 +61,11 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
 
                 this._logger.LogInformation(
                     "Request tracked: {Method} {Path} - {StatusCode} in {DurationMs}ms from {ClientIp}",
-                    usageData.method,
-                    usageData.path,
-                    usageData.statusCode,
-                    usageData.durationMs,
-                    usageData.clientIp);
+                    usageData.Method,
+                    usageData.Path,
+                    usageData.StatusCode,
+                    usageData.DurationMs,
+                    usageData.ClientIp);
             }
         }
 
@@ -91,10 +91,10 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
     /// Usage data for a single request.
     /// </summary>
     public record UsageData(
-        string path,
-        string method,
-        DateTime timestamp,
-        long durationMs,
-        int statusCode,
-        string clientIp);
+        string Path,
+        string Method,
+        DateTime Timestamp,
+        long DurationMs,
+        int StatusCode,
+        string ClientIp);
 }

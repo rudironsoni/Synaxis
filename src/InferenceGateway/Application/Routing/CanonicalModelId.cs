@@ -7,15 +7,15 @@ namespace Synaxis.InferenceGateway.Application.Routing;
 /// <summary>
 /// Represents a canonical model identifier with provider and model path.
 /// </summary>
-/// <param name="provider">The provider name.</param>
-/// <param name="modelPath">The model path.</param>
-public record CanonicalModelId(string provider, string modelPath)
+/// <param name="Provider">The provider name.</param>
+/// <param name="ModelPath">The model path.</param>
+public record CanonicalModelId(string Provider, string ModelPath)
 {
     /// <summary>
     /// Returns the string representation of the canonical model identifier.
     /// </summary>
     /// <returns>A string in the format "provider/modelPath".</returns>
-    public override string ToString() => $"{this.provider}/{this.modelPath}";
+    public override string ToString() => $"{this.Provider}/{this.ModelPath}";
 
     /// <summary>
     /// Parses a string into a CanonicalModelId.

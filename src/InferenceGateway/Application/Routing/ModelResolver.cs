@@ -207,8 +207,8 @@ namespace Synaxis.InferenceGateway.Application.Routing
                 }
 
                 // Step C: Registry lookup
-                var candidatePairs = this.registry.GetCandidates(canonicalId.modelPath).ToList();
-                Console.WriteLine($"[DEBUG] Registry returned {candidatePairs.Count} candidates for '{canonicalId.modelPath}'");
+                var candidatePairs = this.registry.GetCandidates(canonicalId.ModelPath).ToList();
+                Console.WriteLine($"[DEBUG] Registry returned {candidatePairs.Count} candidates for '{canonicalId.ModelPath}'");
 
                 // Fallback: sometimes Parse() will split provider/model incorrectly (e.g. when model id contains '/').
                 // If nothing was found and we didn't have an explicit canonical config, try the raw candidate string.
@@ -243,20 +243,20 @@ namespace Synaxis.InferenceGateway.Application.Routing
                     .ToList();
 
                 // Step E: Provider filtering by canonical provider if present
-                if (!string.Equals(canonicalId.provider, "unknown", StringComparison.OrdinalIgnoreCase))
+                if (!string.Equals(canonicalId.Provider, "unknown", StringComparison.OrdinalIgnoreCase))
                 {
                     providers = providers
-                        .Where(c => string.Equals(c.Key, canonicalId.provider, StringComparison.OrdinalIgnoreCase))
+                        .Where(c => string.Equals(c.Key, canonicalId.Provider, StringComparison.OrdinalIgnoreCase))
                         .ToList();
                 }
 
                 // Step F: Success check
                 if (providers.Count > 0)
                 {
-                    if (string.Equals(canonicalId.provider, "unknown", StringComparison.OrdinalIgnoreCase))
+                    if (string.Equals(canonicalId.Provider, "unknown", StringComparison.OrdinalIgnoreCase))
                     {
                         // Use the first provider as the canonical provider if unknown
-                        canonicalId = new CanonicalModelId(providers[0].Key!, canonicalId.modelPath);
+                        canonicalId = new CanonicalModelId(providers[0].Key!, canonicalId.ModelPath);
                     }
 
                     return new ResolutionResult(originalModelId, canonicalId, providers);

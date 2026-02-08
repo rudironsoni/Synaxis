@@ -65,13 +65,13 @@ namespace Synaxis.InferenceGateway.Application.ControlPlane
                     this.logger.LogWarning("Provider '{ProviderKey}' client not found", providerKey);
                     errors = new[] { "Client not found for provider" };
                     return new HealthCheckResult(
-                        isHealthy: false,
-                        endpoint: endpoint,
-                        supportsStreaming: supportsStreaming,
-                        supportsChat: supportsChat,
-                        latencyMs: latencyMs,
-                        supportedModels: supportedModels,
-                        errors: errors);
+                        IsHealthy: false,
+                        Endpoint: endpoint,
+                        SupportsStreaming: supportsStreaming,
+                        SupportsChat: supportsChat,
+                        LatencyMs: latencyMs,
+                        SupportedModels: supportedModels,
+                        Errors: errors);
                 }
 
                 var stopwatch = System.Diagnostics.Stopwatch.StartNew();
@@ -97,13 +97,13 @@ namespace Synaxis.InferenceGateway.Application.ControlPlane
             }
 
             return new HealthCheckResult(
-                isHealthy: isHealthy,
-                endpoint: endpoint,
-                supportsStreaming: supportsStreaming,
-                supportsChat: supportsChat,
-                latencyMs: latencyMs,
-                supportedModels: supportedModels,
-                errors: errors);
+                IsHealthy: isHealthy,
+                Endpoint: endpoint,
+                SupportsStreaming: supportsStreaming,
+                SupportsChat: supportsChat,
+                LatencyMs: latencyMs,
+                SupportedModels: supportedModels,
+                Errors: errors);
         }
 
         /// <summary>
@@ -116,7 +116,7 @@ namespace Synaxis.InferenceGateway.Application.ControlPlane
         {
             var result = await this.CheckProviderHealthAsync(providerKey, cancellationToken).ConfigureAwait(false);
 
-            if (result.isHealthy)
+            if (result.IsHealthy)
             {
                 await this.healthStore.MarkSuccessAsync(providerKey, cancellationToken).ConfigureAwait(false);
             }

@@ -7,10 +7,10 @@ using System;
 namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Models
 {
     public record SmokeTestResult(
-        SmokeTestCase @case,
-        bool success,
-        TimeSpan responseTime,
-        string? error = null,
-        string? responseSnippet = null,
-        int attemptCount = 1);
+        SmokeTestCase Case,
+        bool Success,
+        TimeSpan ResponseTime,
+        string? Error = null,
+        string? ResponseSnippet = null,
+        int AttemptCount = 1);
 }

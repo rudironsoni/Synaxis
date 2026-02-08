@@ -10,9 +10,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
     /// <summary>
     /// Represents account information for listing purposes.
     /// </summary>
-    /// <param name="email">The account email.</param>
-    /// <param name="isActive">Whether the account is active.</param>
-    public record AccountInfo(string email, bool isActive);
+    /// <param name="Email">The account email.</param>
+    /// <param name="IsActive">Whether the account is active.</param>
+    public record AccountInfo(string Email, bool IsActive);
 
     /// <summary>
     /// Interface for managing Antigravity authentication and tokens.
