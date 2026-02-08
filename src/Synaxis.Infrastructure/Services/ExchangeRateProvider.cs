@@ -87,7 +87,7 @@ namespace Synaxis.Infrastructure.Services
             }
         }
         
-        public async Task<Dictionary<string, decimal>> GetRatesAsync(params string[] targetCurrencies)
+        public async Task<IDictionary<string, decimal>> GetRatesAsync(params string[] targetCurrencies)
         {
             if (targetCurrencies == null || targetCurrencies.Length == 0)
                 return new Dictionary<string, decimal>();

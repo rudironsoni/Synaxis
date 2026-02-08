@@ -239,7 +239,7 @@ namespace Synaxis.Infrastructure.Services
             return invoice;
         }
         
-        public async Task<List<CreditTransaction>> GetTransactionHistoryAsync(Guid organizationId, DateTime? startDate = null, DateTime? endDate = null, int limit = 100)
+        public async Task<IList<CreditTransaction>> GetTransactionHistoryAsync(Guid organizationId, DateTime? startDate = null, DateTime? endDate = null, int limit = 100)
         {
             if (organizationId == Guid.Empty)
                 throw new ArgumentException("Organization ID is required", nameof(organizationId));
@@ -297,7 +297,7 @@ namespace Synaxis.Infrastructure.Services
             return spendLog;
         }
         
-        public async Task<Dictionary<string, decimal>> GetSpendingSummaryAsync(Guid organizationId, DateTime periodStart, DateTime periodEnd)
+        public async Task<IDictionary<string, decimal>> GetSpendingSummaryAsync(Guid organizationId, DateTime periodStart, DateTime periodEnd)
         {
             if (organizationId == Guid.Empty)
                 throw new ArgumentException("Organization ID is required", nameof(organizationId));

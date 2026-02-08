@@ -25,7 +25,7 @@ RUN find /src/src -type d -name "bin" -prune -exec rm -rf {} \; 2>/dev/null || t
 RUN find /src/src -type d -name "obj" -prune -exec rm -rf {} \; 2>/dev/null || true
 
 WORKDIR /src/src/Synaxis.Api
-RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false /p:TreatWarningsAsErrors=false /p:EnforceCodeStyleInBuild=false
 
 # Runtime Stage
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime

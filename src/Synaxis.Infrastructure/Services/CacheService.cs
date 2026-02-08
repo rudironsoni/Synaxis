@@ -179,7 +179,7 @@ namespace Synaxis.Infrastructure.Services
             }
         }
         
-        public async Task<Dictionary<string, T>> GetManyAsync<T>(IEnumerable<string> keys) where T : class
+        public async Task<IDictionary<string, T>> GetManyAsync<T>(IEnumerable<string> keys) where T : class
         {
             if (keys == null || !keys.Any())
                 return new Dictionary<string, T>();
@@ -198,7 +198,7 @@ namespace Synaxis.Infrastructure.Services
             return result;
         }
         
-        public async Task SetManyAsync<T>(Dictionary<string, T> items, TimeSpan? expiration = null) where T : class
+        public async Task SetManyAsync<T>(IDictionary<string, T> items, TimeSpan? expiration = null) where T : class
         {
             if (items == null || !items.Any())
                 return;
