@@ -12,7 +12,7 @@ namespace Synaxis.InferenceGateway.Application.Tests.Configuration;
 /// <summary>
 /// Unit tests for ConfigurationResolver.
 /// </summary>
-public class ConfigurationResolverTests : IDisposable
+public sealed class ConfigurationResolverTests : IDisposable
 {
     private readonly SynaxisDbContext _context;
     private readonly ConfigurationResolver _resolver;

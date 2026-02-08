@@ -5,7 +5,7 @@ using Synaxis.InferenceGateway.Application.ChatClients;
 
 namespace Synaxis.InferenceGateway.Application.Tests;
 
-public class UsageTrackingTests
+public sealed class UsageTrackingTests : IDisposable
 {
     private readonly Mock<IChatClient> _innerMock;
     private readonly Mock<ILogger<UsageTrackingChatClient>> _loggerMock;
@@ -76,5 +76,10 @@ public class UsageTrackingTests
         Assert.Single(result);
         Assert.Equal("Part 1", result[0].Text);
         this._innerMock.Verify(c => c.GetStreamingResponseAsync(messages, null, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    public void Dispose()
+    {
+        (this._client as IDisposable)?.Dispose();
     }
 }

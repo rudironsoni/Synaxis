@@ -15,7 +15,7 @@ using Xunit;
 
 namespace Synaxis.InferenceGateway.Application.Tests.ChatClients;
 
-public class SmartRoutingChatClientTests : TestBase
+public sealed class SmartRoutingChatClientTests : TestBase, IDisposable
 {
     private readonly Mock<IChatClientFactory> _chatClientFactoryMock;
     private readonly Mock<ISmartRouter> _smartRouterMock;
@@ -169,7 +169,7 @@ public class SmartRoutingChatClientTests : TestBase
         this._chatClientFactoryMock.Setup(x => x.GetClient("openai"))
             .Returns(mockChatClient.Object);
 
-        var cts = new CancellationTokenSource();
+        using var cts = new CancellationTokenSource();
         cts.Cancel();
 
         // Act & Assert
@@ -363,7 +363,7 @@ public class SmartRoutingChatClientTests : TestBase
         var messages = new[] { new ChatMessage(ChatRole.User, "Hello") };
         var options = new ChatOptions { ModelId = "gpt-4" };
 
-        var cts = new CancellationTokenSource();
+        using var cts = new CancellationTokenSource();
         cts.Cancel();
 
         // Setup mock to throw OperationCanceledException when token is cancelled
@@ -1517,7 +1517,6 @@ public class SmartRoutingChatClientTests : TestBase
         }
     }
 
-
 #pragma warning disable CS0162
     private static async IAsyncEnumerable<ChatResponseUpdate> ThrowingStream(Exception ex)
     {
@@ -1525,4 +1524,9 @@ public class SmartRoutingChatClientTests : TestBase
         yield break;
     }
 #pragma warning restore CS0162
+
+    public void Dispose()
+    {
+        this._activitySource?.Dispose();
+    }
 }
