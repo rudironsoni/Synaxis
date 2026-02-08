@@ -1,9 +1,13 @@
+// <copyright file="SmokeTestDataGenerator.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Microsoft.Extensions.Configuration;
 using DotNetEnv;
+using Microsoft.Extensions.Configuration;
 using Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Models;
 
 namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
@@ -41,7 +45,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
                     apiKey.Contains("REPLACE_WITH", StringComparison.OrdinalIgnoreCase) ||
                     apiKey.Contains("INSERT", StringComparison.OrdinalIgnoreCase) ||
                     apiKey.Contains("CHANGE", StringComparison.OrdinalIgnoreCase) ||
-                    apiKey == "0000000000")
+string.Equals(apiKey, "0000000000", StringComparison.Ordinal))
                 {
                     continue;
                 }
@@ -95,6 +99,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
 
             // Map environment variables to configuration keys (same as WebApi Program.cs)
             var envMapping = new Dictionary<string, string?>
+(StringComparer.Ordinal)
             {
                 { "Synaxis:InferenceGateway:Providers:Groq:Key", Environment.GetEnvironmentVariable("GROQ_API_KEY") },
                 { "Synaxis:InferenceGateway:Providers:Cohere:Key", Environment.GetEnvironmentVariable("COHERE_API_KEY") },
@@ -109,7 +114,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
 
             // Filter out null or empty values so we don't overwrite other config values with nulls
             var filteredMapping = envMapping.Where(kv => !string.IsNullOrEmpty(kv.Value))
-                                        .ToDictionary(kv => kv.Key, kv => kv.Value);
+                                        .ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.Ordinal);
 
             builder.AddInMemoryCollection(filteredMapping);
 
