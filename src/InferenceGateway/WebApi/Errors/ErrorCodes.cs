@@ -79,7 +79,7 @@ namespace Synaxis.InferenceGateway.WebApi.Errors
                 ProviderError => 502,
                 ServiceUnavailable => 503,
                 InternalError => 500,
-                _ => 500
+                _ => 500,
             };
         }
 
@@ -102,7 +102,7 @@ namespace Synaxis.InferenceGateway.WebApi.Errors
                 ProviderError => "api_error",
                 ServiceUnavailable => "api_error",
                 InternalError => "server_error",
-                _ => "api_error"
+                _ => "api_error",
             };
         }
 
@@ -125,7 +125,7 @@ namespace Synaxis.InferenceGateway.WebApi.Errors
                 ProviderError => "An error occurred while processing your request.",
                 ServiceUnavailable => "The service is temporarily unavailable. Please try again later.",
                 InternalError => "An internal server error occurred. Please try again later.",
-                _ => "An unexpected error occurred."
+                _ => "An unexpected error occurred.",
             };
         }
     }

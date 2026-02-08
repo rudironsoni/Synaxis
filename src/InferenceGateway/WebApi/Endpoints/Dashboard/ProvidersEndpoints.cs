@@ -218,7 +218,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
                 "nvidia" => "https://integrate.api.nvidia.com/v1",
                 "huggingface" => "https://router.huggingface.co",
                 "pollinations" => "https://pollinations.ai",
-                _ => null
+                _ => null,
             };
         }
     }

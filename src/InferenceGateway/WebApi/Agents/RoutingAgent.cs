@@ -20,9 +20,9 @@ namespace Synaxis.InferenceGateway.WebApi.Agents
     using Synaxis.InferenceGateway.WebApi.Middleware;
 
     /// <summary>
-    /// Routing agent thread.
+    /// Routing agent session.
     /// </summary>
-    public class RoutingAgentThread : AgentThread
+    public class RoutingAgentSession : AgentSession
     {
     }
 
@@ -58,13 +58,13 @@ namespace Synaxis.InferenceGateway.WebApi.Agents
         /// Runs the agent asynchronously.
         /// </summary>
         /// <param name="messages">The chat messages.</param>
-        /// <param name="thread">The agent thread.</param>
+        /// <param name="session">The agent session.</param>
         /// <param name="options">The agent run options.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The agent response.</returns>
         protected override async Task<Microsoft.Agents.AI.AgentResponse> RunCoreAsync(
             IEnumerable<ChatMessage> messages,
-            Microsoft.Agents.AI.AgentThread? thread = null,
+            Microsoft.Agents.AI.AgentSession? session = null,
             Microsoft.Agents.AI.AgentRunOptions? options = null,
             CancellationToken cancellationToken = default)
         {
@@ -105,10 +105,10 @@ namespace Synaxis.InferenceGateway.WebApi.Agents
             }
 
             // 8. Build Agent Response
-            var agentMessage = new ChatMessage(ChatRole.Assistant, translatedResponse.content);
-            if (translatedResponse.toolCalls != null)
+            var agentMessage = new ChatMessage(ChatRole.Assistant, translatedResponse.Content);
+            if (translatedResponse.ToolCalls != null)
             {
-                foreach (var toolCall in translatedResponse.toolCalls)
+                foreach (var toolCall in translatedResponse.ToolCalls)
                 {
                     agentMessage.Contents.Add(toolCall);
                 }
@@ -121,13 +121,13 @@ namespace Synaxis.InferenceGateway.WebApi.Agents
         /// Runs the agent asynchronously with streaming.
         /// </summary>
         /// <param name="messages">The chat messages.</param>
-        /// <param name="thread">The agent thread.</param>
+        /// <param name="session">The agent session.</param>
         /// <param name="options">The agent run options.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The agent response updates.</returns>
         protected override async IAsyncEnumerable<Microsoft.Agents.AI.AgentResponseUpdate> RunCoreStreamingAsync(
             IEnumerable<ChatMessage> messages,
-            Microsoft.Agents.AI.AgentThread? thread = null,
+            Microsoft.Agents.AI.AgentSession? session = null,
             Microsoft.Agents.AI.AgentRunOptions? options = null,
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
@@ -176,11 +176,15 @@ namespace Synaxis.InferenceGateway.WebApi.Agents
         }
 
         /// <inheritdoc/>
-        public override ValueTask<AgentThread> GetNewThreadAsync(CancellationToken cancellationToken = default)
-            => new ValueTask<AgentThread>(new RoutingAgentThread());
+        public override ValueTask<AgentSession> CreateSessionAsync(CancellationToken cancellationToken = default)
+            => new ValueTask<AgentSession>(new RoutingAgentSession());
 
         /// <inheritdoc/>
-        public override ValueTask<AgentThread> DeserializeThreadAsync(JsonElement serializedThread, JsonSerializerOptions? jsonSerializerOptions = null, CancellationToken cancellationToken = default)
-            => new ValueTask<AgentThread>(new RoutingAgentThread());
+        public override ValueTask<AgentSession> DeserializeSessionAsync(JsonElement serializedState, JsonSerializerOptions? jsonSerializerOptions = null, CancellationToken cancellationToken = default)
+            => new ValueTask<AgentSession>(new RoutingAgentSession());
+
+        /// <inheritdoc/>
+        public override JsonElement SerializeSession(AgentSession session, JsonSerializerOptions? jsonSerializerOptions = null)
+            => JsonSerializer.SerializeToElement(new { }, jsonSerializerOptions);
     }
 }
