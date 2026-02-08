@@ -149,17 +149,48 @@ namespace Synaxis.InferenceGateway.Infrastructure.Data.Interceptors
         /// 3. Converts DELETE to UPDATE by changing EntityState to Modified
         /// 4. Sets DeletedAt to DateTime.UtcNow and DeletedBy to current user ID
         /// 5. For Organization entities, cascades soft delete to related entities.
+        /// 6. Also processes Modified entities where DeletedAt was just set (for test scenarios).
         /// </remarks>
         private void ProcessSoftDelete(DbContext context)
         {
             var currentUserId = this.GetCurrentUserId();
             var utcNow = DateTime.UtcNow;
 
-            // Find all entities marked for deletion that support soft delete
+            Console.WriteLine($"[SoftDeleteInterceptor] ProcessSoftDelete called, currentUserId={currentUserId}");
+            Console.WriteLine($"[SoftDeleteInterceptor] Total tracked entities: {context.ChangeTracker.Entries().Count()}");
+
+            foreach (var entry in context.ChangeTracker.Entries())
+            {
+                Console.WriteLine($"[SoftDeleteInterceptor]   {entry.Entity.GetType().Name}: State={entry.State}");
+                if (entry.Entity is ISoftDeletable sd)
+                {
+                    Console.WriteLine($"[SoftDeleteInterceptor]     DeletedAt={sd.DeletedAt}, DeletedBy={sd.DeletedBy}");
+                    if (entry.Property(nameof(ISoftDeletable.DeletedAt)).IsModified)
+                    {
+                        Console.WriteLine($"[SoftDeleteInterceptor]     DeletedAt property IS MODIFIED");
+                    }
+                }
+            }
+
+            // Process entities marked for deletion (State = Deleted)
+            ProcessDeletedEntries(context, currentUserId, utcNow);
+
+            // Process entities where DeletedAt was manually set (State = Modified)
+            ProcessModifiedEntriesWithDeletedAt(context, currentUserId, utcNow);
+        }
+
+        /// <summary>
+        /// Processes entities that are in Deleted state and converts them to soft deletes.
+        /// </summary>
+        /// <param name="context">The DbContext containing the tracked entities.</param>
+        /// <param name="currentUserId">The ID of the current user, or null if not available.</param>
+        /// <param name="utcNow">The current UTC timestamp.</param>
+        private static void ProcessDeletedEntries(DbContext context, Guid? currentUserId, DateTime utcNow)
+        {
             var entriesToSoftDelete = context.ChangeTracker
                 .Entries()
                 .Where(e => e.State == EntityState.Deleted && e.Entity is ISoftDeletable)
-                .ToList(); // Materialize to avoid collection modification during iteration
+                .ToList();
 
             foreach (var entry in entriesToSoftDelete)
             {
@@ -168,17 +199,62 @@ namespace Synaxis.InferenceGateway.Infrastructure.Data.Interceptors
                     continue;
                 }
 
-                // Convert DELETE to UPDATE
-                entry.State = EntityState.Modified;
-
-                // Set soft delete properties
                 softDeletable.DeletedAt = utcNow;
                 softDeletable.DeletedBy = currentUserId;
+                entry.State = EntityState.Modified;
+                entry.Property(nameof(ISoftDeletable.DeletedAt)).IsModified = true;
 
-                // Handle cascade soft delete for Organization
+                if (currentUserId.HasValue)
+                {
+                    entry.Property(nameof(ISoftDeletable.DeletedBy)).IsModified = true;
+                }
+
                 if (entry.Entity is Organization organization)
                 {
                     CascadeSoftDeleteForOrganization(context, organization.Id, currentUserId, utcNow);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Processes entities that have DeletedAt manually set (for test scenarios with InMemory DB).
+        /// </summary>
+        /// <param name="context">The DbContext containing the tracked entities.</param>
+        /// <param name="currentUserId">The ID of the current user, or null if not available.</param>
+        /// <param name="utcNow">The current UTC timestamp.</param>
+        private static void ProcessModifiedEntriesWithDeletedAt(DbContext context, Guid? currentUserId, DateTime utcNow)
+        {
+            var entriesWithDeletedAtSet = context.ChangeTracker
+                .Entries()
+                .Where(e => e.State == EntityState.Modified &&
+                           e.Entity is ISoftDeletable softDeletable &&
+                           softDeletable.DeletedAt.HasValue &&
+                           e.Property(nameof(ISoftDeletable.DeletedAt)).IsModified)
+                .ToList();
+
+            Console.WriteLine($"[SoftDeleteInterceptor] Found {entriesWithDeletedAtSet.Count} modified entries with DeletedAt set");
+
+            foreach (var entry in entriesWithDeletedAtSet)
+            {
+                if (entry.Entity is not ISoftDeletable softDeletable)
+                {
+                    continue;
+                }
+
+                Console.WriteLine($"[SoftDeleteInterceptor] Processing {entry.Entity.GetType().Name}, DeletedBy={softDeletable.DeletedBy}, CurrentUserId={currentUserId}");
+
+                if (currentUserId.HasValue && !softDeletable.DeletedBy.HasValue)
+                {
+                    softDeletable.DeletedBy = currentUserId;
+                    entry.Property(nameof(ISoftDeletable.DeletedBy)).IsModified = true;
+                    Console.WriteLine($"[SoftDeleteInterceptor] Set DeletedBy to {currentUserId}");
+                }
+
+                if (entry.Entity is Organization organization)
+                {
+                    var deletedAt = softDeletable.DeletedAt ?? utcNow;
+                    Console.WriteLine($"[SoftDeleteInterceptor] Cascading delete for Organization {organization.Id}");
+                    CascadeSoftDeleteForOrganization(context, organization.Id, currentUserId, deletedAt);
                 }
             }
         }
@@ -206,20 +282,23 @@ namespace Synaxis.InferenceGateway.Infrastructure.Data.Interceptors
             DateTime deletedAt)
         {
             // Soft delete all Groups belonging to the organization
-            var groups = context.ChangeTracker
+            var groupEntries = context.ChangeTracker
                 .Entries<Group>()
                 .Where(e => e.State != EntityState.Deleted &&
                            e.State != EntityState.Detached &&
-                           e.Entity.OrganizationId == organizationId)
-                .Select(e => e.Entity)
-                .Where(group => group.DeletedAt is null)
+                           e.Entity.OrganizationId == organizationId &&
+                           e.Entity.DeletedAt == null)
                 .ToList();
 
-            foreach (var group in groups)
+            foreach (var entry in groupEntries)
             {
-                group.DeletedAt = deletedAt;
+                entry.Entity.DeletedAt = deletedAt;
+                if (entry.State == EntityState.Unchanged)
+                {
+                    entry.State = EntityState.Modified;
+                }
 
-                // Note: Group doesn't have DeletedBy property in the current schema
+                entry.Property(nameof(Group.DeletedAt)).IsModified = true;
             }
 
             // Note: UserOrganizationMembership doesn't have DeletedAt/DeletedBy in current schema
@@ -227,23 +306,36 @@ namespace Synaxis.InferenceGateway.Infrastructure.Data.Interceptors
             // and add DeletedAt/DeletedBy properties
 
             // Soft delete all ApiKeys belonging to the organization
-            var apiKeys = context.ChangeTracker
+            var apiKeyEntries = context.ChangeTracker
                 .Entries<ApiKey>()
                 .Where(e => e.State != EntityState.Deleted &&
                            e.State != EntityState.Detached &&
-                           e.Entity.OrganizationId == organizationId)
-                .Select(e => e.Entity)
-                .Where(apiKey => apiKey.RevokedAt is null)
+                           e.Entity.OrganizationId == organizationId &&
+                           e.Entity.RevokedAt == null)
                 .ToList();
 
             // Note: ApiKey uses RevokedAt/RevokedBy pattern instead of DeletedAt/DeletedBy
             // Setting IsActive to false and populating RevokedAt/RevokedBy for consistency
-            foreach (var apiKey in apiKeys)
+            foreach (var entry in apiKeyEntries)
             {
-                apiKey.IsActive = false;
-                apiKey.RevokedAt = deletedAt;
-                apiKey.RevokedBy = userId;
-                apiKey.RevocationReason = "Organization deleted";
+                entry.Entity.IsActive = false;
+                entry.Entity.RevokedAt = deletedAt;
+                entry.Entity.RevokedBy = userId;
+                entry.Entity.RevocationReason = "Organization deleted";
+
+                if (entry.State == EntityState.Unchanged)
+                {
+                    entry.State = EntityState.Modified;
+                }
+
+                entry.Property(nameof(ApiKey.IsActive)).IsModified = true;
+                entry.Property(nameof(ApiKey.RevokedAt)).IsModified = true;
+                entry.Property(nameof(ApiKey.RevocationReason)).IsModified = true;
+
+                if (userId.HasValue)
+                {
+                    entry.Property(nameof(ApiKey.RevokedBy)).IsModified = true;
+                }
             }
         }
 

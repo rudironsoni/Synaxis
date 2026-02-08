@@ -18,9 +18,15 @@ namespace Synaxis.InferenceGateway.IntegrationTests
     {
         private static WebApplicationFactory<Program> CreateFactory(Dictionary<string, string?> settings, bool suppressHealthLogs = false)
         {
-            return new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+            // Set JWT secret BEFORE factory creation so it's available when Program.cs validates
+            System.Environment.SetEnvironmentVariable(
+                "Synaxis__InferenceGateway__JwtSecret",
+                "TestJwtSecretKeyThatIsAtLeast32BytesLongForHmacSha256Algorithm");
+
+            return new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder =>
             {
-                builder.UseEnvironment("Test");
+                builder.UseEnvironment("Development");
 
                 if (suppressHealthLogs)
                 {
@@ -37,6 +43,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                     {
                         ["Synaxis:ControlPlane:UseInMemory"] = "true",
                         ["Synaxis:ControlPlane:ConnectionString"] = string.Empty,
+                        ["Synaxis:InferenceGateway:JwtSecret"] = "TestJwtSecretKeyThatIsAtLeast32BytesLongForHmacSha256Algorithm",
                     };
 
                     foreach (var kvp in defaults)
@@ -60,12 +67,14 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             {
                 ["Synaxis:ControlPlane:UseInMemory"] = "true",
                 ["Synaxis:InferenceGateway:Providers:TestProvider:Type"] = "openai",
+                ["Synaxis:InferenceGateway:Providers:TestProvider:Enabled"] = "true",
                 ["Synaxis:InferenceGateway:Providers:TestProvider:Models:0"] = "test-model",
                 ["Synaxis:InferenceGateway:CanonicalModels:0:Id"] = "test-model",
                 ["Synaxis:InferenceGateway:CanonicalModels:0:Provider"] = "TestProvider",
                 ["Synaxis:InferenceGateway:CanonicalModels:0:ModelPath"] = "test-model",
                 ["Synaxis:InferenceGateway:Aliases:fast:Candidates:0"] = "test-model",
                 ["Synaxis:InferenceGateway:Aliases:default:Candidates:0"] = "test-model",
+                ["Synaxis:InferenceGateway:JwtSecret"] = "TestJwtSecretKeyThatIsAtLeast32BytesLongForHmacSha256Algorithm",
             };
 
             await using var factory = CreateFactory(settings);
@@ -86,7 +95,11 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         [Fact]
         public async Task Liveness_ReturnsOk()
         {
-            await using var factory = CreateFactory(new Dictionary<string, string?>(StringComparer.Ordinal));
+            var settings = new Dictionary<string, string?>(StringComparer.Ordinal)
+            {
+                ["Synaxis:InferenceGateway:JwtSecret"] = "TestJwtSecretKeyThatIsAtLeast32BytesLongForHmacSha256Algorithm",
+            };
+            await using var factory = CreateFactory(settings);
             using var client = factory.CreateClient();
 
             var response = await client.GetAsync("/health/liveness");
@@ -109,6 +122,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 ["Synaxis:InferenceGateway:Aliases:default:Candidates:0"] = "test-model",
                 ["Synaxis:ControlPlane:ConnectionString"] = string.Empty,
                 ["ConnectionStrings:Redis"] = "localhost:6379,abortConnect=false,connectTimeout=100,asyncTimeout=100",
+                ["Synaxis:InferenceGateway:JwtSecret"] = "TestJwtSecretKeyThatIsAtLeast32BytesLongForHmacSha256Algorithm",
             };
 
             await using var factory = CreateFactory(settings, suppressHealthLogs: true);

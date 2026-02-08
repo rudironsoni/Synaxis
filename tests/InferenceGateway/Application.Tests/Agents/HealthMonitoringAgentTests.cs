@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -12,12 +13,12 @@ using Xunit;
 
 namespace Synaxis.InferenceGateway.Application.Tests.Agents;
 
-public class HealthMonitoringAgentTests
+public class HealthMonitoringAgentTests : IDisposable
 {
     private readonly Mock<IServiceProvider> _serviceProviderMock;
     private readonly Mock<IServiceScope> _scopeMock;
     private readonly Mock<IServiceScopeFactory> _scopeFactoryMock;
-    private readonly Mock<ControlPlaneDbContext> _dbMock;
+    private readonly ControlPlaneDbContext _db;
     private readonly Mock<IHealthTool> _healthToolMock;
     private readonly Mock<IAlertTool> _alertToolMock;
     private readonly Mock<IAuditTool> _auditToolMock;
@@ -29,7 +30,13 @@ public class HealthMonitoringAgentTests
         this._serviceProviderMock = new Mock<IServiceProvider>();
         this._scopeMock = new Mock<IServiceScope>();
         this._scopeFactoryMock = new Mock<IServiceScopeFactory>();
-        this._dbMock = new Mock<ControlPlaneDbContext>();
+
+        // Create in-memory database
+        var options = new DbContextOptionsBuilder<ControlPlaneDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+        this._db = new ControlPlaneDbContext(options);
+
         this._healthToolMock = new Mock<IHealthTool>();
         this._alertToolMock = new Mock<IAlertTool>();
         this._auditToolMock = new Mock<IAuditTool>();
@@ -39,7 +46,7 @@ public class HealthMonitoringAgentTests
         this._serviceProviderMock.Setup(sp => sp.GetService(typeof(IServiceScopeFactory)))
             .Returns(this._scopeFactoryMock.Object);
         this._serviceProviderMock.Setup(sp => sp.GetService(typeof(ControlPlaneDbContext)))
-            .Returns(this._dbMock.Object);
+            .Returns(this._db);
         this._serviceProviderMock.Setup(sp => sp.GetService(typeof(IHealthTool)))
             .Returns(this._healthToolMock.Object);
         this._serviceProviderMock.Setup(sp => sp.GetService(typeof(IAlertTool)))
@@ -50,6 +57,11 @@ public class HealthMonitoringAgentTests
         this._scopeFactoryMock.Setup(f => f.CreateScope()).Returns(this._scopeMock.Object);
 
         this._agent = new HealthMonitoringAgent(this._serviceProviderMock.Object, this._loggerMock.Object);
+    }
+
+    public void Dispose()
+    {
+        this._db?.Dispose();
     }
 
     [Fact]

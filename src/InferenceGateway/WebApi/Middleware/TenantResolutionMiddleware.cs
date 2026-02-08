@@ -101,8 +101,8 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     this.HandleJwtAuthentication(context, tenantContext);
                 }
 
-                // Only proceed if authentication was successful
-                if (context.Response.StatusCode == StatusCodes.Status401Unauthorized)
+                // Only proceed if authentication was successful (2xx status codes)
+                if (context.Response.StatusCode < 200 || context.Response.StatusCode >= 300)
                 {
                     return;
                 }
@@ -200,6 +200,8 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                         type = "internal_server_error",
                     },
                 }).ConfigureAwait(false);
+
+                // Execution stops here, preventing continuation to next middleware
             }
         }
 

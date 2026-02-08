@@ -78,7 +78,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
             this.dbContext.ApiKeys.Add(apiKey);
             await this.dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-            await this.auditService.LogAsync(tenantId, userId, "CreateApiKey", new { ApiKeyId = apiKey.Id, ProjectId = projectId }, cancellationToken).ConfigureAwait(false);
+            await this.auditService.LogAsync(tenantId, userId, "CreateApiKey", new { ApiKeyId = apiKey.Id, ProjectId = projectId, Name = apiKey.Name }, cancellationToken).ConfigureAwait(false);
 
             return this.Ok(new { Id = apiKey.Id, Key = rawKey, Name = apiKey.Name });
         }
