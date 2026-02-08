@@ -42,6 +42,28 @@ This archive includes several derived analysis documents:
 - **[COMPONENTS.md](./COMPONENTS.md)** - 9 component directory with links
 - **[git/COMMITS.md](./git/COMMITS.md)** - 115 commits touching documentation
 
+## Legacy Implementation Documentation (2026-02-08)
+
+The following legacy implementation documents have been archived as they are superseded by Architecture Decision Records:
+
+- **IMPLEMENTATION_COMPLETE.md** - Original implementation completion summary
+  - **Superseded by**: ADR-0001 through ADR-0009
+  - **Reason**: Implementation details now captured in structured ADRs
+
+- **IMPLEMENTATION_SUMMARY.md** - Original feature implementation overview
+  - **Superseded by**: ADR-0001 (Provider Routing Architecture), ADR-0002 (Streaming Strategy)
+  - **Reason**: Architecture decisions documented in ADR format
+
+- **BILLING_CACHE_IMPLEMENTATION.md** - Billing cache implementation details
+  - **Superseded by**: ADR-0008 (Billing Cache Strategy)
+  - **Reason**: Consolidated into formal ADR with decision rationale
+
+- **TEST_COVERAGE_REPORT.md** - Initial test coverage report
+  - **Superseded by**: Ongoing test coverage metrics in CI/CD
+  - **Reason**: Point-in-time report replaced by automated coverage tracking
+
+These files are preserved with full git history via `git mv`. Use `git log --follow docs/archive/<filename>` to see complete history.
+
 ## Current Documentation
 
 For current project documentation, see:
