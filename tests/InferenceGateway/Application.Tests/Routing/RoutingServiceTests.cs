@@ -1,5 +1,4 @@
 using Microsoft.Agents.AI;
-using AgentsAI = Microsoft.Agents.AI;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
@@ -9,6 +8,7 @@ using Synaxis.InferenceGateway.Application.Routing;
 using Synaxis.InferenceGateway.WebApi.Agents;
 using Synaxis.InferenceGateway.WebApi.Middleware;
 using System.Runtime.CompilerServices;
+using AgentsAI = Microsoft.Agents.AI;
 
 namespace Synaxis.InferenceGateway.Application.Tests.Routing;
 
