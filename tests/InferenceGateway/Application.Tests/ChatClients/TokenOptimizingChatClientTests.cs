@@ -21,7 +21,7 @@ namespace Synaxis.InferenceGateway.Application.Tests.ChatClients;
 /// Unit tests for TokenOptimizingChatClient decorator
 /// Tests semantic caching, deduplication, compression, and session affinity
 /// </summary>
-public class TokenOptimizingChatClientTests : TestBase
+public sealed class TokenOptimizingChatClientTests : TestBase, IDisposable
 {
     private readonly Mock<IChatClient> _innerClientMock;
     private readonly Mock<ISemanticCacheService> _cacheServiceMock;
@@ -585,6 +585,11 @@ public class TokenOptimizingChatClientTests : TestBase
         // Act & Assert
         await Assert.ThrowsAsync<OperationCanceledException>(async () =>
             await this._client.GetResponseAsync(messages, options, cts.Token));
+    }
+
+    public void Dispose()
+    {
+        this._client?.Dispose();
     }
 }
 
