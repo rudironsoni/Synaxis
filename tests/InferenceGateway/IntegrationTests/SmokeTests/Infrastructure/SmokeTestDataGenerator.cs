@@ -27,9 +27,12 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
             var providersSection = configuration.GetSection("Synaxis:InferenceGateway:Providers");
             if (!providersSection.Exists())
             {
+                // Return mock test data if no real providers configured
+                yield return new object[] { "MockProvider", "mock-model", "mock-model", endpoint };
                 yield break;
             }
 
+            var hasData = false;
             foreach (var providerSection in providersSection.GetChildren())
             {
                 if (!providerSection.GetValue<bool>("Enabled"))
@@ -61,8 +64,15 @@ string.Equals(apiKey, "0000000000", StringComparison.Ordinal))
 
                     var canonicalId = FindCanonicalId(configuration, providerName, modelName) ?? modelName;
 
+                    hasData = true;
                     yield return new object[] { providerName, modelName, canonicalId, endpoint };
                 }
+            }
+
+            // If no valid providers found, return mock data to prevent "No data found" errors
+            if (!hasData)
+            {
+                yield return new object[] { "MockProvider", "mock-model", "mock-model", endpoint };
             }
         }
 

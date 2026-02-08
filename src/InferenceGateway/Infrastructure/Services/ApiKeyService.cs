@@ -18,15 +18,15 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
     /// Implementation of the API key service for managing programmatic access with bcrypt hashing.
     /// </summary>
     /// <remarks>
-    /// API Key Format: synaxis_{43-char-base62-id}_{43-char-base62-secret}
+    /// API Key Format: synaxis_build_{43-char-base62-id}_{43-char-base62-secret}
     /// - ID Part: 32 bytes (256 bits) of entropy encoded as base62 (~43 characters).
     /// - Secret Part: 32 bytes (256 bits) of entropy encoded as base62 (~43 characters).
-    /// - Prefix Format: synaxis_{first-8-chars-of-id}.
+    /// - Prefix Format: synaxis_build_{first-8-chars-of-id}.
     /// - Hash: bcrypt with work factor 12.
     /// </remarks>
     public class ApiKeyService : IApiKeyService
     {
-        private const string KeyPrefix = "synaxis";
+        private const string KeyPrefix = "synaxis_build";
         private const int EntropyBytes = 32; // 256 bits
         private const int WorkFactor = 12; // bcrypt work factor
         private const int PrefixIdLength = 8;
@@ -321,7 +321,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
         /// Extracts the key prefix from the key ID part.
         /// </summary>
         /// <param name="keyIdBase62">The base62-encoded key ID.</param>
-        /// <returns>The prefix in format "synaxis_{first-8-chars-of-id}".</returns>
+        /// <returns>The prefix in format "synaxis_build_{first-8-chars-of-id}".</returns>
         private static string ExtractKeyPrefix(string keyIdBase62)
         {
             var idPrefix = keyIdBase62.Length >= PrefixIdLength
@@ -344,7 +344,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             }
 
             return apiKey.StartsWith($"{KeyPrefix}_", StringComparison.Ordinal)
-                   && apiKey.Split('_').Length == 3;
+                   && apiKey.Split('_').Length == 4;
         }
 
         /// <summary>
@@ -381,14 +381,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                 return false;
             }
 
-            var parts = apiKey.Split('_', 3);
-            if (parts.Length != 3)
+            var parts = apiKey.Split('_', 4);
+            if (parts.Length != 4)
             {
                 result.ErrorMessage = "Invalid API key structure.";
                 return false;
             }
 
-            var keyIdPart = parts[1];
+            var keyIdPart = parts[2];
             prefix = ExtractKeyPrefix(keyIdPart);
             return true;
         }
@@ -407,15 +407,16 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
 
         private static bool ValidateKeyStatus(ApiKey matchedKey, ApiKeyValidationResult result)
         {
-            if (!matchedKey.IsActive)
-            {
-                result.ErrorMessage = "API key has been deactivated.";
-                return false;
-            }
-
+            // Check revoked first, as it's more specific than IsActive
             if (matchedKey.RevokedAt.HasValue)
             {
                 result.ErrorMessage = $"API key was revoked: {matchedKey.RevocationReason ?? "No reason provided"}";
+                return false;
+            }
+
+            if (!matchedKey.IsActive)
+            {
+                result.ErrorMessage = "API key is inactive.";
                 return false;
             }
 

@@ -6,7 +6,6 @@ using Moq;
 using StackExchange.Redis;
 using Synaxis.InferenceGateway.Application.Configuration;
 using Synaxis.InferenceGateway.Infrastructure.Routing;
-using System.Collections.Generic;
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Routing;
 
@@ -27,15 +26,14 @@ public class RedisQuotaTrackerTests
 
         this._config = new SynaxisConfiguration
         {
-            // TODO: Re-enable provider configuration tests once ProviderConfiguration type is available
-            // Providers = new Dictionary<string, ProviderConfiguration>
-            // {
-            //     ["Groq"] = new ProviderConfiguration
-            //     {
-            //         RateLimitRPM = 100,
-            //         RateLimitTPM = 10000
-            //     }
-            // }
+            Providers = new Dictionary<string, ProviderConfig>
+            {
+                ["Groq"] = new ProviderConfig
+                {
+                    RateLimitRPM = 100,
+                    RateLimitTPM = 10000
+                }
+            }
         };
 
         this._mockConfig.Setup(c => c.Value).Returns(this._config);
@@ -55,25 +53,24 @@ public class RedisQuotaTrackerTests
         result.Should().BeTrue();
     }
 
-    // TODO: Re-enable once ProviderConfiguration type is available
-    // [Fact]
-    // public async Task CheckQuotaAsync_WithNoRateLimits_ReturnsTrue()
-    // {
-    //     // Arrange
-    //     _config.Providers["NoLimit"] = new ProviderConfiguration
-    //     {
-    //         RateLimitRPM = null,
-    //         RateLimitTPM = null
-    //     };
-    //
-    //     var tracker = new RedisQuotaTracker(_mockRedis.Object, _mockLogger.Object, _mockConfig.Object);
-    //
-    //     // Act
-    //     var result = await tracker.CheckQuotaAsync("NoLimit");
-    //
-    //     // Assert
-    //     result.Should().BeTrue();
-    // }
+    [Fact]
+    public async Task CheckQuotaAsync_WithNoRateLimits_ReturnsTrue()
+    {
+        // Arrange
+        this._config.Providers["NoLimit"] = new ProviderConfig
+        {
+            RateLimitRPM = null,
+            RateLimitTPM = null
+        };
+
+        var tracker = new RedisQuotaTracker(this._mockRedis.Object, this._mockLogger.Object, this._mockConfig.Object);
+
+        // Act
+        var result = await tracker.CheckQuotaAsync("NoLimit");
+
+        // Assert
+        result.Should().BeTrue();
+    }
 
     [Fact]
     public async Task CheckQuotaAsync_WithinLimits_ReturnsTrue()

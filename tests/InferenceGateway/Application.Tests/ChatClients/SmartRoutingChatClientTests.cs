@@ -52,6 +52,9 @@ public sealed class SmartRoutingChatClientTests : TestBase, IDisposable
         this._pipelineProviderMock.Setup(x => x.GetPipeline("provider-retry"))
             .Returns(pipeline);
 
+        // Setup fallback orchestrator with default behavior
+        SetupFallbackOrchestrator();
+
         this._client = new SmartRoutingChatClient(
             this._chatClientFactoryMock.Object,
             this._smartRouterMock.Object,
@@ -62,6 +65,87 @@ public sealed class SmartRoutingChatClientTests : TestBase, IDisposable
             this._activitySource,
             this._fallbackOrchestratorMock.Object,
             this._loggerMock.Object);
+    }
+
+    private void SetupFallbackOrchestrator()
+    {
+        // Setup fallback orchestrator to call the operation with the first healthy candidate
+        this._fallbackOrchestratorMock.Setup(x => x.ExecuteWithFallbackAsync(
+                It.IsAny<string>(),
+                It.IsAny<bool>(),
+                It.IsAny<string?>(),
+                It.IsAny<Func<EnrichedCandidate, Task<ChatResponse>>>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<CancellationToken>()))
+            .Returns<string, bool, string?, Func<EnrichedCandidate, Task<ChatResponse>>, string?, string?, CancellationToken>(
+                async (modelId, streaming, preferredKey, operation, tenantId, userId, ct) =>
+                {
+                    ct.ThrowIfCancellationRequested();
+                    
+                    var candidates = await this._smartRouterMock.Object.GetCandidatesAsync(modelId, streaming, ct).ConfigureAwait(false);
+                    var exceptions = new List<Exception>();
+                    
+                    foreach (var candidate in candidates)
+                    {
+                        ct.ThrowIfCancellationRequested();
+                        
+                        var isHealthy = await this._quotaTrackerMock.Object.IsHealthyAsync(candidate.Key, ct).ConfigureAwait(false);
+                        if (isHealthy)
+                        {
+                            try
+                            {
+                                return await operation(candidate).ConfigureAwait(false);
+                            }
+                            catch (Exception ex)
+                            {
+                                exceptions.Add(ex);
+                                continue;
+                            }
+                        }
+                    }
+
+                    throw new AggregateException($"All providers failed for model '{modelId}'", exceptions);
+                });
+
+        // Setup fallback orchestrator for streaming requests
+        this._fallbackOrchestratorMock.Setup(x => x.ExecuteWithFallbackAsync(
+                It.IsAny<string>(),
+                It.IsAny<bool>(),
+                It.IsAny<string?>(),
+                It.IsAny<Func<EnrichedCandidate, Task<IAsyncEnumerable<ChatResponseUpdate>>>>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<CancellationToken>()))
+            .Returns<string, bool, string?, Func<EnrichedCandidate, Task<IAsyncEnumerable<ChatResponseUpdate>>>, string?, string?, CancellationToken>(
+                async (modelId, streaming, preferredKey, operation, tenantId, userId, ct) =>
+                {
+                    ct.ThrowIfCancellationRequested();
+                    
+                    var candidates = await this._smartRouterMock.Object.GetCandidatesAsync(modelId, streaming, ct).ConfigureAwait(false);
+                    var exceptions = new List<Exception>();
+                    
+                    foreach (var candidate in candidates)
+                    {
+                        ct.ThrowIfCancellationRequested();
+                        
+                        var isHealthy = await this._quotaTrackerMock.Object.IsHealthyAsync(candidate.Key, ct).ConfigureAwait(false);
+                        if (isHealthy)
+                        {
+                            try
+                            {
+                                return await operation(candidate).ConfigureAwait(false);
+                            }
+                            catch (Exception ex)
+                            {
+                                exceptions.Add(ex);
+                                continue;
+                            }
+                        }
+                    }
+
+                    throw new AggregateException($"All providers failed to initiate stream for model '{modelId}'", exceptions);
+                });
     }
 
     [Fact]
@@ -172,11 +256,9 @@ public sealed class SmartRoutingChatClientTests : TestBase, IDisposable
         using var cts = new CancellationTokenSource();
         cts.Cancel();
 
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<AggregateException>(async () =>
+        // Act & Assert - Cancellation throws OperationCanceledException not AggregateException
+        await Assert.ThrowsAsync<OperationCanceledException>(async () =>
             await this._client.GetResponseAsync(messages, options, cts.Token));
-
-        Assert.Contains("All providers failed for model 'gpt-4'", exception.Message);
     }
 
     [Fact]
@@ -366,8 +448,15 @@ public sealed class SmartRoutingChatClientTests : TestBase, IDisposable
         using var cts = new CancellationTokenSource();
         cts.Cancel();
 
-        // Setup mock to throw OperationCanceledException when token is cancelled
-        this._smartRouterMock.Setup(x => x.GetCandidatesAsync("gpt-4", false, It.IsAny<CancellationToken>()))
+        // Setup fallback orchestrator to throw OperationCanceledException when token is cancelled
+        this._fallbackOrchestratorMock.Setup(x => x.ExecuteWithFallbackAsync(
+                It.IsAny<string>(),
+                It.IsAny<bool>(),
+                It.IsAny<string?>(),
+                It.IsAny<Func<EnrichedCandidate, Task<ChatResponse>>>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<CancellationToken>()))
             .ThrowsAsync(new OperationCanceledException(cts.Token));
 
         // Act & Assert
@@ -1242,8 +1331,7 @@ public sealed class SmartRoutingChatClientTests : TestBase, IDisposable
 
         // Act & Assert
         await Assert.ThrowsAsync<AggregateException>(() => this._client.GetResponseAsync(messages, options));
-        // MarkFailureAsync is called twice: once in rotation loop, once in ExecuteCandidateAsync
-        this._healthStoreMock.Verify(x => x.MarkFailureAsync("openai", TimeSpan.FromSeconds(60), It.IsAny<CancellationToken>()), Times.Exactly(2));
+        this._healthStoreMock.Verify(x => x.MarkFailureAsync("openai", TimeSpan.FromSeconds(60), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -1277,8 +1365,7 @@ public sealed class SmartRoutingChatClientTests : TestBase, IDisposable
 
         // Act & Assert
         await Assert.ThrowsAsync<AggregateException>(() => this._client.GetResponseAsync(messages, options));
-        // MarkFailureAsync is called twice: once in rotation loop, once in ExecuteCandidateAsync
-        this._healthStoreMock.Verify(x => x.MarkFailureAsync("openai", TimeSpan.FromHours(1), It.IsAny<CancellationToken>()), Times.Exactly(2));
+        this._healthStoreMock.Verify(x => x.MarkFailureAsync("openai", TimeSpan.FromHours(1), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -1380,8 +1467,7 @@ public sealed class SmartRoutingChatClientTests : TestBase, IDisposable
 
         // Act & Assert
         await Assert.ThrowsAsync<AggregateException>(() => this._client.GetResponseAsync(messages, options));
-        // MarkFailureAsync is called twice: once in rotation loop, once in ExecuteCandidateAsync
-        this._healthStoreMock.Verify(x => x.MarkFailureAsync("openai", TimeSpan.FromSeconds(30), It.IsAny<CancellationToken>()), Times.Exactly(2));
+        this._healthStoreMock.Verify(x => x.MarkFailureAsync("openai", TimeSpan.FromSeconds(30), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -1413,8 +1499,7 @@ public sealed class SmartRoutingChatClientTests : TestBase, IDisposable
 
         // Act & Assert
         await Assert.ThrowsAsync<AggregateException>(() => this._client.GetResponseAsync(messages, options));
-        // MarkFailureAsync is called twice: once in rotation loop, once in ExecuteCandidateAsync
-        this._healthStoreMock.Verify(x => x.MarkFailureAsync("openai", TimeSpan.FromSeconds(30), It.IsAny<CancellationToken>()), Times.Exactly(2));
+        this._healthStoreMock.Verify(x => x.MarkFailureAsync("openai", TimeSpan.FromSeconds(30), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -1448,9 +1533,7 @@ public sealed class SmartRoutingChatClientTests : TestBase, IDisposable
 
         // Act & Assert
         await Assert.ThrowsAsync<AggregateException>(() => this._client.GetResponseAsync(messages, options));
-        // Should apply 60 second cooldown for 429 extracted from inner exception message
-        // MarkFailureAsync is called twice: once in rotation loop, once in ExecuteCandidateAsync
-        this._healthStoreMock.Verify(x => x.MarkFailureAsync("openai", TimeSpan.FromSeconds(60), It.IsAny<CancellationToken>()), Times.Exactly(2));
+        this._healthStoreMock.Verify(x => x.MarkFailureAsync("openai", TimeSpan.FromSeconds(60), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     #endregion

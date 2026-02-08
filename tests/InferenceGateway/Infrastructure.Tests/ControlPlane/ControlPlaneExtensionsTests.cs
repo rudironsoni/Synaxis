@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Synaxis.InferenceGateway.Application.ControlPlane;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 
@@ -21,6 +22,7 @@ public class ControlPlaneExtensionsTests
             .Build();
 
         services.AddSingleton<IConfiguration>(configuration);
+        services.AddLogging();
         services.AddControlPlane(configuration);
         var serviceProvider = services.BuildServiceProvider();
 
@@ -43,6 +45,7 @@ public class ControlPlaneExtensionsTests
             .Build();
 
         services.AddSingleton<IConfiguration>(configuration);
+        services.AddLogging();
         services.AddControlPlane(configuration);
         var serviceProvider = services.BuildServiceProvider();
 
@@ -64,6 +67,7 @@ public class ControlPlaneExtensionsTests
             .Build();
 
         services.AddSingleton<IConfiguration>(configuration);
+        services.AddLogging();
         services.AddControlPlane(configuration);
         var serviceProvider = services.BuildServiceProvider();
 
@@ -88,6 +92,7 @@ public class ControlPlaneExtensionsTests
             .Build();
 
         services.AddSingleton<IConfiguration>(configuration);
+        services.AddLogging();
         services.AddControlPlane(configuration);
         var serviceProvider = services.BuildServiceProvider();
 

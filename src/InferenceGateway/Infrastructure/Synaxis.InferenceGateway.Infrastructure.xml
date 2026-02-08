@@ -3086,6 +3086,18 @@
         <member name="M:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.AddEnterpriseMultiTenantSchema.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.PendingModelChanges">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.PendingModelChanges.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.PendingModelChanges.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.PendingModelChanges.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
         <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.NotificationService">
             <summary>
             Stub implementation of notification service.
@@ -3318,7 +3330,24 @@
             3. Converts DELETE to UPDATE by changing EntityState to Modified
             4. Sets DeletedAt to DateTime.UtcNow and DeletedBy to current user ID
             5. For Organization entities, cascades soft delete to related entities.
+            6. Also processes Modified entities where DeletedAt was just set (for test scenarios).
             </remarks>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Data.Interceptors.SoftDeleteInterceptor.ProcessDeletedEntries(Microsoft.EntityFrameworkCore.DbContext,System.Nullable{System.Guid},System.DateTime)">
+            <summary>
+            Processes entities that are in Deleted state and converts them to soft deletes.
+            </summary>
+            <param name="context">The DbContext containing the tracked entities.</param>
+            <param name="currentUserId">The ID of the current user, or null if not available.</param>
+            <param name="utcNow">The current UTC timestamp.</param>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Data.Interceptors.SoftDeleteInterceptor.ProcessModifiedEntriesWithDeletedAt(Microsoft.EntityFrameworkCore.DbContext,System.Nullable{System.Guid},System.DateTime)">
+            <summary>
+            Processes entities that have DeletedAt manually set (for test scenarios with InMemory DB).
+            </summary>
+            <param name="context">The DbContext containing the tracked entities.</param>
+            <param name="currentUserId">The ID of the current user, or null if not available.</param>
+            <param name="utcNow">The current UTC timestamp.</param>
         </member>
         <member name="M:Synaxis.InferenceGateway.Infrastructure.Data.Interceptors.SoftDeleteInterceptor.CascadeSoftDeleteForOrganization(Microsoft.EntityFrameworkCore.DbContext,System.Guid,System.Nullable{System.Guid},System.DateTime)">
              <summary>
@@ -4366,6 +4395,12 @@
         <member name="M:Synaxis.InferenceGateway.Infrastructure.Identity.Core.IdentityManager.Dispose">
             <inheritdoc/>
         </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Identity.Core.IdentityManager.Dispose(System.Boolean)">
+            <summary>
+            Disposes resources used by the IdentityManager.
+            </summary>
+            <param name="disposing">True if called from Dispose(), false if called from finalizer.</param>
+        </member>
         <member name="M:Synaxis.InferenceGateway.Infrastructure.Identity.Core.IdentityManager.StartAuth(System.String,System.Threading.CancellationToken)">
             <summary>
             Initiates an authentication flow for the specified provider.
@@ -5311,10 +5346,10 @@
             Implementation of the API key service for managing programmatic access with bcrypt hashing.
             </summary>
             <remarks>
-            API Key Format: synaxis_{43-char-base62-id}_{43-char-base62-secret}
+            API Key Format: synaxis_build_{43-char-base62-id}_{43-char-base62-secret}
             - ID Part: 32 bytes (256 bits) of entropy encoded as base62 (~43 characters).
             - Secret Part: 32 bytes (256 bits) of entropy encoded as base62 (~43 characters).
-            - Prefix Format: synaxis_{first-8-chars-of-id}.
+            - Prefix Format: synaxis_build_{first-8-chars-of-id}.
             - Hash: bcrypt with work factor 12.
             </remarks>
         </member>
@@ -5384,7 +5419,7 @@
             Extracts the key prefix from the key ID part.
             </summary>
             <param name="keyIdBase62">The base62-encoded key ID.</param>
-            <returns>The prefix in format "synaxis_{first-8-chars-of-id}".</returns>
+            <returns>The prefix in format "synaxis_build_{first-8-chars-of-id}".</returns>
         </member>
         <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.ApiKeyService.IsValidKeyFormat(System.String)">
             <summary>

@@ -27,6 +27,7 @@ public sealed class IdentityServiceTests : IDisposable
         // Setup in-memory database
         var options = new DbContextOptionsBuilder<SynaxisDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning))
             .Options;
 
         this._context = new SynaxisDbContext(options);
@@ -75,8 +76,13 @@ public sealed class IdentityServiceTests : IDisposable
         this._userManagerMock.Setup(um => um.FindByEmailAsync(It.IsAny<string>()))
             .ReturnsAsync((SynaxisUser?)null);
 
+        SynaxisUser? createdUser = null;
         this._userManagerMock.Setup(um => um.CreateAsync(It.IsAny<SynaxisUser>(), It.IsAny<string>()))
-            .ReturnsAsync(IdentityResult.Success);
+            .ReturnsAsync(IdentityResult.Success)
+            .Callback<SynaxisUser, string>((user, _) => createdUser = user);
+
+        this._userManagerMock.Setup(um => um.FindByIdAsync(It.IsAny<string>()))
+            .ReturnsAsync(() => createdUser);
 
         this._userManagerMock.Setup(um => um.UpdateAsync(It.IsAny<SynaxisUser>()))
             .ReturnsAsync(IdentityResult.Success);

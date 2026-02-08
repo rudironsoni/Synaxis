@@ -205,6 +205,21 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 .Setup(x => x.GetCostAsync("paid-tier2", modelId, cancellationToken))
                 .ReturnsAsync(new ModelCost { CostPerToken = 0.001m, FreeTier = false });
 
+            // Mock routing score calculator to return scores that follow the expected order:
+            // free-tier1 (highest), free-tier2, paid-tier2 (lower cost), paid-tier1 (highest cost, lowest score)
+            this._mockRoutingScoreCalculator
+                .Setup(x => x.CalculateScore(It.Is<EnrichedCandidate>(c => c.Key == "free-tier1"), null, null))
+                .Returns(100.0); // Free + tier 1
+            this._mockRoutingScoreCalculator
+                .Setup(x => x.CalculateScore(It.Is<EnrichedCandidate>(c => c.Key == "free-tier2"), null, null))
+                .Returns(90.0); // Free + tier 2
+            this._mockRoutingScoreCalculator
+                .Setup(x => x.CalculateScore(It.Is<EnrichedCandidate>(c => c.Key == "paid-tier2"), null, null))
+                .Returns(50.0); // Paid + lower cost
+            this._mockRoutingScoreCalculator
+                .Setup(x => x.CalculateScore(It.Is<EnrichedCandidate>(c => c.Key == "paid-tier1"), null, null))
+                .Returns(40.0); // Paid + higher cost
+
             // Act
             var result = await this._smartRouter.GetCandidatesAsync(modelId, streaming, cancellationToken);
 

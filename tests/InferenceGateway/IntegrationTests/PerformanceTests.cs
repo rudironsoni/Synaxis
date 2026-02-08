@@ -154,6 +154,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             services.AddSingleton(Options.Create(config));
 
+            // Add RoutingScoreCalculator (required by SmartRouter)
+            services.AddScoped<IRoutingScoreCalculator, RoutingScoreCalculator>();
+
             // Add SmartRouter with real dependencies
             services.AddScoped<SmartRouter>();
 

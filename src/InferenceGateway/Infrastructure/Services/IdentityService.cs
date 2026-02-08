@@ -97,6 +97,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                 return result;
             }
 
+            // Check if user already exists BEFORE starting transaction
+            var existingUser = await this._userManager.FindByEmailAsync(request.Email).ConfigureAwait(false);
+            if (existingUser != null)
+            {
+                result.Errors.Add("User with this email already exists.");
+                return result;
+            }
+
             // Begin transaction
             using var transaction = await this._context.Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
             try

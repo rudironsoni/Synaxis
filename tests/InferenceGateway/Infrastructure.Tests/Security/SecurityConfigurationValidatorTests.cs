@@ -217,10 +217,10 @@ public class SecurityConfigurationValidatorTests
     }
 
     [Theory]
-    [InlineData("password12345678901234567890")]
-    [InlineData("secret1234567890123456789012")]
-    [InlineData("test12345678901234567890123")]
-    [InlineData("admin1234567890123456789012")]
+    [InlineData("password123456789012345678901234")]
+    [InlineData("secret123456789012345678901234567")]
+    [InlineData("test1234567890123456789012345678")]
+    [InlineData("admin123456789012345678901234567")]
     public void Validate_WithCommonWeakSecrets_ReturnsWarning(string weakSecret)
     {
         // Arrange

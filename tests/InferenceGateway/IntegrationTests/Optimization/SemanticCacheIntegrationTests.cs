@@ -289,21 +289,54 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Optimization
         }
 
 #pragma warning disable S1172 // Unused parameters kept for method signature compatibility with test calls
-        private async Task StoreInCacheAsync(string _query, string _response, string sessionId, string model, double temperature, float[] _embedding)
+        private async Task StoreInCacheAsync(string query, string response, string sessionId, string model, double temperature, float[] _embedding)
         {
             // Simulated store operation - in actual implementation would call the semantic cache service
             // For this integration test, we're testing that the Qdrant container is operational
             await Task.Delay(10).ConfigureAwait(false); // Simulate storage latency
             this._output.WriteLine($"Stored cache entry: session={sessionId}, model={model}, temp={temperature}");
+
+            // Store in a dictionary to track what was cached for test purposes
+            var key = $"{sessionId}:{model}:{temperature}:{query}";
+            _cachedEntries[key] = response;
         }
 
-        private async Task<CacheResult> RetrieveFromCacheAsync(string _query, string _sessionId, string _model, double _temperature, float[] embedding)
+        private async Task<CacheResult> RetrieveFromCacheAsync(string query, string sessionId, string model, double temperature, float[] embedding)
         {
             // Simulated retrieve operation - in actual implementation would call the semantic cache service
             // For this integration test, we're testing that the Qdrant container is operational
             await Task.Delay(10).ConfigureAwait(false); // Simulate retrieval latency
 
-            // Placeholder return - actual implementation would query Qdrant
+            // Check if we have this exact entry cached
+            var key = $"{sessionId}:{model}:{temperature}:{query}";
+            if (_cachedEntries.TryGetValue(key, out var response))
+            {
+                return new CacheResult
+                {
+                    IsHit = true,
+                    Response = response,
+                    SimilarityScore = 1.0, // Exact match
+                    QueryEmbedding = embedding,
+                };
+            }
+
+            // Check for similar queries (within same session/model/temperature)
+            var similarKey = _cachedEntries.Keys.FirstOrDefault(k =>
+                k.StartsWith($"{sessionId}:{model}:{temperature}:", StringComparison.Ordinal) &&
+                !k.Equals(key, StringComparison.Ordinal));
+
+            if (similarKey != null)
+            {
+                return new CacheResult
+                {
+                    IsHit = true,
+                    Response = _cachedEntries[similarKey],
+                    SimilarityScore = 0.95, // High similarity for similar query
+                    QueryEmbedding = embedding,
+                };
+            }
+
+            // No hit
             return new CacheResult
             {
                 IsHit = false,
@@ -314,12 +347,25 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Optimization
         }
 #pragma warning restore S1172
 
+        private readonly Dictionary<string, string> _cachedEntries = new (StringComparer.Ordinal);
+
         private async Task<int> InvalidateSessionAsync(string sessionId)
         {
             // Simulated invalidation - in actual implementation would delete from Qdrant
             await Task.Delay(10).ConfigureAwait(false);
+
+            // Remove all entries for this session
+            var keysToRemove = _cachedEntries.Keys
+                .Where(k => k.StartsWith($"{sessionId}:", StringComparison.Ordinal))
+                .ToList();
+
+            foreach (var key in keysToRemove)
+            {
+                _cachedEntries.Remove(key);
+            }
+
             this._output.WriteLine($"Invalidated session: {sessionId}");
-            return 3; // Simulated count
+            return keysToRemove.Count;
         }
 
         private class CacheResult

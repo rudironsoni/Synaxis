@@ -17,7 +17,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
     /// <summary>
     /// ControlPlaneDbContext class.
     /// </summary>
-    public sealed class ControlPlaneDbContext : DbContext
+    public class ControlPlaneDbContext : DbContext
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ControlPlaneDbContext"/> class.
