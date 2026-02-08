@@ -644,9 +644,10 @@ public sealed class TokenOptimizingChatClient : IChatClient
         var sessionId = this._fingerprinter.ComputeSessionId(this._contextProvider.GetCurrentContext()!);
 
         // Check for session affinity
+        string? preferredProvider = null;
         if (this._configResolver.IsSessionAffinityEnabled())
         {
-            var preferredProvider = await this._sessionStore.GetPreferredProviderAsync(sessionId, cancellationToken);
+            preferredProvider = await this._sessionStore.GetPreferredProviderAsync(sessionId, cancellationToken);
             // Apply preferred provider to options if available
         }
 
@@ -700,6 +701,13 @@ public sealed class TokenOptimizingChatClient : IChatClient
 
         // Call inner client
         var response = await this._innerClient.GetResponseAsync(processedMessages, options, cancellationToken);
+
+        // Add preferred provider to response if session affinity was used
+        if (preferredProvider != null)
+        {
+            response.AdditionalProperties = response.AdditionalProperties ?? new AdditionalPropertiesDictionary();
+            response.AdditionalProperties["preferred_provider"] = preferredProvider;
+        }
 
         // Update conversation history
         await this._conversationStore.AddMessageAsync(sessionId, messages.Last(), cancellationToken);

@@ -86,8 +86,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                 });
             }
 
-            if (jwtSecret.Contains("default", StringComparison.OrdinalIgnoreCase) ||
-                jwtSecret.Contains("secret", StringComparison.OrdinalIgnoreCase))
+            if (jwtSecret.Contains("default", StringComparison.OrdinalIgnoreCase))
             {
                 issues.Add(new SecurityIssue
                 {

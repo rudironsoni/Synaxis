@@ -188,14 +188,16 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
             var mockStore = new Mock<ISecureTokenStore>();
             var logger = new Mock<ILogger<IdentityManager>>();
 
-            var storedAccounts = new List<IdentityAccount>();
-            mockStore.Setup(s => s.SaveAsync(It.IsAny<IList<IdentityAccount>>()))
-                .Callback<IList<IdentityAccount>>(accounts => storedAccounts.AddRange(accounts))
-                .Returns(Task.CompletedTask);
+            // Setup LoadAsync to return empty list initially
             mockStore.Setup(s => s.LoadAsync())
-                .ReturnsAsync(storedAccounts);
+                .ReturnsAsync(new List<IdentityAccount>());
+            mockStore.Setup(s => s.SaveAsync(It.IsAny<IList<IdentityAccount>>()))
+                .Returns(Task.CompletedTask);
 
             var manager = new IdentityManager(new[] { mockStrat.Object }, mockStore.Object, logger.Object);
+
+            // Wait for initial load to complete
+            await manager.WaitForInitialLoadAsync();
 
             var account = new IdentityAccount
             {

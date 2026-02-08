@@ -26,10 +26,14 @@ public class SmartRouterTests
         this._routingScoreCalculatorMock = new Mock<IRoutingScoreCalculator>();
         this._loggerMock = new Mock<ILogger<SmartRouter>>();
 
-        // Default: return higher score for lower tier (tier 1 > tier 2)
+        // Default: return higher score for lower tier (tier 1 > tier 2), with free tier bonus
         this._routingScoreCalculatorMock
             .Setup(x => x.CalculateScore(It.IsAny<EnrichedCandidate>(), It.IsAny<string?>(), It.IsAny<string?>()))
-            .Returns<EnrichedCandidate, string?, string?>((candidate, _, _) => 100.0 - candidate.config.Tier);
+            .Returns<EnrichedCandidate, string?, string?>((candidate, _, _) =>
+            {
+                var baseScore = 100.0 - candidate.config.Tier;
+                return candidate.IsFree ? baseScore + 50.0 : baseScore;
+            });
 
         this._router = new SmartRouter(
             this._modelResolverMock.Object,
