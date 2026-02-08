@@ -10,19 +10,19 @@ namespace Synaxis.InferenceGateway.Application.Translation
     /// <summary>
     /// Represents a canonical request containing all necessary information for inference.
     /// </summary>
-    /// <param name="endpoint">The endpoint kind for routing.</param>
-    /// <param name="model">The model identifier.</param>
-    /// <param name="messages">The list of chat messages.</param>
-    /// <param name="tools">The list of available AI tools.</param>
-    /// <param name="toolChoice">The tool choice configuration.</param>
-    /// <param name="responseFormat">The response format configuration.</param>
-    /// <param name="additionalOptions">Additional chat options.</param>
+    /// <param name="Endpoint">The endpoint kind for routing.</param>
+    /// <param name="Model">The model identifier.</param>
+    /// <param name="Messages">The list of chat messages.</param>
+    /// <param name="Tools">The list of available AI tools.</param>
+    /// <param name="ToolChoice">The tool choice configuration.</param>
+    /// <param name="ResponseFormat">The response format configuration.</param>
+    /// <param name="AdditionalOptions">Additional chat options.</param>
     public sealed record CanonicalRequest(
-        EndpointKind endpoint,
-        string model,
-        IReadOnlyList<ChatMessage> messages,
-        IList<AITool>? tools = null,
-        object? toolChoice = null,
-        object? responseFormat = null,
-        ChatOptions? additionalOptions = null);
+        EndpointKind Endpoint,
+        string Model,
+        IReadOnlyList<ChatMessage> Messages,
+        IList<AITool>? Tools = null,
+        object? ToolChoice = null,
+        object? ResponseFormat = null,
+        ChatOptions? AdditionalOptions = null);
 }
