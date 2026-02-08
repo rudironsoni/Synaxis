@@ -4,7 +4,7 @@ using Xunit;
 
 namespace Synaxis.InferenceGateway.Application.Tests.Optimization.Configuration;
 
-public class TokenOptimizationConfigResolverTests : IDisposable
+public sealed class TokenOptimizationConfigResolverTests : IDisposable
 {
     private readonly Mock<IDbContextFactory<TestTokenOptimizationDbContext>> _dbContextFactoryMock;
     private readonly TestTokenOptimizationDbContext _dbContext;

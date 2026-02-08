@@ -7,13 +7,13 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Xunit;
 using Synaxis.Common.Tests;
 using Synaxis.InferenceGateway.Application.Tests.Optimization;
 using Synaxis.InferenceGateway.Application.Tests.Optimization.Caching;
-using ISemanticCacheService = Synaxis.InferenceGateway.Application.Tests.Optimization.Caching.ISemanticCacheService;
-using IRequestFingerprinter = Synaxis.InferenceGateway.Application.Tests.Optimization.IRequestFingerprinter;
+using Xunit;
 using IRequestContextProvider = Synaxis.InferenceGateway.Application.Tests.Optimization.IRequestContextProvider;
+using IRequestFingerprinter = Synaxis.InferenceGateway.Application.Tests.Optimization.IRequestFingerprinter;
+using ISemanticCacheService = Synaxis.InferenceGateway.Application.Tests.Optimization.Caching.ISemanticCacheService;
 
 namespace Synaxis.InferenceGateway.Application.Tests.ChatClients;
 
@@ -570,7 +570,7 @@ public class TokenOptimizingChatClientTests : TestBase
         // Arrange
         var messages = new[] { new ChatMessage(ChatRole.User, "Hello") };
         var options = new ChatOptions { ModelId = "gpt-4" };
-        var cts = new CancellationTokenSource();
+        using var cts = new CancellationTokenSource();
 
         this._configResolverMock
             .Setup(x => x.IsOptimizationEnabled())
@@ -591,7 +591,7 @@ public class TokenOptimizingChatClientTests : TestBase
 /// <summary>
 /// Mock implementation of TokenOptimizingChatClient for testing
 /// </summary>
-public class TokenOptimizingChatClient : IChatClient
+public sealed class TokenOptimizingChatClient : IChatClient
 {
     private readonly IChatClient _innerClient;
     private readonly ISemanticCacheService _cacheService;
@@ -701,12 +701,10 @@ public class TokenOptimizingChatClient : IChatClient
         await this._conversationStore.AddMessageAsync(sessionId, response.Messages.First(), cancellationToken);
 
         // Update session affinity
-        if (this._configResolver.IsSessionAffinityEnabled() && response.AdditionalProperties != null)
+        if (this._configResolver.IsSessionAffinityEnabled() && response.AdditionalProperties != null &&
+            response.AdditionalProperties.TryGetValue("provider_name", out var providerName))
         {
-            if (response.AdditionalProperties.TryGetValue("provider_name", out var providerName))
-            {
-                await this._sessionStore.SetPreferredProviderAsync(sessionId, providerName?.ToString() ?? "", cancellationToken);
-            }
+            await this._sessionStore.SetPreferredProviderAsync(sessionId, providerName?.ToString() ?? "", cancellationToken);
         }
 
         // Cache the response
