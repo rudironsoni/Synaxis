@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AspNetCore.HealthChecks.Redis" />
+    <PackageReference Include="AspNetCore.HealthChecks.Npgsql" />
+    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
+    <PackageReference Include="OpenTelemetry.Exporter.Prometheus.AspNetCore" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Http" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Synaxis\Synaxis.csproj" />
+    <ProjectReference Include="..\..\src\Synaxis.Providers.OpenAI\Synaxis.Providers.OpenAI.csproj" />
+    <ProjectReference Include="..\..\src\Synaxis.Transport.Http\Synaxis.Transport.Http.csproj" />
+    <ProjectReference Include="..\..\src\Synaxis.Transport.Grpc\Synaxis.Transport.Grpc.csproj" />
+    <ProjectReference Include="..\..\src\Synaxis.Transport.WebSocket\Synaxis.Transport.WebSocket.csproj" />
+  </ItemGroup>
+
+</Project>

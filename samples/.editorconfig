@@ -1,0 +1,32 @@
+# Sample projects - relaxed rules for educational clarity
+root = true
+
+[*.cs]
+# Allow top-level statements and global using directives for minimal APIs
+dotnet_diagnostic.SA1028.severity = none
+dotnet_diagnostic.SA1200.severity = none
+dotnet_diagnostic.SA1512.severity = none
+dotnet_diagnostic.SA1516.severity = none
+dotnet_diagnostic.SA1413.severity = none
+dotnet_diagnostic.SA1636.severity = none
+dotnet_diagnostic.SA1649.severity = none
+dotnet_diagnostic.MA0004.severity = none
+dotnet_diagnostic.MA0006.severity = none
+dotnet_diagnostic.MA0047.severity = none
+dotnet_diagnostic.MA0048.severity = none
+dotnet_diagnostic.MA0051.severity = none
+dotnet_diagnostic.MA0074.severity = none
+dotnet_diagnostic.S125.severity = none
+dotnet_diagnostic.S1066.severity = none
+dotnet_diagnostic.S1075.severity = none
+dotnet_diagnostic.S3903.severity = none
+dotnet_diagnostic.S6966.severity = none
+dotnet_diagnostic.SA0001.severity = none
+dotnet_diagnostic.ASPDEPR002.severity = none
+dotnet_diagnostic.AD0001.severity = none
+dotnet_diagnostic.IDISP001.severity = none
+
+# Disable documentation requirements for samples
+dotnet_diagnostic.SA1600.severity = none
+dotnet_diagnostic.SA1601.severity = none
+dotnet_diagnostic.SA1633.severity = none
