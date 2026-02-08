@@ -22,17 +22,17 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Operatio
         /// <summary>
         /// Gets or sets the Name.
         /// </summary>
-        required public string Name { get; set; }
+        public required string Name { get; set; }
 
         /// <summary>
         /// Gets or sets the KeyHash.
         /// </summary>
-        required public string KeyHash { get; set; }
+        public required string KeyHash { get; set; }
 
         /// <summary>
         /// Gets or sets the KeyPrefix.
         /// </summary>
-        required public string KeyPrefix { get; set; }
+        public required string KeyPrefix { get; set; }
 
         /// <summary>
         /// Gets or sets the ExpiresAt.

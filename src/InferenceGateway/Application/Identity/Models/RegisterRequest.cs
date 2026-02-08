@@ -14,12 +14,12 @@ namespace Synaxis.InferenceGateway.Application.Identity.Models
         /// <summary>
         /// Gets or sets the user's email address.
         /// </summary>
-        required public string Email { get; set; }
+        public required string Email { get; set; }
 
         /// <summary>
         /// Gets or sets the user's password.
         /// </summary>
-        required public string Password { get; set; }
+        public required string Password { get; set; }
 
         /// <summary>
         /// Gets or sets the user's first name.

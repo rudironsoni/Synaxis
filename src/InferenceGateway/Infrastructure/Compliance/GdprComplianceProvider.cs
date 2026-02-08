@@ -26,13 +26,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
         private const int BreachNotificationHoursThreshold = 72;
 
         // EU regions for data residency validation
-        private static readonly HashSet<string> EuRegions = new ()
+        private static readonly HashSet<string> EuRegions = new()
         {
             "eu-west-1", "eu-central-1", "eu-north-1", "eu-south-1",
         };
 
         // Adequate countries under GDPR (simplified list)
-        private static readonly HashSet<string> AdequateCountries = new ()
+        private static readonly HashSet<string> AdequateCountries = new()
         {
             "EU", "UK", "CH", "NO", "IS", "LI", "NZ", "JP", "KR", "CA",
         };

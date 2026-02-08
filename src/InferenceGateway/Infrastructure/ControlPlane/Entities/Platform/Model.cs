@@ -22,12 +22,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Platform
         /// <summary>
         /// Gets or sets the canonical identifier for the model (e.g., "gpt-4", "claude-3-opus").
         /// </summary>
-        required public string CanonicalId { get; set; }
+        public required string CanonicalId { get; set; }
 
         /// <summary>
         /// Gets or sets the display name for the model.
         /// </summary>
-        required public string DisplayName { get; set; }
+        public required string DisplayName { get; set; }
 
         /// <summary>
         /// Gets or sets the description of the model.

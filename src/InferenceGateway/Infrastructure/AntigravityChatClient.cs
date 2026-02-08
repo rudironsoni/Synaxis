@@ -323,7 +323,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
         /// Gets or sets the RequestPayload.
         /// </summary>
         [JsonPropertyName("request")]
-        public RequestPayload RequestPayload { get; set; } = new ();
+        public RequestPayload RequestPayload { get; set; } = new();
     }
 
     /// <summary>
@@ -335,7 +335,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
         /// Gets or sets the contents of the request.
         /// </summary>
         [JsonPropertyName("contents")]
-        public List<Content> Contents { get; set; } = new ();
+        public List<Content> Contents { get; set; } = new();
 
         /// <summary>
         /// Gets or sets the SystemInstruction.
@@ -347,7 +347,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
         /// Gets or sets the GenerationConfig.
         /// </summary>
         [JsonPropertyName("generationConfig")]
-        public GenerationConfig GenerationConfig { get; set; } = new ();
+        public GenerationConfig GenerationConfig { get; set; } = new();
     }
 
     /// <summary>
@@ -365,7 +365,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
         /// Gets or sets the parts of the content.
         /// </summary>
         [JsonPropertyName("parts")]
-        public List<Part> Parts { get; set; } = new ();
+        public List<Part> Parts { get; set; } = new();
     }
 
     /// <summary>
@@ -377,7 +377,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
         /// Gets or sets the parts of the system instruction.
         /// </summary>
         [JsonPropertyName("parts")]
-        public List<Part> Parts { get; set; } = new ();
+        public List<Part> Parts { get; set; } = new();
     }
 
     /// <summary>
@@ -473,7 +473,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
         /// Gets or sets the candidates.
         /// </summary>
         [JsonPropertyName("candidates")]
-        public List<Candidate> Candidates { get; set; } = new ();
+        public List<Candidate> Candidates { get; set; } = new();
 
         /// <summary>
         /// Gets or sets the model version.

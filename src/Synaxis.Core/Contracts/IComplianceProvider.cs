@@ -92,22 +92,22 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the source region.
         /// </summary>
-        required public string FromRegion { get; set; }
+        public required string FromRegion { get; set; }
 
         /// <summary>
         /// Gets or sets the destination region.
         /// </summary>
-        required public string ToRegion { get; set; }
+        public required string ToRegion { get; set; }
 
         /// <summary>
         /// Gets or sets the legal basis for transfer.
         /// </summary>
-        required public string LegalBasis { get; set; }
+        public required string LegalBasis { get; set; }
 
         /// <summary>
         /// Gets or sets the purpose of transfer.
         /// </summary>
-        required public string Purpose { get; set; }
+        public required string Purpose { get; set; }
 
         /// <summary>
         /// Gets or sets the data categories being transferred.
@@ -145,12 +145,12 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the processing purpose.
         /// </summary>
-        required public string ProcessingPurpose { get; set; }
+        public required string ProcessingPurpose { get; set; }
 
         /// <summary>
         /// Gets or sets the legal basis for processing.
         /// </summary>
-        required public string LegalBasis { get; set; }
+        public required string LegalBasis { get; set; }
 
         /// <summary>
         /// Gets or sets the data categories being processed.
@@ -173,7 +173,7 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the breach type.
         /// </summary>
-        required public string BreachType { get; set; }
+        public required string BreachType { get; set; }
 
         /// <summary>
         /// Gets or sets the number of affected users.
@@ -190,7 +190,7 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the risk level (low, medium, high).
         /// </summary>
-        required public string RiskLevel { get; set; }
+        public required string RiskLevel { get; set; }
     }
 
     /// <summary>
@@ -223,6 +223,6 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the export metadata.
         /// </summary>
-        required public IDictionary<string, object> Metadata { get; set; }
+        public required IDictionary<string, object> Metadata { get; set; }
     }
 }

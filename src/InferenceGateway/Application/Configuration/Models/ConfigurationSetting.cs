@@ -18,7 +18,7 @@ namespace Synaxis.InferenceGateway.Application.Configuration.Models
         /// <summary>
         /// Gets or sets the source of the setting (User, Group, Organization, Global).
         /// </summary>
-        required public string Source { get; set; }
+        public required string Source { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether the setting was found.

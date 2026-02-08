@@ -27,7 +27,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit
         /// <summary>
         /// Gets or sets the action performed.
         /// </summary>
-        required public string Action { get; set; }
+        public required string Action { get; set; }
 
         /// <summary>
         /// Gets or sets the entity type.

@@ -531,10 +531,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
         {
             var claims = new List<Claim>
             {
-                new (ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new (ClaimTypes.Email, user.Email!),
-                new ("organizationId", membership.OrganizationId.ToString()),
-                new ("organizationRole", membership.OrganizationRole),
+                new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new(ClaimTypes.Email, user.Email!),
+                new("organizationId", membership.OrganizationId.ToString()),
+                new("organizationRole", membership.OrganizationRole),
             };
 
             var jwtSecret = this._configuration["Jwt:Secret"] ?? "your-secret-key-here-min-32-chars-long!";

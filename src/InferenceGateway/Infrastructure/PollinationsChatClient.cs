@@ -126,7 +126,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
             {
                 "gpt-4o-mini" => "openai",
                 "gpt-4o" => "openai-large",
-                _ => this._modelId
+                _ => this._modelId,
             };
 
             return new

@@ -19,12 +19,12 @@ namespace Synaxis.InferenceGateway.Application.Identity.Models
         /// <summary>
         /// Gets or sets the organization display name.
         /// </summary>
-        required public string DisplayName { get; set; }
+        public required string DisplayName { get; set; }
 
         /// <summary>
         /// Gets or sets the organization slug.
         /// </summary>
-        required public string Slug { get; set; }
+        public required string Slug { get; set; }
 
         /// <summary>
         /// Gets or sets the user's role in this organization.

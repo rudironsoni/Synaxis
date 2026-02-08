@@ -19,7 +19,7 @@ namespace Synaxis.InferenceGateway.Application.ApiKeys.Models
         /// <summary>
         /// Gets or sets the API key name.
         /// </summary>
-        required public string Name { get; set; }
+        public required string Name { get; set; }
 
         /// <summary>
         /// Gets or sets the scopes for the API key.

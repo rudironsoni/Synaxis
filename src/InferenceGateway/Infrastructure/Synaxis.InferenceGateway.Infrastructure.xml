@@ -903,26 +903,6 @@
         <member name="M:Synaxis.InferenceGateway.Infrastructure.AntigravityJsonContext.GetTypeInfo(System.Type)">
             <inheritdoc/>
         </member>
-        <member name="T:Synaxis.InferenceGateway.Infrastructure.Auth.AntigravityAccount">
-            <summary>
-            Represents an Antigravity account with token and project information.
-            </summary>
-        </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.Auth.AntigravityAccount.Email">
-            <summary>
-            Gets or sets the email address.
-            </summary>
-        </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.Auth.AntigravityAccount.ProjectId">
-            <summary>
-            Gets or sets the project identifier.
-            </summary>
-        </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.Auth.AntigravityAccount.Token">
-            <summary>
-            Gets or sets the Token.
-            </summary>
-        </member>
         <member name="T:Synaxis.InferenceGateway.Infrastructure.Auth.AntigravityAuthManager">
             <summary>
             Manages Antigravity authentication with multi-account support and automatic token refresh.
@@ -991,6 +971,26 @@
             Gets or sets the Email.
             </summary>
         </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Auth.AntigravityAccount">
+            <summary>
+            Represents an Antigravity account with token and project information.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Auth.AntigravityAccount.Email">
+            <summary>
+            Gets or sets the email address.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Auth.AntigravityAccount.ProjectId">
+            <summary>
+            Gets or sets the project identifier.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Auth.AntigravityAccount.Token">
+            <summary>
+            Gets or sets the Token.
+            </summary>
+        </member>
         <member name="T:Synaxis.InferenceGateway.Infrastructure.Auth.FileTokenStore">
             <summary>
             File-based implementation of ITokenStore for persisting Antigravity tokens.
@@ -1008,26 +1008,6 @@
         </member>
         <member name="M:Synaxis.InferenceGateway.Infrastructure.Auth.FileTokenStore.SaveAsync(System.Collections.Generic.IList{Synaxis.InferenceGateway.Infrastructure.Auth.AntigravityAccount})">
             <inheritdoc/>
-        </member>
-        <member name="T:Synaxis.InferenceGateway.Infrastructure.Auth.AccountInfo">
-            <summary>
-            Represents account information for listing purposes.
-            </summary>
-            <param name="Email">The account email.</param>
-            <param name="IsActive">Whether the account is active.</param>
-        </member>
-        <member name="M:Synaxis.InferenceGateway.Infrastructure.Auth.AccountInfo.#ctor(System.String,System.Boolean)">
-            <summary>
-            Represents account information for listing purposes.
-            </summary>
-            <param name="Email">The account email.</param>
-            <param name="IsActive">Whether the account is active.</param>
-        </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.Auth.AccountInfo.Email">
-            <summary>The account email.</summary>
-        </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.Auth.AccountInfo.IsActive">
-            <summary>Whether the account is active.</summary>
         </member>
         <member name="T:Synaxis.InferenceGateway.Infrastructure.Auth.IAntigravityAuthManager">
             <summary>
@@ -1055,6 +1035,26 @@
             <param name="redirectUrl">The redirect URL used in the flow.</param>
             <param name="state">Optional state parameter.</param>
             <returns>A task representing the asynchronous operation.</returns>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Auth.AccountInfo">
+            <summary>
+            Represents account information for listing purposes.
+            </summary>
+            <param name="Email">The account email.</param>
+            <param name="IsActive">Whether the account is active.</param>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Auth.AccountInfo.#ctor(System.String,System.Boolean)">
+            <summary>
+            Represents account information for listing purposes.
+            </summary>
+            <param name="Email">The account email.</param>
+            <param name="IsActive">Whether the account is active.</param>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Auth.AccountInfo.Email">
+            <summary>The account email.</summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Auth.AccountInfo.IsActive">
+            <summary>Whether the account is active.</summary>
         </member>
         <member name="T:Synaxis.InferenceGateway.Infrastructure.Auth.ITokenProvider">
             <summary>
@@ -3681,26 +3681,6 @@
         <member name="M:Synaxis.InferenceGateway.Infrastructure.External.DuckDuckGo.DuckDuckGoChatClient.GetService(System.Type,System.Object)">
             <inheritdoc/>
         </member>
-        <member name="T:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSessionAdapter">
-            <summary>
-            Adapter for GitHub Copilot session.
-            </summary>
-        </member>
-        <member name="M:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSessionAdapter.#ctor(GitHub.Copilot.SDK.CopilotSession)">
-            <summary>
-            Initializes a new instance of the <see cref="T:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSessionAdapter"/> class.
-            </summary>
-            <param name="inner">The inner Copilot session.</param>
-        </member>
-        <member name="M:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSessionAdapter.On(GitHub.Copilot.SDK.SessionEventHandler)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSessionAdapter.SendAsync(GitHub.Copilot.SDK.MessageOptions,System.Threading.CancellationToken)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSessionAdapter.DisposeAsync">
-            <inheritdoc/>
-        </member>
         <member name="T:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotClientAdapter">
             <summary>
             Adapter for GitHub Copilot client.
@@ -3722,6 +3702,26 @@
             <inheritdoc/>
         </member>
         <member name="M:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotClientAdapter.DisposeAsync">
+            <inheritdoc/>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSessionAdapter">
+            <summary>
+            Adapter for GitHub Copilot session.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSessionAdapter.#ctor(GitHub.Copilot.SDK.CopilotSession)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSessionAdapter"/> class.
+            </summary>
+            <param name="inner">The inner Copilot session.</param>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSessionAdapter.On(GitHub.Copilot.SDK.SessionEventHandler)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSessionAdapter.SendAsync(GitHub.Copilot.SDK.MessageOptions,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSessionAdapter.DisposeAsync">
             <inheritdoc/>
         </member>
         <member name="T:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSdkAdapter">
@@ -3749,6 +3749,35 @@
             <inheritdoc/>
         </member>
         <member name="M:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSdkAdapter.Dispose">
+            <inheritdoc/>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSdkClient">
+            <summary>
+            IChatClient implementation backed by a GitHub Copilot SDK adapter.
+            Keeps production wiring separate from tests and allows graceful lifecycle management.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSdkClient.#ctor(Synaxis.InferenceGateway.Infrastructure.External.GitHub.ICopilotSdkAdapter)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSdkClient"/> class.
+            </summary>
+            <param name="adapter">The Copilot SDK adapter.</param>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSdkClient.Metadata">
+            <summary>
+            Gets the metadata for the chat client.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSdkClient.GetResponseAsync(System.Collections.Generic.IEnumerable{Microsoft.Extensions.AI.ChatMessage},Microsoft.Extensions.AI.ChatOptions,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSdkClient.GetStreamingResponseAsync(System.Collections.Generic.IEnumerable{Microsoft.Extensions.AI.ChatMessage},Microsoft.Extensions.AI.ChatOptions,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSdkClient.GetService(System.Type,System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSdkClient.Dispose">
             <inheritdoc/>
         </member>
         <member name="T:Synaxis.InferenceGateway.Infrastructure.External.GitHub.ICopilotSdkAdapter">
@@ -3787,35 +3816,6 @@
             <param name="serviceType">The type of service to retrieve.</param>
             <param name="serviceKey">Optional service key.</param>
             <returns>The service instance or null.</returns>
-        </member>
-        <member name="T:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSdkClient">
-            <summary>
-            IChatClient implementation backed by a GitHub Copilot SDK adapter.
-            Keeps production wiring separate from tests and allows graceful lifecycle management.
-            </summary>
-        </member>
-        <member name="M:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSdkClient.#ctor(Synaxis.InferenceGateway.Infrastructure.External.GitHub.ICopilotSdkAdapter)">
-            <summary>
-            Initializes a new instance of the <see cref="T:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSdkClient"/> class.
-            </summary>
-            <param name="adapter">The Copilot SDK adapter.</param>
-        </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSdkClient.Metadata">
-            <summary>
-            Gets the metadata for the chat client.
-            </summary>
-        </member>
-        <member name="M:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSdkClient.GetResponseAsync(System.Collections.Generic.IEnumerable{Microsoft.Extensions.AI.ChatMessage},Microsoft.Extensions.AI.ChatOptions,System.Threading.CancellationToken)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSdkClient.GetStreamingResponseAsync(System.Collections.Generic.IEnumerable{Microsoft.Extensions.AI.ChatMessage},Microsoft.Extensions.AI.ChatOptions,System.Threading.CancellationToken)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSdkClient.GetService(System.Type,System.Object)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSdkClient.Dispose">
-            <inheritdoc/>
         </member>
         <member name="T:Synaxis.InferenceGateway.Infrastructure.External.GitHub.GitHubCopilotChatClient">
             <summary>
@@ -4226,6 +4226,40 @@
         <member name="M:Synaxis.InferenceGateway.Infrastructure.Identity.Core.EncryptedFileTokenStore.SaveAsync(System.Collections.Generic.IList{Synaxis.InferenceGateway.Infrastructure.Identity.Core.IdentityAccount})">
             <inheritdoc/>
         </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Identity.Core.IAuthStrategy">
+            <summary>
+            Authentication strategy interface.
+            </summary>
+        </member>
+        <member name="E:Synaxis.InferenceGateway.Infrastructure.Identity.Core.IAuthStrategy.AccountAuthenticated">
+            <summary>
+            Occurs when an account is authenticated.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Identity.Core.IAuthStrategy.InitiateFlowAsync(System.Threading.CancellationToken)">
+            <summary>
+            Initiates the authentication flow.
+            </summary>
+            <param name="ct">Cancellation token.</param>
+            <returns>The authentication result.</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Identity.Core.IAuthStrategy.CompleteFlowAsync(System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Completes the authentication flow.
+            </summary>
+            <param name="code">The authorization code.</param>
+            <param name="state">The state parameter.</param>
+            <param name="ct">Cancellation token.</param>
+            <returns>The authentication result.</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Identity.Core.IAuthStrategy.RefreshTokenAsync(Synaxis.InferenceGateway.Infrastructure.Identity.Core.IdentityAccount,System.Threading.CancellationToken)">
+            <summary>
+            Refreshes the access token.
+            </summary>
+            <param name="account">The account to refresh.</param>
+            <param name="ct">Cancellation token.</param>
+            <returns>The new token response.</returns>
+        </member>
         <member name="T:Synaxis.InferenceGateway.Infrastructure.Identity.Core.TokenResponse">
             <summary>
             Token response.
@@ -4291,40 +4325,6 @@
             <summary>
             Gets the authenticated account.
             </summary>
-        </member>
-        <member name="T:Synaxis.InferenceGateway.Infrastructure.Identity.Core.IAuthStrategy">
-            <summary>
-            Authentication strategy interface.
-            </summary>
-        </member>
-        <member name="E:Synaxis.InferenceGateway.Infrastructure.Identity.Core.IAuthStrategy.AccountAuthenticated">
-            <summary>
-            Occurs when an account is authenticated.
-            </summary>
-        </member>
-        <member name="M:Synaxis.InferenceGateway.Infrastructure.Identity.Core.IAuthStrategy.InitiateFlowAsync(System.Threading.CancellationToken)">
-            <summary>
-            Initiates the authentication flow.
-            </summary>
-            <param name="ct">Cancellation token.</param>
-            <returns>The authentication result.</returns>
-        </member>
-        <member name="M:Synaxis.InferenceGateway.Infrastructure.Identity.Core.IAuthStrategy.CompleteFlowAsync(System.String,System.String,System.Threading.CancellationToken)">
-            <summary>
-            Completes the authentication flow.
-            </summary>
-            <param name="code">The authorization code.</param>
-            <param name="state">The state parameter.</param>
-            <param name="ct">Cancellation token.</param>
-            <returns>The authentication result.</returns>
-        </member>
-        <member name="M:Synaxis.InferenceGateway.Infrastructure.Identity.Core.IAuthStrategy.RefreshTokenAsync(Synaxis.InferenceGateway.Infrastructure.Identity.Core.IdentityAccount,System.Threading.CancellationToken)">
-            <summary>
-            Refreshes the access token.
-            </summary>
-            <param name="account">The account to refresh.</param>
-            <param name="ct">Cancellation token.</param>
-            <returns>The new token response.</returns>
         </member>
         <member name="T:Synaxis.InferenceGateway.Infrastructure.Identity.Core.IdentityAccount">
             <summary>

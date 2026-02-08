@@ -21,27 +21,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
     using Synaxis.InferenceGateway.Application.Configuration;
 
     /// <summary>
-    /// Represents an Antigravity account with token and project information.
-    /// </summary>
-    public class AntigravityAccount
-    {
-        /// <summary>
-        /// Gets or sets the email address.
-        /// </summary>
-        public string Email { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Gets or sets the project identifier.
-        /// </summary>
-        public string ProjectId { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Gets or sets the Token.
-        /// </summary>
-        public TokenResponse Token { get; set; } = new ();
-    }
-
-    /// <summary>
     /// Manages Antigravity authentication with multi-account support and automatic token refresh.
     /// </summary>
     public class AntigravityAuthManager : IAntigravityAuthManager
@@ -81,7 +60,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
         private readonly string _projectId;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly AntigravitySettings _settings;
-        private readonly SemaphoreSlim _authLock = new (1, 1);
+        private readonly SemaphoreSlim _authLock = new(1, 1);
 
         private IList<AntigravityAccount> _accounts = new List<AntigravityAccount>();
         private int _requestCount = 0;
@@ -671,5 +650,26 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
             [JsonPropertyName("email")]
             public string? Email { get; set; }
         }
+    }
+
+    /// <summary>
+    /// Represents an Antigravity account with token and project information.
+    /// </summary>
+    public class AntigravityAccount
+    {
+        /// <summary>
+        /// Gets or sets the email address.
+        /// </summary>
+        public string Email { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the project identifier.
+        /// </summary>
+        public string ProjectId { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the Token.
+        /// </summary>
+        public TokenResponse Token { get; set; } = new();
     }
 }

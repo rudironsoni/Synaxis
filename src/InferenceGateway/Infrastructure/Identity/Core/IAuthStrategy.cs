@@ -9,6 +9,41 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
     using System.Threading.Tasks;
 
     /// <summary>
+    /// Authentication strategy interface.
+    /// </summary>
+    public interface IAuthStrategy
+    {
+        /// <summary>
+        /// Occurs when an account is authenticated.
+        /// </summary>
+        event EventHandler<AccountAuthenticatedEventArgs>? AccountAuthenticated;
+
+        /// <summary>
+        /// Initiates the authentication flow.
+        /// </summary>
+        /// <param name="ct">Cancellation token.</param>
+        /// <returns>The authentication result.</returns>
+        Task<AuthResult> InitiateFlowAsync(CancellationToken ct);
+
+        /// <summary>
+        /// Completes the authentication flow.
+        /// </summary>
+        /// <param name="code">The authorization code.</param>
+        /// <param name="state">The state parameter.</param>
+        /// <param name="ct">Cancellation token.</param>
+        /// <returns>The authentication result.</returns>
+        Task<AuthResult> CompleteFlowAsync(string code, string state, CancellationToken ct);
+
+        /// <summary>
+        /// Refreshes the access token.
+        /// </summary>
+        /// <param name="account">The account to refresh.</param>
+        /// <param name="ct">Cancellation token.</param>
+        /// <returns>The new token response.</returns>
+        Task<TokenResponse> RefreshTokenAsync(IdentityAccount account, CancellationToken ct);
+    }
+
+    /// <summary>
     /// Token response.
     /// </summary>
     public class TokenResponse
@@ -78,40 +113,5 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
         /// Gets the authenticated account.
         /// </summary>
         public IdentityAccount Account { get; }
-    }
-
-    /// <summary>
-    /// Authentication strategy interface.
-    /// </summary>
-    public interface IAuthStrategy
-    {
-        /// <summary>
-        /// Occurs when an account is authenticated.
-        /// </summary>
-        event EventHandler<AccountAuthenticatedEventArgs>? AccountAuthenticated;
-
-        /// <summary>
-        /// Initiates the authentication flow.
-        /// </summary>
-        /// <param name="ct">Cancellation token.</param>
-        /// <returns>The authentication result.</returns>
-        Task<AuthResult> InitiateFlowAsync(CancellationToken ct);
-
-        /// <summary>
-        /// Completes the authentication flow.
-        /// </summary>
-        /// <param name="code">The authorization code.</param>
-        /// <param name="state">The state parameter.</param>
-        /// <param name="ct">Cancellation token.</param>
-        /// <returns>The authentication result.</returns>
-        Task<AuthResult> CompleteFlowAsync(string code, string state, CancellationToken ct);
-
-        /// <summary>
-        /// Refreshes the access token.
-        /// </summary>
-        /// <param name="account">The account to refresh.</param>
-        /// <param name="ct">Cancellation token.</param>
-        /// <returns>The new token response.</returns>
-        Task<TokenResponse> RefreshTokenAsync(IdentityAccount account, CancellationToken ct);
     }
 }

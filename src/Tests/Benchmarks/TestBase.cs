@@ -30,7 +30,7 @@ public abstract class TestBase
             It.IsAny<EventId>(),
             It.IsAny<It.IsAnyType>(),
             It.IsAny<Exception?>(),
-            It.IsAny<Func<It.IsAnyType, Exception?, string>>() !))
+            It.IsAny<Func<It.IsAnyType, Exception?, string>>()!))
             .Verifiable();
         return mock;
     }
@@ -111,7 +111,7 @@ public abstract class TestBase
             .Returns(new ResolutionResult(
                 modelId,
                 new CanonicalModelId(canonicalId, canonicalId),
-                new List<ProviderConfig> { new () { Key = "test-provider" } }));
+                new List<ProviderConfig> { new() { Key = "test-provider" } }));
         mock.Setup(x => x.ResolveAsync(
             It.IsAny<string>(),
             It.IsAny<EndpointKind>(),
@@ -120,7 +120,7 @@ public abstract class TestBase
             .ReturnsAsync(new ResolutionResult(
                 modelId,
                 new CanonicalModelId(canonicalId, canonicalId),
-                new List<ProviderConfig> { new () { Key = "test-provider" } }));
+                new List<ProviderConfig> { new() { Key = "test-provider" } }));
         return mock;
     }
 

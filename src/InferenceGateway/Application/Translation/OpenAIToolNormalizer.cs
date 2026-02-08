@@ -20,13 +20,13 @@ namespace Synaxis.InferenceGateway.Application.Translation
         /// <returns>The normalized response.</returns>
         public CanonicalResponse NormalizeResponse(CanonicalResponse response)
         {
-            if (response.toolCalls == null || response.toolCalls.Count == 0)
+            if (response.ToolCalls == null || response.ToolCalls.Count == 0)
             {
                 return response;
             }
 
             var normalizedCalls = new List<FunctionCallContent>();
-            foreach (var toolCall in response.toolCalls)
+            foreach (var toolCall in response.ToolCalls)
             {
                 var id = !string.IsNullOrWhiteSpace(toolCall.CallId) ? toolCall.CallId : $"call_{Guid.NewGuid().ToString("N").Substring(0, 24)}";
 
@@ -42,7 +42,7 @@ namespace Synaxis.InferenceGateway.Application.Translation
             }
 
 #pragma warning disable SA1101 // Prefix local calls with this - False positive: 'response' is a parameter, not a member
-            return response with { toolCalls = normalizedCalls };
+            return response with { ToolCalls = normalizedCalls };
 #pragma warning restore SA1101 // Prefix local calls with this
         }
 

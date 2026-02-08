@@ -22,7 +22,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity
         /// <summary>
         /// Gets or sets the group name.
         /// </summary>
-        required public string Name { get; set; }
+        public required string Name { get; set; }
 
         /// <summary>
         /// Gets or sets the group description.
@@ -32,7 +32,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity
         /// <summary>
         /// Gets or sets the URL slug.
         /// </summary>
-        required public string Slug { get; set; }
+        public required string Slug { get; set; }
 
         /// <summary>
         /// Gets or sets the rate limit in requests per minute.
@@ -52,7 +52,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity
         /// <summary>
         /// Gets or sets the group status.
         /// </summary>
-        required public string Status { get; set; } = "Active";
+        public required string Status { get; set; } = "Active";
 
         /// <summary>
         /// Gets or sets a value indicating whether this is the default group.

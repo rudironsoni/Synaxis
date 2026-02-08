@@ -8,13 +8,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
     using System.Threading.Tasks;
 
     /// <summary>
-    /// Represents account information for listing purposes.
-    /// </summary>
-    /// <param name="Email">The account email.</param>
-    /// <param name="IsActive">Whether the account is active.</param>
-    public record AccountInfo(string Email, bool IsActive);
-
-    /// <summary>
     /// Interface for managing Antigravity authentication and tokens.
     /// </summary>
     public interface IAntigravityAuthManager : ITokenProvider
@@ -41,4 +34,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
         /// <returns>A task representing the asynchronous operation.</returns>
         Task CompleteAuthFlowAsync(string code, string redirectUrl, string? state = null);
     }
+
+    /// <summary>
+    /// Represents account information for listing purposes.
+    /// </summary>
+    /// <param name="Email">The account email.</param>
+    /// <param name="IsActive">Whether the account is active.</param>
+    public record AccountInfo(string Email, bool IsActive);
 }

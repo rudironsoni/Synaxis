@@ -26,7 +26,7 @@ namespace Synaxis.InferenceGateway.Application.ChatClients
     /// </summary>
     public sealed class SmartRoutingChatClient : IChatClient
     {
-        private static readonly Regex StatusCodeRegex = new ("(4\\d{2}|5\\d{2}|401|429)", RegexOptions.Compiled | RegexOptions.ExplicitCapture, TimeSpan.FromMilliseconds(100));
+        private static readonly Regex StatusCodeRegex = new("(4\\d{2}|5\\d{2}|401|429)", RegexOptions.Compiled | RegexOptions.ExplicitCapture, TimeSpan.FromMilliseconds(100));
 
         private readonly IChatClientFactory chatClientFactory;
         private readonly IHealthStore healthStore;
@@ -74,7 +74,7 @@ namespace Synaxis.InferenceGateway.Application.ChatClients
         /// <summary>
         /// Gets the metadata for this chat client.
         /// </summary>
-        public ChatClientMetadata Metadata { get; } = new ("SmartRoutingChatClient");
+        public ChatClientMetadata Metadata { get; } = new("SmartRoutingChatClient");
 
         /// <summary>
         /// Gets a chat response asynchronously.
@@ -184,7 +184,7 @@ namespace Synaxis.InferenceGateway.Application.ChatClients
             {
                 System.Net.HttpStatusCode sc => (int)sc,
                 int i => i,
-                _ => null
+                _ => null,
             };
         }
 
@@ -214,7 +214,7 @@ namespace Synaxis.InferenceGateway.Application.ChatClients
             {
                 System.Net.HttpStatusCode sc => (int)sc,
                 int i => i,
-                _ => null
+                _ => null,
             };
         }
 
@@ -350,9 +350,14 @@ namespace Synaxis.InferenceGateway.Application.ChatClients
                 var stream = await pipeline.ExecuteAsync(
                     ct =>
                     {
-                        var innerStream = strategy.ExecuteStreamingAsync(client, chatMessages.ToList(), routedOptions, ct);
+                        var innerStream = strategy.ExecuteStreamingAsync(
+                            client,
+                            chatMessages.ToList(),
+                            routedOptions,
+                            ct);
                         return new ValueTask<IAsyncEnumerable<ChatResponseUpdate>>(innerStream);
-                    }, cancellationToken).ConfigureAwait(false);
+                    },
+                    cancellationToken).ConfigureAwait(false);
 
                 // Wrap the stream to add metadata
                 return AddMetadataToStream(stream, candidate.Key, candidate.CanonicalModelPath);
@@ -430,7 +435,7 @@ namespace Synaxis.InferenceGateway.Application.ChatClients
                 401 => this.LogAndReturnCooldown(providerKey, modelId, ex, code, TimeSpan.FromHours(1), LogLevel.Critical, "returned 401 Unauthorized"),
                 400 or 404 => this.LogClientError(providerKey, modelId, ex, code),
                 >= 500 and < 600 => this.LogAndReturnCooldown(providerKey, modelId, ex, code, TimeSpan.FromSeconds(30), LogLevel.Error, "returned server error"),
-                _ => this.LogAndReturnCooldown(providerKey, modelId, ex, code, TimeSpan.FromSeconds(30), LogLevel.Error, "returned unexpected status code")
+                _ => this.LogAndReturnCooldown(providerKey, modelId, ex, code, TimeSpan.FromSeconds(30), LogLevel.Error, "returned unexpected status code"),
             };
         }
 
