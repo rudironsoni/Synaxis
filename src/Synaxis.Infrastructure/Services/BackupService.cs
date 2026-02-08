@@ -198,7 +198,7 @@ namespace Synaxis.Infrastructure.Services
             return success;
         }
         
-        public async Task<List<BackupMetadata>> ListBackupsAsync(Guid organizationId)
+        public async Task<IList<BackupMetadata>> ListBackupsAsync(Guid organizationId)
         {
             // Simulated - in production would query from metadata store
             await Task.CompletedTask;
@@ -412,7 +412,7 @@ namespace Synaxis.Infrastructure.Services
             return $"s3://{region}/backups/{backupId}";
         }
         
-        private async Task<List<string>> ReplicateBackupAsync(string backupId, byte[] data, List<string> targetRegions)
+        private async Task<List<string>> ReplicateBackupAsync(string backupId, byte[] data, IList<string> targetRegions)
         {
             var replicatedRegions = new List<string>();
             

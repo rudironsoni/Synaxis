@@ -117,7 +117,7 @@ namespace Synaxis.Infrastructure.Services
             }
         }
         
-        public async Task<Dictionary<string, RegionHealth>> GetAllRegionHealthAsync()
+        public async Task<IDictionary<string, RegionHealth>> GetAllRegionHealthAsync()
         {
             var regions = new[] { "eu-west-1", "us-east-1", "sa-east-1" };
             var healthChecks = await Task.WhenAll(
@@ -245,7 +245,7 @@ namespace Synaxis.Infrastructure.Services
             return health.IsHealthy;
         }
         
-        public async Task<string> GetNearestHealthyRegionAsync(string fromRegion, List<string> availableRegions)
+        public async Task<string> GetNearestHealthyRegionAsync(string fromRegion, IList<string> availableRegions)
         {
             if (availableRegions == null || !availableRegions.Any())
                 throw new ArgumentException("No available regions provided", nameof(availableRegions));

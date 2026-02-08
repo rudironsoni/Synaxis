@@ -213,7 +213,7 @@ namespace Synaxis.Infrastructure.Services
             return true;
         }
         
-        private T GetLimitValue<T>(System.Collections.Generic.Dictionary<string, object> config, string key, T defaultValue)
+        private T GetLimitValue<T>(IDictionary<string, object> config, string key, T defaultValue)
         {
             if (config == null || !config.ContainsKey(key))
                 return defaultValue;

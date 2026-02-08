@@ -52,7 +52,7 @@ services:
       timeout: 3s
       retries: 10
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - synaxis-postgres-data:/var/lib/postgresql/data
     networks:

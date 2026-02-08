@@ -81,7 +81,7 @@ namespace Synaxis.Infrastructure.Services
             return auditLog;
         }
         
-        public async Task<List<AuditLog>> QueryAuditLogsAsync(AuditQuery query)
+        public async Task<IList<AuditLog>> QueryAuditLogsAsync(AuditQuery query)
         {
             if (query == null)
             {

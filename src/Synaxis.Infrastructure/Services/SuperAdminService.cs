@@ -60,7 +60,7 @@ namespace Synaxis.Infrastructure.Services
             _currentRegion = currentRegion;
         }
         
-        public async Task<List<OrganizationSummary>> GetCrossRegionOrganizationsAsync()
+        public async Task<IList<OrganizationSummary>> GetCrossRegionOrganizationsAsync()
         {
             _logger.LogInformation("Fetching cross-region organizations");
             
@@ -206,7 +206,7 @@ namespace Synaxis.Infrastructure.Services
             };
         }
         
-        public async Task<List<CrossBorderTransferReport>> GetCrossBorderTransfersAsync(DateTime? startDate = null, DateTime? endDate = null)
+        public async Task<IList<CrossBorderTransferReport>> GetCrossBorderTransfersAsync(DateTime? startDate = null, DateTime? endDate = null)
         {
             var start = startDate ?? DateTime.UtcNow.AddDays(-30);
             var end = endDate ?? DateTime.UtcNow;
