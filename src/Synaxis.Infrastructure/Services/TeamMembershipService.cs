@@ -138,8 +138,8 @@ namespace Synaxis.Infrastructure.Services
             {
                 Id = membership.Id,
                 UserId = userId,
-                UserEmail = membership.User.Email,
-                UserFullName = membership.User.FullName,
+                UserEmail = membership.User?.Email ?? string.Empty,
+                UserFullName = membership.User?.FullName ?? string.Empty,
                 TeamId = teamId,
                 Role = newRole,
                 JoinedAt = membership.JoinedAt,
@@ -164,8 +164,8 @@ namespace Synaxis.Infrastructure.Services
                 {
                     Id = m.Id,
                     UserId = m.UserId,
-                    UserEmail = m.User.Email,
-                    UserFullName = m.User.FullName,
+                    UserEmail = m.User != null ? m.User.Email : string.Empty,
+                    UserFullName = m.User != null ? m.User.FullName : string.Empty,
                     TeamId = m.TeamId,
                     Role = m.Role,
                     JoinedAt = m.JoinedAt,
@@ -188,7 +188,7 @@ namespace Synaxis.Infrastructure.Services
         {
             var query = _context.TeamMemberships
                 .Include(m => m.Team)
-                .ThenInclude(t => t.Organization)
+                    .ThenInclude(t => t!.Organization)
                 .Where(m => m.UserId == userId);
 
             var totalCount = await query.CountAsync(cancellationToken).ConfigureAwait(false);

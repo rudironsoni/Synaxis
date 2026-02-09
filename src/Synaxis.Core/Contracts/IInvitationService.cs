@@ -30,7 +30,7 @@ namespace Synaxis.Core.Contracts
         /// <param name="token">The invitation token.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>The invitation response or null if not found.</returns>
-        Task<InvitationResponse> GetInvitationAsync(string token, CancellationToken cancellationToken = default);
+        Task<InvitationResponse?> GetInvitationAsync(string token, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Accepts an invitation and adds the user to the team.

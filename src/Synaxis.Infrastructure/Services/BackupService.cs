@@ -150,7 +150,7 @@ namespace Synaxis.Infrastructure.Services
 
                 return new BackupResult
                 {
-                    BackupId = null,
+                    BackupId = string.Empty,
                     BackupType = backupType,
                     OrganizationId = organizationId,
                     Success = false,
@@ -208,7 +208,7 @@ namespace Synaxis.Infrastructure.Services
             return new List<BackupMetadata>();
         }
 
-        public async Task<BackupMetadata> GetBackupMetadataAsync(string backupId)
+        public async Task<BackupMetadata?> GetBackupMetadataAsync(string backupId)
         {
             // Simulated - in production would query from metadata store
 

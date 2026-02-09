@@ -6,7 +6,6 @@
     <IsPackable>false</IsPackable>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <NoWarn>SA0001</NoWarn>
-    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="DotNetEnv" />

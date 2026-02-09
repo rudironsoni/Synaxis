@@ -18,8 +18,8 @@ public class ControlPlaneExtensionsTests
     {
         var services = new ServiceCollection();
         var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-(StringComparer.Ordinal)
+            .AddInMemoryCollection(new Dictionary<string, string?>(
+StringComparer.Ordinal)
             {
                 { "Synaxis:ControlPlane:UseInMemory", "true" },
                 { "Synaxis:ControlPlane:ConnectionString", string.Empty },
@@ -42,8 +42,8 @@ public class ControlPlaneExtensionsTests
         var services = new ServiceCollection();
         var connectionString = "Host=localhost;Database=testdb;Username=postgres;Password=password";
         var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-(StringComparer.Ordinal)
+            .AddInMemoryCollection(new Dictionary<string, string?>(
+StringComparer.Ordinal)
             {
                 { "Synaxis:ControlPlane:UseInMemory", "false" },
                 { "Synaxis:ControlPlane:ConnectionString", connectionString },
@@ -65,8 +65,8 @@ public class ControlPlaneExtensionsTests
     {
         var services = new ServiceCollection();
         var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-(StringComparer.Ordinal)
+            .AddInMemoryCollection(new Dictionary<string, string?>(
+StringComparer.Ordinal)
             {
                 { "Synaxis:ControlPlane:UseInMemory", "true" },
                 { "Synaxis:ControlPlane:ConnectionString", string.Empty },
@@ -91,8 +91,8 @@ public class ControlPlaneExtensionsTests
     {
         var services = new ServiceCollection();
         var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-(StringComparer.Ordinal)
+            .AddInMemoryCollection(new Dictionary<string, string?>(
+StringComparer.Ordinal)
             {
                 { "Synaxis:ControlPlane:UseInMemory", "false" },
                 { "Synaxis:ControlPlane:ConnectionString", string.Empty },

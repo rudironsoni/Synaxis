@@ -26,26 +26,26 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the organization navigation property.
         /// </summary>
-        public virtual Organization Organization { get; set; }
+        public virtual Organization? Organization { get; set; }
 
         /// <summary>
         /// Gets or sets the team slug.
         /// </summary>
         [Required]
         [StringLength(100)]
-        public string Slug { get; set; }
+        public string Slug { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the team name.
         /// </summary>
         [Required]
         [StringLength(255)]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the team description.
         /// </summary>
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets a value indicating whether the team is active.
@@ -65,12 +65,12 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the allowed models (NULL = inherit from org).
         /// </summary>
-        public IList<string> AllowedModels { get; set; }
+        public IList<string> AllowedModels { get; set; } = new List<string>();
 
         /// <summary>
         /// Gets or sets the blocked models.
         /// </summary>
-        public IList<string> BlockedModels { get; set; }
+        public IList<string> BlockedModels { get; set; } = new List<string>();
 
         /// <summary>
         /// Gets or sets the creation timestamp.
@@ -85,11 +85,11 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the team memberships navigation property.
         /// </summary>
-        public virtual ICollection<TeamMembership> TeamMemberships { get; set; }
+        public virtual ICollection<TeamMembership> TeamMemberships { get; set; } = new List<TeamMembership>();
 
         /// <summary>
         /// Gets or sets the virtual keys navigation property.
         /// </summary>
-        public virtual ICollection<VirtualKey> VirtualKeys { get; set; }
+        public virtual ICollection<VirtualKey> VirtualKeys { get; set; } = new List<VirtualKey>();
     }
 }

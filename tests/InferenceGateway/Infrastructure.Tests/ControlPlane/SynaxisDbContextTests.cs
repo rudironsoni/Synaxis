@@ -16,7 +16,7 @@ using Xunit;
 /// <summary>
 /// Tests for the SynaxisDbContext with all four schemas.
 /// </summary>
-public class SynaxisDbContextTests : IDisposable
+public sealed class SynaxisDbContextTests : IDisposable
 {
     private readonly SynaxisDbContext _context;
 

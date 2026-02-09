@@ -104,7 +104,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
             response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         }
 
-        [Fact(Skip = "AuditLog schema mismatch: ControlPlaneDbContext uses audit.AuditLogs with properties (EntityType, PreviousValues, NewValues), while SynaxisDbContext uses public.audit_logs with properties (EventType, ResourceType, Metadata). Requires schema unification.")]
+        [Fact]
         public async Task CreateTeam_CreatesAuditLog()
         {
             var (client, user) = await CreateAuthenticatedClientAsync();
@@ -267,7 +267,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
             content.GetProperty("description").GetString().Should().Be("Updated description");
         }
 
-        [Fact(Skip = "Audit log schema mismatch: AuditService writes to audit.AuditLogs (ControlPlaneDbContext) but tests query public.audit_logs (SynaxisDbContext). Requires audit log unification.")]
+        [Fact]
         public async Task UpdateTeam_CreatesAuditLog()
         {
             var (client, user) = await CreateAuthenticatedClientAsync();
@@ -337,7 +337,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
             deletedTeam!.IsActive.Should().BeFalse();
         }
 
-        [Fact(Skip = "Audit log schema mismatch: AuditService writes to audit.AuditLogs (ControlPlaneDbContext) but tests query public.audit_logs (SynaxisDbContext). Requires audit log unification.")]
+        [Fact]
         public async Task DeleteTeam_CreatesAuditLog()
         {
             var (client, user) = await CreateAuthenticatedClientAsync();
@@ -490,6 +490,336 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
 
             return dbContext.TeamMemberships
                 .FirstOrDefaultAsync(m => m.UserId == userId && m.TeamId == teamId);
+        }
+
+        [Fact]
+        public async Task AddMember_WithoutAuth_ReturnsUnauthorized()
+        {
+            var orgId = Guid.NewGuid();
+            var teamId = Guid.NewGuid();
+            var request = new { UserId = Guid.NewGuid(), Role = "member" };
+
+            var response = await _client.PostAsJsonAsync($"/api/v1/organizations/{orgId}/teams/{teamId}/members", request);
+
+            response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        }
+
+        [Fact]
+        public async Task AddMember_NotTeamAdmin_ReturnsForbidden()
+        {
+            var (_, user1) = await CreateAuthenticatedClientAsync("user1@example.com");
+            var org1 = await CreateTestOrganizationAsync(user1.Id);
+            var team1 = await CreateTestGroupAsync(org1.Id, "Team Alpha");
+
+            var (client2, user2) = await CreateAuthenticatedClientAsync("user2@example.com");
+            await AddUserToOrganizationAsync(user2.Id, org1.Id, "Member");
+            await AddUserToGroupAsync(user2.Id, team1.Id, "Member");
+
+            var request = new { UserId = Guid.NewGuid(), Role = "member" };
+            var response = await client2.PostAsJsonAsync($"/api/v1/organizations/{org1.Id}/teams/{team1.Id}/members", request);
+
+            response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        }
+
+        [Fact]
+        public async Task AddMember_ValidRequest_AddsMemberToTeam()
+        {
+            var (client, user1) = await CreateAuthenticatedClientAsync("admin@example.com");
+            var org = await CreateTestOrganizationAsync(user1.Id);
+            var team = await CreateTestGroupAsync(org.Id, "Team Alpha");
+            await AddUserToGroupAsync(user1.Id, team.Id, "TeamAdmin");
+
+            var (_, user2) = await CreateAuthenticatedClientAsync("member@example.com");
+            await AddUserToOrganizationAsync(user2.Id, org.Id, "Member");
+
+            var request = new { UserId = user2.Id, Role = "member" };
+            var response = await client.PostAsJsonAsync($"/api/v1/organizations/{org.Id}/teams/{team.Id}/members", request);
+
+            response.StatusCode.Should().Be(HttpStatusCode.Created);
+
+            var membership = await GetUserGroupMembershipAsync(user2.Id, team.Id);
+            membership.Should().NotBeNull();
+            membership!.Role.Should().Be("Member");
+            membership.InvitedBy.Should().Be(user1.Id);
+        }
+
+        [Fact]
+        public async Task AddMember_WithAdminRole_AddsMemberAsTeamAdmin()
+        {
+            var (client, user1) = await CreateAuthenticatedClientAsync("admin@example.com");
+            var org = await CreateTestOrganizationAsync(user1.Id);
+            var team = await CreateTestGroupAsync(org.Id, "Team Alpha");
+            await AddUserToGroupAsync(user1.Id, team.Id, "TeamAdmin");
+
+            var (_, user2) = await CreateAuthenticatedClientAsync("newadmin@example.com");
+            await AddUserToOrganizationAsync(user2.Id, org.Id, "Member");
+
+            var request = new { UserId = user2.Id, Role = "admin" };
+            var response = await client.PostAsJsonAsync($"/api/v1/organizations/{org.Id}/teams/{team.Id}/members", request);
+
+            response.StatusCode.Should().Be(HttpStatusCode.Created);
+
+            var membership = await GetUserGroupMembershipAsync(user2.Id, team.Id);
+            membership.Should().NotBeNull();
+            membership!.Role.Should().Be("TeamAdmin");
+        }
+
+        [Fact]
+        public async Task AddMember_InvalidRole_ReturnsBadRequest()
+        {
+            var (client, user1) = await CreateAuthenticatedClientAsync("admin@example.com");
+            var org = await CreateTestOrganizationAsync(user1.Id);
+            var team = await CreateTestGroupAsync(org.Id, "Team Alpha");
+            await AddUserToGroupAsync(user1.Id, team.Id, "TeamAdmin");
+
+            var (_, user2) = await CreateAuthenticatedClientAsync("member@example.com");
+            await AddUserToOrganizationAsync(user2.Id, org.Id, "Member");
+
+            var request = new { UserId = user2.Id, Role = "invalidrole" };
+            var response = await client.PostAsJsonAsync($"/api/v1/organizations/{org.Id}/teams/{team.Id}/members", request);
+
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        }
+
+        [Fact]
+        public async Task AddMember_NonExistentTeam_ReturnsNotFound()
+        {
+            var (client, user1) = await CreateAuthenticatedClientAsync("admin@example.com");
+            var org = await CreateTestOrganizationAsync(user1.Id);
+
+            var (_, user2) = await CreateAuthenticatedClientAsync("member@example.com");
+            await AddUserToOrganizationAsync(user2.Id, org.Id, "Member");
+
+            var request = new { UserId = user2.Id, Role = "member" };
+            var response = await client.PostAsJsonAsync($"/api/v1/organizations/{org.Id}/teams/{Guid.NewGuid()}/members", request);
+
+            response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        }
+
+        [Fact]
+        public async Task AddMember_NonExistentUser_ReturnsBadRequest()
+        {
+            var (client, user1) = await CreateAuthenticatedClientAsync("admin@example.com");
+            var org = await CreateTestOrganizationAsync(user1.Id);
+            var team = await CreateTestGroupAsync(org.Id, "Team Alpha");
+            await AddUserToGroupAsync(user1.Id, team.Id, "TeamAdmin");
+
+            var request = new { UserId = Guid.NewGuid(), Role = "member" };
+            var response = await client.PostAsJsonAsync($"/api/v1/organizations/{org.Id}/teams/{team.Id}/members", request);
+
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        }
+
+        [Fact]
+        public async Task AddMember_UserNotInOrganization_ReturnsBadRequest()
+        {
+            var (client, user1) = await CreateAuthenticatedClientAsync("admin@example.com");
+            var org1 = await CreateTestOrganizationAsync(user1.Id);
+            var team = await CreateTestGroupAsync(org1.Id, "Team Alpha");
+            await AddUserToGroupAsync(user1.Id, team.Id, "TeamAdmin");
+
+            var (_, user2) = await CreateAuthenticatedClientAsync("outsider@example.com");
+            var org2 = await CreateTestOrganizationAsync(user2.Id, "Other Org");
+
+            var request = new { UserId = user2.Id, Role = "member" };
+            var response = await client.PostAsJsonAsync($"/api/v1/organizations/{org1.Id}/teams/{team.Id}/members", request);
+
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        }
+
+        [Fact]
+        public async Task AddMember_AlreadyMember_ReturnsBadRequest()
+        {
+            var (client, user1) = await CreateAuthenticatedClientAsync("admin@example.com");
+            var org = await CreateTestOrganizationAsync(user1.Id);
+            var team = await CreateTestGroupAsync(org.Id, "Team Alpha");
+            await AddUserToGroupAsync(user1.Id, team.Id, "TeamAdmin");
+
+            var (_, user2) = await CreateAuthenticatedClientAsync("member@example.com");
+            await AddUserToOrganizationAsync(user2.Id, org.Id, "Member");
+            await AddUserToGroupAsync(user2.Id, team.Id, "Member");
+
+            var request = new { UserId = user2.Id, Role = "member" };
+            var response = await client.PostAsJsonAsync($"/api/v1/organizations/{org.Id}/teams/{team.Id}/members", request);
+
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        }
+
+        [Fact]
+        public async Task AddMember_CreatesAuditLog()
+        {
+            var (client, user1) = await CreateAuthenticatedClientAsync("admin@example.com");
+            var org = await CreateTestOrganizationAsync(user1.Id);
+            var team = await CreateTestGroupAsync(org.Id, "Team Alpha");
+            await AddUserToGroupAsync(user1.Id, team.Id, "TeamAdmin");
+
+            var (_, user2) = await CreateAuthenticatedClientAsync("member@example.com");
+            await AddUserToOrganizationAsync(user2.Id, org.Id, "Member");
+
+            var request = new { UserId = user2.Id, Role = "member" };
+            var response = await client.PostAsJsonAsync($"/api/v1/organizations/{org.Id}/teams/{team.Id}/members", request);
+
+            response.EnsureSuccessStatusCode();
+
+            var scope = _factory.Services.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<SynaxisDbContext>();
+            var auditLog = await dbContext.AuditLogs
+                .Where(a => a.Action == "AddTeamMember" && a.UserId == user1.Id)
+                .OrderByDescending(a => a.Timestamp)
+                .FirstOrDefaultAsync();
+
+            auditLog.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async Task UpdateMemberRole_WithoutAuth_ReturnsUnauthorized()
+        {
+            var orgId = Guid.NewGuid();
+            var teamId = Guid.NewGuid();
+            var memberId = Guid.NewGuid();
+            var request = new { Role = "admin" };
+
+            var response = await _client.PutAsJsonAsync($"/api/v1/organizations/{orgId}/teams/{teamId}/members/{memberId}/role", request);
+
+            response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        }
+
+        [Fact]
+        public async Task UpdateMemberRole_NotTeamAdmin_ReturnsForbidden()
+        {
+            var (_, user1) = await CreateAuthenticatedClientAsync("user1@example.com");
+            var org1 = await CreateTestOrganizationAsync(user1.Id);
+            var team1 = await CreateTestGroupAsync(org1.Id, "Team Alpha");
+
+            var (client2, user2) = await CreateAuthenticatedClientAsync("user2@example.com");
+            await AddUserToOrganizationAsync(user2.Id, org1.Id, "Member");
+            await AddUserToGroupAsync(user2.Id, team1.Id, "Member");
+
+            var (_, user3) = await CreateAuthenticatedClientAsync("user3@example.com");
+            await AddUserToOrganizationAsync(user3.Id, org1.Id, "Member");
+            await AddUserToGroupAsync(user3.Id, team1.Id, "Member");
+
+            var request = new { Role = "admin" };
+            var response = await client2.PutAsJsonAsync($"/api/v1/organizations/{org1.Id}/teams/{team1.Id}/members/{user3.Id}/role", request);
+
+            response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        }
+
+        [Fact]
+        public async Task UpdateMemberRole_ValidRequest_UpdatesRole()
+        {
+            var (client, user1) = await CreateAuthenticatedClientAsync("admin@example.com");
+            var org = await CreateTestOrganizationAsync(user1.Id);
+            var team = await CreateTestGroupAsync(org.Id, "Team Alpha");
+            await AddUserToGroupAsync(user1.Id, team.Id, "TeamAdmin");
+
+            var (_, user2) = await CreateAuthenticatedClientAsync("member@example.com");
+            await AddUserToOrganizationAsync(user2.Id, org.Id, "Member");
+            await AddUserToGroupAsync(user2.Id, team.Id, "Member");
+
+            var request = new { Role = "admin" };
+            var response = await client.PutAsJsonAsync($"/api/v1/organizations/{org.Id}/teams/{team.Id}/members/{user2.Id}/role", request);
+
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            var content = await response.Content.ReadFromJsonAsync<JsonElement>();
+            content.GetProperty("role").GetString().Should().Be("TeamAdmin");
+
+            var membership = await GetUserGroupMembershipAsync(user2.Id, team.Id);
+            membership.Should().NotBeNull();
+            membership!.Role.Should().Be("TeamAdmin");
+        }
+
+        [Fact]
+        public async Task UpdateMemberRole_DowngradeToMember_UpdatesRole()
+        {
+            var (client, user1) = await CreateAuthenticatedClientAsync("admin@example.com");
+            var org = await CreateTestOrganizationAsync(user1.Id);
+            var team = await CreateTestGroupAsync(org.Id, "Team Alpha");
+            await AddUserToGroupAsync(user1.Id, team.Id, "TeamAdmin");
+
+            var (_, user2) = await CreateAuthenticatedClientAsync("admin2@example.com");
+            await AddUserToOrganizationAsync(user2.Id, org.Id, "Member");
+            await AddUserToGroupAsync(user2.Id, team.Id, "TeamAdmin");
+
+            var request = new { Role = "member" };
+            var response = await client.PutAsJsonAsync($"/api/v1/organizations/{org.Id}/teams/{team.Id}/members/{user2.Id}/role", request);
+
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            var membership = await GetUserGroupMembershipAsync(user2.Id, team.Id);
+            membership.Should().NotBeNull();
+            membership!.Role.Should().Be("Member");
+        }
+
+        [Fact]
+        public async Task UpdateMemberRole_InvalidRole_ReturnsBadRequest()
+        {
+            var (client, user1) = await CreateAuthenticatedClientAsync("admin@example.com");
+            var org = await CreateTestOrganizationAsync(user1.Id);
+            var team = await CreateTestGroupAsync(org.Id, "Team Alpha");
+            await AddUserToGroupAsync(user1.Id, team.Id, "TeamAdmin");
+
+            var (_, user2) = await CreateAuthenticatedClientAsync("member@example.com");
+            await AddUserToOrganizationAsync(user2.Id, org.Id, "Member");
+            await AddUserToGroupAsync(user2.Id, team.Id, "Member");
+
+            var request = new { Role = "superuser" };
+            var response = await client.PutAsJsonAsync($"/api/v1/organizations/{org.Id}/teams/{team.Id}/members/{user2.Id}/role", request);
+
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        }
+
+        [Fact]
+        public async Task UpdateMemberRole_NonExistentTeam_ReturnsNotFound()
+        {
+            var (client, user1) = await CreateAuthenticatedClientAsync("admin@example.com");
+            var org = await CreateTestOrganizationAsync(user1.Id);
+
+            var request = new { Role = "admin" };
+            var response = await client.PutAsJsonAsync($"/api/v1/organizations/{org.Id}/teams/{Guid.NewGuid()}/members/{Guid.NewGuid()}/role", request);
+
+            response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        }
+
+        [Fact]
+        public async Task UpdateMemberRole_NonExistentMember_ReturnsNotFound()
+        {
+            var (client, user1) = await CreateAuthenticatedClientAsync("admin@example.com");
+            var org = await CreateTestOrganizationAsync(user1.Id);
+            var team = await CreateTestGroupAsync(org.Id, "Team Alpha");
+            await AddUserToGroupAsync(user1.Id, team.Id, "TeamAdmin");
+
+            var request = new { Role = "admin" };
+            var response = await client.PutAsJsonAsync($"/api/v1/organizations/{org.Id}/teams/{team.Id}/members/{Guid.NewGuid()}/role", request);
+
+            response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        }
+
+        [Fact]
+        public async Task UpdateMemberRole_CreatesAuditLog()
+        {
+            var (client, user1) = await CreateAuthenticatedClientAsync("admin@example.com");
+            var org = await CreateTestOrganizationAsync(user1.Id);
+            var team = await CreateTestGroupAsync(org.Id, "Team Alpha");
+            await AddUserToGroupAsync(user1.Id, team.Id, "TeamAdmin");
+
+            var (_, user2) = await CreateAuthenticatedClientAsync("member@example.com");
+            await AddUserToOrganizationAsync(user2.Id, org.Id, "Member");
+            await AddUserToGroupAsync(user2.Id, team.Id, "Member");
+
+            var request = new { Role = "admin" };
+            var response = await client.PutAsJsonAsync($"/api/v1/organizations/{org.Id}/teams/{team.Id}/members/{user2.Id}/role", request);
+
+            response.EnsureSuccessStatusCode();
+
+            var scope = _factory.Services.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<SynaxisDbContext>();
+            var auditLog = await dbContext.AuditLogs
+                .Where(a => a.Action == "UpdateTeamMemberRole" && a.UserId == user1.Id)
+                .OrderByDescending(a => a.Timestamp)
+                .FirstOrDefaultAsync();
+
+            auditLog.Should().NotBeNull();
         }
     }
 }

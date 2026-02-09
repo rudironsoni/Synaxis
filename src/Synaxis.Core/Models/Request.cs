@@ -31,7 +31,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the organization navigation property.
         /// </summary>
-        public virtual Organization Organization { get; set; }
+        public virtual Organization? Organization { get; set; }
 
         /// <summary>
         /// Gets or sets the user identifier.
@@ -41,7 +41,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the user navigation property.
         /// </summary>
-        public virtual User User { get; set; }
+        public virtual User? User { get; set; }
 
         /// <summary>
         /// Gets or sets the virtual key identifier.
@@ -51,7 +51,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the virtual key navigation property.
         /// </summary>
-        public virtual VirtualKey VirtualKey { get; set; }
+        public virtual VirtualKey? VirtualKey { get; set; }
 
         /// <summary>
         /// Gets or sets the team identifier.
@@ -61,22 +61,22 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the team navigation property.
         /// </summary>
-        public virtual Team Team { get; set; }
+        public virtual Team? Team { get; set; }
 
         /// <summary>
         /// Gets or sets the region where user data is stored.
         /// </summary>
-        public string UserRegion { get; set; }
+        public string UserRegion { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the region where request was processed.
         /// </summary>
-        public string ProcessedRegion { get; set; }
+        public string ProcessedRegion { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the region where data is persisted.
         /// </summary>
-        public string StoredRegion { get; set; }
+        public string StoredRegion { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets a value indicating whether this was a cross-border transfer.
@@ -86,12 +86,12 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the legal basis for transfer: SCC, consent, adequacy, none.
         /// </summary>
-        public string TransferLegalBasis { get; set; }
+        public string TransferLegalBasis { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the purpose of cross-border transfer.
         /// </summary>
-        public string TransferPurpose { get; set; }
+        public string TransferPurpose { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the transfer timestamp.
@@ -103,13 +103,13 @@ namespace Synaxis.Core.Models
         /// </summary>
         [Required]
         [StringLength(100)]
-        public string Model { get; set; }
+        public string Model { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the provider name.
         /// </summary>
         [StringLength(100)]
-        public string Provider { get; set; }
+        public string Provider { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the number of input tokens.
@@ -159,17 +159,17 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the client IP address.
         /// </summary>
-        public string ClientIpAddress { get; set; }
+        public string ClientIpAddress { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the user agent string.
         /// </summary>
-        public string UserAgent { get; set; }
+        public string UserAgent { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets the request headers.
+        /// Gets or sets the HTTP request headers.
         /// </summary>
-        public IDictionary<string, string> RequestHeaders { get; set; }
+        public IDictionary<string, string> RequestHeaders { get; set; } = new Dictionary<string, string>();
 
         /// <summary>
         /// Gets or sets the creation timestamp.

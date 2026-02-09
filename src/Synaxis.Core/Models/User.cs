@@ -26,7 +26,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the organization navigation property.
         /// </summary>
-        public virtual Organization Organization { get; set; }
+        public virtual Organization? Organization { get; set; }
 
         /// <summary>
         /// Gets or sets the email address.
@@ -34,7 +34,7 @@ namespace Synaxis.Core.Models
         [Required]
         [EmailAddress]
         [StringLength(255)]
-        public string Email { get; set; }
+        public string Email { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the email verification timestamp.
@@ -45,36 +45,36 @@ namespace Synaxis.Core.Models
         /// Gets or sets the password hash.
         /// </summary>
         [Required]
-        public string PasswordHash { get; set; }
+        public string PasswordHash { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the region where user data must be stored (GDPR/LGPD compliance).
         /// </summary>
         [Required]
-        public string DataResidencyRegion { get; set; }
+        public string DataResidencyRegion { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the region where user account was created.
         /// </summary>
         [Required]
-        public string CreatedInRegion { get; set; }
+        public string CreatedInRegion { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the first name.
         /// </summary>
         [StringLength(100)]
-        public string FirstName { get; set; }
+        public string FirstName { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the last name.
         /// </summary>
         [StringLength(100)]
-        public string LastName { get; set; }
+        public string LastName { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the avatar URL.
         /// </summary>
-        public string AvatarUrl { get; set; }
+        public string AvatarUrl { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the timezone.
@@ -111,7 +111,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the cross-border consent version.
         /// </summary>
-        public string CrossBorderConsentVersion { get; set; }
+        public string? CrossBorderConsentVersion { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether MFA is enabled.
@@ -121,7 +121,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the MFA secret.
         /// </summary>
-        public string MfaSecret { get; set; }
+        public string? MfaSecret { get; set; }
 
         /// <summary>
         /// Gets or sets the last login timestamp.
@@ -156,12 +156,12 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the team memberships navigation property.
         /// </summary>
-        public virtual ICollection<TeamMembership> TeamMemberships { get; set; }
+        public virtual ICollection<TeamMembership> TeamMemberships { get; set; } = new List<TeamMembership>();
 
         /// <summary>
         /// Gets or sets the virtual keys navigation property.
         /// </summary>
-        public virtual ICollection<VirtualKey> VirtualKeys { get; set; }
+        public virtual ICollection<VirtualKey> VirtualKeys { get; set; } = new List<VirtualKey>();
 
         /// <summary>
         /// Gets the full name of the user.

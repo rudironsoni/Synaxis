@@ -71,7 +71,7 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the metric type (requests or tokens).
         /// </summary>
-        public string MetricType { get; set; }
+        public string MetricType { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the amount to increment by.
@@ -81,7 +81,7 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the time granularity (minute, hour, day, week, month).
         /// </summary>
-        public string TimeGranularity { get; set; }
+        public string TimeGranularity { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the window type.
@@ -107,12 +107,12 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the reason for the action.
         /// </summary>
-        public string Reason { get; set; }
+        public string Reason { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the quota details.
         /// </summary>
-        public QuotaDetails Details { get; set; }
+        public QuotaDetails? Details { get; set; }
 
         /// <summary>
         /// Gets or sets the credit charge amount.
@@ -155,7 +155,7 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the metric type.
         /// </summary>
-        public string MetricType { get; set; }
+        public string MetricType { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the quota limit.
@@ -175,7 +175,7 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the time window description.
         /// </summary>
-        public string TimeWindow { get; set; }
+        public string TimeWindow { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the window start time.
@@ -211,7 +211,7 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the metric type.
         /// </summary>
-        public string MetricType { get; set; }
+        public string MetricType { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the metric value.
@@ -221,7 +221,7 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the model used.
         /// </summary>
-        public string Model { get; set; }
+        public string Model { get; set; } = string.Empty;
     }
 
     /// <summary>
@@ -242,12 +242,12 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the metric type filter.
         /// </summary>
-        public string MetricType { get; set; }
+        public string MetricType { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the granularity (hour, day, week, month).
         /// </summary>
-        public string Granularity { get; set; }
+        public string Granularity { get; set; } = string.Empty;
     }
 
     /// <summary>
@@ -273,12 +273,12 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets usage grouped by metric.
         /// </summary>
-        public IDictionary<string, long> UsageByMetric { get; set; }
+        public IDictionary<string, long> UsageByMetric { get; set; } = new Dictionary<string, long>(StringComparer.Ordinal);
 
         /// <summary>
         /// Gets or sets usage grouped by model.
         /// </summary>
-        public IDictionary<string, long> UsageByModel { get; set; }
+        public IDictionary<string, long> UsageByModel { get; set; } = new Dictionary<string, long>(StringComparer.Ordinal);
 
         /// <summary>
         /// Gets or sets the total cost.

@@ -23,19 +23,19 @@ namespace Synaxis.Core.Models
         /// </summary>
         [Required]
         [StringLength(100)]
-        public string Slug { get; set; }
+        public string Slug { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the plan name.
         /// </summary>
         [Required]
         [StringLength(255)]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the plan description.
         /// </summary>
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets a value indicating whether the plan is active.

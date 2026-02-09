@@ -79,6 +79,10 @@ dotnet_analyzer_diagnostic.category-StyleCop.severity = none
 dotnet_diagnostic.SA1200.severity = none
 dotnet_diagnostic.SA1137.severity = none
 dotnet_diagnostic.SA1413.severity = none
+dotnet_diagnostic.MA0048.severity = none
+dotnet_diagnostic.S125.severity = none
+dotnet_diagnostic.S1135.severity = none
+dotnet_diagnostic.MA0026.severity = none
 
 # Generated files (obj directory) - suppress all StyleCop analyzers for auto-generated files
 [**/obj/**/*.cs]
@@ -119,5 +123,19 @@ dotnet_diagnostic.SA1018.severity = none
 # StyleCop has a bug with C# 9+ record declarations that causes AD0001 analyzer exceptions
 # Suppress globally where records are already correctly named
 dotnet_diagnostic.SA1649.severity = none
+
+# Test Projects - suppress most StyleCop rules for test code
+# Tests don't need the same strict style enforcement as production code
+[tests/**/*.cs]
+dotnet_diagnostic.SA1101.severity = none
+dotnet_diagnostic.SA1116.severity = none
+dotnet_diagnostic.SA1214.severity = none
+dotnet_diagnostic.SA1413.severity = none
+dotnet_diagnostic.SA1513.severity = none
+dotnet_diagnostic.SA1515.severity = none
+dotnet_diagnostic.SA1503.severity = none
+dotnet_diagnostic.AsyncFixer01.severity = none
+dotnet_diagnostic.MA0004.severity = none
+dotnet_diagnostic.SA0001.severity = none
 
 

@@ -94,10 +94,10 @@ namespace Synaxis.Infrastructure.Services
                 OrganizationId = organizationId,
                 Slug = normalizedSlug,
                 Name = request.Name.Trim(),
-                Description = request.Description?.Trim(),
+                Description = request.Description?.Trim() ?? string.Empty,
                 IsActive = true,
                 MonthlyBudget = request.MonthlyBudget,
-                AllowedModels = request.AllowedModels?.ToList(),
+                AllowedModels = request.AllowedModels?.ToList() ?? new List<string>(),
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
             };
@@ -156,9 +156,9 @@ namespace Synaxis.Infrastructure.Services
                 team.Name = request.Name.Trim();
             }
 
-            if (request.Description != null)
+            if (request.Description is not null)
             {
-                team.Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim();
+                team.Description = string.IsNullOrWhiteSpace(request.Description) ? string.Empty : request.Description.Trim();
             }
 
             if (request.MonthlyBudget.HasValue)

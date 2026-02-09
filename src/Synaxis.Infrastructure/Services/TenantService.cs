@@ -206,9 +206,6 @@ namespace Synaxis.Infrastructure.Services
             // For now, return true as placeholder
             var limits = await GetOrganizationLimitsAsync(organizationId);
 
-            // In production, check Redis or similar for active request count
-            // var activeRequests = await _redisCache.GetAsync<int>($"org:{organizationId}:active_requests");
-            // return activeRequests < limits.MaxConcurrentRequests;
             return true;
         }
 

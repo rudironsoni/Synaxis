@@ -5,13 +5,14 @@
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
 {
     using System;
+    using System.Linq;
     using System.Text.Json;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.EntityFrameworkCore;
-    using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
-    using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
+    using Synaxis.Core.Models;
     using Synaxis.InferenceGateway.Infrastructure.Security;
+    using Synaxis.Infrastructure.Data;
     using Xunit;
 
     public class AuditServiceTests
@@ -20,7 +21,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
         public void Constructor_WithNullDbContext_ThrowsArgumentNullException()
         {
             // Arrange
-            ControlPlaneDbContext nullDbContext = null!;
+            SynaxisDbContext nullDbContext = null!;
 
             // Act & Assert
             Assert.Throws<ArgumentNullException>(() => new AuditService(nullDbContext!));
@@ -48,7 +49,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             Assert.Equal(tenantId, log.OrganizationId);
             Assert.Equal(userId, log.UserId);
             Assert.Equal(action, log.Action);
-            Assert.NotNull(log.NewValues);
+            Assert.NotNull(log.Metadata);
         }
 
         [Fact]
@@ -75,16 +76,18 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             Assert.Equal(tenantId, log.OrganizationId);
             Assert.Equal(userId, log.UserId);
             Assert.Equal(action, log.Action);
-            Assert.NotNull(log.NewValues);
+            Assert.NotNull(log.Metadata);
 
-            // Verify payload was serialized correctly
-            var deserializedPayload = JsonSerializer.Deserialize<JsonElement>(log.NewValues!);
-            Assert.Equal("Value1", deserializedPayload.GetProperty("Property1").GetString());
-            Assert.Equal(123, deserializedPayload.GetProperty("Property2").GetInt32());
+            // Verify payload was serialized correctly - stored in Metadata["payload"]
+            var metadataJson = JsonSerializer.Serialize(log.Metadata);
+            var metadata = JsonSerializer.Deserialize<JsonElement>(metadataJson);
+            var payloadElement = metadata.GetProperty("payload");
+            Assert.Equal("Value1", payloadElement.GetProperty("Property1").GetString());
+            Assert.Equal(123, payloadElement.GetProperty("Property2").GetInt32());
 
-            // Verify CreatedAt was set
-            Assert.True(log.CreatedAt <= DateTimeOffset.UtcNow);
-            Assert.True(log.CreatedAt >= DateTimeOffset.UtcNow.AddSeconds(-5)); // Within 5 seconds
+            // Verify Timestamp was set
+            Assert.True(log.Timestamp <= DateTime.UtcNow);
+            Assert.True(log.Timestamp >= DateTime.UtcNow.AddSeconds(-5)); // Within 5 seconds
         }
 
         [Fact]
@@ -106,7 +109,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             var logs = await dbContext.AuditLogs.ToListAsync();
             Assert.Single(logs);
             var log = logs[0];
-            Assert.Null(log.NewValues);
+            Assert.Empty(log.Metadata);
         }
 
         [Fact]
@@ -131,13 +134,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             Assert.Null(log.UserId);
         }
 
-        private static ControlPlaneDbContext BuildDbContext()
+        private static SynaxisDbContext BuildDbContext()
         {
-            var options = new DbContextOptionsBuilder<ControlPlaneDbContext>()
+            var options = new DbContextOptionsBuilder<SynaxisDbContext>()
                 .UseInMemoryDatabase(Guid.NewGuid().ToString())
                 .Options;
 
-            return new ControlPlaneDbContext(options);
+            return new SynaxisDbContext(options);
         }
     }
 }

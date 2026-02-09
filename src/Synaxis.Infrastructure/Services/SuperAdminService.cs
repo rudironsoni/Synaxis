@@ -168,9 +168,12 @@ namespace Synaxis.Infrastructure.Services
                 { _currentRegion, localUsage }
             };
 
-            foreach (var result in remoteResults.Where(r => r != null && r.Region != null))
+            foreach (var result in remoteResults)
             {
-                usageByRegion[result.Region] = result;
+                if (result != null && result.Region != null)
+                {
+                    usageByRegion[result.Region] = result;
+                }
             }
 
             var totalRequests = usageByRegion.Values.Sum(u => u.Requests);
@@ -222,11 +225,11 @@ namespace Synaxis.Infrastructure.Services
                 {
                     Id = r.Id,
                     OrganizationId = r.OrganizationId,
-                    OrganizationName = r.Organization.Name,
+                    OrganizationName = r.Organization != null ? r.Organization.Name : string.Empty,
                     UserId = r.UserId,
-                    UserEmail = r.User != null ? r.User.Email : null,
-                    FromRegion = r.UserRegion,
-                    ToRegion = r.ProcessedRegion,
+                    UserEmail = r.User != null ? r.User.Email : string.Empty,
+                    FromRegion = r.UserRegion ?? string.Empty,
+                    ToRegion = r.ProcessedRegion ?? string.Empty,
                     LegalBasis = r.TransferLegalBasis,
                     Purpose = r.TransferPurpose,
                     DataCategories = new[] { "request_data", "response_data" },
@@ -525,7 +528,7 @@ namespace Synaxis.Infrastructure.Services
                     IpAddress = context.IpAddress,
                     Metadata = new Dictionary<string, object>
                     {
-                        { "requested_action", context.Action },
+                        { "requested_action", context.Action ?? "unknown" },
                         { "hour_utc", currentHour }
                     },
                     Region = _currentRegion
@@ -571,8 +574,8 @@ namespace Synaxis.Infrastructure.Services
                     Tier = o.Tier,
                     UserCount = o.Users.Count(u => u.IsActive),
                     TeamCount = o.Teams.Count(t => t.IsActive),
-                    MonthlyRequests = 0, // TODO: Requires Request navigation property on VirtualKey
-                    MonthlySpend = o.CreditBalance, // Using credit balance as placeholder
+                    MonthlyRequests = 0,
+                    MonthlySpend = o.CreditBalance,
                     IsActive = o.IsActive,
                     CreatedAt = o.CreatedAt
                 })
@@ -620,7 +623,7 @@ namespace Synaxis.Infrastructure.Services
             };
         }
 
-        private async Task<RegionUsage> FetchUsageFromRegionAsync(string region, DateTime start, DateTime end)
+        private async Task<RegionUsage?> FetchUsageFromRegionAsync(string region, DateTime start, DateTime end)
         {
             try
             {
@@ -631,7 +634,7 @@ namespace Synaxis.Infrastructure.Services
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
-                    return JsonSerializer.Deserialize<RegionUsage>(json);
+                    return JsonSerializer.Deserialize<RegionUsage?>(json);
                 }
 
                 _logger.LogWarning("Failed to fetch usage from region {Region}: {Status}", region, response.StatusCode);

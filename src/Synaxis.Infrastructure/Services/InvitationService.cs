@@ -129,7 +129,7 @@ namespace Synaxis.Infrastructure.Services
 
             var invitation = await this._context.Set<Invitation>()
                 .Include(i => i.Team)
-                    .ThenInclude(t => t.Organization)
+                    .ThenInclude(t => t!.Organization)
                 .FirstOrDefaultAsync(i => i.Token == token, cancellationToken);
 
             return invitation != null ? MapToResponse(invitation) : null;
@@ -240,7 +240,7 @@ namespace Synaxis.Infrastructure.Services
         {
             var query = this._context.Set<Invitation>()
                 .Include(i => i.Team)
-                    .ThenInclude(t => t.Organization)
+                    .ThenInclude(t => t!.Organization)
                 .Where(i => i.OrganizationId == organizationId && i.Status == "pending")
                 .OrderByDescending(i => i.CreatedAt);
 

@@ -592,7 +592,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
             return team;
         }
 
-        #pragma warning disable AsyncFixer01 // Method only awaits a single expression - has setup code before await
+#pragma warning disable AsyncFixer01 // Method only awaits a single expression - has setup code before await
         private async Task AddUserToTeamAsync(Guid userId, Guid teamId, Guid organizationId, string role)
         {
             var scope = this._factory.Services.CreateScope();
@@ -611,7 +611,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
             dbContext.TeamMemberships.Add(membership);
             await dbContext.SaveChangesAsync().ConfigureAwait(false);
         }
-        #pragma warning restore AsyncFixer01
+#pragma warning restore AsyncFixer01
 
 #pragma warning disable SA1124
         #endregion

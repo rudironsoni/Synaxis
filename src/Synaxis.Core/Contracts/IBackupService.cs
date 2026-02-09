@@ -42,7 +42,7 @@ namespace Synaxis.Core.Contracts
         /// </summary>
         /// <param name="backupId">The unique identifier of the backup.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains the backup metadata.</returns>
-        Task<BackupMetadata> GetBackupMetadataAsync(string backupId);
+        Task<BackupMetadata?> GetBackupMetadataAsync(string backupId);
 
         /// <summary>
         /// Delete backup.
@@ -108,7 +108,7 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the backup identifier.
         /// </summary>
-        public string BackupId { get; set; }
+        public string BackupId { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the backup type.
@@ -133,7 +133,7 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the error message if backup failed.
         /// </summary>
-        public string ErrorMessage { get; set; }
+        public string ErrorMessage { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the timestamp when the backup was created.
@@ -149,7 +149,7 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the backup identifier.
         /// </summary>
-        public string BackupId { get; set; }
+        public string BackupId { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the backup type.
@@ -164,12 +164,12 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the primary region.
         /// </summary>
-        public string PrimaryRegion { get; set; }
+        public string PrimaryRegion { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the list of replicated regions.
         /// </summary>
-        public IList<string> ReplicatedRegions { get; set; }
+        public IList<string> ReplicatedRegions { get; set; } = new List<string>();
 
         /// <summary>
         /// Gets or sets the backup size in bytes.
@@ -184,7 +184,7 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the storage path of the backup.
         /// </summary>
-        public string StoragePath { get; set; }
+        public string StoragePath { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the timestamp when the backup was created.

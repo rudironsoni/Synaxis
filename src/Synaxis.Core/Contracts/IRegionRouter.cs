@@ -30,9 +30,9 @@ namespace Synaxis.Core.Contracts
         /// <param name="request">The request to route.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains the response.</returns>
         Task<TResponse> RouteToUserRegionAsync<TRequest, TResponse>(
-            Guid userId,
-            string endpoint,
-            TRequest request);
+        Guid userId,
+        string endpoint,
+        TRequest request);
 
         /// <summary>
         /// Check if routing would be cross-border.
@@ -93,27 +93,27 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the source region.
         /// </summary>
-        public string FromRegion { get; set; }
+        public string FromRegion { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the destination region.
         /// </summary>
-        public string ToRegion { get; set; }
+        public string ToRegion { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the legal basis (SCC, consent, adequacy).
         /// </summary>
-        public string LegalBasis { get; set; }
+        public string LegalBasis { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the purpose of transfer.
         /// </summary>
-        public string Purpose { get; set; }
+        public string Purpose { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the data categories being transferred.
         /// </summary>
-        public string[] DataCategories { get; set; }
+        public string[] DataCategories { get; set; } = Array.Empty<string>();
     }
 
     /// <summary>
@@ -124,22 +124,22 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the IP address.
         /// </summary>
-        public string IpAddress { get; set; }
+        public string IpAddress { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the country code.
         /// </summary>
-        public string CountryCode { get; set; }
+        public string CountryCode { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the country name.
         /// </summary>
-        public string CountryName { get; set; }
+        public string CountryName { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the city.
         /// </summary>
-        public string City { get; set; }
+        public string City { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the latitude.
@@ -154,11 +154,11 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the continent code.
         /// </summary>
-        public string ContinentCode { get; set; }
+        public string ContinentCode { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the time zone.
         /// </summary>
-        public string TimeZone { get; set; }
+        public string TimeZone { get; set; } = string.Empty;
     }
 }

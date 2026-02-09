@@ -4,16 +4,18 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
 {
+    using System.Security.Cryptography;
+    using System.Text;
     using Microsoft.Extensions.Logging;
-    using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
-    using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit;
+    using Synaxis.Core.Models;
+    using Synaxis.Infrastructure.Data;
 
     /// <summary>
     /// Tool for logging agent actions and optimizations.
     /// </summary>
     public class AuditTool : IAuditTool
     {
-        private readonly ControlPlaneDbContext _db;
+        private readonly SynaxisDbContext _db;
         private readonly ILogger<AuditTool> _logger;
 
         /// <summary>
@@ -21,7 +23,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
         /// </summary>
         /// <param name="db">The database context.</param>
         /// <param name="logger">The logger.</param>
-        public AuditTool(ControlPlaneDbContext db, ILogger<AuditTool> logger)
+        public AuditTool(SynaxisDbContext db, ILogger<AuditTool> logger)
         {
             this._db = db;
             this._logger = logger;
@@ -42,22 +44,30 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
         {
             try
             {
+                var metadata = new Dictionary<string, object>
+                {
+                    ["agent"] = agentName,
+                    ["action"] = action,
+                    ["details"] = details,
+                    ["correlationId"] = correlationId,
+                    ["timestamp"] = DateTime.UtcNow,
+                };
+
                 var auditLog = new AuditLog
                 {
                     Id = Guid.NewGuid(),
-                    Action = $"{agentName}:{action}",
+                    OrganizationId = organizationId ?? Guid.Empty,
                     UserId = userId,
-                    OrganizationId = organizationId,
-                    NewValues = System.Text.Json.JsonSerializer.Serialize(new
-                    {
-                        agent = agentName,
-                        action,
-                        details,
-                        correlationId,
-                        timestamp = DateTime.UtcNow,
-                    }),
-                    CreatedAt = DateTime.UtcNow,
+                    EventType = $"{agentName}:{action}",
+                    EventCategory = "agent",
+                    Action = action,
+                    Metadata = metadata,
+                    Region = "unknown",
+                    Timestamp = DateTime.UtcNow,
+                    IntegrityHash = string.Empty,
                 };
+
+                auditLog.IntegrityHash = ComputeIntegrityHash(auditLog);
 
                 this._db.AuditLogs.Add(auditLog);
                 await this._db.SaveChangesAsync(ct).ConfigureAwait(false);
@@ -83,22 +93,30 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
         {
             try
             {
+                var metadata = new Dictionary<string, object>
+                {
+                    ["modelId"] = modelId,
+                    ["oldProvider"] = oldProvider,
+                    ["newProvider"] = newProvider,
+                    ["savingsPercent"] = savingsPercent,
+                    ["reason"] = reason,
+                    ["timestamp"] = DateTime.UtcNow,
+                };
+
                 var auditLog = new AuditLog
                 {
                     Id = Guid.NewGuid(),
-                    Action = "CostOptimization:ProviderSwitch",
                     OrganizationId = organizationId,
-                    NewValues = System.Text.Json.JsonSerializer.Serialize(new
-                    {
-                        modelId,
-                        oldProvider,
-                        newProvider,
-                        savingsPercent,
-                        reason,
-                        timestamp = DateTime.UtcNow,
-                    }),
-                    CreatedAt = DateTime.UtcNow,
+                    EventType = "CostOptimization",
+                    EventCategory = "optimization",
+                    Action = "ProviderSwitch",
+                    Metadata = metadata,
+                    Region = "unknown",
+                    Timestamp = DateTime.UtcNow,
+                    IntegrityHash = string.Empty,
                 };
+
+                auditLog.IntegrityHash = ComputeIntegrityHash(auditLog);
 
                 this._db.AuditLogs.Add(auditLog);
                 await this._db.SaveChangesAsync(ct).ConfigureAwait(false);
@@ -115,6 +133,21 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
             {
                 this._logger.LogError(ex, "Failed to log optimization");
             }
+        }
+
+        private static string ComputeIntegrityHash(AuditLog log)
+        {
+            var data = $"{log.Id}|{log.OrganizationId}|{log.UserId}|" +
+                       $"{log.EventType}|{log.EventCategory}|{log.Action}|" +
+                       $"{log.ResourceType}|{log.ResourceId}|" +
+                       $"{System.Text.Json.JsonSerializer.Serialize(log.Metadata)}|" +
+                       $"{log.IpAddress}|{log.UserAgent}|{log.Region}|" +
+                       $"{log.PreviousHash}|" +
+                       $"{log.Timestamp:O}";
+
+            using var sha256 = SHA256.Create();
+            var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(data));
+            return Convert.ToBase64String(hashBytes);
         }
     }
 }

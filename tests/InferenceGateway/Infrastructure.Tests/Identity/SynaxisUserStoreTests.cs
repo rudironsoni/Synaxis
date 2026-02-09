@@ -14,7 +14,7 @@ using Xunit;
 /// <summary>
 /// Unit tests for SynaxisUserStore.
 /// </summary>
-public class SynaxisUserStoreTests : IDisposable
+public sealed class SynaxisUserStoreTests : IDisposable
 {
     private readonly SynaxisDbContext _context;
     private readonly SynaxisUserStore _store;

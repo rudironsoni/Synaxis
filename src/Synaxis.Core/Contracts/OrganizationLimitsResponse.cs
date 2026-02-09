@@ -101,17 +101,17 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the allowed email domains.
         /// </summary>
-        public IList<string> AllowedEmailDomains { get; set; }
+        public IList<string> AllowedEmailDomains { get; set; } = new List<string>();
 
         /// <summary>
         /// Gets or sets the available regions.
         /// </summary>
-        public IList<string> AvailableRegions { get; set; }
+        public IList<string> AvailableRegions { get; set; } = new List<string>();
 
         /// <summary>
         /// Gets or sets the privacy consent.
         /// </summary>
-        public IDictionary<string, object> PrivacyConsent { get; set; }
+        public IDictionary<string, object> PrivacyConsent { get; set; } = new Dictionary<string, object>(StringComparer.Ordinal);
     }
 
     /// <summary>
@@ -132,6 +132,6 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the allowed email domains.
         /// </summary>
-        public IList<string> AllowedEmailDomains { get; set; }
+        public IList<string> AllowedEmailDomains { get; set; } = new List<string>();
     }
 }

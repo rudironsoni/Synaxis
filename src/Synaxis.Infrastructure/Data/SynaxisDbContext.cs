@@ -94,9 +94,9 @@ namespace Synaxis.Infrastructure.Data
                         v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null!),
                         v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(),
                         new ValueComparer<IDictionary<string, object>>(
-                            (c1, c2) => c1.Count == c2.Count && !c1.Except(c2).Any(),
-                            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
-                            c => c.ToDictionary(entry => entry.Key, entry => entry.Value)))
+                            (c1, c2) => c1 != null && c2 != null && c1.Count == c2.Count && !c1.Except(c2).Any(),
+                            c => c == null ? 0 : c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
+                            c => c == null ? new Dictionary<string, object>() : c.ToDictionary(entry => entry.Key, entry => entry.Value)))
                     .HasColumnType("jsonb");
 
                 entity.HasIndex(e => e.Slug).IsUnique();
@@ -180,9 +180,9 @@ namespace Synaxis.Infrastructure.Data
                         v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null!),
                         v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(),
                         new ValueComparer<IDictionary<string, object>>(
-                            (c1, c2) => c1.Count == c2.Count && !c1.Except(c2).Any(),
-                            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
-                            c => c.ToDictionary(entry => entry.Key, entry => entry.Value)))
+                            (c1, c2) => c1 != null && c2 != null && c1.Count == c2.Count && !c1.Except(c2).Any(),
+                            c => c == null ? 0 : c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
+                            c => c == null ? new Dictionary<string, object>() : c.ToDictionary(entry => entry.Key, entry => entry.Value)))
                     .HasColumnType("jsonb");
 
                 entity.HasOne(e => e.Organization)
@@ -264,9 +264,9 @@ namespace Synaxis.Infrastructure.Data
                         v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null!),
                         v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(),
                         new ValueComparer<IDictionary<string, object>>(
-                            (c1, c2) => c1.Count == c2.Count && !c1.Except(c2).Any(),
-                            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
-                            c => c.ToDictionary(entry => entry.Key, entry => entry.Value)))
+                            (c1, c2) => c1 != null && c2 != null && c1.Count == c2.Count && !c1.Except(c2).Any(),
+                            c => c == null ? 0 : c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
+                            c => c == null ? new Dictionary<string, object>() : c.ToDictionary(entry => entry.Key, entry => entry.Value)))
                     .HasColumnType("jsonb");
 
                 entity.HasOne(e => e.Organization)
@@ -338,9 +338,9 @@ namespace Synaxis.Infrastructure.Data
                         v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null!),
                         v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, string>(),
                         new ValueComparer<IDictionary<string, string>>(
-                            (c1, c2) => c1.Count == c2.Count && !c1.Except(c2).Any(),
-                            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), StringComparer.Ordinal.GetHashCode(v.Value))),
-                            c => c.ToDictionary(entry => entry.Key, entry => entry.Value)))
+                            (c1, c2) => c1 != null && c2 != null && c1.Count == c2.Count && !c1.Except(c2).Any(),
+                            c => c == null ? 0 : c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), StringComparer.Ordinal.GetHashCode(v.Value))),
+                            c => c == null ? new Dictionary<string, string>() : c.ToDictionary(entry => entry.Key, entry => entry.Value)))
                     .HasColumnType("jsonb");
 
                 entity.HasOne(e => e.Organization)
@@ -433,9 +433,9 @@ namespace Synaxis.Infrastructure.Data
                         v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null!),
                         v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(),
                         new ValueComparer<IDictionary<string, object>>(
-                            (c1, c2) => c1.Count == c2.Count && !c1.Except(c2).Any(),
-                            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
-                            c => c.ToDictionary(entry => entry.Key, entry => entry.Value)))
+                            (c1, c2) => c1 != null && c2 != null && c1.Count == c2.Count && !c1.Except(c2).Any(),
+                            c => c == null ? 0 : c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
+                            c => c == null ? new Dictionary<string, object>() : c.ToDictionary(entry => entry.Key, entry => entry.Value)))
                     .HasColumnType("jsonb");
 
                 entity.HasOne(e => e.Organization)
@@ -575,9 +575,9 @@ namespace Synaxis.Infrastructure.Data
                         v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null!),
                         v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(),
                         new ValueComparer<IDictionary<string, object>>(
-                            (c1, c2) => c1.Count == c2.Count && !c1.Except(c2).Any(),
-                            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
-                            c => c.ToDictionary(entry => entry.Key, entry => entry.Value)))
+                            (c1, c2) => c1 != null && c2 != null && c1.Count == c2.Count && !c1.Except(c2).Any(),
+                            c => c == null ? 0 : c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
+                            c => c == null ? new Dictionary<string, object>() : c.ToDictionary(entry => entry.Key, entry => entry.Value)))
                     .HasColumnType("jsonb");
 
                 // Configure Features as JSON column
@@ -587,9 +587,9 @@ namespace Synaxis.Infrastructure.Data
                         v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null!),
                         v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(),
                         new ValueComparer<IDictionary<string, object>>(
-                            (c1, c2) => c1.Count == c2.Count && !c1.Except(c2).Any(),
-                            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
-                            c => c.ToDictionary(entry => entry.Key, entry => entry.Value)))
+                            (c1, c2) => c1 != null && c2 != null && c1.Count == c2.Count && !c1.Except(c2).Any(),
+                            c => c == null ? 0 : c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
+                            c => c == null ? new Dictionary<string, object>() : c.ToDictionary(entry => entry.Key, entry => entry.Value)))
                     .HasColumnType("jsonb");
 
                 entity.HasIndex(e => e.Slug).IsUnique();

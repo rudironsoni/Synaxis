@@ -25,7 +25,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the organization navigation property.
         /// </summary>
-        public virtual Organization Organization { get; set; }
+        public virtual Organization? Organization { get; set; }
 
         /// <summary>
         /// Gets or sets the team identifier.
@@ -35,7 +35,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the team navigation property.
         /// </summary>
-        public virtual Team Team { get; set; }
+        public virtual Team? Team { get; set; }
 
         /// <summary>
         /// Gets or sets the email address of the invitee.
@@ -43,7 +43,7 @@ namespace Synaxis.Core.Models
         [Required]
         [EmailAddress]
         [StringLength(255)]
-        public string Email { get; set; }
+        public string Email { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the role to assign when invitation is accepted.
@@ -56,7 +56,7 @@ namespace Synaxis.Core.Models
         /// </summary>
         [Required]
         [StringLength(128)]
-        public string Token { get; set; }
+        public string Token { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the user who created the invitation.
@@ -66,7 +66,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the inviter navigation property.
         /// </summary>
-        public virtual User Inviter { get; set; }
+        public virtual User? Inviter { get; set; }
 
         /// <summary>
         /// Gets or sets the invitation status: pending, accepted, declined, cancelled, expired.

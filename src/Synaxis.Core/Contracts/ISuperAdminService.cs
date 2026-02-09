@@ -83,22 +83,22 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the organization name.
         /// </summary>
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the organization slug.
         /// </summary>
-        public string Slug { get; set; }
+        public string Slug { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the primary region.
         /// </summary>
-        public string PrimaryRegion { get; set; }
+        public string PrimaryRegion { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the tier.
         /// </summary>
-        public string Tier { get; set; }
+        public string Tier { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the user count.
@@ -149,12 +149,12 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the justification for impersonation.
         /// </summary>
-        public string Justification { get; set; }
+        public string Justification { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the approver identifier.
         /// </summary>
-        public string ApprovedBy { get; set; }
+        public string ApprovedBy { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the duration in minutes.
@@ -170,7 +170,7 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the token value.
         /// </summary>
-        public string Token { get; set; }
+        public string Token { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the user identifier being impersonated.
@@ -190,7 +190,7 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the justification for impersonation.
         /// </summary>
-        public string Justification { get; set; }
+        public string Justification { get; set; } = string.Empty;
     }
 
     /// <summary>
@@ -231,17 +231,17 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets usage grouped by region.
         /// </summary>
-        public IDictionary<string, RegionUsage> UsageByRegion { get; set; }
+        public IDictionary<string, RegionUsage> UsageByRegion { get; set; } = new Dictionary<string, RegionUsage>(StringComparer.Ordinal);
 
         /// <summary>
         /// Gets or sets requests grouped by model.
         /// </summary>
-        public IDictionary<string, long> RequestsByModel { get; set; }
+        public IDictionary<string, long> RequestsByModel { get; set; } = new Dictionary<string, long>(StringComparer.Ordinal);
 
         /// <summary>
         /// Gets or sets requests grouped by provider.
         /// </summary>
-        public IDictionary<string, long> RequestsByProvider { get; set; }
+        public IDictionary<string, long> RequestsByProvider { get; set; } = new Dictionary<string, long>(StringComparer.Ordinal);
 
         /// <summary>
         /// Gets or sets the analytics start date.
@@ -262,7 +262,7 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the region identifier.
         /// </summary>
-        public string Region { get; set; }
+        public string Region { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the request count.
@@ -308,7 +308,7 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the organization name.
         /// </summary>
-        public string OrganizationName { get; set; }
+        public string OrganizationName { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the user identifier.
@@ -318,32 +318,32 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the user email.
         /// </summary>
-        public string UserEmail { get; set; }
+        public string UserEmail { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the source region.
         /// </summary>
-        public string FromRegion { get; set; }
+        public string FromRegion { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the destination region.
         /// </summary>
-        public string ToRegion { get; set; }
+        public string ToRegion { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the legal basis for transfer.
         /// </summary>
-        public string LegalBasis { get; set; }
+        public string LegalBasis { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the purpose of transfer.
         /// </summary>
-        public string Purpose { get; set; }
+        public string Purpose { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the data categories transferred.
         /// </summary>
-        public string[] DataCategories { get; set; }
+        public string[] DataCategories { get; set; } = Array.Empty<string>();
 
         /// <summary>
         /// Gets or sets the transfer timestamp.
@@ -374,12 +374,12 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets compliance status grouped by region.
         /// </summary>
-        public IDictionary<string, RegionCompliance> ComplianceByRegion { get; set; }
+        public IDictionary<string, RegionCompliance> ComplianceByRegion { get; set; } = new Dictionary<string, RegionCompliance>(StringComparer.Ordinal);
 
         /// <summary>
         /// Gets or sets the list of compliance issues.
         /// </summary>
-        public IList<ComplianceIssue> Issues { get; set; }
+        public IList<ComplianceIssue> Issues { get; set; } = new List<ComplianceIssue>();
 
         /// <summary>
         /// Gets or sets the timestamp when compliance was checked.
@@ -395,7 +395,7 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the region identifier.
         /// </summary>
-        public string Region { get; set; }
+        public string Region { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets a value indicating whether the region is compliant.
@@ -420,7 +420,7 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the list of compliance issues.
         /// </summary>
-        public IList<string> Issues { get; set; }
+        public IList<string> Issues { get; set; } = new List<string>();
     }
 
     /// <summary>
@@ -431,17 +431,17 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the severity (Critical, High, Medium, Low).
         /// </summary>
-        public string Severity { get; set; }
+        public string Severity { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the issue category.
         /// </summary>
-        public string Category { get; set; }
+        public string Category { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the issue description.
         /// </summary>
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the organization identifier.
@@ -451,12 +451,12 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the organization name.
         /// </summary>
-        public string OrganizationName { get; set; }
+        public string OrganizationName { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the region.
         /// </summary>
-        public string Region { get; set; }
+        public string Region { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the timestamp when issue was detected.
@@ -472,7 +472,7 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets health status grouped by region.
         /// </summary>
-        public IDictionary<string, RegionHealth> HealthByRegion { get; set; }
+        public IDictionary<string, RegionHealth> HealthByRegion { get; set; } = new Dictionary<string, RegionHealth>(StringComparer.Ordinal);
 
         /// <summary>
         /// Gets or sets a value indicating whether all regions are healthy.
@@ -492,7 +492,7 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the list of system alerts.
         /// </summary>
-        public IList<SystemAlert> Alerts { get; set; }
+        public IList<SystemAlert> Alerts { get; set; } = new List<SystemAlert>();
 
         /// <summary>
         /// Gets or sets the timestamp when health was checked.
@@ -508,17 +508,17 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the severity (Critical, Warning, Info).
         /// </summary>
-        public string Severity { get; set; }
+        public string Severity { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the alert message.
         /// </summary>
-        public string Message { get; set; }
+        public string Message { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the region.
         /// </summary>
-        public string Region { get; set; }
+        public string Region { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the alert timestamp.
@@ -539,7 +539,7 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the limit type (MaxTeams, MaxUsersPerTeam, MaxKeysPerUser, etc.).
         /// </summary>
-        public string LimitType { get; set; }
+        public string LimitType { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the new limit value.
@@ -549,12 +549,12 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the justification for modification.
         /// </summary>
-        public string Justification { get; set; }
+        public string Justification { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the approver identifier.
         /// </summary>
-        public string ApprovedBy { get; set; }
+        public string ApprovedBy { get; set; } = string.Empty;
     }
 
     /// <summary>
@@ -570,22 +570,22 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the IP address.
         /// </summary>
-        public string IpAddress { get; set; }
+        public string IpAddress { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the MFA code.
         /// </summary>
-        public string MfaCode { get; set; }
+        public string MfaCode { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the action being performed.
         /// </summary>
-        public string Action { get; set; }
+        public string Action { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the justification for action.
         /// </summary>
-        public string Justification { get; set; }
+        public string Justification { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the request timestamp.
@@ -606,7 +606,7 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the failure reason.
         /// </summary>
-        public string FailureReason { get; set; }
+        public string FailureReason { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets a value indicating whether MFA is required.

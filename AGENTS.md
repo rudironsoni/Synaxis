@@ -19,6 +19,22 @@
 - **VERIFY** the solution builds and passes tests
 - **FIX** underlying issues, never disable checks to make things pass
 - **DO NOT** commit until verification succeeds
+- **DO NOT** claim completion unless verification succeeded or the work is explicitly marked **NOT VERIFIED** with a concrete reason
+- **DO NOT** close tracking issues until verification evidence is captured
+- **DO NOT** proceed to new work while any build warning, build error, or test failure remains unresolved for the current change
+
+## Agent Execution Contract (Mandatory)
+
+For every non-trivial task, follow this sequence exactly:
+
+1. `bd ready --json`
+2. Claim work: `bd update <id> --status in_progress --json`
+3. Implement a minimal, focused change set
+4. Run mandatory verification commands from repo root
+5. Publish verification evidence (exact commands + pass/fail)
+6. Close completed work: `bd close <id> --reason "Completed" --json`
+
+If any required check fails, stop, fix root cause, and rerun all required checks.
 
 ---
 
@@ -91,6 +107,11 @@ bd close bd-42 --reason "Completed" --json
    - `bd create "Found bug" --description="Details about what was found" -p 1 --deps discovered-from:<parent-id>`
 5. **Complete**: `bd close <id> --reason "Done"`
 
+### Hard Gate
+
+- Do not start code edits before an issue is in `in_progress`, unless the user explicitly requests a one-off change and waives beads tracking.
+- Do not close an issue until verification evidence is included in the final summary.
+
 ### Auto-Sync
 
 bd automatically syncs with git:
@@ -133,16 +154,49 @@ dotnet format --verify-no-changes
 dotnet build <Solution.sln> -c Release -warnaserror
 
 # Test the solution:
-dotnet test <Solution.sln> -c Release --no-build
+dotnet test <Solution.sln> --no-build
 ```
+
+`dotnet build` and `dotnet test` results are acceptable only when there are **zero warnings** and **zero errors**.
+Any warning is treated as a failed verification even if tooling/configuration accidentally allows it.
 
 Replace `<Solution.sln>` with the actual solution file name.
 
 If the repo uses multiple solution files, run these commands for the solution impacted by the change, and prefer the primary solution used by CI.
 
+#### Verification Decision Matrix
+
+- **Code changes**: format + build + test are required.
+- **Test-only changes**: format + build + test are required.
+- **Docs-only changes**: verification commands are recommended; if not run, mark output as **NOT VERIFIED (docs-only change)**.
+- **Behavioral code changes**: add or update automated tests is mandatory unless technically impossible; if impossible, create and link a follow-up issue before completion.
+- **Any non-doc change**: running tests is mandatory; skipping tests is non-compliant.
+
 If `dotnet test ... --no-build` fails due to missing artifacts, use:
 ```bash
-dotnet test <Solution.sln> -c Release
+dotnet test <Solution.sln>
+```
+
+#### Test Command Guardrails (Strict)
+
+For test execution, these flags are **forbidden** because they can hide race conditions or create misleading pass results:
+
+- `--configuration Release`
+- `-c Release`
+- `--maxcpucount:1`
+- `-maxcpucount:1`
+- `-nodeReuse:false`
+- `-nodereuse:false`
+- `/nr:false`
+
+Do not serialize test execution or tune MSBuild process reuse to "make tests pass". Fix the flaky/concurrency issue instead.
+These flags are forbidden in local invocations, scripts, and CI snippets.
+
+If extra diagnostics are needed, prefer adding observability rather than changing execution semantics, for example:
+
+```bash
+dotnet test <Solution.sln> --no-build --logger "trx;LogFileName=test-results.trx"
+dotnet test <Solution.sln> --no-build --blame-hang --blame-hang-timeout 5m
 ```
 
 #### Rules About Failures
@@ -150,6 +204,10 @@ dotnet test <Solution.sln> -c Release
 - **DO NOT** "fix" failures by weakening correctness gates (disabling analyzers, removing `-warnaserror`, lowering severity)
 - **FIX** the underlying cause
 - If you cannot run these commands, you **MUST** state that clearly and mark the change as **NOT VERIFIED**
+- If a failure is intermittent, treat it as a correctness issue and stabilize it (no retries-until-green behavior)
+- If any test fails, stop immediately, fix the root cause, and rerun the full required verification commands
+- It is forbidden to claim completion while any build warning, build error, or test failure exists
+- It is forbidden to bypass failures by skipping tests, filtering out failing tests, quarantining tests, or changing runtime semantics to force green
 
 #### Evidence Required
 
@@ -157,6 +215,49 @@ Include in your PR or change summary:
 - The exact commands you ran
 - Pass/fail results
 - Any deviations and why (only when explicitly requested or technically unavoidable)
+
+Use this format:
+
+```text
+Verification Evidence
+- Command: <exact command>
+  Result: PASS|FAIL
+  Notes: <optional short note>
+```
+
+Any missing verification evidence means the change is **NOT VERIFIED**.
+
+---
+
+## .NET 10 Execution Standard
+
+### SDK and Language Baseline
+
+- Target .NET 10 SDK/tooling for all active development paths
+- Keep `global.json` pinned to an approved .NET 10 SDK band for reproducible local/CI behavior
+- Enable modern defaults in project files (`Nullable`, implicit usings as appropriate, analyzers on)
+- Do not silently upgrade SDK bands in feature branches; coordinate SDK jumps as explicit maintenance work
+
+### Restore Determinism
+
+- Prefer deterministic restore behavior aligned with CI lock-file policy
+- If lock files are enabled in the repo, use locked restore mode in CI and local verification paths
+- Do not bypass restore determinism to resolve transient package issues; fix source/lock configuration instead
+
+### CI-Equivalent Local Validation
+
+When validating locally, prefer CI-equivalent behavior over custom local shortcuts:
+
+- Run format, build, and tests from repo root
+- Use the same solution(s) and test entrypoints used in CI
+- Do not weaken analyzers, warning policy, or test runtime behavior to bypass failures
+
+### Strict Agent Compliance
+
+- If a required command fails, stop and fix root cause before continuing
+- If verification cannot be executed, explicitly state what is blocked and why
+- Never report "done" without either successful verification evidence or an explicit **NOT VERIFIED** declaration
+- Never trade reliability for speed by reducing parallelism or changing runtime semantics to force green tests
 
 ---
 
@@ -379,6 +480,23 @@ Point newPos = originalPos with { X = originalPos.X + 1 };
 - Keep tests deterministic and resilient (no dependencies on real time, random data, or external services unless required)
 - Isolate external dependencies and label accordingly
 - Tests should serve as executable documentation
+
+### Mandatory Test Rules (Enforced)
+
+- Do not introduce or keep flaky tests; fix instability before completion
+- Do not force single-threaded execution to hide concurrency defects
+- Do not depend on machine-local state, timezone, locale, or clock timing unless explicitly required and controlled
+- Prefer behavioral assertions over implementation-detail assertions
+- For any behavioral code change, tests must be implemented or updated in the same change set unless explicitly waived by maintainers
+- Running the relevant test suites is mandatory before claiming completion
+- Any failing test is a release-blocking condition for the change until fixed
+
+### Flaky Test Handling Protocol
+
+1. Reproduce under normal parallel execution.
+2. Capture diagnostics (`trx`, `--blame-hang`, targeted logs).
+3. Fix root cause (shared mutable state, race, ordering, timing assumptions).
+4. Re-run the full required verification commands.
 
 ### Testing Stack
 
@@ -746,8 +864,8 @@ If guidance conflicts:
 
 ## Architecture Overview
 
-_Add a brief overview of your project architecture here_
+Maintainer-owned section. Keep this updated with the current solution layout (entry points, boundaries, infrastructure, and test strategy) when architecture changes.
 
 ## Project-Specific Conventions
 
-_Add your project-specific conventions here_
+Maintainer-owned section. Add concrete naming, layering, and dependency conventions specific to this repository; avoid leaving placeholders.

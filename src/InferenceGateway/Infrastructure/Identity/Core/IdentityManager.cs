@@ -72,8 +72,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
                         if (loaded != null)
                         {
                             this._accounts.AddRange(loaded);
+                        }
                     }
-                }
 
                     this._initialLoadComplete.TrySetResult(true);
                 }

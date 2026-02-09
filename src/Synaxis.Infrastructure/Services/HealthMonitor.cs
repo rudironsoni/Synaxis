@@ -319,7 +319,7 @@ namespace Synaxis.Infrastructure.Services
             };
         }
 
-        private string GetProviderStatusUrl(string provider)
+        private string? GetProviderStatusUrl(string provider)
         {
             // In production, these would be actual status page URLs
             return provider switch

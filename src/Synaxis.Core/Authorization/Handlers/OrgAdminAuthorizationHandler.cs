@@ -19,8 +19,8 @@ public class OrgAdminAuthorizationHandler : AuthorizationHandler<OrgAdminRequire
 
     /// <inheritdoc/>
     protected override Task HandleRequirementAsync(
-        AuthorizationHandlerContext context,
-        OrgAdminRequirement requirement)
+    AuthorizationHandlerContext context,
+    OrgAdminRequirement requirement)
     {
         if (context.User?.Identity?.IsAuthenticated != true)
         {

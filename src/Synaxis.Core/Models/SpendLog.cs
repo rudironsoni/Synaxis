@@ -25,7 +25,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the organization navigation property.
         /// </summary>
-        public virtual Organization Organization { get; set; }
+        public virtual Organization? Organization { get; set; }
 
         /// <summary>
         /// Gets or sets the team identifier.
@@ -35,7 +35,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the team navigation property.
         /// </summary>
-        public virtual Team Team { get; set; }
+        public virtual Team? Team { get; set; }
 
         /// <summary>
         /// Gets or sets the virtual key identifier.
@@ -45,7 +45,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the virtual key navigation property.
         /// </summary>
-        public virtual VirtualKey VirtualKey { get; set; }
+        public virtual VirtualKey? VirtualKey { get; set; }
 
         /// <summary>
         /// Gets or sets the request identifier.
@@ -61,13 +61,13 @@ namespace Synaxis.Core.Models
         /// Gets or sets the model used for the request.
         /// </summary>
         [StringLength(100)]
-        public string Model { get; set; }
+        public string Model { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the provider name.
         /// </summary>
         [StringLength(100)]
-        public string Provider { get; set; }
+        public string Provider { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the number of tokens used.
@@ -78,7 +78,7 @@ namespace Synaxis.Core.Models
         /// Gets or sets the region where the spend occurred.
         /// </summary>
         [StringLength(50)]
-        public string Region { get; set; }
+        public string Region { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the creation timestamp.

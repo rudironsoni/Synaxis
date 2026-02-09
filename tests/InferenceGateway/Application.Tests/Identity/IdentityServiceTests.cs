@@ -35,7 +35,7 @@ public sealed class IdentityServiceTests : IDisposable
         // Setup UserManager mock
         var userStoreMock = new Mock<IUserStore<SynaxisUser>>();
         this._userManagerMock = new Mock<UserManager<SynaxisUser>>(
-            userStoreMock.Object, null, null, null, null, null, null, null, null);
+            userStoreMock.Object, null!, null!, null!, null!, null!, null!, null!, null!);
 
         // Setup SignInManager mock
         var contextAccessorMock = new Mock<Microsoft.AspNetCore.Http.IHttpContextAccessor>();
@@ -44,7 +44,7 @@ public sealed class IdentityServiceTests : IDisposable
             this._userManagerMock.Object,
             contextAccessorMock.Object,
             userPrincipalFactoryMock.Object,
-            null, null, null, null);
+            null!, null!, null!, null!);
 
         // Setup Configuration mock
         this._configurationMock = new Mock<IConfiguration>();

@@ -142,13 +142,13 @@ public class RedisRateLimitingServiceTests
     public async Task CheckRateLimitAsync_WithNullOrEmptyKey_ShouldThrowArgumentException()
     {
         // Act & Assert
-        var act1 = async () => await _service.CheckRateLimitAsync(null!, 100, TimeSpan.FromMinutes(1)).ConfigureAwait(false);
+        var act1 = async () => await this._service.CheckRateLimitAsync(null!, 100, TimeSpan.FromMinutes(1)).ConfigureAwait(false);
         await act1.Should().ThrowAsync<ArgumentException>().WithParameterName("key");
 
-        var act2 = async () => await _service.CheckRateLimitAsync(string.Empty, 100, TimeSpan.FromMinutes(1)).ConfigureAwait(false);
+        var act2 = async () => await this._service.CheckRateLimitAsync(string.Empty, 100, TimeSpan.FromMinutes(1)).ConfigureAwait(false);
         await act2.Should().ThrowAsync<ArgumentException>().WithParameterName("key");
 
-        var act3 = async () => await _service.CheckRateLimitAsync("   ", 100, TimeSpan.FromMinutes(1)).ConfigureAwait(false);
+        var act3 = async () => await this._service.CheckRateLimitAsync("   ", 100, TimeSpan.FromMinutes(1)).ConfigureAwait(false);
         await act3.Should().ThrowAsync<ArgumentException>().WithParameterName("key");
     }
 
@@ -156,10 +156,10 @@ public class RedisRateLimitingServiceTests
     public async Task CheckRateLimitAsync_WithZeroOrNegativeLimit_ShouldThrowArgumentException()
     {
         // Act & Assert
-        var act1 = async () => await _service.CheckRateLimitAsync("key", 0, TimeSpan.FromMinutes(1)).ConfigureAwait(false);
+        var act1 = async () => await this._service.CheckRateLimitAsync("key", 0, TimeSpan.FromMinutes(1)).ConfigureAwait(false);
         await act1.Should().ThrowAsync<ArgumentException>().WithParameterName("limit");
 
-        var act2 = async () => await _service.CheckRateLimitAsync("key", -10, TimeSpan.FromMinutes(1)).ConfigureAwait(false);
+        var act2 = async () => await this._service.CheckRateLimitAsync("key", -10, TimeSpan.FromMinutes(1)).ConfigureAwait(false);
         await act2.Should().ThrowAsync<ArgumentException>().WithParameterName("limit");
     }
 
@@ -507,7 +507,7 @@ public class RedisRateLimitingServiceTests
         var organizationId = Guid.NewGuid();
 
         // Act & Assert
-        var act = async () => await _service.CheckHierarchicalRateLimitAsync(
+        var act = async () => await this._service.CheckHierarchicalRateLimitAsync(
             userId, null, organizationId, null!).ConfigureAwait(false);
         return act.Should().ThrowAsync<ArgumentNullException>().WithParameterName("config");
     }
@@ -585,10 +585,10 @@ public class RedisRateLimitingServiceTests
     public async Task IncrementTokenUsageAsync_WithNullOrEmptyKey_ShouldThrowArgumentException()
     {
         // Act & Assert
-        var act1 = async () => await _service.IncrementTokenUsageAsync(null!, 100, TimeSpan.FromMinutes(1)).ConfigureAwait(false);
+        var act1 = async () => await this._service.IncrementTokenUsageAsync(null!, 100, TimeSpan.FromMinutes(1)).ConfigureAwait(false);
         await act1.Should().ThrowAsync<ArgumentException>().WithParameterName("key");
 
-        var act2 = async () => await _service.IncrementTokenUsageAsync(string.Empty, 100, TimeSpan.FromMinutes(1)).ConfigureAwait(false);
+        var act2 = async () => await this._service.IncrementTokenUsageAsync(string.Empty, 100, TimeSpan.FromMinutes(1)).ConfigureAwait(false);
         await act2.Should().ThrowAsync<ArgumentException>().WithParameterName("key");
     }
 
@@ -596,7 +596,7 @@ public class RedisRateLimitingServiceTests
     public Task IncrementTokenUsageAsync_WithNegativeTokenCount_ShouldThrowArgumentException()
     {
         // Act & Assert
-        var act = async () => await _service.IncrementTokenUsageAsync("key", -10, TimeSpan.FromMinutes(1)).ConfigureAwait(false);
+        var act = async () => await this._service.IncrementTokenUsageAsync("key", -10, TimeSpan.FromMinutes(1)).ConfigureAwait(false);
         return act.Should().ThrowAsync<ArgumentException>().WithParameterName("tokenCount");
     }
 

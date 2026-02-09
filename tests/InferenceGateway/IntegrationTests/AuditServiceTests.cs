@@ -10,10 +10,10 @@ namespace Synaxis.InferenceGateway.IntegrationTests
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.EntityFrameworkCore;
+    using Synaxis.Core.Models;
     using Synaxis.InferenceGateway.Application.Security;
-    using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
-    using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit;
     using Synaxis.InferenceGateway.Infrastructure.Security;
+    using Synaxis.Infrastructure.Data;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -62,10 +62,11 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             Assert.Equal(tenantId, log.OrganizationId);
             Assert.Equal(userId, log.UserId);
             Assert.Equal(action, log.Action);
-            Assert.NotNull(log.NewValues);
-            Assert.Contains("testuser", log.NewValues, StringComparison.Ordinal);
-            Assert.Contains("192.168.1.1", log.NewValues, StringComparison.Ordinal);
-            Assert.True(log.CreatedAt <= DateTime.UtcNow.AddSeconds(1));
+            Assert.NotNull(log.Metadata);
+            var metadataJson = JsonSerializer.Serialize(log.Metadata);
+            Assert.Contains("testuser", metadataJson, StringComparison.Ordinal);
+            Assert.Contains("192.168.1.1", metadataJson, StringComparison.Ordinal);
+            Assert.True(log.Timestamp <= DateTime.UtcNow.AddSeconds(1));
         }
 
         [Fact]
@@ -88,8 +89,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             Assert.Equal(tenantId, log.OrganizationId);
             Assert.Null(log.UserId);
             Assert.Equal(action, log.Action);
-            Assert.NotNull(log.NewValues);
-            Assert.Contains("1.0.0", log.NewValues, StringComparison.Ordinal);
+            Assert.NotNull(log.Metadata);
+            var metadataJson = JsonSerializer.Serialize(log.Metadata);
+            Assert.Contains("1.0.0", metadataJson, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -112,7 +114,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             Assert.Equal(tenantId, log.OrganizationId);
             Assert.Equal(userId, log.UserId);
             Assert.Equal(action, log.Action);
-            Assert.Null(log.NewValues);
+            Assert.Empty(log.Metadata);
         }
 
         [Fact]
@@ -136,7 +138,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             Assert.Equal(tenantId, log.OrganizationId);
             Assert.Equal(userId, log.UserId);
             Assert.Equal(action, log.Action);
-            Assert.Equal("{}", log.NewValues);
+            var metadataJson = JsonSerializer.Serialize(log.Metadata);
+            Assert.Equal("{\"payload\":{}}", metadataJson);
         }
 
         [Fact]
@@ -166,9 +169,10 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             Assert.Equal(tenantId, log.OrganizationId);
             Assert.Equal(userId, log.UserId);
             Assert.Equal(action, log.Action);
-            Assert.NotNull(log.NewValues);
-            Assert.Contains("chat/completions", log.NewValues, StringComparison.Ordinal);
-            Assert.Contains("llama-3.3-70b-versatile", log.NewValues, StringComparison.Ordinal);
+            Assert.NotNull(log.Metadata);
+            var metadataJson = JsonSerializer.Serialize(log.Metadata);
+            Assert.Contains("chat/completions", metadataJson, StringComparison.Ordinal);
+            Assert.Contains("llama-3.3-70b-versatile", metadataJson, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -209,8 +213,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             // Assert
             var log = await dbContext.AuditLogs.FirstOrDefaultAsync();
             Assert.NotNull(log);
-            Assert.True(log.CreatedAt >= beforeLog.AddSeconds(-1));
-            Assert.True(log.CreatedAt <= afterLog.AddSeconds(1));
+            Assert.True(log.Timestamp >= beforeLog.AddSeconds(-1));
+            Assert.True(log.Timestamp <= afterLog.AddSeconds(1));
         }
 
         [Fact]
@@ -269,7 +273,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             Assert.Equal(action, log.Action);
 
             // JSON serialization escapes special characters
-            Assert.Contains("chars!@#$%^\\u0026*()", log.NewValues, StringComparison.Ordinal);
+            var metadataJson = JsonSerializer.Serialize(log.Metadata);
+            Assert.Contains("chars!@#$%^\\u0026*()", metadataJson, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -311,13 +316,14 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             // Assert
             var log = await dbContext.AuditLogs.FirstOrDefaultAsync();
             Assert.NotNull(log);
-            Assert.NotNull(log.NewValues);
+            Assert.NotNull(log.Metadata);
+            var metadataJson = JsonSerializer.Serialize(log.Metadata);
 
-            Assert.Contains("not null", log.NewValues, StringComparison.Ordinal);
-            Assert.Contains("42", log.NewValues, StringComparison.Ordinal);
+            Assert.Contains("not null", metadataJson, StringComparison.Ordinal);
+            Assert.Contains("42", metadataJson, StringComparison.Ordinal);
 
             // JSON serializer will include null values
-            Assert.Contains("null", log.NewValues, StringComparison.Ordinal);
+            Assert.Contains("null", metadataJson, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -338,8 +344,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             // Assert
             var log = await dbContext.AuditLogs.FirstOrDefaultAsync();
             Assert.NotNull(log);
-            Assert.NotNull(log.NewValues);
-            Assert.Contains(largeString, log.NewValues, StringComparison.Ordinal);
+            Assert.NotNull(log.Metadata);
+            var metadataJson = JsonSerializer.Serialize(log.Metadata);
+            Assert.Contains(largeString, metadataJson, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -358,17 +365,17 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             // Assert
             var log = await dbContext.AuditLogs.FirstOrDefaultAsync();
             Assert.NotNull(log);
-            Assert.Equal(DateTimeKind.Utc, log.CreatedAt.Kind);
-            Assert.True((DateTime.UtcNow - log.CreatedAt).TotalSeconds < 5);
+            Assert.Equal(DateTimeKind.Utc, log.Timestamp.Kind);
+            Assert.True((DateTime.UtcNow - log.Timestamp).TotalSeconds < 5);
         }
 
-        private ControlPlaneDbContext CreateInMemoryDbContext()
+        private SynaxisDbContext CreateInMemoryDbContext()
         {
-            var options = new DbContextOptionsBuilder<ControlPlaneDbContext>()
+            var options = new DbContextOptionsBuilder<SynaxisDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
 
-            return new ControlPlaneDbContext(options);
+            return new SynaxisDbContext(options);
         }
     }
 }

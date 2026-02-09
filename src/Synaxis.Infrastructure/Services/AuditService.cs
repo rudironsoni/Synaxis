@@ -64,7 +64,7 @@ namespace Synaxis.Infrastructure.Services
                 IpAddress = auditEvent.IpAddress,
                 UserAgent = auditEvent.UserAgent,
                 Region = auditEvent.Region ?? "unknown",
-                PreviousHash = previousLog?.IntegrityHash,
+                PreviousHash = previousLog?.IntegrityHash ?? string.Empty,
                 Timestamp = DateTime.UtcNow
             };
 

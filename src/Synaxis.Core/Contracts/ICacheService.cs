@@ -19,8 +19,8 @@ namespace Synaxis.Core.Contracts
         /// <typeparam name="T">The type of the cached value.</typeparam>
         /// <param name="key">The cache key.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains the cached value or null.</returns>
-        Task<T> GetAsync<T>(string key)
-            where T : class;
+        Task<T?> GetAsync<T>(string key)
+        where T : class;
 
         /// <summary>
         /// Set value in cache with expiration.
@@ -31,7 +31,7 @@ namespace Synaxis.Core.Contracts
         /// <param name="expiration">The optional expiration time span.</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
         Task SetAsync<T>(string key, T value, TimeSpan? expiration = null)
-            where T : class;
+        where T : class;
 
         /// <summary>
         /// Remove value from cache.
@@ -61,7 +61,7 @@ namespace Synaxis.Core.Contracts
         /// <param name="keys">The collection of cache keys to retrieve.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains the dictionary of key-value pairs.</returns>
         Task<IDictionary<string, T>> GetManyAsync<T>(IEnumerable<string> keys)
-            where T : class;
+        where T : class;
 
         /// <summary>
         /// Set multiple values in cache.
@@ -71,7 +71,7 @@ namespace Synaxis.Core.Contracts
         /// <param name="expiration">The optional expiration time span.</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
         Task SetManyAsync<T>(IDictionary<string, T> items, TimeSpan? expiration = null)
-            where T : class;
+        where T : class;
 
         /// <summary>
         /// Get cache statistics (hits, misses, etc.).

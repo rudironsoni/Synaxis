@@ -56,7 +56,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the encryption key ID (reference to key management service).
         /// </summary>
-        public string EncryptionKeyId { get; set; }
+        public string EncryptionKeyId { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the retention period in days.
@@ -101,11 +101,11 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the last backup status.
         /// </summary>
-        public string LastBackupStatus { get; set; }
+        public string LastBackupStatus { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the organization navigation property.
         /// </summary>
-        public virtual Organization Organization { get; set; }
+        public virtual Organization? Organization { get; set; }
     }
 }

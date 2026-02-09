@@ -80,7 +80,7 @@ namespace Synaxis.Infrastructure.Services
             return transaction;
         }
 
-        public async Task<CreditTransaction> TopUpCreditsAsync(Guid organizationId, decimal amountUsd, Guid initiatedBy, string description = null)
+        public async Task<CreditTransaction> TopUpCreditsAsync(Guid organizationId, decimal amountUsd, Guid initiatedBy, string? description = null)
         {
             if (organizationId == Guid.Empty)
                 throw new ArgumentException("Organization ID is required", nameof(organizationId));
@@ -261,7 +261,7 @@ namespace Synaxis.Infrastructure.Services
                 .ToListAsync();
         }
 
-        public async Task<SpendLog> LogSpendAsync(Guid organizationId, decimal amountUsd, string model, string provider, int tokens, Guid? teamId = null, Guid? virtualKeyId = null, Guid? requestId = null, string region = null)
+        public async Task<SpendLog> LogSpendAsync(Guid organizationId, decimal amountUsd, string model, string provider, int tokens, Guid? teamId = null, Guid? virtualKeyId = null, Guid? requestId = null, string? region = null)
         {
             if (organizationId == Guid.Empty)
                 throw new ArgumentException("Organization ID is required", nameof(organizationId));
@@ -281,9 +281,9 @@ namespace Synaxis.Infrastructure.Services
                 RequestId = requestId,
                 AmountUsd = amountUsd,
                 Model = model,
-                Provider = provider,
+                Provider = provider ?? string.Empty,
                 Tokens = tokens,
-                Region = region,
+                Region = region ?? string.Empty,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -328,7 +328,7 @@ namespace Synaxis.Infrastructure.Services
             // Add breakdown by team if available
             var byTeam = spendLogs
                 .Where(s => s.TeamId.HasValue)
-                .GroupBy(s => s.TeamId.Value)
+                .GroupBy(s => s.TeamId!.Value)
                 .ToDictionary(g => $"team_{g.Key}", g => g.Sum(s => s.AmountUsd));
 
             foreach (var kvp in byTeam)

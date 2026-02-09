@@ -236,7 +236,8 @@ namespace Synaxis.Infrastructure.MultiRegion
                 response.EnsureSuccessStatusCode();
 
                 var responseJson = await response.Content.ReadAsStringAsync();
-                return JsonSerializer.Deserialize<TResponse>(responseJson);
+                return JsonSerializer.Deserialize<TResponse>(responseJson) ??
+                    throw new InvalidOperationException($"Failed to deserialize response from region {targetRegion}");
             }
             catch (HttpRequestException ex)
             {

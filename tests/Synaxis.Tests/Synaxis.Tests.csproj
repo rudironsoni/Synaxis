@@ -6,7 +6,6 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <NoWarn>$(NoWarn);MA0004;SA1312;SA0001</NoWarn>
   </PropertyGroup>
 

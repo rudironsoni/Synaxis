@@ -144,10 +144,21 @@ namespace Synaxis.Infrastructure.Services
                         new RedisValue[] { limit, windowSeconds, now, request.IncrementBy });
                 }
 
-                var values = (RedisValue[])result;
-                var current = (long)values[0];
-                var ttl = (long)values[1];
-                var status = (string)values[2];
+                if (result.IsNull)
+                {
+                    throw new InvalidOperationException("Quota check script returned null");
+                }
+
+                var valuesArray = (RedisValue[]?)result;
+                if (valuesArray == null || valuesArray.Length < 3)
+                {
+                    throw new InvalidOperationException("Quota check script returned invalid result");
+                }
+
+                var current = (long)valuesArray[0];
+                var ttl = (long)valuesArray[1];
+                var statusValue = valuesArray[2];
+                var status = statusValue.HasValue ? (string)statusValue! : "unknown";
 
                 if (status == "exceeded")
                 {
@@ -218,10 +229,21 @@ namespace Synaxis.Infrastructure.Services
                         new RedisValue[] { limit, windowSeconds, now, request.IncrementBy });
                 }
 
-                var values = (RedisValue[])result;
-                var current = (long)values[0];
-                var ttl = (long)values[1];
-                var status = (string)values[2];
+                if (result.IsNull)
+                {
+                    throw new InvalidOperationException("Quota check script returned null");
+                }
+
+                var valuesArray = (RedisValue[]?)result;
+                if (valuesArray == null || valuesArray.Length < 3)
+                {
+                    throw new InvalidOperationException("Quota check script returned invalid result");
+                }
+
+                var current = (long)valuesArray[0];
+                var ttl = (long)valuesArray[1];
+                var statusValue = valuesArray[2];
+                var status = statusValue.HasValue ? (string)statusValue! : "unknown";
 
                 if (status == "exceeded")
                 {

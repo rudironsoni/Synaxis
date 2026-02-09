@@ -54,11 +54,13 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("integrity_hash");
 
                     b.Property<string>("IpAddress")
+                        .IsRequired()
                         .HasMaxLength(45)
                         .HasColumnType("character varying(45)")
                         .HasColumnName("ip_address");
 
                     b.Property<string>("Metadata")
+                        .IsRequired()
                         .HasColumnType("jsonb")
                         .HasColumnName("metadata");
 
@@ -67,6 +69,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("organization_id");
 
                     b.Property<string>("PreviousHash")
+                        .IsRequired()
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)")
                         .HasColumnName("previous_hash");
@@ -78,11 +81,13 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("region");
 
                     b.Property<string>("ResourceId")
+                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)")
                         .HasColumnName("resource_id");
 
                     b.Property<string>("ResourceType")
+                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("resource_type");
@@ -92,6 +97,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("timestamp");
 
                     b.Property<string>("UserAgent")
+                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)")
                         .HasColumnName("user_agent");
@@ -145,6 +151,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("enable_redis_backup");
 
                     b.Property<string>("EncryptionKeyId")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("encryption_key_id");
 
@@ -163,6 +170,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("last_backup_at");
 
                     b.Property<string>("LastBackupStatus")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("last_backup_status");
 
@@ -185,6 +193,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("strategy");
 
                     b.PrimitiveCollection<string[]>("TargetRegions")
+                        .IsRequired()
                         .HasColumnType("text[]");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -224,6 +233,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)")
                         .HasColumnName("description");
@@ -354,6 +364,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("id");
 
                     b.Property<string>("BillingCurrency")
+                        .IsRequired()
                         .HasMaxLength(3)
                         .HasColumnType("character varying(3)")
                         .HasColumnName("billing_currency");
@@ -432,12 +443,15 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("id");
 
                     b.PrimitiveCollection<string[]>("AllowedEmailDomains")
+                        .IsRequired()
                         .HasColumnType("text[]");
 
                     b.PrimitiveCollection<string[]>("AvailableRegions")
+                        .IsRequired()
                         .HasColumnType("text[]");
 
                     b.Property<string>("BillingCurrency")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("billing_currency");
 
@@ -450,12 +464,14 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("credit_balance");
 
                     b.Property<string>("CreditCurrency")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("DataRetentionDays")
                         .HasColumnType("integer");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("description");
 
@@ -500,6 +516,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("primary_region");
 
                     b.Property<string>("PrivacyConsent")
+                        .IsRequired()
                         .HasColumnType("jsonb")
                         .HasColumnName("privacy_consent");
 
@@ -519,12 +536,14 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("SubscriptionStatus")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("TermsAcceptedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Tier")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("tier");
 
@@ -561,6 +580,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("id");
 
                     b.Property<string>("ClientIpAddress")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("client_ip_address");
 
@@ -603,10 +623,12 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("output_tokens");
 
                     b.Property<string>("ProcessedRegion")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("processed_region");
 
                     b.Property<string>("Provider")
+                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("provider");
@@ -616,6 +638,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("queue_time_ms");
 
                     b.Property<string>("RequestHeaders")
+                        .IsRequired()
                         .HasColumnType("jsonb")
                         .HasColumnName("request_headers");
 
@@ -636,6 +659,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("status_code");
 
                     b.Property<string>("StoredRegion")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("stored_region");
 
@@ -644,10 +668,12 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("team_id");
 
                     b.Property<string>("TransferLegalBasis")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("transfer_legal_basis");
 
                     b.Property<string>("TransferPurpose")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("transfer_purpose");
 
@@ -656,6 +682,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("transfer_timestamp");
 
                     b.Property<string>("UserAgent")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("user_agent");
 
@@ -664,6 +691,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("user_id");
 
                     b.Property<string>("UserRegion")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("user_region");
 
@@ -709,6 +737,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("Model")
+                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("model");
@@ -718,11 +747,13 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("organization_id");
 
                     b.Property<string>("Provider")
+                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("provider");
 
                     b.Property<string>("Region")
+                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
                         .HasColumnName("region");
@@ -770,10 +801,12 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("description");
 
                     b.Property<string>("Features")
+                        .IsRequired()
                         .HasColumnType("jsonb")
                         .HasColumnName("features");
 
@@ -782,6 +815,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("is_active");
 
                     b.Property<string>("LimitsConfig")
+                        .IsRequired()
                         .HasColumnType("jsonb")
                         .HasColumnName("limits_config");
 
@@ -827,9 +861,11 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("id");
 
                     b.PrimitiveCollection<string[]>("AllowedModels")
+                        .IsRequired()
                         .HasColumnType("text[]");
 
                     b.PrimitiveCollection<string[]>("BlockedModels")
+                        .IsRequired()
                         .HasColumnType("text[]");
 
                     b.Property<decimal>("BudgetAlertThreshold")
@@ -841,6 +877,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("description");
 
@@ -947,6 +984,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("id");
 
                     b.Property<string>("AvatarUrl")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("avatar_url");
 
@@ -991,6 +1029,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("failed_login_attempts");
 
                     b.Property<string>("FirstName")
+                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("first_name");
@@ -1004,11 +1043,13 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("last_login_at");
 
                     b.Property<string>("LastName")
+                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("last_name");
 
                     b.Property<string>("Locale")
+                        .IsRequired()
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)")
                         .HasColumnName("locale");
@@ -1035,14 +1076,17 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("password_hash");
 
                     b.Property<string>("PrivacyConsent")
+                        .IsRequired()
                         .HasColumnType("jsonb")
                         .HasColumnName("privacy_consent");
 
                     b.Property<string>("Role")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("role");
 
                     b.Property<string>("Timezone")
+                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
                         .HasColumnName("timezone");
@@ -1071,9 +1115,11 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("id");
 
                     b.PrimitiveCollection<string[]>("AllowedModels")
+                        .IsRequired()
                         .HasColumnType("text[]");
 
                     b.PrimitiveCollection<string[]>("BlockedModels")
+                        .IsRequired()
                         .HasColumnType("text[]");
 
                     b.Property<DateTime>("CreatedAt")
@@ -1089,6 +1135,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("current_spend");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("description");
 
@@ -1115,10 +1162,12 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("max_budget");
 
                     b.Property<string>("Metadata")
+                        .IsRequired()
                         .HasColumnType("jsonb")
                         .HasColumnName("metadata");
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)")
                         .HasColumnName("name");
@@ -1132,6 +1181,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("revoked_at");
 
                     b.Property<string>("RevokedReason")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("revoked_reason");
 
@@ -1140,6 +1190,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("rpm_limit");
 
                     b.PrimitiveCollection<string[]>("Tags")
+                        .IsRequired()
                         .HasColumnType("text[]");
 
                     b.Property<Guid>("TeamId")

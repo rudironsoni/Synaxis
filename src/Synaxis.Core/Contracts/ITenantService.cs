@@ -80,17 +80,17 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the organization name.
         /// </summary>
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the organization slug.
         /// </summary>
-        public string Slug { get; set; }
+        public string Slug { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the primary region.
         /// </summary>
-        public string PrimaryRegion { get; set; }
+        public string PrimaryRegion { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the billing currency.
@@ -106,17 +106,17 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the organization name.
         /// </summary>
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the organization description.
         /// </summary>
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the organization settings.
         /// </summary>
-        public IDictionary<string, object> Settings { get; set; }
+        public IDictionary<string, object> Settings { get; set; } = new Dictionary<string, object>(StringComparer.Ordinal);
     }
 
     /// <summary>

@@ -38,7 +38,7 @@ public class ApiKeyServiceTests : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
-        await _dbContext.DisposeAsync().ConfigureAwait(false);
+        await this._dbContext.DisposeAsync().ConfigureAwait(false);
     }
 
     [Fact]
@@ -601,7 +601,7 @@ public class ApiKeyServiceTests : IAsyncLifetime
         var nonExistentKeyId = Guid.NewGuid();
 
         // Act
-        var act = async () => await _apiKeyService.UpdateLastUsedAsync(nonExistentKeyId).ConfigureAwait(false);
+        var act = async () => await this._apiKeyService.UpdateLastUsedAsync(nonExistentKeyId).ConfigureAwait(false);
 
         // Assert
         return act.Should().NotThrowAsync();
