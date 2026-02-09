@@ -9,8 +9,8 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Synaxis.Core.Models;
 using Synaxis.InferenceGateway.Application.Configuration;
-using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
 using Synaxis.InferenceGateway.Infrastructure.Security;
 using Xunit;
 
@@ -37,9 +37,12 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Security
             var user = new User
             {
                 Id = Guid.NewGuid(),
-                TenantId = Guid.NewGuid(),
+                OrganizationId = Guid.NewGuid(),
+                DataResidencyRegion = "us-east-1",
+                CreatedInRegion = "us-east-1",
+                PasswordHash = "dummy",
                 Email = "test@example.com",
-                Role = UserRole.Developer,
+                Role = "developer",
             };
 
             var token = jwtService.GenerateToken(user);
@@ -100,9 +103,12 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Security
             var user = new User
             {
                 Id = Guid.NewGuid(),
-                TenantId = Guid.NewGuid(),
+                OrganizationId = Guid.NewGuid(),
+                DataResidencyRegion = "us-east-1",
+                CreatedInRegion = "us-east-1",
+                PasswordHash = "dummy",
                 Email = "test@example.com",
-                Role = UserRole.Developer,
+                Role = "developer",
             };
 
             var token = jwtService.GenerateToken(user);
@@ -197,8 +203,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Security
             {
             new Claim(JwtRegisteredClaimNames.Sub, Guid.NewGuid().ToString()),
             new Claim(JwtRegisteredClaimNames.Email, "test@example.com"),
-            new Claim("role", UserRole.Developer.ToString()),
-            new Claim("tenantId", Guid.NewGuid().ToString()),
+            new Claim("role", "developer".ToString()),
+            new Claim("organizationId", Guid.NewGuid().ToString()),
             };
 
             var tokenDescriptor = new SecurityTokenDescriptor
@@ -224,8 +230,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Security
             {
             new Claim(JwtRegisteredClaimNames.Sub, Guid.NewGuid().ToString()),
             new Claim(JwtRegisteredClaimNames.Email, "test@example.com"),
-            new Claim("role", UserRole.Developer.ToString()),
-            new Claim("tenantId", Guid.NewGuid().ToString()),
+            new Claim("role", "developer".ToString()),
+            new Claim("organizationId", Guid.NewGuid().ToString()),
             };
 
             var tokenDescriptor = new SecurityTokenDescriptor
@@ -250,8 +256,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Security
             {
             new Claim(JwtRegisteredClaimNames.Sub, Guid.NewGuid().ToString()),
             new Claim(JwtRegisteredClaimNames.Email, "test@example.com"),
-            new Claim("role", UserRole.Developer.ToString()),
-            new Claim("tenantId", Guid.NewGuid().ToString()),
+            new Claim("role", "developer".ToString()),
+            new Claim("organizationId", Guid.NewGuid().ToString()),
             };
 
             var tokenDescriptor = new SecurityTokenDescriptor

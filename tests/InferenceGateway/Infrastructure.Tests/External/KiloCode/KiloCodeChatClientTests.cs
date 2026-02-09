@@ -4,13 +4,12 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.External.KiloCode
 {
-    using Microsoft.Extensions.AI;
-    using RichardSzalay.MockHttp;
+    using System;
     using System.Net.Http;
     using System.Reflection;
-    using System;
+    using Microsoft.Extensions.AI;
+    using RichardSzalay.MockHttp;
     using Xunit;
-
 
     public class KiloCodeChatClientTests
     {

@@ -465,7 +465,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
             if (user != null)
             {
                 user.OrganizationId = org.Id;
-                user.Role = "admin"; // Creator is org admin
+                user.Role = "owner"; // Creator is org owner
             }
 
             await dbContext.SaveChangesAsync().ConfigureAwait(false);
@@ -504,6 +504,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
             if (user != null)
             {
                 user.OrganizationId = organizationId;
+
                 // Map common role names to the expected format
                 user.Role = role.ToLowerInvariant() switch
                 {

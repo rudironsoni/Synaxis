@@ -4,16 +4,15 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
 {
-    using Microsoft.AspNetCore.DataProtection;
-    using Moq;
-    using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
+    using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Text;
     using System.Threading.Tasks;
-    using System;
+    using Microsoft.AspNetCore.DataProtection;
+    using Moq;
+    using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
     using Xunit;
-
 
     public class EncryptedFileTokenStoreTests : IDisposable
     {
@@ -33,7 +32,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
                     File.Delete(this._tmpPath);
                 }
             }
-            catch { }
+            catch
+            {
+            }
         }
 
         [Fact]

@@ -7,9 +7,9 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
     using Microsoft.AspNetCore.Cors;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
-    using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
+    using Synaxis.Core.Models;
     using Synaxis.InferenceGateway.Application.Security;
-    using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
+    using Synaxis.Infrastructure.Data;
 
     /// <summary>
     /// Controller for authentication operations.
@@ -21,7 +21,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
     {
         private readonly IJwtService jwtService;
         private readonly IPasswordHasher passwordHasher;
-        private readonly ControlPlaneDbContext dbContext;
+        private readonly SynaxisDbContext dbContext;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AuthController"/> class.
@@ -29,7 +29,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         /// <param name="jwtService">The JWT service.</param>
         /// <param name="passwordHasher">The password hasher.</param>
         /// <param name="dbContext">The database context.</param>
-        public AuthController(IJwtService jwtService, IPasswordHasher passwordHasher, ControlPlaneDbContext dbContext)
+        public AuthController(IJwtService jwtService, IPasswordHasher passwordHasher, SynaxisDbContext dbContext)
         {
             this.jwtService = jwtService;
             this.passwordHasher = passwordHasher;
@@ -59,25 +59,28 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
                 return this.BadRequest(new { success = false, message = "User already exists" });
             }
 
-            var tenant = new Tenant
+            var organization = new Organization
             {
                 Id = Guid.NewGuid(),
-                Name = $"{request.Email} Tenant",
-                Region = TenantRegion.Us,
-                Status = TenantStatus.Active,
+                Name = $"{request.Email} Organization",
+                Slug = $"org-{Guid.NewGuid().ToString()[..8]}",
+                PrimaryRegion = "us-east-1",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
             };
-            this.dbContext.Tenants.Add(tenant);
+            this.dbContext.Organizations.Add(organization);
 
             var user = new User
             {
                 Id = Guid.NewGuid(),
-                TenantId = tenant.Id,
+                OrganizationId = organization.Id,
                 Email = request.Email,
                 PasswordHash = this.passwordHasher.HashPassword(request.Password),
-                Role = UserRole.Owner,
-                AuthProvider = "local",
-                ProviderUserId = request.Email,
-                CreatedAt = DateTimeOffset.UtcNow,
+                Role = "owner",
+                DataResidencyRegion = "us-east-1",
+                CreatedInRegion = "us-east-1",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
             };
             this.dbContext.Users.Add(user);
 
@@ -142,23 +145,28 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
 
             if (user == null)
             {
-                var tenant = new Tenant
+                var organization = new Organization
                 {
                     Id = Guid.NewGuid(),
-                    Name = "Dev Tenant",
-                    Region = TenantRegion.Us,
-                    Status = TenantStatus.Active,
+                    Name = "Dev Organization",
+                    Slug = $"dev-org-{Guid.NewGuid().ToString()[..8]}",
+                    PrimaryRegion = "us-east-1",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
                 };
-                this.dbContext.Tenants.Add(tenant);
+                this.dbContext.Organizations.Add(organization);
 
                 user = new User
                 {
                     Id = Guid.NewGuid(),
-                    TenantId = tenant.Id,
+                    OrganizationId = organization.Id,
                     Email = request.Email,
-                    Role = UserRole.Owner,
-                    AuthProvider = "dev",
-                    ProviderUserId = request.Email,
+                    PasswordHash = "N/A",
+                    Role = "owner",
+                    DataResidencyRegion = "us-east-1",
+                    CreatedInRegion = "us-east-1",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
                 };
                 this.dbContext.Users.Add(user);
                 await this.dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

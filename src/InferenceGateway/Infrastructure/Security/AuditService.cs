@@ -8,6 +8,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
     using Synaxis.InferenceGateway.Application.Security;
     using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
     using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit;
+    using AuditLog = Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit.AuditLog;
 
     /// <summary>
     /// AuditService class.

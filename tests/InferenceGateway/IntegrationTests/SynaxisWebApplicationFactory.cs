@@ -13,10 +13,12 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Synaxis.InferenceGateway.Application.ControlPlane;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
+using Synaxis.Infrastructure.Data;
 using Testcontainers.PostgreSql;
 using Testcontainers.Redis;
 using Tests.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure;
@@ -40,19 +42,25 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             // Start containers in parallel
             await Task.WhenAll(_postgres.StartAsync(), _redis.StartAsync()).ConfigureAwait(false);
 
-            // Initialize the database schema
-            // We do this here to ensure the DB is ready before the application starts
-            var optionsBuilder = new DbContextOptionsBuilder<ControlPlaneDbContext>();
-            optionsBuilder.UseNpgsql(this._postgres.GetConnectionString());
+            // Initialize the ControlPlane database schema
+            var controlPlaneOptionsBuilder = new DbContextOptionsBuilder<ControlPlaneDbContext>();
+            controlPlaneOptionsBuilder.UseNpgsql(this._postgres.GetConnectionString());
 
-            using var dbContext = new ControlPlaneDbContext(optionsBuilder.Options);
+            using var controlPlaneContext = new ControlPlaneDbContext(controlPlaneOptionsBuilder.Options);
 
             // Use execution strategy to handle potential transient failures during startup
-            var strategy = dbContext.Database.CreateExecutionStrategy();
+            var strategy = controlPlaneContext.Database.CreateExecutionStrategy();
             await strategy.ExecuteAsync(async () =>
             {
-                // Apply EF Core migrations so the schema matches migrations rather than EnsureCreated
-                await dbContext.Database.MigrateAsync().ConfigureAwait(false);
+                // Apply EF Core migrations for ControlPlaneDbContext (infrastructure tables: identity.Users, etc.)
+                await controlPlaneContext.Database.MigrateAsync().ConfigureAwait(false);
+
+                // Apply EF Core migrations for SynaxisDbContext (multi-tenant tables: public.users, etc.)
+                // Both contexts target the same database but create DIFFERENT tables
+                var synaxisOptionsBuilder = new DbContextOptionsBuilder<Synaxis.Infrastructure.Data.SynaxisDbContext>();
+                synaxisOptionsBuilder.UseNpgsql(this._postgres.GetConnectionString());
+                using var synaxisContext = new Synaxis.Infrastructure.Data.SynaxisDbContext(synaxisOptionsBuilder.Options);
+                await synaxisContext.Database.MigrateAsync().ConfigureAwait(false);
 
                 // Build temporary configuration to seed test data. Reuse logic from SmokeTestDataGenerator.
                 var builder = new ConfigurationBuilder();
@@ -104,7 +112,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 var config = builder.Build();
 
                 // Seed the database
-                await TestDatabaseSeeder.SeedAsync(dbContext, config).ConfigureAwait(false);
+                await TestDatabaseSeeder.SeedAsync(controlPlaneContext, config).ConfigureAwait(false);
             }).ConfigureAwait(false);
         }
 
@@ -148,6 +156,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                     ["Synaxis:ControlPlane:UseInMemory"] = "false",
                     ["Synaxis:ControlPlane:RunMigrations"] = "false",
                     ["ConnectionStrings:Redis"] = $"{this._redis.GetConnectionString()},abortConnect=false",
+                    ["Synaxis:InferenceGateway:EnableQuartz"] = "false",
                 };
 
                 // Map a standard list of provider environment variables to configuration keys.
@@ -208,6 +217,34 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 }
 
                 config.AddInMemoryCollection(settings);
+            });
+
+            builder.ConfigureServices(services =>
+            {
+                // Remove the in-memory DbContext registrations from AddControlPlane
+                var controlPlaneDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ControlPlaneDbContext>));
+                if (controlPlaneDescriptor != null)
+                {
+                    services.Remove(controlPlaneDescriptor);
+                }
+
+                var synaxisDbDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<Synaxis.Infrastructure.Data.SynaxisDbContext>));
+                if (synaxisDbDescriptor != null)
+                {
+                    services.Remove(synaxisDbDescriptor);
+                }
+
+                // Re-register ControlPlaneDbContext with PostgreSQL (this is used by tests to query data)
+                services.AddDbContext<ControlPlaneDbContext>(options =>
+                {
+                    options.UseNpgsql(this._postgres.GetConnectionString());
+                });
+
+                // Re-register SynaxisDbContext (used by Identity) with PostgreSQL
+                services.AddDbContext<Synaxis.Infrastructure.Data.SynaxisDbContext>(options =>
+                {
+                    options.UseNpgsql(this._postgres.GetConnectionString());
+                });
             });
         }
     }

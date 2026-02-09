@@ -4,16 +4,16 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Optimization.Caching;
 
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Moq;
 using StackExchange.Redis;
-using System.Threading.Tasks;
-using System.Threading;
-using System;
 using Xunit;
 
 /// <summary>
 /// Unit tests for ISessionStore Redis implementation
-/// Tests session affinity and activity tracking for token optimization
+/// Tests session affinity and activity tracking for token optimization.
 /// </summary>
 public class RedisSessionStoreTests
 {
@@ -324,7 +324,7 @@ public class RedisSessionStoreTests
 }
 
 /// <summary>
-/// Mock implementation of ISessionStore for testing
+/// Mock implementation of ISessionStore for testing.
 /// </summary>
 public interface ISessionStore
 {
@@ -342,7 +342,7 @@ public interface ISessionStore
 }
 
 /// <summary>
-/// Redis implementation of ISessionStore
+/// Redis implementation of ISessionStore.
 /// </summary>
 public class RedisSessionStore : ISessionStore
 {
@@ -359,7 +359,7 @@ public class RedisSessionStore : ISessionStore
         {
             var db = this._redis.GetDatabase();
             var key = $"session:{sessionId}:affinity";
-            var value = await db.StringGetAsync(key);
+            var value = await db.StringGetAsync(key).ConfigureAwait(false);
             return value.HasValue ? value.ToString() : null;
         }
         catch (RedisException)
@@ -369,18 +369,18 @@ public class RedisSessionStore : ISessionStore
         }
     }
 
-    public async Task SetProviderAffinityAsync(string sessionId, string providerId, TimeSpan ttl, CancellationToken cancellationToken)
+    public Task SetProviderAffinityAsync(string sessionId, string providerId, TimeSpan ttl, CancellationToken cancellationToken)
     {
         var db = this._redis.GetDatabase();
         var key = $"session:{sessionId}:affinity";
-        await db.StringSetAsync(key, providerId, ttl);
+        return db.StringSetAsync(key, providerId, ttl);
     }
 
     public async Task<DateTimeOffset?> GetLastActivityAsync(string sessionId, CancellationToken cancellationToken)
     {
         var db = this._redis.GetDatabase();
         var key = $"session:{sessionId}:lastactivity";
-        var value = await db.StringGetAsync(key);
+        var value = await db.StringGetAsync(key).ConfigureAwait(false);
 
         if (value.HasValue && long.TryParse(value.ToString(), out var unixTimestamp))
         {
@@ -390,18 +390,18 @@ public class RedisSessionStore : ISessionStore
         return null;
     }
 
-    public async Task UpdateLastActivityAsync(string sessionId, DateTimeOffset timestamp, TimeSpan ttl, CancellationToken cancellationToken)
+    public Task UpdateLastActivityAsync(string sessionId, DateTimeOffset timestamp, TimeSpan ttl, CancellationToken cancellationToken)
     {
         var db = this._redis.GetDatabase();
         var key = $"session:{sessionId}:lastactivity";
-        await db.StringSetAsync(key, timestamp.ToUnixTimeSeconds(), ttl);
+        return db.StringSetAsync(key, timestamp.ToUnixTimeSeconds(), ttl);
     }
 
-    public async Task<bool> SessionExistsAsync(string sessionId, CancellationToken cancellationToken)
+    public Task<bool> SessionExistsAsync(string sessionId, CancellationToken cancellationToken)
     {
         var db = this._redis.GetDatabase();
         var key = $"session:{sessionId}:affinity";
-        return await db.KeyExistsAsync(key);
+        return db.KeyExistsAsync(key);
     }
 
     public async Task<List<string>> GetActiveSessionsAsync(CancellationToken cancellationToken)
@@ -414,9 +414,10 @@ public class RedisSessionStore : ISessionStore
             var server = this._redis.GetServer(endpoint);
             var keys = server.KeysAsync(pattern: "session:*:affinity");
 
-            await foreach (var key in keys)
+            await foreach (var key in keys.ConfigureAwait(false))
             {
                 var keyStr = key.ToString();
+
                 // Extract session ID from "session:{sessionId}:affinity"
                 var parts = keyStr.Split(':');
                 if (parts.Length == 3)
@@ -439,6 +440,7 @@ internal static class AsyncEnumerableExtensions
         {
             yield return item;
         }
-        await Task.CompletedTask;
+
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 }

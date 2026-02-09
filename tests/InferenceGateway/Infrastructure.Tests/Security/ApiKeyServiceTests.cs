@@ -7,10 +7,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Moq;
-using Synaxis.InferenceGateway.Application.ApiKeys.Models;
 using Synaxis.InferenceGateway.Application.ApiKeys;
-using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Operations;
+using Synaxis.InferenceGateway.Application.ApiKeys.Models;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
+using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Operations;
 using Synaxis.InferenceGateway.Infrastructure.Services;
 using Xunit;
 
@@ -38,10 +38,8 @@ public class ApiKeyServiceTests : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
-        await this._dbContext.DisposeAsync();
+        await _dbContext.DisposeAsync().ConfigureAwait(false);
     }
-
-    #region GenerateApiKeyAsync Tests
 
     [Fact]
     public async Task GenerateApiKeyAsync_ShouldGenerateValidKeyFormat()
@@ -203,10 +201,6 @@ public class ApiKeyServiceTests : IAsyncLifetime
         storedKey!.IsActive.Should().BeTrue();
     }
 
-    #endregion
-
-    #region ValidateApiKeyAsync Tests
-
     [Fact]
     public async Task ValidateApiKeyAsync_WithValidKey_ShouldReturnSuccess()
     {
@@ -350,6 +344,7 @@ public class ApiKeyServiceTests : IAsyncLifetime
         // Assert
         result.Should().NotBeNull();
         result.IsValid.Should().BeFalse();
+
         // BCrypt handles constant-time comparison internally
     }
 
@@ -375,10 +370,6 @@ public class ApiKeyServiceTests : IAsyncLifetime
         result.RateLimitRpm.Should().Be(150);
         result.RateLimitTpm.Should().Be(15000);
     }
-
-    #endregion
-
-    #region RevokeApiKeyAsync Tests
 
     [Fact]
     public async Task RevokeApiKeyAsync_WithValidKey_ShouldRevokeSuccessfully()
@@ -475,10 +466,6 @@ public class ApiKeyServiceTests : IAsyncLifetime
         revokedKey.RevokedBy.Should().BeNull();
         revokedKey.RevocationReason.Should().Be("Automated revocation");
     }
-
-    #endregion
-
-    #region ListApiKeysAsync Tests
 
     [Fact]
     public async Task ListApiKeysAsync_ShouldReturnAllActiveKeys()
@@ -578,13 +565,10 @@ public class ApiKeyServiceTests : IAsyncLifetime
 
         // Assert
         keys.Should().HaveCount(1);
+
         // ApiKeyInfo should only contain prefix, not the full key or hash
         keys.First().Prefix.Should().StartWith("synaxis_build_");
     }
-
-    #endregion
-
-    #region UpdateLastUsedAsync Tests
 
     [Fact]
     public async Task UpdateLastUsedAsync_ShouldUpdateTimestamp()
@@ -611,17 +595,15 @@ public class ApiKeyServiceTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task UpdateLastUsedAsync_WithNonExistentKey_ShouldNotThrow()
+    public Task UpdateLastUsedAsync_WithNonExistentKey_ShouldNotThrow()
     {
         // Arrange
         var nonExistentKeyId = Guid.NewGuid();
 
         // Act
-        var act = async () => await this._apiKeyService.UpdateLastUsedAsync(nonExistentKeyId);
+        var act = async () => await _apiKeyService.UpdateLastUsedAsync(nonExistentKeyId).ConfigureAwait(false);
 
         // Assert
-        await act.Should().NotThrowAsync();
+        return act.Should().NotThrowAsync();
     }
-
-    #endregion
 }

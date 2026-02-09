@@ -10,8 +10,8 @@ using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Moq;
+using Synaxis.Core.Models;
 using Synaxis.InferenceGateway.Application.Configuration;
-using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
 using Synaxis.InferenceGateway.Infrastructure.Security;
 using Xunit;
 using Xunit.Abstractions;
@@ -42,8 +42,11 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             {
                 Id = Guid.NewGuid(),
                 Email = "test@example.com",
-                Role = UserRole.Admin,
-                TenantId = Guid.NewGuid(),
+                Role = "admin",
+                OrganizationId = Guid.NewGuid(),
+                DataResidencyRegion = "us-east-1",
+                CreatedInRegion = "us-east-1",
+                PasswordHash = "dummy",
             };
 
             var token = jwtService.GenerateToken(user);
@@ -67,13 +70,13 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var jwtService = new JwtService(mockConfig.Object);
 
             var userId = Guid.NewGuid();
-            var tenantId = Guid.NewGuid();
+            var organizationId = Guid.NewGuid();
             var user = new User
             {
                 Id = userId,
                 Email = "claims.test@example.com",
-                Role = UserRole.Developer,
-                TenantId = tenantId,
+                Role = "developer",
+                OrganizationId = organizationId,
             };
 
             var token = jwtService.GenerateToken(user);
@@ -83,8 +86,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             Assert.Equal(userId.ToString(), jwtToken.Claims.First(c => string.Equals(c.Type, JwtRegisteredClaimNames.Sub, StringComparison.Ordinal)).Value);
             Assert.Equal(user.Email, jwtToken.Claims.First(c => string.Equals(c.Type, JwtRegisteredClaimNames.Email, StringComparison.Ordinal)).Value);
-            Assert.Equal("Developer", jwtToken.Claims.First(c => string.Equals(c.Type, "role", StringComparison.Ordinal)).Value);
-            Assert.Equal(tenantId.ToString(), jwtToken.Claims.First(c => string.Equals(c.Type, "tenantId", StringComparison.Ordinal)).Value);
+            Assert.Equal("developer", jwtToken.Claims.First(c => string.Equals(c.Type, "role", StringComparison.Ordinal)).Value);
+            Assert.Equal(organizationId.ToString(), jwtToken.Claims.First(c => string.Equals(c.Type, "organizationId", StringComparison.Ordinal)).Value);
         }
 
         [Fact]
@@ -104,8 +107,11 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             {
                 Id = Guid.NewGuid(),
                 Email = "expiration.test@example.com",
-                Role = UserRole.Developer,
-                TenantId = Guid.NewGuid(),
+                Role = "developer",
+                OrganizationId = Guid.NewGuid(),
+                DataResidencyRegion = "us-east-1",
+                CreatedInRegion = "us-east-1",
+                PasswordHash = "dummy",
             };
 
             var token = jwtService.GenerateToken(user);
@@ -137,8 +143,11 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             {
                 Id = Guid.NewGuid(),
                 Email = "issuer.test@example.com",
-                Role = UserRole.Developer,
-                TenantId = Guid.NewGuid(),
+                Role = "developer",
+                OrganizationId = Guid.NewGuid(),
+                DataResidencyRegion = "us-east-1",
+                CreatedInRegion = "us-east-1",
+                PasswordHash = "dummy",
             };
 
             var token = jwtService.GenerateToken(user);
@@ -167,8 +176,11 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             {
                 Id = Guid.NewGuid(),
                 Email = "defaults.test@example.com",
-                Role = UserRole.Developer,
-                TenantId = Guid.NewGuid(),
+                Role = "developer",
+                OrganizationId = Guid.NewGuid(),
+                DataResidencyRegion = "us-east-1",
+                CreatedInRegion = "us-east-1",
+                PasswordHash = "dummy",
             };
 
             var token = jwtService.GenerateToken(user);
@@ -197,8 +209,11 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             {
                 Id = Guid.NewGuid(),
                 Email = "signature.test@example.com",
-                Role = UserRole.Developer,
-                TenantId = Guid.NewGuid(),
+                Role = "developer",
+                OrganizationId = Guid.NewGuid(),
+                DataResidencyRegion = "us-east-1",
+                CreatedInRegion = "us-east-1",
+                PasswordHash = "dummy",
             };
 
             var token = jwtService.GenerateToken(user);
@@ -226,8 +241,11 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             {
                 Id = Guid.NewGuid(),
                 Email = "empty.secret@example.com",
-                Role = UserRole.Developer,
-                TenantId = Guid.NewGuid(),
+                Role = "developer",
+                OrganizationId = Guid.NewGuid(),
+                DataResidencyRegion = "us-east-1",
+                CreatedInRegion = "us-east-1",
+                PasswordHash = "dummy",
             };
 
             var exception = Assert.Throws<InvalidOperationException>(() =>
@@ -253,8 +271,11 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             {
                 Id = Guid.NewGuid(),
                 Email = "whitespace.secret@example.com",
-                Role = UserRole.Readonly,
-                TenantId = Guid.NewGuid(),
+                Role = "readonly",
+                OrganizationId = Guid.NewGuid(),
+                DataResidencyRegion = "us-east-1",
+                CreatedInRegion = "us-east-1",
+                PasswordHash = "dummy",
             };
 
             var exception = Assert.Throws<InvalidOperationException>(() =>
@@ -280,8 +301,11 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             {
                 Id = Guid.NewGuid(),
                 Email = "uniqueness.test@example.com",
-                Role = UserRole.Developer,
-                TenantId = Guid.NewGuid(),
+                Role = "developer",
+                OrganizationId = Guid.NewGuid(),
+                DataResidencyRegion = "us-east-1",
+                CreatedInRegion = "us-east-1",
+                PasswordHash = "dummy",
             };
 
             var token1 = jwtService.GenerateToken(user);
@@ -309,16 +333,22 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             {
                 Id = Guid.NewGuid(),
                 Email = "user1@example.com",
-                Role = UserRole.Developer,
-                TenantId = Guid.NewGuid(),
+                Role = "developer",
+                OrganizationId = Guid.NewGuid(),
+                DataResidencyRegion = "us-east-1",
+                CreatedInRegion = "us-east-1",
+                PasswordHash = "dummy",
             };
 
             var user2 = new User
             {
                 Id = Guid.NewGuid(),
                 Email = "user2@example.com",
-                Role = UserRole.Admin,
-                TenantId = Guid.NewGuid(),
+                Role = "admin",
+                OrganizationId = Guid.NewGuid(),
+                DataResidencyRegion = "us-east-1",
+                CreatedInRegion = "us-east-1",
+                PasswordHash = "dummy",
             };
 
             var token1 = jwtService.GenerateToken(user1);
@@ -348,7 +378,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             mockConfig.Setup(x => x.Value).Returns(config);
             var jwtService = new JwtService(mockConfig.Object);
 
-            var roles = new[] { UserRole.Owner, UserRole.Admin, UserRole.Developer, UserRole.Readonly };
+            var roles = new[] { "owner", "admin", "developer", "readonly" };
 
             foreach (var role in roles)
             {
@@ -357,7 +387,10 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                     Id = Guid.NewGuid(),
                     Email = $"role.test@{role}.example.com",
                     Role = role,
-                    TenantId = Guid.NewGuid(),
+                    OrganizationId = Guid.NewGuid(),
+                    DataResidencyRegion = "us-east-1",
+                    CreatedInRegion = "us-east-1",
+                    PasswordHash = "dummy",
                 };
 
                 var token = jwtService.GenerateToken(user);

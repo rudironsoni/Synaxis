@@ -14,42 +14,42 @@ using Synaxis.Infrastructure.Data;
 namespace Synaxis.Infrastructure.Services
 {
     /// <summary>
-    /// Service for immutable audit logging with tamper detection
+    /// Service for immutable audit logging with tamper detection.
     /// </summary>
     public class AuditService : IAuditService
     {
         private readonly SynaxisDbContext _context;
         private readonly ILogger<AuditService> _logger;
-        
+
         public AuditService(SynaxisDbContext context, ILogger<AuditService> logger)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
-        
+
         public async Task<AuditLog> LogEventAsync(AuditEvent auditEvent)
         {
             if (auditEvent == null)
             {
                 throw new ArgumentNullException(nameof(auditEvent));
             }
-            
+
             if (auditEvent.OrganizationId == Guid.Empty)
             {
                 throw new ArgumentException("OrganizationId is required", nameof(auditEvent));
             }
-            
+
             if (string.IsNullOrWhiteSpace(auditEvent.EventType))
             {
                 throw new ArgumentException("EventType is required", nameof(auditEvent));
             }
-            
+
             // Get previous log hash for chain verification
             var previousLog = await _context.Set<AuditLog>()
                 .Where(al => al.OrganizationId == auditEvent.OrganizationId)
                 .OrderByDescending(al => al.Timestamp)
                 .FirstOrDefaultAsync();
-            
+
             var auditLog = new AuditLog
             {
                 Id = Guid.NewGuid(),
@@ -67,153 +67,153 @@ namespace Synaxis.Infrastructure.Services
                 PreviousHash = previousLog?.IntegrityHash,
                 Timestamp = DateTime.UtcNow
             };
-            
+
             // Compute integrity hash
             auditLog.IntegrityHash = ComputeIntegrityHash(auditLog);
-            
+
             // Add to database (immutable - no updates allowed)
             _context.Set<AuditLog>().Add(auditLog);
             await _context.SaveChangesAsync();
-            
-            _logger.LogInformation("Audit event logged: {EventType} for org {OrganizationId}", 
+
+            _logger.LogInformation("Audit event logged: {EventType} for org {OrganizationId}",
                 auditEvent.EventType, auditEvent.OrganizationId);
-            
+
             return auditLog;
         }
-        
+
         public async Task<IList<AuditLog>> QueryAuditLogsAsync(AuditQuery query)
         {
             if (query == null)
             {
                 throw new ArgumentNullException(nameof(query));
             }
-            
+
             if (query.OrganizationId == Guid.Empty)
             {
                 throw new ArgumentException("OrganizationId is required", nameof(query));
             }
-            
+
             var logsQuery = _context.Set<AuditLog>()
                 .Where(al => al.OrganizationId == query.OrganizationId);
-            
+
             if (query.UserId.HasValue)
             {
                 logsQuery = logsQuery.Where(al => al.UserId == query.UserId.Value);
             }
-            
+
             if (!string.IsNullOrWhiteSpace(query.EventType))
             {
                 logsQuery = logsQuery.Where(al => al.EventType == query.EventType);
             }
-            
+
             if (!string.IsNullOrWhiteSpace(query.EventCategory))
             {
                 logsQuery = logsQuery.Where(al => al.EventCategory == query.EventCategory);
             }
-            
+
             if (query.StartDate.HasValue)
             {
                 logsQuery = logsQuery.Where(al => al.Timestamp >= query.StartDate.Value);
             }
-            
+
             if (query.EndDate.HasValue)
             {
                 logsQuery = logsQuery.Where(al => al.Timestamp <= query.EndDate.Value);
             }
-            
+
             // Apply pagination
             var logs = await logsQuery
                 .OrderByDescending(al => al.Timestamp)
                 .Skip((query.PageNumber - 1) * query.PageSize)
                 .Take(query.PageSize)
                 .ToListAsync();
-            
+
             return logs;
         }
-        
+
         public async Task<AuditLog> GetAuditLogAsync(Guid logId)
         {
             var log = await _context.Set<AuditLog>().FindAsync(logId);
-            
+
             if (log == null)
             {
                 throw new InvalidOperationException($"Audit log {logId} not found");
             }
-            
+
             return log;
         }
-        
+
         public async Task<byte[]> ExportAuditLogsAsync(Guid organizationId, DateTime startDate, DateTime endDate)
         {
             if (organizationId == Guid.Empty)
             {
                 throw new ArgumentException("OrganizationId is required", nameof(organizationId));
             }
-            
+
             var logs = await _context.Set<AuditLog>()
-                .Where(al => al.OrganizationId == organizationId 
-                    && al.Timestamp >= startDate 
+                .Where(al => al.OrganizationId == organizationId
+                    && al.Timestamp >= startDate
                     && al.Timestamp <= endDate)
                 .OrderBy(al => al.Timestamp)
                 .ToListAsync();
-            
+
             // Export as JSON
-            var json = JsonSerializer.Serialize(logs, new JsonSerializerOptions 
-            { 
-                WriteIndented = true 
+            var json = JsonSerializer.Serialize(logs, new JsonSerializerOptions
+            {
+                WriteIndented = true
             });
-            
-            _logger.LogInformation("Exported {Count} audit logs for organization {OrganizationId}", 
+
+            _logger.LogInformation("Exported {Count} audit logs for organization {OrganizationId}",
                 logs.Count, organizationId);
-            
+
             return Encoding.UTF8.GetBytes(json);
         }
-        
+
         public async Task<bool> VerifyIntegrityAsync(Guid logId)
         {
             var log = await GetAuditLogAsync(logId);
-            
+
             // Recompute hash and compare (must include previous hash that was used during creation)
             var computedHash = ComputeIntegrityHash(log, useStoredHash: true);
             var isValid = computedHash == log.IntegrityHash;
-            
+
             if (!isValid)
             {
                 _logger.LogWarning("Integrity check failed for audit log {LogId}", logId);
             }
-            
+
             // Verify chain if previous hash exists
             if (!string.IsNullOrWhiteSpace(log.PreviousHash))
             {
                 var previousLog = await _context.Set<AuditLog>()
-                    .Where(al => al.OrganizationId == log.OrganizationId 
+                    .Where(al => al.OrganizationId == log.OrganizationId
                         && al.Timestamp < log.Timestamp)
                     .OrderByDescending(al => al.Timestamp)
                     .FirstOrDefaultAsync();
-                
+
                 if (previousLog != null && previousLog.IntegrityHash != log.PreviousHash)
                 {
                     _logger.LogWarning("Chain verification failed for audit log {LogId}", logId);
                     return false;
                 }
             }
-            
+
             return isValid;
         }
-        
+
         public async Task<AuditAggregationResult> AggregateAnonymizedLogsAsync(DateTime startDate, DateTime endDate)
         {
             // Cross-region aggregation with anonymized data
             var logs = await _context.Set<AuditLog>()
                 .Where(al => al.Timestamp >= startDate && al.Timestamp <= endDate)
-                .Select(al => new 
-                { 
-                    al.EventType, 
-                    al.EventCategory, 
-                    al.Region 
+                .Select(al => new
+                {
+                    al.EventType,
+                    al.EventCategory,
+                    al.Region
                 })
                 .ToListAsync();
-            
+
             var result = new AuditAggregationResult
             {
                 TotalEvents = logs.Count,
@@ -226,14 +226,13 @@ namespace Synaxis.Infrastructure.Services
                 StartDate = startDate,
                 EndDate = endDate
             };
-            
+
             _logger.LogInformation("Aggregated {Count} anonymized audit events", result.TotalEvents);
-            
+
             return result;
         }
-        
+
         // Private helper methods
-        
         private string ComputeIntegrityHash(AuditLog log, bool useStoredHash = true)
         {
             // Create deterministic string representation for hashing
@@ -244,7 +243,7 @@ namespace Synaxis.Infrastructure.Services
                        $"{log.IpAddress}|{log.UserAgent}|{log.Region}|" +
                        $"{(useStoredHash ? log.PreviousHash : string.Empty)}|" +
                        $"{log.Timestamp:O}";
-            
+
             using (var sha256 = SHA256.Create())
             {
                 var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(data));

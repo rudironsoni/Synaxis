@@ -4,19 +4,19 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests;
 
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Net.Http;
+using System.Text;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
-using Moq.Protected;
 using Moq;
+using Moq.Protected;
 using Synaxis.InferenceGateway.Infrastructure;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Net;
-using System.Text.Json;
-using System.Text;
-using System.Threading.Tasks;
-using System.Threading;
-using System;
 using Xunit;
 
 public class CloudflareChatClientTests
@@ -131,7 +131,7 @@ public class CloudflareChatClientTests
     }
 
     [Fact]
-    public async Task GetResponseAsync_ApiError_ThrowsHttpRequestException()
+    public Task GetResponseAsync_ApiError_ThrowsHttpRequestException()
     {
         // Arrange
         var handlerMock = new Mock<HttpMessageHandler>();
@@ -151,7 +151,7 @@ public class CloudflareChatClientTests
         var client = new CloudflareChatClient(httpClient, TestAccountId, TestModelId, TestApiKey);
 
         // Act & Assert
-        await Assert.ThrowsAsync<HttpRequestException>(() =>
+        return Assert.ThrowsAsync<HttpRequestException>(() =>
             client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") }));
     }
 
@@ -216,7 +216,7 @@ public class CloudflareChatClientTests
         var result = await client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") });
 
         // Assert
-        Assert.Equal("", result.Messages[0].Text);
+        Assert.Equal(string.Empty, result.Messages[0].Text);
     }
 
     [Fact]
@@ -373,10 +373,9 @@ public class CloudflareChatClientTests
         // Arrange
         var handlerMock = new Mock<HttpMessageHandler>();
         var httpClient = new HttpClient(handlerMock.Object);
-        var client = new CloudflareChatClient(httpClient, TestAccountId, TestModelId, TestApiKey);
-
-        // Act
-        client.Dispose();
+        using (var client = new CloudflareChatClient(httpClient, TestAccountId, TestModelId, TestApiKey))
+        {
+        }
 
         // Assert
         Assert.True(true);

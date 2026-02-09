@@ -4,7 +4,7 @@
 
 namespace Synaxis.InferenceGateway.Application.Security
 {
-    using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
+    using Synaxis.Core.Models;
 
     /// <summary>
     /// Provides JWT token generation services.

@@ -6,11 +6,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.ControlPlane;
 
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Operations;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Platform;
-using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 using Xunit;
 
 /// <summary>

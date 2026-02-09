@@ -4,16 +4,15 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
 {
+    using System;
+    using System.Text.Json;
+    using System.Threading;
+    using System.Threading.Tasks;
     using Microsoft.EntityFrameworkCore;
     using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
     using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
     using Synaxis.InferenceGateway.Infrastructure.Security;
-    using System.Text.Json;
-    using System.Threading.Tasks;
-    using System.Threading;
-    using System;
     using Xunit;
-
 
     public class AuditServiceTests
     {

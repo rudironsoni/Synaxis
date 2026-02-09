@@ -4,13 +4,13 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.External.GitHub;
 
-using Microsoft.Extensions.AI;
-using Moq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Threading;
-using System;
+using System.Threading.Tasks;
+using Microsoft.Extensions.AI;
+using Moq;
 using Xunit;
 
 public class CopilotSdkClientTests
@@ -39,7 +39,7 @@ public class CopilotSdkClientTests
         async IAsyncEnumerable<ChatResponseUpdate> GetUpdates()
         {
             yield return new ChatResponseUpdate { Role = ChatRole.Assistant };
-            await Task.Delay(1);
+            await Task.Delay(1).ConfigureAwait(false);
             yield return new ChatResponseUpdate { Role = ChatRole.Assistant };
         }
 
@@ -64,9 +64,10 @@ public class CopilotSdkClientTests
         // The adapter is injected via DI and should be disposed by the DI container, not the client.
         // This test verifies that the client follows proper DI disposal patterns.
         var adapterMock = new Mock<Synaxis.InferenceGateway.Infrastructure.External.GitHub.ICopilotSdkAdapter>();
-
-        var client = new Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSdkClient(adapterMock.Object);
-        client.Dispose();
+        using (
+                var client = new Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSdkClient(adapterMock.Object))
+        {
+        }
 
         // Verify the adapter was NOT disposed by the client
         adapterMock.Verify(a => a.Dispose(), Times.Never);

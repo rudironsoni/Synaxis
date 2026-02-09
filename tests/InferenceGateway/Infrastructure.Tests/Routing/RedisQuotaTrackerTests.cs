@@ -31,13 +31,14 @@ public class RedisQuotaTrackerTests
         this._config = new SynaxisConfiguration
         {
             Providers = new Dictionary<string, ProviderConfig>
+(StringComparer.Ordinal)
             {
                 ["Groq"] = new ProviderConfig
                 {
                     RateLimitRPM = 100,
                     RateLimitTPM = 10000
                 }
-            }
+            },
         };
 
         this._mockConfig.Setup(c => c.Value).Returns(this._config);
@@ -64,7 +65,7 @@ public class RedisQuotaTrackerTests
         this._config.Providers["NoLimit"] = new ProviderConfig
         {
             RateLimitRPM = null,
-            RateLimitTPM = null
+            RateLimitTPM = null,
         };
 
         var tracker = new RedisQuotaTracker(this._mockRedis.Object, this._mockLogger.Object, this._mockConfig.Object);

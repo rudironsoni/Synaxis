@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.OpenApi;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -105,6 +106,19 @@ try
     builder.Services.AddSynaxisApplication(builder.Configuration);
     builder.Services.AddOpenApi();
 
+    // Register SynaxisDbContext for multi-tenant features
+    builder.Services.AddDbContext<Synaxis.Infrastructure.Data.SynaxisDbContext>(options =>
+    {
+        var connectionString = builder.Configuration["Synaxis:ControlPlane:ConnectionString"];
+        options.UseNpgsql(
+            connectionString,
+            npgsqlOptions =>
+            {
+                npgsqlOptions.MigrationsAssembly("Synaxis.Infrastructure");
+                npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "public");
+            });
+    });
+
     // Add ASP.NET Core Identity
     builder.Services.AddIdentity<SynaxisUser, IdentityRole<Guid>>(options =>
     {
@@ -118,77 +132,81 @@ try
     .AddEntityFrameworkStores<ControlPlaneDbContext>()
     .AddDefaultTokenProviders();
 
-    // Quartz.NET - schedule periodic jobs
-    builder.Services.AddQuartz(q =>
+    // Quartz.NET - schedule periodic jobs (can be disabled for testing)
+    var enableQuartz = builder.Configuration.GetValue<bool>("Synaxis:InferenceGateway:EnableQuartz", true);
+    if (enableQuartz)
     {
-        // Create a job key for ModelsDevSyncJob
-        var modelsDevSyncJobKey = new JobKey("ModelsDevSyncJob");
+        builder.Services.AddQuartz(q =>
+        {
+            // Create a job key for ModelsDevSyncJob
+            var modelsDevSyncJobKey = new JobKey("ModelsDevSyncJob");
 
-        // Register the job with the scheduler
-        q.AddJob<ModelsDevSyncJob>(opts => opts.WithIdentity(modelsDevSyncJobKey));
+            // Register the job with the scheduler
+            q.AddJob<ModelsDevSyncJob>(opts => opts.WithIdentity(modelsDevSyncJobKey));
 
-        // Trigger: start now, repeat every 24 hours
-        q.AddTrigger(opts => opts
-            .ForJob(modelsDevSyncJobKey)
-            .StartNow()
-            .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromHours(24)).RepeatForever()));
+            // Trigger: start now, repeat every 24 hours
+            q.AddTrigger(opts => opts
+                .ForJob(modelsDevSyncJobKey)
+                .StartNow()
+                .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromHours(24)).RepeatForever()));
 
-        // Create a job key for ProviderDiscoveryJob
-        var providerDiscoveryJobKey = new JobKey("ProviderDiscoveryJob");
+            // Create a job key for ProviderDiscoveryJob
+            var providerDiscoveryJobKey = new JobKey("ProviderDiscoveryJob");
 
-        // Register the ProviderDiscoveryJob with the scheduler
-        q.AddJob<ProviderDiscoveryJob>(opts => opts.WithIdentity(providerDiscoveryJobKey));
+            // Register the ProviderDiscoveryJob with the scheduler
+            q.AddJob<ProviderDiscoveryJob>(opts => opts.WithIdentity(providerDiscoveryJobKey));
 
-        // Trigger: start now, repeat every 1 hour
-        q.AddTrigger(opts => opts
-            .ForJob(providerDiscoveryJobKey)
-            .StartNow()
-            .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromHours(1)).RepeatForever()));
+            // Trigger: start now, repeat every 1 hour
+            q.AddTrigger(opts => opts
+                .ForJob(providerDiscoveryJobKey)
+                .StartNow()
+                .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromHours(1)).RepeatForever()));
 
-        // Health Monitoring - every 2 minutes
-        var healthJobKey = new JobKey("HealthMonitoringJob");
-        q.AddJob<HealthMonitoringAgent>(opts => opts.WithIdentity(healthJobKey));
-        q.AddTrigger(opts => opts
-            .ForJob(healthJobKey)
-            .StartNow()
-            .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromMinutes(2)).RepeatForever()));
+            // Health Monitoring - every 2 minutes
+            var healthJobKey = new JobKey("HealthMonitoringJob");
+            q.AddJob<HealthMonitoringAgent>(opts => opts.WithIdentity(healthJobKey));
+            q.AddTrigger(opts => opts
+                .ForJob(healthJobKey)
+                .StartNow()
+                .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromMinutes(2)).RepeatForever()));
 
-        // Cost Optimization - every 15 minutes
-        var costJobKey = new JobKey("CostOptimizationJob");
-        q.AddJob<CostOptimizationAgent>(opts => opts.WithIdentity(costJobKey));
-        q.AddTrigger(opts => opts
-            .ForJob(costJobKey)
-            .StartNow()
-            .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromMinutes(15)).RepeatForever()));
+            // Cost Optimization - every 15 minutes
+            var costJobKey = new JobKey("CostOptimizationJob");
+            q.AddJob<CostOptimizationAgent>(opts => opts.WithIdentity(costJobKey));
+            q.AddTrigger(opts => opts
+                .ForJob(costJobKey)
+                .StartNow()
+                .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromMinutes(15)).RepeatForever()));
 
-        // Model Discovery - daily at 2 AM
-        var discoveryJobKey = new JobKey("ModelDiscoveryJob");
-        q.AddJob<ModelDiscoveryAgent>(opts => opts.WithIdentity(discoveryJobKey));
-        q.AddTrigger(opts => opts
-            .ForJob(discoveryJobKey)
-            .StartNow()
-            .WithCronSchedule("0 0 2 * * ?")); // 2 AM daily
+            // Model Discovery - daily at 2 AM
+            var discoveryJobKey = new JobKey("ModelDiscoveryJob");
+            q.AddJob<ModelDiscoveryAgent>(opts => opts.WithIdentity(discoveryJobKey));
+            q.AddTrigger(opts => opts
+                .ForJob(discoveryJobKey)
+                .StartNow()
+                .WithCronSchedule("0 0 2 * * ?")); // 2 AM daily
 
-        // Security Audit - every 6 hours
-        var securityJobKey = new JobKey("SecurityAuditJob");
-        q.AddJob<SecurityAuditAgent>(opts => opts.WithIdentity(securityJobKey));
-        q.AddTrigger(opts => opts
-            .ForJob(securityJobKey)
-            .StartNow()
-            .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromHours(6)).RepeatForever()));
+            // Security Audit - every 6 hours
+            var securityJobKey = new JobKey("SecurityAuditJob");
+            q.AddJob<SecurityAuditAgent>(opts => opts.WithIdentity(securityJobKey));
+            q.AddTrigger(opts => opts
+                .ForJob(securityJobKey)
+                .StartNow()
+                .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromHours(6)).RepeatForever()));
 
-        // Audit Log Partition Management - daily at 3 AM
-        var auditPartitionJobKey = new JobKey("AuditLogPartitionJob");
-        q.AddJob<AuditLogPartitionJob>(opts => opts.WithIdentity(auditPartitionJobKey));
-        q.AddTrigger(opts => opts
-            .ForJob(auditPartitionJobKey)
-            .WithIdentity("AuditLogPartitionTrigger")
-            .StartNow()
-            .WithCronSchedule("0 0 3 * * ?")); // 3 AM daily
-    });
+            // Audit Log Partitioning - daily at 3 AM
+            var auditPartitionJobKey = new JobKey("AuditLogPartitionJob");
+            q.AddJob<AuditLogPartitionJob>(opts => opts.WithIdentity(auditPartitionJobKey));
+            q.AddTrigger(opts => opts
+                .ForJob(auditPartitionJobKey)
+                .WithIdentity("AuditLogPartitionTrigger")
+                .StartNow()
+                .WithCronSchedule("0 0 3 * * ?")); // 3 AM daily
+        });
 
-    // Add hosted service to run Quartz and wait for jobs to complete on shutdown
-    builder.Services.AddQuartzHostedService(opt => opt.WaitForJobsToComplete = true);
+        // Add hosted service to run Quartz and wait for jobs to complete on shutdown
+        builder.Services.AddQuartzHostedService(opt => opt.WaitForJobsToComplete = true);
+    }
 
     // OpenTelemetry
     builder.Services.AddOpenTelemetry()

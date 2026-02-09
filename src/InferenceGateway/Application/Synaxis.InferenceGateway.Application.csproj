@@ -1,5 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\..\Synaxis.Core\Synaxis.Core.csproj" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Agents.Core" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />

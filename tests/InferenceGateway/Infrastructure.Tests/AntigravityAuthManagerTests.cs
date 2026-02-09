@@ -4,18 +4,18 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests;
 
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Synaxis.InferenceGateway.Application.Configuration;
 using Synaxis.InferenceGateway.Infrastructure.Auth;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Net;
-using System.Threading.Tasks;
-using System;
 using Xunit;
 
 public class AntigravityAuthManagerTests : IDisposable
@@ -64,8 +64,8 @@ public class AntigravityAuthManagerTests : IDisposable
         // The manager implements round robin logic.
         // We verify that accounts are loaded correctly from disk.
         Assert.Equal(2, list.Count);
-        Assert.Contains(list, a => a.Email == "user1@test.com");
-        Assert.Contains(list, a => a.Email == "user2@test.com");
+        Assert.Contains(list, a => string.Equals(a.Email, "user1@test.com", StringComparison.Ordinal));
+        Assert.Contains(list, a => string.Equals(a.Email, "user2@test.com", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -90,11 +90,10 @@ public class AntigravityAuthManagerTests : IDisposable
             // So it will try to Refresh.
             // This will throw because we can't refresh against real Google API without a valid refresh token and network.
             // So we expect an Exception, but we verify the account was added to the list.
-
             await Assert.ThrowsAnyAsync<Exception>(() => manager.GetTokenAsync());
 
             var list = manager.ListAccounts().ToList();
-            Assert.Contains(list, a => a.Email == "env-var-user@system");
+            Assert.Contains(list, a => string.Equals(a.Email, "env-var-user@system", StringComparison.Ordinal));
         }
         finally
         {

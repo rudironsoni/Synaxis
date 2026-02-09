@@ -149,8 +149,8 @@ public class ControlPlaneStoreTests
         Assert.Equal("GPT", result.Family);
         Assert.NotNull(result.ProviderModels);
         Assert.Equal(2, result.ProviderModels.Count);
-        Assert.Contains(result.ProviderModels, pm => pm.ProviderId == "openai");
-        Assert.Contains(result.ProviderModels, pm => pm.ProviderId == "azure");
+        Assert.Contains(result.ProviderModels, pm => string.Equals(pm.ProviderId, "openai", StringComparison.Ordinal));
+        Assert.Contains(result.ProviderModels, pm => string.Equals(pm.ProviderId, "azure", StringComparison.Ordinal));
     }
 
     [Fact]

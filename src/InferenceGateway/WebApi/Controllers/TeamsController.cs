@@ -145,7 +145,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
                 UserId = userId,
                 TeamId = teamId,
                 OrganizationId = orgId,
-                Role = "admin",
+                Role = "TeamAdmin",
                 JoinedAt = DateTime.UtcNow,
             };
         }
@@ -322,8 +322,8 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
                 .FirstOrDefaultAsync(u => u.Id == userId && u.OrganizationId == orgId, cancellationToken)
                 .ConfigureAwait(false);
 
-            var isTeamAdmin = string.Equals(teamMembership?.Role, "TeamAdmin", StringComparison.OrdinalIgnoreCase);
-            var isOrgAdmin = user != null && string.Equals(user.Role, "admin", StringComparison.OrdinalIgnoreCase);
+            var isTeamAdmin = string.Equals(teamMembership?.Role, "TeamAdmin", StringComparison.Ordinal);
+            var isOrgAdmin = user != null && (string.Equals(user.Role, "admin", StringComparison.OrdinalIgnoreCase) || string.Equals(user.Role, "owner", StringComparison.OrdinalIgnoreCase));
 
             return isTeamAdmin || isOrgAdmin;
         }
@@ -650,7 +650,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
                 .FirstOrDefaultAsync(u => u.Id == userId && u.OrganizationId == orgId, cancellationToken)
                 .ConfigureAwait(false);
 
-            var isOrgAdmin = user != null && string.Equals(user.Role, "admin", StringComparison.OrdinalIgnoreCase);
+            var isOrgAdmin = user != null && (string.Equals(user.Role, "admin", StringComparison.OrdinalIgnoreCase) || string.Equals(user.Role, "owner", StringComparison.OrdinalIgnoreCase));
 
             var membership = await this._dbContext.TeamMemberships
                 .FirstOrDefaultAsync(m => m.UserId == userId && m.TeamId == teamId, cancellationToken)
@@ -707,7 +707,9 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
             return normalized switch
             {
                 "admin" or "teamadmin" => "TeamAdmin",
+                "orgadmin" => "OrgAdmin",
                 "member" => "Member",
+                "viewer" => "Viewer",
                 _ => null,
             };
         }

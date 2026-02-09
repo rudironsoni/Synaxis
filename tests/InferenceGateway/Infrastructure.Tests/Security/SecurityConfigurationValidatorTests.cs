@@ -26,6 +26,7 @@ public class SecurityConfigurationValidatorTests
         // Arrange
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
+(StringComparer.Ordinal)
             {
                 ["Synaxis:InferenceGateway:JwtSecret"] = "ThisIsAVerySecureJwtSecretKey123456789012345",
                 ["Synaxis:InferenceGateway:Providers:Groq:RateLimitRPM"] = "100",
@@ -49,7 +50,7 @@ public class SecurityConfigurationValidatorTests
     {
         // Arrange
         var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>())
+            .AddInMemoryCollection(new Dictionary<string, string?>(StringComparer.Ordinal))
             .Build();
 
         var validator = new SecurityConfigurationValidator(configuration, this._mockLogger.Object, "Production");
@@ -69,6 +70,7 @@ public class SecurityConfigurationValidatorTests
         // Arrange
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
+(StringComparer.Ordinal)
             {
                 ["Synaxis:InferenceGateway:JwtSecret"] = "short",
             })
@@ -91,6 +93,7 @@ public class SecurityConfigurationValidatorTests
         // Arrange
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
+(StringComparer.Ordinal)
             {
                 ["Synaxis:InferenceGateway:JwtSecret"] = "SynaxisDefaultSecretKeyDoNotUseInProd1234567890",
             })
@@ -113,6 +116,7 @@ public class SecurityConfigurationValidatorTests
         // Arrange
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
+(StringComparer.Ordinal)
             {
                 ["Synaxis:InferenceGateway:JwtSecret"] = "SynaxisDefaultSecretKeyDoNotUseInProd1234567890",
             })
@@ -135,6 +139,7 @@ public class SecurityConfigurationValidatorTests
         // Arrange
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
+(StringComparer.Ordinal)
             {
                 ["Synaxis:InferenceGateway:JwtSecret"] = "mypassword123456789012345678901234",
             })
@@ -157,6 +162,7 @@ public class SecurityConfigurationValidatorTests
         // Arrange
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
+(StringComparer.Ordinal)
             {
                 ["Synaxis:InferenceGateway:JwtSecret"] = "ThisIsAVerySecureJwtSecretKey123456789012345",
                 ["Synaxis:InferenceGateway:Providers:Groq:Enabled"] = "true",
@@ -180,6 +186,7 @@ public class SecurityConfigurationValidatorTests
         // Arrange
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
+(StringComparer.Ordinal)
             {
                 ["Synaxis:InferenceGateway:JwtSecret"] = "ThisIsAVerySecureJwtSecretKey123456789012345",
                 ["Synaxis:InferenceGateway:Cors:PublicOrigins"] = "*",
@@ -203,6 +210,7 @@ public class SecurityConfigurationValidatorTests
         // Arrange
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
+(StringComparer.Ordinal)
             {
                 ["Synaxis:InferenceGateway:JwtSecret"] = "short",
                 ["Synaxis:InferenceGateway:Cors:PublicOrigins"] = "*",
@@ -230,6 +238,7 @@ public class SecurityConfigurationValidatorTests
         // Arrange
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
+(StringComparer.Ordinal)
             {
                 ["Synaxis:InferenceGateway:JwtSecret"] = weakSecret,
             })

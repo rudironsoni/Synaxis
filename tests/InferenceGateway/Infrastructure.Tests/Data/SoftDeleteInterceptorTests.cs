@@ -4,15 +4,15 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Data;
 
+using System.Security.Claims;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Moq;
+using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Operations;
-using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 using Synaxis.InferenceGateway.Infrastructure.Data.Interceptors;
-using System.Security.Claims;
 using Xunit;
 
 /// <summary>
@@ -46,10 +46,8 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
-        await this._dbContext.DisposeAsync();
+        await _dbContext.DisposeAsync().ConfigureAwait(false);
     }
-
-    #region Constructor Tests
 
     [Fact]
     public void Constructor_WithoutHttpContextAccessor_ShouldNotThrow()
@@ -66,10 +64,6 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
         var act = () => new SoftDeleteInterceptor(this._mockHttpContextAccessor.Object);
         act.Should().NotThrow();
     }
-
-    #endregion
-
-    #region Soft Delete Conversion Tests
 
     [Fact]
     public async Task SaveChangesAsync_WithDeletedOrganization_ShouldConvertToSoftDelete()
@@ -279,10 +273,6 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
         deletedOrg.Should().NotBeNull();
         deletedOrg!.DeletedBy.Should().Be(userId);
     }
-
-    #endregion
-
-    #region Cascade Soft Delete Tests
 
     [Fact(Skip = "EF Core InMemory doesn't support cascade deletes with interceptors. Run against real PostgreSQL.")]
     public async Task SaveChangesAsync_WithDeletedOrganization_ShouldCascadeSoftDeleteGroups()
@@ -629,10 +619,6 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
         deletedGroup!.DeletedAt.Should().NotBeNull();
     }
 
-    #endregion
-
-    #region Query Filter Tests
-
     [Fact]
     public async Task Query_ShouldExcludeSoftDeletedEntitiesByDefault()
     {
@@ -723,10 +709,6 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
         allOrgs.Should().Contain(o => o.Id == org2.Id);
     }
 
-    #endregion
-
-    #region Synchronous SaveChanges Tests
-
     [Fact]
     public void SaveChanges_WithDeletedEntity_ShouldConvertToSoftDelete()
     {
@@ -760,6 +742,4 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
         deletedOrg.Should().NotBeNull();
         deletedOrg!.DeletedAt.Should().NotBeNull();
     }
-
-    #endregion
 }

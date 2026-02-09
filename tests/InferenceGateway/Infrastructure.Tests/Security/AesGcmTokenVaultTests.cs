@@ -4,6 +4,11 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
 {
+    using System;
+    using System.Security.Cryptography;
+    using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Options;
     using Moq;
@@ -11,13 +16,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
     using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
     using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
     using Synaxis.InferenceGateway.Infrastructure.Security;
-    using System.Security.Cryptography;
-    using System.Text;
-    using System.Threading.Tasks;
-    using System.Threading;
-    using System;
     using Xunit;
-
 
     public class AesGcmTokenVaultTests
     {
@@ -53,7 +52,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
         {
             // Arrange
             using var dbContext = BuildDbContext();
-            var mockConfig = CreateMockConfig("");
+            var mockConfig = CreateMockConfig(string.Empty);
 
             // Act & Assert
             var exception = Assert.Throws<InvalidOperationException>(() =>
@@ -114,8 +113,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             // Assert
             Assert.NotNull(encrypted);
             Assert.NotEmpty(encrypted);
+
             // Encrypted data should be larger than plaintext due to nonce and tag
             Assert.True(encrypted.Length > plaintext.Length);
+
             // Should have nonce (12) + tag (16) + ciphertext
             Assert.True(encrypted.Length >= 28);
         }
@@ -134,7 +135,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
                 tokenVault.EncryptAsync(tenantId, plaintext));
-            Assert.StartsWith("Tenant not found", exception.Message);
+            Assert.StartsWith("Tenant not found", exception.Message, StringComparison.Ordinal);
             Assert.Equal("tenantId", exception.ParamName);
         }
 
@@ -183,7 +184,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
                 tokenVault.DecryptAsync(tenantId, ciphertext));
-            Assert.StartsWith("Tenant not found", exception.Message);
+            Assert.StartsWith("Tenant not found", exception.Message, StringComparison.Ordinal);
             Assert.Equal("tenantId", exception.ParamName);
         }
 
@@ -275,7 +276,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
                 tokenVault.RotateKeyAsync(tenantId, newKeyBase64));
-            Assert.StartsWith("Tenant not found", exception.Message);
+            Assert.StartsWith("Tenant not found", exception.Message, StringComparison.Ordinal);
             Assert.Equal("tenantId", exception.ParamName);
         }
 
@@ -305,7 +306,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
                 tokenVault.RotateKeyAsync(tenantId, invalidKeyBase64));
-            Assert.StartsWith("Key must be 32 bytes", exception.Message);
+            Assert.StartsWith("Key must be 32 bytes", exception.Message, StringComparison.Ordinal);
             Assert.Equal("newKeyBase64", exception.ParamName);
         }
 
@@ -340,6 +341,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
 
             // Assert
             Assert.NotEqual(encrypted1, encrypted2);
+
             // But both should decrypt to the same value
             var decrypted1 = Encoding.UTF8.GetString(AesGcmTokenVaultTestsHelper.Decrypt(encrypted1, key));
             var decrypted2 = Encoding.UTF8.GetString(AesGcmTokenVaultTestsHelper.Decrypt(encrypted2, key));
