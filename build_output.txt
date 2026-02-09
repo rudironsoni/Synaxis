@@ -1,0 +1,20 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Synaxis.Core -> /home/rrj/src/github/rudironsoni/Synaxis/src/Synaxis.Core/bin/Debug/net10.0/Synaxis.Core.dll
+  Synaxis.InferenceGateway.Application -> /home/rrj/src/github/rudironsoni/Synaxis/src/InferenceGateway/Application/bin/Debug/net10.0/Synaxis.InferenceGateway.Application.dll
+  Synaxis.Infrastructure -> /home/rrj/src/github/rudironsoni/Synaxis/src/Synaxis.Infrastructure/bin/Debug/net10.0/Synaxis.Infrastructure.dll
+  Synaxis.InferenceGateway.Infrastructure -> /home/rrj/src/github/rudironsoni/Synaxis/src/InferenceGateway/Infrastructure/bin/Debug/net10.0/Synaxis.InferenceGateway.Infrastructure.dll
+  Synaxis.Benchmarks -> /home/rrj/src/github/rudironsoni/Synaxis/src/Tests/Benchmarks/bin/Debug/net10.0/Synaxis.Benchmarks.dll
+  Synaxis.Infrastructure.Tests -> /home/rrj/src/github/rudironsoni/Synaxis/tests/Synaxis.Infrastructure.Tests/bin/Debug/net10.0/Synaxis.Infrastructure.Tests.dll
+  Synaxis.InferenceGateway.WebApi -> /home/rrj/src/github/rudironsoni/Synaxis/src/InferenceGateway/WebApi/bin/Debug/net10.0/Synaxis.InferenceGateway.WebApi.dll
+  Synaxis.InferenceGateway.Infrastructure.Tests -> /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/Infrastructure.Tests/bin/Debug/net10.0/Synaxis.InferenceGateway.Infrastructure.Tests.dll
+  Synaxis.InferenceGateway.IntegrationTests -> /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/IntegrationTests/bin/Debug/net10.0/Synaxis.InferenceGateway.IntegrationTests.dll
+  Synaxis.Common.Tests -> /home/rrj/src/github/rudironsoni/Synaxis/tests/Common/bin/Debug/net10.0/Synaxis.Common.Tests.dll
+  Synaxis.InferenceGateway.UnitTests -> /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway.UnitTests/bin/Debug/net10.0/Synaxis.InferenceGateway.UnitTests.dll
+  Synaxis.InferenceGateway.Application.Tests -> /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/Application.Tests/bin/Debug/net10.0/Synaxis.InferenceGateway.Application.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.90

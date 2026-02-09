@@ -3225,6 +3225,18 @@
         <member name="M:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.AddInvitations.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.RemoveAuditLogSchema">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.RemoveAuditLogSchema.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.RemoveAuditLogSchema.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.RemoveAuditLogSchema.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
         <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.NotificationService">
             <summary>
             Stub implementation of notification service.

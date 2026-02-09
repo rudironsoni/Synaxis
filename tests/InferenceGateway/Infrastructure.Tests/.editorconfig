@@ -1,0 +1,58 @@
+# Test project specific configuration
+root = true
+
+[*.cs]
+# Suppress XML documentation requirements in test code
+dotnet_diagnostic.SA1600.severity = none
+dotnet_diagnostic.SA1601.severity = none
+dotnet_diagnostic.SA1602.severity = none
+
+# Suppress StyleCop rules common in test code
+dotnet_diagnostic.SA1309.severity = none
+dotnet_diagnostic.SA1636.severity = none
+dotnet_diagnostic.SA1633.severity = none
+dotnet_diagnostic.SA1201.severity = none
+dotnet_diagnostic.SA1202.severity = none
+
+# Allow multiple types per file in tests (test helpers, fakes, etc.)
+dotnet_diagnostic.SA1402.severity = none
+dotnet_diagnostic.SA1649.severity = none
+dotnet_diagnostic.MA0048.severity = none
+
+# Allow long test methods (setup can be verbose)
+dotnet_diagnostic.MA0051.severity = none
+
+# Allow concrete collection types in tests
+dotnet_diagnostic.MA0016.severity = none
+
+# Allow parameter formatting flexibility in tests
+dotnet_diagnostic.SA1117.severity = none
+dotnet_diagnostic.SA1118.severity = none
+
+# Relax some Sonar rules for tests
+dotnet_diagnostic.S4144.severity = none  # Allow duplicate test methods
+dotnet_diagnostic.S108.severity = none   # Allow empty catch blocks in tests
+dotnet_diagnostic.S1481.severity = none  # Allow unused variables (assertion side effects)
+dotnet_diagnostic.S2699.severity = none  # Allow tests without assertions (negative tests)
+dotnet_diagnostic.S6608.severity = none  # Allow First() instead of indexing
+dotnet_diagnostic.S3878.severity = none  # Allow array covariance in tests
+dotnet_diagnostic.S927.severity = none   # Allow parameter name mismatches in tests
+dotnet_diagnostic.MA0011.severity = none # Allow Convert without IFormatProvider in tests
+dotnet_diagnostic.MA0015.severity = none # Allow StringComparison.Ordinal default in tests
+dotnet_diagnostic.MA0132.severity = none # Allow Task.Wait in test synchronization
+
+# Async/await rules for tests
+dotnet_diagnostic.MA0004.severity = none # xUnit requires no ConfigureAwait in tests (xUnit1030)
+
+# IDisposable analyzer exceptions for test code
+# Tests create HttpClient, DbContext for short-lived test scenarios
+# Test framework handles cleanup; manual disposal adds noise without benefit
+dotnet_diagnostic.IDISP001.severity = none # Don't require Dispose in test methods
+dotnet_diagnostic.IDISP003.severity = none # Allow reassigning disposables in tests
+dotnet_diagnostic.IDISP004.severity = none # Allow ignoring disposables in tests
+dotnet_diagnostic.IDISP005.severity = none # Return types in test helpers
+dotnet_diagnostic.IDISP006.severity = none # IAsyncLifetime is valid disposal pattern
+
+# However, test fixtures MUST implement IDisposable properly
+# Keep IDISP025 (seal class) but suppress S3881 which duplicates it
+dotnet_diagnostic.S3881.severity = none  # Sonar IDisposable pattern (covered by IDISP025)
