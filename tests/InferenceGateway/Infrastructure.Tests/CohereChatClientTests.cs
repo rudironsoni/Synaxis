@@ -4,15 +4,15 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests;
 
-using Microsoft.Extensions.AI;
-using Moq.Protected;
-using Moq;
-using Synaxis.InferenceGateway.Infrastructure;
 using System.Collections.Generic;
-using System.Net.Http;
 using System.Net;
-using System.Threading.Tasks;
+using System.Net.Http;
 using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.AI;
+using Moq;
+using Moq.Protected;
+using Synaxis.InferenceGateway.Infrastructure;
 using Xunit;
 
 public class CohereChatClientTests
@@ -28,8 +28,7 @@ public class CohereChatClientTests
             .Setup<Task<HttpResponseMessage>>(
                 "SendAsync",
                 ItExpr.IsAny<HttpRequestMessage>(),
-                ItExpr.IsAny<CancellationToken>()
-            )
+                ItExpr.IsAny<CancellationToken>())
             .ReturnsAsync(new HttpResponseMessage
             {
                 StatusCode = HttpStatusCode.OK,

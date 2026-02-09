@@ -375,7 +375,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Optimization
 
             public double SimilarityScore { get; set; }
 
-            public float[] ? QueryEmbedding { get; set; }
+            public float[]? QueryEmbedding { get; set; }
         }
     }
 }

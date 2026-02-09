@@ -113,7 +113,7 @@ namespace Synaxis.Core.Contracts
         /// Gets or sets the data categories being transferred.
         /// </summary>
 #pragma warning disable SA1018 // Nullable type symbol should not be preceded by a space
-        public string[] ? DataCategories { get; set; }
+        public string[]? DataCategories { get; set; }
 #pragma warning restore SA1018 // Nullable type symbol should not be preceded by a space
 
         /// <summary>
@@ -156,7 +156,7 @@ namespace Synaxis.Core.Contracts
         /// Gets or sets the data categories being processed.
         /// </summary>
 #pragma warning disable SA1018 // Nullable type symbol should not be preceded by a space
-        public string[] ? DataCategories { get; set; }
+        public string[]? DataCategories { get; set; }
 #pragma warning restore SA1018 // Nullable type symbol should not be preceded by a space
     }
 
@@ -184,7 +184,7 @@ namespace Synaxis.Core.Contracts
         /// Gets or sets the data categories exposed in breach.
         /// </summary>
 #pragma warning disable SA1018 // Nullable type symbol should not be preceded by a space
-        public string[] ? DataCategoriesExposed { get; set; }
+        public string[]? DataCategoriesExposed { get; set; }
 #pragma warning restore SA1018 // Nullable type symbol should not be preceded by a space
 
         /// <summary>
@@ -212,7 +212,7 @@ namespace Synaxis.Core.Contracts
         /// Gets or sets the exported data.
         /// </summary>
 #pragma warning disable SA1018 // Nullable type symbol should not be preceded by a space
-        public byte[] ? Data { get; set; }
+        public byte[]? Data { get; set; }
 #pragma warning restore SA1018 // Nullable type symbol should not be preceded by a space
 
         /// <summary>

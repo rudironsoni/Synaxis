@@ -50,6 +50,8 @@ namespace Synaxis.Infrastructure.Tests.Migrations
         {
             var options = new DbContextOptionsBuilder<SynaxisDbContext>()
                 .UseNpgsql(_postgresContainer.GetConnectionString())
+                .ConfigureWarnings(warnings =>
+                    warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning))
                 .Options;
 
             return new SynaxisDbContext(options);

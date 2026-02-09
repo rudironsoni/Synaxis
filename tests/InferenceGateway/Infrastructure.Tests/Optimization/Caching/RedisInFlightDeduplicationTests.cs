@@ -4,16 +4,16 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Optimization.Caching;
 
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Moq;
 using StackExchange.Redis;
-using System.Threading.Tasks;
-using System.Threading;
-using System;
 using Xunit;
 
 /// <summary>
 /// Unit tests for IInFlightDeduplication Redis implementation
-/// Tests request deduplication to prevent duplicate LLM calls for identical concurrent requests
+/// Tests request deduplication to prevent duplicate LLM calls for identical concurrent requests.
 /// </summary>
 public class RedisInFlightDeduplicationTests
 {
@@ -70,7 +70,7 @@ public class RedisInFlightDeduplicationTests
         Func<Task<string>> operation = async () =>
         {
             executed = true;
-            await Task.Delay(10);
+            await Task.Delay(10).ConfigureAwait(false);
             return "Result from operation";
         };
 
@@ -147,7 +147,7 @@ public class RedisInFlightDeduplicationTests
         Func<Task<string>> operation = async () =>
         {
             Interlocked.Increment(ref executionCount);
-            await Task.Delay(100); // Simulate work
+            await Task.Delay(100).ConfigureAwait(false); // Simulate work
             return "Result from operation";
         };
 
@@ -200,7 +200,7 @@ public class RedisInFlightDeduplicationTests
         Func<Task<string>> operation = async () =>
         {
             executed = true;
-            await Task.Delay(10);
+            await Task.Delay(10).ConfigureAwait(false);
             return "Fallback result";
         };
 
@@ -258,7 +258,7 @@ public class RedisInFlightDeduplicationTests
 
         Func<Task<string>> operation = async () =>
         {
-            await Task.Delay(10);
+            await Task.Delay(10).ConfigureAwait(false);
             return "Operation result";
         };
 
@@ -316,7 +316,7 @@ public class RedisInFlightDeduplicationTests
 
         Func<Task<string>> operation = async () =>
         {
-            await Task.Delay(10);
+            await Task.Delay(10).ConfigureAwait(false);
             throw new InvalidOperationException("Operation failed");
         };
 
@@ -327,7 +327,7 @@ public class RedisInFlightDeduplicationTests
                 requestHash,
                 operation,
                 lockTimeout,
-                this._cancellationToken);
+                _cancellationToken).ConfigureAwait(false);
         });
 
         // Assert - Lock should be released even on failure
@@ -376,7 +376,7 @@ public class RedisInFlightDeduplicationTests
                 requestHash,
                 operation,
                 lockTimeout,
-                this._cancellationToken);
+                _cancellationToken).ConfigureAwait(false);
         });
 
         Assert.Equal("Invalid argument", exception.Message);
@@ -451,7 +451,7 @@ public class RedisInFlightDeduplicationTests
         Func<Task<string>> operation = async () =>
         {
             executed = true;
-            await Task.Delay(10);
+            await Task.Delay(10).ConfigureAwait(false);
             return "Direct execution result";
         };
 
@@ -469,7 +469,7 @@ public class RedisInFlightDeduplicationTests
 }
 
 /// <summary>
-/// Interface for in-flight request deduplication
+/// Interface for in-flight request deduplication.
 /// </summary>
 public interface IInFlightDeduplication
 {
@@ -483,7 +483,7 @@ public interface IInFlightDeduplication
 }
 
 /// <summary>
-/// Redis implementation of IInFlightDeduplication
+/// Redis implementation of IInFlightDeduplication.
 /// </summary>
 public class RedisInFlightDeduplication : IInFlightDeduplication
 {
@@ -507,25 +507,25 @@ public class RedisInFlightDeduplication : IInFlightDeduplication
             var resultKey = $"result:{requestHash}";
 
             // Try to acquire lock
-            var lockAcquired = await db.StringSetAsync(lockKey, "locked", lockTimeout, when: When.NotExists);
+            var lockAcquired = await db.StringSetAsync(lockKey, "locked", lockTimeout, when: When.NotExists).ConfigureAwait(false);
 
             if (lockAcquired)
             {
                 try
                 {
                     // We got the lock - execute the operation
-                    var result = await operation();
+                    var result = await operation().ConfigureAwait(false);
 
                     // Store the result for other waiters
                     var serialized = System.Text.Json.JsonSerializer.Serialize(result);
-                    await db.StringSetAsync(resultKey, serialized, TimeSpan.FromMinutes(5));
+                    await db.StringSetAsync(resultKey, serialized, TimeSpan.FromMinutes(5)).ConfigureAwait(false);
 
                     return result;
                 }
                 finally
                 {
                     // Always release the lock
-                    await db.KeyDeleteAsync(lockKey);
+                    await db.KeyDeleteAsync(lockKey).ConfigureAwait(false);
                 }
             }
             else
@@ -535,30 +535,30 @@ public class RedisInFlightDeduplication : IInFlightDeduplication
 
                 while (DateTime.UtcNow < deadline)
                 {
-                    var cachedResult = await db.StringGetAsync(resultKey);
+                    var cachedResult = await db.StringGetAsync(resultKey).ConfigureAwait(false);
                     if (cachedResult.HasValue)
                     {
                         return System.Text.Json.JsonSerializer.Deserialize<T>(cachedResult.ToString())!;
                     }
 
-                    await Task.Delay(100, cancellationToken); // Poll interval
+                    await Task.Delay(100, cancellationToken).ConfigureAwait(false); // Poll interval
                 }
 
                 // Timeout - execute as fallback
-                return await operation();
+                return await operation().ConfigureAwait(false);
             }
         }
         catch (RedisException)
         {
             // Fail open - execute directly if Redis is unavailable
-            return await operation();
+            return await operation().ConfigureAwait(false);
         }
     }
 
-    public async Task<bool> IsInFlightAsync(string requestHash, CancellationToken cancellationToken)
+    public Task<bool> IsInFlightAsync(string requestHash, CancellationToken cancellationToken)
     {
         var db = this._redis.GetDatabase();
         var lockKey = $"inflight:{requestHash}";
-        return await db.KeyExistsAsync(lockKey);
+        return db.KeyExistsAsync(lockKey);
     }
 }

@@ -4,16 +4,16 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.External.DuckDuckGo;
 
-using Microsoft.Extensions.AI;
-using RichardSzalay.MockHttp;
-using Synaxis.InferenceGateway.Infrastructure.External.DuckDuckGo;
-using Synaxis.InferenceGateway.Infrastructure;
 using System.Collections.Generic;
+using System.Net;
+using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Net.Http;
-using System.Net;
 using System.Threading.Tasks;
+using Microsoft.Extensions.AI;
+using RichardSzalay.MockHttp;
+using Synaxis.InferenceGateway.Infrastructure;
+using Synaxis.InferenceGateway.Infrastructure.External.DuckDuckGo;
 using Xunit;
 
 public class DuckDuckGoChatClientTests
@@ -42,6 +42,7 @@ public class DuckDuckGoChatClientTests
                 {
                     Content = JsonContent.Create(new { reply = "hello from ddg" }),
                 };
+
                 // Update token for next request
                 res.Headers.Add("x-vqd-4", "next-token");
                 return res;

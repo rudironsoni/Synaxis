@@ -19,9 +19,10 @@ public class ControlPlaneExtensionsTests
         var services = new ServiceCollection();
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
+(StringComparer.Ordinal)
             {
                 { "Synaxis:ControlPlane:UseInMemory", "true" },
-                { "Synaxis:ControlPlane:ConnectionString", "" },
+                { "Synaxis:ControlPlane:ConnectionString", string.Empty },
             })
             .Build();
 
@@ -32,7 +33,7 @@ public class ControlPlaneExtensionsTests
 
         var dbContext = serviceProvider.GetRequiredService<ControlPlaneDbContext>();
         Assert.NotNull(dbContext);
-        Assert.Contains("InMemory", dbContext.Database.ProviderName ?? "");
+        Assert.Contains("InMemory", dbContext.Database.ProviderName ?? string.Empty, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -42,6 +43,7 @@ public class ControlPlaneExtensionsTests
         var connectionString = "Host=localhost;Database=testdb;Username=postgres;Password=password";
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
+(StringComparer.Ordinal)
             {
                 { "Synaxis:ControlPlane:UseInMemory", "false" },
                 { "Synaxis:ControlPlane:ConnectionString", connectionString },
@@ -55,7 +57,7 @@ public class ControlPlaneExtensionsTests
 
         var dbContext = serviceProvider.GetRequiredService<ControlPlaneDbContext>();
         Assert.NotNull(dbContext);
-        Assert.Contains("Npgsql", dbContext.Database.ProviderName ?? "");
+        Assert.Contains("Npgsql", dbContext.Database.ProviderName ?? string.Empty, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -64,9 +66,10 @@ public class ControlPlaneExtensionsTests
         var services = new ServiceCollection();
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
+(StringComparer.Ordinal)
             {
                 { "Synaxis:ControlPlane:UseInMemory", "true" },
-                { "Synaxis:ControlPlane:ConnectionString", "" },
+                { "Synaxis:ControlPlane:ConnectionString", string.Empty },
             })
             .Build();
 
@@ -89,9 +92,10 @@ public class ControlPlaneExtensionsTests
         var services = new ServiceCollection();
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
+(StringComparer.Ordinal)
             {
                 { "Synaxis:ControlPlane:UseInMemory", "false" },
-                { "Synaxis:ControlPlane:ConnectionString", "" },
+                { "Synaxis:ControlPlane:ConnectionString", string.Empty },
             })
             .Build();
 
@@ -102,6 +106,6 @@ public class ControlPlaneExtensionsTests
 
         var dbContext = serviceProvider.GetRequiredService<ControlPlaneDbContext>();
         Assert.NotNull(dbContext);
-        Assert.Contains("InMemory", dbContext.Database.ProviderName ?? "");
+        Assert.Contains("InMemory", dbContext.Database.ProviderName ?? string.Empty, StringComparison.Ordinal);
     }
 }

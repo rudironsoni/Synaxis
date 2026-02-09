@@ -4,15 +4,15 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security;
 
+using System.Security.Claims;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Synaxis.InferenceGateway.Application.ApiKeys.Models;
 using Synaxis.InferenceGateway.Application.ApiKeys;
+using Synaxis.InferenceGateway.Application.ApiKeys.Models;
 using Synaxis.InferenceGateway.Application.Interfaces;
 using Synaxis.InferenceGateway.WebApi.Middleware;
-using System.Security.Claims;
 using Xunit;
 
 /// <summary>
@@ -38,8 +38,6 @@ public class TenantResolutionMiddlewareTests
         this._httpContext = new DefaultHttpContext();
     }
 
-    #region Constructor Tests
-
     [Fact]
     public void Constructor_WithNullNext_ShouldThrowArgumentNullException()
     {
@@ -55,10 +53,6 @@ public class TenantResolutionMiddlewareTests
         var act = () => new TenantResolutionMiddleware(this._mockNext.Object, null!);
         act.Should().Throw<ArgumentNullException>().WithParameterName("logger");
     }
-
-    #endregion
-
-    #region API Key Authentication Tests
 
     [Fact]
     public async Task InvokeAsync_WithValidApiKey_ShouldAuthenticateSuccessfully()
@@ -86,7 +80,8 @@ public class TenantResolutionMiddlewareTests
         await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
 
         // Assert
-        this._mockTenantContext.Verify(t => t.SetApiKeyContext(
+        this._mockTenantContext.Verify(
+            t => t.SetApiKeyContext(
             orgId,
             apiKeyId,
             It.Is<string[]>(s => s.SequenceEqual(new[] { "read", "write" })),
@@ -118,7 +113,8 @@ public class TenantResolutionMiddlewareTests
         // Assert
         this._httpContext.Response.StatusCode.Should().Be(StatusCodes.Status401Unauthorized);
         this._mockNext.Verify(n => n(It.IsAny<HttpContext>()), Times.Never);
-        this._mockTenantContext.Verify(t => t.SetApiKeyContext(
+        this._mockTenantContext.Verify(
+            t => t.SetApiKeyContext(
             It.IsAny<Guid>(),
             It.IsAny<Guid>(),
             It.IsAny<string[]>(),
@@ -172,14 +168,11 @@ public class TenantResolutionMiddlewareTests
         await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
 
         // Assert
-        this._mockApiKeyService.Verify(s => s.ValidateApiKeyAsync(
+        this._mockApiKeyService.Verify(
+            s => s.ValidateApiKeyAsync(
             apiKey, // Full key should be passed for validation
             It.IsAny<CancellationToken>()), Times.Once);
     }
-
-    #endregion
-
-    #region JWT Authentication Tests
 
     [Fact]
     public async Task InvokeAsync_WithValidJwt_ShouldAuthenticateSuccessfully()
@@ -205,7 +198,8 @@ public class TenantResolutionMiddlewareTests
         await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
 
         // Assert
-        this._mockTenantContext.Verify(t => t.SetJwtContext(
+        this._mockTenantContext.Verify(
+            t => t.SetJwtContext(
             orgId,
             userId,
             It.Is<string[]>(s => s.SequenceEqual(new[] { "read", "write", "admin" }))), Times.Once);
@@ -312,7 +306,8 @@ public class TenantResolutionMiddlewareTests
         await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
 
         // Assert
-        this._mockTenantContext.Verify(t => t.SetJwtContext(
+        this._mockTenantContext.Verify(
+            t => t.SetJwtContext(
             orgId,
             userId,
             It.IsAny<string[]>()), Times.Once);
@@ -342,7 +337,8 @@ public class TenantResolutionMiddlewareTests
         await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
 
         // Assert
-        this._mockTenantContext.Verify(t => t.SetJwtContext(
+        this._mockTenantContext.Verify(
+            t => t.SetJwtContext(
             orgId,
             userId,
             It.Is<string[]>(s => s.Length == 0)), Times.Once);
@@ -366,10 +362,6 @@ public class TenantResolutionMiddlewareTests
         this._httpContext.Response.StatusCode.Should().Be(StatusCodes.Status401Unauthorized);
     }
 
-    #endregion
-
-    #region Authorization Header Tests
-
     [Fact]
     public async Task InvokeAsync_WithNoAuthorizationHeader_ShouldCallNext()
     {
@@ -388,7 +380,7 @@ public class TenantResolutionMiddlewareTests
     public async Task InvokeAsync_WithEmptyAuthorizationHeader_ShouldCallNext()
     {
         // Arrange
-        this._httpContext.Request.Headers["Authorization"] = "";
+        this._httpContext.Request.Headers["Authorization"] = string.Empty;
 
         // Act
         await this._middleware.InvokeAsync(this._httpContext, this._mockTenantContext.Object, this._mockApiKeyService.Object);
@@ -465,10 +457,6 @@ public class TenantResolutionMiddlewareTests
         this._httpContext.Response.StatusCode.Should().Be(StatusCodes.Status200OK);
     }
 
-    #endregion
-
-    #region Error Handling Tests
-
     [Fact]
     public async Task InvokeAsync_WhenApiKeyServiceThrows_ShouldReturn500()
     {
@@ -535,6 +523,4 @@ public class TenantResolutionMiddlewareTests
         // Assert
         this._httpContext.Response.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
     }
-
-    #endregion
 }

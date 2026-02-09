@@ -169,6 +169,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
         /// </summary>
         public DbSet<UserGroupMembership> UserGroupMemberships => this.Set<UserGroupMembership>();
 
+        /// <summary>
+        /// Gets the Invitations DbSet.
+        /// </summary>
+        public DbSet<Invitation> Invitations => this.Set<Invitation>();
+
         // Operations schema entities
 
         /// <summary>
@@ -240,6 +245,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
             modelBuilder.Entity<IdentityUserRole>().ToTable("UserRoles", "identity");
             modelBuilder.Entity<UserOrganizationMembership>().ToTable("UserOrganizationMemberships", "identity");
             modelBuilder.Entity<UserGroupMembership>().ToTable("UserGroupMemberships", "identity");
+            modelBuilder.Entity<Invitation>().ToTable("Invitations", "identity");
 
             // Operations schema
             modelBuilder.Entity<OperationsApiKey>().ToTable("ApiKeys", "operations");
@@ -307,6 +313,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
             ConfigureUserRoleEntity(modelBuilder);
             ConfigureUserOrganizationMembershipEntity(modelBuilder);
             ConfigureUserGroupMembershipEntity(modelBuilder);
+            ConfigureInvitationEntity(modelBuilder);
         }
 
         private static void ConfigureOrganizationEntity(ModelBuilder modelBuilder)
@@ -476,6 +483,39 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                 entity.HasIndex(m => new { m.UserId, m.GroupId }).IsUnique();
                 entity.HasIndex(m => m.GroupId);
                 entity.HasIndex(m => m.IsPrimary);
+            });
+        }
+
+        private static void ConfigureInvitationEntity(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Invitation>(entity =>
+            {
+                entity.HasKey(i => i.Id);
+                entity.Property(i => i.Email).HasMaxLength(255).IsRequired();
+                entity.Property(i => i.Role).HasMaxLength(50).IsRequired();
+                entity.Property(i => i.Token).HasMaxLength(128).IsRequired();
+                entity.Property(i => i.Status).HasMaxLength(50).IsRequired();
+
+                entity.HasOne(i => i.Organization)
+                    .WithMany()
+                    .HasForeignKey(i => i.OrganizationId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(i => i.Team)
+                    .WithMany()
+                    .HasForeignKey(i => i.TeamId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(i => i.Inviter)
+                    .WithMany()
+                    .HasForeignKey(i => i.InvitedBy)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(i => i.Token).IsUnique();
+                entity.HasIndex(i => i.OrganizationId);
+                entity.HasIndex(i => i.TeamId);
+                entity.HasIndex(i => i.Status);
+                entity.HasIndex(i => new { i.TeamId, i.Email, i.Status });
             });
         }
 

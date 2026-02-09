@@ -4,18 +4,17 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitHub
 {
+    using System;
+    using System.Net;
+    using System.Net.Http;
+    using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
     using Moq;
     using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
     using Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub;
-    using System.Net.Http;
-    using System.Net;
-    using System.Text;
-    using System.Threading.Tasks;
-    using System.Threading;
-    using System;
     using Xunit;
-
 
     public class DeviceFlowServiceTests
     {
@@ -35,7 +34,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             {
                 receivedToken = token;
                 onSuccessCalled = true;
-                await Task.CompletedTask;
+                await Task.CompletedTask.ConfigureAwait(false);
             }, CancellationToken.None);
 
             await Task.Delay(100);
@@ -83,7 +82,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             {
                 receivedToken = token;
                 onSuccessCalled = true;
-                await Task.CompletedTask;
+                await Task.CompletedTask.ConfigureAwait(false);
             }, CancellationToken.None);
 
             await Task.Delay(2500);
@@ -129,7 +128,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             {
                 receivedToken = token;
                 onSuccessCalled = true;
-                await Task.CompletedTask;
+                await Task.CompletedTask.ConfigureAwait(false);
             }, CancellationToken.None);
 
             await Task.Delay(8000);
@@ -155,7 +154,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             {
                 receivedToken = token;
                 onSuccessCalled = true;
-                await Task.CompletedTask;
+                await Task.CompletedTask.ConfigureAwait(false);
             }, CancellationToken.None);
 
             await Task.Delay(100);
@@ -180,7 +179,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             {
                 receivedToken = token;
                 onSuccessCalled = true;
-                await Task.CompletedTask;
+                await Task.CompletedTask.ConfigureAwait(false);
             }, CancellationToken.None);
 
             await Task.Delay(100);
@@ -207,7 +206,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             {
                 receivedToken = token;
                 onSuccessCalled = true;
-                await Task.CompletedTask;
+                await Task.CompletedTask.ConfigureAwait(false);
             }, CancellationToken.None);
 
             await Task.Delay(100);
@@ -231,7 +230,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             {
                 receivedToken = token;
                 onSuccessCalled = true;
-                await Task.CompletedTask;
+                await Task.CompletedTask.ConfigureAwait(false);
             }, CancellationToken.None);
 
             await Task.Delay(100);

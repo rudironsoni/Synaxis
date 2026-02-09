@@ -4,12 +4,11 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitHub
 {
-    using Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub;
+    using System;
     using System.IO;
     using System.Threading.Tasks;
-    using System;
+    using Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub;
     using Xunit;
-
 
     public class GhConfigWriterTests : IDisposable
     {
@@ -47,8 +46,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             var configPath = this.GetConfigPath();
             Assert.True(File.Exists(configPath));
             var content = await File.ReadAllTextAsync(configPath);
-            Assert.Contains("github.com:", content);
-            Assert.Contains($"oauth_token: {token}", content);
+            Assert.Contains("github.com:", content, StringComparison.Ordinal);
+            Assert.Contains($"oauth_token: {token}", content, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -59,7 +58,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             await GhConfigWriter.WriteTokenAsync(token, customUser);
 
             var content = await File.ReadAllTextAsync(this.GetConfigPath());
-            Assert.Contains($"user: {customUser}", content);
+            Assert.Contains($"user: {customUser}", content, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -76,8 +75,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             await GhConfigWriter.WriteTokenAsync(newToken);
 
             var content = await File.ReadAllTextAsync(configPath);
-            Assert.Contains($"oauth_token: {newToken}", content);
-            Assert.DoesNotContain(oldToken, content);
+            Assert.Contains($"oauth_token: {newToken}", content, StringComparison.Ordinal);
+            Assert.DoesNotContain(oldToken, content, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -93,9 +92,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             await GhConfigWriter.WriteTokenAsync(githubToken);
 
             var content = await File.ReadAllTextAsync(configPath);
-            Assert.Contains("enterprise.github.com:", content);
-            Assert.Contains("ghp_enterprisetoken", content);
-            Assert.Contains($"oauth_token: {githubToken}", content);
+            Assert.Contains("enterprise.github.com:", content, StringComparison.Ordinal);
+            Assert.Contains("ghp_enterprisetoken", content, StringComparison.Ordinal);
+            Assert.Contains($"oauth_token: {githubToken}", content, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -109,8 +108,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             await GhConfigWriter.WriteTokenAsync(token);
 
             var content = await File.ReadAllTextAsync(configPath);
-            Assert.Contains("github.com:", content);
-            Assert.Contains($"oauth_token: {token}", content);
+            Assert.Contains("github.com:", content, StringComparison.Ordinal);
+            Assert.Contains($"oauth_token: {token}", content, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -126,9 +125,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             await GhConfigWriter.WriteTokenAsync(token);
 
             var content = await File.ReadAllTextAsync(configPath);
-            Assert.Contains("gitlab.com:", content);
-            Assert.Contains("github.com:", content);
-            Assert.Contains($"oauth_token: {token}", content);
+            Assert.Contains("gitlab.com:", content, StringComparison.Ordinal);
+            Assert.Contains("github.com:", content, StringComparison.Ordinal);
+            Assert.Contains($"oauth_token: {token}", content, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -142,7 +141,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             await GhConfigWriter.WriteTokenAsync(token);
 
             var content = await File.ReadAllTextAsync(configPath);
-            Assert.Contains($"oauth_token: {token}", content);
+            Assert.Contains($"oauth_token: {token}", content, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -165,7 +164,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             await GhConfigWriter.WriteTokenAsync(token);
 
             var content = await File.ReadAllTextAsync(this.GetConfigPath());
-            Assert.Contains($"oauth_token: {token}", content);
+            Assert.Contains($"oauth_token: {token}", content, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -183,9 +182,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             await GhConfigWriter.WriteTokenAsync(newToken, newUser);
 
             var content = await File.ReadAllTextAsync(configPath);
-            Assert.Contains($"user: {newUser}", content);
-            Assert.Contains($"oauth_token: {newToken}", content);
-            Assert.DoesNotContain(oldUser, content);
+            Assert.Contains($"user: {newUser}", content, StringComparison.Ordinal);
+            Assert.Contains($"oauth_token: {newToken}", content, StringComparison.Ordinal);
+            Assert.DoesNotContain(oldUser, content, StringComparison.Ordinal);
         }
     }
 }

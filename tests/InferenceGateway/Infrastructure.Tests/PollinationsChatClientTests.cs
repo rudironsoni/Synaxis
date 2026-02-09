@@ -4,18 +4,18 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests;
 
-using Microsoft.Extensions.AI;
-using Moq.Protected;
-using Moq;
-using Synaxis.InferenceGateway.Infrastructure;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Net;
-using System.Text.Json;
-using System.Text;
-using System.Threading.Tasks;
-using System.Threading;
 using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Net.Http;
+using System.Text;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.AI;
+using Moq;
+using Moq.Protected;
+using Synaxis.InferenceGateway.Infrastructure;
 using Xunit;
 
 public class PollinationsChatClientTests
@@ -115,7 +115,7 @@ public class PollinationsChatClientTests
     }
 
     [Fact]
-    public async Task GetResponseAsync_ApiError_ThrowsHttpRequestException()
+    public Task GetResponseAsync_ApiError_ThrowsHttpRequestException()
     {
         // Arrange
         var handlerMock = new Mock<HttpMessageHandler>();
@@ -135,7 +135,7 @@ public class PollinationsChatClientTests
         var client = new PollinationsChatClient(httpClient, TestModelId);
 
         // Act & Assert
-        await Assert.ThrowsAsync<HttpRequestException>(() =>
+        return Assert.ThrowsAsync<HttpRequestException>(() =>
             client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") }));
     }
 
@@ -180,7 +180,7 @@ public class PollinationsChatClientTests
     {
         // Arrange
         var handlerMock = new Mock<HttpMessageHandler>();
-        var responseText = "";
+        var responseText = string.Empty;
 
         handlerMock.Protected()
             .Setup<Task<HttpResponseMessage>>(
@@ -200,7 +200,7 @@ public class PollinationsChatClientTests
         var result = await client.GetResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") });
 
         // Assert
-        Assert.Equal("", result.Messages[0].Text);
+        Assert.Equal(string.Empty, result.Messages[0].Text);
     }
 
     [Fact]
@@ -280,7 +280,7 @@ public class PollinationsChatClientTests
     {
         // Arrange
         var handlerMock = new Mock<HttpMessageHandler>();
-        var emptyContent = new StringContent("", Encoding.UTF8, "text/plain");
+        var emptyContent = new StringContent(string.Empty, Encoding.UTF8, "text/plain");
 
         handlerMock.Protected()
             .Setup<Task<HttpResponseMessage>>(
@@ -309,7 +309,7 @@ public class PollinationsChatClientTests
     }
 
     [Fact]
-    public async Task GetStreamingResponseAsync_ApiError_ThrowsHttpRequestException()
+    public Task GetStreamingResponseAsync_ApiError_ThrowsHttpRequestException()
     {
         // Arrange
         var handlerMock = new Mock<HttpMessageHandler>();
@@ -329,9 +329,9 @@ public class PollinationsChatClientTests
         var client = new PollinationsChatClient(httpClient, TestModelId);
 
         // Act & Assert
-        await Assert.ThrowsAsync<HttpRequestException>(async () =>
+        return Assert.ThrowsAsync<HttpRequestException>(async () =>
         {
-            await foreach (var update in client.GetStreamingResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") }))
+            await foreach (var update in client.GetStreamingResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") }).ConfigureAwait(false))
             {
                 // Should throw before yielding any updates
             }
@@ -359,10 +359,9 @@ public class PollinationsChatClientTests
         // Arrange
         var handlerMock = new Mock<HttpMessageHandler>();
         var httpClient = new HttpClient(handlerMock.Object);
-        var client = new PollinationsChatClient(httpClient, TestModelId);
-
-        // Act
-        client.Dispose();
+        using (var client = new PollinationsChatClient(httpClient, TestModelId))
+        {
+        }
 
         // Assert - Should not throw
         Assert.True(true);

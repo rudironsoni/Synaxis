@@ -4,15 +4,15 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.External.AiHorde.Tests;
 
-using Microsoft.Extensions.AI;
-using Moq.Protected;
-using Moq;
-using System.Net.Http.Json;
-using System.Net.Http;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Json;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.AI;
+using Moq;
+using Moq.Protected;
 using Xunit;
 
 public class AiHordeChatClientTests
@@ -45,6 +45,7 @@ public class AiHordeChatClientTests
                         Content = JsonContent.Create(new { done = false }),
                     };
                 }
+
                 return new HttpResponseMessage(HttpStatusCode.OK)
                 {
                     Content = JsonContent.Create(new { done = true, text = "Hello" }),

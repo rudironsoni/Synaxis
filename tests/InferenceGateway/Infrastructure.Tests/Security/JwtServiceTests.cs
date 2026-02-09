@@ -4,19 +4,18 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
 {
-    using Microsoft.Extensions.Options;
-    using Microsoft.IdentityModel.Tokens;
-    using Moq;
-    using Synaxis.InferenceGateway.Application.Configuration;
-    using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
-    using Synaxis.InferenceGateway.Infrastructure.Security;
+    using System;
     using System.IdentityModel.Tokens.Jwt;
     using System.Linq;
     using System.Security.Claims;
     using System.Text;
-    using System;
+    using Microsoft.Extensions.Options;
+    using Microsoft.IdentityModel.Tokens;
+    using Moq;
+    using Synaxis.Core.Models;
+    using Synaxis.InferenceGateway.Application.Configuration;
+    using Synaxis.InferenceGateway.Infrastructure.Security;
     using Xunit;
-
 
     public class JwtServiceTests
     {
@@ -56,9 +55,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             var user = new User
             {
                 Id = Guid.NewGuid(),
-                TenantId = Guid.NewGuid(),
+                OrganizationId = Guid.NewGuid(),
                 Email = "test@example.com",
-                Role = UserRole.Developer,
+                Role = "developer",
+                PasswordHash = "dummy",
+                DataResidencyRegion = "US",
+                CreatedInRegion = "US",
             };
 
             // Act
@@ -93,13 +95,16 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
         public void GenerateToken_WithEmptyJwtSecret_ThrowsInvalidOperationException()
         {
             // Arrange
-            this._config.JwtSecret = "";
+            this._config.JwtSecret = string.Empty;
             var user = new User
             {
                 Id = Guid.NewGuid(),
-                TenantId = Guid.NewGuid(),
+                OrganizationId = Guid.NewGuid(),
                 Email = "test@example.com",
-                Role = UserRole.Developer,
+                Role = "developer",
+                PasswordHash = "dummy",
+                DataResidencyRegion = "US",
+                CreatedInRegion = "US",
             };
 
             // Act & Assert
@@ -115,9 +120,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             var user = new User
             {
                 Id = Guid.NewGuid(),
-                TenantId = Guid.NewGuid(),
+                OrganizationId = Guid.NewGuid(),
                 Email = "test@example.com",
-                Role = UserRole.Developer,
+                Role = "developer",
+                PasswordHash = "dummy",
+                DataResidencyRegion = "US",
+                CreatedInRegion = "US",
             };
 
             // Act & Assert
@@ -133,9 +141,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             var user = new User
             {
                 Id = Guid.NewGuid(),
-                TenantId = Guid.NewGuid(),
+                OrganizationId = Guid.NewGuid(),
                 Email = "test@example.com",
-                Role = UserRole.Developer,
+                Role = "developer",
+                PasswordHash = "dummy",
+                DataResidencyRegion = "US",
+                CreatedInRegion = "US",
             };
 
             // Act & Assert
@@ -150,9 +161,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             var user = new User
             {
                 Id = Guid.NewGuid(),
-                TenantId = Guid.NewGuid(),
+                OrganizationId = Guid.NewGuid(),
                 Email = "test@example.com",
-                Role = UserRole.Developer,
+                Role = "developer",
+                PasswordHash = "dummy",
+                DataResidencyRegion = "US",
+                CreatedInRegion = "US",
             };
 
             // Act
@@ -162,6 +176,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
 
             // Assert
             var expectedExpiration = DateTime.UtcNow.AddDays(7);
+
             // Allow for small time differences
             var expirationDifference = Math.Abs((jwtToken.ValidTo - expectedExpiration).TotalSeconds);
             Assert.True(expirationDifference < 5); // Within 5 seconds
@@ -174,9 +189,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             var user = new User
             {
                 Id = Guid.NewGuid(),
-                TenantId = Guid.NewGuid(),
+                OrganizationId = Guid.NewGuid(),
                 Email = "test@example.com",
-                Role = UserRole.Developer,
+                Role = "developer",
+                PasswordHash = "dummy",
+                DataResidencyRegion = "US",
+                CreatedInRegion = "US",
             };
 
             // Act
@@ -199,9 +217,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             var user = new User
             {
                 Id = Guid.NewGuid(),
-                TenantId = Guid.NewGuid(),
+                OrganizationId = Guid.NewGuid(),
                 Email = "test@example.com",
-                Role = UserRole.Developer,
+                Role = "developer",
+                PasswordHash = "dummy",
+                DataResidencyRegion = "US",
+                CreatedInRegion = "US",
             };
 
             // Act

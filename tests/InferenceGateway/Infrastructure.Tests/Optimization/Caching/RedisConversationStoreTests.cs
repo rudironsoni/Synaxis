@@ -4,19 +4,19 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Optimization.Caching;
 
-using Moq;
-using StackExchange.Redis;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
-using System.Threading.Tasks;
 using System.Threading;
-using System;
+using System.Threading.Tasks;
+using Moq;
+using StackExchange.Redis;
 using Xunit;
 
 /// <summary>
 /// Unit tests for IConversationStore Redis implementation
-/// Tests conversation history storage and compression for token optimization
+/// Tests conversation history storage and compression for token optimization.
 /// </summary>
 public class RedisConversationStoreTests
 {
@@ -177,6 +177,7 @@ public class RedisConversationStoreTests
 
         // Assert
         Assert.NotNull(result);
+
         // With sliding window strategy, should return most recent messages within token limit
         Assert.True(result.Count <= messages.Count);
         Assert.True(result.Count > 0);
@@ -289,9 +290,10 @@ public class RedisConversationStoreTests
             Content = "Test message with special chars: ñ, 中文, 🎉",
             Timestamp = DateTimeOffset.UtcNow,
             Metadata = new Dictionary<string, string>
+(StringComparer.Ordinal)
             {
                 { "model", "gpt-4" },
-                { "temperature", "0.7" }
+                { "temperature", "0.7" },
             },
         };
 
@@ -334,7 +336,7 @@ public class RedisConversationStoreTests
 }
 
 /// <summary>
-/// Interface for conversation history storage
+/// Interface for conversation history storage.
 /// </summary>
 public interface IConversationStore
 {
@@ -348,7 +350,7 @@ public interface IConversationStore
 }
 
 /// <summary>
-/// Redis implementation of IConversationStore
+/// Redis implementation of IConversationStore.
 /// </summary>
 public class RedisConversationStore : IConversationStore
 {
@@ -365,7 +367,7 @@ public class RedisConversationStore : IConversationStore
         {
             var db = this._redis.GetDatabase();
             var key = $"conversation:{sessionId}:messages";
-            var values = await db.ListRangeAsync(key);
+            var values = await db.ListRangeAsync(key).ConfigureAwait(false);
 
             var messages = new List<ConversationMessage>();
             foreach (var value in values)
@@ -395,8 +397,8 @@ public class RedisConversationStore : IConversationStore
         var key = $"conversation:{sessionId}:messages";
         var serialized = JsonSerializer.Serialize(message);
 
-        await db.ListRightPushAsync(key, serialized);
-        await db.KeyExpireAsync(key, ttl);
+        await db.ListRightPushAsync(key, serialized).ConfigureAwait(false);
+        await db.KeyExpireAsync(key, ttl).ConfigureAwait(false);
     }
 
     public async Task<List<ConversationMessage>> GetCompressedForProviderAsync(
@@ -405,11 +407,11 @@ public class RedisConversationStore : IConversationStore
         int maxTokens,
         CancellationToken cancellationToken)
     {
-        var fullHistory = await this.GetFullHistoryAsync(sessionId, cancellationToken);
+        var fullHistory = await GetFullHistoryAsync(sessionId, cancellationToken).ConfigureAwait(false);
 
         // Simple sliding window compression for testing
         // In production, this would use actual token counting and sophisticated strategies
-        if (strategy == "sliding-window")
+        if (string.Equals(strategy, "sliding-window", StringComparison.Ordinal))
         {
             // Return last N messages that fit within token limit
             // Assume ~4 tokens per message for simplification
@@ -420,7 +422,7 @@ public class RedisConversationStore : IConversationStore
         return fullHistory;
     }
 
-    public async Task ClearSessionAsync(string sessionId, CancellationToken cancellationToken)
+    public Task ClearSessionAsync(string sessionId, CancellationToken cancellationToken)
     {
         var db = this._redis.GetDatabase();
         var keys = new RedisKey[]
@@ -429,12 +431,12 @@ public class RedisConversationStore : IConversationStore
             $"conversation:{sessionId}:metadata",
         };
 
-        await db.KeyDeleteAsync(keys);
+        return db.KeyDeleteAsync(keys);
     }
 }
 
 /// <summary>
-/// Represents a message in a conversation
+/// Represents a message in a conversation.
 /// </summary>
 public class ConversationMessage
 {

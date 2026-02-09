@@ -9,8 +9,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
     using System.Text;
     using Microsoft.Extensions.Options;
     using Microsoft.IdentityModel.Tokens;
+    using Synaxis.Core.Models;
     using Synaxis.InferenceGateway.Application.Configuration;
-    using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
     using Synaxis.InferenceGateway.Application.Security;
 
     /// <summary>
@@ -56,8 +56,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim("role", user.Role.ToString()),
-                new Claim("tenantId", user.TenantId.ToString()),
+                new Claim("role", user.Role),
+                new Claim("organizationId", user.OrganizationId.ToString()),
             };
 
             var tokenDescriptor = new SecurityTokenDescriptor

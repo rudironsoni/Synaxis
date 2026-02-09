@@ -15,7 +15,7 @@ using Synaxis.Infrastructure.Data;
 namespace Synaxis.Infrastructure.Services
 {
     /// <summary>
-    /// Super Admin service with cross-region visibility and strict access controls
+    /// Super Admin service with cross-region visibility and strict access controls.
     /// </summary>
     public class SuperAdminService : ISuperAdminService
     {
@@ -25,25 +25,25 @@ namespace Synaxis.Infrastructure.Services
         private readonly IUserService _userService;
         private readonly ILogger<SuperAdminService> _logger;
         private readonly string _currentRegion;
-        
+
         // Configuration - should come from IConfiguration in production
-        private readonly Dictionary<string, string> _regionEndpoints = new ()
+        private readonly Dictionary<string, string> _regionEndpoints = new()
         {
             { "us-east-1", "https://api-us.synaxis.io" },
             { "eu-west-1", "https://api-eu.synaxis.io" },
             { "sa-east-1", "https://api-br.synaxis.io" }
         };
-        
-        private readonly HashSet<string> _allowedIpRanges = new ()
+
+        private readonly HashSet<string> _allowedIpRanges = new()
         {
             "10.0.0.0/8",
             "172.16.0.0/12",
             "192.168.0.0/16"
         };
-        
+
         private readonly int _businessHoursStart = 8; // 8 AM
         private readonly int _businessHoursEnd = 18; // 6 PM
-        
+
         public SuperAdminService(
             SynaxisDbContext context,
             IHttpClientFactory httpClientFactory,
@@ -59,50 +59,50 @@ namespace Synaxis.Infrastructure.Services
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _currentRegion = currentRegion;
         }
-        
+
         public async Task<IList<OrganizationSummary>> GetCrossRegionOrganizationsAsync()
         {
             _logger.LogInformation("Fetching cross-region organizations");
-            
+
             // Get local organizations
             var localOrgs = await GetLocalOrganizationsAsync();
-            
+
             // Fetch from all other regions in parallel
             var otherRegions = _regionEndpoints.Keys.Where(r => r != _currentRegion).ToList();
             var tasks = otherRegions.Select(region => FetchOrganizationsFromRegionAsync(region));
             var remoteResults = await Task.WhenAll(tasks);
-            
+
             // Combine all results
             var allOrgs = localOrgs.Concat(remoteResults.SelectMany(r => r)).ToList();
-            
+
             _logger.LogInformation("Retrieved {Count} organizations across {Regions} regions",
                 allOrgs.Count, _regionEndpoints.Count);
-            
+
             return allOrgs;
         }
-        
+
         public async Task<ImpersonationToken> GenerateImpersonationTokenAsync(ImpersonationRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
-                
+
             if (string.IsNullOrWhiteSpace(request.Justification))
                 throw new ArgumentException("Justification is required for impersonation");
-                
+
             if (string.IsNullOrWhiteSpace(request.ApprovedBy))
                 throw new ArgumentException("Approval is required for impersonation");
-            
+
             _logger.LogWarning("Generating impersonation token for user {UserId} in org {OrgId}. Justification: {Justification}",
                 request.UserId, request.OrganizationId, request.Justification);
-            
+
             // Verify user exists
             var user = await _context.Users
                 .Include(u => u.Organization)
                 .FirstOrDefaultAsync(u => u.Id == request.UserId && u.OrganizationId == request.OrganizationId);
-                
+
             if (user == null)
                 throw new InvalidOperationException($"User {request.UserId} not found in organization {request.OrganizationId}");
-            
+
             // Generate secure token
             var tokenData = new
             {
@@ -114,9 +114,9 @@ namespace Synaxis.Infrastructure.Services
                 ApprovedBy = request.ApprovedBy,
                 Type = "Impersonation"
             };
-            
+
             var token = GenerateSecureToken(tokenData);
-            
+
             // Audit log the impersonation
             await _auditService.LogEventAsync(new AuditEvent
             {
@@ -136,7 +136,7 @@ namespace Synaxis.Infrastructure.Services
                 },
                 Region = _currentRegion
             });
-            
+
             return new ImpersonationToken
             {
                 Token = token,
@@ -146,50 +146,50 @@ namespace Synaxis.Infrastructure.Services
                 Justification = request.Justification
             };
         }
-        
+
         public async Task<GlobalUsageAnalytics> GetGlobalUsageAnalyticsAsync(DateTime? startDate = null, DateTime? endDate = null)
         {
             var start = startDate ?? DateTime.UtcNow.AddDays(-30);
             var end = endDate ?? DateTime.UtcNow;
-            
+
             _logger.LogInformation("Fetching global usage analytics from {Start} to {End}", start, end);
-            
+
             // Get local usage
             var localUsage = await GetLocalUsageAsync(start, end);
-            
+
             // Fetch from all other regions in parallel
             var otherRegions = _regionEndpoints.Keys.Where(r => r != _currentRegion).ToList();
             var tasks = otherRegions.Select(region => FetchUsageFromRegionAsync(region, start, end));
             var remoteResults = await Task.WhenAll(tasks);
-            
+
             // Aggregate all usage
             var usageByRegion = new Dictionary<string, RegionUsage>
             {
                 { _currentRegion, localUsage }
             };
-            
+
             foreach (var result in remoteResults.Where(r => r != null && r.Region != null))
             {
                 usageByRegion[result.Region] = result;
             }
-            
+
             var totalRequests = usageByRegion.Values.Sum(u => u.Requests);
             var totalTokens = usageByRegion.Values.Sum(u => u.Tokens);
             var totalSpend = usageByRegion.Values.Sum(u => u.Spend);
-            
+
             // Get model and provider breakdowns from local region only (for simplicity)
             var requestsByModel = await _context.Requests
                 .Where(r => r.CreatedAt >= start && r.CreatedAt <= end)
                 .GroupBy(r => r.Model)
                 .Select(g => new { Model = g.Key, Count = g.Count() })
                 .ToDictionaryAsync(x => x.Model ?? "unknown", x => (long)x.Count);
-                
+
             var requestsByProvider = await _context.Requests
                 .Where(r => r.CreatedAt >= start && r.CreatedAt <= end)
                 .GroupBy(r => r.Provider)
                 .Select(g => new { Provider = g.Key, Count = g.Count() })
                 .ToDictionaryAsync(x => x.Provider ?? "unknown", x => (long)x.Count);
-            
+
             return new GlobalUsageAnalytics
             {
                 TotalRequests = totalRequests,
@@ -205,14 +205,14 @@ namespace Synaxis.Infrastructure.Services
                 EndDate = end
             };
         }
-        
+
         public async Task<IList<CrossBorderTransferReport>> GetCrossBorderTransfersAsync(DateTime? startDate = null, DateTime? endDate = null)
         {
             var start = startDate ?? DateTime.UtcNow.AddDays(-30);
             var end = endDate ?? DateTime.UtcNow;
-            
+
             _logger.LogInformation("Fetching cross-border transfers from {Start} to {End}", start, end);
-            
+
             var transfers = await _context.Requests
                 .Where(r => r.CrossBorderTransfer && r.CreatedAt >= start && r.CreatedAt <= end)
                 .Include(r => r.Organization)
@@ -233,21 +233,21 @@ namespace Synaxis.Infrastructure.Services
                     Timestamp = r.TransferTimestamp ?? r.CreatedAt
                 })
                 .ToListAsync();
-            
+
             return transfers;
         }
-        
+
         public async Task<ComplianceStatusDashboard> GetComplianceStatusAsync()
         {
             _logger.LogInformation("Checking compliance status across regions");
-            
+
             var totalOrgs = await _context.Organizations.CountAsync();
             var orgsWithConsent = await _context.Users
                 .Where(u => u.CrossBorderConsentGiven)
                 .Select(u => u.OrganizationId)
                 .Distinct()
                 .CountAsync();
-            
+
             var complianceByRegion = await _context.Organizations
                 .GroupBy(o => o.PrimaryRegion)
                 .Select(g => new RegionCompliance
@@ -260,9 +260,9 @@ namespace Synaxis.Infrastructure.Services
                     Issues = new List<string>()
                 })
                 .ToDictionaryAsync(r => r.Region);
-            
+
             var issues = new List<ComplianceIssue>();
-            
+
             // Check for organizations without consent doing cross-border transfers
             var orgsWithoutConsent = await _context.Organizations
                 .Where(o => !o.Users.Any(u => u.CrossBorderConsentGiven) &&
@@ -278,9 +278,9 @@ namespace Synaxis.Infrastructure.Services
                     DetectedAt = DateTime.UtcNow
                 })
                 .ToListAsync();
-            
+
             issues.AddRange(orgsWithoutConsent);
-            
+
             return new ComplianceStatusDashboard
             {
                 TotalOrganizations = totalOrgs,
@@ -291,27 +291,27 @@ namespace Synaxis.Infrastructure.Services
                 CheckedAt = DateTime.UtcNow
             };
         }
-        
+
         public async Task<SystemHealthOverview> GetSystemHealthOverviewAsync()
         {
             _logger.LogInformation("Checking system health across regions");
-            
+
             var healthByRegion = new Dictionary<string, RegionHealth>();
             var alerts = new List<SystemAlert>();
-            
+
             // Check local region health
             var localHealth = await CheckLocalRegionHealthAsync();
             healthByRegion[_currentRegion] = localHealth;
-            
+
             // Check remote regions in parallel
             var otherRegions = _regionEndpoints.Keys.Where(r => r != _currentRegion).ToList();
             var tasks = otherRegions.Select(region => CheckRemoteRegionHealthAsync(region));
             var remoteHealthResults = await Task.WhenAll(tasks);
-            
+
             foreach (var health in remoteHealthResults.Where(h => h != null))
             {
                 healthByRegion[health.Region] = health;
-                
+
                 if (!health.IsHealthy)
                 {
                     alerts.Add(new SystemAlert
@@ -323,9 +323,9 @@ namespace Synaxis.Infrastructure.Services
                     });
                 }
             }
-            
+
             var healthyRegions = healthByRegion.Values.Count(h => h.IsHealthy);
-            
+
             return new SystemHealthOverview
             {
                 HealthByRegion = healthByRegion,
@@ -336,25 +336,25 @@ namespace Synaxis.Infrastructure.Services
                 CheckedAt = DateTime.UtcNow
             };
         }
-        
+
         public async Task<bool> ModifyOrganizationLimitsAsync(LimitModificationRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
-                
+
             if (string.IsNullOrWhiteSpace(request.Justification))
                 throw new ArgumentException("Justification is required for limit modification");
-                
+
             if (string.IsNullOrWhiteSpace(request.ApprovedBy))
                 throw new ArgumentException("Approval is required for limit modification");
-            
+
             _logger.LogWarning("Modifying limits for organization {OrgId}. Type: {Type}, New Value: {Value}. Justification: {Justification}",
                 request.OrganizationId, request.LimitType, request.NewValue, request.Justification);
-            
+
             var org = await _context.Organizations.FindAsync(request.OrganizationId);
             if (org == null)
                 throw new InvalidOperationException($"Organization {request.OrganizationId} not found");
-            
+
             // Update the appropriate limit
             switch (request.LimitType)
             {
@@ -379,10 +379,10 @@ namespace Synaxis.Infrastructure.Services
                 default:
                     throw new ArgumentException($"Unknown limit type: {request.LimitType}");
             }
-            
+
             org.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
-            
+
             // Audit log the modification
             await _auditService.LogEventAsync(new AuditEvent
             {
@@ -401,22 +401,22 @@ namespace Synaxis.Infrastructure.Services
                 },
                 Region = _currentRegion
             });
-            
+
             return true;
         }
-        
+
         public async Task<SuperAdminAccessValidation> ValidateAccessAsync(SuperAdminAccessContext context)
         {
             if (context == null)
                 throw new ArgumentNullException(nameof(context));
-            
+
             var validation = new SuperAdminAccessValidation
             {
                 ValidatedAt = DateTime.UtcNow,
                 MfaRequired = true,
                 JustificationRequired = true
             };
-            
+
             // Check if user has SuperAdmin role
             var user = await _userService.GetUserAsync(context.UserId);
             if (user.Role != "SuperAdmin")
@@ -425,7 +425,7 @@ namespace Synaxis.Infrastructure.Services
                 validation.FailureReason = "User is not a Super Admin";
                 return validation;
             }
-            
+
             // Verify MFA
             if (!user.MfaEnabled)
             {
@@ -434,7 +434,7 @@ namespace Synaxis.Infrastructure.Services
                 validation.FailureReason = "MFA is not enabled for Super Admin account";
                 return validation;
             }
-            
+
             if (string.IsNullOrWhiteSpace(context.MfaCode))
             {
                 validation.IsValid = false;
@@ -442,15 +442,15 @@ namespace Synaxis.Infrastructure.Services
                 validation.FailureReason = "MFA code is required";
                 return validation;
             }
-            
+
             var mfaValid = await _userService.VerifyMfaCodeAsync(context.UserId, context.MfaCode);
             validation.MfaValid = mfaValid;
-            
+
             if (!mfaValid)
             {
                 validation.IsValid = false;
                 validation.FailureReason = "Invalid MFA code";
-                
+
                 // Audit failed MFA attempt
                 await _auditService.LogEventAsync(new AuditEvent
                 {
@@ -464,17 +464,17 @@ namespace Synaxis.Infrastructure.Services
                     IpAddress = context.IpAddress,
                     Region = _currentRegion
                 });
-                
+
                 return validation;
             }
-            
+
             // Check IP allowlist
             validation.IpAllowed = IsIpAllowed(context.IpAddress);
             if (!validation.IpAllowed)
             {
                 validation.IsValid = false;
                 validation.FailureReason = "IP address not in allowlist";
-                
+
                 // Audit unauthorized IP attempt
                 await _auditService.LogEventAsync(new AuditEvent
                 {
@@ -488,30 +488,30 @@ namespace Synaxis.Infrastructure.Services
                     IpAddress = context.IpAddress,
                     Region = _currentRegion
                 });
-                
+
                 return validation;
             }
-            
+
             // Check justification for sensitive actions (before business hours to fail fast on invalid requests)
             var sensitiveActions = new[] { "impersonate", "modify_limits", "export_pii", "delete_organization" };
-            if (sensitiveActions.Contains(context.Action?.ToLowerInvariant()) && 
+            if (sensitiveActions.Contains(context.Action?.ToLowerInvariant()) &&
                 string.IsNullOrWhiteSpace(context.Justification))
             {
                 validation.IsValid = false;
                 validation.FailureReason = "Justification is required for sensitive actions";
                 return validation;
             }
-            
+
             // Check business hours (in UTC)
             var requestTime = context.RequestTime == default ? DateTime.UtcNow : context.RequestTime;
             var currentHour = requestTime.Hour;
             validation.WithinBusinessHours = currentHour >= _businessHoursStart && currentHour < _businessHoursEnd;
-            
+
             if (!validation.WithinBusinessHours)
             {
                 validation.IsValid = false;
                 validation.FailureReason = "Super Admin access is restricted to business hours (8 AM - 6 PM UTC)";
-                
+
                 // Audit off-hours attempt
                 await _auditService.LogEventAsync(new AuditEvent
                 {
@@ -530,12 +530,12 @@ namespace Synaxis.Infrastructure.Services
                     },
                     Region = _currentRegion
                 });
-                
+
                 return validation;
             }
-            
+
             validation.IsValid = true;
-            
+
             // Audit successful validation
             await _auditService.LogEventAsync(new AuditEvent
             {
@@ -554,12 +554,11 @@ namespace Synaxis.Infrastructure.Services
                 },
                 Region = _currentRegion
             });
-            
+
             return validation;
         }
-        
+
         // Private helper methods
-        
         private async Task<List<OrganizationSummary>> GetLocalOrganizationsAsync()
         {
             return await _context.Organizations
@@ -579,7 +578,7 @@ namespace Synaxis.Infrastructure.Services
                 })
                 .ToListAsync();
         }
-        
+
         private async Task<List<OrganizationSummary>> FetchOrganizationsFromRegionAsync(string region)
         {
             try
@@ -587,13 +586,13 @@ namespace Synaxis.Infrastructure.Services
                 var client = _httpClientFactory.CreateClient();
                 var endpoint = _regionEndpoints[region];
                 var response = await client.GetAsync($"{endpoint}/api/internal/organizations");
-                
+
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
                     return JsonSerializer.Deserialize<List<OrganizationSummary>>(json) ?? new List<OrganizationSummary>();
                 }
-                
+
                 _logger.LogWarning("Failed to fetch organizations from region {Region}: {Status}", region, response.StatusCode);
                 return new List<OrganizationSummary>();
             }
@@ -603,13 +602,13 @@ namespace Synaxis.Infrastructure.Services
                 return new List<OrganizationSummary>();
             }
         }
-        
+
         private async Task<RegionUsage> GetLocalUsageAsync(DateTime start, DateTime end)
         {
             var requests = await _context.Requests
                 .Where(r => r.CreatedAt >= start && r.CreatedAt <= end)
                 .ToListAsync();
-            
+
             return new RegionUsage
             {
                 Region = _currentRegion,
@@ -620,7 +619,7 @@ namespace Synaxis.Infrastructure.Services
                 Users = await _context.Users.CountAsync(u => u.IsActive)
             };
         }
-        
+
         private async Task<RegionUsage> FetchUsageFromRegionAsync(string region, DateTime start, DateTime end)
         {
             try
@@ -628,13 +627,13 @@ namespace Synaxis.Infrastructure.Services
                 var client = _httpClientFactory.CreateClient();
                 var endpoint = _regionEndpoints[region];
                 var response = await client.GetAsync($"{endpoint}/api/internal/usage?start={start:O}&end={end:O}");
-                
+
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
                     return JsonSerializer.Deserialize<RegionUsage>(json);
                 }
-                
+
                 _logger.LogWarning("Failed to fetch usage from region {Region}: {Status}", region, response.StatusCode);
                 return null;
             }
@@ -644,18 +643,18 @@ namespace Synaxis.Infrastructure.Services
                 return null;
             }
         }
-        
+
         private async Task<RegionHealth> CheckLocalRegionHealthAsync()
         {
             var startTime = DateTime.UtcNow;
-            
+
             try
             {
                 // Simple health check - can database connection be established?
                 await _context.Organizations.AnyAsync();
-                
+
                 var responseTime = (DateTime.UtcNow - startTime).TotalMilliseconds;
-                
+
                 return new RegionHealth
                 {
                     Region = _currentRegion,
@@ -671,7 +670,7 @@ namespace Synaxis.Infrastructure.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Health check failed for local region {Region}", _currentRegion);
-                
+
                 return new RegionHealth
                 {
                     Region = _currentRegion,
@@ -685,21 +684,21 @@ namespace Synaxis.Infrastructure.Services
                 };
             }
         }
-        
+
         private async Task<RegionHealth> CheckRemoteRegionHealthAsync(string region)
         {
             var startTime = DateTime.UtcNow;
-            
+
             try
             {
                 var client = _httpClientFactory.CreateClient();
                 client.Timeout = TimeSpan.FromSeconds(5);
-                
+
                 var endpoint = _regionEndpoints[region];
                 var response = await client.GetAsync($"{endpoint}/api/health");
-                
+
                 var responseTime = (DateTime.UtcNow - startTime).TotalMilliseconds;
-                
+
                 if (response.IsSuccessStatusCode)
                 {
                     return new RegionHealth
@@ -714,7 +713,7 @@ namespace Synaxis.Infrastructure.Services
                         LastChecked = DateTime.UtcNow
                     };
                 }
-                
+
                 return new RegionHealth
                 {
                     Region = region,
@@ -730,7 +729,7 @@ namespace Synaxis.Infrastructure.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Health check failed for region {Region}", region);
-                
+
                 return new RegionHealth
                 {
                     Region = region,
@@ -744,28 +743,28 @@ namespace Synaxis.Infrastructure.Services
                 };
             }
         }
-        
+
         private string GenerateSecureToken(object tokenData)
         {
             var json = JsonSerializer.Serialize(tokenData);
             var bytes = Encoding.UTF8.GetBytes(json);
-            
+
             using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes("super-secret-key-should-be-in-config"));
             var hash = hmac.ComputeHash(bytes);
-            
+
             var tokenBytes = bytes.Concat(hash).ToArray();
             return Convert.ToBase64String(tokenBytes);
         }
-        
+
         private bool IsIpAllowed(string ipAddress)
         {
             if (string.IsNullOrWhiteSpace(ipAddress))
                 return false;
-            
+
             // Simple check - in production would use proper CIDR matching
             // For now, allow private IP ranges
-            return ipAddress.StartsWith("10.") || 
-                   ipAddress.StartsWith("172.") || 
+            return ipAddress.StartsWith("10.") ||
+                   ipAddress.StartsWith("172.") ||
                    ipAddress.StartsWith("192.168.") ||
                    ipAddress == "127.0.0.1" ||
                    ipAddress == "::1";

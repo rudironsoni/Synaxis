@@ -1768,6 +1768,11 @@
             Gets the UserGroupMemberships DbSet.
             </summary>
         </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.ControlPlaneDbContext.Invitations">
+            <summary>
+            Gets the Invitations DbSet.
+            </summary>
+        </member>
         <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.ControlPlaneDbContext.OperationsApiKeys">
             <summary>
             Gets the OperationsApiKeys DbSet.
@@ -2051,6 +2056,116 @@
         <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.Group.UserMemberships">
             <summary>
             Gets or sets the user group memberships.
+            </summary>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.Invitation">
+            <summary>
+            Team invitation entity for managing team member invitations.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.Invitation.Id">
+            <summary>
+            Gets or sets the unique identifier.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.Invitation.OrganizationId">
+            <summary>
+            Gets or sets the organization identifier.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.Invitation.Organization">
+            <summary>
+            Gets or sets the organization navigation property.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.Invitation.TeamId">
+            <summary>
+            Gets or sets the team identifier.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.Invitation.Team">
+            <summary>
+            Gets or sets the team navigation property.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.Invitation.Email">
+            <summary>
+            Gets or sets the email address of the invitee.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.Invitation.Role">
+            <summary>
+            Gets or sets the role to assign when invitation is accepted.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.Invitation.Token">
+            <summary>
+            Gets or sets the secure invitation token.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.Invitation.InvitedBy">
+            <summary>
+            Gets or sets the user who created the invitation.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.Invitation.Inviter">
+            <summary>
+            Gets or sets the inviter navigation property.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.Invitation.Status">
+            <summary>
+            Gets or sets the invitation status: pending, accepted, declined, cancelled, expired.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.Invitation.CreatedAt">
+            <summary>
+            Gets or sets the creation timestamp.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.Invitation.ExpiresAt">
+            <summary>
+            Gets or sets the expiration timestamp.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.Invitation.AcceptedAt">
+            <summary>
+            Gets or sets the acceptance timestamp.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.Invitation.AcceptedBy">
+            <summary>
+            Gets or sets the user who accepted the invitation.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.Invitation.DeclinedAt">
+            <summary>
+            Gets or sets the declination timestamp.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.Invitation.DeclinedBy">
+            <summary>
+            Gets or sets the user who declined the invitation.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.Invitation.CancelledAt">
+            <summary>
+            Gets or sets the cancellation timestamp.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.Invitation.CancelledBy">
+            <summary>
+            Gets or sets the user who cancelled the invitation.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.Invitation.IsExpired">
+            <summary>
+            Gets a value indicating whether the invitation is expired.
+            </summary>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.Invitation.IsValid">
+            <summary>
+            Gets a value indicating whether the invitation is still valid.
             </summary>
         </member>
         <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.Organization">
@@ -3096,6 +3211,18 @@
             <inheritdoc />
         </member>
         <member name="M:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.PendingModelChanges.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.AddInvitations">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.AddInvitations.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.AddInvitations.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.AddInvitations.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
         <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.NotificationService">
@@ -5252,7 +5379,7 @@
             </summary>
             <param name="config">The configuration options containing JWT settings.</param>
         </member>
-        <member name="M:Synaxis.InferenceGateway.Infrastructure.Security.JwtService.GenerateToken(Synaxis.InferenceGateway.Application.ControlPlane.Entities.User)">
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Security.JwtService.GenerateToken(Synaxis.Core.Models.User)">
             <summary>
             Generates a JWT token for the specified user.
             </summary>

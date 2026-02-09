@@ -12,7 +12,7 @@ using Synaxis.Infrastructure.Data;
 namespace Synaxis.Infrastructure.Services
 {
     /// <summary>
-    /// Enforces quota limits for requests and tokens with Redis-based distributed state
+    /// Enforces quota limits for requests and tokens with Redis-based distributed state.
     /// </summary>
     public class QuotaService : IQuotaService
     {
@@ -20,7 +20,7 @@ namespace Synaxis.Infrastructure.Services
         private readonly IConnectionMultiplexer _redis;
         private readonly ITenantService _tenantService;
         private readonly ILogger<QuotaService> _logger;
-        
+
         // Lua script for atomic quota check with both fixed and sliding window support
         private const string LuaCheckQuotaFixed = @"
             local key = KEYS[1]
@@ -46,7 +46,7 @@ namespace Synaxis.Infrastructure.Services
             local ttl = redis.call('TTL', key)
             return {new_count, ttl, 'allowed'}
         ";
-        
+
         // Lua script for sliding window using sorted sets
         private const string LuaCheckQuotaSliding = @"
             local key = KEYS[1]
@@ -83,7 +83,7 @@ namespace Synaxis.Infrastructure.Services
             local new_count = redis.call('ZCARD', key)
             return {new_count, window_seconds, 'allowed'}
         ";
-        
+
         public QuotaService(
             SynaxisDbContext context,
             IConnectionMultiplexer redis,
@@ -95,16 +95,16 @@ namespace Synaxis.Infrastructure.Services
             _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
-        
+
         public async Task<QuotaResult> CheckQuotaAsync(Guid organizationId, QuotaCheckRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
-                
+
             try
             {
                 var limits = await GetEffectiveLimitsAsync(organizationId);
-                
+
                 // Check concurrent requests first
                 if (request.MetricType == "requests")
                 {
@@ -112,29 +112,28 @@ namespace Synaxis.Infrastructure.Services
                     if (!concurrentCheck.IsAllowed)
                         return concurrentCheck;
                 }
-                
+
                 // Determine the limit to apply
                 long limit = DetermineLimit(request, limits);
-                
+
                 if (limit <= 0)
                 {
                     // No limit configured, allow request
                     return QuotaResult.Allowed();
                 }
-                
+
                 // Check quota using Redis
                 var db = _redis.GetDatabase();
                 var key = BuildQuotaKey(organizationId, null, null, request.MetricType, request.TimeGranularity);
                 var windowSeconds = GetWindowSeconds(request.TimeGranularity);
-                
+
                 RedisResult result;
                 if (request.WindowType == WindowType.Fixed)
                 {
                     result = await db.ScriptEvaluateAsync(
                         LuaCheckQuotaFixed,
                         new RedisKey[] { key },
-                        new RedisValue[] { limit, windowSeconds, request.IncrementBy }
-                    );
+                        new RedisValue[] { limit, windowSeconds, request.IncrementBy });
                 }
                 else
                 {
@@ -142,21 +141,20 @@ namespace Synaxis.Infrastructure.Services
                     result = await db.ScriptEvaluateAsync(
                         LuaCheckQuotaSliding,
                         new RedisKey[] { key },
-                        new RedisValue[] { limit, windowSeconds, now, request.IncrementBy }
-                    );
+                        new RedisValue[] { limit, windowSeconds, now, request.IncrementBy });
                 }
-                
+
                 var values = (RedisValue[])result;
                 var current = (long)values[0];
                 var ttl = (long)values[1];
                 var status = (string)values[2];
-                
+
                 if (status == "exceeded")
                 {
                     _logger.LogWarning(
                         "Quota exceeded for org {OrgId}, metric {Metric}: {Current}/{Limit}",
                         organizationId, request.MetricType, current, limit);
-                    
+
                     var details = new QuotaDetails
                     {
                         MetricType = request.MetricType,
@@ -167,49 +165,49 @@ namespace Synaxis.Infrastructure.Services
                         WindowEnd = DateTime.UtcNow.AddSeconds(ttl),
                         RetryAfter = TimeSpan.FromSeconds(ttl)
                     };
-                    
+
                     return QuotaResult.Throttled(details);
                 }
-                
+
                 _logger.LogDebug(
                     "Quota check passed for org {OrgId}, metric {Metric}: {Current}/{Limit}",
                     organizationId, request.MetricType, current, limit);
-                
+
                 return QuotaResult.Allowed();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error checking quota for org {OrgId}", organizationId);
+
                 // Fail open: allow request if quota check fails
                 return QuotaResult.Allowed();
             }
         }
-        
+
         public async Task<QuotaResult> CheckUserQuotaAsync(Guid organizationId, Guid userId, QuotaCheckRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
-                
+
             try
             {
                 var limits = await GetEffectiveLimitsAsync(organizationId);
                 long limit = DetermineLimit(request, limits);
-                
+
                 if (limit <= 0)
                     return QuotaResult.Allowed();
-                
+
                 var db = _redis.GetDatabase();
                 var key = BuildQuotaKey(organizationId, userId, null, request.MetricType, request.TimeGranularity);
                 var windowSeconds = GetWindowSeconds(request.TimeGranularity);
-                
+
                 RedisResult result;
                 if (request.WindowType == WindowType.Fixed)
                 {
                     result = await db.ScriptEvaluateAsync(
                         LuaCheckQuotaFixed,
                         new RedisKey[] { key },
-                        new RedisValue[] { limit, windowSeconds, request.IncrementBy }
-                    );
+                        new RedisValue[] { limit, windowSeconds, request.IncrementBy });
                 }
                 else
                 {
@@ -217,15 +215,14 @@ namespace Synaxis.Infrastructure.Services
                     result = await db.ScriptEvaluateAsync(
                         LuaCheckQuotaSliding,
                         new RedisKey[] { key },
-                        new RedisValue[] { limit, windowSeconds, now, request.IncrementBy }
-                    );
+                        new RedisValue[] { limit, windowSeconds, now, request.IncrementBy });
                 }
-                
+
                 var values = (RedisValue[])result;
                 var current = (long)values[0];
                 var ttl = (long)values[1];
                 var status = (string)values[2];
-                
+
                 if (status == "exceeded")
                 {
                     var details = new QuotaDetails
@@ -238,10 +235,10 @@ namespace Synaxis.Infrastructure.Services
                         WindowEnd = DateTime.UtcNow.AddSeconds(ttl),
                         RetryAfter = TimeSpan.FromSeconds(ttl)
                     };
-                    
+
                     return QuotaResult.Throttled(details);
                 }
-                
+
                 return QuotaResult.Allowed();
             }
             catch (Exception ex)
@@ -250,26 +247,26 @@ namespace Synaxis.Infrastructure.Services
                 return QuotaResult.Allowed();
             }
         }
-        
+
         public async Task IncrementUsageAsync(Guid organizationId, UsageMetrics metrics)
         {
             if (metrics == null)
                 throw new ArgumentNullException(nameof(metrics));
-                
+
             try
             {
                 var db = _redis.GetDatabase();
-                
+
                 // Increment monthly counters
                 var monthKey = BuildQuotaKey(organizationId, metrics.UserId, metrics.VirtualKeyId, metrics.MetricType, "month");
                 await db.StringIncrementAsync(monthKey, metrics.Value);
                 await db.KeyExpireAsync(monthKey, TimeSpan.FromDays(31));
-                
+
                 // Increment daily counters for analytics
                 var dayKey = BuildQuotaKey(organizationId, metrics.UserId, metrics.VirtualKeyId, metrics.MetricType, "day");
                 await db.StringIncrementAsync(dayKey, metrics.Value);
                 await db.KeyExpireAsync(dayKey, TimeSpan.FromDays(2));
-                
+
                 _logger.LogDebug(
                     "Incremented usage for org {OrgId}, metric {Metric}: +{Value}",
                     organizationId, metrics.MetricType, metrics.Value);
@@ -279,12 +276,12 @@ namespace Synaxis.Infrastructure.Services
                 _logger.LogError(ex, "Error incrementing usage for org {OrgId}", organizationId);
             }
         }
-        
+
         public async Task<UsageReport> GetUsageAsync(Guid organizationId, UsageQuery query)
         {
             if (query == null)
                 throw new ArgumentNullException(nameof(query));
-                
+
             try
             {
                 var db = _redis.GetDatabase();
@@ -296,17 +293,17 @@ namespace Synaxis.Infrastructure.Services
                     UsageByMetric = new Dictionary<string, long>(),
                     UsageByModel = new Dictionary<string, long>()
                 };
-                
+
                 // Get usage from Redis for current period
-                var metricTypes = string.IsNullOrEmpty(query.MetricType) 
-                    ? new[] { "requests", "tokens" } 
+                var metricTypes = string.IsNullOrEmpty(query.MetricType)
+                    ? new[] { "requests", "tokens" }
                     : new[] { query.MetricType };
-                
+
                 foreach (var metricType in metricTypes)
                 {
                     var key = BuildQuotaKey(organizationId, null, null, metricType, query.Granularity ?? "month");
                     var value = await db.StringGetAsync(key);
-                    
+
                     if (value.HasValue)
                     {
                         report.UsageByMetric[metricType] = (long)value;
@@ -316,7 +313,7 @@ namespace Synaxis.Infrastructure.Services
                         report.UsageByMetric[metricType] = 0;
                     }
                 }
-                
+
                 return report;
             }
             catch (Exception ex)
@@ -332,23 +329,23 @@ namespace Synaxis.Infrastructure.Services
                 };
             }
         }
-        
+
         public async Task ResetUsageAsync(Guid organizationId, string metricType)
         {
             try
             {
                 var db = _redis.GetDatabase();
                 var pattern = $"quota:org:{organizationId}:*:{metricType}:*";
-                
+
                 // Note: In production, use Redis SCAN instead of KEYS for better performance
                 var endpoints = _redis.GetEndPoints();
                 var server = _redis.GetServer(endpoints.First());
-                
+
                 await foreach (var key in server.KeysAsync(pattern: pattern))
                 {
                     await db.KeyDeleteAsync(key);
                 }
-                
+
                 _logger.LogInformation("Reset usage for org {OrgId}, metric {Metric}", organizationId, metricType);
             }
             catch (Exception ex)
@@ -356,13 +353,13 @@ namespace Synaxis.Infrastructure.Services
                 _logger.LogError(ex, "Error resetting usage for org {OrgId}", organizationId);
             }
         }
-        
+
         public async Task<QuotaLimits> GetEffectiveLimitsAsync(Guid organizationId)
         {
             try
             {
                 var orgLimits = await _tenantService.GetOrganizationLimitsAsync(organizationId);
-                
+
                 return new QuotaLimits
                 {
                     MaxConcurrentRequests = orgLimits.MaxConcurrentRequests,
@@ -375,7 +372,7 @@ namespace Synaxis.Infrastructure.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting limits for org {OrgId}", organizationId);
-                
+
                 // Return default free tier limits
                 return new QuotaLimits
                 {
@@ -387,7 +384,7 @@ namespace Synaxis.Infrastructure.Services
                 };
             }
         }
-        
+
         private async Task<QuotaResult> CheckConcurrentLimitAsync(Guid organizationId, QuotaLimits limits)
         {
             try
@@ -396,16 +393,16 @@ namespace Synaxis.Infrastructure.Services
                 var key = $"quota:org:{organizationId}:concurrent";
                 var current = await db.StringGetAsync(key);
                 var currentCount = current.HasValue ? (long)current : 0;
-                
+
                 if (currentCount >= limits.MaxConcurrentRequests)
                 {
                     _logger.LogWarning(
                         "Concurrent request limit exceeded for org {OrgId}: {Current}/{Limit}",
                         organizationId, currentCount, limits.MaxConcurrentRequests);
-                    
+
                     return QuotaResult.Blocked($"Concurrent request limit exceeded: {currentCount}/{limits.MaxConcurrentRequests}");
                 }
-                
+
                 return QuotaResult.Allowed();
             }
             catch (Exception ex)
@@ -414,23 +411,23 @@ namespace Synaxis.Infrastructure.Services
                 return QuotaResult.Allowed();
             }
         }
-        
+
         private string BuildQuotaKey(Guid organizationId, Guid? userId, Guid? virtualKeyId, string metricType, string granularity)
         {
             var keyParts = new List<string> { "quota", "org", organizationId.ToString() };
-            
+
             if (userId.HasValue)
                 keyParts.AddRange(new[] { "user", userId.Value.ToString() });
-            
+
             if (virtualKeyId.HasValue)
                 keyParts.AddRange(new[] { "key", virtualKeyId.Value.ToString() });
-            
+
             keyParts.Add(metricType);
             keyParts.Add(granularity);
-            
+
             return string.Join(":", keyParts);
         }
-        
+
         private long DetermineLimit(QuotaCheckRequest request, QuotaLimits limits)
         {
             return request.TimeGranularity switch
@@ -442,7 +439,7 @@ namespace Synaxis.Infrastructure.Services
                 _ => 0 // No limit for other granularities
             };
         }
-        
+
         private int GetWindowSeconds(string granularity)
         {
             return granularity switch
@@ -455,16 +452,16 @@ namespace Synaxis.Infrastructure.Services
                 _ => 60
             };
         }
-        
+
         private DateTime CalculateWindowStart(string granularity, WindowType windowType)
         {
             var now = DateTime.UtcNow;
-            
+
             if (windowType == WindowType.Sliding)
             {
                 return now.AddSeconds(-GetWindowSeconds(granularity));
             }
-            
+
             // Fixed window
             return granularity switch
             {
@@ -476,7 +473,7 @@ namespace Synaxis.Infrastructure.Services
                 _ => now
             };
         }
-        
+
         private int DeriveRpmLimit(long monthlyLimit)
         {
             // Assume ~30 days, 24 hours, 60 minutes
@@ -484,7 +481,7 @@ namespace Synaxis.Infrastructure.Services
             var avgPerMinute = monthlyLimit / (30.0 * 24 * 60);
             return Math.Max(1, (int)(avgPerMinute * 1.2));
         }
-        
+
         private int DeriveTpmLimit(long monthlyLimit)
         {
             var avgPerMinute = monthlyLimit / (30.0 * 24 * 60);

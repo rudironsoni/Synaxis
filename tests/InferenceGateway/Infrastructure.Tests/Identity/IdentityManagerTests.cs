@@ -4,15 +4,14 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Threading;
+    using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
     using Moq;
     using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
-    using System.Collections.Generic;
-    using System.Threading.Tasks;
-    using System.Threading;
-    using System;
     using Xunit;
-
 
     public class IdentityManagerTests
     {
@@ -284,13 +283,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
             {
                 Id = "1",
                 Provider = "TestProvider",
-                AccessToken = "",
+                AccessToken = string.Empty,
             };
 
             await manager.AddOrUpdateAccountAsync(newAccount);
 
             var tokenAfter = await manager.GetToken("TestProvider");
-            Assert.Equal("", tokenAfter);
+            Assert.Equal(string.Empty, tokenAfter);
         }
 
         [Fact]
@@ -320,7 +319,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
         }
 
         [Fact]
-        public async Task CompleteAuth_InvalidProvider_ThrowsException()
+        public Task CompleteAuth_InvalidProvider_ThrowsException()
         {
             var mockStore = new Mock<ISecureTokenStore>();
             var logger = new Mock<ILogger<IdentityManager>>();
@@ -328,7 +327,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
             // Create manager with empty strategy list
             var manager = new IdentityManager(Array.Empty<IAuthStrategy>(), mockStore.Object, logger.Object);
 
-            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            return Assert.ThrowsAsync<InvalidOperationException>(() =>
                 manager.CompleteAuth("NonExistentProvider123", "auth-code", "state"));
         }
     }

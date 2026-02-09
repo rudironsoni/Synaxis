@@ -13,7 +13,7 @@ using System.Text.Json;
 namespace Synaxis.Infrastructure.Data
 {
     /// <summary>
-    /// Database context for Synaxis multi-tenant platform
+    /// Database context for Synaxis multi-tenant platform.
     /// </summary>
     public class SynaxisDbContext : DbContext
     {
@@ -23,17 +23,30 @@ namespace Synaxis.Infrastructure.Data
         }
 
         public DbSet<Organization> Organizations { get; set; }
+
         public DbSet<Team> Teams { get; set; }
+
         public DbSet<User> Users { get; set; }
+
         public DbSet<TeamMembership> TeamMemberships { get; set; }
+
         public DbSet<VirtualKey> VirtualKeys { get; set; }
+
         public DbSet<Request> Requests { get; set; }
+
         public DbSet<SubscriptionPlan> SubscriptionPlans { get; set; }
+
         public DbSet<BackupConfig> BackupConfigs { get; set; }
+
         public DbSet<AuditLog> AuditLogs { get; set; }
+
         public DbSet<SpendLog> SpendLogs { get; set; }
+
         public DbSet<CreditTransaction> CreditTransactions { get; set; }
+
         public DbSet<Invoice> Invoices { get; set; }
+
+        public DbSet<Invitation> Invitations { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -52,6 +65,7 @@ namespace Synaxis.Infrastructure.Data
             modelBuilder.Entity<SpendLog>().ToTable("spend_logs");
             modelBuilder.Entity<CreditTransaction>().ToTable("credit_transactions");
             modelBuilder.Entity<Invoice>().ToTable("invoices");
+            modelBuilder.Entity<Invitation>().ToTable("invitations");
 
             // Configure Organizations
             modelBuilder.Entity<Organization>(entity =>
@@ -81,7 +95,7 @@ namespace Synaxis.Infrastructure.Data
                         v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(),
                         new ValueComparer<IDictionary<string, object>>(
                             (c1, c2) => c1.Count == c2.Count && !c1.Except(c2).Any(),
-                            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.Key.GetHashCode(), v.Value.GetHashCode())),
+                            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
                             c => c.ToDictionary(entry => entry.Key, entry => entry.Value)))
                     .HasColumnType("jsonb");
 
@@ -90,7 +104,7 @@ namespace Synaxis.Infrastructure.Data
                 entity.HasIndex(e => e.PrimaryRegion);
 
                 // Data integrity constraints
-                entity.HasCheckConstraint("CK_Organization_Slug_Lowercase", "slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'");
+                entity.ToTable(t => t.HasCheckConstraint("CK_Organization_Slug_Lowercase", "slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'"));
             });
 
             // Configure Teams
@@ -120,8 +134,11 @@ namespace Synaxis.Infrastructure.Data
                 entity.HasIndex(e => new { e.OrganizationId, e.Name });
 
                 // Data integrity constraints
-                entity.HasCheckConstraint("CK_Team_MonthlyBudget_NonNegative", "monthly_budget IS NULL OR monthly_budget >= 0");
-                entity.HasCheckConstraint("CK_Team_BudgetAlertThreshold_Range", "budget_alert_threshold >= 0 AND budget_alert_threshold <= 100");
+                entity.ToTable(t =>
+                {
+                    t.HasCheckConstraint("CK_Team_MonthlyBudget_NonNegative", "monthly_budget IS NULL OR monthly_budget >= 0");
+                    t.HasCheckConstraint("CK_Team_BudgetAlertThreshold_Range", "budget_alert_threshold >= 0 AND budget_alert_threshold <= 100");
+                });
             });
 
             // Configure Users
@@ -164,7 +181,7 @@ namespace Synaxis.Infrastructure.Data
                         v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(),
                         new ValueComparer<IDictionary<string, object>>(
                             (c1, c2) => c1.Count == c2.Count && !c1.Except(c2).Any(),
-                            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.Key.GetHashCode(), v.Value.GetHashCode())),
+                            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
                             c => c.ToDictionary(entry => entry.Key, entry => entry.Value)))
                     .HasColumnType("jsonb");
 
@@ -210,7 +227,7 @@ namespace Synaxis.Infrastructure.Data
                 entity.HasIndex(e => new { e.TeamId, e.UserId });
 
                 // Data integrity constraints
-                entity.HasCheckConstraint("CK_TeamMembership_Role_Valid", "role IN ('OrgAdmin', 'TeamAdmin', 'Member', 'Viewer')");
+                entity.ToTable(t => t.HasCheckConstraint("CK_TeamMembership_Role_Valid", "role IN ('OrgAdmin', 'TeamAdmin', 'Member', 'Viewer')"));
             });
 
             // Configure VirtualKeys
@@ -248,7 +265,7 @@ namespace Synaxis.Infrastructure.Data
                         v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(),
                         new ValueComparer<IDictionary<string, object>>(
                             (c1, c2) => c1.Count == c2.Count && !c1.Except(c2).Any(),
-                            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.Key.GetHashCode(), v.Value.GetHashCode())),
+                            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
                             c => c.ToDictionary(entry => entry.Key, entry => entry.Value)))
                     .HasColumnType("jsonb");
 
@@ -272,8 +289,11 @@ namespace Synaxis.Infrastructure.Data
                 entity.HasIndex(e => new { e.OrganizationId, e.Name });
 
                 // Data integrity constraints
-                entity.HasCheckConstraint("CK_VirtualKey_MaxBudget_NonNegative", "max_budget IS NULL OR max_budget >= 0");
-                entity.HasCheckConstraint("CK_VirtualKey_CurrentSpend_NonNegative", "current_spend >= 0");
+                entity.ToTable(t =>
+                {
+                    t.HasCheckConstraint("CK_VirtualKey_MaxBudget_NonNegative", "max_budget IS NULL OR max_budget >= 0");
+                    t.HasCheckConstraint("CK_VirtualKey_CurrentSpend_NonNegative", "current_spend >= 0");
+                });
             });
 
             // Configure Requests
@@ -319,7 +339,7 @@ namespace Synaxis.Infrastructure.Data
                         v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, string>(),
                         new ValueComparer<IDictionary<string, string>>(
                             (c1, c2) => c1.Count == c2.Count && !c1.Except(c2).Any(),
-                            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.Key.GetHashCode(), v.Value.GetHashCode())),
+                            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), StringComparer.Ordinal.GetHashCode(v.Value))),
                             c => c.ToDictionary(entry => entry.Key, entry => entry.Value)))
                     .HasColumnType("jsonb");
 
@@ -414,7 +434,7 @@ namespace Synaxis.Infrastructure.Data
                         v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(),
                         new ValueComparer<IDictionary<string, object>>(
                             (c1, c2) => c1.Count == c2.Count && !c1.Except(c2).Any(),
-                            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.Key.GetHashCode(), v.Value.GetHashCode())),
+                            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
                             c => c.ToDictionary(entry => entry.Key, entry => entry.Value)))
                     .HasColumnType("jsonb");
 
@@ -556,7 +576,7 @@ namespace Synaxis.Infrastructure.Data
                         v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(),
                         new ValueComparer<IDictionary<string, object>>(
                             (c1, c2) => c1.Count == c2.Count && !c1.Except(c2).Any(),
-                            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.Key.GetHashCode(), v.Value.GetHashCode())),
+                            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
                             c => c.ToDictionary(entry => entry.Key, entry => entry.Value)))
                     .HasColumnType("jsonb");
 
@@ -568,12 +588,56 @@ namespace Synaxis.Infrastructure.Data
                         v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(),
                         new ValueComparer<IDictionary<string, object>>(
                             (c1, c2) => c1.Count == c2.Count && !c1.Except(c2).Any(),
-                            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.Key.GetHashCode(), v.Value.GetHashCode())),
+                            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
                             c => c.ToDictionary(entry => entry.Key, entry => entry.Value)))
                     .HasColumnType("jsonb");
 
                 entity.HasIndex(e => e.Slug).IsUnique();
                 entity.HasIndex(e => e.IsActive);
+            });
+
+            // Configure Invitations
+            modelBuilder.Entity<Invitation>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id)
+                    .HasColumnName("id")
+                    .ValueGeneratedOnAdd();
+
+                entity.Property(e => e.OrganizationId).HasColumnName("organization_id");
+                entity.Property(e => e.TeamId).HasColumnName("team_id");
+                entity.Property(e => e.Email).HasColumnName("email");
+                entity.Property(e => e.Role).HasColumnName("role");
+                entity.Property(e => e.Token).HasColumnName("token");
+                entity.Property(e => e.InvitedBy).HasColumnName("invited_by");
+                entity.Property(e => e.Status).HasColumnName("status");
+                entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+                entity.Property(e => e.ExpiresAt).HasColumnName("expires_at");
+                entity.Property(e => e.AcceptedAt).HasColumnName("accepted_at");
+                entity.Property(e => e.AcceptedBy).HasColumnName("accepted_by");
+                entity.Property(e => e.DeclinedAt).HasColumnName("declined_at");
+                entity.Property(e => e.DeclinedBy).HasColumnName("declined_by");
+                entity.Property(e => e.CancelledAt).HasColumnName("cancelled_at");
+                entity.Property(e => e.CancelledBy).HasColumnName("cancelled_by");
+
+                entity.HasOne(e => e.Organization)
+                    .WithMany()
+                    .HasForeignKey(e => e.OrganizationId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Team)
+                    .WithMany()
+                    .HasForeignKey(e => e.TeamId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Inviter)
+                    .WithMany()
+                    .HasForeignKey(e => e.InvitedBy)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => e.Token).IsUnique();
+                entity.HasIndex(e => new { e.OrganizationId, e.Status });
+                entity.HasIndex(e => new { e.TeamId, e.Email, e.Status });
             });
         }
     }

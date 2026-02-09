@@ -4,10 +4,9 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
 {
-    using Microsoft.AspNetCore.DataProtection;
-    using System.Text;
     using System;
-
+    using System.Text;
+    using Microsoft.AspNetCore.DataProtection;
 
     internal class FakeDataProtectionProvider : IDataProtectionProvider
     {
@@ -34,7 +33,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
         public byte[] Unprotect(byte[] protectedData)
         {
             var s = Encoding.UTF8.GetString(protectedData);
-            if (s.StartsWith("protected:"))
+            if (s.StartsWith("protected:", StringComparison.Ordinal))
             {
                 s = s.Substring("protected:".Length);
             }

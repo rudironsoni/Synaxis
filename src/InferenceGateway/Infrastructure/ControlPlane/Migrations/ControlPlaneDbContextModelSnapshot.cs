@@ -783,6 +783,83 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations
                     b.ToTable("Groups", "identity");
                 });
 
+            modelBuilder.Entity("Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.Invitation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("AcceptedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("AcceptedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CancelledBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeclinedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeclinedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("InvitedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<Guid>("TeamId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InvitedBy");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("TeamId");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.HasIndex("TeamId", "Email", "Status");
+
+                    b.ToTable("Invitations", "identity");
+                });
+
             modelBuilder.Entity("Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.Organization", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1804,6 +1881,33 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations
                         .IsRequired();
 
                     b.Navigation("Organization");
+                });
+
+            modelBuilder.Entity("Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.Invitation", b =>
+                {
+                    b.HasOne("Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.SynaxisUser", "Inviter")
+                        .WithMany()
+                        .HasForeignKey("InvitedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.Organization", "Organization")
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.Group", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Inviter");
+
+                    b.Navigation("Organization");
+
+                    b.Navigation("Team");
                 });
 
             modelBuilder.Entity("Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.OrganizationSettings", b =>

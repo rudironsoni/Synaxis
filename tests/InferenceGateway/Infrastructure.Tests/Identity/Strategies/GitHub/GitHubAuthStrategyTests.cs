@@ -4,20 +4,19 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitHub
 {
+    using System;
+    using System.IO;
+    using System.Net;
+    using System.Net.Http;
+    using System.Text;
+    using System.Text.Json;
+    using System.Threading;
+    using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
     using Moq;
     using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
     using Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub;
-    using System.IO;
-    using System.Net.Http;
-    using System.Net;
-    using System.Text.Json;
-    using System.Text;
-    using System.Threading.Tasks;
-    using System.Threading;
-    using System;
     using Xunit;
-
 
     public class GitHubAuthStrategyTests : IDisposable
     {
@@ -107,7 +106,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
         }
 
         [Fact]
-        public async Task RefreshTokenAsync_NetworkFailure_Throws()
+        public Task RefreshTokenAsync_NetworkFailure_Throws()
         {
             // Handler that throws to simulate network failure
             var handler = new DelegatingHandlerStub((req, ct) => throw new HttpRequestException("network"));
@@ -119,7 +118,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
 
             var account = new IdentityAccount { Provider = "github", Id = "1", RefreshToken = "rt" };
 
-            await Assert.ThrowsAsync<HttpRequestException>(() => strat.RefreshTokenAsync(account, CancellationToken.None));
+            return Assert.ThrowsAsync<HttpRequestException>(() => strat.RefreshTokenAsync(account, CancellationToken.None));
         }
 
         [Fact]
@@ -165,10 +164,16 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             var cfgPath = Path.Combine(tmp, ".config", "gh", "hosts.yml");
             Assert.True(File.Exists(cfgPath));
             var contents = await File.ReadAllTextAsync(cfgPath);
-            Assert.Contains("oauth_token: access-1", contents);
+            Assert.Contains("oauth_token: access-1", contents, StringComparison.Ordinal);
 
             // cleanup
-            try { Directory.Delete(tmp, true); } catch { }
+            try
+            {
+                Directory.Delete(tmp, true);
+            }
+            catch
+            {
+            }
         }
 
         // Helpers

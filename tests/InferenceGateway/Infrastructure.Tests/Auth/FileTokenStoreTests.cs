@@ -4,16 +4,15 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Auth
 {
-    using Microsoft.Extensions.Logging;
-    using Moq;
-    using Synaxis.InferenceGateway.Infrastructure.Auth;
+    using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Text.Json;
     using System.Threading.Tasks;
-    using System;
+    using Microsoft.Extensions.Logging;
+    using Moq;
+    using Synaxis.InferenceGateway.Infrastructure.Auth;
     using Xunit;
-
 
     public class FileTokenStoreTests : IDisposable
     {
@@ -40,7 +39,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Auth
                     Directory.Delete(this._tmpDir, true);
                 }
             }
-            catch { }
+            catch
+            {
+            }
         }
 
         [Fact]
@@ -89,6 +90,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Auth
         public async Task LoadAsync_ReturnsEmptyList_WhenFileDoesNotExist()
         {
             var logger = Mock.Of<ILogger<FileTokenStore>>();
+
             // Ensure no file
             if (File.Exists(this._tmpPath))
             {
@@ -105,6 +107,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Auth
         public async Task LoadAsync_ReturnsEmptyList_OnException()
         {
             var loggerMock = new Mock<ILogger<FileTokenStore>>();
+
             // Write invalid JSON to force JsonSerializer.Deserialize to throw
             Directory.CreateDirectory(this._tmpDir);
             await File.WriteAllTextAsync(this._tmpPath, "{ invalid json");
@@ -114,6 +117,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Auth
 
             Assert.NotNull(loaded);
             Assert.Empty(loaded);
+
             // Don't verify LogError via extension method (not overridable). Just ensure method handles exception and returns empty list.
         }
 
@@ -121,6 +125,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Auth
         public async Task SaveAsync_CreatesDirectory_IfNotExists()
         {
             var logger = Mock.Of<ILogger<FileTokenStore>>();
+
             // Ensure directory doesn't exist
             if (Directory.Exists(this._tmpDir))
             {
@@ -134,6 +139,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Auth
             Assert.True(Directory.Exists(this._tmpDir));
             Assert.True(File.Exists(this._tmpPath));
             var content = await File.ReadAllTextAsync(this._tmpPath);
+
             // empty list serializes to []
             Assert.Equal("[]", content);
         }
