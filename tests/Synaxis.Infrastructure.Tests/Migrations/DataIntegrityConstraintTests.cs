@@ -29,7 +29,7 @@ namespace Synaxis.Infrastructure.Tests.Migrations
         public void OrganizationSlug_ValidSlugs_Accepted(string slug)
         {
             // Arrange
-            var regex = new Regex("^[a-z0-9]+(-[a-z0-9]+)*$");
+            var regex = new Regex("^[a-z0-9]+(-[a-z0-9]+)*$", RegexOptions.ExplicitCapture, TimeSpan.FromMilliseconds(100));
 
             // Act & Assert
             regex.IsMatch(slug).Should().BeTrue();
@@ -49,7 +49,7 @@ namespace Synaxis.Infrastructure.Tests.Migrations
         public void OrganizationSlug_InvalidSlugs_Rejected(string slug)
         {
             // Arrange
-            var regex = new Regex("^[a-z0-9]+(-[a-z0-9]+)*$");
+            var regex = new Regex("^[a-z0-9]+(-[a-z0-9]+)*$", RegexOptions.ExplicitCapture, TimeSpan.FromMilliseconds(100));
 
             // Act & Assert
             regex.IsMatch(slug).Should().BeFalse();
@@ -89,7 +89,7 @@ namespace Synaxis.Infrastructure.Tests.Migrations
         public void UserEmail_Validation(string email, bool expectedValid)
         {
             // Arrange
-            var regex = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$");
+            var regex = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.None, TimeSpan.FromMilliseconds(100));
 
             // Act
             var isValid = regex.IsMatch(email);

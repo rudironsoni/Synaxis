@@ -13,10 +13,10 @@ using Xunit;
 namespace Synaxis.Infrastructure.Tests.Services
 {
     [Trait("Category", "Unit")]
-    public class TeamMembershipServiceTests : IAsyncLifetime
+    public sealed class TeamMembershipServiceTests : IAsyncLifetime, IDisposable
     {
-        private SynaxisDbContext _context = null!;
-        private ITeamMembershipService _service = null!;
+        private SynaxisDbContext? _context;
+        private ITeamMembershipService? _service;
         private readonly Guid _orgId = Guid.NewGuid();
         private readonly Guid _teamId = Guid.NewGuid();
         private readonly Guid _userId = Guid.NewGuid();
@@ -28,6 +28,11 @@ namespace Synaxis.Infrastructure.Tests.Services
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
 
+            if (_context is not null)
+            {
+                await _context.DisposeAsync();
+            }
+
             _context = new SynaxisDbContext(options);
             _service = new TeamMembershipService(_context);
 
@@ -36,7 +41,15 @@ namespace Synaxis.Infrastructure.Tests.Services
 
         public async Task DisposeAsync()
         {
-            await _context.DisposeAsync();
+            if (_context is not null)
+            {
+                await _context.DisposeAsync();
+            }
+        }
+
+        public void Dispose()
+        {
+            _context?.Dispose();
         }
 
         [Fact]
@@ -62,11 +75,11 @@ namespace Synaxis.Infrastructure.Tests.Services
                 Name = "Test Team"
             };
 
-            _context.Users.Add(user);
+            _context!.Users.Add(user);
             _context.Teams.Add(team);
             await _context.SaveChangesAsync();
 
-            var result = await _service.AddMemberAsync(_teamId, _userId, "Member", _adminUserId);
+            var result = await _service!.AddMemberAsync(_teamId, _userId, "Member", _adminUserId);
 
             result.Should().NotBeNull();
             result.UserId.Should().Be(_userId);
@@ -106,12 +119,12 @@ namespace Synaxis.Infrastructure.Tests.Services
                 Role = "Member"
             };
 
-            _context.Users.Add(user);
+            _context!.Users.Add(user);
             _context.Teams.Add(team);
             _context.TeamMemberships.Add(existingMembership);
             await _context.SaveChangesAsync();
 
-            var act = async () => await _service.AddMemberAsync(_teamId, _userId, "Member", _adminUserId);
+            var act = async () => await _service!.AddMemberAsync(_teamId, _userId, "Member", _adminUserId);
 
             await act.Should().ThrowAsync<InvalidOperationException>()
                 .WithMessage("*already a member*");
@@ -138,11 +151,11 @@ namespace Synaxis.Infrastructure.Tests.Services
                 Name = "Test Team"
             };
 
-            _context.Users.Add(user);
+            _context!.Users.Add(user);
             _context.Teams.Add(team);
             await _context.SaveChangesAsync();
 
-            var act = async () => await _service.AddMemberAsync(_teamId, _userId, "invalid_role", _adminUserId);
+            var act = async () => await _service!.AddMemberAsync(_teamId, _userId, "invalid_role", _adminUserId);
 
             await act.Should().ThrowAsync<ArgumentException>()
                 .WithMessage("*Invalid role*");
@@ -169,11 +182,11 @@ namespace Synaxis.Infrastructure.Tests.Services
                 Name = "Test Team"
             };
 
-            _context.Users.Add(user);
+            _context!.Users.Add(user);
             _context.Teams.Add(team);
             await _context.SaveChangesAsync();
 
-            var act = async () => await _service.AddMemberAsync(_teamId, _userId, "Member", _adminUserId);
+            var act = async () => await _service!.AddMemberAsync(_teamId, _userId, "Member", _adminUserId);
 
             await act.Should().ThrowAsync<InvalidOperationException>()
                 .WithMessage("*not in the same organization*");
@@ -191,10 +204,10 @@ namespace Synaxis.Infrastructure.Tests.Services
                 Role = "Member"
             };
 
-            _context.TeamMemberships.Add(membership);
+            _context!.TeamMemberships.Add(membership);
             await _context.SaveChangesAsync();
 
-            await _service.RemoveMemberAsync(_teamId, _userId, _adminUserId);
+            await _service!.RemoveMemberAsync(_teamId, _userId, _adminUserId);
 
             var removed = await _context.TeamMemberships
                 .FirstOrDefaultAsync(m => m.UserId == _userId && m.TeamId == _teamId);
@@ -204,7 +217,7 @@ namespace Synaxis.Infrastructure.Tests.Services
         [Fact]
         public async Task RemoveMemberAsync_UserNotFound_ThrowsInvalidOperationException()
         {
-            var act = async () => await _service.RemoveMemberAsync(_teamId, _userId, _adminUserId);
+            var act = async () => await _service!.RemoveMemberAsync(_teamId, _userId, _adminUserId);
 
             await act.Should().ThrowAsync<InvalidOperationException>()
                 .WithMessage("*not found*");
@@ -234,16 +247,16 @@ namespace Synaxis.Infrastructure.Tests.Services
                 Role = "Member"
             };
 
-            _context.Users.Add(user);
+            _context!.Users.Add(user);
             _context.TeamMemberships.Add(membership);
             await _context.SaveChangesAsync();
 
-            var result = await _service.UpdateMemberRoleAsync(_teamId, _userId, "TeamAdmin", _adminUserId);
+            var result = await _service!.UpdateMemberRoleAsync(_teamId, _userId, "TeamAdmin", _adminUserId);
 
             result.Should().NotBeNull();
             result.Role.Should().Be("TeamAdmin");
 
-            var updated = await _context.TeamMemberships
+            var updated = await _context!.TeamMemberships
                 .FirstOrDefaultAsync(m => m.UserId == _userId && m.TeamId == _teamId);
             updated.Should().NotBeNull();
             updated!.Role.Should().Be("TeamAdmin");
@@ -261,10 +274,10 @@ namespace Synaxis.Infrastructure.Tests.Services
                 Role = "Member"
             };
 
-            _context.TeamMemberships.Add(membership);
+            _context!.TeamMemberships.Add(membership);
             await _context.SaveChangesAsync();
 
-            var act = async () => await _service.UpdateMemberRoleAsync(_teamId, _userId, "invalid_role", _adminUserId);
+            var act = async () => await _service!.UpdateMemberRoleAsync(_teamId, _userId, "invalid_role", _adminUserId);
 
             await act.Should().ThrowAsync<ArgumentException>()
                 .WithMessage("*Invalid role*");
@@ -273,7 +286,7 @@ namespace Synaxis.Infrastructure.Tests.Services
         [Fact]
         public async Task UpdateMemberRoleAsync_UserNotFound_ThrowsInvalidOperationException()
         {
-            var act = async () => await _service.UpdateMemberRoleAsync(_teamId, _userId, "TeamAdmin", _adminUserId);
+            var act = async () => await _service!.UpdateMemberRoleAsync(_teamId, _userId, "TeamAdmin", _adminUserId);
 
             await act.Should().ThrowAsync<InvalidOperationException>()
                 .WithMessage("*not found*");
@@ -291,11 +304,11 @@ namespace Synaxis.Infrastructure.Tests.Services
                 new TeamMembership { Id = Guid.NewGuid(), UserId = user2.Id, TeamId = _teamId, OrganizationId = _orgId, Role = "Member" }
             };
 
-            _context.Users.AddRange(user1, user2);
+            _context!.Users.AddRange(user1, user2);
             _context.TeamMemberships.AddRange(memberships);
             await _context.SaveChangesAsync();
 
-            var result = await _service.GetTeamMembersAsync(_teamId, 1, 10);
+            var result = await _service!.GetTeamMembersAsync(_teamId, 1, 10);
 
             result.Should().NotBeNull();
             result.Members.Should().HaveCount(2);
@@ -307,7 +320,7 @@ namespace Synaxis.Infrastructure.Tests.Services
         [Fact]
         public async Task GetTeamMembersAsync_EmptyTeam_ReturnsEmptyList()
         {
-            var result = await _service.GetTeamMembersAsync(_teamId, 1, 10);
+            var result = await _service!.GetTeamMembersAsync(_teamId, 1, 10);
 
             result.Should().NotBeNull();
             result.Members.Should().BeEmpty();
@@ -327,12 +340,12 @@ namespace Synaxis.Infrastructure.Tests.Services
                 new TeamMembership { Id = Guid.NewGuid(), UserId = _userId, TeamId = team2.Id, OrganizationId = _orgId, Role = "Member" }
             };
 
-            _context.Organizations.Add(org);
+            _context!.Organizations.Add(org);
             _context.Teams.AddRange(team1, team2);
             _context.TeamMemberships.AddRange(memberships);
             await _context.SaveChangesAsync();
 
-            var result = await _service.GetUserTeamsAsync(_userId, 1, 10);
+            var result = await _service!.GetUserTeamsAsync(_userId, 1, 10);
 
             result.Should().NotBeNull();
             result.Members.Should().HaveCount(2);
@@ -352,12 +365,12 @@ namespace Synaxis.Infrastructure.Tests.Services
                 new TeamMembership { Id = Guid.NewGuid(), UserId = _userId, TeamId = team2.Id, OrganizationId = _orgId, Role = "Member" }
             };
 
-            _context.Organizations.Add(org);
+            _context!.Organizations.Add(org);
             _context.Teams.AddRange(team1, team2);
             _context.TeamMemberships.AddRange(memberships);
             await _context.SaveChangesAsync();
 
-            var result = await _service.GetUserTeamsAsync(_userId, 1, 1);
+            var result = await _service!.GetUserTeamsAsync(_userId, 1, 1);
 
             result.Should().NotBeNull();
             result.Members.Should().HaveCount(1);
@@ -368,7 +381,7 @@ namespace Synaxis.Infrastructure.Tests.Services
         [Fact]
         public async Task GetUserTeamsAsync_EmptyResult_ReturnsEmptyList()
         {
-            var result = await _service.GetUserTeamsAsync(_userId, 1, 10);
+            var result = await _service!.GetUserTeamsAsync(_userId, 1, 10);
 
             result.Should().NotBeNull();
             result.Members.Should().BeEmpty();
@@ -387,10 +400,10 @@ namespace Synaxis.Infrastructure.Tests.Services
                 Role = "TeamAdmin"
             };
 
-            _context.TeamMemberships.Add(membership);
+            _context!.TeamMemberships.Add(membership);
             await _context.SaveChangesAsync();
 
-            var result = await _service.CheckPermissionAsync(_userId, _teamId, "manage_team");
+            var result = await _service!.CheckPermissionAsync(_userId, _teamId, "manage_team");
 
             result.Should().BeTrue();
         }
@@ -407,10 +420,10 @@ namespace Synaxis.Infrastructure.Tests.Services
                 Role = "Member"
             };
 
-            _context.TeamMemberships.Add(membership);
+            _context!.TeamMemberships.Add(membership);
             await _context.SaveChangesAsync();
 
-            var result = await _service.CheckPermissionAsync(_userId, _teamId, "manage_team");
+            var result = await _service!.CheckPermissionAsync(_userId, _teamId, "manage_team");
 
             result.Should().BeFalse();
         }
@@ -418,7 +431,7 @@ namespace Synaxis.Infrastructure.Tests.Services
         [Fact]
         public async Task CheckPermissionAsync_UserNotMember_ReturnsFalse()
         {
-            var result = await _service.CheckPermissionAsync(_userId, _teamId, "manage_team");
+            var result = await _service!.CheckPermissionAsync(_userId, _teamId, "manage_team");
 
             result.Should().BeFalse();
         }

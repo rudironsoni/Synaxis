@@ -18,18 +18,17 @@ namespace Synaxis.Infrastructure.Tests.Migrations
     /// </summary>
     public class TestcontainersMigrationTests : IAsyncLifetime
     {
-        private PostgreSqlContainer _postgresContainer;
+        private PostgreSqlContainer _postgresContainer = null!;
 
         /// <summary>
         /// Initializes the PostgreSQL container before tests run.
         /// </summary>
         public async Task InitializeAsync()
         {
-            _postgresContainer = new PostgreSqlBuilder()
+            _postgresContainer = new PostgreSqlBuilder("postgres:16-alpine")
                 .WithDatabase("synaxis_test")
                 .WithUsername("postgres")
                 .WithPassword("testpassword")
-                .WithImage("postgres:16-alpine")
                 .Build();
 
             await _postgresContainer.StartAsync();
@@ -386,10 +385,10 @@ namespace Synaxis.Infrastructure.Tests.Migrations
                 Slug = "json-test-org",
                 Name = "JSON Test Organization",
                 PrimaryRegion = "eu-west-1",
-                PrivacyConsent = new System.Collections.Generic.Dictionary<string, object>
+                PrivacyConsent = new System.Collections.Generic.Dictionary<string, object>(System.StringComparer.Ordinal)
                 {
                     { "gdpr_accepted", true },
-                    { "consent_date", DateTime.UtcNow.ToString("O") },
+                    { "consent_date", DateTime.UtcNow.ToString("O", System.Globalization.CultureInfo.InvariantCulture) },
                     { "version", "1.0" },
                 },
             };
@@ -406,7 +405,7 @@ namespace Synaxis.Infrastructure.Tests.Migrations
             savedOrg.Should().NotBeNull();
             savedOrg?.PrivacyConsent.Should().NotBeNull();
             savedOrg?.PrivacyConsent.Should().ContainKey("gdpr_accepted");
-            
+
             // JSON deserialization returns JsonElement, so we need to extract the boolean value
             var gdprAccepted = savedOrg?.PrivacyConsent["gdpr_accepted"];
             if (gdprAccepted is System.Text.Json.JsonElement jsonElement)
@@ -419,15 +418,17 @@ namespace Synaxis.Infrastructure.Tests.Migrations
             }
         }
 
-        private async Task<bool> TableExistsAsync(SynaxisDbContext context, string tableName)
+        private static async Task<bool> TableExistsAsync(SynaxisDbContext context, string tableName)
         {
+#pragma warning disable IDISP001 // Dispose created - connection is managed by EF Core
             var connection = context.Database.GetDbConnection();
-            
+#pragma warning restore IDISP001
+
             // Only open connection if it's not already open
             var shouldClose = false;
             if (connection.State != System.Data.ConnectionState.Open)
             {
-                await connection.OpenAsync();
+                await connection.OpenAsync().ConfigureAwait(false);
                 shouldClose = true;
             }
 
@@ -440,20 +441,20 @@ namespace Synaxis.Infrastructure.Tests.Migrations
                         WHERE table_schema = 'public'
                         AND table_name = @tableName
                     );";
-                
+
                 var parameter = command.CreateParameter();
                 parameter.ParameterName = "@tableName";
                 parameter.Value = tableName;
                 command.Parameters.Add(parameter);
 
-                var result = await command.ExecuteScalarAsync();
+                var result = await command.ExecuteScalarAsync().ConfigureAwait(false);
                 return result is bool exists && exists;
             }
             finally
             {
                 if (shouldClose)
                 {
-                    await connection.CloseAsync();
+                    await connection.CloseAsync().ConfigureAwait(false);
                 }
             }
         }
