@@ -404,20 +404,56 @@ namespace Synaxis.Infrastructure.Tests.Migrations
             savedOrg.Should().NotBeNull();
             savedOrg?.PrivacyConsent.Should().NotBeNull();
             savedOrg?.PrivacyConsent.Should().ContainKey("gdpr_accepted");
-            savedOrg?.PrivacyConsent["gdpr_accepted"].Should().Be(true);
+            
+            // JSON deserialization returns JsonElement, so we need to extract the boolean value
+            var gdprAccepted = savedOrg?.PrivacyConsent["gdpr_accepted"];
+            if (gdprAccepted is System.Text.Json.JsonElement jsonElement)
+            {
+                jsonElement.GetBoolean().Should().BeTrue();
+            }
+            else
+            {
+                gdprAccepted.Should().Be(true);
+            }
         }
 
         private async Task<bool> TableExistsAsync(SynaxisDbContext context, string tableName)
         {
-            var sql = $@"
-                SELECT EXISTS (
-                    SELECT 1 FROM information_schema.tables
-                    WHERE table_schema = 'public'
-                    AND table_name = '{tableName}'
-                );";
+            var connection = context.Database.GetDbConnection();
+            
+            // Only open connection if it's not already open
+            var shouldClose = false;
+            if (connection.State != System.Data.ConnectionState.Open)
+            {
+                await connection.OpenAsync();
+                shouldClose = true;
+            }
 
-            var result = await context.Database.ExecuteSqlRawAsync(sql);
-            return result >= 0; // Simplified check - in real code would use proper scalar query
+            try
+            {
+                using var command = connection.CreateCommand();
+                command.CommandText = @"
+                    SELECT EXISTS (
+                        SELECT 1 FROM information_schema.tables
+                        WHERE table_schema = 'public'
+                        AND table_name = @tableName
+                    );";
+                
+                var parameter = command.CreateParameter();
+                parameter.ParameterName = "@tableName";
+                parameter.Value = tableName;
+                command.Parameters.Add(parameter);
+
+                var result = await command.ExecuteScalarAsync();
+                return result is bool exists && exists;
+            }
+            finally
+            {
+                if (shouldClose)
+                {
+                    await connection.CloseAsync();
+                }
+            }
         }
     }
 }
