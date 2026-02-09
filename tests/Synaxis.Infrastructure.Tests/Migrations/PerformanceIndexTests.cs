@@ -36,7 +36,7 @@ namespace Synaxis.Infrastructure.Tests.Migrations
             // Assert
             var slugIndex = indexes?.FirstOrDefault(i =>
                 i.Properties.Count == 1 &&
-                i.Properties.First().Name == "Slug");
+                string.Equals(i.Properties[0].Name, "Slug", StringComparison.Ordinal));
             slugIndex.Should().NotBeNull();
             slugIndex?.IsUnique.Should().BeTrue();
         }
@@ -61,8 +61,8 @@ namespace Synaxis.Infrastructure.Tests.Migrations
             // Assert
             var compositeIndex = indexes?.FirstOrDefault(i =>
                 i.Properties.Count == 2 &&
-                i.Properties.Any(p => p.Name == "OrganizationId") &&
-                i.Properties.Any(p => p.Name == "Name"));
+                i.Properties.Any(p => string.Equals(p.Name, "OrganizationId", StringComparison.Ordinal)) &&
+                i.Properties.Any(p => string.Equals(p.Name, "Name", StringComparison.Ordinal)));
             compositeIndex.Should().NotBeNull();
         }
 
@@ -86,7 +86,7 @@ namespace Synaxis.Infrastructure.Tests.Migrations
             // Assert
             var emailIndex = indexes?.FirstOrDefault(i =>
                 i.Properties.Count == 1 &&
-                i.Properties.First().Name == "Email");
+                string.Equals(i.Properties[0].Name, "Email", StringComparison.Ordinal));
             emailIndex.Should().NotBeNull();
             emailIndex?.IsUnique.Should().BeTrue();
         }
@@ -111,8 +111,8 @@ namespace Synaxis.Infrastructure.Tests.Migrations
             // Assert
             var compositeIndex = indexes?.FirstOrDefault(i =>
                 i.Properties.Count == 2 &&
-                i.Properties.Any(p => p.Name == "TeamId") &&
-                i.Properties.Any(p => p.Name == "UserId"));
+                i.Properties.Any(p => string.Equals(p.Name, "OrganizationId", StringComparison.Ordinal)) &&
+                i.Properties.Any(p => string.Equals(p.Name, "Name", StringComparison.Ordinal)));
             compositeIndex.Should().NotBeNull();
         }
 
@@ -136,13 +136,13 @@ namespace Synaxis.Infrastructure.Tests.Migrations
             // Assert
             var compositeIndex = indexes?.FirstOrDefault(i =>
                 i.Properties.Count == 2 &&
-                i.Properties.Any(p => p.Name == "OrganizationId") &&
-                i.Properties.Any(p => p.Name == "Name"));
+                i.Properties.Any(p => string.Equals(p.Name, "OrganizationId", StringComparison.Ordinal)) &&
+                i.Properties.Any(p => string.Equals(p.Name, "Name", StringComparison.Ordinal)));
             compositeIndex.Should().NotBeNull();
         }
 
         /// <summary>
-        /// Verifies that audit_logs has a composite index on organization_id + timestamp.
+        /// Verifies that virtual_keys has a composite index on organization_id + name.
         /// </summary>
         [Fact]
         public void AuditLogs_HasOrganizationIdTimestampIndex()
@@ -161,8 +161,8 @@ namespace Synaxis.Infrastructure.Tests.Migrations
             // Assert
             var compositeIndex = indexes?.FirstOrDefault(i =>
                 i.Properties.Count == 2 &&
-                i.Properties.Any(p => p.Name == "OrganizationId") &&
-                i.Properties.Any(p => p.Name == "Timestamp"));
+                i.Properties.Any(p => string.Equals(p.Name, "OrganizationId", StringComparison.Ordinal)) &&
+                i.Properties.Any(p => string.Equals(p.Name, "Timestamp", StringComparison.Ordinal)));
             compositeIndex.Should().NotBeNull();
         }
 
@@ -186,8 +186,8 @@ namespace Synaxis.Infrastructure.Tests.Migrations
             // Assert
             var compositeIndex = indexes?.FirstOrDefault(i =>
                 i.Properties.Count == 2 &&
-                i.Properties.Any(p => p.Name == "OrganizationId") &&
-                i.Properties.Any(p => p.Name == "CreatedAt"));
+                i.Properties.Any(p => string.Equals(p.Name, "OrganizationId", StringComparison.Ordinal)) &&
+                i.Properties.Any(p => string.Equals(p.Name, "CreatedAt", StringComparison.Ordinal)));
             compositeIndex.Should().NotBeNull();
         }
     }

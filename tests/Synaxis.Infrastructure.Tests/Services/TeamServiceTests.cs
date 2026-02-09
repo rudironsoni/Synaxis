@@ -22,11 +22,11 @@ namespace Synaxis.Infrastructure.Tests.Services
     /// Unit tests for TeamService (RED phase - TDD).
     /// </summary>
     [Trait("Category", "Unit")]
-    public class TeamServiceTests : IAsyncLifetime
+    public sealed class TeamServiceTests : IAsyncLifetime, IDisposable
     {
-        private SynaxisDbContext _context;
-        private Mock<IInvitationService> _invitationServiceMock;
-        private TeamService _service;
+        private SynaxisDbContext? _context;
+        private Mock<IInvitationService> _invitationServiceMock = null!;
+        private TeamService? _service;
         private Guid _organizationId;
         private Guid _userId;
 
@@ -35,6 +35,11 @@ namespace Synaxis.Infrastructure.Tests.Services
             var options = new DbContextOptionsBuilder<SynaxisDbContext>()
                 .UseInMemoryDatabase(databaseName: $"TeamServiceTests_{Guid.NewGuid()}")
                 .Options;
+
+            if (_context is not null)
+            {
+                await _context.DisposeAsync();
+            }
 
             _context = new SynaxisDbContext(options);
             _invitationServiceMock = new Mock<IInvitationService>();
@@ -65,19 +70,25 @@ namespace Synaxis.Infrastructure.Tests.Services
                 PasswordHash = "dummy-hash-for-testing"
             };
 
-            _context.Organizations.Add(organization);
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+            _context!.Organizations.Add(organization);
+            _context!.Users.Add(user);
+            await _context!.SaveChangesAsync();
 
             _service = new TeamService(_context, _invitationServiceMock.Object);
         }
 
         public async Task DisposeAsync()
         {
-            await _context.DisposeAsync();
+            if (_context is not null)
+            {
+                await _context!.DisposeAsync();
+            }
         }
 
-        #region CreateTeamAsync Tests
+        public void Dispose()
+        {
+            _context?.Dispose();
+        }
 
         [Fact]
         public async Task CreateTeamAsync_WithValidRequest_CreatesTeam()
@@ -93,7 +104,7 @@ namespace Synaxis.Infrastructure.Tests.Services
             };
 
             // Act
-            var result = await _service.CreateTeamAsync(request, _organizationId, _userId);
+            var result = await _service!.CreateTeamAsync(request, _organizationId, _userId);
 
             // Assert
             result.Should().NotBeNull();
@@ -104,7 +115,7 @@ namespace Synaxis.Infrastructure.Tests.Services
             result.IsActive.Should().BeTrue();
             result.OrganizationId.Should().Be(_organizationId);
 
-            var dbTeam = await _context.Teams.FirstOrDefaultAsync(t => t.Slug == "test-team");
+            var dbTeam = await _context!.Teams.FirstOrDefaultAsync(t => t.Slug == "test-team");
             dbTeam.Should().NotBeNull();
         }
 
@@ -120,8 +131,8 @@ namespace Synaxis.Infrastructure.Tests.Services
                 Name = "Existing Team",
                 IsActive = true
             };
-            _context.Teams.Add(existingTeam);
-            await _context.SaveChangesAsync();
+            _context!.Teams.Add(existingTeam);
+            await _context!.SaveChangesAsync();
 
             var request = new CreateTeamRequest
             {
@@ -130,7 +141,7 @@ namespace Synaxis.Infrastructure.Tests.Services
             };
 
             // Act
-            Func<Task> act = async () => await _service.CreateTeamAsync(request, _organizationId, _userId);
+            Func<Task> act = async () => await _service!.CreateTeamAsync(request, _organizationId, _userId);
 
             // Assert
             await act.Should().ThrowAsync<InvalidOperationException>()
@@ -149,7 +160,7 @@ namespace Synaxis.Infrastructure.Tests.Services
             };
 
             // Act
-            Func<Task> act = async () => await _service.CreateTeamAsync(request, invalidOrgId, _userId);
+            Func<Task> act = async () => await _service!.CreateTeamAsync(request, invalidOrgId, _userId);
 
             // Assert
             await act.Should().ThrowAsync<InvalidOperationException>()
@@ -160,15 +171,11 @@ namespace Synaxis.Infrastructure.Tests.Services
         public async Task CreateTeamAsync_WithNullRequest_ThrowsArgumentNullException()
         {
             // Act
-            Func<Task> act = async () => await _service.CreateTeamAsync(null, _organizationId, _userId);
+            Func<Task> act = async () => await _service!.CreateTeamAsync(null!, _organizationId, _userId);
 
             // Assert
             await act.Should().ThrowAsync<ArgumentNullException>();
         }
-
-        #endregion
-
-        #region GetTeamAsync Tests
 
         [Fact]
         public async Task GetTeamAsync_WithValidTeamId_ReturnsTeam()
@@ -185,11 +192,11 @@ namespace Synaxis.Infrastructure.Tests.Services
                 IsActive = true,
                 MonthlyBudget = 100.00m
             };
-            _context.Teams.Add(team);
-            await _context.SaveChangesAsync();
+            _context!.Teams.Add(team);
+            await _context!.SaveChangesAsync();
 
             // Act
-            var result = await _service.GetTeamAsync(teamId, _organizationId);
+            var result = await _service!.GetTeamAsync(teamId, _organizationId);
 
             // Assert
             result.Should().NotBeNull();
@@ -205,7 +212,7 @@ namespace Synaxis.Infrastructure.Tests.Services
             var nonExistentId = Guid.NewGuid();
 
             // Act
-            var result = await _service.GetTeamAsync(nonExistentId, _organizationId);
+            var result = await _service!.GetTeamAsync(nonExistentId, _organizationId);
 
             // Assert
             result.Should().BeNull();
@@ -225,19 +232,15 @@ namespace Synaxis.Infrastructure.Tests.Services
                 Name = "Test Team",
                 IsActive = true
             };
-            _context.Teams.Add(team);
-            await _context.SaveChangesAsync();
+            _context!.Teams.Add(team);
+            await _context!.SaveChangesAsync();
 
             // Act
-            var result = await _service.GetTeamAsync(teamId, wrongOrgId);
+            var result = await _service!.GetTeamAsync(teamId, wrongOrgId);
 
             // Assert
             result.Should().BeNull();
         }
-
-        #endregion
-
-        #region UpdateTeamAsync Tests
 
         [Fact]
         public async Task UpdateTeamAsync_WithValidRequest_UpdatesTeam()
@@ -252,8 +255,8 @@ namespace Synaxis.Infrastructure.Tests.Services
                 Name = "Original Name",
                 IsActive = true
             };
-            _context.Teams.Add(team);
-            await _context.SaveChangesAsync();
+            _context!.Teams.Add(team);
+            await _context!.SaveChangesAsync();
 
             var updateRequest = new UpdateTeamRequest
             {
@@ -264,7 +267,7 @@ namespace Synaxis.Infrastructure.Tests.Services
             };
 
             // Act
-            var result = await _service.UpdateTeamAsync(teamId, updateRequest);
+            var result = await _service!.UpdateTeamAsync(teamId, updateRequest);
 
             // Assert
             result.Should().NotBeNull();
@@ -285,7 +288,7 @@ namespace Synaxis.Infrastructure.Tests.Services
             };
 
             // Act
-            Func<Task> act = async () => await _service.UpdateTeamAsync(nonExistentId, updateRequest);
+            Func<Task> act = async () => await _service!.UpdateTeamAsync(nonExistentId, updateRequest);
 
             // Assert
             await act.Should().ThrowAsync<InvalidOperationException>()
@@ -299,15 +302,11 @@ namespace Synaxis.Infrastructure.Tests.Services
             var teamId = Guid.NewGuid();
 
             // Act
-            Func<Task> act = async () => await _service.UpdateTeamAsync(teamId, null);
+            Func<Task> act = async () => await _service!.UpdateTeamAsync(teamId, null!);
 
             // Assert
             await act.Should().ThrowAsync<ArgumentNullException>();
         }
-
-        #endregion
-
-        #region DeleteTeamAsync Tests
 
         [Fact]
         public async Task DeleteTeamAsync_WithValidTeam_MarksTeamInactive()
@@ -322,14 +321,14 @@ namespace Synaxis.Infrastructure.Tests.Services
                 Name = "Test Team",
                 IsActive = true
             };
-            _context.Teams.Add(team);
-            await _context.SaveChangesAsync();
+            _context!.Teams.Add(team);
+            await _context!.SaveChangesAsync();
 
             // Act
-            await _service.DeleteTeamAsync(teamId, _organizationId);
+            await _service!.DeleteTeamAsync(teamId, _organizationId);
 
             // Assert
-            var deletedTeam = await _context.Teams.FindAsync(teamId);
+            var deletedTeam = await _context!.Teams.FindAsync(teamId);
             deletedTeam.Should().NotBeNull();
             deletedTeam.IsActive.Should().BeFalse();
         }
@@ -341,7 +340,7 @@ namespace Synaxis.Infrastructure.Tests.Services
             var nonExistentId = Guid.NewGuid();
 
             // Act
-            Func<Task> act = async () => await _service.DeleteTeamAsync(nonExistentId, _organizationId);
+            Func<Task> act = async () => await _service!.DeleteTeamAsync(nonExistentId, _organizationId);
 
             // Assert
             await act.Should().ThrowAsync<InvalidOperationException>()
@@ -362,19 +361,15 @@ namespace Synaxis.Infrastructure.Tests.Services
                 Name = "Test Team",
                 IsActive = true
             };
-            _context.Teams.Add(team);
-            await _context.SaveChangesAsync();
+            _context!.Teams.Add(team);
+            await _context!.SaveChangesAsync();
 
             // Act
-            Func<Task> act = async () => await _service.DeleteTeamAsync(teamId, wrongOrgId);
+            Func<Task> act = async () => await _service!.DeleteTeamAsync(teamId, wrongOrgId);
 
             // Assert
             await act.Should().ThrowAsync<InvalidOperationException>();
         }
-
-        #endregion
-
-        #region ListTeamsAsync Tests
 
         [Fact]
         public async Task ListTeamsAsync_WithMultipleTeams_ReturnsPaginatedList()
@@ -382,7 +377,7 @@ namespace Synaxis.Infrastructure.Tests.Services
             // Arrange
             for (int i = 1; i <= 5; i++)
             {
-                _context.Teams.Add(new Team
+                _context!.Teams.Add(new Team
                 {
                     Id = Guid.NewGuid(),
                     OrganizationId = _organizationId,
@@ -391,10 +386,10 @@ namespace Synaxis.Infrastructure.Tests.Services
                     IsActive = true
                 });
             }
-            await _context.SaveChangesAsync();
+            await _context!.SaveChangesAsync();
 
             // Act
-            var result = await _service.ListTeamsAsync(_organizationId, page: 1, pageSize: 3);
+            var result = await _service!.ListTeamsAsync(_organizationId, page: 1, pageSize: 3);
 
             // Assert
             result.Should().NotBeNull();
@@ -408,7 +403,7 @@ namespace Synaxis.Infrastructure.Tests.Services
         public async Task ListTeamsAsync_WithNoTeams_ReturnsEmptyList()
         {
             // Act
-            var result = await _service.ListTeamsAsync(_organizationId, page: 1, pageSize: 10);
+            var result = await _service!.ListTeamsAsync(_organizationId, page: 1, pageSize: 10);
 
             // Assert
             result.Should().NotBeNull();
@@ -422,7 +417,7 @@ namespace Synaxis.Infrastructure.Tests.Services
             // Arrange
             for (int i = 1; i <= 5; i++)
             {
-                _context.Teams.Add(new Team
+                _context!.Teams.Add(new Team
                 {
                     Id = Guid.NewGuid(),
                     OrganizationId = _organizationId,
@@ -431,10 +426,10 @@ namespace Synaxis.Infrastructure.Tests.Services
                     IsActive = true
                 });
             }
-            await _context.SaveChangesAsync();
+            await _context!.SaveChangesAsync();
 
             // Act
-            var result = await _service.ListTeamsAsync(_organizationId, page: 2, pageSize: 3);
+            var result = await _service!.ListTeamsAsync(_organizationId, page: 2, pageSize: 3);
 
             // Assert
             result.Should().NotBeNull();
@@ -442,10 +437,6 @@ namespace Synaxis.Infrastructure.Tests.Services
             result.TotalCount.Should().Be(5);
             result.Page.Should().Be(2);
         }
-
-        #endregion
-
-        #region ArchiveTeamAsync Tests
 
         [Fact]
         public async Task ArchiveTeamAsync_WithValidTeam_MarksTeamInactive()
@@ -460,14 +451,14 @@ namespace Synaxis.Infrastructure.Tests.Services
                 Name = "Test Team",
                 IsActive = true
             };
-            _context.Teams.Add(team);
-            await _context.SaveChangesAsync();
+            _context!.Teams.Add(team);
+            await _context!.SaveChangesAsync();
 
             // Act
-            await _service.ArchiveTeamAsync(teamId, _organizationId);
+            await _service!.ArchiveTeamAsync(teamId, _organizationId);
 
             // Assert
-            var archivedTeam = await _context.Teams.FindAsync(teamId);
+            var archivedTeam = await _context!.Teams.FindAsync(teamId);
             archivedTeam.Should().NotBeNull();
             archivedTeam.IsActive.Should().BeFalse();
         }
@@ -479,16 +470,12 @@ namespace Synaxis.Infrastructure.Tests.Services
             var nonExistentId = Guid.NewGuid();
 
             // Act
-            Func<Task> act = async () => await _service.ArchiveTeamAsync(nonExistentId, _organizationId);
+            Func<Task> act = async () => await _service!.ArchiveTeamAsync(nonExistentId, _organizationId);
 
             // Assert
             await act.Should().ThrowAsync<InvalidOperationException>()
                 .WithMessage("*Team*not found*");
         }
-
-        #endregion
-
-        #region RestoreTeamAsync Tests
 
         [Fact]
         public async Task RestoreTeamAsync_WithArchivedTeam_MarksTeamActive()
@@ -503,14 +490,14 @@ namespace Synaxis.Infrastructure.Tests.Services
                 Name = "Test Team",
                 IsActive = false
             };
-            _context.Teams.Add(team);
-            await _context.SaveChangesAsync();
+            _context!.Teams.Add(team);
+            await _context!.SaveChangesAsync();
 
             // Act
-            await _service.RestoreTeamAsync(teamId, _organizationId);
+            await _service!.RestoreTeamAsync(teamId, _organizationId);
 
             // Assert
-            var restoredTeam = await _context.Teams.FindAsync(teamId);
+            var restoredTeam = await _context!.Teams.FindAsync(teamId);
             restoredTeam.Should().NotBeNull();
             restoredTeam.IsActive.Should().BeTrue();
         }
@@ -522,16 +509,12 @@ namespace Synaxis.Infrastructure.Tests.Services
             var nonExistentId = Guid.NewGuid();
 
             // Act
-            Func<Task> act = async () => await _service.RestoreTeamAsync(nonExistentId, _organizationId);
+            Func<Task> act = async () => await _service!.RestoreTeamAsync(nonExistentId, _organizationId);
 
             // Assert
             await act.Should().ThrowAsync<InvalidOperationException>()
                 .WithMessage("*Team*not found*");
         }
-
-        #endregion
-
-        #region ValidateTeamSlugAsync Tests
 
         [Fact]
         public async Task ValidateTeamSlugAsync_WithUniqueSlug_ReturnsTrue()
@@ -540,7 +523,7 @@ namespace Synaxis.Infrastructure.Tests.Services
             var slug = "unique-team";
 
             // Act
-            var result = await _service.ValidateTeamSlugAsync(slug, _organizationId);
+            var result = await _service!.ValidateTeamSlugAsync(slug, _organizationId);
 
             // Assert
             result.Should().BeTrue();
@@ -551,7 +534,7 @@ namespace Synaxis.Infrastructure.Tests.Services
         {
             // Arrange
             var slug = "duplicate-team";
-            _context.Teams.Add(new Team
+            _context!.Teams.Add(new Team
             {
                 Id = Guid.NewGuid(),
                 OrganizationId = _organizationId,
@@ -559,10 +542,10 @@ namespace Synaxis.Infrastructure.Tests.Services
                 Name = "Existing Team",
                 IsActive = true
             });
-            await _context.SaveChangesAsync();
+            await _context!.SaveChangesAsync();
 
             // Act
-            var result = await _service.ValidateTeamSlugAsync(slug, _organizationId);
+            var result = await _service!.ValidateTeamSlugAsync(slug, _organizationId);
 
             // Assert
             result.Should().BeFalse();
@@ -574,7 +557,7 @@ namespace Synaxis.Infrastructure.Tests.Services
             // Arrange
             var teamId = Guid.NewGuid();
             var slug = "existing-team";
-            _context.Teams.Add(new Team
+            _context!.Teams.Add(new Team
             {
                 Id = teamId,
                 OrganizationId = _organizationId,
@@ -582,10 +565,10 @@ namespace Synaxis.Infrastructure.Tests.Services
                 Name = "Existing Team",
                 IsActive = true
             });
-            await _context.SaveChangesAsync();
+            await _context!.SaveChangesAsync();
 
             // Act
-            var result = await _service.ValidateTeamSlugAsync(slug, _organizationId, teamId);
+            var result = await _service!.ValidateTeamSlugAsync(slug, _organizationId, teamId);
 
             // Assert
             result.Should().BeTrue();
@@ -597,7 +580,7 @@ namespace Synaxis.Infrastructure.Tests.Services
             // Arrange
             var otherOrgId = Guid.NewGuid();
             var slug = "duplicate-slug";
-            _context.Organizations.Add(new Organization
+            _context!.Organizations.Add(new Organization
             {
                 Id = otherOrgId,
                 Slug = "other-org",
@@ -606,7 +589,7 @@ namespace Synaxis.Infrastructure.Tests.Services
                 PrimaryRegion = "us-east-1",
                 IsActive = true
             });
-            _context.Teams.Add(new Team
+            _context!.Teams.Add(new Team
             {
                 Id = Guid.NewGuid(),
                 OrganizationId = otherOrgId,
@@ -614,18 +597,33 @@ namespace Synaxis.Infrastructure.Tests.Services
                 Name = "Other Org Team",
                 IsActive = true
             });
-            await _context.SaveChangesAsync();
+            await _context!.SaveChangesAsync();
 
             // Act
-            var result = await _service.ValidateTeamSlugAsync(slug, _organizationId);
+            var result = await _service!.ValidateTeamSlugAsync(slug, _organizationId);
 
             // Assert
             result.Should().BeTrue();
         }
 
-        #endregion
-
-        #region GetTeamStatsAsync Tests
+        private async Task<User> CreateUserAsync(Guid userId, Guid orgId, string email, string firstName, string lastName)
+        {
+            var user = new User
+            {
+                Id = userId,
+                OrganizationId = orgId,
+                Email = email,
+                Role = "Member",
+                DataResidencyRegion = "us-east-1",
+                CreatedInRegion = "us-east-1",
+                PasswordHash = "dummy-hash-for-testing",
+                FirstName = firstName,
+                LastName = lastName,
+            };
+            _context!.Users.Add(user);
+            await _context!.SaveChangesAsync();
+            return user;
+        }
 
         [Fact]
         public async Task GetTeamStatsAsync_WithTeamAndMembers_ReturnsCorrectStats()
@@ -639,39 +637,23 @@ namespace Synaxis.Infrastructure.Tests.Services
                 Slug = "test-team",
                 Name = "Test Team",
                 IsActive = true,
-                MonthlyBudget = 1000.00m
+                MonthlyBudget = 1000.00m,
             };
-            _context.Teams.Add(team);
+            _context!.Teams.Add(team);
 
-            // Add members
-            for (int i = 1; i <= 3; i++)
-            {
-                var memberId = Guid.NewGuid();
-                _context.Users.Add(new User
-                {
-                    Id = memberId,
-                    OrganizationId = _organizationId,
-                    Email = $"member{i}@test.com",
-                    Role = "Member",
-                    DataResidencyRegion = "us-east-1",
-                    CreatedInRegion = "us-east-1",
-                    PasswordHash = "dummy-hash-for-testing"
-                });
-                _context.TeamMemberships.Add(new TeamMembership
-                {
-                    Id = Guid.NewGuid(),
-                    UserId = memberId,
-                    TeamId = teamId,
-                    OrganizationId = _organizationId,
-                    Role = "Member",
-                    JoinedAt = DateTime.UtcNow
-                });
-            }
+            // Add members using helper method
+            var member1 = await CreateUserAsync(Guid.NewGuid(), _organizationId, "member1@test.com", "Member", "One");
+            var member2 = await CreateUserAsync(Guid.NewGuid(), _organizationId, "member2@test.com", "Member", "Two");
+            var member3 = await CreateUserAsync(Guid.NewGuid(), _organizationId, "member3@test.com", "Member", "Three");
+
+            _context!.TeamMemberships.Add(new TeamMembership { Id = Guid.NewGuid(), UserId = member1.Id, TeamId = teamId, OrganizationId = _organizationId, Role = "Member", JoinedAt = DateTime.UtcNow });
+            _context!.TeamMemberships.Add(new TeamMembership { Id = Guid.NewGuid(), UserId = member2.Id, TeamId = teamId, OrganizationId = _organizationId, Role = "Member", JoinedAt = DateTime.UtcNow });
+            _context!.TeamMemberships.Add(new TeamMembership { Id = Guid.NewGuid(), UserId = member3.Id, TeamId = teamId, OrganizationId = _organizationId, Role = "Member", JoinedAt = DateTime.UtcNow });
 
             // Add virtual keys
             for (int i = 1; i <= 2; i++)
             {
-                _context.VirtualKeys.Add(new VirtualKey
+                _context!.VirtualKeys.Add(new VirtualKey
                 {
                     Id = Guid.NewGuid(),
                     OrganizationId = _organizationId,
@@ -681,14 +663,14 @@ namespace Synaxis.Infrastructure.Tests.Services
                     KeyHash = $"hash-{i}",
                     IsActive = true,
                     IsRevoked = false,
-                    UserRegion = "us-east-1"
+                    UserRegion = "us-east-1",
                 });
             }
 
-            await _context.SaveChangesAsync();
+            await _context!.SaveChangesAsync();
 
             // Act
-            var result = await _service.GetTeamStatsAsync(teamId, _organizationId);
+            var result = await _service!.GetTeamStatsAsync(teamId, _organizationId);
 
             // Assert
             result.Should().NotBeNull();
@@ -711,11 +693,11 @@ namespace Synaxis.Infrastructure.Tests.Services
                 Name = "Empty Team",
                 IsActive = true
             };
-            _context.Teams.Add(team);
-            await _context.SaveChangesAsync();
+            _context!.Teams.Add(team);
+            await _context!.SaveChangesAsync();
 
             // Act
-            var result = await _service.GetTeamStatsAsync(teamId, _organizationId);
+            var result = await _service!.GetTeamStatsAsync(teamId, _organizationId);
 
             // Assert
             result.Should().NotBeNull();
@@ -730,16 +712,12 @@ namespace Synaxis.Infrastructure.Tests.Services
             var nonExistentId = Guid.NewGuid();
 
             // Act
-            Func<Task> act = async () => await _service.GetTeamStatsAsync(nonExistentId, _organizationId);
+            Func<Task> act = async () => await _service!.GetTeamStatsAsync(nonExistentId, _organizationId);
 
             // Assert
             await act.Should().ThrowAsync<InvalidOperationException>()
                 .WithMessage("*Team*not found*");
         }
-
-        #endregion
-
-        #region InviteMemberAsync Tests
 
         [Fact]
         public async Task InviteMemberAsync_WithValidEmail_CallsInvitationService()
@@ -754,14 +732,14 @@ namespace Synaxis.Infrastructure.Tests.Services
                 Name = "Test Team",
                 IsActive = true
             };
-            _context.Teams.Add(team);
-            await _context.SaveChangesAsync();
+            _context!.Teams.Add(team);
+            await _context!.SaveChangesAsync();
 
             var email = "newmember@test.com";
             var role = "Member";
 
             // Act
-            await _service.InviteMemberAsync(teamId, email, role, _userId);
+            await _service!.InviteMemberAsync(teamId, email, role, _userId);
 
             // Assert
             _invitationServiceMock.Verify(
@@ -776,14 +754,12 @@ namespace Synaxis.Infrastructure.Tests.Services
             var nonExistentTeamId = Guid.NewGuid();
 
             // Act
-            Func<Task> act = async () => await _service.InviteMemberAsync(
+            Func<Task> act = async () => await _service!.InviteMemberAsync(
                 nonExistentTeamId, "test@test.com", "Member", _userId);
 
             // Assert
             await act.Should().ThrowAsync<InvalidOperationException>()
                 .WithMessage("*Team*not found*");
         }
-
-        #endregion
     }
 }

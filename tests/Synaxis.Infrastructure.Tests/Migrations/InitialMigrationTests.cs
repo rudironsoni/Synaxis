@@ -35,7 +35,7 @@ namespace Synaxis.Infrastructure.Tests.Migrations
             await context.Database.EnsureCreatedAsync();
 
             // Assert
-            context.Database.CanConnect().Should().BeTrue();
+            (await context.Database.CanConnectAsync()).Should().BeTrue();
         }
 
         /// <summary>
@@ -56,18 +56,18 @@ namespace Synaxis.Infrastructure.Tests.Migrations
 
             // Assert
             // Check that all DbSet properties can be accessed (tables exist conceptually)
-            var organizations = context.Organizations.ToList();
-            var teams = context.Teams.ToList();
-            var users = context.Users.ToList();
-            var memberships = context.TeamMemberships.ToList();
-            var virtualKeys = context.VirtualKeys.ToList();
-            var requests = context.Requests.ToList();
-            var subscriptionPlans = context.SubscriptionPlans.ToList();
-            var auditLogs = context.AuditLogs.ToList();
-            var spendLogs = context.SpendLogs.ToList();
-            var creditTransactions = context.CreditTransactions.ToList();
-            var invoices = context.Invoices.ToList();
-            var backupConfigs = context.BackupConfigs.ToList();
+            var organizations = await context.Organizations.ToListAsync();
+            var teams = await context.Teams.ToListAsync();
+            var users = await context.Users.ToListAsync();
+            var memberships = await context.TeamMemberships.ToListAsync();
+            var virtualKeys = await context.VirtualKeys.ToListAsync();
+            var requests = await context.Requests.ToListAsync();
+            var subscriptionPlans = await context.SubscriptionPlans.ToListAsync();
+            var auditLogs = await context.AuditLogs.ToListAsync();
+            var spendLogs = await context.SpendLogs.ToListAsync();
+            var creditTransactions = await context.CreditTransactions.ToListAsync();
+            var invoices = await context.Invoices.ToListAsync();
+            var backupConfigs = await context.BackupConfigs.ToListAsync();
 
             // All should be empty but accessible (no exception means tables exist)
             organizations.Should().BeEmpty();
@@ -217,7 +217,7 @@ namespace Synaxis.Infrastructure.Tests.Migrations
             // When User is deleted, TeamMemberships should be deleted (Cascade)
             var membershipEntity = model.FindEntityType(typeof(TeamMembership));
             var membershipUserFk = membershipEntity?.GetForeignKeys()
-                .FirstOrDefault(fk => fk.PrincipalEntityType.ClrType == typeof(User) && fk.Properties.Any(p => p.Name == "UserId"));
+                .FirstOrDefault(fk => fk.PrincipalEntityType.ClrType == typeof(User) && fk.Properties.Any(p => string.Equals(p.Name, "UserId", StringComparison.Ordinal)));
             membershipUserFk.Should().NotBeNull();
             membershipUserFk?.DeleteBehavior.Should().Be(DeleteBehavior.Cascade);
 

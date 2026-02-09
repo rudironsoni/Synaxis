@@ -22,9 +22,14 @@ namespace Synaxis.Infrastructure.Tests.Migrations
         public RollbackScriptTests()
         {
             // Navigate from test project to repo root
-            _repoRoot = Path.GetFullPath(Path.Combine(
-                Directory.GetCurrentDirectory(),
-                "..", "..", "..", "..", ".."));
+            _repoRoot = Path.GetFullPath(
+                Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                    "..",
+                    "..",
+                    "..",
+                    "..",
+                    ".."));
         }
 
         /// <summary>
@@ -129,7 +134,7 @@ namespace Synaxis.Infrastructure.Tests.Migrations
             // Assert
             // Check if owner has execute permission (Unix permissions)
             var mode = fileInfo.UnixFileMode;
-            ((mode & UnixFileMode.UserExecute) != 0).Should().BeTrue("Bash script should be executable");
+            mode.HasFlag(UnixFileMode.UserExecute).Should().BeTrue("Bash script should be executable");
         }
 
         /// <summary>

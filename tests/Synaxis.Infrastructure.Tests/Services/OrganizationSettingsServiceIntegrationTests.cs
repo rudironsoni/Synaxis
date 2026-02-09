@@ -17,17 +17,16 @@ namespace Synaxis.Infrastructure.Tests.Services
     /// Integration tests for OrganizationSettingsService using TestContainers.
     /// </summary>
     [Trait("Category", "Integration")]
-    public class OrganizationSettingsServiceIntegrationTests : IAsyncLifetime
+    public sealed class OrganizationSettingsServiceIntegrationTests : IAsyncLifetime, IDisposable
     {
-        private readonly PostgreSqlContainer postgres = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
+        private readonly PostgreSqlContainer postgres = new PostgreSqlBuilder("postgres:16-alpine")
             .WithDatabase("synaxis_test")
             .WithUsername("test")
             .WithPassword("test")
             .Build();
 
-        private SynaxisDbContext context = null!;
-        private OrganizationSettingsService service = null!;
+        private SynaxisDbContext? context;
+        private OrganizationSettingsService? service;
 
         public async Task InitializeAsync()
         {
@@ -37,6 +36,11 @@ namespace Synaxis.Infrastructure.Tests.Services
                 .UseNpgsql(this.postgres.GetConnectionString())
                 .Options;
 
+            if (this.context is not null)
+            {
+                await this.context.DisposeAsync();
+            }
+
             this.context = new SynaxisDbContext(options);
             await this.context.Database.EnsureCreatedAsync();
 
@@ -45,12 +49,18 @@ namespace Synaxis.Infrastructure.Tests.Services
 
         public async Task DisposeAsync()
         {
-            if (this.context != null)
+            if (this.context is not null)
             {
                 await this.context.DisposeAsync();
             }
 
             await this.postgres.DisposeAsync();
+        }
+
+        public void Dispose()
+        {
+            this.context?.Dispose();
+            this.postgres.DisposeAsync().AsTask().Wait();
         }
 
         [Fact]
@@ -68,11 +78,11 @@ namespace Synaxis.Infrastructure.Tests.Services
                 MaxKeysPerUser = 8,
             };
 
-            this.context.Organizations.Add(organization);
+            this.context!.Organizations.Add(organization);
             await this.context.SaveChangesAsync();
 
             // Act
-            var result = await this.service.GetOrganizationLimitsAsync(organization.Id);
+            var result = await this.service!.GetOrganizationLimitsAsync(organization.Id);
 
             // Assert
             result.Should().NotBeNull();
@@ -94,7 +104,7 @@ namespace Synaxis.Infrastructure.Tests.Services
                 MaxTeams = 5,
             };
 
-            this.context.Organizations.Add(organization);
+            this.context!.Organizations.Add(organization);
             await this.context.SaveChangesAsync();
 
             var request = new UpdateOrganizationLimitsRequest
@@ -104,7 +114,7 @@ namespace Synaxis.Infrastructure.Tests.Services
             };
 
             // Act
-            var result = await this.service.UpdateOrganizationLimitsAsync(
+            var result = await this.service!.UpdateOrganizationLimitsAsync(
                 organization.Id,
                 request,
                 Guid.NewGuid());
@@ -114,7 +124,7 @@ namespace Synaxis.Infrastructure.Tests.Services
             result.MaxUsersPerTeam.Should().Be(100);
 
             // Verify persistence by re-fetching
-            var updatedOrg = await this.context.Organizations.FindAsync(organization.Id);
+            var updatedOrg = await this.context!.Organizations.FindAsync(organization.Id);
             updatedOrg.Should().NotBeNull();
             updatedOrg!.MaxTeams.Should().Be(25);
             updatedOrg.MaxUsersPerTeam.Should().Be(100);
@@ -133,7 +143,7 @@ namespace Synaxis.Infrastructure.Tests.Services
                 MaxTeams = 10,
             };
 
-            this.context.Organizations.Add(organization);
+            this.context!.Organizations.Add(organization);
             await this.context.SaveChangesAsync();
 
             // Create two separate contexts to simulate concurrent updates
@@ -160,7 +170,7 @@ namespace Synaxis.Infrastructure.Tests.Services
             await Task.WhenAll(tasks);
 
             // Assert - Verify final state (last write wins in this implementation)
-            var finalOrg = await this.context.Organizations.FindAsync(organization.Id);
+            var finalOrg = await this.context!.Organizations.FindAsync(organization.Id);
             finalOrg.Should().NotBeNull();
             (finalOrg!.MaxTeams == 20 || finalOrg.MaxUsersPerTeam == 50).Should().BeTrue();
         }
@@ -181,18 +191,18 @@ namespace Synaxis.Infrastructure.Tests.Services
                 AllowedEmailDomains = new List<string> { "company.com", "subsidiary.com" },
             };
 
-            this.context.Organizations.Add(organization);
+            this.context!.Organizations.Add(organization);
             await this.context.SaveChangesAsync();
 
             // Act
-            var result = await this.service.GetOrganizationSettingsAsync(organization.Id);
+            var result = await this.service!.GetOrganizationSettingsAsync(organization.Id);
 
             // Assert
             result.Should().NotBeNull();
             result.Tier.Should().Be("enterprise");
             result.DataRetentionDays.Should().Be(180);
             result.RequireSso.Should().BeTrue();
-            result.AllowedEmailDomains.Should().BeEquivalentTo(new[] { "company.com", "subsidiary.com" });
+            result.AllowedEmailDomains.Should().BeEquivalentTo("company.com", "subsidiary.com");
         }
 
         [Fact]
@@ -210,7 +220,7 @@ namespace Synaxis.Infrastructure.Tests.Services
                 RequireSso = false,
             };
 
-            this.context.Organizations.Add(organization);
+            this.context!.Organizations.Add(organization);
             await this.context.SaveChangesAsync();
 
             var request = new UpdateOrganizationSettingsRequest
@@ -221,7 +231,7 @@ namespace Synaxis.Infrastructure.Tests.Services
             };
 
             // Act
-            var result = await this.service.UpdateOrganizationSettingsAsync(
+            var result = await this.service!.UpdateOrganizationSettingsAsync(
                 organization.Id,
                 request,
                 Guid.NewGuid());
@@ -229,10 +239,10 @@ namespace Synaxis.Infrastructure.Tests.Services
             // Assert
             result.DataRetentionDays.Should().Be(365);
             result.RequireSso.Should().BeTrue();
-            result.AllowedEmailDomains.Should().BeEquivalentTo(new[] { "secure.com" });
+            result.AllowedEmailDomains.Should().BeEquivalentTo("secure.com");
 
             // Verify persistence
-            var updatedOrg = await this.context.Organizations.FindAsync(organization.Id);
+            var updatedOrg = await this.context!.Organizations.FindAsync(organization.Id);
             updatedOrg.Should().NotBeNull();
             updatedOrg!.DataRetentionDays.Should().Be(365);
             updatedOrg.RequireSso.Should().BeTrue();
@@ -251,7 +261,7 @@ namespace Synaxis.Infrastructure.Tests.Services
                 MaxTeams = 5,
             };
 
-            this.context.Organizations.Add(organization);
+            this.context!.Organizations.Add(organization);
             await this.context.SaveChangesAsync();
 
             var request = new UpdateOrganizationLimitsRequest
@@ -261,7 +271,7 @@ namespace Synaxis.Infrastructure.Tests.Services
             };
 
             // Act
-            var result = await this.service.UpdateOrganizationLimitsAsync(
+            var result = await this.service!.UpdateOrganizationLimitsAsync(
                 organization.Id,
                 request,
                 Guid.NewGuid());
@@ -271,7 +281,7 @@ namespace Synaxis.Infrastructure.Tests.Services
             result.MaxConcurrentRequests.Should().Be(10000);
 
             // Verify these large values are actually stored
-            var updatedOrg = await this.context.Organizations.FindAsync(organization.Id);
+            var updatedOrg = await this.context!.Organizations.FindAsync(organization.Id);
             updatedOrg!.MaxTeams.Should().Be(1000);
             updatedOrg.MaxConcurrentRequests.Should().Be(10000);
         }
@@ -288,7 +298,7 @@ namespace Synaxis.Infrastructure.Tests.Services
                 PrimaryRegion = "us-east-1",
             };
 
-            this.context.Organizations.Add(organization);
+            this.context!.Organizations.Add(organization);
             await this.context.SaveChangesAsync();
 
             var invalidRequest = new UpdateOrganizationSettingsRequest
@@ -297,7 +307,7 @@ namespace Synaxis.Infrastructure.Tests.Services
             };
 
             // Act
-            Func<Task> act = async () => await this.service.UpdateOrganizationSettingsAsync(
+            Func<Task> act = async () => await this.service!.UpdateOrganizationSettingsAsync(
                 organization.Id,
                 invalidRequest,
                 Guid.NewGuid());

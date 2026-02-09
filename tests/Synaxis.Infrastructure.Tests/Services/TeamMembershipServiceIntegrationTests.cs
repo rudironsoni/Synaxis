@@ -14,17 +14,16 @@ using Xunit;
 namespace Synaxis.Infrastructure.Tests.Services
 {
     [Trait("Category", "Integration")]
-    public class TeamMembershipServiceIntegrationTests : IAsyncLifetime
+    public sealed class TeamMembershipServiceIntegrationTests : IAsyncLifetime, IDisposable
     {
-        private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
+        private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:16-alpine")
             .WithDatabase("synaxis_test")
             .WithUsername("test")
             .WithPassword("test")
             .Build();
 
-        private SynaxisDbContext _context = null!;
-        private ITeamMembershipService _service = null!;
+        private SynaxisDbContext? _context;
+        private ITeamMembershipService? _service;
         private Organization _org = null!;
         private Team _team = null!;
         private User _user1 = null!;
@@ -39,12 +38,23 @@ namespace Synaxis.Infrastructure.Tests.Services
                 .UseNpgsql(_postgres.GetConnectionString())
                 .Options;
 
+            if (_context is not null)
+            {
+                await _context.DisposeAsync();
+            }
+
             _context = new SynaxisDbContext(options);
             await _context.Database.EnsureCreatedAsync();
 
             _service = new TeamMembershipService(_context);
 
             _adminUserId = Guid.NewGuid();
+            SeedTestData();
+            await _context.SaveChangesAsync();
+        }
+
+        private void SeedTestData()
+        {
             _org = new Organization
             {
                 Id = Guid.NewGuid(),
@@ -85,32 +95,41 @@ namespace Synaxis.Infrastructure.Tests.Services
                 CreatedInRegion = "us-east-1"
             };
 
-            _context.Organizations.Add(_org);
+            _context!.Organizations.Add(_org);
             _context.Teams.Add(_team);
             _context.Users.AddRange(_user1, _user2);
-            await _context.SaveChangesAsync();
         }
 
         public async Task DisposeAsync()
         {
-            await _context.DisposeAsync();
+            if (_context is not null)
+            {
+                await _context.DisposeAsync();
+            }
+
             await _postgres.DisposeAsync();
+        }
+
+        public void Dispose()
+        {
+            _context?.Dispose();
+            _postgres.DisposeAsync().AsTask().Wait();
         }
 
         [Fact]
         public async Task FullMembershipLifecycle_AddUpdateRemove_Success()
         {
-            var added = await _service.AddMemberAsync(_team.Id, _user1.Id, "Member", _adminUserId);
+            var added = await _service!.AddMemberAsync(_team.Id, _user1.Id, "Member", _adminUserId);
             added.Should().NotBeNull();
             added.Role.Should().Be("Member");
 
-            var updated = await _service.UpdateMemberRoleAsync(_team.Id, _user1.Id, "TeamAdmin", _adminUserId);
+            var updated = await _service!.UpdateMemberRoleAsync(_team.Id, _user1.Id, "TeamAdmin", _adminUserId);
             updated.Should().NotBeNull();
             updated.Role.Should().Be("TeamAdmin");
 
-            await _service.RemoveMemberAsync(_team.Id, _user1.Id, _adminUserId);
+            await _service!.RemoveMemberAsync(_team.Id, _user1.Id, _adminUserId);
 
-            var membership = await _context.TeamMemberships
+            var membership = await _context!.TeamMemberships
                 .FirstOrDefaultAsync(m => m.UserId == _user1.Id && m.TeamId == _team.Id);
             membership.Should().BeNull();
         }
@@ -118,9 +137,9 @@ namespace Synaxis.Infrastructure.Tests.Services
         [Fact]
         public async Task ForeignKeyConstraints_DeleteUser_CascadesDelete()
         {
-            await _service.AddMemberAsync(_team.Id, _user1.Id, "Member", _adminUserId);
+            await _service!.AddMemberAsync(_team.Id, _user1.Id, "Member", _adminUserId);
 
-            _context.Users.Remove(_user1);
+            _context!.Users.Remove(_user1);
             await _context.SaveChangesAsync();
 
             var membership = await _context.TeamMemberships
@@ -131,9 +150,9 @@ namespace Synaxis.Infrastructure.Tests.Services
         [Fact]
         public async Task ForeignKeyConstraints_DeleteTeam_CascadesDelete()
         {
-            await _service.AddMemberAsync(_team.Id, _user1.Id, "Member", _adminUserId);
+            await _service!.AddMemberAsync(_team.Id, _user1.Id, "Member", _adminUserId);
 
-            _context.Teams.Remove(_team);
+            _context!.Teams.Remove(_team);
             await _context.SaveChangesAsync();
 
             var membership = await _context.TeamMemberships
@@ -144,17 +163,17 @@ namespace Synaxis.Infrastructure.Tests.Services
         [Fact]
         public async Task RoleBasedQueries_FilterByRole_ReturnsCorrectMembers()
         {
-            await _service.AddMemberAsync(_team.Id, _user1.Id, "TeamAdmin", _adminUserId);
+            await _service!.AddMemberAsync(_team.Id, _user1.Id, "TeamAdmin", _adminUserId);
             await _service.AddMemberAsync(_team.Id, _user2.Id, "Member", _adminUserId);
 
-            var admins = await _context.TeamMemberships
+            var admins = await _context!.TeamMemberships
                 .Where(m => m.TeamId == _team.Id && m.Role == "TeamAdmin")
                 .ToListAsync();
 
             admins.Should().HaveCount(1);
             admins[0].UserId.Should().Be(_user1.Id);
 
-            var members = await _context.TeamMemberships
+            var members = await _context!.TeamMemberships
                 .Where(m => m.TeamId == _team.Id && m.Role == "Member")
                 .ToListAsync();
 
@@ -175,10 +194,10 @@ namespace Synaxis.Infrastructure.Tests.Services
                 CreatedInRegion = "us-east-1"
             };
 
-            _context.Users.Add(user3);
+            _context!.Users.Add(user3);
             await _context.SaveChangesAsync();
 
-            await _service.AddMemberAsync(_team.Id, _user1.Id, "Member", _adminUserId);
+            await _service!.AddMemberAsync(_team.Id, _user1.Id, "Member", _adminUserId);
             await _service.AddMemberAsync(_team.Id, _user2.Id, "TeamAdmin", _adminUserId);
             await _service.AddMemberAsync(_team.Id, user3.Id, "Viewer", _adminUserId);
 
@@ -195,7 +214,7 @@ namespace Synaxis.Infrastructure.Tests.Services
         [Fact]
         public async Task GetTeamMembers_WithPagination_WorksWithRealDatabase()
         {
-            await _service.AddMemberAsync(_team.Id, _user1.Id, "TeamAdmin", _adminUserId);
+            await _service!.AddMemberAsync(_team.Id, _user1.Id, "TeamAdmin", _adminUserId);
             await _service.AddMemberAsync(_team.Id, _user2.Id, "Member", _adminUserId);
 
             var page1 = await _service.GetTeamMembersAsync(_team.Id, 1, 1);
@@ -203,7 +222,7 @@ namespace Synaxis.Infrastructure.Tests.Services
             page1.Members.Should().HaveCount(1);
             page1.TotalCount.Should().Be(2);
 
-            var page2 = await _service.GetTeamMembersAsync(_team.Id, 2, 1);
+            var page2 = await _service!.GetTeamMembersAsync(_team.Id, 2, 1);
             page2.Should().NotBeNull();
             page2.Members.Should().HaveCount(1);
             page2.TotalCount.Should().Be(2);
@@ -222,10 +241,10 @@ namespace Synaxis.Infrastructure.Tests.Services
                 Name = "Team 2"
             };
 
-            _context.Teams.Add(team2);
+            _context!.Teams.Add(team2);
             await _context.SaveChangesAsync();
 
-            await _service.AddMemberAsync(_team.Id, _user1.Id, "Member", _adminUserId);
+            await _service!.AddMemberAsync(_team.Id, _user1.Id, "Member", _adminUserId);
             await _service.AddMemberAsync(team2.Id, _user1.Id, "TeamAdmin", _adminUserId);
 
             var userTeams = await _service.GetUserTeamsAsync(_user1.Id, 1, 10);
@@ -238,25 +257,25 @@ namespace Synaxis.Infrastructure.Tests.Services
         [Fact]
         public async Task CheckPermission_WithRealDatabase_ReturnsCorrectResult()
         {
-            await _service.AddMemberAsync(_team.Id, _user1.Id, "TeamAdmin", _adminUserId);
+            await _service!.AddMemberAsync(_team.Id, _user1.Id, "TeamAdmin", _adminUserId);
             await _service.AddMemberAsync(_team.Id, _user2.Id, "Member", _adminUserId);
 
             var adminHasPermission = await _service.CheckPermissionAsync(_user1.Id, _team.Id, "manage_team");
             adminHasPermission.Should().BeTrue();
 
-            var memberLacksPermission = await _service.CheckPermissionAsync(_user2.Id, _team.Id, "manage_team");
+            var memberLacksPermission = await _service!.CheckPermissionAsync(_user2.Id, _team.Id, "manage_team");
             memberLacksPermission.Should().BeFalse();
 
-            var memberCanViewTeam = await _service.CheckPermissionAsync(_user2.Id, _team.Id, "view_team");
+            var memberCanViewTeam = await _service!.CheckPermissionAsync(_user2.Id, _team.Id, "view_team");
             memberCanViewTeam.Should().BeTrue();
         }
 
         [Fact]
         public async Task UniqueConstraint_PreventsDuplicateMemberships()
         {
-            await _service.AddMemberAsync(_team.Id, _user1.Id, "Member", _adminUserId);
+            await _service!.AddMemberAsync(_team.Id, _user1.Id, "Member", _adminUserId);
 
-            var act = async () => await _service.AddMemberAsync(_team.Id, _user1.Id, "TeamAdmin", _adminUserId);
+            var act = async () => await _service!.AddMemberAsync(_team.Id, _user1.Id, "TeamAdmin", _adminUserId);
 
             await act.Should().ThrowAsync<InvalidOperationException>()
                 .WithMessage("*already a member*");
