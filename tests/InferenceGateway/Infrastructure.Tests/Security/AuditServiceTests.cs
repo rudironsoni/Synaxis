@@ -5,13 +5,14 @@
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
 {
     using System;
+    using System.Linq;
     using System.Text.Json;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.EntityFrameworkCore;
-    using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
-    using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
+    using Microsoft.Extensions.Logging.Abstractions;
     using Synaxis.InferenceGateway.Infrastructure.Security;
+    using Synaxis.Infrastructure.Data;
     using Xunit;
 
     public class AuditServiceTests
@@ -20,10 +21,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
         public void Constructor_WithNullDbContext_ThrowsArgumentNullException()
         {
             // Arrange
-            ControlPlaneDbContext nullDbContext = null!;
+            SynaxisDbContext nullDbContext = null!;
+            var logger = NullLogger<AuditService>.Instance;
 
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => new AuditService(nullDbContext!));
+            Assert.Throws<ArgumentNullException>(() => new AuditService(nullDbContext!, logger));
         }
 
         [Fact]
@@ -36,7 +38,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             var payload = new { Property1 = "Value1", Property2 = 123 };
 
             using var dbContext = BuildDbContext();
-            var auditService = new AuditService(dbContext);
+            var logger = NullLogger<AuditService>.Instance;
+            var auditService = new AuditService(dbContext, logger);
 
             // Act
             await auditService.LogAsync(tenantId, userId, action, payload);
@@ -48,7 +51,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             Assert.Equal(tenantId, log.OrganizationId);
             Assert.Equal(userId, log.UserId);
             Assert.Equal(action, log.Action);
-            Assert.NotNull(log.NewValues);
+            Assert.NotNull(log.Metadata);
         }
 
         [Fact]
@@ -61,7 +64,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             var payload = new { Property1 = "Value1", Property2 = 123 };
 
             using var dbContext = BuildDbContext();
-            var auditService = new AuditService(dbContext);
+            var logger = NullLogger<AuditService>.Instance;
+            var auditService = new AuditService(dbContext, logger);
 
             // Act
             await auditService.LogAsync(tenantId, userId, action, payload);
@@ -75,20 +79,16 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             Assert.Equal(tenantId, log.OrganizationId);
             Assert.Equal(userId, log.UserId);
             Assert.Equal(action, log.Action);
-            Assert.NotNull(log.NewValues);
+            Assert.NotNull(log.Metadata);
+            Assert.True(log.Metadata.ContainsKey("payload"));
 
-            // Verify payload was serialized correctly
-            var deserializedPayload = JsonSerializer.Deserialize<JsonElement>(log.NewValues!);
-            Assert.Equal("Value1", deserializedPayload.GetProperty("Property1").GetString());
-            Assert.Equal(123, deserializedPayload.GetProperty("Property2").GetInt32());
-
-            // Verify CreatedAt was set
-            Assert.True(log.CreatedAt <= DateTimeOffset.UtcNow);
-            Assert.True(log.CreatedAt >= DateTimeOffset.UtcNow.AddSeconds(-5)); // Within 5 seconds
+            // Verify Timestamp was set
+            Assert.True(log.Timestamp <= DateTime.UtcNow);
+            Assert.True(log.Timestamp >= DateTime.UtcNow.AddSeconds(-5)); // Within 5 seconds
         }
 
         [Fact]
-        public async Task LogAsync_WithNullPayload_SetsPayloadJsonToNull()
+        public async Task LogAsync_WithNullPayload_SetsMetadataToEmptyDictionary()
         {
             // Arrange
             var tenantId = Guid.NewGuid();
@@ -97,7 +97,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             object? payload = null;
 
             using var dbContext = BuildDbContext();
-            var auditService = new AuditService(dbContext);
+            var logger = NullLogger<AuditService>.Instance;
+            var auditService = new AuditService(dbContext, logger);
 
             // Act
             await auditService.LogAsync(tenantId, userId, action, payload);
@@ -106,7 +107,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             var logs = await dbContext.AuditLogs.ToListAsync();
             Assert.Single(logs);
             var log = logs[0];
-            Assert.Null(log.NewValues);
+            Assert.NotNull(log.Metadata);
+            Assert.Empty(log.Metadata);
         }
 
         [Fact]
@@ -119,7 +121,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             var payload = new { Property1 = "Value1" };
 
             using var dbContext = BuildDbContext();
-            var auditService = new AuditService(dbContext);
+            var logger = NullLogger<AuditService>.Instance;
+            var auditService = new AuditService(dbContext, logger);
 
             // Act
             await auditService.LogAsync(tenantId, userId, action, payload);
@@ -131,13 +134,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             Assert.Null(log.UserId);
         }
 
-        private static ControlPlaneDbContext BuildDbContext()
+        private static SynaxisDbContext BuildDbContext()
         {
-            var options = new DbContextOptionsBuilder<ControlPlaneDbContext>()
+            var options = new DbContextOptionsBuilder<SynaxisDbContext>()
                 .UseInMemoryDatabase(Guid.NewGuid().ToString())
                 .Options;
 
-            return new ControlPlaneDbContext(options);
+            return new SynaxisDbContext(options);
         }
     }
 }

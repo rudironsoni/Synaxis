@@ -5,47 +5,86 @@
 namespace Synaxis.InferenceGateway.Infrastructure.Security
 {
     using System.Text.Json;
+    using Microsoft.Extensions.Logging;
+    using Synaxis.Core.Models;
     using Synaxis.InferenceGateway.Application.Security;
-    using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
-    using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit;
-    using AuditLog = Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit.AuditLog;
+    using Synaxis.Infrastructure.Data;
 
     /// <summary>
     /// AuditService class.
     /// </summary>
     public sealed class AuditService : IAuditService
     {
-        private readonly ControlPlaneDbContext _dbContext;
+        private readonly SynaxisDbContext _dbContext;
+        private readonly ILogger<AuditService> _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AuditService"/> class.
         /// </summary>
         /// <param name="dbContext">The dbContext.</param>
-        public AuditService(ControlPlaneDbContext dbContext)
+        /// <param name="logger">The logger.</param>
+        public AuditService(SynaxisDbContext dbContext, ILogger<AuditService> logger)
         {
             if (dbContext is null)
             {
                 throw new ArgumentNullException(nameof(dbContext));
             }
 
+            if (logger is null)
+            {
+                throw new ArgumentNullException(nameof(logger));
+            }
+
             this._dbContext = dbContext;
+            this._logger = logger;
         }
 
         /// <inheritdoc/>
-        public Task LogAsync(Guid tenantId, Guid? userId, string action, object? payload, CancellationToken cancellationToken = default)
+        public async Task LogAsync(Guid tenantId, Guid? userId, string action, object? payload, CancellationToken cancellationToken = default)
         {
-            var log = new AuditLog
+            try
             {
-                Id = Guid.NewGuid(),
-                OrganizationId = tenantId,
-                UserId = userId,
-                Action = action,
-                NewValues = payload != null ? JsonSerializer.Serialize(payload) : null,
-                CreatedAt = DateTime.UtcNow,
-            };
+                var log = new AuditLog
+                {
+                    Id = Guid.NewGuid(),
+                    OrganizationId = tenantId,
+                    UserId = userId,
+                    EventType = action,
+                    EventCategory = "general",
+                    Action = action,
+                    ResourceType = string.Empty,
+                    ResourceId = string.Empty,
+                    Metadata = payload != null
+                        ? new Dictionary<string, object> { { "payload", payload } }
+                        : new Dictionary<string, object>(),
+                    IpAddress = string.Empty,
+                    UserAgent = string.Empty,
+                    Region = "unknown",
+                    IntegrityHash = string.Empty,
+                    PreviousHash = string.Empty,
+                    Timestamp = DateTime.UtcNow,
+                };
 
-            this._dbContext.AuditLogs.Add(log);
-            return this._dbContext.SaveChangesAsync(cancellationToken);
+                this._dbContext.AuditLogs.Add(log);
+                await this._dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+                this._logger.LogInformation(
+                    "Audit log created: Action={Action}, UserId={UserId}, OrganizationId={OrganizationId}, Timestamp={Timestamp}",
+                    action,
+                    userId,
+                    tenantId,
+                    log.Timestamp);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                this._logger.LogError(
+                    ex,
+                    "Failed to create audit log: Action={Action}, UserId={UserId}, OrganizationId={OrganizationId}",
+                    action,
+                    userId,
+                    tenantId);
+                throw new InvalidOperationException($"Failed to create audit log for action '{action}'", ex);
+            }
         }
     }
 }

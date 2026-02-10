@@ -5,15 +5,15 @@
 namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
 {
     using Microsoft.Extensions.Logging;
-    using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
-    using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit;
+    using Synaxis.Core.Models;
+    using Synaxis.Infrastructure.Data;
 
     /// <summary>
     /// Tool for logging agent actions and optimizations.
     /// </summary>
     public class AuditTool : IAuditTool
     {
-        private readonly ControlPlaneDbContext _db;
+        private readonly SynaxisDbContext _db;
         private readonly ILogger<AuditTool> _logger;
 
         /// <summary>
@@ -21,7 +21,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
         /// </summary>
         /// <param name="db">The database context.</param>
         /// <param name="logger">The logger.</param>
-        public AuditTool(ControlPlaneDbContext db, ILogger<AuditTool> logger)
+        public AuditTool(SynaxisDbContext db, ILogger<AuditTool> logger)
         {
             this._db = db;
             this._logger = logger;
@@ -42,25 +42,41 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
         {
             try
             {
+                var timestamp = DateTime.UtcNow;
                 var auditLog = new AuditLog
                 {
                     Id = Guid.NewGuid(),
-                    Action = $"{agentName}:{action}",
+                    OrganizationId = organizationId ?? Guid.Empty,
                     UserId = userId,
-                    OrganizationId = organizationId,
-                    NewValues = System.Text.Json.JsonSerializer.Serialize(new
+                    EventType = $"{agentName}:{action}",
+                    EventCategory = "agent",
+                    Action = action,
+                    ResourceType = "agent",
+                    ResourceId = agentName,
+                    Metadata = new Dictionary<string, object>
                     {
-                        agent = agentName,
-                        action,
-                        details,
-                        correlationId,
-                        timestamp = DateTime.UtcNow,
-                    }),
-                    CreatedAt = DateTime.UtcNow,
+                        { "agent", agentName },
+                        { "action", action },
+                        { "details", details },
+                        { "correlationId", correlationId },
+                        { "timestamp", timestamp },
+                    },
+                    Region = "unknown",
+                    IntegrityHash = string.Empty,
+                    Timestamp = timestamp,
                 };
 
                 this._db.AuditLogs.Add(auditLog);
                 await this._db.SaveChangesAsync(ct).ConfigureAwait(false);
+
+                this._logger.LogInformation(
+                    "Agent action logged: ToolName={ToolName}, Action={Action}, OrganizationId={OrganizationId}, UserId={UserId}, Timestamp={Timestamp}, Success={Success}",
+                    agentName,
+                    action,
+                    organizationId,
+                    userId,
+                    timestamp,
+                    true);
             }
             catch (Exception ex)
             {
@@ -83,33 +99,45 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
         {
             try
             {
+                var timestamp = DateTime.UtcNow;
                 var auditLog = new AuditLog
                 {
                     Id = Guid.NewGuid(),
-                    Action = "CostOptimization:ProviderSwitch",
                     OrganizationId = organizationId,
-                    NewValues = System.Text.Json.JsonSerializer.Serialize(new
+                    UserId = null,
+                    EventType = "CostOptimization:ProviderSwitch",
+                    EventCategory = "cost_optimization",
+                    Action = "ProviderSwitch",
+                    ResourceType = "model",
+                    ResourceId = modelId,
+                    Metadata = new Dictionary<string, object>
                     {
-                        modelId,
-                        oldProvider,
-                        newProvider,
-                        savingsPercent,
-                        reason,
-                        timestamp = DateTime.UtcNow,
-                    }),
-                    CreatedAt = DateTime.UtcNow,
+                        { "modelId", modelId },
+                        { "oldProvider", oldProvider },
+                        { "newProvider", newProvider },
+                        { "savingsPercent", savingsPercent },
+                        { "reason", reason },
+                        { "timestamp", timestamp },
+                    },
+                    Region = "unknown",
+                    IntegrityHash = string.Empty,
+                    Timestamp = timestamp,
                 };
 
                 this._db.AuditLogs.Add(auditLog);
                 await this._db.SaveChangesAsync(ct).ConfigureAwait(false);
 
                 this._logger.LogInformation(
-                    "Optimization logged: OrgId={OrgId}, Model={Model}, {Old}->{New}, Savings={Savings}%",
+                    "Optimization logged: ToolName={ToolName}, Action={Action}, OrganizationId={OrganizationId}, Model={Model}, OldProvider={OldProvider}, NewProvider={NewProvider}, Savings={Savings}%, Timestamp={Timestamp}, Success={Success}",
+                    "CostOptimization",
+                    "ProviderSwitch",
                     organizationId,
                     modelId,
                     oldProvider,
                     newProvider,
-                    savingsPercent);
+                    savingsPercent,
+                    timestamp,
+                    true);
             }
             catch (Exception ex)
             {

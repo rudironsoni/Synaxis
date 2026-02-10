@@ -60,7 +60,10 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
             var team = this.CreateTeamEntity(orgId, request);
             this._dbContext.Teams.Add(team);
 
-            var teamMembership = this.CreateTeamMembership(userId, team.Id, orgId);
+            // Save team first to ensure OrganizationId FK is valid
+            await this._dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            var teamMembership = this.CreateTeamMembership(userId, team.Id, team.OrganizationId);
             this._dbContext.TeamMemberships.Add(teamMembership);
 
             await this._dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -129,7 +132,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
                 Id = Guid.NewGuid(),
                 OrganizationId = orgId,
                 Name = request.Name,
-                Description = request.Description,
+                Description = request.Description ?? string.Empty,
                 Slug = GenerateSlug(request.Name),
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow,

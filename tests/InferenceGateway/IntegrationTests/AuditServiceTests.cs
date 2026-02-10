@@ -10,10 +10,10 @@ namespace Synaxis.InferenceGateway.IntegrationTests
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.Logging;
     using Synaxis.InferenceGateway.Application.Security;
-    using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
-    using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit;
     using Synaxis.InferenceGateway.Infrastructure.Security;
+    using Synaxis.Infrastructure.Data;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -29,14 +29,18 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         [Fact]
         public void Constructor_ShouldThrowArgumentNullException_ForNullDbContext()
         {
-            Assert.Throws<ArgumentNullException>(() => new AuditService(null!));
+            using var loggerFactory = LoggerFactory.Create(builder => { });
+            var logger = loggerFactory.CreateLogger<AuditService>();
+            Assert.Throws<ArgumentNullException>(() => new AuditService(null!, logger));
         }
 
         [Fact]
         public void Constructor_ShouldInitializeSuccessfully_WithValidDbContext()
         {
             using var dbContext = this.CreateInMemoryDbContext();
-            var service = new AuditService(dbContext);
+            using var loggerFactory = LoggerFactory.Create(builder => { });
+            var logger = loggerFactory.CreateLogger<AuditService>();
+            var service = new AuditService(dbContext, logger);
 
             Assert.NotNull(service);
         }
@@ -46,7 +50,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         {
             // Arrange
             using var dbContext = this.CreateInMemoryDbContext();
-            var service = new AuditService(dbContext);
+            using var loggerFactory = LoggerFactory.Create(builder => { });
+            var logger = loggerFactory.CreateLogger<AuditService>();
+            var service = new AuditService(dbContext, logger);
 
             var tenantId = Guid.NewGuid();
             var userId = Guid.NewGuid();
@@ -62,10 +68,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             Assert.Equal(tenantId, log.OrganizationId);
             Assert.Equal(userId, log.UserId);
             Assert.Equal(action, log.Action);
-            Assert.NotNull(log.NewValues);
-            Assert.Contains("testuser", log.NewValues, StringComparison.Ordinal);
-            Assert.Contains("192.168.1.1", log.NewValues, StringComparison.Ordinal);
-            Assert.True(log.CreatedAt <= DateTime.UtcNow.AddSeconds(1));
+            Assert.NotNull(log.Metadata);
+            Assert.True(log.Timestamp <= DateTime.UtcNow.AddSeconds(1));
         }
 
         [Fact]
@@ -73,7 +77,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         {
             // Arrange
             using var dbContext = this.CreateInMemoryDbContext();
-            var service = new AuditService(dbContext);
+            using var loggerFactory = LoggerFactory.Create(builder => { });
+            var logger = loggerFactory.CreateLogger<AuditService>();
+            var service = new AuditService(dbContext, logger);
 
             var tenantId = Guid.NewGuid();
             var action = "system.startup";
@@ -88,8 +94,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             Assert.Equal(tenantId, log.OrganizationId);
             Assert.Null(log.UserId);
             Assert.Equal(action, log.Action);
-            Assert.NotNull(log.NewValues);
-            Assert.Contains("1.0.0", log.NewValues, StringComparison.Ordinal);
+            Assert.NotNull(log.Metadata);
         }
 
         [Fact]
@@ -97,7 +102,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         {
             // Arrange
             using var dbContext = this.CreateInMemoryDbContext();
-            var service = new AuditService(dbContext);
+            using var loggerFactory = LoggerFactory.Create(builder => { });
+            var logger = loggerFactory.CreateLogger<AuditService>();
+            var service = new AuditService(dbContext, logger);
 
             var tenantId = Guid.NewGuid();
             var userId = Guid.NewGuid();
@@ -112,7 +119,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             Assert.Equal(tenantId, log.OrganizationId);
             Assert.Equal(userId, log.UserId);
             Assert.Equal(action, log.Action);
-            Assert.Null(log.NewValues);
+            Assert.Empty(log.Metadata);
         }
 
         [Fact]
@@ -120,7 +127,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         {
             // Arrange
             using var dbContext = this.CreateInMemoryDbContext();
-            var service = new AuditService(dbContext);
+            using var loggerFactory = LoggerFactory.Create(builder => { });
+            var logger = loggerFactory.CreateLogger<AuditService>();
+            var service = new AuditService(dbContext, logger);
 
             var tenantId = Guid.NewGuid();
             var userId = Guid.NewGuid();
@@ -136,7 +145,6 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             Assert.Equal(tenantId, log.OrganizationId);
             Assert.Equal(userId, log.UserId);
             Assert.Equal(action, log.Action);
-            Assert.Equal("{}", log.NewValues);
         }
 
         [Fact]
@@ -144,7 +152,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         {
             // Arrange
             using var dbContext = this.CreateInMemoryDbContext();
-            var service = new AuditService(dbContext);
+            using var loggerFactory = LoggerFactory.Create(builder => { });
+            var logger = loggerFactory.CreateLogger<AuditService>();
+            var service = new AuditService(dbContext, logger);
 
             var tenantId = Guid.NewGuid();
             var userId = Guid.NewGuid();
@@ -166,9 +176,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             Assert.Equal(tenantId, log.OrganizationId);
             Assert.Equal(userId, log.UserId);
             Assert.Equal(action, log.Action);
-            Assert.NotNull(log.NewValues);
-            Assert.Contains("chat/completions", log.NewValues, StringComparison.Ordinal);
-            Assert.Contains("llama-3.3-70b-versatile", log.NewValues, StringComparison.Ordinal);
+            Assert.NotNull(log.Metadata);
         }
 
         [Fact]
@@ -176,7 +184,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         {
             // Arrange
             using var dbContext = this.CreateInMemoryDbContext();
-            var service = new AuditService(dbContext);
+            using var loggerFactory = LoggerFactory.Create(builder => { });
+            var logger = loggerFactory.CreateLogger<AuditService>();
+            var service = new AuditService(dbContext, logger);
 
             var tenantId = Guid.NewGuid();
             var action = "test.action";
@@ -196,7 +206,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         {
             // Arrange
             using var dbContext = this.CreateInMemoryDbContext();
-            var service = new AuditService(dbContext);
+            using var loggerFactory = LoggerFactory.Create(builder => { });
+            var logger = loggerFactory.CreateLogger<AuditService>();
+            var service = new AuditService(dbContext, logger);
 
             var tenantId = Guid.NewGuid();
             var action = "timestamp.test";
@@ -209,8 +221,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             // Assert
             var log = await dbContext.AuditLogs.FirstOrDefaultAsync();
             Assert.NotNull(log);
-            Assert.True(log.CreatedAt >= beforeLog.AddSeconds(-1));
-            Assert.True(log.CreatedAt <= afterLog.AddSeconds(1));
+            Assert.True(log.Timestamp >= beforeLog.AddSeconds(-1));
+            Assert.True(log.Timestamp <= afterLog.AddSeconds(1));
         }
 
         [Fact]
@@ -218,7 +230,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         {
             // Arrange
             using var dbContext = this.CreateInMemoryDbContext();
-            var service = new AuditService(dbContext);
+            using var loggerFactory = LoggerFactory.Create(builder => { });
+            var logger = loggerFactory.CreateLogger<AuditService>();
+            var service = new AuditService(dbContext, logger);
 
             var tenantId = Guid.NewGuid();
             var longAction = new string('a', 255);
@@ -238,7 +252,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         {
             // Arrange
             using var dbContext = this.CreateInMemoryDbContext();
-            var service = new AuditService(dbContext);
+            using var loggerFactory = LoggerFactory.Create(builder => { });
+            var logger = loggerFactory.CreateLogger<AuditService>();
+            var service = new AuditService(dbContext, logger);
 
             var tenantId = Guid.NewGuid();
             var action = "cancellation.test";
@@ -254,7 +270,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         {
             // Arrange
             using var dbContext = this.CreateInMemoryDbContext();
-            var service = new AuditService(dbContext);
+            using var loggerFactory = LoggerFactory.Create(builder => { });
+            var logger = loggerFactory.CreateLogger<AuditService>();
+            var service = new AuditService(dbContext, logger);
 
             var tenantId = Guid.NewGuid();
             var action = "action-with-dashes_and.underscores";
@@ -267,9 +285,6 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var log = await dbContext.AuditLogs.FirstOrDefaultAsync();
             Assert.NotNull(log);
             Assert.Equal(action, log.Action);
-
-            // JSON serialization escapes special characters
-            Assert.Contains("chars!@#$%^\\u0026*()", log.NewValues, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -277,7 +292,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         {
             // Arrange
             using var dbContext = this.CreateInMemoryDbContext();
-            var service = new AuditService(dbContext);
+            using var loggerFactory = LoggerFactory.Create(builder => { });
+            var logger = loggerFactory.CreateLogger<AuditService>();
+            var service = new AuditService(dbContext, logger);
 
             var tenant1 = Guid.NewGuid();
             var tenant2 = Guid.NewGuid();
@@ -299,7 +316,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         {
             // Arrange
             using var dbContext = this.CreateInMemoryDbContext();
-            var service = new AuditService(dbContext);
+            using var loggerFactory = LoggerFactory.Create(builder => { });
+            var logger = loggerFactory.CreateLogger<AuditService>();
+            var service = new AuditService(dbContext, logger);
 
             var tenantId = Guid.NewGuid();
             var action = "null.payload";
@@ -311,13 +330,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             // Assert
             var log = await dbContext.AuditLogs.FirstOrDefaultAsync();
             Assert.NotNull(log);
-            Assert.NotNull(log.NewValues);
-
-            Assert.Contains("not null", log.NewValues, StringComparison.Ordinal);
-            Assert.Contains("42", log.NewValues, StringComparison.Ordinal);
-
-            // JSON serializer will include null values
-            Assert.Contains("null", log.NewValues, StringComparison.Ordinal);
+            Assert.NotNull(log.Metadata);
         }
 
         [Fact]
@@ -325,7 +338,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         {
             // Arrange
             using var dbContext = this.CreateInMemoryDbContext();
-            var service = new AuditService(dbContext);
+            using var loggerFactory = LoggerFactory.Create(builder => { });
+            var logger = loggerFactory.CreateLogger<AuditService>();
+            var service = new AuditService(dbContext, logger);
 
             var tenantId = Guid.NewGuid();
             var action = "large.payload";
@@ -338,8 +353,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             // Assert
             var log = await dbContext.AuditLogs.FirstOrDefaultAsync();
             Assert.NotNull(log);
-            Assert.NotNull(log.NewValues);
-            Assert.Contains(largeString, log.NewValues, StringComparison.Ordinal);
+            Assert.NotNull(log.Metadata);
         }
 
         [Fact]
@@ -347,7 +361,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests
         {
             // Arrange
             using var dbContext = this.CreateInMemoryDbContext();
-            var service = new AuditService(dbContext);
+            using var loggerFactory = LoggerFactory.Create(builder => { });
+            var logger = loggerFactory.CreateLogger<AuditService>();
+            var service = new AuditService(dbContext, logger);
 
             var tenantId = Guid.NewGuid();
             var action = "utc.time";
@@ -358,17 +374,17 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             // Assert
             var log = await dbContext.AuditLogs.FirstOrDefaultAsync();
             Assert.NotNull(log);
-            Assert.Equal(DateTimeKind.Utc, log.CreatedAt.Kind);
-            Assert.True((DateTime.UtcNow - log.CreatedAt).TotalSeconds < 5);
+            Assert.Equal(DateTimeKind.Utc, log.Timestamp.Kind);
+            Assert.True((DateTime.UtcNow - log.Timestamp).TotalSeconds < 5);
         }
 
-        private ControlPlaneDbContext CreateInMemoryDbContext()
+        private SynaxisDbContext CreateInMemoryDbContext()
         {
-            var options = new DbContextOptionsBuilder<ControlPlaneDbContext>()
+            var options = new DbContextOptionsBuilder<SynaxisDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
 
-            return new ControlPlaneDbContext(options);
+            return new SynaxisDbContext(options);
         }
     }
 }

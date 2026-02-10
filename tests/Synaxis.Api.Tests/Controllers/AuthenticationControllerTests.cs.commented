@@ -2,23 +2,23 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-using FluentAssertions;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Moq;
-using Synaxis.Api.Controllers;
-using Synaxis.Api.DTOs.Authentication;
-using Synaxis.Core.Contracts;
-using Synaxis.Core.Models;
-using Synaxis.Infrastructure.Data;
-using System;
-using System.Threading.Tasks;
-using Xunit;
-
 namespace Synaxis.Api.Tests.Controllers
 {
+    using System;
+    using System.Threading.Tasks;
+    using FluentAssertions;
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.AspNetCore.Mvc;
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.Configuration;
+    using Moq;
+    using Synaxis.Api.Controllers;
+    using Synaxis.Api.DTOs.Authentication;
+    using Synaxis.Core.Contracts;
+    using Synaxis.Core.Models;
+    using Synaxis.Infrastructure.Data;
+    using Xunit;
+
     public class AuthenticationControllerTests
     {
         private readonly Mock<IAuthenticationService> _mockAuthService;

@@ -105,7 +105,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
             response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         }
 
-        [Fact(Skip = "AuditLog schema mismatch: ControlPlaneDbContext uses audit.AuditLogs with properties (EntityType, PreviousValues, NewValues), while SynaxisDbContext uses public.audit_logs with properties (EventType, ResourceType, Metadata). Requires schema unification.")]
+        [Fact]
         public async Task CreateTeam_CreatesAuditLog()
         {
             var (client, user) = await CreateAuthenticatedClientAsync();
@@ -268,7 +268,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
             content.GetProperty("description").GetString().Should().Be("Updated description");
         }
 
-        [Fact(Skip = "Audit log schema mismatch: AuditService writes to audit.AuditLogs (ControlPlaneDbContext) but tests query public.audit_logs (SynaxisDbContext). Requires audit log unification.")]
+        [Fact]
         public async Task UpdateTeam_CreatesAuditLog()
         {
             var (client, user) = await CreateAuthenticatedClientAsync();
@@ -338,7 +338,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
             deletedTeam!.IsActive.Should().BeFalse();
         }
 
-        [Fact(Skip = "Audit log schema mismatch: AuditService writes to audit.AuditLogs (ControlPlaneDbContext) but tests query public.audit_logs (SynaxisDbContext). Requires audit log unification.")]
+        [Fact]
         public async Task DeleteTeam_CreatesAuditLog()
         {
             var (client, user) = await CreateAuthenticatedClientAsync();
@@ -501,7 +501,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
             response.StatusCode.Should().Be(HttpStatusCode.NotFound);
         }
 
-        [Fact(Skip = "Audit log schema mismatch: AuditService writes to audit.AuditLogs (ControlPlaneDbContext) but tests query public.audit_logs (SynaxisDbContext). Requires audit log unification.")]
+        [Fact]
         public async Task AddMember_CreatesAuditLog()
         {
             var (client, user) = await CreateAuthenticatedClientAsync("admin@example.com");
@@ -631,7 +631,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
             response.StatusCode.Should().Be(HttpStatusCode.NotFound);
         }
 
-        [Fact(Skip = "Audit log schema mismatch: AuditService writes to audit.AuditLogs (ControlPlaneDbContext) but tests query public.audit_logs (SynaxisDbContext). Requires audit log unification.")]
+        [Fact]
         public async Task UpdateMemberRole_CreatesAuditLog()
         {
             var (client, user) = await CreateAuthenticatedClientAsync("admin@example.com");
