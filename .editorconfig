@@ -79,6 +79,7 @@ dotnet_analyzer_diagnostic.category-StyleCop.severity = none
 dotnet_diagnostic.SA1200.severity = none
 dotnet_diagnostic.SA1137.severity = none
 dotnet_diagnostic.SA1413.severity = none
+dotnet_diagnostic.MA0048.severity = none
 
 # Generated files (obj directory) - suppress all StyleCop analyzers for auto-generated files
 [**/obj/**/*.cs]

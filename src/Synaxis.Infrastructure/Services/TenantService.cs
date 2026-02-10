@@ -203,12 +203,8 @@ namespace Synaxis.Infrastructure.Services
         public async Task<bool> IsUnderConcurrentLimitAsync(Guid organizationId)
         {
             // This would typically check against a cache/counter of active requests
-            // For now, return true as placeholder
+            // Implementation requires Redis/distributed counter for active request tracking
             var limits = await GetOrganizationLimitsAsync(organizationId);
-
-            // In production, check Redis or similar for active request count
-            // var activeRequests = await _redisCache.GetAsync<int>($"org:{organizationId}:active_requests");
-            // return activeRequests < limits.MaxConcurrentRequests;
             return true;
         }
 

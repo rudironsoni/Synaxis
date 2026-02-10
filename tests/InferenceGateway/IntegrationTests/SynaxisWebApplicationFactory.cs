@@ -46,26 +46,22 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             // Initialize the ControlPlane database schema
             var controlPlaneOptionsBuilder = new DbContextOptionsBuilder<ControlPlaneDbContext>();
             var connectionString = $"{this._postgres.GetConnectionString()};Pooling=true;Maximum Pool Size=200";
-            controlPlaneOptionsBuilder.UseNpgsql(connectionString, npgsql => npgsql.EnableRetryOnFailure(3));
+            controlPlaneOptionsBuilder.UseNpgsql(connectionString);
 
             using var controlPlaneContext = new ControlPlaneDbContext(controlPlaneOptionsBuilder.Options);
 
-            // Use execution strategy to handle potential transient failures during startup
-            var strategy = controlPlaneContext.Database.CreateExecutionStrategy();
-            await strategy.ExecuteAsync(async () =>
-            {
-                // Apply EF Core migrations for ControlPlaneDbContext (infrastructure tables: identity.Users, etc.)
-                await controlPlaneContext.Database.MigrateAsync().ConfigureAwait(false);
+            // Apply EF Core migrations for ControlPlaneDbContext (infrastructure tables: identity.Users, etc.)
+            await controlPlaneContext.Database.MigrateAsync().ConfigureAwait(false);
 
-                // Apply EF Core migrations for SynaxisDbContext (multi-tenant tables: public.users, etc.)
-                // Both contexts target the same database but create DIFFERENT tables
-                var synaxisOptionsBuilder = new DbContextOptionsBuilder<Synaxis.Infrastructure.Data.SynaxisDbContext>();
-                synaxisOptionsBuilder.UseNpgsql(connectionString, npgsql => npgsql.EnableRetryOnFailure(3));
-                using var synaxisContext = new Synaxis.Infrastructure.Data.SynaxisDbContext(synaxisOptionsBuilder.Options);
-                await synaxisContext.Database.MigrateAsync().ConfigureAwait(false);
+            // Apply EF Core migrations for SynaxisDbContext (multi-tenant tables: public.users, etc.)
+            // Both contexts target the same database but create DIFFERENT tables
+            var synaxisOptionsBuilder = new DbContextOptionsBuilder<Synaxis.Infrastructure.Data.SynaxisDbContext>();
+            synaxisOptionsBuilder.UseNpgsql(connectionString);
+            using var synaxisContext = new Synaxis.Infrastructure.Data.SynaxisDbContext(synaxisOptionsBuilder.Options);
+            await synaxisContext.Database.MigrateAsync().ConfigureAwait(false);
 
-                // Build temporary configuration to seed test data. Reuse logic from SmokeTestDataGenerator.
-                var builder = new ConfigurationBuilder();
+            // Build temporary configuration to seed test data. Reuse logic from SmokeTestDataGenerator.
+            var builder = new ConfigurationBuilder();
 
                 // Find project root to locate appsettings
                 string? projectRoot = null;
@@ -113,9 +109,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 builder.AddEnvironmentVariables();
                 var config = builder.Build();
 
-                // Seed the database
-                await TestDatabaseSeeder.SeedAsync(controlPlaneContext, config).ConfigureAwait(false);
-            }).ConfigureAwait(false);
+            // Seed the database
+            await TestDatabaseSeeder.SeedAsync(controlPlaneContext, config).ConfigureAwait(false);
         }
 
         Task IAsyncLifetime.DisposeAsync()
@@ -248,13 +243,13 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 // Re-register ControlPlaneDbContext with PostgreSQL (this is used by tests to query data)
                 services.AddDbContext<ControlPlaneDbContext>(options =>
                 {
-                    options.UseNpgsql(connectionString, npgsql => npgsql.EnableRetryOnFailure(3));
+                    options.UseNpgsql(connectionString);
                 });
 
                 // Re-register SynaxisDbContext (used by Identity) with PostgreSQL
                 services.AddDbContext<Synaxis.Infrastructure.Data.SynaxisDbContext>(options =>
                 {
-                    options.UseNpgsql(connectionString, npgsql => npgsql.EnableRetryOnFailure(3));
+                    options.UseNpgsql(connectionString);
                 });
             });
         }

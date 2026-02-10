@@ -48,6 +48,12 @@ namespace Synaxis.Infrastructure.Data
 
         public DbSet<Invitation> Invitations { get; set; }
 
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
+
+        public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
+
+        public DbSet<EmailVerificationToken> EmailVerificationTokens { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -66,6 +72,9 @@ namespace Synaxis.Infrastructure.Data
             modelBuilder.Entity<CreditTransaction>().ToTable("credit_transactions");
             modelBuilder.Entity<Invoice>().ToTable("invoices");
             modelBuilder.Entity<Invitation>().ToTable("invitations");
+            modelBuilder.Entity<RefreshToken>().ToTable("refresh_tokens");
+            modelBuilder.Entity<PasswordResetToken>().ToTable("password_reset_tokens");
+            modelBuilder.Entity<EmailVerificationToken>().ToTable("email_verification_tokens");
 
             // Configure Organizations
             modelBuilder.Entity<Organization>(entity =>
@@ -638,6 +647,80 @@ namespace Synaxis.Infrastructure.Data
                 entity.HasIndex(e => e.Token).IsUnique();
                 entity.HasIndex(e => new { e.OrganizationId, e.Status });
                 entity.HasIndex(e => new { e.TeamId, e.Email, e.Status });
+            });
+
+            // Configure RefreshTokens
+            modelBuilder.Entity<RefreshToken>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id)
+                    .HasColumnName("id")
+                    .ValueGeneratedOnAdd();
+
+                entity.Property(e => e.UserId).HasColumnName("user_id");
+                entity.Property(e => e.TokenHash).HasColumnName("token_hash");
+                entity.Property(e => e.ExpiresAt).HasColumnName("expires_at");
+                entity.Property(e => e.IsRevoked).HasColumnName("is_revoked");
+                entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+                entity.Property(e => e.RevokedAt).HasColumnName("revoked_at");
+                entity.Property(e => e.ReplacedByTokenHash).HasColumnName("replaced_by_token_hash");
+
+                entity.HasOne(e => e.User)
+                    .WithMany()
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(e => e.TokenHash).IsUnique();
+                entity.HasIndex(e => e.UserId);
+                entity.HasIndex(e => e.ExpiresAt);
+            });
+
+            // Configure PasswordResetTokens
+            modelBuilder.Entity<PasswordResetToken>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id)
+                    .HasColumnName("id")
+                    .ValueGeneratedOnAdd();
+
+                entity.Property(e => e.UserId).HasColumnName("user_id");
+                entity.Property(e => e.TokenHash).HasColumnName("token_hash");
+                entity.Property(e => e.ExpiresAt).HasColumnName("expires_at");
+                entity.Property(e => e.IsUsed).HasColumnName("is_used");
+                entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+
+                entity.HasOne(e => e.User)
+                    .WithMany()
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(e => e.TokenHash).IsUnique();
+                entity.HasIndex(e => e.UserId);
+                entity.HasIndex(e => e.ExpiresAt);
+            });
+
+            // Configure EmailVerificationTokens
+            modelBuilder.Entity<EmailVerificationToken>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id)
+                    .HasColumnName("id")
+                    .ValueGeneratedOnAdd();
+
+                entity.Property(e => e.UserId).HasColumnName("user_id");
+                entity.Property(e => e.TokenHash).HasColumnName("token_hash");
+                entity.Property(e => e.ExpiresAt).HasColumnName("expires_at");
+                entity.Property(e => e.IsUsed).HasColumnName("is_used");
+                entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+
+                entity.HasOne(e => e.User)
+                    .WithMany()
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(e => e.TokenHash).IsUnique();
+                entity.HasIndex(e => e.UserId);
+                entity.HasIndex(e => e.ExpiresAt);
             });
         }
     }

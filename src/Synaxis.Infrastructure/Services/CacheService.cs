@@ -150,10 +150,7 @@ namespace Synaxis.Infrastructure.Services
             _logger.LogWarning("RemoveByPatternAsync not fully implemented - pattern matching requires Redis Lua scripting. Pattern: {Pattern}", pattern);
 
             // Note: Pattern-based deletion in Redis requires Lua scripting or SCAN command
-            // For now, this is a placeholder. In production, implement using StackExchange.Redis directly:
-            // var server = _redis.GetServer(...);
-            // var keys = server.Keys(pattern: pattern);
-            // foreach (var key in keys) await _distributedCache.RemoveAsync(key);
+            // Implementation requires StackExchange.Redis IConnectionMultiplexer injection
             await Task.CompletedTask;
         }
 
@@ -234,18 +231,8 @@ namespace Synaxis.Infrastructure.Services
                 await RemoveAsync(key);
 
                 // Publish invalidation message to Kafka for cross-region sync
-                // Note: This requires Kafka integration which should be injected
-                _logger.LogInformation("Publishing global cache invalidation for key: {Key}", key);
-
-                // TODO: Publish to Kafka topic 'cache-invalidation'
-                // await _kafkaProducer.ProduceAsync("cache-invalidation", new CacheInvalidationMessage
-                // {
-                //     Key = key,
-                //     Timestamp = DateTime.UtcNow,
-                //     Region = _currentRegion
-                // });
-
-                // For now, just log - Kafka integration can be added later
+                // Note: Kafka integration requires IKafkaProducer injection (not yet implemented)
+                _logger.LogInformation("Global cache invalidation requested for key: {Key}", key);
                 _logger.LogDebug("Cache invalidation message would be published to Kafka topic: cache-invalidation");
             }
             catch (Exception ex)

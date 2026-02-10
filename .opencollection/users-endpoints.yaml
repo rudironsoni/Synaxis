@@ -1,0 +1,407 @@
+openapi: 3.0.0
+info:
+  title: Users API
+  description: User profile and account management endpoints
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:5000
+    description: Local development server
+  - url: https://api.synaxis.dev
+    description: Production server
+
+paths:
+  /api/v1/users/me:
+    get:
+      summary: Get current user profile
+      description: Retrieves the authenticated user's profile information
+      operationId: getCurrentUser
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+              example:
+                id: "550e8400-e29b-41d4-a716-446655440000"
+                email: "user@example.com"
+                firstName: "John"
+                lastName: "Doe"
+                avatarUrl: "https://example.com/avatar.jpg"
+                timezone: "UTC"
+                locale: "en-US"
+                role: "user"
+                dataResidencyRegion: "us-east-1"
+                crossBorderConsentGiven: true
+                crossBorderConsentDate: "2024-01-15T10:30:00Z"
+                mfaEnabled: false
+                isActive: true
+                createdAt: "2024-01-01T00:00:00Z"
+                updatedAt: "2024-01-15T10:30:00Z"
+        '401':
+          description: Unauthorized - Invalid or missing authentication token
+        '404':
+          description: User not found
+
+    put:
+      summary: Update current user profile
+      description: Updates the authenticated user's profile information
+      operationId: updateCurrentUser
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+            example:
+              firstName: "Jane"
+              lastName: "Smith"
+              timezone: "America/New_York"
+              locale: "en-GB"
+      responses:
+        '200':
+          description: User profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileUpdate'
+              example:
+                id: "550e8400-e29b-41d4-a716-446655440000"
+                email: "user@example.com"
+                firstName: "Jane"
+                lastName: "Smith"
+                avatarUrl: "https://example.com/avatar.jpg"
+                timezone: "America/New_York"
+                locale: "en-GB"
+                role: "user"
+                updatedAt: "2024-01-15T11:00:00Z"
+        '400':
+          description: Bad request - Invalid input data
+        '401':
+          description: Unauthorized - Invalid or missing authentication token
+        '404':
+          description: User not found
+
+    delete:
+      summary: Delete current user account
+      description: Soft deletes the authenticated user's account (sets isActive to false)
+      operationId: deleteCurrentUser
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: User account deleted successfully (soft delete)
+        '401':
+          description: Unauthorized - Invalid or missing authentication token
+        '404':
+          description: User not found
+
+  /api/v1/users/me/organizations:
+    get:
+      summary: Get user's organizations
+      description: Retrieves a paginated list of organizations the authenticated user is a member of
+      operationId: getUserOrganizations
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Page number (1-based)
+          required: false
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: pageSize
+          in: query
+          description: Number of items per page
+          required: false
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Organizations retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationListResponse'
+              example:
+                items:
+                  - id: "650e8400-e29b-41d4-a716-446655440000"
+                    name: "Acme Corp"
+                    slug: "acme-corp"
+                    description: "Software development company"
+                    tier: "enterprise"
+                    isActive: true
+                    createdAt: "2024-01-01T00:00:00Z"
+                  - id: "750e8400-e29b-41d4-a716-446655440000"
+                    name: "StartupXYZ"
+                    slug: "startup-xyz"
+                    description: "Early-stage startup"
+                    tier: "free"
+                    isActive: true
+                    createdAt: "2024-02-01T00:00:00Z"
+                page: 1
+                pageSize: 10
+                totalCount: 2
+                totalPages: 1
+        '401':
+          description: Unauthorized - Invalid or missing authentication token
+
+  /api/v1/users/me/teams:
+    get:
+      summary: Get user's teams
+      description: Retrieves a paginated list of teams the authenticated user is a member of
+      operationId: getUserTeams
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Page number (1-based)
+          required: false
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: pageSize
+          in: query
+          description: Number of items per page
+          required: false
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Teams retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamListResponse'
+              example:
+                items:
+                  - id: "850e8400-e29b-41d4-a716-446655440000"
+                    organizationId: "650e8400-e29b-41d4-a716-446655440000"
+                    name: "Engineering"
+                    slug: "engineering"
+                    description: "Engineering team"
+                    isActive: true
+                    createdAt: "2024-01-05T00:00:00Z"
+                  - id: "950e8400-e29b-41d4-a716-446655440000"
+                    organizationId: "650e8400-e29b-41d4-a716-446655440000"
+                    name: "Product"
+                    slug: "product"
+                    description: "Product team"
+                    isActive: true
+                    createdAt: "2024-01-10T00:00:00Z"
+                page: 1
+                pageSize: 10
+                totalCount: 2
+                totalPages: 1
+        '401':
+          description: Unauthorized - Invalid or missing authentication token
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the user
+        email:
+          type: string
+          format: email
+          description: User's email address
+        firstName:
+          type: string
+          description: User's first name
+        lastName:
+          type: string
+          description: User's last name
+        avatarUrl:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to user's avatar image
+        timezone:
+          type: string
+          description: User's timezone (IANA format)
+        locale:
+          type: string
+          description: User's locale (e.g., en-US, en-GB)
+        role:
+          type: string
+          description: User's role in the system
+        dataResidencyRegion:
+          type: string
+          description: Data residency region for the user
+        crossBorderConsentGiven:
+          type: boolean
+          description: Whether user has given cross-border data transfer consent
+        crossBorderConsentDate:
+          type: string
+          format: date-time
+          nullable: true
+          description: Date when consent was given
+        mfaEnabled:
+          type: boolean
+          description: Whether MFA is enabled for the user
+        isActive:
+          type: boolean
+          description: Whether the user account is active
+        createdAt:
+          type: string
+          format: date-time
+          description: Account creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+          nullable: true
+          description: Updated first name
+        lastName:
+          type: string
+          nullable: true
+          description: Updated last name
+        timezone:
+          type: string
+          nullable: true
+          description: Updated timezone (IANA format)
+        locale:
+          type: string
+          nullable: true
+          description: Updated locale (e.g., en-US, en-GB)
+
+    UserProfileUpdate:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        avatarUrl:
+          type: string
+          format: uri
+          nullable: true
+        timezone:
+          type: string
+        locale:
+          type: string
+        role:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+
+    OrganizationSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        tier:
+          type: string
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    OrganizationListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationSummary'
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        totalCount:
+          type: integer
+        totalPages:
+          type: integer
+
+    TeamSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        organizationId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    TeamListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamSummary'
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        totalCount:
+          type: integer
+        totalPages:
+          type: integer

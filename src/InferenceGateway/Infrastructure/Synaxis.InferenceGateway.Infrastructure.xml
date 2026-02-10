@@ -1086,6 +1086,26 @@
             <param name="accounts">The accounts to save.</param>
             <returns>A task representing the asynchronous operation.</returns>
         </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Auth.OrganizationUserContext">
+            <summary>
+            Provides access to the current authenticated user's context from HTTP claims.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Auth.OrganizationUserContext.#ctor(Microsoft.AspNetCore.Http.IHttpContextAccessor)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Synaxis.InferenceGateway.Infrastructure.Auth.OrganizationUserContext"/> class.
+            </summary>
+            <param name="httpContextAccessor">The HTTP context accessor.</param>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Auth.OrganizationUserContext.UserId">
+            <inheritdoc/>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Auth.OrganizationUserContext.OrganizationId">
+            <inheritdoc/>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.Auth.OrganizationUserContext.IsAuthenticated">
+            <inheritdoc/>
+        </member>
         <member name="T:Synaxis.InferenceGateway.Infrastructure.ChatClients.ChatClientFactory">
             <summary>
             ChatClientFactory class.
@@ -5201,6 +5221,18 @@
             <inheritdoc />
         </member>
         <member name="M:Synaxis.InferenceGateway.Infrastructure.Migrations.AddUserOrganizationMembershipSoftDelete.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Migrations.FixPendingModelChanges2">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Migrations.FixPendingModelChanges2.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Migrations.FixPendingModelChanges2.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Migrations.FixPendingModelChanges2.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
         <member name="T:Synaxis.InferenceGateway.Infrastructure.PollinationsChatClient">

@@ -6,13 +6,13 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
 {
     using System;
     using System.Linq;
-    using System.Security.Claims;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Cors;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
+    using Synaxis.InferenceGateway.Application.Interfaces;
     using Synaxis.Infrastructure.Data;
 
     /// <summary>
@@ -25,14 +25,17 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
     public class UsersController : ControllerBase
     {
         private readonly SynaxisDbContext _synaxisDbContext;
+        private readonly IOrganizationUserContext _userContext;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UsersController"/> class.
         /// </summary>
         /// <param name="synaxisDbContext">The Synaxis database context.</param>
-        public UsersController(SynaxisDbContext synaxisDbContext)
+        /// <param name="userContext">The organization user context.</param>
+        public UsersController(SynaxisDbContext synaxisDbContext, IOrganizationUserContext userContext)
         {
             this._synaxisDbContext = synaxisDbContext;
+            this._userContext = userContext;
         }
 
         /// <summary>
@@ -43,7 +46,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         [HttpGet("me")]
         public async Task<IActionResult> GetMe(CancellationToken cancellationToken)
         {
-            var userId = this.GetUserId();
+            var userId = this._userContext.UserId;
 
             var user = await this._synaxisDbContext.Users
                 .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken)
@@ -85,7 +88,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         [HttpPut("me")]
         public async Task<IActionResult> UpdateMe([FromBody] UpdateUserRequest request, CancellationToken cancellationToken)
         {
-            var userId = this.GetUserId();
+            var userId = this._userContext.UserId;
 
             var user = await this._synaxisDbContext.Users
                 .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken)
@@ -143,7 +146,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         [HttpDelete("me")]
         public async Task<IActionResult> DeleteMe(CancellationToken cancellationToken)
         {
-            var userId = this.GetUserId();
+            var userId = this._userContext.UserId;
 
             var user = await this._synaxisDbContext.Users
                 .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken)
@@ -169,7 +172,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         [HttpPost("me/avatar")]
         public async Task<IActionResult> UploadAvatar(CancellationToken cancellationToken)
         {
-            var userId = this.GetUserId();
+            var userId = this._userContext.UserId;
 
             var user = await this._synaxisDbContext.Users
                 .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken)
@@ -199,7 +202,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         [HttpGet("me/organizations")]
         public async Task<IActionResult> GetMyOrganizations([FromQuery] int page = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
         {
-            var userId = this.GetUserId();
+            var userId = this._userContext.UserId;
 
             var query = this._synaxisDbContext.Organizations
                 .Where(o => o.Teams.Any(t => t.TeamMemberships.Any(tm => tm.UserId == userId)))
@@ -242,7 +245,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         [HttpGet("me/teams")]
         public async Task<IActionResult> GetMyTeams([FromQuery] int page = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
         {
-            var userId = this.GetUserId();
+            var userId = this._userContext.UserId;
 
             var query = this._synaxisDbContext.Teams
                 .Where(t => t.TeamMemberships.Any(tm => tm.UserId == userId))
@@ -283,7 +286,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         [HttpPost("me/data-export")]
         public async Task<IActionResult> RequestDataExport(CancellationToken cancellationToken)
         {
-            var userId = this.GetUserId();
+            var userId = this._userContext.UserId;
 
             var user = await this._synaxisDbContext.Users
                 .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken)
@@ -313,7 +316,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         [HttpPut("me/cross-border-consent")]
         public async Task<IActionResult> UpdateCrossBorderConsent([FromBody] UpdateCrossBorderConsentRequest request, CancellationToken cancellationToken)
         {
-            var userId = this.GetUserId();
+            var userId = this._userContext.UserId;
 
             var validationResult = this.ValidateCrossBorderConsentRequest(request);
             if (validationResult != null)
@@ -347,12 +350,6 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
             };
 
             return this.Ok(response);
-        }
-
-        private Guid GetUserId()
-        {
-            var userIdClaim = this.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? this.User.FindFirstValue("sub");
-            return Guid.Parse(userIdClaim!);
         }
 
         private IActionResult? ValidateCrossBorderConsentRequest(UpdateCrossBorderConsentRequest request)
