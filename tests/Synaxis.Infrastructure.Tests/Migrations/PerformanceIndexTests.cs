@@ -111,8 +111,8 @@ namespace Synaxis.Infrastructure.Tests.Migrations
             // Assert
             var compositeIndex = indexes?.FirstOrDefault(i =>
                 i.Properties.Count == 2 &&
-                i.Properties.Any(p => string.Equals(p.Name, "OrganizationId", StringComparison.Ordinal)) &&
-                i.Properties.Any(p => string.Equals(p.Name, "Name", StringComparison.Ordinal)));
+                i.Properties.Any(p => string.Equals(p.Name, "TeamId", StringComparison.Ordinal)) &&
+                i.Properties.Any(p => string.Equals(p.Name, "UserId", StringComparison.Ordinal)));
             compositeIndex.Should().NotBeNull();
         }
 
@@ -142,7 +142,7 @@ namespace Synaxis.Infrastructure.Tests.Migrations
         }
 
         /// <summary>
-        /// Verifies that virtual_keys has a composite index on organization_id + name.
+        /// Verifies that audit_logs has a composite index on organization_id + timestamp.
         /// </summary>
         [Fact]
         public void AuditLogs_HasOrganizationIdTimestampIndex()

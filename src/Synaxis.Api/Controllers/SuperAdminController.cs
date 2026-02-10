@@ -52,10 +52,13 @@ namespace Synaxis.Api.Controllers
 
             if (!validation.IsValid)
             {
-                this._logger.LogWarning(
-                    "Super admin access denied for user {UserId}: {Reason}",
-                    accessContext.UserId, validation.FailureReason);
-                return this.StatusCode(403, new { error = validation.FailureReason });
+                this._logger.LogWarning("Super admin access denied for user {UserId}: {Reason}", accessContext.UserId, validation.FailureReason);
+                return this.StatusCode(
+                    403,
+                    new
+                    {
+                        error = validation.FailureReason,
+                    });
             }
 
             var organizations = await this._superAdminService.GetCrossRegionOrganizationsAsync();
@@ -89,26 +92,31 @@ namespace Synaxis.Api.Controllers
 
             if (!validation.IsValid)
             {
-                this._logger.LogWarning(
-                    "Super admin impersonation denied for user {UserId}: {Reason}",
-                    accessContext.UserId, validation.FailureReason);
-                return this.StatusCode(403, new { error = validation.FailureReason });
+                this._logger.LogWarning("Super admin impersonation denied for user {UserId}: {Reason}", accessContext.UserId, validation.FailureReason);
+                return this.StatusCode(
+                    403,
+                    new
+                    {
+                        error = validation.FailureReason,
+                    });
             }
 
             try
             {
                 var token = await this._superAdminService.GenerateImpersonationTokenAsync(request);
 
-                this._logger.LogWarning(
-                    "⚠️  IMPERSONATION TOKEN GENERATED - User: {UserId}, Target: {TargetUserId}, Org: {OrgId}",
-                    this.GetCurrentUserId(), request.UserId, request.OrganizationId);
+                this._logger.LogWarning("⚠️  IMPERSONATION TOKEN GENERATED - User: {UserId}, Target: {TargetUserId}, Org: {OrgId}", this.GetCurrentUserId(), request.UserId, request.OrganizationId);
 
                 return this.Ok(token);
             }
             catch (Exception ex)
             {
                 this._logger.LogError(ex, "Failed to generate impersonation token");
-                return this.BadRequest(new { error = ex.Message });
+                return this.BadRequest(
+                    new
+                    {
+                        error = ex.Message,
+                    });
             }
         }
 
@@ -239,9 +247,7 @@ namespace Synaxis.Api.Controllers
 
             if (!validation.IsValid)
             {
-                this._logger.LogWarning(
-                    "Super admin limit modification denied for user {UserId}: {Reason}",
-                    accessContext.UserId, validation.FailureReason);
+                this._logger.LogWarning("Super admin limit modification denied for user {UserId}: {Reason}", accessContext.UserId, validation.FailureReason);
                 return this.StatusCode(403, new { error = validation.FailureReason });
             }
 
@@ -251,14 +257,26 @@ namespace Synaxis.Api.Controllers
 
                 this._logger.LogWarning(
                     "⚠️  LIMITS MODIFIED - Org: {OrgId}, Type: {Type}, Value: {Value}, By: {UserId}",
-                    organizationId, request.LimitType, request.NewValue, this.GetCurrentUserId());
+                    organizationId,
+                    request.LimitType,
+                    request.NewValue,
+                    this.GetCurrentUserId());
 
-                return this.Ok(new { success, message = "Limits modified successfully" });
+                return this.Ok(
+                    new
+                    {
+                        success,
+                        message = "Limits modified successfully",
+                    });
             }
             catch (Exception ex)
             {
                 this._logger.LogError(ex, "Failed to modify organization limits");
-                return this.BadRequest(new { error = ex.Message });
+                return this.BadRequest(
+                    new
+                    {
+                        error = ex.Message,
+                    });
             }
         }
 
@@ -281,7 +299,7 @@ namespace Synaxis.Api.Controllers
             }
 
             context.UserId = this.GetCurrentUserId();
-            context.IpAddress = this.GetClientIpAddress();
+            context.IpAddress = GetClientIpAddress(this.HttpContext);
             context.MfaCode = mfaCode;
             context.RequestTime = DateTime.UtcNow;
 
@@ -296,7 +314,7 @@ namespace Synaxis.Api.Controllers
             return new SuperAdminAccessContext
             {
                 UserId = this.GetCurrentUserId(),
-                IpAddress = this.GetClientIpAddress(),
+                IpAddress = GetClientIpAddress(this.HttpContext),
                 MfaCode = mfaCode,
                 Action = action,
                 Justification = justification,
@@ -317,10 +335,11 @@ namespace Synaxis.Api.Controllers
             throw new UnauthorizedAccessException("User ID not found in claims");
         }
 
-        private string GetClientIpAddress()
+        private static string GetClientIpAddress(Microsoft.AspNetCore.Http.HttpContext context)
         {
+#pragma warning disable S6932 // Accessing headers in helper method is acceptable for IP address resolution
             // Try X-Forwarded-For first (for proxied requests)
-            var forwardedFor = this.Request.Headers["X-Forwarded-For"].ToString();
+            var forwardedFor = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             if (!string.IsNullOrEmpty(forwardedFor))
             {
                 var ips = forwardedFor.Split(',');
@@ -328,7 +347,8 @@ namespace Synaxis.Api.Controllers
             }
 
             // Fall back to direct connection IP
-            return this.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            return context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+#pragma warning restore S6932 // Accessing headers in helper method is acceptable for IP address resolution
         }
     }
 }

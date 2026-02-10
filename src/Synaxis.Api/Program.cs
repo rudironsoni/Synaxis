@@ -21,7 +21,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHealthChecks()
     .AddNpgSql(
         connectionString: builder.Configuration.GetConnectionString("DefaultConnection")
-            ?? "Host=localhost;Database=synaxis;Username=postgres;Password=postgres",
+            ?? builder.Configuration["ConnectionStrings:DefaultConnection"]
+            ?? throw new InvalidOperationException("DefaultConnection is required"),
         name: "postgres",
         tags: new[] { "db", "postgres" });
 
@@ -29,7 +30,8 @@ builder.Services.AddHealthChecks()
 builder.Services.AddDbContext<SynaxisDbContext>(options =>
 {
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-        ?? "Host=localhost;Database=synaxis;Username=postgres;Password=postgres";
+        ?? builder.Configuration["ConnectionStrings:DefaultConnection"]
+        ?? throw new InvalidOperationException("DefaultConnection is required");
     options.UseNpgsql(connectionString);
 });
 
@@ -61,23 +63,35 @@ builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddScoped<IUserService, UserService>();
 
 // Configure HTTP clients for cross-region communication
-builder.Services.AddHttpClient("eu-west-1", client =>
+var euWest1Endpoint = builder.Configuration["Regions:EuWest1:Endpoint"];
+if (!string.IsNullOrEmpty(euWest1Endpoint))
 {
-    client.BaseAddress = new Uri(builder.Configuration["Regions:EuWest1:Endpoint"] ?? "https://eu-west-1.synaxis.io");
-    client.Timeout = TimeSpan.FromSeconds(30);
-});
+    builder.Services.AddHttpClient("eu-west-1", client =>
+    {
+        client.BaseAddress = new Uri(euWest1Endpoint);
+        client.Timeout = TimeSpan.FromSeconds(30);
+    });
+}
 
-builder.Services.AddHttpClient("us-east-1", client =>
+var usEast1Endpoint = builder.Configuration["Regions:UsEast1:Endpoint"];
+if (!string.IsNullOrEmpty(usEast1Endpoint))
 {
-    client.BaseAddress = new Uri(builder.Configuration["Regions:UsEast1:Endpoint"] ?? "https://us-east-1.synaxis.io");
-    client.Timeout = TimeSpan.FromSeconds(30);
-});
+    builder.Services.AddHttpClient("us-east-1", client =>
+    {
+        client.BaseAddress = new Uri(usEast1Endpoint);
+        client.Timeout = TimeSpan.FromSeconds(30);
+    });
+}
 
-builder.Services.AddHttpClient("sa-east-1", client =>
+var saEast1Endpoint = builder.Configuration["Regions:SaEast1:Endpoint"];
+if (!string.IsNullOrEmpty(saEast1Endpoint))
 {
-    client.BaseAddress = new Uri(builder.Configuration["Regions:SaEast1:Endpoint"] ?? "https://sa-east-1.synaxis.io");
-    client.Timeout = TimeSpan.FromSeconds(30);
-});
+    builder.Services.AddHttpClient("sa-east-1", client =>
+    {
+        client.BaseAddress = new Uri(saEast1Endpoint);
+        client.Timeout = TimeSpan.FromSeconds(30);
+    });
+}
 
 // Add CORS if needed
 builder.Services.AddCors(options =>
@@ -109,4 +123,4 @@ app.MapHealthChecks("/health/live");
 
 app.MapControllers();
 
-app.Run();
+await app.RunAsync().ConfigureAwait(false);

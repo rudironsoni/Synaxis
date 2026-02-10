@@ -94,10 +94,11 @@ namespace Synaxis.Infrastructure.Services
                 OrganizationId = organizationId,
                 Slug = normalizedSlug,
                 Name = request.Name.Trim(),
-                Description = request.Description?.Trim(),
+                Description = request.Description?.Trim() ?? string.Empty,
                 IsActive = true,
                 MonthlyBudget = request.MonthlyBudget,
-                AllowedModels = request.AllowedModels?.ToList(),
+                AllowedModels = request.AllowedModels?.ToList() ?? new List<string>(),
+                BlockedModels = new List<string>(),
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
             };
