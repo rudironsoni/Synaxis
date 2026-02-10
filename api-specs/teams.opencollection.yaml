@@ -1,0 +1,515 @@
+openapi: 3.0.3
+info:
+  title: Synaxis Teams API
+  description: API endpoints for managing teams (groups) within organizations in the Synaxis platform
+  version: 1.0.0
+  contact:
+    name: Synaxis Team
+servers:
+  - url: /api/v1
+    description: API v1 Base URL
+tags:
+  - name: Teams
+    description: Team management operations
+  - name: Team Members
+    description: Team membership operations
+security:
+  - bearerAuth: []
+paths:
+  /organizations/{orgId}/teams:
+    post:
+      tags:
+        - Teams
+      summary: Create a new team
+      description: Creates a new team in an organization. The creator is automatically added as a TeamAdmin.
+      operationId: createTeam
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          description: Organization ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTeamRequest'
+      responses:
+        '201':
+          description: Team created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamResponse'
+        '400':
+          description: Bad request (e.g., duplicate team name)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - User is not a member of the organization
+        '404':
+          description: Organization not found
+    get:
+      tags:
+        - Teams
+      summary: List teams in organization
+      description: Returns a paginated list of teams in the organization
+      operationId: listTeams
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          description: Organization ID
+          schema:
+            type: string
+            format: uuid
+        - name: pageSize
+          in: query
+          description: Number of teams per page
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+        - name: page
+          in: query
+          description: Page number (0-indexed)
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+      responses:
+        '200':
+          description: List of teams retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamListResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - User is not a member of the organization
+  /organizations/{orgId}/teams/{teamId}:
+    get:
+      tags:
+        - Teams
+      summary: Get team details
+      description: Returns detailed information about a specific team
+      operationId: getTeam
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          description: Organization ID
+          schema:
+            type: string
+            format: uuid
+        - name: teamId
+          in: path
+          required: true
+          description: Team ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Team details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamDetailResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - User is not a member of the team
+        '404':
+          description: Team not found
+    put:
+      tags:
+        - Teams
+      summary: Update team
+      description: Updates team information. Requires TeamAdmin or OrgAdmin permissions.
+      operationId: updateTeam
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          description: Organization ID
+          schema:
+            type: string
+            format: uuid
+        - name: teamId
+          in: path
+          required: true
+          description: Team ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTeamRequest'
+      responses:
+        '200':
+          description: Team updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - User does not have permission to update the team
+        '404':
+          description: Team not found
+    delete:
+      tags:
+        - Teams
+      summary: Delete team (soft delete)
+      description: Soft deletes a team by setting isActive to false. Requires TeamAdmin or OrgAdmin permissions.
+      operationId: deleteTeam
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          description: Organization ID
+          schema:
+            type: string
+            format: uuid
+        - name: teamId
+          in: path
+          required: true
+          description: Team ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Team deleted successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - User does not have permission to delete the team
+        '404':
+          description: Team not found
+  /organizations/{orgId}/teams/{teamId}/members:
+    post:
+      tags:
+        - Team Members
+      summary: Add member to team
+      description: Adds a user to a team. Requires TeamAdmin or OrgAdmin permissions.
+      operationId: addMember
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          description: Organization ID
+          schema:
+            type: string
+            format: uuid
+        - name: teamId
+          in: path
+          required: true
+          description: Team ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddMemberRequest'
+      responses:
+        '201':
+          description: Member added successfully
+        '400':
+          description: Bad request (e.g., invalid role, user already a member, user not in organization)
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - User does not have permission to add members
+        '404':
+          description: Team or user not found
+  /organizations/{orgId}/teams/{teamId}/members/{memberId}:
+    delete:
+      tags:
+        - Team Members
+      summary: Remove member from team
+      description: Removes a user from a team. TeamAdmin/OrgAdmin can remove any member. Users can remove themselves.
+      operationId: removeMember
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          description: Organization ID
+          schema:
+            type: string
+            format: uuid
+        - name: teamId
+          in: path
+          required: true
+          description: Team ID
+          schema:
+            type: string
+            format: uuid
+        - name: memberId
+          in: path
+          required: true
+          description: User ID to remove
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Member removed successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - User does not have permission to remove this member
+        '404':
+          description: Team or member not found
+  /organizations/{orgId}/teams/{teamId}/members/{memberId}/role:
+    put:
+      tags:
+        - Team Members
+      summary: Update member role
+      description: Updates a team member's role. Requires TeamAdmin or OrgAdmin permissions.
+      operationId: updateMemberRole
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          description: Organization ID
+          schema:
+            type: string
+            format: uuid
+        - name: teamId
+          in: path
+          required: true
+          description: Team ID
+          schema:
+            type: string
+            format: uuid
+        - name: memberId
+          in: path
+          required: true
+          description: User ID whose role to update
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMemberRoleRequest'
+      responses:
+        '200':
+          description: Member role updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberRoleResponse'
+        '400':
+          description: Bad request (e.g., invalid role)
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - User does not have permission to update member roles
+        '404':
+          description: Team or member not found
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    CreateTeamRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Team name
+          minLength: 1
+          maxLength: 100
+          example: "Engineering Team"
+        description:
+          type: string
+          description: Team description
+          maxLength: 500
+          example: "Core engineering team responsible for backend services"
+    UpdateTeamRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Updated team name
+          minLength: 1
+          maxLength: 100
+          example: "Platform Engineering Team"
+        description:
+          type: string
+          description: Updated team description
+          maxLength: 500
+          example: "Updated description for the team"
+    AddMemberRequest:
+      type: object
+      required:
+        - userId
+        - role
+      properties:
+        userId:
+          type: string
+          format: uuid
+          description: ID of the user to add to the team
+        role:
+          type: string
+          description: Role for the member (admin, member, viewer)
+          enum:
+            - admin
+            - teamadmin
+            - member
+            - viewer
+          example: "member"
+    UpdateMemberRoleRequest:
+      type: object
+      required:
+        - role
+      properties:
+        role:
+          type: string
+          description: New role for the member
+          enum:
+            - admin
+            - teamadmin
+            - member
+            - viewer
+          example: "admin"
+    TeamResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Team ID
+        name:
+          type: string
+          description: Team name
+        description:
+          type: string
+          description: Team description
+          nullable: true
+        slug:
+          type: string
+          description: Team slug (URL-friendly identifier)
+        isActive:
+          type: boolean
+          description: Whether the team is active
+        createdAt:
+          type: string
+          format: date-time
+          description: Team creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          nullable: true
+    TeamDetailResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Team ID
+        name:
+          type: string
+          description: Team name
+        description:
+          type: string
+          description: Team description
+          nullable: true
+        slug:
+          type: string
+          description: Team slug
+        isActive:
+          type: boolean
+          description: Whether the team is active
+        memberCount:
+          type: integer
+          description: Number of team members
+        createdAt:
+          type: string
+          format: date-time
+          description: Team creation timestamp
+    TeamListResponse:
+      type: object
+      properties:
+        teams:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              name:
+                type: string
+              description:
+                type: string
+                nullable: true
+              slug:
+                type: string
+              isActive:
+                type: boolean
+              memberCount:
+                type: integer
+        total:
+          type: integer
+          description: Total number of teams
+        page:
+          type: integer
+          description: Current page number
+        pageSize:
+          type: integer
+          description: Number of items per page
+    MemberRoleResponse:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+          description: User ID
+        role:
+          type: string
+          description: Member role
+          enum:
+            - TeamAdmin
+            - Member
+            - Viewer
+        joinedAt:
+          type: string
+          format: date-time
+          description: When the user joined the team
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+        details:
+          type: object
+          description: Additional error details
+          nullable: true
