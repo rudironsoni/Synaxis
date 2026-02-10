@@ -1,3 +1,8 @@
+// <copyright file="Program.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
+using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -5,7 +10,6 @@ using Synaxis.Api.Middleware;
 using Synaxis.Core.Contracts;
 using Synaxis.Infrastructure.Data;
 using Synaxis.Infrastructure.Services;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,7 +20,7 @@ builder.Services.AddEndpointsApiExplorer();
 // Add health checks
 builder.Services.AddHealthChecks()
     .AddNpgSql(
-        connectionString: builder.Configuration.GetConnectionString("DefaultConnection") 
+        connectionString: builder.Configuration.GetConnectionString("DefaultConnection")
             ?? "Host=localhost;Database=synaxis;Username=postgres;Password=postgres",
         name: "postgres",
         tags: new[] { "db", "postgres" });
@@ -24,7 +28,7 @@ builder.Services.AddHealthChecks()
 // Configure Database
 builder.Services.AddDbContext<SynaxisDbContext>(options =>
 {
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
         ?? "Host=localhost;Database=synaxis;Username=postgres;Password=postgres";
     options.UseNpgsql(connectionString);
 });
@@ -45,7 +49,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = jwtIssuer,
             ValidAudience = jwtAudience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
         };
     });
 
@@ -55,7 +59,6 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<ISuperAdminService, SuperAdminService>();
 builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 
 // Configure HTTP clients for cross-region communication
 builder.Services.AddHttpClient("eu-west-1", client =>

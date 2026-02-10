@@ -80,7 +80,7 @@
             Tool for logging agent actions and optimizations.
             </summary>
         </member>
-        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.AuditTool.#ctor(Synaxis.InferenceGateway.Infrastructure.ControlPlane.ControlPlaneDbContext,Microsoft.Extensions.Logging.ILogger{Synaxis.InferenceGateway.Infrastructure.Agents.Tools.AuditTool})">
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.AuditTool.#ctor(Synaxis.Infrastructure.Data.SynaxisDbContext,Microsoft.Extensions.Logging.ILogger{Synaxis.InferenceGateway.Infrastructure.Agents.Tools.AuditTool})">
             <summary>
             Initializes a new instance of the <see cref="T:Synaxis.InferenceGateway.Infrastructure.Agents.Tools.AuditTool"/> class.
             </summary>
@@ -1818,11 +1818,6 @@
             Gets the ProviderHealthStatuses DbSet.
             </summary>
         </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.ControlPlaneDbContext.AuditLogs">
-            <summary>
-            Gets the AuditLogs DbSet.
-            </summary>
-        </member>
         <member name="M:Synaxis.InferenceGateway.Infrastructure.ControlPlane.ControlPlaneDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <summary>
             Configures the model that was discovered by convention from the entity types.
@@ -3245,16 +3240,16 @@
         <member name="M:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.AddInvitations.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
-        <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.RemoveAuditLogSchema">
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.FixPendingChanges">
             <inheritdoc />
         </member>
-        <member name="M:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.RemoveAuditLogSchema.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.FixPendingChanges.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
             <inheritdoc />
         </member>
-        <member name="M:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.RemoveAuditLogSchema.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.FixPendingChanges.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
             <inheritdoc />
         </member>
-        <member name="M:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.RemoveAuditLogSchema.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations.FixPendingChanges.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
         <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.NotificationService">
@@ -5403,11 +5398,12 @@
             AuditService class.
             </summary>
         </member>
-        <member name="M:Synaxis.InferenceGateway.Infrastructure.Security.AuditService.#ctor(Synaxis.InferenceGateway.Infrastructure.ControlPlane.ControlPlaneDbContext)">
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Security.AuditService.#ctor(Synaxis.Infrastructure.Data.SynaxisDbContext,Microsoft.Extensions.Logging.ILogger{Synaxis.InferenceGateway.Infrastructure.Security.AuditService})">
             <summary>
             Initializes a new instance of the <see cref="T:Synaxis.InferenceGateway.Infrastructure.Security.AuditService"/> class.
             </summary>
             <param name="dbContext">The dbContext.</param>
+            <param name="logger">The logger.</param>
         </member>
         <member name="M:Synaxis.InferenceGateway.Infrastructure.Security.AuditService.LogAsync(System.Guid,System.Nullable{System.Guid},System.String,System.Object,System.Threading.CancellationToken)">
             <inheritdoc/>

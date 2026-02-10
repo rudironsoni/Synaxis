@@ -222,6 +222,11 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
                 return this.BadRequest(new { success = false, message = "User not found" });
             }
 
+            if (!user.IsActive)
+            {
+                return this.Unauthorized(new { success = false, message = "User account is inactive" });
+            }
+
             var newToken = this.jwtService.GenerateToken(user);
             return this.Ok(new { token = newToken });
         }
@@ -242,19 +247,36 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         /// Resets a user's password.
         /// </summary>
         /// <param name="request">The reset password request.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The result.</returns>
         [HttpPost("reset-password")]
-        public IActionResult ResetPassword([FromBody] ResetPasswordRequest request)
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(request.Token) || string.IsNullOrWhiteSpace(request.Password))
             {
                 return this.BadRequest(new { success = false, message = "Token and password are required" });
             }
 
-            // For now, just validate token format
+            // Validate token format
             if (!request.Token.StartsWith("reset_", StringComparison.Ordinal))
             {
                 return this.BadRequest(new { success = false, message = "Invalid reset token" });
+            }
+
+            // Extract user ID from token (format: reset_{userId}_{guid})
+            var tokenParts = request.Token.Split('_');
+            if (tokenParts.Length >= 2 && Guid.TryParse(tokenParts[1], out var userId))
+            {
+                var user = await this.dbContext.Users
+                    .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (user != null)
+                {
+                    // Update password
+                    user.PasswordHash = this.passwordHasher.HashPassword(request.Password);
+                    await this.dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+                }
             }
 
             return this.Ok(new { success = true, message = "Password reset successful" });

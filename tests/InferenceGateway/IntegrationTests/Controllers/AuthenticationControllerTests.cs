@@ -149,6 +149,28 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
         }
 
         [Fact]
+        public async Task Refresh_WithInactivity_ReturnsUnauthorized()
+        {
+            var email = $"inactive_{Guid.NewGuid()}@example.com";
+            var password = "InactivePass123!";
+            await _client.PostAsJsonAsync("/auth/register", new { Email = email, Password = password });
+            var loginResponse = await _client.PostAsJsonAsync("/auth/login", new { Email = email, Password = password });
+            var loginContent = await loginResponse.Content.ReadFromJsonAsync<JsonElement>();
+            var token = loginContent.GetProperty("token").GetString();
+
+            // Mark user as inactive
+            using var scope = _factory.Services.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<SynaxisDbContext>();
+            var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
+            user!.IsActive = false;
+            await dbContext.SaveChangesAsync();
+
+            var response = await _client.PostAsJsonAsync("/auth/refresh", new { Token = token });
+
+            response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        }
+
+        [Fact]
         public async Task ForgotPassword_ExistingEmail_ReturnsSuccessAndCreatesToken()
         {
             var email = $"forgot_{Guid.NewGuid()}@example.com";

@@ -2,10 +2,10 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-using System.ComponentModel.DataAnnotations;
-
 namespace Synaxis.Api.DTOs.Authentication
 {
+    using System.ComponentModel.DataAnnotations;
+
     public class ResetPasswordRequest
     {
         [Required]

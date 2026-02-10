@@ -63,51 +63,51 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             // Build temporary configuration to seed test data. Reuse logic from SmokeTestDataGenerator.
             var builder = new ConfigurationBuilder();
 
-                // Find project root to locate appsettings
-                string? projectRoot = null;
-                var dir = new DirectoryInfo(AppContext.BaseDirectory ?? Directory.GetCurrentDirectory());
-                while (dir != null)
+            // Find project root to locate appsettings
+            string? projectRoot = null;
+            var dir = new DirectoryInfo(AppContext.BaseDirectory ?? Directory.GetCurrentDirectory());
+            while (dir != null)
+            {
+                if (dir.GetFiles("*.sln").Any())
                 {
-                    if (dir.GetFiles("*.sln").Any())
-                    {
-                        projectRoot = dir.FullName;
-                        break;
-                    }
-
-                    var src = Path.Combine(dir.FullName, "src");
-                    if (Directory.Exists(src))
-                    {
-                        projectRoot = dir.FullName;
-                        break;
-                    }
-
-                    dir = dir.Parent;
+                    projectRoot = dir.FullName;
+                    break;
                 }
 
-                if (!string.IsNullOrEmpty(projectRoot))
+                var src = Path.Combine(dir.FullName, "src");
+                if (Directory.Exists(src))
                 {
-                    var webApiPath = Path.Combine(projectRoot, "src", "InferenceGateway", "WebApi");
-                    if (Directory.Exists(webApiPath))
-                    {
-                        var appsettings = Path.Combine(webApiPath, "appsettings.json");
-                        var appsettingsDev = Path.Combine(webApiPath, "appsettings.Development.json");
-                        if (File.Exists(appsettings))
-                        {
-                            builder.AddJsonFile(appsettings, optional: true, reloadOnChange: false);
-                        }
-
-                        if (File.Exists(appsettingsDev))
-                        {
-                            builder.AddJsonFile(appsettingsDev, optional: true, reloadOnChange: false);
-                        }
-                    }
+                    projectRoot = dir.FullName;
+                    break;
                 }
 
-                // Load .env files (if present) so that AddEnvironmentVariables picks them up
-                Env.TraversePath().Load();
+                dir = dir.Parent;
+            }
 
-                builder.AddEnvironmentVariables();
-                var config = builder.Build();
+            if (!string.IsNullOrEmpty(projectRoot))
+            {
+                var webApiPath = Path.Combine(projectRoot, "src", "InferenceGateway", "WebApi");
+                if (Directory.Exists(webApiPath))
+                {
+                    var appsettings = Path.Combine(webApiPath, "appsettings.json");
+                    var appsettingsDev = Path.Combine(webApiPath, "appsettings.Development.json");
+                    if (File.Exists(appsettings))
+                    {
+                        builder.AddJsonFile(appsettings, optional: true, reloadOnChange: false);
+                    }
+
+                    if (File.Exists(appsettingsDev))
+                    {
+                        builder.AddJsonFile(appsettingsDev, optional: true, reloadOnChange: false);
+                    }
+                }
+            }
+
+            // Load .env files (if present) so that AddEnvironmentVariables picks them up
+            Env.TraversePath().Load();
+
+            builder.AddEnvironmentVariables();
+            var config = builder.Build();
 
             // Seed the database
             await TestDatabaseSeeder.SeedAsync(controlPlaneContext, config).ConfigureAwait(false);

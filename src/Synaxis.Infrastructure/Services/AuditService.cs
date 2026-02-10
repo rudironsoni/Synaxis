@@ -75,8 +75,15 @@ namespace Synaxis.Infrastructure.Services
             _context.Set<AuditLog>().Add(auditLog);
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation("Audit event logged: {EventType} for org {OrganizationId}",
-                auditEvent.EventType, auditEvent.OrganizationId);
+            _logger.LogInformation(
+                "Audit log created: Action={Action}, UserId={UserId}, ResourceType={ResourceType}, ResourceId={ResourceId}, OrganizationId={OrganizationId}, Timestamp={Timestamp}, Success={Success}",
+                auditLog.Action,
+                auditLog.UserId,
+                auditLog.ResourceType,
+                auditLog.ResourceId,
+                auditLog.OrganizationId,
+                auditLog.Timestamp,
+                true);
 
             return auditLog;
         }
@@ -92,6 +99,14 @@ namespace Synaxis.Infrastructure.Services
             {
                 throw new ArgumentException("OrganizationId is required", nameof(query));
             }
+
+            _logger.LogDebug(
+                "Querying audit logs: OrganizationId={OrganizationId}, UserId={UserId}, EventType={EventType}, PageNumber={PageNumber}, PageSize={PageSize}",
+                query.OrganizationId,
+                query.UserId,
+                query.EventType,
+                query.PageNumber,
+                query.PageSize);
 
             var logsQuery = _context.Set<AuditLog>()
                 .Where(al => al.OrganizationId == query.OrganizationId);
@@ -128,15 +143,23 @@ namespace Synaxis.Infrastructure.Services
                 .Take(query.PageSize)
                 .ToListAsync();
 
+            _logger.LogInformation(
+                "Query completed: Found {Count} audit logs for OrganizationId={OrganizationId}",
+                logs.Count,
+                query.OrganizationId);
+
             return logs;
         }
 
         public async Task<AuditLog> GetAuditLogAsync(Guid logId)
         {
+            _logger.LogDebug("Retrieving audit log: LogId={LogId}", logId);
+
             var log = await _context.Set<AuditLog>().FindAsync(logId);
 
             if (log == null)
             {
+                _logger.LogWarning("Audit log not found: LogId={LogId}", logId);
                 throw new InvalidOperationException($"Audit log {logId} not found");
             }
 
@@ -171,6 +194,8 @@ namespace Synaxis.Infrastructure.Services
 
         public async Task<bool> VerifyIntegrityAsync(Guid logId)
         {
+            _logger.LogDebug("Verifying audit log integrity: LogId={LogId}", logId);
+
             var log = await GetAuditLogAsync(logId);
 
             // Recompute hash and compare (must include previous hash that was used during creation)
@@ -179,7 +204,11 @@ namespace Synaxis.Infrastructure.Services
 
             if (!isValid)
             {
-                _logger.LogWarning("Integrity check failed for audit log {LogId}", logId);
+                _logger.LogWarning(
+                    "Integrity check failed for audit log: LogId={LogId}, ExpectedHash={ExpectedHash}, ComputedHash={ComputedHash}",
+                    logId,
+                    log.IntegrityHash,
+                    computedHash);
             }
 
             // Verify chain if previous hash exists
@@ -193,10 +222,18 @@ namespace Synaxis.Infrastructure.Services
 
                 if (previousLog != null && previousLog.IntegrityHash != log.PreviousHash)
                 {
-                    _logger.LogWarning("Chain verification failed for audit log {LogId}", logId);
+                    _logger.LogWarning(
+                        "Chain verification failed for audit log: LogId={LogId}, PreviousLogId={PreviousLogId}",
+                        logId,
+                        previousLog.Id);
                     return false;
                 }
             }
+
+            _logger.LogInformation(
+                "Integrity verification completed: LogId={LogId}, IsValid={IsValid}",
+                logId,
+                isValid);
 
             return isValid;
         }

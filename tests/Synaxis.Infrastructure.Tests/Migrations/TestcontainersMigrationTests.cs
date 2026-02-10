@@ -23,7 +23,7 @@ namespace Synaxis.Infrastructure.Tests.Migrations
         /// <summary>
         /// Initializes the PostgreSQL container before tests run.
         /// </summary>
-        /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         public async Task InitializeAsync()
         {
             _postgresContainer = new PostgreSqlBuilder("postgres:16-alpine")
@@ -38,7 +38,7 @@ namespace Synaxis.Infrastructure.Tests.Migrations
         /// <summary>
         /// Disposes the PostgreSQL container after tests complete.
         /// </summary>
-        /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         public async Task DisposeAsync()
         {
             if (_postgresContainer != null)
@@ -61,7 +61,7 @@ namespace Synaxis.Infrastructure.Tests.Migrations
         /// <summary>
         /// Verifies that all migrations can be applied successfully to a fresh database.
         /// </summary>
-        /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous unit test.</placeholder></returns>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task Migrations_CanBeApplied_ToFreshDatabase()
         {
@@ -94,7 +94,7 @@ namespace Synaxis.Infrastructure.Tests.Migrations
         /// <summary>
         /// Verifies that migrations can be rolled back.
         /// </summary>
-        /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous unit test.</placeholder></returns>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task Migrations_CanBeRolledBack()
         {
@@ -126,7 +126,7 @@ namespace Synaxis.Infrastructure.Tests.Migrations
         /// <summary>
         /// Verifies that data can be inserted after migrations are applied.
         /// </summary>
-        /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous unit test.</placeholder></returns>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task Data_CanBeInserted_AfterMigrations()
         {
@@ -183,7 +183,7 @@ namespace Synaxis.Infrastructure.Tests.Migrations
         /// <summary>
         /// Verifies that foreign key constraints work correctly.
         /// </summary>
-        /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous unit test.</placeholder></returns>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task ForeignKeyConstraints_Enforced()
         {
@@ -225,7 +225,7 @@ namespace Synaxis.Infrastructure.Tests.Migrations
         /// <summary>
         /// Verifies that unique constraints are enforced.
         /// </summary>
-        /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous unit test.</placeholder></returns>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task UniqueConstraints_Enforced()
         {
@@ -262,7 +262,7 @@ namespace Synaxis.Infrastructure.Tests.Migrations
         /// <summary>
         /// Verifies that cascading deletes work correctly.
         /// </summary>
-        /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous unit test.</placeholder></returns>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task CascadeDeletes_WorkCorrectly()
         {
@@ -308,7 +308,7 @@ namespace Synaxis.Infrastructure.Tests.Migrations
         /// <summary>
         /// Verifies that concurrent migration attempts fail gracefully.
         /// </summary>
-        /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous unit test.</placeholder></returns>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task ConcurrentMigrations_FailGracefully()
         {
@@ -344,7 +344,7 @@ namespace Synaxis.Infrastructure.Tests.Migrations
         /// <summary>
         /// Verifies that check constraints are enforced.
         /// </summary>
-        /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous unit test.</placeholder></returns>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task CheckConstraints_Enforced()
         {
@@ -382,7 +382,7 @@ namespace Synaxis.Infrastructure.Tests.Migrations
         /// <summary>
         /// Verifies that JSON columns work correctly.
         /// </summary>
-        /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous unit test.</placeholder></returns>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task JsonColumns_WorkCorrectly()
         {

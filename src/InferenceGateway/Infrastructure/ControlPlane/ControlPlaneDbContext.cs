@@ -6,7 +6,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
 {
     using Microsoft.EntityFrameworkCore;
     using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
-    using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit;
     using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity;
     using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Operations;
     using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Platform;
@@ -201,13 +200,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
         /// </summary>
         public DbSet<ProviderHealthStatus> ProviderHealthStatuses => this.Set<ProviderHealthStatus>();
 
-        // Audit schema entities
-
-        /// <summary>
-        /// Gets the AuditLogs DbSet.
-        /// </summary>
-        public DbSet<AuditLog> AuditLogs => this.Set<AuditLog>();
-
         /// <summary>
         /// Configures the model that was discovered by convention from the entity types.
         /// </summary>
@@ -233,7 +225,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
             ConfigurePlatformSchema(modelBuilder);
             ConfigureIdentitySchema(modelBuilder);
             ConfigureOperationsSchema(modelBuilder);
-            ConfigureAuditSchema(modelBuilder, isPostgreSql);
         }
 
         private static void ConfigureSchemas(ModelBuilder modelBuilder)
@@ -259,9 +250,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
             modelBuilder.Entity<OrganizationModel>().ToTable("OrganizationModels", "operations");
             modelBuilder.Entity<RoutingStrategy>().ToTable("RoutingStrategies", "operations");
             modelBuilder.Entity<ProviderHealthStatus>().ToTable("ProviderHealthStatuses", "operations");
-
-            // Audit schema
-            modelBuilder.Entity<AuditLog>().ToTable("AuditLogs", "audit");
         }
 
         private static void ConfigureSoftDeleteFilters(ModelBuilder modelBuilder)
@@ -619,33 +607,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                 entity.HasIndex(phs => phs.OrganizationProviderId).IsUnique();
                 entity.HasIndex(phs => new { phs.OrganizationId, phs.IsHealthy });
                 entity.HasIndex(phs => phs.LastCheckedAt);
-            });
-        }
-
-        private static void ConfigureAuditSchema(ModelBuilder modelBuilder, bool isPostgreSql)
-        {
-            modelBuilder.Entity<AuditLog>(entity =>
-            {
-                entity.HasKey(a => a.Id);
-                entity.Property(a => a.Action).HasMaxLength(200).IsRequired();
-                entity.Property(a => a.EntityType).HasMaxLength(100);
-                entity.Property(a => a.EntityId).HasMaxLength(100);
-
-                if (isPostgreSql)
-                {
-                    entity.Property(a => a.PreviousValues).HasColumnType("jsonb");
-                    entity.Property(a => a.NewValues).HasColumnType("jsonb");
-                }
-
-                entity.Property(a => a.IpAddress).HasMaxLength(45);
-                entity.Property(a => a.UserAgent).HasMaxLength(500);
-                entity.Property(a => a.CorrelationId).HasMaxLength(100);
-
-                entity.HasIndex(a => a.CreatedAt);
-                entity.HasIndex(a => a.UserId);
-                entity.HasIndex(a => a.Action);
-                entity.HasIndex(a => a.OrganizationId);
-                entity.HasIndex(a => a.PartitionDate);
             });
         }
 
