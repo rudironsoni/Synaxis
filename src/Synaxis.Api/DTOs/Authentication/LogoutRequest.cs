@@ -10,5 +10,10 @@ namespace Synaxis.Api.DTOs.Authentication
     {
         [Required]
         public string RefreshToken { get; set; }
+
+        /// <summary>
+        /// Gets or sets the JWT access token to invalidate.
+        /// </summary>
+        public string AccessToken { get; set; }
     }
 }

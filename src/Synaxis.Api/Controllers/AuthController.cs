@@ -10,10 +10,12 @@ namespace Synaxis.Api.Controllers
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
+    using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Logging;
     using Synaxis.Api.DTOs.Authentication;
     using Synaxis.Core.Contracts;
     using Synaxis.Core.Models;
+    using MfaEnableResult = Synaxis.Core.Contracts.MfaEnableResult;
 
     /// <summary>
     /// Controller for authentication endpoints.
@@ -26,17 +28,20 @@ namespace Synaxis.Api.Controllers
         private readonly IUserService _userService;
         private readonly IEmailService _emailService;
         private readonly ILogger<AuthController> _logger;
+        private readonly Synaxis.Infrastructure.Data.SynaxisDbContext _dbContext;
 
         public AuthController(
             IAuthenticationService authenticationService,
             IUserService userService,
             IEmailService emailService,
-            ILogger<AuthController> logger)
+            ILogger<AuthController> logger,
+            Synaxis.Infrastructure.Data.SynaxisDbContext dbContext)
         {
             this._authenticationService = authenticationService ?? throw new ArgumentNullException(nameof(authenticationService));
             this._userService = userService ?? throw new ArgumentNullException(nameof(userService));
             this._emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         }
 
         /// <summary>
@@ -224,7 +229,7 @@ namespace Synaxis.Api.Controllers
         /// Logout user.
         /// </summary>
         /// <param name="request">The logout request.</param>
-        /// <returns>The logout result.</returns>
+        /// <returns>204 No Content on success.</returns>
         [HttpPost("logout")]
         public async Task<ActionResult> Logout([FromBody] LogoutRequest request)
         {
@@ -232,9 +237,9 @@ namespace Synaxis.Api.Controllers
             {
                 this._logger.LogInformation("Logout attempt");
 
-                await this._authenticationService.LogoutAsync(request.RefreshToken);
+                await this._authenticationService.LogoutAsync(request.RefreshToken, request.AccessToken);
 
-                return this.Ok(new { message = "Logout successful" });
+                return this.NoContent();
             }
             catch (Exception ex)
             {
@@ -286,12 +291,46 @@ namespace Synaxis.Api.Controllers
             {
                 this._logger.LogInformation("Password reset attempt for token: {Token}", request.Token);
 
-                // In a real implementation, you'd:
-                // 1. Validate the reset token
-                // 2. Find the user associated with the token
-                // 3. Update the user's password
-                // 4. Invalidate the reset token
-                return this.Ok(new { message = "Password reset successful" });
+                // Validate request
+                if (string.IsNullOrEmpty(request.Token) || string.IsNullOrEmpty(request.NewPassword))
+                {
+                    return this.BadRequest(new { success = false, message = "Token and password are required" });
+                }
+
+                // Find the reset token
+                var resetToken = await this._dbContext.PasswordResetTokens
+                    .Include(rt => rt.User)
+                    .FirstOrDefaultAsync(rt => rt.TokenHash == this._userService.HashPassword(request.Token));
+
+                if (resetToken == null)
+                {
+                    return this.BadRequest(new { success = false, message = "Invalid or expired token" });
+                }
+
+                // Check if token is expired
+                if (resetToken.ExpiresAt < DateTime.UtcNow)
+                {
+                    return this.BadRequest(new { success = false, message = "Token has expired" });
+                }
+
+                // Check if token has already been used
+                if (resetToken.IsUsed)
+                {
+                    return this.BadRequest(new { success = false, message = "Token has already been used" });
+                }
+
+                // Update user's password
+                resetToken.User.PasswordHash = this._userService.HashPassword(request.NewPassword);
+                resetToken.User.UpdatedAt = DateTime.UtcNow;
+
+                // Mark token as used
+                resetToken.IsUsed = true;
+
+                await this._dbContext.SaveChangesAsync();
+
+                this._logger.LogInformation("Password reset successful for user: {UserId}", resetToken.UserId);
+
+                return this.Ok(new { success = true, message = "Password reset successful" });
             }
             catch (Exception ex)
             {
@@ -333,10 +372,10 @@ namespace Synaxis.Api.Controllers
         /// Enable MFA for the current user.
         /// </summary>
         /// <param name="request">The MFA enable request.</param>
-        /// <returns>The MFA enable result.</returns>
+        /// <returns>The MFA enable result with backup codes.</returns>
         [HttpPost("mfa/enable")]
         [Authorize]
-        public async Task<ActionResult> EnableMfa([FromBody] MfaEnableRequest request)
+        public async Task<ActionResult<MfaEnableResult>> EnableMfa([FromBody] MfaEnableRequest request)
         {
             try
             {
@@ -350,12 +389,7 @@ namespace Synaxis.Api.Controllers
 
                 var result = await this._userService.EnableMfaAsync(userId, request.Code);
 
-                if (!result)
-                {
-                    return this.BadRequest(new { message = "Invalid TOTP code" });
-                }
-
-                return this.Ok(new { message = "MFA enabled successfully" });
+                return this.Ok(result);
             }
             catch (Exception ex)
             {
@@ -367,24 +401,38 @@ namespace Synaxis.Api.Controllers
         /// <summary>
         /// Disable MFA for the current user.
         /// </summary>
-        /// <returns>The MFA disable result.</returns>
+        /// <param name="request">The MFA disable request containing TOTP or backup code.</param>
+        /// <returns>204 No Content on success.</returns>
         [HttpPost("mfa/disable")]
         [Authorize]
-        public async Task<ActionResult> DisableMfa()
+        public async Task<ActionResult> DisableMfa([FromBody] MfaDisableRequest request)
         {
+            Guid? userId = null;
+
             try
             {
                 var userIdClaim = this.User.FindFirst(ClaimTypes.NameIdentifier);
-                if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
+                if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var parsedUserId))
                 {
                     return this.Unauthorized(new { message = "Invalid user" });
                 }
 
+                userId = parsedUserId;
                 this._logger.LogInformation("MFA disable attempt for user: {UserId}", userId);
 
-                await this._userService.DisableMfaAsync(userId);
+                var result = await this._userService.DisableMfaAsync(userId.Value, request.Code);
 
-                return this.Ok(new { message = "MFA disabled successfully" });
+                if (!result)
+                {
+                    return this.BadRequest(new { message = "Invalid TOTP code or backup code" });
+                }
+
+                return this.NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                this._logger.LogWarning(ex, "MFA disable failed for user: {UserId}", userId ?? Guid.Empty);
+                return this.BadRequest(new { message = ex.Message });
             }
             catch (Exception ex)
             {

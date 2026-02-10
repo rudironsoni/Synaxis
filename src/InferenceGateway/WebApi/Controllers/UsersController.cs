@@ -5,6 +5,7 @@
 namespace Synaxis.InferenceGateway.WebApi.Controllers
 {
     using System;
+    using System.IdentityModel.Tokens.Jwt;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -46,6 +47,17 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         [HttpGet("me")]
         public async Task<IActionResult> GetMe(CancellationToken cancellationToken)
         {
+            // Check if JWT token is blacklisted
+            var authHeader = this.Request.Headers.Authorization.FirstOrDefault();
+            if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer ", StringComparison.Ordinal))
+            {
+                var token = authHeader.Substring("Bearer ".Length).Trim();
+                if (await this.IsTokenBlacklistedAsync(token, cancellationToken))
+                {
+                    return this.Unauthorized();
+                }
+            }
+
             var userId = this._userContext.UserId;
 
             var user = await this._synaxisDbContext.Users
@@ -360,6 +372,38 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Checks if a JWT token is blacklisted.
+        /// </summary>
+        /// <param name="token">The JWT token to check.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>True if the token is blacklisted; otherwise, false.</returns>
+        private async Task<bool> IsTokenBlacklistedAsync(string token, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var jwtToken = tokenHandler.ReadJwtToken(token);
+                var jtiClaim = jwtToken.Claims.FirstOrDefault(c => string.Equals(c.Type, JwtRegisteredClaimNames.Jti, StringComparison.Ordinal))?.Value;
+
+                if (string.IsNullOrEmpty(jtiClaim))
+                {
+                    return false;
+                }
+
+                var blacklistedToken = await this._synaxisDbContext.JwtBlacklists
+                    .FirstOrDefaultAsync(jb => jb.TokenId == jtiClaim, cancellationToken)
+                    .ConfigureAwait(false);
+
+                return blacklistedToken != null;
+            }
+            catch
+            {
+                // If token parsing fails, consider it not blacklisted
+                return false;
+            }
         }
     }
 

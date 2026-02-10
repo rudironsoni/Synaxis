@@ -54,6 +54,8 @@ namespace Synaxis.Infrastructure.Data
 
         public DbSet<EmailVerificationToken> EmailVerificationTokens { get; set; }
 
+        public DbSet<JwtBlacklist> JwtBlacklists { get; set; }
+
         public DbSet<Collection> Collections { get; set; }
 
         public DbSet<CollectionMembership> CollectionMemberships { get; set; }
@@ -723,6 +725,29 @@ namespace Synaxis.Infrastructure.Data
                     .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasIndex(e => e.TokenHash).IsUnique();
+                entity.HasIndex(e => e.UserId);
+                entity.HasIndex(e => e.ExpiresAt);
+            });
+
+            // Configure JwtBlacklists
+            modelBuilder.Entity<JwtBlacklist>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id)
+                    .HasColumnName("id")
+                    .ValueGeneratedOnAdd();
+
+                entity.Property(e => e.UserId).HasColumnName("user_id");
+                entity.Property(e => e.TokenId).HasColumnName("token_id");
+                entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+                entity.Property(e => e.ExpiresAt).HasColumnName("expires_at");
+
+                entity.HasOne(e => e.User)
+                    .WithMany()
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(e => e.TokenId).IsUnique();
                 entity.HasIndex(e => e.UserId);
                 entity.HasIndex(e => e.ExpiresAt);
             });

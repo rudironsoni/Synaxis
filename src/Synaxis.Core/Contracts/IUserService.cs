@@ -69,8 +69,8 @@ namespace Synaxis.Core.Contracts
         /// </summary>
         /// <param name="userId">The unique identifier of the user.</param>
         /// <param name="totpCode">The TOTP code to verify.</param>
-        /// <returns>A task that represents the asynchronous operation. The task result indicates whether MFA was enabled.</returns>
-        Task<bool> EnableMfaAsync(Guid userId, string totpCode);
+        /// <returns>A task that represents the asynchronous operation. The task result contains the MFA enable result with backup codes.</returns>
+        Task<MfaEnableResult> EnableMfaAsync(Guid userId, string totpCode);
 
         /// <summary>
         /// Disable MFA for user.
@@ -78,6 +78,14 @@ namespace Synaxis.Core.Contracts
         /// <param name="userId">The unique identifier of the user.</param>
         /// <returns>A task that represents the asynchronous operation. The task result indicates whether MFA was disabled.</returns>
         Task<bool> DisableMfaAsync(Guid userId);
+
+        /// <summary>
+        /// Disable MFA for user with code verification.
+        /// </summary>
+        /// <param name="userId">The unique identifier of the user.</param>
+        /// <param name="code">The TOTP code or backup code to verify.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result indicates whether MFA was disabled.</returns>
+        Task<bool> DisableMfaAsync(Guid userId, string code);
 
         /// <summary>
         /// Verify MFA code.

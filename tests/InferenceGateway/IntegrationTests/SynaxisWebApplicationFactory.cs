@@ -47,6 +47,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var controlPlaneOptionsBuilder = new DbContextOptionsBuilder<ControlPlaneDbContext>();
             var connectionString = $"{this._postgres.GetConnectionString()};Pooling=true;Maximum Pool Size=200";
             controlPlaneOptionsBuilder.UseNpgsql(connectionString);
+            controlPlaneOptionsBuilder.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 
             using var controlPlaneContext = new ControlPlaneDbContext(controlPlaneOptionsBuilder.Options);
 
@@ -57,6 +58,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             // Both contexts target the same database but create DIFFERENT tables
             var synaxisOptionsBuilder = new DbContextOptionsBuilder<Synaxis.Infrastructure.Data.SynaxisDbContext>();
             synaxisOptionsBuilder.UseNpgsql(connectionString);
+            synaxisOptionsBuilder.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
             using var synaxisContext = new Synaxis.Infrastructure.Data.SynaxisDbContext(synaxisOptionsBuilder.Options);
             await synaxisContext.Database.MigrateAsync().ConfigureAwait(false);
 
@@ -244,12 +246,14 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 services.AddDbContext<ControlPlaneDbContext>(options =>
                 {
                     options.UseNpgsql(connectionString);
+                    options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
                 });
 
                 // Re-register SynaxisDbContext (used by Identity) with PostgreSQL
                 services.AddDbContext<Synaxis.Infrastructure.Data.SynaxisDbContext>(options =>
                 {
                     options.UseNpgsql(connectionString);
+                    options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
                 });
             });
         }

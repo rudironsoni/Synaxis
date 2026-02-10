@@ -2,6 +2,7 @@
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Net.Http.Json;
@@ -303,7 +304,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
         }
 
         [Fact]
-        public async Task MfaEnable_WithValidCode_EnablesMfa()
+        public async Task MfaEnable_WithValidCode_EnablesMfaAndReturnsBackupCodes()
         {
             // Arrange: Setup MFA first
             var email = $"mfa_enable_{Guid.NewGuid()}@example.com";
@@ -329,7 +330,20 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
             // Assert
             enableResponse.EnsureSuccessStatusCode();
             var enableContent = await enableResponse.Content.ReadFromJsonAsync<JsonElement>();
-            Assert.True(enableContent.GetProperty("success").GetBoolean());
+
+            // Verify backup codes are returned
+            Assert.True(enableContent.TryGetProperty("backupCodes", out var backupCodes));
+            Assert.Equal(JsonValueKind.Array, backupCodes.ValueKind);
+            var codesArray = backupCodes.EnumerateArray().ToList();
+            Assert.Equal(10, codesArray.Count); // Should return 10 backup codes
+
+            // Each backup code should be 8 characters
+            foreach (var codeElement in codesArray)
+            {
+                var backupCode = codeElement.GetString();
+                Assert.NotNull(backupCode);
+                Assert.Equal(8, backupCode!.Length);
+            }
 
             // Verify MFA is enabled in database
             var scope = this._factory.Services.CreateScope();
@@ -380,13 +394,12 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
 
             await this._client.PostAsJsonAsync("/api/v1/auth/mfa/enable", new { code });
 
-            // Act: Disable MFA
-            var response = await this._client.PostAsync("/api/v1/auth/mfa/disable", null);
+            // Act: Disable MFA with valid TOTP code
+            var disableCode = totp.ComputeTotp();
+            var response = await this._client.PostAsJsonAsync("/api/v1/auth/mfa/disable", new { code = disableCode });
 
             // Assert
-            response.EnsureSuccessStatusCode();
-            var content = await response.Content.ReadFromJsonAsync<JsonElement>();
-            Assert.True(content.GetProperty("success").GetBoolean());
+            Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
             // Verify MFA is disabled in database
             var scope = this._factory.Services.CreateScope();
@@ -462,6 +475,443 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
             response.EnsureSuccessStatusCode();
             var content = await response.Content.ReadFromJsonAsync<JsonElement>();
             Assert.True(content.GetProperty("success").GetBoolean());
+        }
+
+        // Reset Password Tests
+        [Fact]
+        public async Task ResetPassword_WithValidToken_Returns204AndUpdatesPassword()
+        {
+            // Arrange: Register a user
+            var email = $"reset_{Guid.NewGuid()}@example.com";
+            var oldPassword = "OldPassword123!";
+            var newPassword = "NewPassword456!";
+            await this._client.PostAsJsonAsync("/auth/register", new { Email = email, Password = oldPassword });
+
+            // Get user from database
+            var scope = this._factory.Services.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<Synaxis.Infrastructure.Data.SynaxisDbContext>();
+            var passwordHasher = scope.ServiceProvider.GetRequiredService<Synaxis.InferenceGateway.Application.Security.IPasswordHasher>();
+            var user = await dbContext.Users.FirstAsync(u => u.Email == email);
+            var oldPasswordHash = user.PasswordHash;
+
+            // Create a password reset token
+            var resetToken = new Synaxis.Core.Models.PasswordResetToken
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                TokenHash = passwordHasher.HashPassword("valid_reset_token_123"),
+                ExpiresAt = DateTime.UtcNow.AddHours(1),
+                IsUsed = false,
+                CreatedAt = DateTime.UtcNow,
+            };
+            dbContext.PasswordResetTokens.Add(resetToken);
+            await dbContext.SaveChangesAsync();
+
+            // Act: Reset password with valid token
+            var response = await this._client.PostAsJsonAsync("/auth/reset-password", new { Token = "valid_reset_token_123", Password = newPassword });
+
+            // Assert: Returns 200 OK
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            var content = await response.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.True(content.GetProperty("success").GetBoolean());
+
+            // Verify password was updated
+            await dbContext.Entry(user).ReloadAsync();
+            Assert.NotEqual(oldPasswordHash, user.PasswordHash);
+
+            // Verify new password works for login
+            var loginResponse = await this._client.PostAsJsonAsync("/auth/login", new { Email = email, Password = newPassword });
+            loginResponse.EnsureSuccessStatusCode();
+            var loginContent = await loginResponse.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.True(loginContent.TryGetProperty("token", out _));
+        }
+
+        [Fact]
+        public async Task ResetPassword_WithInvalidToken_Returns400()
+        {
+            // Arrange
+            var email = $"invalid_token_{Guid.NewGuid()}@example.com";
+            await this._client.PostAsJsonAsync("/auth/register", new { Email = email, Password = "Password123!" });
+
+            // Act: Try to reset with non-existent token
+            var response = await this._client.PostAsJsonAsync("/auth/reset-password", new { Token = "non_existent_token", Password = "NewPassword456!" });
+
+            // Assert: Returns 400 Bad Request
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            var content = await response.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.False(content.GetProperty("success").GetBoolean());
+        }
+
+        [Fact]
+        public async Task ResetPassword_WithExpiredToken_Returns400()
+        {
+            // Arrange: Register a user
+            var email = $"expired_{Guid.NewGuid()}@example.com";
+            await this._client.PostAsJsonAsync("/auth/register", new { Email = email, Password = "Password123!" });
+
+            // Get user from database
+            var scope = this._factory.Services.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<Synaxis.Infrastructure.Data.SynaxisDbContext>();
+            var passwordHasher = scope.ServiceProvider.GetRequiredService<Synaxis.InferenceGateway.Application.Security.IPasswordHasher>();
+            var user = await dbContext.Users.FirstAsync(u => u.Email == email);
+
+            // Create an expired password reset token
+            var expiredToken = new Synaxis.Core.Models.PasswordResetToken
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                TokenHash = passwordHasher.HashPassword("expired_token_123"),
+                ExpiresAt = DateTime.UtcNow.AddHours(-1), // Expired 1 hour ago
+                IsUsed = false,
+                CreatedAt = DateTime.UtcNow.AddHours(-2),
+            };
+            dbContext.PasswordResetTokens.Add(expiredToken);
+            await dbContext.SaveChangesAsync();
+
+            // Act: Try to reset with expired token
+            var response = await this._client.PostAsJsonAsync("/auth/reset-password", new { Token = "expired_token_123", Password = "NewPassword456!" });
+
+            // Assert: Returns 400 Bad Request
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            var content = await response.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.False(content.GetProperty("success").GetBoolean());
+            Assert.Contains("expired", content.GetProperty("message").GetString() ?? string.Empty, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public async Task ResetPassword_WithUsedToken_Returns400()
+        {
+            // Arrange: Register a user
+            var email = $"used_token_{Guid.NewGuid()}@example.com";
+            await this._client.PostAsJsonAsync("/auth/register", new { Email = email, Password = "Password123!" });
+
+            // Get user from database
+            var scope = this._factory.Services.CreateScope();
+            var passwordHasher = scope.ServiceProvider.GetRequiredService<Synaxis.InferenceGateway.Application.Security.IPasswordHasher>();
+            var dbContext = scope.ServiceProvider.GetRequiredService<Synaxis.Infrastructure.Data.SynaxisDbContext>();
+            var user = await dbContext.Users.FirstAsync(u => u.Email == email);
+
+            // Create an already used password reset token
+            var usedToken = new Synaxis.Core.Models.PasswordResetToken
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                TokenHash = passwordHasher.HashPassword("used_token_123"),
+                ExpiresAt = DateTime.UtcNow.AddHours(1),
+                IsUsed = true, // Already used
+                CreatedAt = DateTime.UtcNow.AddMinutes(-30),
+            };
+            dbContext.PasswordResetTokens.Add(usedToken);
+            await dbContext.SaveChangesAsync();
+
+            // Act: Try to reset with used token
+            var response = await this._client.PostAsJsonAsync("/auth/reset-password", new { Token = "used_token_123", Password = "NewPassword456!" });
+
+            // Assert: Returns 400 Bad Request
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            var content = await response.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.False(content.GetProperty("success").GetBoolean());
+        }
+
+        [Fact]
+        public async Task ResetPassword_WithMissingToken_Returns400()
+        {
+            // Act: Try to reset without token
+            var response = await this._client.PostAsJsonAsync("/auth/reset-password", new { Password = "NewPassword456!" });
+
+            // Assert: Returns 400 Bad Request
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            var content = await response.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.False(content.GetProperty("success").GetBoolean());
+        }
+
+        [Fact]
+        public async Task ResetPassword_WithMissingPassword_Returns400()
+        {
+            // Act: Try to reset without password
+            var response = await this._client.PostAsJsonAsync("/auth/reset-password", new { Token = "some_token" });
+
+            // Assert: Returns 400 Bad Request
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            var content = await response.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.False(content.GetProperty("success").GetBoolean());
+        }
+
+        [Fact]
+        public async Task ResetPassword_MarksTokenAsUsed()
+        {
+            // Arrange: Register a user
+            var email = $"mark_used_{Guid.NewGuid()}@example.com";
+            await this._client.PostAsJsonAsync("/auth/register", new { Email = email, Password = "Password123!" });
+
+            var scope = this._factory.Services.CreateScope();
+            var passwordHasher = scope.ServiceProvider.GetRequiredService<Synaxis.InferenceGateway.Application.Security.IPasswordHasher>();
+            var dbContext = scope.ServiceProvider.GetRequiredService<Synaxis.Infrastructure.Data.SynaxisDbContext>();
+            var user = await dbContext.Users.FirstAsync(u => u.Email == email);
+
+            // Create a password reset token
+            var resetToken = new Synaxis.Core.Models.PasswordResetToken
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                TokenHash = passwordHasher.HashPassword("mark_used_token_123"),
+                ExpiresAt = DateTime.UtcNow.AddHours(1),
+                IsUsed = false,
+                CreatedAt = DateTime.UtcNow,
+            };
+            dbContext.PasswordResetTokens.Add(resetToken);
+            await dbContext.SaveChangesAsync();
+
+            // Act: Reset password
+            await this._client.PostAsJsonAsync("/auth/reset-password", new { Token = "mark_used_token_123", Password = "NewPassword456!" });
+
+            // Assert: Token is marked as used
+            await dbContext.Entry(resetToken).ReloadAsync();
+            Assert.True(resetToken.IsUsed);
+        }
+
+        [Fact]
+        public async Task ResetPassword_CannotReuseToken()
+        {
+            // Arrange: Register a user
+            var email = $"reuse_{Guid.NewGuid()}@example.com";
+            var password1 = "Password123!";
+            var password2 = "NewPassword456!";
+            var password3 = "AnotherPassword789!";
+            await this._client.PostAsJsonAsync("/auth/register", new { Email = email, Password = password1 });
+
+            // Get user from database
+            var scope = this._factory.Services.CreateScope();
+            var passwordHasher = scope.ServiceProvider.GetRequiredService<Synaxis.InferenceGateway.Application.Security.IPasswordHasher>();
+            var dbContext = scope.ServiceProvider.GetRequiredService<Synaxis.Infrastructure.Data.SynaxisDbContext>();
+            var user = await dbContext.Users.FirstAsync(u => u.Email == email);
+
+            // Create a password reset token
+            var resetToken = new Synaxis.Core.Models.PasswordResetToken
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                TokenHash = passwordHasher.HashPassword("reuse_token_123"),
+                ExpiresAt = DateTime.UtcNow.AddHours(1),
+                IsUsed = false,
+                CreatedAt = DateTime.UtcNow,
+            };
+            dbContext.PasswordResetTokens.Add(resetToken);
+            await dbContext.SaveChangesAsync();
+
+            // Act: First reset - should succeed
+            var firstResponse = await this._client.PostAsJsonAsync("/auth/reset-password", new { Token = "reuse_token_123", Password = password2 });
+            Assert.Equal(HttpStatusCode.OK, firstResponse.StatusCode);
+
+            // Act: Second reset with same token - should fail
+            var secondResponse = await this._client.PostAsJsonAsync("/auth/reset-password", new { Token = "reuse_token_123", Password = password3 });
+
+            // Assert: Second attempt fails
+            Assert.Equal(HttpStatusCode.BadRequest, secondResponse.StatusCode);
+            var content = await secondResponse.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.False(content.GetProperty("success").GetBoolean());
+
+            // Verify password was only changed once (to password2)
+            await dbContext.Entry(user).ReloadAsync();
+            var loginResponse = await this._client.PostAsJsonAsync("/auth/login", new { Email = email, Password = password2 });
+            loginResponse.EnsureSuccessStatusCode();
+        }
+
+        // Logout Tests
+        [Fact]
+        public async Task Logout_WithValidTokens_Returns204NoContent()
+        {
+            // Arrange: Login first
+            var email = $"logout_{Guid.NewGuid()}@example.com";
+            var loginResponse = await this._client.PostAsJsonAsync("/auth/dev-login", new { Email = email });
+            loginResponse.EnsureSuccessStatusCode();
+            var loginContent = await loginResponse.Content.ReadFromJsonAsync<JsonElement>();
+            var token = loginContent.GetProperty("token").GetString();
+
+            // Get refresh token from database
+            var scope = this._factory.Services.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<SynaxisDbContext>();
+            var user = await dbContext.Users.FirstAsync(u => u.Email == email);
+            var refreshToken = await dbContext.RefreshTokens
+                .Where(rt => rt.UserId == user.Id && !rt.IsRevoked)
+                .FirstOrDefaultAsync();
+
+            Assert.NotNull(refreshToken);
+
+            // Add auth header
+            this._client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            // Act: Logout
+            var response = await this._client.PostAsJsonAsync("/auth/logout", new { RefreshToken = refreshToken.TokenHash, AccessToken = token });
+
+            // Assert
+            Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+
+            // Verify refresh token is revoked
+            await dbContext.Entry(refreshToken).ReloadAsync();
+            Assert.True(refreshToken.IsRevoked);
+            Assert.NotNull(refreshToken.RevokedAt);
+
+            // Verify JWT is blacklisted
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var jwtToken = tokenHandler.ReadJwtToken(token);
+            var jtiClaim = jwtToken.Claims.First(c => c.Type == JwtRegisteredClaimNames.Jti).Value;
+
+            var blacklistedToken = await dbContext.JwtBlacklists
+                .FirstOrDefaultAsync(jb => jb.TokenId == jtiClaim);
+            Assert.NotNull(blacklistedToken);
+            Assert.Equal(user.Id, blacklistedToken.UserId);
+        }
+
+        [Fact]
+        public async Task Logout_WithInvalidRefreshToken_Returns204NoContent()
+        {
+            // Arrange: Login first
+            var email = $"logout_invalid_{Guid.NewGuid()}@example.com";
+            var loginResponse = await this._client.PostAsJsonAsync("/auth/dev-login", new { Email = email });
+            loginResponse.EnsureSuccessStatusCode();
+            var loginContent = await loginResponse.Content.ReadFromJsonAsync<JsonElement>();
+            var token = loginContent.GetProperty("token").GetString();
+
+            // Add auth header
+            this._client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            // Act: Logout with invalid refresh token
+            var response = await this._client.PostAsJsonAsync("/auth/logout", new { RefreshToken = "invalid_refresh_token", AccessToken = token });
+
+            // Assert: Still returns 204 to prevent token enumeration
+            Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task Logout_WithoutRefreshToken_Returns204NoContent()
+        {
+            // Arrange: Login first
+            var email = $"logout_no_refresh_{Guid.NewGuid()}@example.com";
+            var loginResponse = await this._client.PostAsJsonAsync("/auth/dev-login", new { Email = email });
+            loginResponse.EnsureSuccessStatusCode();
+            var loginContent = await loginResponse.Content.ReadFromJsonAsync<JsonElement>();
+            var token = loginContent.GetProperty("token").GetString();
+
+            // Add auth header
+            this._client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            // Act: Logout without refresh token
+            var response = await this._client.PostAsJsonAsync("/auth/logout", new { RefreshToken = string.Empty, AccessToken = token });
+
+            // Assert: Still returns 204 to prevent token enumeration
+            Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task Logout_BlacklistedTokenCannotBeUsed()
+        {
+            // Arrange: Login and logout
+            var email = $"logout_blacklist_{Guid.NewGuid()}@example.com";
+            var loginResponse = await this._client.PostAsJsonAsync("/auth/dev-login", new { Email = email });
+            loginResponse.EnsureSuccessStatusCode();
+            var loginContent = await loginResponse.Content.ReadFromJsonAsync<JsonElement>();
+            var token = loginContent.GetProperty("token").GetString();
+
+            var scope = this._factory.Services.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<SynaxisDbContext>();
+            var user = await dbContext.Users.FirstAsync(u => u.Email == email);
+            var refreshToken = await dbContext.RefreshTokens
+                .Where(rt => rt.UserId == user.Id && !rt.IsRevoked)
+                .FirstOrDefaultAsync();
+
+            this._client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            await this._client.PostAsJsonAsync("/auth/logout", new { RefreshToken = refreshToken!.TokenHash, AccessToken = token });
+
+            // Act: Try to use the blacklisted token
+            var response = await this._client.GetAsync("/api/v1/users/me");
+
+            // Assert: Token should be rejected
+            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task Logout_RevokedRefreshTokenCannotBeUsed()
+        {
+            // Arrange: Login and logout
+            var email = $"logout_revoked_{Guid.NewGuid()}@example.com";
+            var loginResponse = await this._client.PostAsJsonAsync("/auth/dev-login", new { Email = email });
+            loginResponse.EnsureSuccessStatusCode();
+            var loginContent = await loginResponse.Content.ReadFromJsonAsync<JsonElement>();
+            var token = loginContent.GetProperty("token").GetString();
+
+            var scope = this._factory.Services.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<SynaxisDbContext>();
+            var user = await dbContext.Users.FirstAsync(u => u.Email == email);
+            var refreshToken = await dbContext.RefreshTokens
+                .Where(rt => rt.UserId == user.Id && !rt.IsRevoked)
+                .FirstOrDefaultAsync();
+
+            this._client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            await this._client.PostAsJsonAsync("/auth/logout", new { RefreshToken = refreshToken!.TokenHash, AccessToken = token });
+
+            // Act: Try to refresh with blacklisted JWT token
+            this._client.DefaultRequestHeaders.Authorization = null;
+            var response = await this._client.PostAsJsonAsync("/auth/refresh", new { Token = token });
+
+            // Assert: Refresh should fail
+            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task Logout_MultipleLogouts_AllTokensInvalidated()
+        {
+            // Arrange: Login multiple times
+            var email = $"logout_multi_{Guid.NewGuid()}@example.com";
+
+            var tokens = new List<string>();
+            var refreshTokens = new List<string>();
+
+            for (int i = 0; i < 3; i++)
+            {
+                var loginResponse = await this._client.PostAsJsonAsync("/auth/dev-login", new { Email = email });
+                loginResponse.EnsureSuccessStatusCode();
+                var loginContent = await loginResponse.Content.ReadFromJsonAsync<JsonElement>();
+                var token = loginContent.GetProperty("token").GetString();
+                tokens.Add(token!);
+
+                var loopScope = this._factory.Services.CreateScope();
+                var loopDbContext = loopScope.ServiceProvider.GetRequiredService<SynaxisDbContext>();
+                var loopUser = await loopDbContext.Users.FirstAsync(u => u.Email == email);
+                var refreshToken = await loopDbContext.RefreshTokens
+                    .Where(rt => rt.UserId == loopUser.Id && !rt.IsRevoked)
+                    .OrderByDescending(rt => rt.CreatedAt)
+                    .FirstOrDefaultAsync();
+
+                if (refreshToken != null)
+                {
+                    refreshTokens.Add(refreshToken.TokenHash!);
+                }
+            }
+
+            // Act: Logout all sessions
+            foreach (var token in tokens)
+            {
+                this._client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                await this._client.PostAsJsonAsync("/auth/logout", new { RefreshToken = refreshTokens[tokens.IndexOf(token)], AccessToken = token });
+            }
+
+            // Assert: All tokens should be blacklisted
+            var scope = this._factory.Services.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<SynaxisDbContext>();
+            var user = await dbContext.Users.FirstAsync(u => u.Email == email);
+
+            var blacklistedCount = await dbContext.JwtBlacklists
+                .Where(jb => jb.UserId == user.Id)
+                .CountAsync();
+
+            Assert.Equal(3, blacklistedCount);
+
+            var revokedRefreshCount = await dbContext.RefreshTokens
+                .Where(rt => rt.UserId == user.Id && rt.IsRevoked)
+                .CountAsync();
+
+            Assert.Equal(3, revokedRefreshCount);
         }
     }
 }
