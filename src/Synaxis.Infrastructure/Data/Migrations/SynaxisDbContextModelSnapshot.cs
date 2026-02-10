@@ -200,6 +200,146 @@ namespace Synaxis.Infrastructure.Data.Migrations
                     b.ToTable("organization_backup_config", (string)null);
                 });
 
+            modelBuilder.Entity("Synaxis.Core.Models.Collection", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Metadata")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("metadata");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("slug");
+
+                    b.PrimitiveCollection<string[]>("Tags")
+                        .HasColumnType("text[]");
+
+                    b.Property<Guid?>("TeamId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("team_id");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("type");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("Visibility")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("visibility");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("TeamId");
+
+                    b.HasIndex("Type");
+
+                    b.HasIndex("Visibility");
+
+                    b.HasIndex("OrganizationId", "Name");
+
+                    b.HasIndex("OrganizationId", "Slug")
+                        .IsUnique();
+
+                    b.ToTable("Collections", t =>
+                        {
+                            t.HasCheckConstraint("CK_Collection_Type_Valid", "type IN ('general', 'models', 'prompts', 'datasets', 'workflows')");
+
+                            t.HasCheckConstraint("CK_Collection_Visibility_Valid", "visibility IN ('public', 'private', 'team')");
+                        });
+                });
+
+            modelBuilder.Entity("Synaxis.Core.Models.CollectionMembership", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("AddedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("added_by");
+
+                    b.Property<Guid>("CollectionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("collection_id");
+
+                    b.Property<DateTime>("JoinedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("joined_at");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("role");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AddedBy");
+
+                    b.HasIndex("CollectionId", "UserId");
+
+                    b.HasIndex("OrganizationId", "UserId");
+
+                    b.HasIndex("UserId", "CollectionId")
+                        .IsUnique();
+
+                    b.ToTable("CollectionMemberships", t =>
+                        {
+                            t.HasCheckConstraint("CK_CollectionMembership_Role_Valid", "role IN ('Admin', 'Member', 'Viewer')");
+                        });
+                });
+
             modelBuilder.Entity("Synaxis.Core.Models.CreditTransaction", b =>
                 {
                     b.Property<Guid>("Id")
@@ -462,6 +602,42 @@ namespace Synaxis.Infrastructure.Data.Migrations
                     b.HasIndex("OrganizationId", "PeriodStart", "PeriodEnd");
 
                     b.ToTable("invoices", (string)null);
+                });
+
+            modelBuilder.Entity("Synaxis.Core.Models.JwtBlacklist", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<string>("TokenId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("token_id");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExpiresAt");
+
+                    b.HasIndex("TokenId")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("JwtBlacklists");
                 });
 
             modelBuilder.Entity("Synaxis.Core.Models.Organization", b =>
@@ -1145,6 +1321,9 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("locked_until");
 
+                    b.Property<string>("MfaBackupCodes")
+                        .HasColumnType("text");
+
                     b.Property<bool>("MfaEnabled")
                         .HasColumnType("boolean")
                         .HasColumnName("mfa_enabled");
@@ -1342,6 +1521,66 @@ namespace Synaxis.Infrastructure.Data.Migrations
                     b.Navigation("Organization");
                 });
 
+            modelBuilder.Entity("Synaxis.Core.Models.Collection", b =>
+                {
+                    b.HasOne("Synaxis.Core.Models.User", "Creator")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Synaxis.Core.Models.Organization", "Organization")
+                        .WithMany("Collections")
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Synaxis.Core.Models.Team", "Team")
+                        .WithMany("Collections")
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Creator");
+
+                    b.Navigation("Organization");
+
+                    b.Navigation("Team");
+                });
+
+            modelBuilder.Entity("Synaxis.Core.Models.CollectionMembership", b =>
+                {
+                    b.HasOne("Synaxis.Core.Models.User", "Adder")
+                        .WithMany()
+                        .HasForeignKey("AddedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Synaxis.Core.Models.Collection", "Collection")
+                        .WithMany("CollectionMemberships")
+                        .HasForeignKey("CollectionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Synaxis.Core.Models.Organization", "Organization")
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Synaxis.Core.Models.User", "User")
+                        .WithMany("CollectionMemberships")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Adder");
+
+                    b.Navigation("Collection");
+
+                    b.Navigation("Organization");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Synaxis.Core.Models.CreditTransaction", b =>
                 {
                     b.HasOne("Synaxis.Core.Models.Organization", "Organization")
@@ -1400,6 +1639,17 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Organization");
+                });
+
+            modelBuilder.Entity("Synaxis.Core.Models.JwtBlacklist", b =>
+                {
+                    b.HasOne("Synaxis.Core.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Synaxis.Core.Models.PasswordResetToken", b =>
@@ -1565,8 +1815,15 @@ namespace Synaxis.Infrastructure.Data.Migrations
                     b.Navigation("Team");
                 });
 
+            modelBuilder.Entity("Synaxis.Core.Models.Collection", b =>
+                {
+                    b.Navigation("CollectionMemberships");
+                });
+
             modelBuilder.Entity("Synaxis.Core.Models.Organization", b =>
                 {
+                    b.Navigation("Collections");
+
                     b.Navigation("Requests");
 
                     b.Navigation("Teams");
@@ -1578,6 +1835,8 @@ namespace Synaxis.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("Synaxis.Core.Models.Team", b =>
                 {
+                    b.Navigation("Collections");
+
                     b.Navigation("TeamMemberships");
 
                     b.Navigation("VirtualKeys");
@@ -1585,6 +1844,8 @@ namespace Synaxis.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("Synaxis.Core.Models.User", b =>
                 {
+                    b.Navigation("CollectionMemberships");
+
                     b.Navigation("TeamMemberships");
 
                     b.Navigation("VirtualKeys");

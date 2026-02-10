@@ -208,15 +208,27 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
             var oldPassword = "OldPass123!";
             var newPassword = "NewPass456!";
             await _client.PostAsJsonAsync("/auth/register", new { Email = email, Password = oldPassword });
-            var forgotResponse = await _client.PostAsJsonAsync("/auth/forgot-password", new { Email = email });
-            forgotResponse.EnsureSuccessStatusCode();
 
             using var scope = _factory.Services.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<SynaxisDbContext>();
+            var passwordHasher = scope.ServiceProvider.GetRequiredService<Synaxis.InferenceGateway.Application.Security.IPasswordHasher>();
             var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
-            var resetToken = $"reset_{user!.Id}_{Guid.NewGuid()}";
 
-            var response = await _client.PostAsJsonAsync("/auth/reset-password", new { Token = resetToken, Password = newPassword });
+            // Create a password reset token
+            var tokenValue = "valid_reset_token_123";
+            var resetToken = new PasswordResetToken
+            {
+                Id = Guid.NewGuid(),
+                UserId = user!.Id,
+                TokenHash = passwordHasher.HashPassword(tokenValue),
+                ExpiresAt = DateTime.UtcNow.AddHours(1),
+                IsUsed = false,
+                CreatedAt = DateTime.UtcNow,
+            };
+            dbContext.PasswordResetTokens.Add(resetToken);
+            await dbContext.SaveChangesAsync();
+
+            var response = await _client.PostAsJsonAsync("/auth/reset-password", new { Token = tokenValue, Password = newPassword });
 
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             var content = await response.Content.ReadFromJsonAsync<JsonElement>();

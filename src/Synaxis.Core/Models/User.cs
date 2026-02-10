@@ -124,6 +124,11 @@ namespace Synaxis.Core.Models
         public string MfaSecret { get; set; }
 
         /// <summary>
+        /// Gets or sets the MFA backup codes (hashed, comma-separated).
+        /// </summary>
+        public string MfaBackupCodes { get; set; }
+
+        /// <summary>
         /// Gets or sets the last login timestamp.
         /// </summary>
         public DateTime? LastLoginAt { get; set; }

@@ -29,11 +29,12 @@ namespace Synaxis.Core.Contracts
         Task<AuthenticationResult> RefreshTokenAsync(string refreshToken);
 
         /// <summary>
-        /// Logout a user by revoking their refresh token.
+        /// Logout a user by revoking their refresh token and invalidating the JWT access token.
         /// </summary>
         /// <param name="refreshToken">The refresh token to revoke.</param>
+        /// <param name="accessToken">The JWT access token to invalidate.</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
-        Task LogoutAsync(string refreshToken);
+        Task LogoutAsync(string refreshToken, string accessToken = null);
 
         /// <summary>
         /// Validate a JWT access token.

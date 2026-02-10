@@ -181,13 +181,14 @@ namespace Synaxis.Infrastructure.Services
                     };
                 }
 
-                // Revoke old refresh token
+                // Generate new tokens first
+                var accessToken = GenerateAccessToken(refreshTokenEntity.User);
+                var newRefreshToken = await GenerateRefreshTokenAsync(refreshTokenEntity.User.Id);
+
+                // Revoke old refresh token and set replacement tracking
                 refreshTokenEntity.IsRevoked = true;
                 refreshTokenEntity.RevokedAt = DateTime.UtcNow;
-
-                // Generate new tokens
-                var accessToken = GenerateAccessToken(refreshTokenEntity.User);
-                var newRefreshToken = await GenerateRefreshTokenAsync(refreshTokenEntity.User.Id, refreshTokenEntity.TokenHash);
+                refreshTokenEntity.ReplacedByTokenHash = newRefreshToken;
 
                 await _context.SaveChangesAsync();
 
@@ -213,34 +214,59 @@ namespace Synaxis.Infrastructure.Services
             }
         }
 
-        public async Task LogoutAsync(string refreshToken)
+        public async Task LogoutAsync(string refreshToken, string accessToken = null)
         {
             try
             {
                 _logger.LogInformation("Logout attempt");
 
-                if (string.IsNullOrWhiteSpace(refreshToken))
+                // Invalidate JWT access token if provided
+                if (!string.IsNullOrWhiteSpace(accessToken))
                 {
-                    _logger.LogWarning("Logout failed: Refresh token is required");
-                    return;
+                    var tokenId = GetTokenIdFromJwt(accessToken);
+                    if (tokenId != null)
+                    {
+                        var userId = GetUserIdFromToken(accessToken);
+                        if (userId.HasValue)
+                        {
+                            var expiresAt = GetTokenExpirationFromJwt(accessToken);
+
+                            var jwtBlacklist = new JwtBlacklist
+                            {
+                                Id = Guid.NewGuid(),
+                                UserId = userId.Value,
+                                TokenId = tokenId,
+                                CreatedAt = DateTime.UtcNow,
+                                ExpiresAt = expiresAt
+                            };
+
+                            _context.JwtBlacklists.Add(jwtBlacklist);
+                            _logger.LogInformation("JWT access token added to blacklist: {TokenId}", tokenId);
+                        }
+                    }
                 }
 
-                var tokenHash = HashToken(refreshToken);
-                var refreshTokenEntity = await _context.RefreshTokens
-                    .FirstOrDefaultAsync(rt => rt.TokenHash == tokenHash);
-
-                if (refreshTokenEntity != null)
+                // Revoke refresh token if provided
+                if (!string.IsNullOrWhiteSpace(refreshToken))
                 {
-                    refreshTokenEntity.IsRevoked = true;
-                    refreshTokenEntity.RevokedAt = DateTime.UtcNow;
-                    await _context.SaveChangesAsync();
+                    var tokenHash = HashToken(refreshToken);
+                    var refreshTokenEntity = await _context.RefreshTokens
+                        .FirstOrDefaultAsync(rt => rt.TokenHash == tokenHash);
 
-                    _logger.LogInformation("Logout successful for refresh token");
+                    if (refreshTokenEntity != null)
+                    {
+                        refreshTokenEntity.IsRevoked = true;
+                        refreshTokenEntity.RevokedAt = DateTime.UtcNow;
+                        _logger.LogInformation("Refresh token revoked for user: {UserId}", refreshTokenEntity.UserId);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Logout: Refresh token not found");
+                    }
                 }
-                else
-                {
-                    _logger.LogWarning("Logout failed: Refresh token not found");
-                }
+
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Logout successful");
             }
             catch (Exception ex)
             {
@@ -255,6 +281,22 @@ namespace Synaxis.Infrastructure.Services
                 if (string.IsNullOrWhiteSpace(token))
                 {
                     return false;
+                }
+
+                // Check if token is blacklisted
+                var tokenId = GetTokenIdFromJwt(token);
+                if (tokenId != null)
+                {
+                    var isBlacklisted = _context.JwtBlacklists
+                        .AnyAsync(jb => jb.TokenId == tokenId && jb.ExpiresAt > DateTime.UtcNow)
+                        .GetAwaiter()
+                        .GetResult();
+
+                    if (isBlacklisted)
+                    {
+                        _logger.LogWarning("Token validation failed: Token is blacklisted");
+                        return false;
+                    }
                 }
 
                 var tokenHandler = new JwtSecurityTokenHandler();
@@ -367,6 +409,38 @@ namespace Synaxis.Infrastructure.Services
                 var bytes = Encoding.UTF8.GetBytes(token);
                 var hash = sha256.ComputeHash(bytes);
                 return Convert.ToBase64String(hash);
+            }
+        }
+
+        private string GetTokenIdFromJwt(string token)
+        {
+            try
+            {
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var jsonToken = tokenHandler.ReadJwtToken(token);
+
+                var jtiClaim = jsonToken.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti);
+                return jtiClaim?.Value;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error extracting token ID from JWT");
+                return null;
+            }
+        }
+
+        private DateTime GetTokenExpirationFromJwt(string token)
+        {
+            try
+            {
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var jsonToken = tokenHandler.ReadJwtToken(token);
+                return jsonToken.ValidTo;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error extracting expiration from JWT");
+                return DateTime.UtcNow.AddMinutes(1); // Default to 1 minute from now
             }
         }
     }

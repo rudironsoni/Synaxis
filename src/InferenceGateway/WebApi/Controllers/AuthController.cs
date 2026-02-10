@@ -4,6 +4,7 @@
 
 namespace Synaxis.InferenceGateway.WebApi.Controllers
 {
+    using System.IdentityModel.Tokens.Jwt;
     using System.Security.Claims;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Cors;
@@ -179,18 +180,86 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
             }
 
             var token = this.jwtService.GenerateToken(user);
-            return this.Ok(new { token });
+
+            // Create a refresh token
+            var refreshToken = new RefreshToken
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                TokenHash = this.passwordHasher.HashPassword(Guid.NewGuid().ToString()),
+                ExpiresAt = DateTime.UtcNow.AddDays(30),
+                IsRevoked = false,
+                CreatedAt = DateTime.UtcNow,
+            };
+            this.dbContext.RefreshTokens.Add(refreshToken);
+            await this.dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            return this.Ok(new { token, refreshToken = refreshToken.TokenHash });
         }
 
         /// <summary>
         /// Logs out a user.
         /// </summary>
+        /// <param name="request">The logout request (optional).</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The logout result.</returns>
         [HttpPost("logout")]
         [Authorize]
-        public IActionResult Logout()
+        public async Task<IActionResult> Logout([FromBody] LogoutRequest? request, CancellationToken cancellationToken)
         {
-            return this.Ok(new { success = true, message = "Logged out successfully" });
+            var userIdClaim = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            {
+                return this.Unauthorized(new { success = false, message = "Invalid user" });
+            }
+
+            // Revoke refresh token if provided
+            if (request != null && !string.IsNullOrWhiteSpace(request.RefreshToken))
+            {
+                var refreshToken = await this.dbContext.RefreshTokens
+                    .FirstOrDefaultAsync(rt => rt.TokenHash == request.RefreshToken && rt.UserId == userId, cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (refreshToken != null)
+                {
+                    refreshToken.IsRevoked = true;
+                    refreshToken.RevokedAt = DateTime.UtcNow;
+                }
+            }
+
+            // Blacklist JWT token if provided
+            if (request != null && !string.IsNullOrWhiteSpace(request.AccessToken))
+            {
+                try
+                {
+                    var tokenHandler = new JwtSecurityTokenHandler();
+                    var jwtToken = tokenHandler.ReadJwtToken(request.AccessToken);
+                    var jtiClaim = jwtToken.Claims.FirstOrDefault(c => string.Equals(c.Type, JwtRegisteredClaimNames.Jti, StringComparison.Ordinal))?.Value;
+
+                    if (!string.IsNullOrEmpty(jtiClaim))
+                    {
+                        var blacklistedToken = new JwtBlacklist
+                        {
+                            Id = Guid.NewGuid(),
+                            TokenId = jtiClaim,
+                            UserId = userId,
+                            ExpiresAt = jwtToken.ValidTo,
+                            CreatedAt = DateTime.UtcNow,
+                        };
+                        this.dbContext.JwtBlacklists.Add(blacklistedToken);
+                    }
+                }
+                catch
+                {
+                    // Ignore token parsing errors
+                }
+            }
+
+            await this.dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            // Return 200 OK for backward compatibility when no request body is provided
+            // Return 204 No Content when request body is provided
+            return request == null ? this.Ok(new { success = true, message = "Logged out successfully" }) : this.NoContent();
         }
 
         /// <summary>
@@ -205,6 +274,12 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
             if (string.IsNullOrWhiteSpace(request.Token))
             {
                 return this.BadRequest(new { success = false, message = "Token is required" });
+            }
+
+            // Check if JWT token is blacklisted
+            if (await this.IsTokenBlacklistedAsync(request.Token, cancellationToken))
+            {
+                return this.Unauthorized(new { success = false, message = "Token has been revoked" });
             }
 
             var userId = this.jwtService.ValidateToken(request.Token);
@@ -235,12 +310,69 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         /// Initiates a password reset process.
         /// </summary>
         /// <param name="request">The forgot password request.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The result.</returns>
         [HttpPost("forgot-password")]
-        public IActionResult ForgotPassword([FromBody] ForgotPasswordRequest request)
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request, CancellationToken cancellationToken)
         {
+            // Validate email
+            if (string.IsNullOrWhiteSpace(request.Email))
+            {
+                return this.BadRequest(new { success = false, message = "Email is required" });
+            }
+
+            // Find user by email
+            var user = await this.dbContext.Users
+                .FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken)
+                .ConfigureAwait(false);
+
+            // Only proceed if user exists (security: don't reveal if email exists)
+            if (user != null)
+            {
+                // Generate a secure random token
+                var token = GenerateSecureToken();
+
+                // Hash the token for storage
+                var tokenHash = this.passwordHasher.HashPassword(token);
+
+                // Create password reset token record
+                var resetToken = new PasswordResetToken
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = user.Id,
+                    TokenHash = tokenHash,
+                    ExpiresAt = DateTime.UtcNow.AddHours(1), // Token expires in 1 hour
+                    IsUsed = false,
+                    CreatedAt = DateTime.UtcNow,
+                };
+
+                this.dbContext.PasswordResetTokens.Add(resetToken);
+                await this.dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+                // Generate reset link
+                var resetLink = $"{this.Request.Scheme}://{this.Request.Host}/auth/reset-password?token={token}";
+
+                // Log the reset link (in production, this would send an email)
+                this.logger.LogInformation("Password reset link generated for user {UserId}: {ResetLink}", user.Id, resetLink);
+            }
+
             // Always return success to avoid leaking user existence
             return this.Ok(new { success = true, message = "If the email exists, a password reset link has been sent" });
+        }
+
+        /// <summary>
+        /// Generates a secure random token for password reset.
+        /// </summary>
+        /// <returns>A secure random token.</returns>
+        private static string GenerateSecureToken()
+        {
+            using var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
+            var tokenBytes = new byte[32];
+            rng.GetBytes(tokenBytes);
+            return Convert.ToBase64String(tokenBytes)
+                .Replace("+", "-")
+                .Replace("/", "_")
+                .Replace("=", string.Empty);
         }
 
         /// <summary>
@@ -257,28 +389,50 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
                 return this.BadRequest(new { success = false, message = "Token and password are required" });
             }
 
-            // Validate token format
-            if (!request.Token.StartsWith("reset_", StringComparison.Ordinal))
+            // Find the reset token by hashing the provided token and comparing with stored hashes
+            var allResetTokens = await this.dbContext.PasswordResetTokens
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            var resetToken = allResetTokens.FirstOrDefault(token => this.passwordHasher.VerifyPassword(request.Token, token.TokenHash));
+
+            if (resetToken == null)
             {
-                return this.BadRequest(new { success = false, message = "Invalid reset token" });
+                return this.BadRequest(new { success = false, message = "Invalid or expired reset token" });
             }
 
-            // Extract user ID from token (format: reset_{userId}_{guid})
-            var tokenParts = request.Token.Split('_');
-            if (tokenParts.Length >= 2 && Guid.TryParse(tokenParts[1], out var userId))
+            // Check if token has expired
+            if (resetToken.ExpiresAt < DateTime.UtcNow)
             {
-                var user = await this.dbContext.Users
-                    .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken)
-                    .ConfigureAwait(false);
-
-                if (user != null)
-                {
-                    // Update password
-                    user.PasswordHash = this.passwordHasher.HashPassword(request.Password);
-                    await this.dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-                }
+                return this.BadRequest(new { success = false, message = "Reset token has expired" });
             }
 
+            // Check if token has already been used
+            if (resetToken.IsUsed)
+            {
+                return this.BadRequest(new { success = false, message = "Reset token has already been used" });
+            }
+
+            // Get the user
+            var user = await this.dbContext.Users
+                .FirstOrDefaultAsync(u => u.Id == resetToken.UserId, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (user == null)
+            {
+                return this.BadRequest(new { success = false, message = "User not found" });
+            }
+
+            // Update the user's password
+            user.PasswordHash = this.passwordHasher.HashPassword(request.Password);
+            user.UpdatedAt = DateTime.UtcNow;
+
+            // Mark the token as used
+            resetToken.IsUsed = true;
+
+            await this.dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            // Return 200 OK with success response
             return this.Ok(new { success = true, message = "Password reset successful" });
         }
 
@@ -345,6 +499,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The MFA secret and QR code.</returns>
         [HttpPost("/api/v1/auth/mfa/setup")]
+        [HttpPost("/api/auth/mfa/setup")]
         [Authorize]
         public async Task<IActionResult> MfaSetup(CancellationToken cancellationToken)
         {
@@ -385,6 +540,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The result.</returns>
         [HttpPost("/api/v1/auth/mfa/enable")]
+        [HttpPost("/api/auth/mfa/enable")]
         [Authorize]
         public async Task<IActionResult> MfaEnable([FromBody] MfaEnableRequest request, CancellationToken cancellationToken)
         {
@@ -417,21 +573,41 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
                 return this.BadRequest(new { success = false, message = "Invalid verification code" });
             }
 
+            // Generate 10 backup codes
+            var backupCodes = new List<string>();
+            var hashedBackupCodes = new List<string>();
+            var random = new Random();
+
+            for (int i = 0; i < 10; i++)
+            {
+                // Generate 8-character alphanumeric code
+                var code = new string(Enumerable.Range(0, 8)
+                    .Select(_ => "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"[random.Next(36)])
+                    .ToArray());
+                backupCodes.Add(code);
+                hashedBackupCodes.Add(this.passwordHasher.HashPassword(code));
+            }
+
+            // Store hashed backup codes in database
+            user.MfaBackupCodes = string.Join(",", hashedBackupCodes);
+
             // Enable MFA
             user.MfaEnabled = true;
             await this.dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-            return this.Ok(new { success = true, message = "MFA enabled successfully" });
+            return this.Ok(new { success = true, message = "MFA enabled successfully", backupCodes });
         }
 
         /// <summary>
         /// Disables MFA for the authenticated user.
         /// </summary>
+        /// <param name="request">The MFA disable request.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The result.</returns>
         [HttpPost("/api/v1/auth/mfa/disable")]
+        [HttpPost("/api/auth/mfa/disable")]
         [Authorize]
-        public async Task<IActionResult> MfaDisable(CancellationToken cancellationToken)
+        public async Task<IActionResult> MfaDisable([FromBody] MfaDisableRequest request, CancellationToken cancellationToken)
         {
             var userIdClaim = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
@@ -448,12 +624,78 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
                 return this.Unauthorized(new { success = false, message = "User not found" });
             }
 
+            // Check if MFA is enabled
+            if (!user.MfaEnabled)
+            {
+                return this.BadRequest(new { success = false, message = "MFA is not enabled" });
+            }
+
+            // Validate code
+            if (string.IsNullOrWhiteSpace(request.Code))
+            {
+                return this.BadRequest(new { success = false, message = "Code is required" });
+            }
+
+            // Check if it's a backup code
+            var isBackupCodeValid = this.IsBackupCodeValid(user, request.Code);
+
+            // Check if it's a valid TOTP code
+            var isTotpValid = AuthController.IsTotpValid(user, request.Code);
+
+            if (!isBackupCodeValid && !isTotpValid)
+            {
+                return this.BadRequest(new { success = false, message = "Invalid code" });
+            }
+
             // Disable MFA
             user.MfaEnabled = false;
             user.MfaSecret = null;
+            user.MfaBackupCodes = null;
             await this.dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-            return this.Ok(new { success = true, message = "MFA disabled successfully" });
+            return this.NoContent();
+        }
+
+        /// <summary>
+        /// Checks if the provided code is a valid backup code.
+        /// </summary>
+        /// <param name="user">The user.</param>
+        /// <param name="code">The code to check.</param>
+        /// <returns>True if the code is a valid backup code; otherwise, false.</returns>
+        private bool IsBackupCodeValid(User user, string code)
+        {
+            if (string.IsNullOrEmpty(user.MfaBackupCodes))
+            {
+                return false;
+            }
+
+            var hashedBackupCodes = user.MfaBackupCodes.Split(',');
+            return hashedBackupCodes.Any(hashedCode => this.passwordHasher.VerifyPassword(code, hashedCode));
+        }
+
+        /// <summary>
+        /// Checks if the provided code is a valid TOTP code.
+        /// </summary>
+        /// <param name="user">The user.</param>
+        /// <param name="code">The code to check.</param>
+        /// <returns>True if the code is a valid TOTP code; otherwise, false.</returns>
+        private static bool IsTotpValid(User user, string code)
+        {
+            if (string.IsNullOrEmpty(user.MfaSecret))
+            {
+                return false;
+            }
+
+            try
+            {
+                var totp = new OtpNet.Totp(Convert.FromBase64String(user.MfaSecret));
+                return totp.VerifyTotp(code, out _, new OtpNet.VerificationWindow(2, 2));
+            }
+            catch
+            {
+                // Invalid secret format
+                return false;
+            }
         }
 
         /// <summary>
@@ -511,6 +753,38 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
                     },
                 });
         }
+
+        /// <summary>
+        /// Checks if a JWT token is blacklisted.
+        /// </summary>
+        /// <param name="token">The JWT token to check.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>True if the token is blacklisted; otherwise, false.</returns>
+        private async Task<bool> IsTokenBlacklistedAsync(string token, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var jwtToken = tokenHandler.ReadJwtToken(token);
+                var jtiClaim = jwtToken.Claims.FirstOrDefault(c => string.Equals(c.Type, JwtRegisteredClaimNames.Jti, StringComparison.Ordinal))?.Value;
+
+                if (string.IsNullOrEmpty(jtiClaim))
+                {
+                    return false;
+                }
+
+                var blacklistedToken = await this.dbContext.JwtBlacklists
+                    .FirstOrDefaultAsync(jb => jb.TokenId == jtiClaim, cancellationToken)
+                    .ConfigureAwait(false);
+
+                return blacklistedToken != null;
+            }
+            catch
+            {
+                // If token parsing fails, consider it not blacklisted
+                return false;
+            }
+        }
     }
 
     /// <summary>
@@ -549,6 +823,33 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         /// Gets or sets the new password.
         /// </summary>
         public string Password { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// Request to logout.
+    /// </summary>
+    public class LogoutRequest
+    {
+        /// <summary>
+        /// Gets or sets the refresh token.
+        /// </summary>
+        public string RefreshToken { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the access token.
+        /// </summary>
+        public string AccessToken { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// Request to disable MFA.
+    /// </summary>
+    public class MfaDisableRequest
+    {
+        /// <summary>
+        /// Gets or sets the TOTP code or backup code.
+        /// </summary>
+        public string Code { get; set; } = string.Empty;
     }
 
     /// <summary>

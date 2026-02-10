@@ -215,17 +215,17 @@ namespace Synaxis.Infrastructure.Services
             // Generate QR code URL for authenticator apps
             var issuer = "Synaxis";
             var accountName = user.Email;
-            var qrCodeUrl = $"otpauth://totp/{issuer}:{accountName}?secret={secret}&issuer={issuer}";
+            var qrCodeUri = $"otpauth://totp/{issuer}:{accountName}?secret={secret}&issuer={issuer}";
 
             return new MfaSetupResult
             {
                 Secret = secret,
-                QrCodeUrl = qrCodeUrl,
-                ManualEntryKey = FormatSecretForManualEntry(secret)
+                QrCodeUrl = qrCodeUri,
+                ManualEntryKey = secret
             };
         }
 
-        public async Task<bool> EnableMfaAsync(Guid userId, string totpCode)
+        public async Task<MfaEnableResult> EnableMfaAsync(Guid userId, string totpCode)
         {
             if (string.IsNullOrWhiteSpace(totpCode))
                 throw new ArgumentException("TOTP code is required", nameof(totpCode));
@@ -242,12 +242,22 @@ namespace Synaxis.Infrastructure.Services
             if (!VerifyTotpCode(user.MfaSecret, totpCode))
                 throw new InvalidOperationException("Invalid TOTP code");
 
+            // Generate backup codes
+            var backupCodes = GenerateBackupCodes();
+
+            // Store backup codes (hashed) in the user record
+            user.MfaBackupCodes = string.Join(",", backupCodes.Select(BCrypt.Net.BCrypt.HashPassword));
             user.MfaEnabled = true;
             user.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
 
-            return true;
+            return new MfaEnableResult
+            {
+                Success = true,
+                BackupCodes = backupCodes.ToArray(),
+                ErrorMessage = "MFA enabled successfully. Please save your backup codes in a secure location."
+            };
         }
 
         public async Task<bool> DisableMfaAsync(Guid userId)
@@ -259,11 +269,65 @@ namespace Synaxis.Infrastructure.Services
 
             user.MfaEnabled = false;
             user.MfaSecret = null;
+            user.MfaBackupCodes = null;
             user.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
 
             return true;
+        }
+
+        public async Task<bool> DisableMfaAsync(Guid userId, string code)
+        {
+            if (string.IsNullOrWhiteSpace(code))
+                throw new ArgumentException("Code is required", nameof(code));
+
+            var user = await _context.Users.FindAsync(userId);
+
+            if (user == null)
+                throw new InvalidOperationException($"User with ID '{userId}' not found");
+
+            if (!user.MfaEnabled)
+                throw new InvalidOperationException("MFA is not enabled for this user");
+
+            // Try TOTP code first
+            if (!string.IsNullOrWhiteSpace(user.MfaSecret) && VerifyTotpCode(user.MfaSecret, code))
+            {
+                user.MfaEnabled = false;
+                user.MfaSecret = null;
+                user.MfaBackupCodes = null;
+                user.UpdatedAt = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+
+                return true;
+            }
+
+            // Try backup code
+            if (!string.IsNullOrWhiteSpace(user.MfaBackupCodes))
+            {
+                var hashedBackupCodes = user.MfaBackupCodes.Split(',');
+                foreach (var hashedCode in hashedBackupCodes)
+                {
+                    if (BCrypt.Net.BCrypt.Verify(code, hashedCode))
+                    {
+                        // Remove the used backup code
+                        var remainingCodes = hashedBackupCodes.Where(c => c != hashedCode).ToArray();
+                        user.MfaBackupCodes = remainingCodes.Length > 0 ? string.Join(",", remainingCodes) : null;
+
+                        // Disable MFA
+                        user.MfaEnabled = false;
+                        user.MfaSecret = null;
+                        user.UpdatedAt = DateTime.UtcNow;
+
+                        await _context.SaveChangesAsync();
+
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         public async Task<bool> VerifyMfaCodeAsync(Guid userId, string code)
@@ -340,6 +404,25 @@ namespace Synaxis.Infrastructure.Services
             }
 
             return Base32Encode(bytes);
+        }
+
+        private IList<string> GenerateBackupCodes()
+        {
+            var codes = new List<string>();
+            var chars = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"; // No ambiguous characters (0, O, 1, I)
+
+            for (int i = 0; i < 10; i++)
+            {
+                var code = new char[8];
+                for (int j = 0; j < 8; j++)
+                {
+                    code[j] = chars[RandomNumberGenerator.GetInt32(chars.Length)];
+                }
+
+                codes.Add(new string(code));
+            }
+
+            return codes;
         }
 
         private string Base32Encode(byte[] data)
