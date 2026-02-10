@@ -120,4 +120,19 @@ dotnet_diagnostic.SA1018.severity = none
 # Suppress globally where records are already correctly named
 dotnet_diagnostic.SA1649.severity = none
 
+# Test Projects - suppress style rules for test code
+[tests/**/*.cs]
+dotnet_diagnostic.SA1101.severity = none
+dotnet_diagnostic.SA1110.severity = none
+dotnet_diagnostic.SA1116.severity = none
+dotnet_diagnostic.SA1214.severity = none
+dotnet_diagnostic.SA1413.severity = none
+dotnet_diagnostic.SA1513.severity = none
+dotnet_diagnostic.SA1515.severity = none
+dotnet_diagnostic.SA1503.severity = none
+dotnet_diagnostic.SA0001.severity = none
+dotnet_diagnostic.AsyncFixer01.severity = none
+dotnet_diagnostic.MA0004.severity = none
+dotnet_diagnostic.MA0006.severity = none
+
 
