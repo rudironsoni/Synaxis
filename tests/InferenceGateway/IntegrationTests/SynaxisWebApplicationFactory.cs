@@ -30,6 +30,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
     public class SynaxisWebApplicationFactory : WebApplicationFactory<Program>, IAsyncLifetime, ITestOutputHelperAccessor
     {
         private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:16-alpine")
+            .WithCommand("-c", "max_connections=200")
             .Build();
 
         private readonly RedisContainer _redis = new RedisBuilder("redis:7-alpine")
@@ -44,7 +45,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             // Initialize the ControlPlane database schema
             var controlPlaneOptionsBuilder = new DbContextOptionsBuilder<ControlPlaneDbContext>();
-            controlPlaneOptionsBuilder.UseNpgsql(this._postgres.GetConnectionString());
+            var connectionString = $"{this._postgres.GetConnectionString()};Pooling=true;Maximum Pool Size=200";
+            controlPlaneOptionsBuilder.UseNpgsql(connectionString, npgsql => npgsql.EnableRetryOnFailure(3));
 
             using var controlPlaneContext = new ControlPlaneDbContext(controlPlaneOptionsBuilder.Options);
 
@@ -58,7 +60,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 // Apply EF Core migrations for SynaxisDbContext (multi-tenant tables: public.users, etc.)
                 // Both contexts target the same database but create DIFFERENT tables
                 var synaxisOptionsBuilder = new DbContextOptionsBuilder<Synaxis.Infrastructure.Data.SynaxisDbContext>();
-                synaxisOptionsBuilder.UseNpgsql(this._postgres.GetConnectionString());
+                synaxisOptionsBuilder.UseNpgsql(connectionString, npgsql => npgsql.EnableRetryOnFailure(3));
                 using var synaxisContext = new Synaxis.Infrastructure.Data.SynaxisDbContext(synaxisOptionsBuilder.Options);
                 await synaxisContext.Database.MigrateAsync().ConfigureAwait(false);
 
@@ -124,11 +126,16 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
         protected override IHost CreateHost(IHostBuilder builder)
         {
-            // Set JWT secret BEFORE host creation so it's available when Program.cs reads configuration
+            // Set environment variables BEFORE host creation so they're available when Program.cs reads configuration
             // This must happen before WebApplication.CreateBuilder is called
             Environment.SetEnvironmentVariable(
                 "Synaxis__InferenceGateway__JwtSecret",
                 "TestJwtSecretKeyThatIsAtLeast32BytesLongForHmacSha256Algorithm");
+
+            // Disable Quartz scheduler for tests to prevent background jobs from interfering
+            Environment.SetEnvironmentVariable(
+                "Synaxis__InferenceGateway__EnableQuartz",
+                "false");
 
             return base.CreateHost(builder);
         }
@@ -149,10 +156,11 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 // Load .env files if present so environment variables are available for tests
                 DotNetEnv.Env.TraversePath().Load();
 
+                var connectionString = $"{this._postgres.GetConnectionString()};Pooling=true;Maximum Pool Size=200";
                 var settings = new Dictionary<string, string?>
 (StringComparer.Ordinal)
                 {
-                    ["Synaxis:ControlPlane:ConnectionString"] = this._postgres.GetConnectionString(),
+                    ["Synaxis:ControlPlane:ConnectionString"] = connectionString,
                     ["Synaxis:ControlPlane:UseInMemory"] = "false",
                     ["Synaxis:ControlPlane:RunMigrations"] = "false",
                     ["ConnectionStrings:Redis"] = $"{this._redis.GetConnectionString()},abortConnect=false",
@@ -221,6 +229,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
             builder.ConfigureServices(services =>
             {
+                // Get connection string with pooling
+                var connectionString = $"{this._postgres.GetConnectionString()};Pooling=true;Maximum Pool Size=200";
+
                 // Remove the in-memory DbContext registrations from AddControlPlane
                 var controlPlaneDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ControlPlaneDbContext>));
                 if (controlPlaneDescriptor != null)
@@ -237,15 +248,27 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 // Re-register ControlPlaneDbContext with PostgreSQL (this is used by tests to query data)
                 services.AddDbContext<ControlPlaneDbContext>(options =>
                 {
-                    options.UseNpgsql(this._postgres.GetConnectionString());
+                    options.UseNpgsql(connectionString, npgsql => npgsql.EnableRetryOnFailure(3));
                 });
 
                 // Re-register SynaxisDbContext (used by Identity) with PostgreSQL
                 services.AddDbContext<Synaxis.Infrastructure.Data.SynaxisDbContext>(options =>
                 {
-                    options.UseNpgsql(this._postgres.GetConnectionString());
+                    options.UseNpgsql(connectionString, npgsql => npgsql.EnableRetryOnFailure(3));
                 });
             });
         }
+    }
+
+    /// <summary>
+    /// Collection fixture for integration tests to share the same SynaxisWebApplicationFactory instance.
+    /// This ensures all tests in the collection use the same PostgreSQL container, reducing connection overhead.
+    /// </summary>
+    [CollectionDefinition("Integration")]
+    public class IntegrationTestCollection : ICollectionFixture<SynaxisWebApplicationFactory>
+    {
+        // This class has no code, and is never created. Its purpose is simply
+        // to be the place to apply [CollectionDefinition] and all the
+        // ICollectionFixture<> interfaces.
     }
 }
