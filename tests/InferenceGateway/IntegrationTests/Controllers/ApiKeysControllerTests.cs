@@ -18,6 +18,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
     using Xunit.Abstractions;
     using User = Synaxis.Core.Models.User;
 
+    [Collection("Integration")]
     public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory>
     {
         private readonly SynaxisWebApplicationFactory _factory;

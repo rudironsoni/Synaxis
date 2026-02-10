@@ -1,0 +1,14 @@
+info:
+  name: Delete Organization
+  type: http
+  seq: 4
+http:
+  method: DELETE
+  url: "{{baseUrl}}/api/v1/organizations/{{organizationId}}"
+  headers:
+    - name: Authorization
+      value: Bearer {{token}}
+auth:
+  mode: bearer
+  bearer:
+    token: "{{token}}"

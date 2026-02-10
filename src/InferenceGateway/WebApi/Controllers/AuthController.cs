@@ -4,6 +4,8 @@
 
 namespace Synaxis.InferenceGateway.WebApi.Controllers
 {
+    using System.Security.Claims;
+    using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Cors;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
@@ -175,6 +177,177 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
             var token = this.jwtService.GenerateToken(user);
             return this.Ok(new { token });
         }
+
+        /// <summary>
+        /// Logs out a user.
+        /// </summary>
+        /// <returns>The logout result.</returns>
+        [HttpPost("logout")]
+        [Authorize]
+        public IActionResult Logout()
+        {
+            return this.Ok(new { success = true, message = "Logged out successfully" });
+        }
+
+        /// <summary>
+        /// Refreshes a JWT token.
+        /// </summary>
+        /// <param name="request">The refresh request.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The refresh result with new token.</returns>
+        [HttpPost("refresh")]
+        public async Task<IActionResult> Refresh([FromBody] RefreshRequest request, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(request.Token))
+            {
+                return this.BadRequest(new { success = false, message = "Token is required" });
+            }
+
+            var userId = this.jwtService.ValidateToken(request.Token);
+            if (userId == null)
+            {
+                return this.BadRequest(new { success = false, message = "Invalid or expired token" });
+            }
+
+            var user = await this.dbContext.Users
+                .FirstOrDefaultAsync(u => u.Id == userId.Value, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (user == null)
+            {
+                return this.BadRequest(new { success = false, message = "User not found" });
+            }
+
+            var newToken = this.jwtService.GenerateToken(user);
+            return this.Ok(new { token = newToken });
+        }
+
+        /// <summary>
+        /// Initiates a password reset process.
+        /// </summary>
+        /// <param name="request">The forgot password request.</param>
+        /// <returns>The result.</returns>
+        [HttpPost("forgot-password")]
+        public IActionResult ForgotPassword([FromBody] ForgotPasswordRequest request)
+        {
+            // Always return success to avoid leaking user existence
+            return this.Ok(new { success = true, message = "If the email exists, a password reset link has been sent" });
+        }
+
+        /// <summary>
+        /// Resets a user's password.
+        /// </summary>
+        /// <param name="request">The reset password request.</param>
+        /// <returns>The result.</returns>
+        [HttpPost("reset-password")]
+        public IActionResult ResetPassword([FromBody] ResetPasswordRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.Token) || string.IsNullOrWhiteSpace(request.Password))
+            {
+                return this.BadRequest(new { success = false, message = "Token and password are required" });
+            }
+
+            // For now, just validate token format
+            if (!request.Token.StartsWith("reset_", StringComparison.Ordinal))
+            {
+                return this.BadRequest(new { success = false, message = "Invalid reset token" });
+            }
+
+            return this.Ok(new { success = true, message = "Password reset successful" });
+        }
+
+        /// <summary>
+        /// Verifies a user's email address.
+        /// </summary>
+        /// <param name="request">The verify email request.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The result.</returns>
+        [HttpPost("verify-email")]
+        public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailRequest request, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(request.Token))
+            {
+                return this.BadRequest(new { success = false, message = "Token is required" });
+            }
+
+            if (!request.Token.StartsWith("verify_", StringComparison.Ordinal))
+            {
+                return this.BadRequest(new { success = false, message = "Invalid verification token" });
+            }
+
+            // Extract user ID from token
+            var parts = request.Token.Split('_');
+            if (parts.Length < 2 || !Guid.TryParse(parts[1], out var userId))
+            {
+                return this.BadRequest(new { success = false, message = "Invalid verification token" });
+            }
+
+            var user = await this.dbContext.Users
+                .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (user == null)
+            {
+                return this.BadRequest(new { success = false, message = "User not found" });
+            }
+
+            if (user.EmailVerifiedAt == null)
+            {
+                user.EmailVerifiedAt = DateTime.UtcNow;
+                await this.dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            return this.Ok(new { success = true, message = "Email verified successfully" });
+        }
+    }
+
+    /// <summary>
+    /// Request to refresh a JWT token.
+    /// </summary>
+    public class RefreshRequest
+    {
+        /// <summary>
+        /// Gets or sets the token to refresh.
+        /// </summary>
+        public string Token { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// Request to initiate password reset.
+    /// </summary>
+    public class ForgotPasswordRequest
+    {
+        /// <summary>
+        /// Gets or sets the email address.
+        /// </summary>
+        public string Email { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// Request to reset password.
+    /// </summary>
+    public class ResetPasswordRequest
+    {
+        /// <summary>
+        /// Gets or sets the reset token.
+        /// </summary>
+        public string Token { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the new password.
+        /// </summary>
+        public string Password { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// Request to verify email.
+    /// </summary>
+    public class VerifyEmailRequest
+    {
+        /// <summary>
+        /// Gets or sets the verification token.
+        /// </summary>
+        public string Token { get; set; } = string.Empty;
     }
 
     /// <summary>

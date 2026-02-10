@@ -24,6 +24,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
     /// Integration tests for OrganizationsController.
     /// </summary>
     [Trait("Category", "Integration")]
+    [Collection("Integration")]
     public class OrganizationsControllerTests : IClassFixture<SynaxisWebApplicationFactory>
     {
         private readonly SynaxisWebApplicationFactory _factory;
@@ -271,6 +272,68 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
             Assert.Equal(orgId, content.GetProperty("id").GetGuid());
             Assert.Equal("Test Org", content.GetProperty("name").GetString());
             Assert.Equal(uniqueSlug, content.GetProperty("slug").GetString());
+        }
+
+        [Fact]
+        public async Task GetOrganizationById_AsMember_ReturnsOrganization()
+        {
+            var (client, user) = await this.CreateAuthenticatedClientAsync();
+
+            var uniqueSlug = $"test-org-{Guid.NewGuid():N}";
+            var createResponse = await client.PostAsJsonAsync("/api/v1/organizations", new { Name = "Test Org", Slug = uniqueSlug });
+            if (!createResponse.IsSuccessStatusCode)
+            {
+                var errorContent = await createResponse.Content.ReadAsStringAsync();
+                this._output.WriteLine($"Create org failed: {createResponse.StatusCode} - {errorContent}");
+            }
+
+            createResponse.EnsureSuccessStatusCode();
+            var createContent = await createResponse.Content.ReadFromJsonAsync<JsonElement>();
+            var orgId = createContent.GetProperty("id").GetGuid();
+
+            var response = await client.GetAsync($"/api/v1/organizations/{orgId}");
+            response.EnsureSuccessStatusCode();
+
+            var content = await response.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.Equal(orgId, content.GetProperty("id").GetGuid());
+            Assert.Equal("Test Org", content.GetProperty("name").GetString());
+            Assert.Equal(uniqueSlug, content.GetProperty("slug").GetString());
+            Assert.True(content.TryGetProperty("description", out _));
+            Assert.True(content.TryGetProperty("primaryRegion", out _));
+            Assert.True(content.TryGetProperty("tier", out _));
+            Assert.True(content.TryGetProperty("billingCurrency", out _));
+            Assert.True(content.TryGetProperty("creditBalance", out _));
+            Assert.True(content.TryGetProperty("subscriptionStatus", out _));
+            Assert.True(content.TryGetProperty("isActive", out _));
+            Assert.True(content.TryGetProperty("isVerified", out _));
+            Assert.True(content.TryGetProperty("createdAt", out _));
+            Assert.True(content.TryGetProperty("updatedAt", out _));
+        }
+
+        [Fact]
+        public async Task GetOrganizationById_WithNonExistentId_ReturnsNotFound()
+        {
+            var (client, user) = await this.CreateAuthenticatedClientAsync();
+
+            var nonExistentId = Guid.NewGuid();
+            var response = await client.GetAsync($"/api/v1/organizations/{nonExistentId}");
+
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task GetOrganizationById_AsNonMember_ReturnsForbidden()
+        {
+            var (client1, user1) = await this.CreateAuthenticatedClientAsync("user1@example.com");
+            var (client2, user2) = await this.CreateAuthenticatedClientAsync("user2@example.com");
+
+            var createResponse = await client1.PostAsJsonAsync("/api/v1/organizations", new { Name = "Private Org", Slug = $"private-org-{Guid.NewGuid():N}" });
+            createResponse.EnsureSuccessStatusCode();
+            var createContent = await createResponse.Content.ReadFromJsonAsync<JsonElement>();
+            var orgId = createContent.GetProperty("id").GetGuid();
+
+            var response = await client2.GetAsync($"/api/v1/organizations/{orgId}");
+            Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         }
 
         [Fact]

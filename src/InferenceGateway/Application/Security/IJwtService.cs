@@ -17,5 +17,12 @@ namespace Synaxis.InferenceGateway.Application.Security
         /// <param name="user">The user to generate a token for.</param>
         /// <returns>The generated JWT token.</returns>
         string GenerateToken(User user);
+
+        /// <summary>
+        /// Validates a JWT token and returns the user ID if valid.
+        /// </summary>
+        /// <param name="token">The JWT token to validate.</param>
+        /// <returns>The user ID if the token is valid; otherwise, null.</returns>
+        Guid? ValidateToken(string token);
     }
 }

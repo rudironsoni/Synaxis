@@ -185,8 +185,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.Goog
 
             // Sequence: first call for token exchange -> return tokenClient, then user info -> badClient
             var seq = 0;
-            httpFactory.Setup(f => f.CreateClient(It.IsAny<string>())).Returns(() => { seq++;
-                return seq == 1 ? tokenClient : badClient; });
+            httpFactory.Setup(f => f.CreateClient(It.IsAny<string>())).Returns(() =>
+            {
+                seq++;
+                return seq == 1 ? tokenClient : badClient;
+            });
 
             var init = await strat.InitiateFlowAsync(CancellationToken.None);
             var uri = new Uri(init.VerificationUri!);

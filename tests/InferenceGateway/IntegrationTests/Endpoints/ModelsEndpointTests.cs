@@ -10,6 +10,7 @@ using Xunit;
 
 namespace Synaxis.InferenceGateway.IntegrationTests.Endpoints
 {
+    [Collection("Integration")]
     public class ModelsEndpointTests : IClassFixture<SynaxisWebApplicationFactory>
     {
         private readonly SynaxisWebApplicationFactory _factory;

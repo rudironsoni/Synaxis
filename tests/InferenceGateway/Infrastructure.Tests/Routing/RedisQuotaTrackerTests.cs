@@ -30,14 +30,14 @@ public class RedisQuotaTrackerTests
 
         this._config = new SynaxisConfiguration
         {
-            Providers = new Dictionary<string, ProviderConfig>
-(StringComparer.Ordinal)
+            Providers = new Dictionary<string, ProviderConfig>(
+StringComparer.Ordinal)
             {
                 ["Groq"] = new ProviderConfig
                 {
                     RateLimitRPM = 100,
-                    RateLimitTPM = 10000
-                }
+                    RateLimitTPM = 10000,
+                },
             },
         };
 

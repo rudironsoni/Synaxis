@@ -2,3 +2,90 @@ collection:
   name: Synaxis Inference Gateway API
   info:
     description: Comprehensive API collection for testing all Synaxis Inference Gateway endpoints with multiple examples showing parameter permutations
+  
+  requests:
+    - name: Update Organization Limits
+      method: PUT
+      url: "{{baseUrl}}/api/v1/organizations/{{organizationId}}/limits"
+      headers:
+        - key: Authorization
+          value: "Bearer {{authToken}}"
+        - key: Content-Type
+          value: application/json
+      body:
+        mode: raw
+        raw: |
+          {
+            "maxTeams": 50,
+            "maxUsersPerTeam": 100,
+            "maxKeysPerUser": 10,
+            "maxConcurrentRequests": 200,
+            "monthlyRequestLimit": 1000000,
+            "monthlyTokenLimit": 5000000
+          }
+      description: Updates the resource limits for an organization. Requires OrgAdmin role.
+      examples:
+        - name: Update All Limits
+          body:
+            raw: |
+              {
+                "maxTeams": 50,
+                "maxUsersPerTeam": 100,
+                "maxKeysPerUser": 10,
+                "maxConcurrentRequests": 200,
+                "monthlyRequestLimit": 1000000,
+                "monthlyTokenLimit": 5000000
+              }
+          response:
+            status: 200
+            body: |
+              {
+                "maxTeams": 50,
+                "maxUsersPerTeam": 100,
+                "maxKeysPerUser": 10,
+                "maxConcurrentRequests": 200,
+                "monthlyRequestLimit": 1000000,
+                "monthlyTokenLimit": 5000000
+              }
+        - name: Update Partial Limits
+          body:
+            raw: |
+              {
+                "maxTeams": 25,
+                "maxConcurrentRequests": 150
+              }
+          response:
+            status: 200
+            body: |
+              {
+                "maxTeams": 25,
+                "maxUsersPerTeam": null,
+                "maxKeysPerUser": null,
+                "maxConcurrentRequests": 150,
+                "monthlyRequestLimit": null,
+                "monthlyTokenLimit": null
+              }
+        - name: Validation Error - Negative Value
+          body:
+            raw: |
+              {
+                "maxTeams": -5
+              }
+          response:
+            status: 400
+            body: |
+              "MaxTeams cannot be negative"
+        - name: Unauthorized
+          headers:
+            - key: Authorization
+              value: ""
+          response:
+            status: 401
+        - name: Forbidden - Non-Admin
+          description: User without OrgAdmin role attempts to update limits
+          response:
+            status: 403
+        - name: Not Found
+          url: "{{baseUrl}}/api/v1/organizations/00000000-0000-0000-0000-000000000000/limits"
+          response:
+            status: 404

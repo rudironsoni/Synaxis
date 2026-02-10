@@ -12,6 +12,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Quartz;
+    using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
     using Synaxis.InferenceGateway.Infrastructure.Agents.Tools;
     using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 
@@ -104,7 +105,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
         {
             var ninetyDaysAgo = DateTime.UtcNow.AddDays(-90);
             var inactiveKeys = await db.ApiKeys
-                .Where(k => k.LastUsedAt < ninetyDaysAgo && k.IsActive)
+                .Where(k => k.LastUsedAt < ninetyDaysAgo && k.Status == ApiKeyStatus.Active)
                 .CountAsync(ct).ConfigureAwait(false);
 
             if (inactiveKeys > 0)

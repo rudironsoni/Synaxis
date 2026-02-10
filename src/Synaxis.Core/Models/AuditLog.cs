@@ -54,13 +54,13 @@ namespace Synaxis.Core.Models
         /// Gets or sets the resource type.
         /// </summary>
         [StringLength(100)]
-        public string ResourceType { get; set; }
+        public string ResourceType { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the resource identifier.
         /// </summary>
         [StringLength(255)]
-        public string ResourceId { get; set; }
+        public string ResourceId { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets additional event metadata as JSON.
@@ -71,13 +71,13 @@ namespace Synaxis.Core.Models
         /// Gets or sets the IP address.
         /// </summary>
         [StringLength(45)]
-        public string IpAddress { get; set; }
+        public string IpAddress { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the user agent string.
         /// </summary>
         [StringLength(500)]
-        public string UserAgent { get; set; }
+        public string UserAgent { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the region where the event occurred.
@@ -97,7 +97,7 @@ namespace Synaxis.Core.Models
         /// Gets or sets the hash of previous log entry for chain verification.
         /// </summary>
         [StringLength(128)]
-        public string PreviousHash { get; set; }
+        public string PreviousHash { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the timestamp when event occurred (immutable).

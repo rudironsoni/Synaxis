@@ -21,6 +21,7 @@ namespace Synaxis.Infrastructure.Tests.Migrations
         /// <summary>
         /// Verifies that the migration can be applied to an empty database.
         /// </summary>
+        /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous unit test.</placeholder></returns>
         [Fact]
         public async Task Migration_CanBeApplied_ToEmptyDatabase()
         {
@@ -41,6 +42,7 @@ namespace Synaxis.Infrastructure.Tests.Migrations
         /// <summary>
         /// Verifies that all required tables are created by the migration.
         /// </summary>
+        /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous unit test.</placeholder></returns>
         [Fact]
         public async Task Migration_CreatesAllRequiredTables()
         {
@@ -87,6 +89,7 @@ namespace Synaxis.Infrastructure.Tests.Migrations
         /// <summary>
         /// Verifies that organization slug has a unique index.
         /// </summary>
+        /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous unit test.</placeholder></returns>
         [Fact]
         public async Task Organization_Slug_HasUniqueIndex()
         {

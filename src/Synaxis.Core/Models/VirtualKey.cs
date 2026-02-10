@@ -59,12 +59,12 @@ namespace Synaxis.Core.Models
         /// Gets or sets the key name.
         /// </summary>
         [StringLength(255)]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the key description.
         /// </summary>
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets a value indicating whether the key is active.
@@ -84,7 +84,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the reason for revocation.
         /// </summary>
-        public string RevokedReason { get; set; }
+        public string RevokedReason { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the maximum budget for this key (NULL = inherit from team).
@@ -109,12 +109,12 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the allowed models (NULL = all models allowed).
         /// </summary>
-        public IList<string> AllowedModels { get; set; }
+        public IList<string> AllowedModels { get; set; } = new List<string>();
 
         /// <summary>
         /// Gets or sets the blocked models.
         /// </summary>
-        public IList<string> BlockedModels { get; set; }
+        public IList<string> BlockedModels { get; set; } = new List<string>();
 
         /// <summary>
         /// Gets or sets the key expiration date.

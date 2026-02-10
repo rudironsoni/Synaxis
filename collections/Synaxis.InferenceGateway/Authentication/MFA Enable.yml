@@ -1,0 +1,22 @@
+info:
+  name: MFA Enable
+  type: http
+  seq: 11
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/auth/mfa/enable"
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: Authorization
+      value: "Bearer {{authToken}}"
+  body:
+    type: json
+    data: |-
+      {
+        "code": "123456"
+      }
+auth:
+  mode: bearer
+  bearer:
+    token: "{{authToken}}"

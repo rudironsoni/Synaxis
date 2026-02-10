@@ -6,7 +6,7 @@ namespace Synaxis.Common.Tests;
 /// NOTE: This requires the Testcontainers NuGet packages to be installed:
 /// - Testcontainers.Qdrant
 /// - Testcontainers.Redis  
-/// - Testcontainers.PostgreSql
+/// - Testcontainers.PostgreSql.
 /// </summary>
 public static class TestContainerFactory
 {
@@ -20,6 +20,7 @@ public static class TestContainerFactory
     /// await qdrant.StopAsync();
     /// </code>
     /// </summary>
+    /// <returns></returns>
     public static ITestContainer CreateQdrant()
     {
         // Requires: Testcontainers.Qdrant package
@@ -43,6 +44,7 @@ public static class TestContainerFactory
     /// await redis.StopAsync();
     /// </code>
     /// </summary>
+    /// <returns></returns>
     public static ITestContainer CreateRedis()
     {
         // Requires: Testcontainers.Redis package
@@ -66,6 +68,7 @@ public static class TestContainerFactory
     /// await postgres.StopAsync();
     /// </code>
     /// </summary>
+    /// <returns></returns>
     public static ITestContainer CreatePostgreSql()
     {
         // Requires: Testcontainers.PostgreSql package

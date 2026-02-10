@@ -11,6 +11,7 @@ using Xunit.Abstractions;
 
 namespace Synaxis.InferenceGateway.IntegrationTests.Endpoints
 {
+    [Collection("Integration")]
     public class ModelsEndpointDebugTests : IClassFixture<SynaxisWebApplicationFactory>
     {
         private readonly SynaxisWebApplicationFactory _factory;

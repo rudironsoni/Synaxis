@@ -53,7 +53,7 @@ namespace Synaxis.Core.Models
         /// Gets or sets the description of the transaction.
         /// </summary>
         [StringLength(500)]
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the reference to related spend log, invoice, etc.

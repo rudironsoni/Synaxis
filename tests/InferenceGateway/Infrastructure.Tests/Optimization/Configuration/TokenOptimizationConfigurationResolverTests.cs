@@ -36,8 +36,8 @@ public class TokenOptimizationConfigurationResolverTests : IAsyncLifetime
     {
         if (this._dbContext != null)
         {
-            await _dbContext.Database.EnsureDeletedAsync().ConfigureAwait(false);
-            await _dbContext.DisposeAsync().ConfigureAwait(false);
+            await this._dbContext.Database.EnsureDeletedAsync().ConfigureAwait(false);
+            await this._dbContext.DisposeAsync().ConfigureAwait(false);
         }
     }
 
@@ -516,7 +516,7 @@ public class TokenOptimizationConfigurationResolver
         string providerId,
         CancellationToken cancellationToken)
     {
-        return _dbContext.TokenOptimizationConfigurations
+        return this._dbContext.TokenOptimizationConfigurations
             .AsNoTracking()
             .FirstOrDefaultAsync(c => c.ProviderId == providerId, cancellationToken);
     }
@@ -525,8 +525,8 @@ public class TokenOptimizationConfigurationResolver
         TokenOptimizationConfiguration configuration,
         CancellationToken cancellationToken)
     {
-        await _dbContext.TokenOptimizationConfigurations.AddAsync(configuration, cancellationToken).ConfigureAwait(false);
-        await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        await this._dbContext.TokenOptimizationConfigurations.AddAsync(configuration, cancellationToken).ConfigureAwait(false);
+        await this._dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public Task UpdateConfigurationAsync(
@@ -534,27 +534,27 @@ public class TokenOptimizationConfigurationResolver
         CancellationToken cancellationToken)
     {
         this._dbContext.TokenOptimizationConfigurations.Update(configuration);
-        return _dbContext.SaveChangesAsync(cancellationToken);
+        return this._dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task DeleteConfigurationAsync(
         string providerId,
         CancellationToken cancellationToken)
     {
-        var config = await _dbContext.TokenOptimizationConfigurations
+        var config = await this._dbContext.TokenOptimizationConfigurations
             .FirstOrDefaultAsync(c => c.ProviderId == providerId, cancellationToken).ConfigureAwait(false);
 
         if (config != null)
         {
             this._dbContext.TokenOptimizationConfigurations.Remove(config);
-            await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            await this._dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
     public Task<List<TokenOptimizationConfiguration>> GetAllConfigurationsAsync(
         CancellationToken cancellationToken)
     {
-        return _dbContext.TokenOptimizationConfigurations
+        return this._dbContext.TokenOptimizationConfigurations
             .AsNoTracking()
             .ToListAsync(cancellationToken);
     }
@@ -563,7 +563,7 @@ public class TokenOptimizationConfigurationResolver
         string strategy,
         CancellationToken cancellationToken)
     {
-        return _dbContext.TokenOptimizationConfigurations
+        return this._dbContext.TokenOptimizationConfigurations
             .AsNoTracking()
             .Where(c => c.CompressionStrategy == strategy)
             .ToListAsync(cancellationToken);
@@ -572,7 +572,7 @@ public class TokenOptimizationConfigurationResolver
     public Task<List<TokenOptimizationConfiguration>> GetConfigurationsWithCachingEnabledAsync(
         CancellationToken cancellationToken)
     {
-        return _dbContext.TokenOptimizationConfigurations
+        return this._dbContext.TokenOptimizationConfigurations
             .AsNoTracking()
             .Where(c => c.EnablePromptCaching)
             .ToListAsync(cancellationToken);

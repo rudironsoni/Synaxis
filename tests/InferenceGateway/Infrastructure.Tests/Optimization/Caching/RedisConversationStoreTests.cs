@@ -289,8 +289,8 @@ public class RedisConversationStoreTests
             Role = "user",
             Content = "Test message with special chars: ñ, 中文, 🎉",
             Timestamp = DateTimeOffset.UtcNow,
-            Metadata = new Dictionary<string, string>
-(StringComparer.Ordinal)
+            Metadata = new Dictionary<string, string>(
+StringComparer.Ordinal)
             {
                 { "model", "gpt-4" },
                 { "temperature", "0.7" },
@@ -407,7 +407,7 @@ public class RedisConversationStore : IConversationStore
         int maxTokens,
         CancellationToken cancellationToken)
     {
-        var fullHistory = await GetFullHistoryAsync(sessionId, cancellationToken).ConfigureAwait(false);
+        var fullHistory = await this.GetFullHistoryAsync(sessionId, cancellationToken).ConfigureAwait(false);
 
         // Simple sliding window compression for testing
         // In production, this would use actual token counting and sophisticated strategies

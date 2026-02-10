@@ -214,20 +214,26 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
         /// <param name="modelBuilder">The builder being used to construct the model for this context.</param>
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Configure schemas for PostgreSQL
-            ConfigureSchemas(modelBuilder);
+            // Detect if using PostgreSQL provider by checking provider name
+            var isPostgreSql = this.Database.ProviderName?.Contains("Npgsql", StringComparison.OrdinalIgnoreCase) == true;
+
+            // Configure schemas for PostgreSQL (schemas not supported by in-memory)
+            if (isPostgreSql)
+            {
+                ConfigureSchemas(modelBuilder);
+            }
 
             // Configure soft delete global query filters
             ConfigureSoftDeleteFilters(modelBuilder);
 
             // Configure legacy entities (to be migrated)
-            ConfigureLegacyEntities(modelBuilder);
+            ConfigureLegacyEntities(modelBuilder, isPostgreSql);
 
             // Configure new schema entities
             ConfigurePlatformSchema(modelBuilder);
             ConfigureIdentitySchema(modelBuilder);
             ConfigureOperationsSchema(modelBuilder);
-            ConfigureAuditSchema(modelBuilder);
+            ConfigureAuditSchema(modelBuilder, isPostgreSql);
         }
 
         private static void ConfigureSchemas(ModelBuilder modelBuilder)
@@ -616,7 +622,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
             });
         }
 
-        private static void ConfigureAuditSchema(ModelBuilder modelBuilder)
+        private static void ConfigureAuditSchema(ModelBuilder modelBuilder, bool isPostgreSql)
         {
             modelBuilder.Entity<AuditLog>(entity =>
             {
@@ -624,8 +630,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                 entity.Property(a => a.Action).HasMaxLength(200).IsRequired();
                 entity.Property(a => a.EntityType).HasMaxLength(100);
                 entity.Property(a => a.EntityId).HasMaxLength(100);
-                entity.Property(a => a.PreviousValues).HasColumnType("jsonb");
-                entity.Property(a => a.NewValues).HasColumnType("jsonb");
+
+                if (isPostgreSql)
+                {
+                    entity.Property(a => a.PreviousValues).HasColumnType("jsonb");
+                    entity.Property(a => a.NewValues).HasColumnType("jsonb");
+                }
+
                 entity.Property(a => a.IpAddress).HasMaxLength(45);
                 entity.Property(a => a.UserAgent).HasMaxLength(500);
                 entity.Property(a => a.CorrelationId).HasMaxLength(100);
@@ -638,10 +649,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
             });
         }
 
-        private static void ConfigureLegacyEntities(ModelBuilder modelBuilder)
+        private static void ConfigureLegacyEntities(ModelBuilder modelBuilder, bool isPostgreSql)
         {
             ConfigureLegacyTenantEntities(modelBuilder);
-            ConfigureLegacyAccountingEntities(modelBuilder);
+            ConfigureLegacyAccountingEntities(modelBuilder, isPostgreSql);
             ConfigureLegacyModelEntities(modelBuilder);
         }
 
@@ -702,19 +713,22 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
             });
         }
 
-        private static void ConfigureLegacyAccountingEntities(ModelBuilder modelBuilder)
+        private static void ConfigureLegacyAccountingEntities(ModelBuilder modelBuilder, bool isPostgreSql)
         {
-            ConfigureRoutingAndAliasEntities(modelBuilder);
-            ConfigureProviderAccountingEntities(modelBuilder);
+            ConfigureRoutingAndAliasEntities(modelBuilder, isPostgreSql);
+            ConfigureProviderAccountingEntities(modelBuilder, isPostgreSql);
             ConfigureLoggingAndTrackingEntities(modelBuilder);
         }
 
-        private static void ConfigureRoutingAndAliasEntities(ModelBuilder modelBuilder)
+        private static void ConfigureRoutingAndAliasEntities(ModelBuilder modelBuilder, bool isPostgreSql)
         {
             modelBuilder.Entity<RoutingPolicy>(entity =>
             {
                 entity.HasKey(r => r.Id);
-                entity.Property(r => r.PolicyJson).HasColumnType("jsonb");
+                if (isPostgreSql)
+                {
+                    entity.Property(r => r.PolicyJson).HasColumnType("jsonb");
+                }
             });
 
             modelBuilder.Entity<ModelAlias>(entity =>
@@ -728,11 +742,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
             {
                 entity.HasKey(m => m.Id);
                 entity.Property(m => m.Name).HasMaxLength(200).IsRequired();
-                entity.Property(m => m.OrderedModelsJson).HasColumnType("jsonb");
+                if (isPostgreSql)
+                {
+                    entity.Property(m => m.OrderedModelsJson).HasColumnType("jsonb");
+                }
             });
         }
 
-        private static void ConfigureProviderAccountingEntities(ModelBuilder modelBuilder)
+        private static void ConfigureProviderAccountingEntities(ModelBuilder modelBuilder, bool isPostgreSql)
         {
             modelBuilder.Entity<ProviderAccount>(entity =>
             {
@@ -754,7 +771,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                 entity.HasKey(q => q.Id);
                 entity.Property(q => q.Provider).HasMaxLength(100).IsRequired();
                 entity.Property(q => q.AccountId).HasMaxLength(200).IsRequired();
-                entity.Property(q => q.QuotaJson).HasColumnType("jsonb");
+                if (isPostgreSql)
+                {
+                    entity.Property(q => q.QuotaJson).HasColumnType("jsonb");
+                }
             });
         }
 

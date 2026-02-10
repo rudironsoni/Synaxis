@@ -13,6 +13,7 @@ using Xunit;
 
 namespace Synaxis.InferenceGateway.IntegrationTests.Admin
 {
+    [Collection("Integration")]
     public class AdminEndpointsTests : IClassFixture<SynaxisWebApplicationFactory>
     {
         private readonly SynaxisWebApplicationFactory _factory;

@@ -11,6 +11,7 @@ using Xunit.Abstractions;
 
 namespace Synaxis.InferenceGateway.IntegrationTests
 {
+    [Collection("Integration")]
     public class LiveProviderValidationTests : IClassFixture<SynaxisWebApplicationFactory>
     {
         private readonly SynaxisWebApplicationFactory _factory;

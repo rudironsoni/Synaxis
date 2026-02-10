@@ -66,7 +66,7 @@ namespace Synaxis.Core.Models
         /// Gets or sets the organization's billing currency.
         /// </summary>
         [StringLength(3)]
-        public string BillingCurrency { get; set; }
+        public string BillingCurrency { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the exchange rate used for conversion.
