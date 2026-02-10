@@ -1,0 +1,25 @@
+info:
+  name: Create Organization
+  type: http
+  seq: 2
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/organizations"
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: Authorization
+      value: Bearer {{token}}
+  body:
+    type: json
+    data: |-
+      {
+        "name": "My Organization",
+        "slug": "my-organization",
+        "description": "Description of my organization",
+        "primaryRegion": "us-east-1"
+      }
+auth:
+  mode: bearer
+  bearer:
+    token: "{{token}}"

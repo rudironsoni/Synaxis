@@ -14,7 +14,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Auth
     using Synaxis.InferenceGateway.Infrastructure.Auth;
     using Xunit;
 
-    public class FileTokenStoreTests : IDisposable
+    public sealed class FileTokenStoreTests : IDisposable
     {
         private readonly string _tmpPath;
         private readonly string _tmpDir;

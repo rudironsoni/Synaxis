@@ -17,9 +17,10 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
     /// Controller for managing team memberships.
     /// </summary>
     [ApiController]
-    [Route("api/v1/organizations/{orgId}/teams/{teamId}/members")]
+    [Route("api/v1/organizations/{orgId}/teams/{teamId}")]
     [Authorize]
     [EnableCors("WebApp")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarLint", "S6934:Specify the RouteAttribute when an HttpMethodAttribute or RouteAttribute is specified at an action level", Justification = "Route templates are correctly specified in HttpMethod attributes following ASP.NET Core convention")]
     public class TeamMembershipsController : ControllerBase
     {
         private readonly SynaxisDbContext _dbContext;
@@ -45,7 +46,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         /// <param name="page">The page number.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>List of team members.</returns>
-        [HttpGet]
+        [HttpGet("members")]
         public async Task<IActionResult> ListMembers(
             Guid orgId,
             Guid teamId,
@@ -119,7 +120,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         /// <param name="memberId">The member ID.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>Member details.</returns>
-        [HttpGet("{memberId}")]
+        [HttpGet("members/{memberId}")]
         public async Task<IActionResult> GetMember(
             Guid orgId,
             Guid teamId,
@@ -165,20 +166,150 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         }
 
         /// <summary>
-        /// Updates a member's role in a team.
+        /// Lists team memberships.
         /// </summary>
         /// <param name="orgId">The organization ID.</param>
         /// <param name="teamId">The team ID.</param>
-        /// <param name="memberId">The user ID to update.</param>
-        /// <param name="request">The update role request.</param>
+        /// <param name="pageSize">The page size.</param>
+        /// <param name="page">The page number.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
-        /// <returns>OK response.</returns>
-        [HttpPut("{memberId}/role")]
-        public async Task<IActionResult> UpdateMemberRole(
+        /// <returns>List of team memberships.</returns>
+        [HttpGet("memberships")]
+        public async Task<IActionResult> ListMemberships(
             Guid orgId,
             Guid teamId,
-            Guid memberId,
-            [FromBody] UpdateMemberRoleRequest request,
+            [FromQuery] int pageSize = 20,
+            [FromQuery] int page = 0,
+            CancellationToken cancellationToken = default)
+        {
+            var userId = this.GetUserId();
+
+            var user = await this._dbContext.Users
+                .FirstOrDefaultAsync(u => u.Id == userId && u.OrganizationId == orgId, cancellationToken)
+                .ConfigureAwait(false);
+
+            var isOrgAdmin = user != null && (string.Equals(user.Role, "admin", StringComparison.OrdinalIgnoreCase) || string.Equals(user.Role, "owner", StringComparison.OrdinalIgnoreCase));
+
+            var membership = await this._dbContext.TeamMemberships
+                .FirstOrDefaultAsync(m => m.UserId == userId && m.TeamId == teamId, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (membership == null && !isOrgAdmin)
+            {
+                return this.Forbid();
+            }
+
+            var team = await this._dbContext.Teams
+                .FirstOrDefaultAsync(g => g.Id == teamId && g.OrganizationId == orgId, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (team == null)
+            {
+                return this.NotFound("Team not found");
+            }
+
+            var query = this._dbContext.TeamMemberships
+                .Where(m => m.TeamId == teamId)
+                .Include(m => m.User);
+
+            var memberships = await query
+                .Where(m => m.User != null)
+                .OrderBy(m => m.User!.Email)
+                .Skip(page * pageSize)
+                .Take(pageSize)
+                .Select(m => new
+                {
+                    id = m.Id,
+                    userId = m.UserId,
+                    email = m.User!.Email,
+                    firstName = m.User.FirstName,
+                    lastName = m.User.LastName,
+                    role = m.Role,
+                    joinedAt = m.JoinedAt,
+                })
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            var total = await query.CountAsync(cancellationToken).ConfigureAwait(false);
+
+            return this.Ok(new
+            {
+                memberships,
+                total,
+                page,
+                pageSize,
+            });
+        }
+
+        /// <summary>
+        /// Gets a specific team membership.
+        /// </summary>
+        /// <param name="orgId">The organization ID.</param>
+        /// <param name="teamId">The team ID.</param>
+        /// <param name="id">The membership ID.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>Membership details.</returns>
+        [HttpGet("memberships/{id}")]
+        public async Task<IActionResult> GetMembership(
+            Guid orgId,
+            Guid teamId,
+            Guid id,
+            CancellationToken cancellationToken)
+        {
+            var userId = this.GetUserId();
+
+            var user = await this._dbContext.Users
+                .FirstOrDefaultAsync(u => u.Id == userId && u.OrganizationId == orgId, cancellationToken)
+                .ConfigureAwait(false);
+
+            var isOrgAdmin = user != null && (string.Equals(user.Role, "admin", StringComparison.OrdinalIgnoreCase) || string.Equals(user.Role, "owner", StringComparison.OrdinalIgnoreCase));
+
+            var callerMembership = await this._dbContext.TeamMemberships
+                .FirstOrDefaultAsync(m => m.UserId == userId && m.TeamId == teamId, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (callerMembership == null && !isOrgAdmin)
+            {
+                return this.Forbid();
+            }
+
+            var membership = await this._dbContext.TeamMemberships
+                .Include(m => m.User)
+                .FirstOrDefaultAsync(m => m.Id == id && m.TeamId == teamId && m.OrganizationId == orgId, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (membership == null)
+            {
+                return this.NotFound("Membership not found");
+            }
+
+            return this.Ok(new
+            {
+                id = membership.Id,
+                userId = membership.UserId,
+                email = membership.User?.Email,
+                firstName = membership.User?.FirstName,
+                lastName = membership.User?.LastName,
+                role = membership.Role,
+                joinedAt = membership.JoinedAt,
+            });
+        }
+
+        /// <summary>
+        /// Updates a team membership.
+        /// </summary>
+        /// <param name="orgId">The organization ID.</param>
+        /// <param name="teamId">The team ID.</param>
+        /// <param name="id">The membership ID.</param>
+        /// <param name="request">The update membership request.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>OK response.</returns>
+        [HttpPut("memberships/{id}")]
+        public async Task<IActionResult> UpdateMembership(
+            Guid orgId,
+            Guid teamId,
+            Guid id,
+            [FromBody] UpdateMembershipRequest request,
             CancellationToken cancellationToken)
         {
             var userId = this.GetUserId();
@@ -205,12 +336,12 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
             }
 
             var membership = await this._dbContext.TeamMemberships
-                .FirstOrDefaultAsync(m => m.UserId == memberId && m.TeamId == teamId, cancellationToken)
+                .FirstOrDefaultAsync(m => m.Id == id && m.TeamId == teamId, cancellationToken)
                 .ConfigureAwait(false);
 
             if (membership == null)
             {
-                return this.NotFound("Member not found in team");
+                return this.NotFound("Membership not found");
             }
 
             membership.Role = validRole;
@@ -220,12 +351,13 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
             await this._auditService.LogAsync(
                 orgId,
                 userId,
-                "UpdateTeamMemberRole",
-                new { TeamId = teamId, MemberId = memberId, NewRole = validRole },
+                "UpdateTeamMembership",
+                new { TeamId = teamId, MembershipId = id, NewRole = validRole },
                 cancellationToken).ConfigureAwait(false);
 
             return this.Ok(new
             {
+                id = membership.Id,
                 userId = membership.UserId,
                 role = membership.Role,
                 joinedAt = membership.JoinedAt,
@@ -233,23 +365,32 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         }
 
         /// <summary>
-        /// Removes a member from a team.
+        /// Deletes a team membership.
         /// </summary>
         /// <param name="orgId">The organization ID.</param>
         /// <param name="teamId">The team ID.</param>
-        /// <param name="memberId">The user ID to remove.</param>
+        /// <param name="id">The membership ID.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>No content response.</returns>
-        [HttpDelete("{memberId}")]
-        public async Task<IActionResult> RemoveMember(
+        [HttpDelete("memberships/{id}")]
+        public async Task<IActionResult> DeleteMembership(
             Guid orgId,
             Guid teamId,
-            Guid memberId,
+            Guid id,
             CancellationToken cancellationToken)
         {
             var userId = this.GetUserId();
 
-            var isSelfRemoval = userId == memberId;
+            var membership = await this._dbContext.TeamMemberships
+                .FirstOrDefaultAsync(m => m.Id == id && m.TeamId == teamId, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (membership == null)
+            {
+                return this.NotFound("Membership not found");
+            }
+
+            var isSelfRemoval = userId == membership.UserId;
             if (!isSelfRemoval)
             {
                 var hasPermission = await this.CheckTeamAdminPermissionAsync(userId, orgId, teamId, cancellationToken).ConfigureAwait(false);
@@ -268,23 +409,14 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
                 return this.NotFound("Team not found");
             }
 
-            var membership = await this._dbContext.TeamMemberships
-                .FirstOrDefaultAsync(m => m.UserId == memberId && m.TeamId == teamId, cancellationToken)
-                .ConfigureAwait(false);
-
-            if (membership == null)
-            {
-                return this.NotFound("Member not found in team");
-            }
-
             this._dbContext.TeamMemberships.Remove(membership);
             await this._dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
             await this._auditService.LogAsync(
                 orgId,
                 userId,
-                "RemoveTeamMember",
-                new { TeamId = teamId, MemberId = memberId },
+                "DeleteTeamMembership",
+                new { TeamId = teamId, MembershipId = id },
                 cancellationToken).ConfigureAwait(false);
 
             return this.NoContent();
@@ -334,6 +466,17 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
     /// Request to update a member's role.
     /// </summary>
     public class UpdateMemberRoleRequest
+    {
+        /// <summary>
+        /// Gets or sets the new role for the member.
+        /// </summary>
+        public required string Role { get; set; }
+    }
+
+    /// <summary>
+    /// Request to update a team membership.
+    /// </summary>
+    public class UpdateMembershipRequest
     {
         /// <summary>
         /// Gets or sets the new role for the member.

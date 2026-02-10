@@ -18,6 +18,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
     /// Integration tests for Google OAuth authentication flow.
     /// Tests the complete authentication flow including user creation and token generation.
     /// </summary>
+    [Collection("Integration")]
     public class GoogleAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFactory>
     {
         private readonly SynaxisWebApplicationFactory _factory;

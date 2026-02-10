@@ -18,7 +18,7 @@ using Synaxis.InferenceGateway.Application.Configuration;
 using Synaxis.InferenceGateway.Infrastructure.Auth;
 using Xunit;
 
-public class AntigravityAuthManagerTests : IDisposable
+public sealed class AntigravityAuthManagerTests : IDisposable
 {
     private readonly string _tempAuthPath;
     private readonly Mock<ILogger<AntigravityAuthManager>> _loggerMock;

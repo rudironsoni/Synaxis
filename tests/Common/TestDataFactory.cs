@@ -11,18 +11,21 @@ public static class TestDataFactory
     /// <summary>
     /// Creates a user chat message with optional custom text.
     /// </summary>
+    /// <returns></returns>
     public static ChatMessage CreateUserMessage(string text = "Test query")
         => new(ChatRole.User, text);
 
     /// <summary>
     /// Creates an assistant chat message with optional custom text.
     /// </summary>
+    /// <returns></returns>
     public static ChatMessage CreateAssistantMessage(string text = "Test response")
         => new(ChatRole.Assistant, text);
 
     /// <summary>
     /// Creates chat options with default settings.
     /// </summary>
+    /// <returns></returns>
     public static ChatOptions CreateChatOptions(
         string model = "gpt-4",
         float? temperature = 0.7f)
@@ -32,6 +35,7 @@ public static class TestDataFactory
     /// Creates a token optimization configuration with sensible defaults.
     /// Use the configure action to override specific settings.
     /// </summary>
+    /// <returns></returns>
     public static TokenOptimizationOptions CreateOptimizationConfig(
         Action<TokenOptimizationOptions>? configure = null)
     {
@@ -55,6 +59,7 @@ public static class TestDataFactory
     /// <summary>
     /// Creates a conversation with alternating user and assistant messages.
     /// </summary>
+    /// <returns></returns>
     public static IEnumerable<ChatMessage> CreateConversation(int messageCount)
     {
         for (int i = 0; i < messageCount; i++)
@@ -69,6 +74,7 @@ public static class TestDataFactory
     /// Creates a test embedding with the specified dimensions.
     /// Returns a float array suitable for embedding operations.
     /// </summary>
+    /// <returns></returns>
     public static float[] CreateTestEmbedding(int dimensions = 768)
     {
         var values = new float[dimensions];

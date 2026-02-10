@@ -1,0 +1,1423 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Synaxis.Core -> /home/rrj/src/github/rudironsoni/Synaxis/src/Synaxis.Core/bin/Release/net10.0/Synaxis.Core.dll
+  Synaxis.InferenceGateway.Application -> /home/rrj/src/github/rudironsoni/Synaxis/src/InferenceGateway/Application/bin/Release/net10.0/Synaxis.InferenceGateway.Application.dll
+  Synaxis.Infrastructure -> /home/rrj/src/github/rudironsoni/Synaxis/src/Synaxis.Infrastructure/bin/Release/net10.0/Synaxis.Infrastructure.dll
+  Synaxis.Infrastructure.Tests -> /home/rrj/src/github/rudironsoni/Synaxis/tests/Synaxis.Infrastructure.Tests/bin/Release/net10.0/Synaxis.Infrastructure.Tests.dll
+Test run for /home/rrj/src/github/rudironsoni/Synaxis/tests/Synaxis.Infrastructure.Tests/bin/Release/net10.0/Synaxis.Infrastructure.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:01.76]     Synaxis.Infrastructure.Tests.Migrations.PerformanceIndexTests.TeamMemberships_HasTeamIdUserIdIndex [FAIL]
+  Failed Synaxis.Infrastructure.Tests.Migrations.PerformanceIndexTests.TeamMemberships_HasTeamIdUserIdIndex [665 ms]
+  Error Message:
+   Expected compositeIndex not to be <null>.
+  Stack Trace:
+     at FluentAssertions.Execution.LateBoundTestFramework.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionScope.AddPreFormattedFailure(String formattedFailureMessage)
+   at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)
+   at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)
+   at FluentAssertions.Execution.AssertionChain.FailWith(String message)
+   at FluentAssertions.Primitives.ReferenceTypeAssertions`2.NotBeNull(String because, Object[] becauseArgs)
+   at Synaxis.Infrastructure.Tests.Migrations.PerformanceIndexTests.TeamMemberships_HasTeamIdUserIdIndex() in /home/rrj/src/github/rudironsoni/Synaxis/tests/Synaxis.Infrastructure.Tests/Migrations/PerformanceIndexTests.cs:line 116
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:08.35]     Synaxis.Infrastructure.Tests.Services.OrganizationSettingsServiceIntegrationTests.UpdateOrganizationLimitsAsync_ConcurrentUpdates_HandlesCorrectly [FAIL]
+  Failed Synaxis.Infrastructure.Tests.Services.OrganizationSettingsServiceIntegrationTests.UpdateOrganizationLimitsAsync_ConcurrentUpdates_HandlesCorrectly [560 ms]
+  Error Message:
+   Expected (finalOrg!.MaxTeams == 20 || finalOrg.MaxUsersPerTeam == 50) to be True, but found False.
+  Stack Trace:
+     at FluentAssertions.Execution.LateBoundTestFramework.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionScope.AddPreFormattedFailure(String formattedFailureMessage)
+   at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)
+   at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)
+   at FluentAssertions.Execution.AssertionChain.FailWith(String message, Object[] args)
+   at FluentAssertions.Primitives.BooleanAssertions`1.BeTrue(String because, Object[] becauseArgs)
+   at Synaxis.Infrastructure.Tests.Services.OrganizationSettingsServiceIntegrationTests.UpdateOrganizationLimitsAsync_ConcurrentUpdates_HandlesCorrectly() in /home/rrj/src/github/rudironsoni/Synaxis/tests/Synaxis.Infrastructure.Tests/Services/OrganizationSettingsServiceIntegrationTests.cs:line 175
+   at Synaxis.Infrastructure.Tests.Services.OrganizationSettingsServiceIntegrationTests.UpdateOrganizationLimitsAsync_ConcurrentUpdates_HandlesCorrectly() in /home/rrj/src/github/rudironsoni/Synaxis/tests/Synaxis.Infrastructure.Tests/Services/OrganizationSettingsServiceIntegrationTests.cs:line 175
+   at Synaxis.Infrastructure.Tests.Services.OrganizationSettingsServiceIntegrationTests.UpdateOrganizationLimitsAsync_ConcurrentUpdates_HandlesCorrectly() in /home/rrj/src/github/rudironsoni/Synaxis/tests/Synaxis.Infrastructure.Tests/Services/OrganizationSettingsServiceIntegrationTests.cs:line 175
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:08.47]     Synaxis.Infrastructure.Tests.Services.TeamServiceIntegrationTests.TenantIsolation_MultipleOrganizations_AreIsolated [FAIL]
+  Failed Synaxis.Infrastructure.Tests.Services.TeamServiceIntegrationTests.TenantIsolation_MultipleOrganizations_AreIsolated [159 ms]
+  Error Message:
+   Microsoft.EntityFrameworkCore.DbUpdateException : An error occurred while saving the entity changes. See the inner exception for details.
+---- Npgsql.PostgresException : 23502: null value in column "description" of relation "teams" violates not-null constraint
+
+DETAIL: Detail redacted as it may contain sensitive data. Specify 'Include Error Detail' in the connection string to include this information.
+  Stack Trace:
+     at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabase.SaveChangesAsync(IList`1 entries, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Synaxis.Infrastructure.Services.TeamService.CreateTeamAsync(CreateTeamRequest request, Guid organizationId, Guid createdByUserId, CancellationToken cancellationToken) in /home/rrj/src/github/rudironsoni/Synaxis/src/Synaxis.Infrastructure/Services/TeamService.cs:line 106
+   at Synaxis.Infrastructure.Tests.Services.TeamServiceIntegrationTests.TenantIsolation_MultipleOrganizations_AreIsolated() in /home/rrj/src/github/rudironsoni/Synaxis/tests/Synaxis.Infrastructure.Tests/Services/TeamServiceIntegrationTests.cs:line 141
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:15.80]     Synaxis.Infrastructure.Tests.Services.TeamServiceIntegrationTests.InviteMember_DelegatesToInvitationService [FAIL]
+  Failed Synaxis.Infrastructure.Tests.Services.TeamServiceIntegrationTests.InviteMember_DelegatesToInvitationService [18 ms]
+  Error Message:
+   Microsoft.EntityFrameworkCore.DbUpdateException : An error occurred while saving the entity changes. See the inner exception for details.
+---- Npgsql.PostgresException : 23502: null value in column "description" of relation "teams" violates not-null constraint
+
+DETAIL: Detail redacted as it may contain sensitive data. Specify 'Include Error Detail' in the connection string to include this information.
+  Stack Trace:
+     at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabase.SaveChangesAsync(IList`1 entries, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Synaxis.Infrastructure.Services.TeamService.CreateTeamAsync(CreateTeamRequest request, Guid organizationId, Guid createdByUserId, CancellationToken cancellationToken) in /home/rrj/src/github/rudironsoni/Synaxis/src/Synaxis.Infrastructure/Services/TeamService.cs:line 106
+   at Synaxis.Infrastructure.Tests.Services.TeamServiceIntegrationTests.InviteMember_DelegatesToInvitationService() in /home/rrj/src/github/rudironsoni/Synaxis/tests/Synaxis.Infrastructure.Tests/Services/TeamServiceIntegrationTests.cs:line 347
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:19.36]     Synaxis.Infrastructure.Tests.Services.TeamServiceIntegrationTests.CreateTeamAsync_FullLifecycle_WorksCorrectly [FAIL]
+  Failed Synaxis.Infrastructure.Tests.Services.TeamServiceIntegrationTests.CreateTeamAsync_FullLifecycle_WorksCorrectly [16 ms]
+  Error Message:
+   Microsoft.EntityFrameworkCore.DbUpdateException : An error occurred while saving the entity changes. See the inner exception for details.
+---- Npgsql.PostgresException : 23502: null value in column "AllowedModels" of relation "teams" violates not-null constraint
+
+DETAIL: Detail redacted as it may contain sensitive data. Specify 'Include Error Detail' in the connection string to include this information.
+  Stack Trace:
+     at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabase.SaveChangesAsync(IList`1 entries, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Synaxis.Infrastructure.Services.TeamService.CreateTeamAsync(CreateTeamRequest request, Guid organizationId, Guid createdByUserId, CancellationToken cancellationToken) in /home/rrj/src/github/rudironsoni/Synaxis/src/Synaxis.Infrastructure/Services/TeamService.cs:line 106
+   at Synaxis.Infrastructure.Tests.Services.TeamServiceIntegrationTests.CreateTeamAsync_FullLifecycle_WorksCorrectly() in /home/rrj/src/github/rudironsoni/Synaxis/tests/Synaxis.Infrastructure.Tests/Services/TeamServiceIntegrationTests.cs:line 99
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:22.47]     Synaxis.Infrastructure.Tests.Services.TeamServiceIntegrationTests.SequentialModifications_SameTeam_HandledCorrectly [FAIL]
+  Failed Synaxis.Infrastructure.Tests.Services.TeamServiceIntegrationTests.SequentialModifications_SameTeam_HandledCorrectly [5 ms]
+  Error Message:
+   Microsoft.EntityFrameworkCore.DbUpdateException : An error occurred while saving the entity changes. See the inner exception for details.
+---- Npgsql.PostgresException : 23502: null value in column "description" of relation "teams" violates not-null constraint
+
+DETAIL: Detail redacted as it may contain sensitive data. Specify 'Include Error Detail' in the connection string to include this information.
+  Stack Trace:
+     at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabase.SaveChangesAsync(IList`1 entries, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Synaxis.Infrastructure.Services.TeamService.CreateTeamAsync(CreateTeamRequest request, Guid organizationId, Guid createdByUserId, CancellationToken cancellationToken) in /home/rrj/src/github/rudironsoni/Synaxis/src/Synaxis.Infrastructure/Services/TeamService.cs:line 106
+   at Synaxis.Infrastructure.Tests.Services.TeamServiceIntegrationTests.SequentialModifications_SameTeam_HandledCorrectly() in /home/rrj/src/github/rudironsoni/Synaxis/tests/Synaxis.Infrastructure.Tests/Services/TeamServiceIntegrationTests.cs:line 246
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:25.65]     Synaxis.Infrastructure.Tests.Services.TeamServiceIntegrationTests.OrganizationLimit_EnforcedCorrectly [FAIL]
+  Failed Synaxis.Infrastructure.Tests.Services.TeamServiceIntegrationTests.OrganizationLimit_EnforcedCorrectly [12 ms]
+  Error Message:
+   Microsoft.EntityFrameworkCore.DbUpdateException : An error occurred while saving the entity changes. See the inner exception for details.
+---- Npgsql.PostgresException : 23502: null value in column "description" of relation "teams" violates not-null constraint
+
+DETAIL: Detail redacted as it may contain sensitive data. Specify 'Include Error Detail' in the connection string to include this information.
+  Stack Trace:
+     at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabase.SaveChangesAsync(IList`1 entries, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Synaxis.Infrastructure.Services.TeamService.CreateTeamAsync(CreateTeamRequest request, Guid organizationId, Guid createdByUserId, CancellationToken cancellationToken) in /home/rrj/src/github/rudironsoni/Synaxis/src/Synaxis.Infrastructure/Services/TeamService.cs:line 106
+   at Synaxis.Infrastructure.Tests.Services.TeamServiceIntegrationTests.OrganizationLimit_EnforcedCorrectly() in /home/rrj/src/github/rudironsoni/Synaxis/tests/Synaxis.Infrastructure.Tests/Services/TeamServiceIntegrationTests.cs:line 267
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:28.67]     Synaxis.Infrastructure.Tests.Services.TeamServiceIntegrationTests.Pagination_LargeDataset_WorksCorrectly [FAIL]
+  Failed Synaxis.Infrastructure.Tests.Services.TeamServiceIntegrationTests.Pagination_LargeDataset_WorksCorrectly [9 ms]
+  Error Message:
+   Microsoft.EntityFrameworkCore.DbUpdateException : An error occurred while saving the entity changes. See the inner exception for details.
+---- Npgsql.PostgresException : 23502: null value in column "description" of relation "teams" violates not-null constraint
+
+DETAIL: Detail redacted as it may contain sensitive data. Specify 'Include Error Detail' in the connection string to include this information.
+  Stack Trace:
+     at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabase.SaveChangesAsync(IList`1 entries, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Synaxis.Infrastructure.Services.TeamService.CreateTeamAsync(CreateTeamRequest request, Guid organizationId, Guid createdByUserId, CancellationToken cancellationToken) in /home/rrj/src/github/rudironsoni/Synaxis/src/Synaxis.Infrastructure/Services/TeamService.cs:line 106
+   at Synaxis.Infrastructure.Tests.Services.TeamServiceIntegrationTests.Pagination_LargeDataset_WorksCorrectly() in /home/rrj/src/github/rudironsoni/Synaxis/tests/Synaxis.Infrastructure.Tests/Services/TeamServiceIntegrationTests.cs:line 220
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:31.49]     Synaxis.Infrastructure.Tests.Services.TeamServiceIntegrationTests.ListTeams_ExcludesSoftDeletedTeams [FAIL]
+  Failed Synaxis.Infrastructure.Tests.Services.TeamServiceIntegrationTests.ListTeams_ExcludesSoftDeletedTeams [8 ms]
+  Error Message:
+   Microsoft.EntityFrameworkCore.DbUpdateException : An error occurred while saving the entity changes. See the inner exception for details.
+---- Npgsql.PostgresException : 23502: null value in column "description" of relation "teams" violates not-null constraint
+
+DETAIL: Detail redacted as it may contain sensitive data. Specify 'Include Error Detail' in the connection string to include this information.
+  Stack Trace:
+     at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabase.SaveChangesAsync(IList`1 entries, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Synaxis.Infrastructure.Services.TeamService.CreateTeamAsync(CreateTeamRequest request, Guid organizationId, Guid createdByUserId, CancellationToken cancellationToken) in /home/rrj/src/github/rudironsoni/Synaxis/src/Synaxis.Infrastructure/Services/TeamService.cs:line 106
+   at Synaxis.Infrastructure.Tests.Services.TeamServiceIntegrationTests.ListTeams_ExcludesSoftDeletedTeams() in /home/rrj/src/github/rudironsoni/Synaxis/tests/Synaxis.Infrastructure.Tests/Services/TeamServiceIntegrationTests.cs:line 307
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:34.30]     Synaxis.Infrastructure.Tests.Services.TeamServiceIntegrationTests.SoftDelete_DoesNotDeleteFromDatabase [FAIL]
+  Failed Synaxis.Infrastructure.Tests.Services.TeamServiceIntegrationTests.SoftDelete_DoesNotDeleteFromDatabase [5 ms]
+  Error Message:
+   Microsoft.EntityFrameworkCore.DbUpdateException : An error occurred while saving the entity changes. See the inner exception for details.
+---- Npgsql.PostgresException : 23502: null value in column "description" of relation "teams" violates not-null constraint
+
+DETAIL: Detail redacted as it may contain sensitive data. Specify 'Include Error Detail' in the connection string to include this information.
+  Stack Trace:
+     at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabase.SaveChangesAsync(IList`1 entries, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Synaxis.Infrastructure.Services.TeamService.CreateTeamAsync(CreateTeamRequest request, Guid organizationId, Guid createdByUserId, CancellationToken cancellationToken) in /home/rrj/src/github/rudironsoni/Synaxis/src/Synaxis.Infrastructure/Services/TeamService.cs:line 106
+   at Synaxis.Infrastructure.Tests.Services.TeamServiceIntegrationTests.SoftDelete_DoesNotDeleteFromDatabase() in /home/rrj/src/github/rudironsoni/Synaxis/tests/Synaxis.Infrastructure.Tests/Services/TeamServiceIntegrationTests.cs:line 289
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:37.08]     Synaxis.Infrastructure.Tests.Services.TeamServiceIntegrationTests.UniqueConstraint_SameSlugDifferentOrgs_Allowed [FAIL]
+  Failed Synaxis.Infrastructure.Tests.Services.TeamServiceIntegrationTests.UniqueConstraint_SameSlugDifferentOrgs_Allowed [7 ms]
+  Error Message:
+   Microsoft.EntityFrameworkCore.DbUpdateException : An error occurred while saving the entity changes. See the inner exception for details.
+---- Npgsql.PostgresException : 23502: null value in column "description" of relation "teams" violates not-null constraint
+
+DETAIL: Detail redacted as it may contain sensitive data. Specify 'Include Error Detail' in the connection string to include this information.
+  Stack Trace:
+     at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabase.SaveChangesAsync(IList`1 entries, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Synaxis.Infrastructure.Services.TeamService.CreateTeamAsync(CreateTeamRequest request, Guid organizationId, Guid createdByUserId, CancellationToken cancellationToken) in /home/rrj/src/github/rudironsoni/Synaxis/src/Synaxis.Infrastructure/Services/TeamService.cs:line 106
+   at Synaxis.Infrastructure.Tests.Services.TeamServiceIntegrationTests.UniqueConstraint_SameSlugDifferentOrgs_Allowed() in /home/rrj/src/github/rudironsoni/Synaxis/tests/Synaxis.Infrastructure.Tests/Services/TeamServiceIntegrationTests.cs:line 195
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:39.82]     Synaxis.Infrastructure.Tests.Services.TeamServiceIntegrationTests.UniqueConstraint_DuplicateSlugWithinOrg_ThrowsException [FAIL]
+  Failed Synaxis.Infrastructure.Tests.Services.TeamServiceIntegrationTests.UniqueConstraint_DuplicateSlugWithinOrg_ThrowsException [11 ms]
+  Error Message:
+   Microsoft.EntityFrameworkCore.DbUpdateException : An error occurred while saving the entity changes. See the inner exception for details.
+---- Npgsql.PostgresException : 23502: null value in column "description" of relation "teams" violates not-null constraint
+
+DETAIL: Detail redacted as it may contain sensitive data. Specify 'Include Error Detail' in the connection string to include this information.
+  Stack Trace:
+     at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabase.SaveChangesAsync(IList`1 entries, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Synaxis.Infrastructure.Services.TeamService.CreateTeamAsync(CreateTeamRequest request, Guid organizationId, Guid createdByUserId, CancellationToken cancellationToken) in /home/rrj/src/github/rudironsoni/Synaxis/src/Synaxis.Infrastructure/Services/TeamService.cs:line 106
+   at Synaxis.Infrastructure.Tests.Services.TeamServiceIntegrationTests.UniqueConstraint_DuplicateSlugWithinOrg_ThrowsException() in /home/rrj/src/github/rudironsoni/Synaxis/tests/Synaxis.Infrastructure.Tests/Services/TeamServiceIntegrationTests.cs:line 166
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+
+Failed!  - Failed:    12, Passed:   127, Skipped:     0, Total:   139, Duration: 39 s - Synaxis.Infrastructure.Tests.dll (net10.0)
+  Synaxis.InferenceGateway.Infrastructure -> /home/rrj/src/github/rudironsoni/Synaxis/src/InferenceGateway/Infrastructure/bin/Release/net10.0/Synaxis.InferenceGateway.Infrastructure.dll
+  Synaxis.InferenceGateway.WebApi -> /home/rrj/src/github/rudironsoni/Synaxis/src/InferenceGateway/WebApi/bin/Release/net10.0/Synaxis.InferenceGateway.WebApi.dll
+  Synaxis.InferenceGateway.IntegrationTests -> /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/IntegrationTests/bin/Release/net10.0/Synaxis.InferenceGateway.IntegrationTests.dll
+  Synaxis.InferenceGateway.Infrastructure.Tests -> /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/Infrastructure.Tests/bin/Release/net10.0/Synaxis.InferenceGateway.Infrastructure.Tests.dll
+Test run for /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/Infrastructure.Tests/bin/Release/net10.0/Synaxis.InferenceGateway.Infrastructure.Tests.dll (.NETCoreApp,Version=v10.0)
+Test run for /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/IntegrationTests/bin/Release/net10.0/Synaxis.InferenceGateway.IntegrationTests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.1 (x64)
+
+VSTest version 18.0.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+  Synaxis.Common.Tests -> /home/rrj/src/github/rudironsoni/Synaxis/tests/Common/bin/Debug/net10.0/Synaxis.Common.Tests.dll
+  Synaxis.InferenceGateway.Application.Tests -> /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/Application.Tests/bin/Release/net10.0/Synaxis.InferenceGateway.Application.Tests.dll
+Test run for /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/Application.Tests/bin/Release/net10.0/Synaxis.InferenceGateway.Application.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:01.37]     Synaxis.InferenceGateway.IntegrationTests.RealTime.WebSocketConnectivityTests.ReceivesProviderHealthUpdate_WhenSubscribedToOrganization [SKIP]
+  Skipped Synaxis.InferenceGateway.IntegrationTests.RealTime.WebSocketConnectivityTests.ReceivesProviderHealthUpdate_WhenSubscribedToOrganization [1 ms]
+[xUnit.net 00:00:01.59]     Synaxis.InferenceGateway.IntegrationTests.RealTime.WebSocketConnectivityTests.CannotConnect_WithoutToken [SKIP]
+[xUnit.net 00:00:01.59]     Synaxis.InferenceGateway.IntegrationTests.RealTime.WebSocketConnectivityTests.CanJoinOrganization_WithValidToken [SKIP]
+[xUnit.net 00:00:01.60]     Synaxis.InferenceGateway.IntegrationTests.RealTime.WebSocketConnectivityTests.CanConnectToSynaxisHub_WithValidToken [SKIP]
+[xUnit.net 00:00:01.60]     Synaxis.InferenceGateway.IntegrationTests.RealTime.WebSocketConnectivityTests.ConnectionReconnects_AfterDisconnection [SKIP]
+  Skipped Synaxis.InferenceGateway.IntegrationTests.RealTime.WebSocketConnectivityTests.CannotConnect_WithoutToken [1 ms]
+  Skipped Synaxis.InferenceGateway.IntegrationTests.RealTime.WebSocketConnectivityTests.CanJoinOrganization_WithValidToken [1 ms]
+  Skipped Synaxis.InferenceGateway.IntegrationTests.RealTime.WebSocketConnectivityTests.CanConnectToSynaxisHub_WithValidToken [1 ms]
+  Skipped Synaxis.InferenceGateway.IntegrationTests.RealTime.WebSocketConnectivityTests.ConnectionReconnects_AfterDisconnection [1 ms]
+[xUnit.net 00:00:09.39]     Synaxis.InferenceGateway.Infrastructure.Tests.Data.SoftDeleteInterceptorTests.SaveChangesAsync_WithDeletedOrganization_ShouldSetRevokedByForApiKeys [SKIP]
+[xUnit.net 00:00:09.40]     Synaxis.InferenceGateway.Infrastructure.Tests.Data.SoftDeleteInterceptorTests.SaveChangesAsync_WithDeletedOrganization_ShouldCascadeRevokeApiKeys [SKIP]
+[xUnit.net 00:00:09.40]     Synaxis.InferenceGateway.Infrastructure.Tests.Data.SoftDeleteInterceptorTests.SaveChangesAsync_WithMultipleOrganizationsDeleted_ShouldHandleCascadeCorrectly [SKIP]
+  Skipped Synaxis.InferenceGateway.Infrastructure.Tests.Data.SoftDeleteInterceptorTests.SaveChangesAsync_WithDeletedOrganization_ShouldSetRevokedByForApiKeys [1 ms]
+  Skipped Synaxis.InferenceGateway.Infrastructure.Tests.Data.SoftDeleteInterceptorTests.SaveChangesAsync_WithDeletedOrganization_ShouldCascadeRevokeApiKeys [1 ms]
+  Skipped Synaxis.InferenceGateway.Infrastructure.Tests.Data.SoftDeleteInterceptorTests.SaveChangesAsync_WithMultipleOrganizationsDeleted_ShouldHandleCascadeCorrectly [1 ms]
+[xUnit.net 00:00:09.58]     Synaxis.InferenceGateway.Infrastructure.Tests.Data.SoftDeleteInterceptorTests.SaveChangesAsync_WithDeletedOrganization_ShouldCascadeSoftDeleteGroups [SKIP]
+[xUnit.net 00:00:09.58]     Synaxis.InferenceGateway.Infrastructure.Tests.Data.SoftDeleteInterceptorTests.SaveChangesAsync_WithAuthenticatedUser_ShouldSetDeletedBy [SKIP]
+  Skipped Synaxis.InferenceGateway.Infrastructure.Tests.Data.SoftDeleteInterceptorTests.SaveChangesAsync_WithDeletedOrganization_ShouldCascadeSoftDeleteGroups [1 ms]
+  Skipped Synaxis.InferenceGateway.Infrastructure.Tests.Data.SoftDeleteInterceptorTests.SaveChangesAsync_WithAuthenticatedUser_ShouldSetDeletedBy [1 ms]
+[xUnit.net 00:00:09.79]     Synaxis.InferenceGateway.Infrastructure.Tests.Data.SoftDeleteInterceptorTests.SaveChangesAsync_WithSubClaim_ShouldSetDeletedBy [SKIP]
+  Skipped Synaxis.InferenceGateway.Infrastructure.Tests.Data.SoftDeleteInterceptorTests.SaveChangesAsync_WithSubClaim_ShouldSetDeletedBy [1 ms]
+[xUnit.net 00:00:11.04]     Synaxis.InferenceGateway.Infrastructure.Tests.Optimization.Caching.RedisSessionStoreTests.ConcurrentAccess_HandlesSafely [FAIL]
+[xUnit.net 00:00:11.10]     Synaxis.InferenceGateway.Infrastructure.Tests.Optimization.Caching.RedisSessionStoreTests.SetProviderAffinityAsync_StoresValue [FAIL]
+  Failed Synaxis.InferenceGateway.Infrastructure.Tests.Optimization.Caching.RedisSessionStoreTests.ConcurrentAccess_HandlesSafely [50 ms]
+  Error Message:
+   Moq.MockException : 
+Expected invocation on the mock exactly 10 times, but was 0 times: db => db.StringSetAsync(session:session-concurrent:affinity, openai-gpt4, 01:00:00, False, When.Always, CommandFlags.None)
+
+Performed invocations:
+
+   Mock<IDatabase:54> (db):
+
+      IDatabaseAsync.StringSetAsync(session:session-concurrent:affinity, openai-gpt4, EX 3600, , CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(session:session-concurrent:affinity, CommandFlags.None)
+      IDatabaseAsync.StringSetAsync(session:session-concurrent:affinity, openai-gpt4, EX 3600, , CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(session:session-concurrent:affinity, CommandFlags.None)
+      IDatabaseAsync.StringSetAsync(session:session-concurrent:affinity, openai-gpt4, EX 3600, , CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(session:session-concurrent:affinity, CommandFlags.None)
+      IDatabaseAsync.StringSetAsync(session:session-concurrent:affinity, openai-gpt4, EX 3600, , CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(session:session-concurrent:affinity, CommandFlags.None)
+      IDatabaseAsync.StringSetAsync(session:session-concurrent:affinity, openai-gpt4, EX 3600, , CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(session:session-concurrent:affinity, CommandFlags.None)
+      IDatabaseAsync.StringSetAsync(session:session-concurrent:affinity, openai-gpt4, EX 3600, , CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(session:session-concurrent:affinity, CommandFlags.None)
+      IDatabaseAsync.StringSetAsync(session:session-concurrent:affinity, openai-gpt4, EX 3600, , CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(session:session-concurrent:affinity, CommandFlags.None)
+      IDatabaseAsync.StringSetAsync(session:session-concurrent:affinity, openai-gpt4, EX 3600, , CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(session:session-concurrent:affinity, CommandFlags.None)
+      IDatabaseAsync.StringSetAsync(session:session-concurrent:affinity, openai-gpt4, EX 3600, , CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(session:session-concurrent:affinity, CommandFlags.None)
+      IDatabaseAsync.StringSetAsync(session:session-concurrent:affinity, openai-gpt4, EX 3600, , CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(session:session-concurrent:affinity, CommandFlags.None)
+
+  Stack Trace:
+     at Moq.Mock.Verify(Mock mock, LambdaExpression expression, Times times, String failMessage) in /_/src/Moq/Mock.cs:line 332
+   at Moq.Mock`1.Verify[TResult](Expression`1 expression, Times times) in /_/src/Moq/Mock`1.cs:line 825
+   at Synaxis.InferenceGateway.Infrastructure.Tests.Optimization.Caching.RedisSessionStoreTests.ConcurrentAccess_HandlesSafely() in /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/Infrastructure.Tests/Optimization/Caching/RedisSessionStoreTests.cs:line 316
+--- End of stack trace from previous location ---
+  Failed Synaxis.InferenceGateway.Infrastructure.Tests.Optimization.Caching.RedisSessionStoreTests.SetProviderAffinityAsync_StoresValue [62 ms]
+  Error Message:
+   Moq.MockException : 
+Expected invocation on the mock once, but was 0 times: db => db.StringSetAsync(session:session-123:affinity, anthropic-claude, 01:00:00, False, When.Always, CommandFlags.None)
+
+Performed invocations:
+
+   Mock<IDatabase:55> (db):
+
+      IDatabaseAsync.StringSetAsync(session:session-123:affinity, anthropic-claude, EX 3600, , CommandFlags.None)
+
+  Stack Trace:
+     at Moq.Mock.Verify(Mock mock, LambdaExpression expression, Times times, String failMessage) in /_/src/Moq/Mock.cs:line 332
+   at Moq.Mock`1.Verify[TResult](Expression`1 expression, Func`1 times) in /_/src/Moq/Mock`1.cs:line 840
+   at Synaxis.InferenceGateway.Infrastructure.Tests.Optimization.Caching.RedisSessionStoreTests.SetProviderAffinityAsync_StoresValue() in /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/Infrastructure.Tests/Optimization/Caching/RedisSessionStoreTests.cs:line 101
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:11.17]     Synaxis.InferenceGateway.Infrastructure.Tests.Optimization.Caching.RedisSessionStoreTests.UpdateLastActivityAsync_UpdatesTimestamp [FAIL]
+  Failed Synaxis.InferenceGateway.Infrastructure.Tests.Optimization.Caching.RedisSessionStoreTests.UpdateLastActivityAsync_UpdatesTimestamp [7 ms]
+  Error Message:
+   Moq.MockException : 
+Expected invocation on the mock once, but was 0 times: db => db.StringSetAsync(session:session-123:lastactivity, It.Is<RedisValue>(v => Math.Abs((long)v - timestamp.ToUnixTimeSeconds()) <= 1), 02:00:00, False, When.Always, CommandFlags.None)
+
+Performed invocations:
+
+   Mock<IDatabase:60> (db):
+
+      IDatabaseAsync.StringSetAsync(session:session-123:lastactivity, 1770708707, EX 7200, , CommandFlags.None)
+
+  Stack Trace:
+     at Moq.Mock.Verify(Mock mock, LambdaExpression expression, Times times, String failMessage) in /_/src/Moq/Mock.cs:line 332
+   at Moq.Mock`1.Verify[TResult](Expression`1 expression, Func`1 times) in /_/src/Moq/Mock`1.cs:line 840
+   at Synaxis.InferenceGateway.Infrastructure.Tests.Optimization.Caching.RedisSessionStoreTests.UpdateLastActivityAsync_UpdatesTimestamp() in /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/Infrastructure.Tests/Optimization/Caching/RedisSessionStoreTests.cs:line 158
+--- End of stack trace from previous location ---
+
+Passed!  - Failed:     0, Passed:   355, Skipped:     0, Total:   355, Duration: 13 s - Synaxis.InferenceGateway.Application.Tests.dll (net10.0)
+[xUnit.net 00:00:39.98]     Synaxis.InferenceGateway.Infrastructure.Tests.Optimization.Caching.RedisInFlightDeduplicationTests.ExecuteWithDeduplication_ConcurrentCalls_Deduplicates [FAIL]
+  Failed Synaxis.InferenceGateway.Infrastructure.Tests.Optimization.Caching.RedisInFlightDeduplicationTests.ExecuteWithDeduplication_ConcurrentCalls_Deduplicates [30 s]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 1
+Actual:   5
+  Stack Trace:
+     at Synaxis.InferenceGateway.Infrastructure.Tests.Optimization.Caching.RedisInFlightDeduplicationTests.ExecuteWithDeduplication_ConcurrentCalls_Deduplicates() in /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/Infrastructure.Tests/Optimization/Caching/RedisInFlightDeduplicationTests.cs:line 168
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:44.05]     Synaxis.InferenceGateway.IntegrationTests.Controllers.TeamsControllerTests.UpdateMemberRole_CreatesAuditLog [SKIP]
+  Skipped Synaxis.InferenceGateway.IntegrationTests.Controllers.TeamsControllerTests.UpdateMemberRole_CreatesAuditLog [1 ms]
+[xUnit.net 00:00:44.25]     Synaxis.InferenceGateway.IntegrationTests.Controllers.TeamsControllerTests.AddMember_CreatesAuditLog [SKIP]
+[xUnit.net 00:00:44.33]     Synaxis.InferenceGateway.IntegrationTests.Controllers.TeamsControllerTests.CreateTeam_CreatesAuditLog [SKIP]
+  Skipped Synaxis.InferenceGateway.IntegrationTests.Controllers.TeamsControllerTests.AddMember_CreatesAuditLog [1 ms]
+  Skipped Synaxis.InferenceGateway.IntegrationTests.Controllers.TeamsControllerTests.CreateTeam_CreatesAuditLog [1 ms]
+[xUnit.net 00:00:44.73]     Synaxis.InferenceGateway.IntegrationTests.Controllers.TeamsControllerTests.DeleteTeam_CreatesAuditLog [SKIP]
+[xUnit.net 00:00:44.76]     Synaxis.InferenceGateway.IntegrationTests.Controllers.TeamsControllerTests.UpdateTeam_CreatesAuditLog [SKIP]
+  Skipped Synaxis.InferenceGateway.IntegrationTests.Controllers.TeamsControllerTests.DeleteTeam_CreatesAuditLog [1 ms]
+  Skipped Synaxis.InferenceGateway.IntegrationTests.Controllers.TeamsControllerTests.UpdateTeam_CreatesAuditLog [1 ms]
+[xUnit.net 00:00:48.88]     Synaxis.InferenceGateway.IntegrationTests.Controllers.TeamMembershipsControllerTests.ListMembers_SupportsPagination [FAIL]
+  Failed Synaxis.InferenceGateway.IntegrationTests.Controllers.TeamMembershipsControllerTests.ListMembers_SupportsPagination [94 ms]
+  Error Message:
+   Expected response.StatusCode to be HttpStatusCode.OK {value: 200}, but found HttpStatusCode.InternalServerError {value: 500}.
+  Stack Trace:
+     at FluentAssertions.Execution.LateBoundTestFramework.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionScope.AddPreFormattedFailure(String formattedFailureMessage)
+   at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)
+   at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)
+   at FluentAssertions.Execution.AssertionChain.FailWith(String message, Object[] args)
+   at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)
+   at Synaxis.InferenceGateway.IntegrationTests.Controllers.TeamMembershipsControllerTests.ListMembers_SupportsPagination() in /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/IntegrationTests/Controllers/TeamMembershipsControllerTests.cs:line 396
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:49.10]     Synaxis.InferenceGateway.IntegrationTests.Controllers.TeamMembershipsControllerTests.ListMembers_WithoutAuth_ReturnsUnauthorized [FAIL]
+  Failed Synaxis.InferenceGateway.IntegrationTests.Controllers.TeamMembershipsControllerTests.ListMembers_WithoutAuth_ReturnsUnauthorized [6 ms]
+  Error Message:
+   Expected response.StatusCode to be HttpStatusCode.Unauthorized {value: 401}, but found HttpStatusCode.InternalServerError {value: 500}.
+  Stack Trace:
+     at FluentAssertions.Execution.LateBoundTestFramework.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionScope.AddPreFormattedFailure(String formattedFailureMessage)
+   at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)
+   at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)
+   at FluentAssertions.Execution.AssertionChain.FailWith(String message, Object[] args)
+   at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)
+   at Synaxis.InferenceGateway.IntegrationTests.Controllers.TeamMembershipsControllerTests.ListMembers_WithoutAuth_ReturnsUnauthorized() in /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/IntegrationTests/Controllers/TeamMembershipsControllerTests.cs:line 339
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:49.37]     Synaxis.InferenceGateway.IntegrationTests.Controllers.TeamMembershipsControllerTests.ListMembers_ValidRequest_ReturnsMembersList [FAIL]
+[xUnit.net 00:00:49.49]     Synaxis.InferenceGateway.IntegrationTests.Controllers.TeamMembershipsControllerTests.ListMembers_NotTeamMember_ReturnsForbidden [FAIL]
+  Failed Synaxis.InferenceGateway.IntegrationTests.Controllers.TeamMembershipsControllerTests.ListMembers_ValidRequest_ReturnsMembersList [26 ms]
+  Error Message:
+   Expected response.StatusCode to be HttpStatusCode.OK {value: 200}, but found HttpStatusCode.InternalServerError {value: 500}.
+  Stack Trace:
+     at FluentAssertions.Execution.LateBoundTestFramework.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionScope.AddPreFormattedFailure(String formattedFailureMessage)
+   at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)
+   at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)
+   at FluentAssertions.Execution.AssertionChain.FailWith(String message, Object[] args)
+   at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)
+   at Synaxis.InferenceGateway.IntegrationTests.Controllers.TeamMembershipsControllerTests.ListMembers_ValidRequest_ReturnsMembersList() in /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/IntegrationTests/Controllers/TeamMembershipsControllerTests.cs:line 371
+--- End of stack trace from previous location ---
+  Failed Synaxis.InferenceGateway.IntegrationTests.Controllers.TeamMembershipsControllerTests.ListMembers_NotTeamMember_ReturnsForbidden [28 ms]
+  Error Message:
+   Expected response.StatusCode to be HttpStatusCode.Forbidden {value: 403}, but found HttpStatusCode.InternalServerError {value: 500}.
+  Stack Trace:
+     at FluentAssertions.Execution.LateBoundTestFramework.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionScope.AddPreFormattedFailure(String formattedFailureMessage)
+   at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)
+   at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)
+   at FluentAssertions.Execution.AssertionChain.FailWith(String message, Object[] args)
+   at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)
+   at Synaxis.InferenceGateway.IntegrationTests.Controllers.TeamMembershipsControllerTests.ListMembers_NotTeamMember_ReturnsForbidden() in /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/IntegrationTests/Controllers/TeamMembershipsControllerTests.cs:line 354
+--- End of stack trace from previous location ---
+[xUnit.net 00:01:08.56]     Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthenticationControllerTests.ResetPassword_InvalidToken_ReturnsBadRequest [FAIL]
+[xUnit.net 00:01:08.63]     Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthenticationControllerTests.ForgotPassword_ExistingEmail_ReturnsSuccessAndCreatesToken [FAIL]
+[xUnit.net 00:01:08.85]     Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthenticationControllerTests.Logout_ValidToken_ReturnsSuccess [FAIL]
+[xUnit.net 00:01:08.85]     Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthenticationControllerTests.Logout_NoToken_ReturnsUnauthorized [FAIL]
+[xUnit.net 00:01:09.02]     Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthenticationControllerTests.Refresh_ValidToken_ReturnsNewToken [FAIL]
+[xUnit.net 00:01:09.17]     Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthenticationControllerTests.ResetPassword_ValidToken_ChangesPassword [FAIL]
+  Failed Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthenticationControllerTests.ResetPassword_InvalidToken_ReturnsBadRequest [262 ms]
+  Error Message:
+   Expected response.StatusCode to be HttpStatusCode.BadRequest {value: 400}, but found HttpStatusCode.NotFound {value: 404}.
+  Stack Trace:
+     at FluentAssertions.Execution.LateBoundTestFramework.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)
+   at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)
+   at Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthenticationControllerTests.ResetPassword_InvalidToken_ReturnsBadRequest() in /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/IntegrationTests/Controllers/AuthenticationControllerTests.cs:line 212
+--- End of stack trace from previous location ---
+  Failed Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthenticationControllerTests.ForgotPassword_ExistingEmail_ReturnsSuccessAndCreatesToken [67 ms]
+  Error Message:
+   Expected response.StatusCode to be HttpStatusCode.OK {value: 200}, but found HttpStatusCode.NotFound {value: 404}.
+  Stack Trace:
+     at FluentAssertions.Execution.LateBoundTestFramework.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)
+   at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)
+   at Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthenticationControllerTests.ForgotPassword_ExistingEmail_ReturnsSuccessAndCreatesToken() in /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/IntegrationTests/Controllers/AuthenticationControllerTests.cs:line 159
+--- End of stack trace from previous location ---
+  Failed Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthenticationControllerTests.Logout_ValidToken_ReturnsSuccess [102 ms]
+  Error Message:
+   Expected response.StatusCode to be HttpStatusCode.OK {value: 200}, but found HttpStatusCode.NotFound {value: 404}.
+  Stack Trace:
+     at FluentAssertions.Execution.LateBoundTestFramework.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)
+   at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)
+   at Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthenticationControllerTests.Logout_ValidToken_ReturnsSuccess() in /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/IntegrationTests/Controllers/AuthenticationControllerTests.cs:line 111
+--- End of stack trace from previous location ---
+  Failed Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthenticationControllerTests.Logout_NoToken_ReturnsUnauthorized [2 ms]
+  Error Message:
+   Expected response.StatusCode to be HttpStatusCode.Unauthorized {value: 401}, but found HttpStatusCode.NotFound {value: 404}.
+  Stack Trace:
+     at FluentAssertions.Execution.LateBoundTestFramework.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)
+   at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)
+   at Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthenticationControllerTests.Logout_NoToken_ReturnsUnauthorized() in /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/IntegrationTests/Controllers/AuthenticationControllerTests.cs:line 121
+--- End of stack trace from previous location ---
+  Failed Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthenticationControllerTests.Refresh_ValidToken_ReturnsNewToken [101 ms]
+  Error Message:
+   Expected response.StatusCode to be HttpStatusCode.OK {value: 200}, but found HttpStatusCode.NotFound {value: 404}.
+  Stack Trace:
+     at FluentAssertions.Execution.LateBoundTestFramework.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)
+   at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)
+   at Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthenticationControllerTests.Refresh_ValidToken_ReturnsNewToken() in /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/IntegrationTests/Controllers/AuthenticationControllerTests.cs:line 136
+--- End of stack trace from previous location ---
+  Failed Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthenticationControllerTests.ResetPassword_ValidToken_ChangesPassword [51 ms]
+  Error Message:
+   System.Net.Http.HttpRequestException : Response status code does not indicate success: 404 (Not Found).
+  Stack Trace:
+     at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthenticationControllerTests.ResetPassword_ValidToken_ChangesPassword() in /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/IntegrationTests/Controllers/AuthenticationControllerTests.cs:line 190
+--- End of stack trace from previous location ---
+[xUnit.net 00:01:09.23]     Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthenticationControllerTests.VerifyEmail_AlreadyVerified_ReturnsSuccess [FAIL]
+[xUnit.net 00:01:09.34]     Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthenticationControllerTests.VerifyEmail_ValidToken_MarksEmailAsVerified [FAIL]
+[xUnit.net 00:01:09.34]     Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthenticationControllerTests.VerifyEmail_InvalidToken_ReturnsBadRequest [FAIL]
+[xUnit.net 00:01:09.34]     Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthenticationControllerTests.ForgotPassword_NonExistentEmail_ReturnsSuccessWithoutLeakingInfo [FAIL]
+[xUnit.net 00:01:09.34]     Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthenticationControllerTests.Refresh_InvalidToken_ReturnsBadRequest [FAIL]
+[xUnit.net 00:01:10.06]     Synaxis.InferenceGateway.Infrastructure.Tests.Optimization.Caching.RedisInFlightDeduplicationTests.ExecuteWithDeduplication_Success_StoresResult [FAIL]
+  Failed Synaxis.InferenceGateway.Infrastructure.Tests.Optimization.Caching.RedisInFlightDeduplicationTests.ExecuteWithDeduplication_Success_StoresResult [30 s]
+  Error Message:
+   Moq.MockException : 
+Expected invocation on the mock once, but was 0 times: db => db.StringSetAsync(It.Is<RedisKey>(k => k.ToString() == resultKey), It.IsAny<RedisValue>(), It.IsAny<TimeSpan?>(), It.IsAny<bool>(), It.IsAny<When>(), CommandFlags.None)
+
+Performed invocations:
+
+   Mock<IDatabase:62> (db):
+
+      IDatabaseAsync.StringSetAsync(inflight:hash-store, locked, 00:00:30, When.NotExists)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-store, CommandFlags.None)
+
+  Stack Trace:
+     at Moq.Mock.Verify(Mock mock, LambdaExpression expression, Times times, String failMessage) in /_/src/Moq/Mock.cs:line 332
+   at Moq.Mock`1.Verify[TResult](Expression`1 expression, Func`1 times) in /_/src/Moq/Mock`1.cs:line 840
+   at Synaxis.InferenceGateway.Infrastructure.Tests.Optimization.Caching.RedisInFlightDeduplicationTests.ExecuteWithDeduplication_Success_StoresResult() in /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/Infrastructure.Tests/Optimization/Caching/RedisInFlightDeduplicationTests.cs:line 275
+--- End of stack trace from previous location ---
+  Failed Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthenticationControllerTests.VerifyEmail_AlreadyVerified_ReturnsSuccess [55 ms]
+  Error Message:
+   Expected response.StatusCode to be HttpStatusCode.OK {value: 200}, but found HttpStatusCode.NotFound {value: 404}.
+  Stack Trace:
+     at FluentAssertions.Execution.LateBoundTestFramework.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)
+   at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)
+   at Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthenticationControllerTests.VerifyEmail_AlreadyVerified_ReturnsSuccess() in /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/IntegrationTests/Controllers/AuthenticationControllerTests.cs:line 259
+--- End of stack trace from previous location ---
+  Failed Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthenticationControllerTests.VerifyEmail_ValidToken_MarksEmailAsVerified [53 ms]
+  Error Message:
+   Expected response.StatusCode to be HttpStatusCode.OK {value: 200}, but found HttpStatusCode.NotFound {value: 404}.
+  Stack Trace:
+     at FluentAssertions.Execution.LateBoundTestFramework.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)
+   at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)
+   at Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthenticationControllerTests.VerifyEmail_ValidToken_MarksEmailAsVerified() in /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/IntegrationTests/Controllers/AuthenticationControllerTests.cs:line 228
+--- End of stack trace from previous location ---
+  Failed Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthenticationControllerTests.VerifyEmail_InvalidToken_ReturnsBadRequest [2 ms]
+  Error Message:
+   Expected response.StatusCode to be HttpStatusCode.BadRequest {value: 400}, but found HttpStatusCode.NotFound {value: 404}.
+  Stack Trace:
+     at FluentAssertions.Execution.LateBoundTestFramework.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)
+   at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)
+   at Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthenticationControllerTests.VerifyEmail_InvalidToken_ReturnsBadRequest() in /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/IntegrationTests/Controllers/AuthenticationControllerTests.cs:line 241
+--- End of stack trace from previous location ---
+  Failed Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthenticationControllerTests.ForgotPassword_NonExistentEmail_ReturnsSuccessWithoutLeakingInfo [2 ms]
+  Error Message:
+   Expected response.StatusCode to be HttpStatusCode.OK {value: 200}, but found HttpStatusCode.NotFound {value: 404}.
+  Stack Trace:
+     at FluentAssertions.Execution.LateBoundTestFramework.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)
+   at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)
+   at Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthenticationControllerTests.ForgotPassword_NonExistentEmail_ReturnsSuccessWithoutLeakingInfo() in /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/IntegrationTests/Controllers/AuthenticationControllerTests.cs:line 177
+--- End of stack trace from previous location ---
+  Failed Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthenticationControllerTests.Refresh_InvalidToken_ReturnsBadRequest [2 ms]
+  Error Message:
+   Expected response.StatusCode to be HttpStatusCode.BadRequest {value: 400}, but found HttpStatusCode.NotFound {value: 404}.
+  Stack Trace:
+     at FluentAssertions.Execution.LateBoundTestFramework.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)
+   at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)
+   at Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthenticationControllerTests.Refresh_InvalidToken_ReturnsBadRequest() in /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/IntegrationTests/Controllers/AuthenticationControllerTests.cs:line 148
+--- End of stack trace from previous location ---
+[xUnit.net 00:01:12.80]     Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthControllerTests.MfaDisable_AuthenticatedUser_DisablesMfa [FAIL]
+[xUnit.net 00:01:12.86]     Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthControllerTests.ResendVerification_NonExistentUser_ReturnsSuccess [FAIL]
+[xUnit.net 00:01:12.86]     Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthControllerTests.MfaSetup_AuthenticatedUser_ReturnsSecretAndQrCode [FAIL]
+[xUnit.net 00:01:12.93]     Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthControllerTests.MfaEnable_WithInvalidCode_ReturnsBadRequest [FAIL]
+  Failed Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthControllerTests.MfaDisable_AuthenticatedUser_DisablesMfa [309 ms]
+  Error Message:
+   System.Text.Json.JsonException : The input does not contain any JSON tokens. Expected the input to start with a valid JSON token, when isFinalBlock is true. Path: $ | LineNumber: 0 | BytePositionInLine: 0.
+---- System.Text.Json.JsonReaderException : The input does not contain any JSON tokens. Expected the input to start with a valid JSON token, when isFinalBlock is true. LineNumber: 0 | BytePositionInLine: 0.
+  Stack Trace:
+     at System.Text.Json.ThrowHelper.ReThrowWithPath(ReadStack& state, JsonReaderException ex)
+   at System.Text.Json.Serialization.JsonConverter`1.ReadCore(Utf8JsonReader& reader, T& value, JsonSerializerOptions options, ReadStack& state)
+   at System.Text.Json.Serialization.Metadata.JsonTypeInfo`1.DeserializeAsync[TReadBufferState,TStream](TStream utf8Json, TReadBufferState bufferState, CancellationToken cancellationToken)
+   at System.Net.Http.Json.HttpContentJsonExtensions.ReadFromJsonAsyncCore[T](HttpContent content, JsonSerializerOptions options, CancellationToken cancellationToken)
+   at Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthControllerTests.MfaDisable_AuthenticatedUser_DisablesMfa() in /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/IntegrationTests/Controllers/AuthControllerTests.cs:line 375
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at System.Text.Json.ThrowHelper.ThrowJsonReaderException(Utf8JsonReader& json, ExceptionResource resource, Byte nextByte, ReadOnlySpan`1 bytes)
+   at System.Text.Json.Serialization.JsonConverter`1.ReadCore(Utf8JsonReader& reader, T& value, JsonSerializerOptions options, ReadStack& state)
+  Failed Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthControllerTests.ResendVerification_NonExistentUser_ReturnsSuccess [3 ms]
+  Error Message:
+   System.Net.Http.HttpRequestException : Response status code does not indicate success: 404 (Not Found).
+  Stack Trace:
+     at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthControllerTests.ResendVerification_NonExistentUser_ReturnsSuccess() in /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/IntegrationTests/Controllers/AuthControllerTests.cs:line 462
+--- End of stack trace from previous location ---
+  Failed Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthControllerTests.MfaSetup_AuthenticatedUser_ReturnsSecretAndQrCode [5 ms]
+  Error Message:
+   System.Net.Http.HttpRequestException : Response status code does not indicate success: 404 (Not Found).
+  Stack Trace:
+     at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthControllerTests.MfaSetup_AuthenticatedUser_ReturnsSecretAndQrCode() in /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/IntegrationTests/Controllers/AuthControllerTests.cs:line 294
+--- End of stack trace from previous location ---
+  Failed Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthControllerTests.MfaEnable_WithInvalidCode_ReturnsBadRequest [8 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: BadRequest
+Actual:   NotFound
+  Stack Trace:
+     at Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthControllerTests.MfaEnable_WithInvalidCode_ReturnsBadRequest() in /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/IntegrationTests/Controllers/AuthControllerTests.cs:line 359
+--- End of stack trace from previous location ---
+[xUnit.net 00:01:13.04]     Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthControllerTests.LoginMfa_WithValidCode_ReturnsToken [FAIL]
+[xUnit.net 00:01:13.07]     Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthControllerTests.MfaEnable_WithValidCode_EnablesMfa [FAIL]
+[xUnit.net 00:01:13.13]     Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthControllerTests.ResendVerification_ExistingUser_ReturnsSuccess [FAIL]
+  Failed Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthControllerTests.LoginMfa_WithValidCode_ReturnsToken [117 ms]
+  Error Message:
+   System.Text.Json.JsonException : The input does not contain any JSON tokens. Expected the input to start with a valid JSON token, when isFinalBlock is true. Path: $ | LineNumber: 0 | BytePositionInLine: 0.
+---- System.Text.Json.JsonReaderException : The input does not contain any JSON tokens. Expected the input to start with a valid JSON token, when isFinalBlock is true. LineNumber: 0 | BytePositionInLine: 0.
+  Stack Trace:
+     at System.Text.Json.ThrowHelper.ReThrowWithPath(ReadStack& state, JsonReaderException ex)
+   at System.Text.Json.Serialization.JsonConverter`1.ReadCore(Utf8JsonReader& reader, T& value, JsonSerializerOptions options, ReadStack& state)
+   at System.Text.Json.Serialization.Metadata.JsonTypeInfo`1.DeserializeAsync[TReadBufferState,TStream](TStream utf8Json, TReadBufferState bufferState, CancellationToken cancellationToken)
+   at System.Net.Http.Json.HttpContentJsonExtensions.ReadFromJsonAsyncCore[T](HttpContent content, JsonSerializerOptions options, CancellationToken cancellationToken)
+   at Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthControllerTests.LoginMfa_WithValidCode_ReturnsToken() in /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/IntegrationTests/Controllers/AuthControllerTests.cs:line 418
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at System.Text.Json.ThrowHelper.ThrowJsonReaderException(Utf8JsonReader& json, ExceptionResource resource, Byte nextByte, ReadOnlySpan`1 bytes)
+   at System.Text.Json.Serialization.JsonConverter`1.ReadCore(Utf8JsonReader& reader, T& value, JsonSerializerOptions options, ReadStack& state)
+  Failed Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthControllerTests.MfaEnable_WithValidCode_EnablesMfa [6 ms]
+  Error Message:
+   System.Net.Http.HttpRequestException : Response status code does not indicate success: 404 (Not Found).
+  Stack Trace:
+     at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthControllerTests.MfaEnable_WithValidCode_EnablesMfa() in /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/IntegrationTests/Controllers/AuthControllerTests.cs:line 318
+--- End of stack trace from previous location ---
+  Failed Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthControllerTests.ResendVerification_ExistingUser_ReturnsSuccess [52 ms]
+  Error Message:
+   System.Net.Http.HttpRequestException : Response status code does not indicate success: 404 (Not Found).
+  Stack Trace:
+     at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at Synaxis.InferenceGateway.IntegrationTests.Controllers.AuthControllerTests.ResendVerification_ExistingUser_ReturnsSuccess() in /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/IntegrationTests/Controllers/AuthControllerTests.cs:line 450
+--- End of stack trace from previous location ---
+[xUnit.net 00:01:16.46]     Synaxis.InferenceGateway.IntegrationTests.Controllers.ApiKeysControllerTests.RevokeKey_WithAuth_ValidKey_ReturnsNoContent [SKIP]
+[xUnit.net 00:01:16.46]     Synaxis.InferenceGateway.IntegrationTests.Controllers.ApiKeysControllerTests.RevokeKey_WithoutAuth_ReturnsUnauthorized [SKIP]
+[xUnit.net 00:01:16.46]     Synaxis.InferenceGateway.IntegrationTests.Controllers.ApiKeysControllerTests.CreateKey_WithAuth_ValidProject_ReturnsCreatedKey [SKIP]
+[xUnit.net 00:01:16.46]     Synaxis.InferenceGateway.IntegrationTests.Controllers.ApiKeysControllerTests.RevokeKey_CreatesAuditLog [SKIP]
+[xUnit.net 00:01:16.46]     Synaxis.InferenceGateway.IntegrationTests.Controllers.ApiKeysControllerTests.CreateKey_StoresCorrectDataInDatabase [SKIP]
+[xUnit.net 00:01:16.46]     Synaxis.InferenceGateway.IntegrationTests.Controllers.ApiKeysControllerTests.CreateKey_KeyHashIsValid [SKIP]
+[xUnit.net 00:01:16.46]     Synaxis.InferenceGateway.IntegrationTests.Controllers.ApiKeysControllerTests.CreateKey_WithAuth_InvalidProject_ReturnsNotFound [SKIP]
+[xUnit.net 00:01:16.46]     Synaxis.InferenceGateway.IntegrationTests.Controllers.ApiKeysControllerTests.RevokeKey_WithAuth_InvalidProject_ReturnsNotFound [SKIP]
+[xUnit.net 00:01:16.46]     Synaxis.InferenceGateway.IntegrationTests.Controllers.ApiKeysControllerTests.RevokeKey_WithAuth_WrongTenant_ReturnsNotFound [SKIP]
+  Skipped Synaxis.InferenceGateway.IntegrationTests.Controllers.ApiKeysControllerTests.RevokeKey_WithAuth_ValidKey_ReturnsNoContent [1 ms]
+  Skipped Synaxis.InferenceGateway.IntegrationTests.Controllers.ApiKeysControllerTests.RevokeKey_WithoutAuth_ReturnsUnauthorized [1 ms]
+  Skipped Synaxis.InferenceGateway.IntegrationTests.Controllers.ApiKeysControllerTests.CreateKey_WithAuth_ValidProject_ReturnsCreatedKey [1 ms]
+  Skipped Synaxis.InferenceGateway.IntegrationTests.Controllers.ApiKeysControllerTests.RevokeKey_CreatesAuditLog [1 ms]
+  Skipped Synaxis.InferenceGateway.IntegrationTests.Controllers.ApiKeysControllerTests.CreateKey_StoresCorrectDataInDatabase [1 ms]
+  Skipped Synaxis.InferenceGateway.IntegrationTests.Controllers.ApiKeysControllerTests.CreateKey_KeyHashIsValid [1 ms]
+  Skipped Synaxis.InferenceGateway.IntegrationTests.Controllers.ApiKeysControllerTests.CreateKey_WithAuth_InvalidProject_ReturnsNotFound [1 ms]
+  Skipped Synaxis.InferenceGateway.IntegrationTests.Controllers.ApiKeysControllerTests.RevokeKey_WithAuth_InvalidProject_ReturnsNotFound [1 ms]
+  Skipped Synaxis.InferenceGateway.IntegrationTests.Controllers.ApiKeysControllerTests.RevokeKey_WithAuth_WrongTenant_ReturnsNotFound [1 ms]
+[xUnit.net 00:01:16.46]     Synaxis.InferenceGateway.IntegrationTests.Controllers.ApiKeysControllerTests.RevokeKey_WithAuth_InvalidKey_ReturnsNotFound [SKIP]
+[xUnit.net 00:01:16.46]     Synaxis.InferenceGateway.IntegrationTests.Controllers.ApiKeysControllerTests.CreateKey_CreatesAuditLog [SKIP]
+[xUnit.net 00:01:16.46]     Synaxis.InferenceGateway.IntegrationTests.Controllers.ApiKeysControllerTests.CreateKey_WithoutAuth_ReturnsUnauthorized [SKIP]
+[xUnit.net 00:01:16.46]     Synaxis.InferenceGateway.IntegrationTests.Controllers.ApiKeysControllerTests.CreateKey_WithAuth_WrongTenant_ReturnsNotFound [SKIP]
+  Skipped Synaxis.InferenceGateway.IntegrationTests.Controllers.ApiKeysControllerTests.RevokeKey_WithAuth_InvalidKey_ReturnsNotFound [1 ms]
+  Skipped Synaxis.InferenceGateway.IntegrationTests.Controllers.ApiKeysControllerTests.CreateKey_CreatesAuditLog [1 ms]
+  Skipped Synaxis.InferenceGateway.IntegrationTests.Controllers.ApiKeysControllerTests.CreateKey_WithoutAuth_ReturnsUnauthorized [1 ms]
+  Skipped Synaxis.InferenceGateway.IntegrationTests.Controllers.ApiKeysControllerTests.CreateKey_WithAuth_WrongTenant_ReturnsNotFound [1 ms]
+[xUnit.net 00:01:40.18]     Synaxis.InferenceGateway.Infrastructure.Tests.Optimization.Caching.RedisInFlightDeduplicationTests.ExecuteWithDeduplication_FirstCall_AcquiresLock [FAIL]
+  Failed Synaxis.InferenceGateway.Infrastructure.Tests.Optimization.Caching.RedisInFlightDeduplicationTests.ExecuteWithDeduplication_FirstCall_AcquiresLock [30 s]
+  Error Message:
+   Moq.MockException : 
+Expected invocation on the mock once, but was 0 times: db => db.StringSetAsync(It.Is<RedisKey>(k => k.ToString() == lockKey), It.IsAny<RedisValue>(), It.IsAny<TimeSpan?>(), It.IsAny<bool>(), When.NotExists, CommandFlags.None)
+
+Performed invocations:
+
+   Mock<IDatabase:63> (db):
+
+      IDatabaseAsync.StringSetAsync(inflight:hash-123, locked, 00:00:30, When.NotExists)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+      IDatabaseAsync.StringGetAsync(result:hash-123, CommandFlags.None)
+
+  Stack Trace:
+     at Moq.Mock.Verify(Mock mock, LambdaExpression expression, Times times, String failMessage) in /_/src/Moq/Mock.cs:line 332
+   at Moq.Mock`1.Verify[TResult](Expression`1 expression, Func`1 times) in /_/src/Moq/Mock`1.cs:line 840
+   at Synaxis.InferenceGateway.Infrastructure.Tests.Optimization.Caching.RedisInFlightDeduplicationTests.ExecuteWithDeduplication_FirstCall_AcquiresLock() in /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/Infrastructure.Tests/Optimization/Caching/RedisInFlightDeduplicationTests.cs:line 88
+--- End of stack trace from previous location ---
+
+Failed!  - Failed:    22, Passed:   583, Skipped:    23, Total:   628, Duration: 1 m 57 s - Synaxis.InferenceGateway.IntegrationTests.dll (net10.0)
+[xUnit.net 00:02:40.43]     Synaxis.InferenceGateway.Infrastructure.Tests.Optimization.Caching.RedisInFlightDeduplicationTests.ExecuteWithDeduplication_Failure_ReleasesLock [FAIL]
+  Failed Synaxis.InferenceGateway.Infrastructure.Tests.Optimization.Caching.RedisInFlightDeduplicationTests.ExecuteWithDeduplication_Failure_ReleasesLock [30 s]
+  Error Message:
+   Assert.True() Failure
+Expected: True
+Actual:   False
+  Stack Trace:
+     at Synaxis.InferenceGateway.Infrastructure.Tests.Optimization.Caching.RedisInFlightDeduplicationTests.ExecuteWithDeduplication_Failure_ReleasesLock() in /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway/Infrastructure.Tests/Optimization/Caching/RedisInFlightDeduplicationTests.cs:line 334
+--- End of stack trace from previous location ---
+
+Failed!  - Failed:     7, Passed:   307, Skipped:     6, Total:   320, Duration: 2 m 40 s - Synaxis.InferenceGateway.Infrastructure.Tests.dll (net10.0)
+  Synaxis.InferenceGateway.UnitTests -> /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway.UnitTests/bin/Release/net10.0/Synaxis.InferenceGateway.UnitTests.dll
+Test run for /home/rrj/src/github/rudironsoni/Synaxis/tests/InferenceGateway.UnitTests/bin/Release/net10.0/Synaxis.InferenceGateway.UnitTests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:    15, Skipped:     0, Total:    15, Duration: 667 ms - Synaxis.InferenceGateway.UnitTests.dll (net10.0)

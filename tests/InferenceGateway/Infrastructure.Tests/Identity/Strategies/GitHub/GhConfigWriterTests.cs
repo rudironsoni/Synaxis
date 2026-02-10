@@ -10,7 +10,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
     using Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub;
     using Xunit;
 
-    public class GhConfigWriterTests : IDisposable
+    public sealed class GhConfigWriterTests : IDisposable
     {
         private readonly string _tempHome;
         private readonly string _origHome;

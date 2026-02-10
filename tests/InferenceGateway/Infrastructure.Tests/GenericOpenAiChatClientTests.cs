@@ -30,8 +30,8 @@ public class GenericOpenAiChatClientTests
     public void Constructor_WithCustomHeaders_AddsHeadersToPipeline()
     {
         // Arrange
-        var customHeaders = new Dictionary<string, string>
-(StringComparer.Ordinal)
+        var customHeaders = new Dictionary<string, string>(
+StringComparer.Ordinal)
         {
             ["X-Custom-Header"] = "custom-value",
             ["X-Another-Header"] = "another-value",
@@ -71,6 +71,7 @@ public class GenericOpenAiChatClientTests
     public void Dispose_DisposesClient()
     {
         using (
+
                 // Arrange
                 var client = new GenericOpenAiChatClient(TestApiKey, this.testEndpoint, TestModelId))
         {

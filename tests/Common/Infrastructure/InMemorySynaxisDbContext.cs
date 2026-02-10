@@ -4,7 +4,7 @@ using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 namespace Synaxis.Common.Tests.Infrastructure
 {
     /// <summary>
-    /// Helper for creating in-memory SynaxisDbContext for testing
+    /// Helper for creating in-memory SynaxisDbContext for testing.
     /// </summary>
     public static class InMemorySynaxisDbContext
     {

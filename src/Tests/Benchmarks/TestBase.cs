@@ -21,6 +21,7 @@ public abstract class TestBase
     /// <summary>
     /// Creates a mock ILogger for any type.
     /// </summary>
+    /// <returns></returns>
     protected static Mock<ILogger<T>> CreateMockLogger<T>()
         where T : class
     {
@@ -38,6 +39,7 @@ public abstract class TestBase
     /// <summary>
     /// Creates a mock IChatClient that returns a default response.
     /// </summary>
+    /// <returns></returns>
     protected static Mock<IChatClient> CreateMockChatClient(string responseText = "Mock response")
     {
         var mock = new Mock<IChatClient>();
@@ -53,6 +55,7 @@ public abstract class TestBase
     /// <summary>
     /// Creates a mock IChatClient that returns a streaming response.
     /// </summary>
+    /// <returns></returns>
     protected static Mock<IChatClient> CreateMockStreamingChatClient(params string[] responseChunks)
     {
         var mock = new Mock<IChatClient>();
@@ -78,6 +81,7 @@ public abstract class TestBase
     /// <summary>
     /// Creates a mock IProviderRegistry with the specified provider configurations.
     /// </summary>
+    /// <returns></returns>
     protected static Mock<IProviderRegistry> CreateMockProviderRegistry(IReadOnlyDictionary<string, ProviderConfig>? providers = null)
     {
         var mock = new Mock<IProviderRegistry>();
@@ -102,6 +106,7 @@ public abstract class TestBase
     /// <summary>
     /// Creates a mock IModelResolver that returns a default resolution.
     /// </summary>
+    /// <returns></returns>
     protected static Mock<IModelResolver> CreateMockModelResolver(string modelId = "test-model", string canonicalId = "test-canonical")
     {
         var mock = new Mock<IModelResolver>();
@@ -127,6 +132,7 @@ public abstract class TestBase
     /// <summary>
     /// Creates a mock IHealthStore that returns healthy status for all providers.
     /// </summary>
+    /// <returns></returns>
     protected static Mock<IHealthStore> CreateMockHealthStore(bool defaultHealthy = true)
     {
         var mock = new Mock<IHealthStore>();
@@ -142,6 +148,7 @@ public abstract class TestBase
     /// <summary>
     /// Creates a mock IQuotaTracker with unlimited quota.
     /// </summary>
+    /// <returns></returns>
     protected static Mock<IQuotaTracker> CreateMockQuotaTracker()
     {
         var mock = new Mock<IQuotaTracker>();
@@ -162,6 +169,7 @@ public abstract class TestBase
     /// <summary>
     /// Creates a mock ICostService that returns zero cost.
     /// </summary>
+    /// <returns></returns>
     protected static Mock<ICostService> CreateMockCostService()
     {
         var mock = new Mock<ICostService>();
@@ -176,6 +184,7 @@ public abstract class TestBase
     /// <summary>
     /// Creates a mock IRoutingScoreCalculator that returns a default score.
     /// </summary>
+    /// <returns></returns>
     protected static Mock<IRoutingScoreCalculator> CreateMockRoutingScoreCalculator()
     {
         var mock = new Mock<IRoutingScoreCalculator>();

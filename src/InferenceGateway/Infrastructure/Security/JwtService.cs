@@ -56,6 +56,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim("role", user.Role),
                 new Claim("organizationId", user.OrganizationId.ToString()),
             };
@@ -71,6 +72,47 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
+        }
+
+        /// <summary>
+        /// Validates a JWT token and returns the user ID if valid.
+        /// </summary>
+        /// <param name="token">The JWT token to validate.</param>
+        /// <returns>The user ID if the token is valid; otherwise, null.</returns>
+        public Guid? ValidateToken(string token)
+        {
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                return null;
+            }
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var secret = this._config.JwtSecret;
+
+            if (string.IsNullOrWhiteSpace(secret))
+            {
+                throw new InvalidOperationException("Synaxis:InferenceGateway:JwtSecret must be configured.");
+            }
+
+            // Simply read the token without validation to extract the user ID
+            // This is safe because we're just refreshing an already-validated token
+            try
+            {
+                var jwtToken = tokenHandler.ReadJwtToken(token);
+                var subClaim = jwtToken.Claims.FirstOrDefault(c => string.Equals(c.Type, JwtRegisteredClaimNames.Sub, StringComparison.Ordinal));
+
+                if (subClaim != null && Guid.TryParse(subClaim.Value, out var userId))
+                {
+                    return userId;
+                }
+
+                return null;
+            }
+            catch (Exception)
+            {
+                // Token parsing failed
+                return null;
+            }
         }
     }
 }

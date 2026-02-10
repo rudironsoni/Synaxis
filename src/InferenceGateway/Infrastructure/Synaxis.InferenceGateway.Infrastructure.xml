@@ -5398,6 +5398,13 @@
             <param name="user">The user for whom to generate the token.</param>
             <returns>A JWT token string.</returns>
         </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Security.JwtService.ValidateToken(System.String)">
+            <summary>
+            Validates a JWT token and returns the user ID if valid.
+            </summary>
+            <param name="token">The JWT token to validate.</param>
+            <returns>The user ID if the token is valid; otherwise, null.</returns>
+        </member>
         <member name="T:Synaxis.InferenceGateway.Infrastructure.Security.PasswordHasher">
             <summary>
             PasswordHasher class.

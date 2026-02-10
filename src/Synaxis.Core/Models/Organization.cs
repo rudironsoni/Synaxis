@@ -35,7 +35,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the organization description.
         /// </summary>
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the primary region where organization was created.

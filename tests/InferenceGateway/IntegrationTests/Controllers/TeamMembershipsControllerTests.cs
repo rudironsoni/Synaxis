@@ -16,6 +16,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
     using Xunit.Abstractions;
 
     [Trait("Category", "Integration")]
+    [Collection("Integration")]
     public class TeamMembershipsControllerTests : IClassFixture<SynaxisWebApplicationFactory>
     {
         private readonly SynaxisWebApplicationFactory _factory;
@@ -397,6 +398,303 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
             var members = content.GetProperty("members").EnumerateArray().ToList();
             members.Should().HaveCount(2);
             content.GetProperty("total").GetInt32().Should().BeGreaterThanOrEqualTo(6);
+        }
+
+        // New /memberships endpoints tests
+        [Fact]
+        public async Task ListMemberships_WithoutAuth_ReturnsUnauthorized()
+        {
+            var orgId = Guid.NewGuid();
+            var teamId = Guid.NewGuid();
+
+            var response = await _client.GetAsync($"/api/v1/organizations/{orgId}/teams/{teamId}/memberships");
+
+            response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        }
+
+        [Fact]
+        public async Task ListMemberships_NotTeamMember_ReturnsForbidden()
+        {
+            var (_, user1) = await CreateAuthenticatedClientAsync("user1@example.com");
+            var org = await CreateTestOrganizationAsync(user1.Id);
+            var team = await CreateTestGroupAsync(org.Id, "Team Alpha");
+
+            var (client2, user2) = await CreateAuthenticatedClientAsync("user2@example.com");
+            await AddUserToOrganizationAsync(user2.Id, org.Id, "member");
+
+            var response = await client2.GetAsync($"/api/v1/organizations/{org.Id}/teams/{team.Id}/memberships");
+
+            response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        }
+
+        [Fact]
+        public async Task ListMemberships_ValidRequest_ReturnsMembershipsList()
+        {
+            var (client, user1) = await CreateAuthenticatedClientAsync("user1@example.com");
+            var org = await CreateTestOrganizationAsync(user1.Id);
+            var team = await CreateTestGroupAsync(org.Id, "Team Alpha");
+            await AddUserToGroupAsync(user1.Id, team.Id, "admin");
+
+            var (_, user2) = await CreateAuthenticatedClientAsync("user2@example.com");
+            await AddUserToOrganizationAsync(user2.Id, org.Id, "member");
+            await AddUserToGroupAsync(user2.Id, team.Id, "member");
+
+            var response = await client.GetAsync($"/api/v1/organizations/{org.Id}/teams/{team.Id}/memberships");
+
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            var content = await response.Content.ReadFromJsonAsync<JsonElement>();
+            var memberships = content.GetProperty("memberships").EnumerateArray().ToList();
+            memberships.Should().HaveCountGreaterThanOrEqualTo(2);
+        }
+
+        [Fact]
+        public async Task GetMembership_WithoutAuth_ReturnsUnauthorized()
+        {
+            var orgId = Guid.NewGuid();
+            var teamId = Guid.NewGuid();
+            var membershipId = Guid.NewGuid();
+
+            var response = await _client.GetAsync($"/api/v1/organizations/{orgId}/teams/{teamId}/memberships/{membershipId}");
+
+            response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        }
+
+        [Fact]
+        public async Task GetMembership_NotTeamMember_ReturnsForbidden()
+        {
+            var (_, user1) = await CreateAuthenticatedClientAsync("user1@example.com");
+            var org = await CreateTestOrganizationAsync(user1.Id);
+            var team = await CreateTestGroupAsync(org.Id, "Team Alpha");
+            await AddUserToGroupAsync(user1.Id, team.Id, "admin");
+
+            var (client2, user2) = await CreateAuthenticatedClientAsync("user2@example.com");
+            await AddUserToOrganizationAsync(user2.Id, org.Id, "member");
+
+            var membership = await GetUserGroupMembershipAsync(user1.Id, team.Id);
+
+            var response = await client2.GetAsync($"/api/v1/organizations/{org.Id}/teams/{team.Id}/memberships/{membership!.Id}");
+
+            response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        }
+
+        [Fact]
+        public async Task GetMembership_ValidRequest_ReturnsMembership()
+        {
+            var (client, user1) = await CreateAuthenticatedClientAsync("user1@example.com");
+            var org = await CreateTestOrganizationAsync(user1.Id);
+            var team = await CreateTestGroupAsync(org.Id, "Team Alpha");
+            await AddUserToGroupAsync(user1.Id, team.Id, "admin");
+
+            var membership = await GetUserGroupMembershipAsync(user1.Id, team.Id);
+
+            var response = await client.GetAsync($"/api/v1/organizations/{org.Id}/teams/{team.Id}/memberships/{membership!.Id}");
+
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            var content = await response.Content.ReadFromJsonAsync<JsonElement>();
+            content.GetProperty("id").GetGuid().Should().Be(membership.Id);
+            content.GetProperty("userId").GetGuid().Should().Be(user1.Id);
+        }
+
+        [Fact]
+        public async Task GetMembership_NotFound_ReturnsNotFound()
+        {
+            var (client, user1) = await CreateAuthenticatedClientAsync("user1@example.com");
+            var org = await CreateTestOrganizationAsync(user1.Id);
+            var team = await CreateTestGroupAsync(org.Id, "Team Alpha");
+            await AddUserToGroupAsync(user1.Id, team.Id, "admin");
+
+            var nonExistentId = Guid.NewGuid();
+
+            var response = await client.GetAsync($"/api/v1/organizations/{org.Id}/teams/{team.Id}/memberships/{nonExistentId}");
+
+            response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        }
+
+        [Fact]
+        public async Task UpdateMembership_WithoutAuth_ReturnsUnauthorized()
+        {
+            var orgId = Guid.NewGuid();
+            var teamId = Guid.NewGuid();
+            var membershipId = Guid.NewGuid();
+            var request = new { role = "admin" };
+
+            var response = await _client.PutAsJsonAsync($"/api/v1/organizations/{orgId}/teams/{teamId}/memberships/{membershipId}", request);
+
+            response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        }
+
+        [Fact]
+        public async Task UpdateMembership_NotTeamAdmin_ReturnsForbidden()
+        {
+            var (_, user1) = await CreateAuthenticatedClientAsync("user1@example.com");
+            var org = await CreateTestOrganizationAsync(user1.Id);
+            var team = await CreateTestGroupAsync(org.Id, "Team Alpha");
+            await AddUserToGroupAsync(user1.Id, team.Id, "admin");
+
+            var (client2, user2) = await CreateAuthenticatedClientAsync("user2@example.com");
+            await AddUserToOrganizationAsync(user2.Id, org.Id, "member");
+            await AddUserToGroupAsync(user2.Id, team.Id, "member");
+
+            var (_, user3) = await CreateAuthenticatedClientAsync("user3@example.com");
+            await AddUserToOrganizationAsync(user3.Id, org.Id, "member");
+            await AddUserToGroupAsync(user3.Id, team.Id, "member");
+
+            var membership = await GetUserGroupMembershipAsync(user3.Id, team.Id);
+            var request = new { role = "admin" };
+
+            var response = await client2.PutAsJsonAsync($"/api/v1/organizations/{org.Id}/teams/{team.Id}/memberships/{membership!.Id}", request);
+
+            response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        }
+
+        [Fact]
+        public async Task UpdateMembership_ValidRequest_ReturnsOk()
+        {
+            var (client, user1) = await CreateAuthenticatedClientAsync("user1@example.com");
+            var org = await CreateTestOrganizationAsync(user1.Id);
+            var team = await CreateTestGroupAsync(org.Id, "Team Alpha");
+            await AddUserToGroupAsync(user1.Id, team.Id, "admin");
+
+            var (_, user2) = await CreateAuthenticatedClientAsync("user2@example.com");
+            await AddUserToOrganizationAsync(user2.Id, org.Id, "member");
+            await AddUserToGroupAsync(user2.Id, team.Id, "member");
+
+            var membership = await GetUserGroupMembershipAsync(user2.Id, team.Id);
+            var request = new { role = "admin" };
+
+            var response = await client.PutAsJsonAsync($"/api/v1/organizations/{org.Id}/teams/{team.Id}/memberships/{membership!.Id}", request);
+
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            var updatedMembership = await GetUserGroupMembershipAsync(user2.Id, team.Id);
+            updatedMembership!.Role.Should().Be("TeamAdmin");
+        }
+
+        [Fact]
+        public async Task UpdateMembership_InvalidRole_ReturnsBadRequest()
+        {
+            var (client, user1) = await CreateAuthenticatedClientAsync("user1@example.com");
+            var org = await CreateTestOrganizationAsync(user1.Id);
+            var team = await CreateTestGroupAsync(org.Id, "Team Alpha");
+            await AddUserToGroupAsync(user1.Id, team.Id, "admin");
+
+            var (_, user2) = await CreateAuthenticatedClientAsync("user2@example.com");
+            await AddUserToOrganizationAsync(user2.Id, org.Id, "member");
+            await AddUserToGroupAsync(user2.Id, team.Id, "member");
+
+            var membership = await GetUserGroupMembershipAsync(user2.Id, team.Id);
+            var request = new { role = "superadmin" };
+
+            var response = await client.PutAsJsonAsync($"/api/v1/organizations/{org.Id}/teams/{team.Id}/memberships/{membership!.Id}", request);
+
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        }
+
+        [Fact]
+        public async Task UpdateMembership_NotFound_ReturnsNotFound()
+        {
+            var (client, user1) = await CreateAuthenticatedClientAsync("user1@example.com");
+            var org = await CreateTestOrganizationAsync(user1.Id);
+            var team = await CreateTestGroupAsync(org.Id, "Team Alpha");
+            await AddUserToGroupAsync(user1.Id, team.Id, "admin");
+
+            var nonExistentId = Guid.NewGuid();
+            var request = new { role = "admin" };
+
+            var response = await client.PutAsJsonAsync($"/api/v1/organizations/{org.Id}/teams/{team.Id}/memberships/{nonExistentId}", request);
+
+            response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        }
+
+        [Fact]
+        public async Task DeleteMembership_WithoutAuth_ReturnsUnauthorized()
+        {
+            var orgId = Guid.NewGuid();
+            var teamId = Guid.NewGuid();
+            var membershipId = Guid.NewGuid();
+
+            var response = await _client.DeleteAsync($"/api/v1/organizations/{orgId}/teams/{teamId}/memberships/{membershipId}");
+
+            response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        }
+
+        [Fact]
+        public async Task DeleteMembership_NotTeamAdmin_ReturnsForbidden()
+        {
+            var (_, user1) = await CreateAuthenticatedClientAsync("user1@example.com");
+            var org = await CreateTestOrganizationAsync(user1.Id);
+            var team = await CreateTestGroupAsync(org.Id, "Team Alpha");
+            await AddUserToGroupAsync(user1.Id, team.Id, "admin");
+
+            var (client2, user2) = await CreateAuthenticatedClientAsync("user2@example.com");
+            await AddUserToOrganizationAsync(user2.Id, org.Id, "member");
+            await AddUserToGroupAsync(user2.Id, team.Id, "member");
+
+            var (_, user3) = await CreateAuthenticatedClientAsync("user3@example.com");
+            await AddUserToOrganizationAsync(user3.Id, org.Id, "member");
+            await AddUserToGroupAsync(user3.Id, team.Id, "member");
+
+            var membership = await GetUserGroupMembershipAsync(user3.Id, team.Id);
+
+            var response = await client2.DeleteAsync($"/api/v1/organizations/{org.Id}/teams/{team.Id}/memberships/{membership!.Id}");
+
+            response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        }
+
+        [Fact]
+        public async Task DeleteMembership_ValidRequest_ReturnsNoContent()
+        {
+            var (client, user1) = await CreateAuthenticatedClientAsync("user1@example.com");
+            var org = await CreateTestOrganizationAsync(user1.Id);
+            var team = await CreateTestGroupAsync(org.Id, "Team Alpha");
+            await AddUserToGroupAsync(user1.Id, team.Id, "admin");
+
+            var (_, user2) = await CreateAuthenticatedClientAsync("user2@example.com");
+            await AddUserToOrganizationAsync(user2.Id, org.Id, "member");
+            await AddUserToGroupAsync(user2.Id, team.Id, "member");
+
+            var membership = await GetUserGroupMembershipAsync(user2.Id, team.Id);
+
+            var response = await client.DeleteAsync($"/api/v1/organizations/{org.Id}/teams/{team.Id}/memberships/{membership!.Id}");
+
+            response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+            var deletedMembership = await GetUserGroupMembershipAsync(user2.Id, team.Id);
+            deletedMembership.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task DeleteMembership_RemoveSelf_ReturnsNoContent()
+        {
+            var (_, user1) = await CreateAuthenticatedClientAsync("user1@example.com");
+            var org = await CreateTestOrganizationAsync(user1.Id);
+            var team = await CreateTestGroupAsync(org.Id, "Team Alpha");
+            await AddUserToGroupAsync(user1.Id, team.Id, "admin");
+
+            var (client2, user2) = await CreateAuthenticatedClientAsync("user2@example.com");
+            await AddUserToOrganizationAsync(user2.Id, org.Id, "member");
+            await AddUserToGroupAsync(user2.Id, team.Id, "member");
+
+            var membership = await GetUserGroupMembershipAsync(user2.Id, team.Id);
+
+            var response = await client2.DeleteAsync($"/api/v1/organizations/{org.Id}/teams/{team.Id}/memberships/{membership!.Id}");
+
+            response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+            var deletedMembership = await GetUserGroupMembershipAsync(user2.Id, team.Id);
+            deletedMembership.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task DeleteMembership_NotFound_ReturnsNotFound()
+        {
+            var (client, user1) = await CreateAuthenticatedClientAsync("user1@example.com");
+            var org = await CreateTestOrganizationAsync(user1.Id);
+            var team = await CreateTestGroupAsync(org.Id, "Team Alpha");
+            await AddUserToGroupAsync(user1.Id, team.Id, "admin");
+
+            var nonExistentId = Guid.NewGuid();
+
+            var response = await client.DeleteAsync($"/api/v1/organizations/{org.Id}/teams/{team.Id}/memberships/{nonExistentId}");
+
+            response.StatusCode.Should().Be(HttpStatusCode.NotFound);
         }
 
         private async Task<(HttpClient Client, User User)> CreateAuthenticatedClientAsync(string email = "test@example.com")

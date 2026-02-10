@@ -21,6 +21,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
     /// Integration tests for GitHub OAuth authentication flow.
     /// Tests device flow, token refresh, and user creation scenarios.
     /// </summary>
+    [Collection("Integration")]
     public class GitHubAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFactory>
     {
         private readonly SynaxisWebApplicationFactory _factory;

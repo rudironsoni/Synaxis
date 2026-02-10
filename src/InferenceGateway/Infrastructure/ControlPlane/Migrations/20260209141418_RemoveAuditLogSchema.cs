@@ -15,9 +15,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "AuditLogs",
-                schema: "audit");
         }
 
         /// <inheritdoc />

@@ -45,7 +45,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the team description.
         /// </summary>
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets a value indicating whether the team is active.
@@ -65,12 +65,12 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the allowed models (NULL = inherit from org).
         /// </summary>
-        public IList<string> AllowedModels { get; set; }
+        public IList<string> AllowedModels { get; set; } = new List<string>();
 
         /// <summary>
         /// Gets or sets the blocked models.
         /// </summary>
-        public IList<string> BlockedModels { get; set; }
+        public IList<string> BlockedModels { get; set; } = new List<string>();
 
         /// <summary>
         /// Gets or sets the creation timestamp.

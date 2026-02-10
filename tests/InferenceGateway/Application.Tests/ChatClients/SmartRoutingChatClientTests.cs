@@ -82,14 +82,14 @@ public sealed class SmartRoutingChatClientTests : TestBase, IDisposable
                 async (modelId, streaming, preferredKey, operation, tenantId, userId, ct) =>
                 {
                     ct.ThrowIfCancellationRequested();
-                    
+
                     var candidates = await this._smartRouterMock.Object.GetCandidatesAsync(modelId, streaming, ct).ConfigureAwait(false);
                     var exceptions = new List<Exception>();
-                    
+
                     foreach (var candidate in candidates)
                     {
                         ct.ThrowIfCancellationRequested();
-                        
+
                         var isHealthy = await this._quotaTrackerMock.Object.IsHealthyAsync(candidate.Key, ct).ConfigureAwait(false);
                         if (isHealthy)
                         {
@@ -120,14 +120,14 @@ public sealed class SmartRoutingChatClientTests : TestBase, IDisposable
                 async (modelId, streaming, preferredKey, operation, tenantId, userId, ct) =>
                 {
                     ct.ThrowIfCancellationRequested();
-                    
+
                     var candidates = await this._smartRouterMock.Object.GetCandidatesAsync(modelId, streaming, ct).ConfigureAwait(false);
                     var exceptions = new List<Exception>();
-                    
+
                     foreach (var candidate in candidates)
                     {
                         ct.ThrowIfCancellationRequested();
-                        
+
                         var isHealthy = await this._quotaTrackerMock.Object.IsHealthyAsync(candidate.Key, ct).ConfigureAwait(false);
                         if (isHealthy)
                         {

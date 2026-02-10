@@ -327,7 +327,7 @@ public class RedisInFlightDeduplicationTests
                 requestHash,
                 operation,
                 lockTimeout,
-                _cancellationToken).ConfigureAwait(false);
+                this._cancellationToken).ConfigureAwait(false);
         });
 
         // Assert - Lock should be released even on failure
@@ -376,7 +376,7 @@ public class RedisInFlightDeduplicationTests
                 requestHash,
                 operation,
                 lockTimeout,
-                _cancellationToken).ConfigureAwait(false);
+                this._cancellationToken).ConfigureAwait(false);
         });
 
         Assert.Equal("Invalid argument", exception.Message);

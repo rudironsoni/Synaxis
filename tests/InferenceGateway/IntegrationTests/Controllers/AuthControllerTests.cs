@@ -18,6 +18,7 @@ using Xunit.Abstractions;
 
 namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
 {
+    [Collection("Integration")]
     public class AuthControllerTests : IClassFixture<SynaxisWebApplicationFactory>
     {
         private readonly SynaxisWebApplicationFactory _factory;
@@ -270,6 +271,197 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
 
             // Assert that the test executed (satisfies S2699)
             Assert.True(true, "Test completed successfully");
+        }
+
+        // MFA Tests
+        [Fact]
+        public async Task MfaSetup_AuthenticatedUser_ReturnsSecretAndQrCode()
+        {
+            // Arrange: Login first
+            var email = $"mfa_setup_{Guid.NewGuid()}@example.com";
+            var loginResponse = await this._client.PostAsJsonAsync("/auth/dev-login", new { Email = email });
+            loginResponse.EnsureSuccessStatusCode();
+            var loginContent = await loginResponse.Content.ReadFromJsonAsync<JsonElement>();
+            var token = loginContent.GetProperty("token").GetString();
+
+            // Add auth token to request
+            this._client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            // Act: Call MFA setup endpoint
+            var response = await this._client.PostAsync("/api/v1/auth/mfa/setup", null);
+
+            // Assert
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadFromJsonAsync<JsonElement>();
+
+            Assert.True(content.TryGetProperty("secret", out var secret));
+            Assert.False(string.IsNullOrEmpty(secret.GetString()));
+
+            Assert.True(content.TryGetProperty("qrCodeUri", out var qrCode));
+            Assert.False(string.IsNullOrEmpty(qrCode.GetString()));
+            Assert.Contains("otpauth://totp/", qrCode.GetString()!, StringComparison.Ordinal);
+        }
+
+        [Fact]
+        public async Task MfaEnable_WithValidCode_EnablesMfa()
+        {
+            // Arrange: Setup MFA first
+            var email = $"mfa_enable_{Guid.NewGuid()}@example.com";
+            var loginResponse = await this._client.PostAsJsonAsync("/auth/dev-login", new { Email = email });
+            loginResponse.EnsureSuccessStatusCode();
+            var loginContent = await loginResponse.Content.ReadFromJsonAsync<JsonElement>();
+            var token = loginContent.GetProperty("token").GetString();
+
+            this._client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var setupResponse = await this._client.PostAsync("/api/v1/auth/mfa/setup", null);
+            setupResponse.EnsureSuccessStatusCode();
+            var setupContent = await setupResponse.Content.ReadFromJsonAsync<JsonElement>();
+            var secret = setupContent.GetProperty("secret").GetString();
+
+            // Generate valid TOTP code
+            var totp = new OtpNet.Totp(Convert.FromBase64String(secret!));
+            var code = totp.ComputeTotp();
+
+            // Act: Enable MFA
+            var enableResponse = await this._client.PostAsJsonAsync("/api/v1/auth/mfa/enable", new { code });
+
+            // Assert
+            enableResponse.EnsureSuccessStatusCode();
+            var enableContent = await enableResponse.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.True(enableContent.GetProperty("success").GetBoolean());
+
+            // Verify MFA is enabled in database
+            var scope = this._factory.Services.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<SynaxisDbContext>();
+            var user = await dbContext.Users.FirstAsync(u => u.Email == email);
+            Assert.True(user.MfaEnabled);
+        }
+
+        [Fact]
+        public async Task MfaEnable_WithInvalidCode_ReturnsBadRequest()
+        {
+            // Arrange
+            var email = $"mfa_invalid_{Guid.NewGuid()}@example.com";
+            var loginResponse = await this._client.PostAsJsonAsync("/auth/dev-login", new { Email = email });
+            loginResponse.EnsureSuccessStatusCode();
+            var loginContent = await loginResponse.Content.ReadFromJsonAsync<JsonElement>();
+            var token = loginContent.GetProperty("token").GetString();
+
+            this._client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            await this._client.PostAsync("/api/v1/auth/mfa/setup", null);
+
+            // Act: Try to enable with invalid code
+            var response = await this._client.PostAsJsonAsync("/api/v1/auth/mfa/enable", new { code = "000000" });
+
+            // Assert
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task MfaDisable_AuthenticatedUser_DisablesMfa()
+        {
+            // Arrange: Enable MFA first
+            var email = $"mfa_disable_{Guid.NewGuid()}@example.com";
+            var loginResponse = await this._client.PostAsJsonAsync("/auth/dev-login", new { Email = email });
+            loginResponse.EnsureSuccessStatusCode();
+            var loginContent = await loginResponse.Content.ReadFromJsonAsync<JsonElement>();
+            var token = loginContent.GetProperty("token").GetString();
+
+            this._client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var setupResponse = await this._client.PostAsync("/api/v1/auth/mfa/setup", null);
+            var setupContent = await setupResponse.Content.ReadFromJsonAsync<JsonElement>();
+            var secret = setupContent.GetProperty("secret").GetString();
+
+            var totp = new OtpNet.Totp(Convert.FromBase64String(secret!));
+            var code = totp.ComputeTotp();
+
+            await this._client.PostAsJsonAsync("/api/v1/auth/mfa/enable", new { code });
+
+            // Act: Disable MFA
+            var response = await this._client.PostAsync("/api/v1/auth/mfa/disable", null);
+
+            // Assert
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.True(content.GetProperty("success").GetBoolean());
+
+            // Verify MFA is disabled in database
+            var scope = this._factory.Services.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<SynaxisDbContext>();
+            var user = await dbContext.Users.FirstAsync(u => u.Email == email);
+            Assert.False(user.MfaEnabled);
+        }
+
+        [Fact]
+        public async Task LoginMfa_WithValidCode_ReturnsToken()
+        {
+            // Arrange: Enable MFA first
+            var email = $"mfa_login_{Guid.NewGuid()}@example.com";
+            var password = "TestPassword123!";
+
+            // Register user with password
+            await this._client.PostAsJsonAsync("/auth/register", new { Email = email, Password = password });
+
+            // Login to get token
+            var loginResponse = await this._client.PostAsJsonAsync("/auth/login", new { Email = email, Password = password });
+            loginResponse.EnsureSuccessStatusCode();
+            var loginContent = await loginResponse.Content.ReadFromJsonAsync<JsonElement>();
+            var token = loginContent.GetProperty("token").GetString();
+
+            this._client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            // Setup and enable MFA
+            var setupResponse = await this._client.PostAsync("/api/v1/auth/mfa/setup", null);
+            var setupContent = await setupResponse.Content.ReadFromJsonAsync<JsonElement>();
+            var secret = setupContent.GetProperty("secret").GetString();
+
+            var totp = new OtpNet.Totp(Convert.FromBase64String(secret!));
+            var enableCode = totp.ComputeTotp();
+            await this._client.PostAsJsonAsync("/api/v1/auth/mfa/enable", new { code = enableCode });
+
+            // Clear auth header
+            this._client.DefaultRequestHeaders.Authorization = null;
+
+            // Act: Login with MFA
+            var mfaCode = totp.ComputeTotp();
+            var response = await this._client.PostAsJsonAsync("/api/v1/auth/login/mfa", new { Email = email, Password = password, Code = mfaCode });
+
+            // Assert
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.True(content.TryGetProperty("token", out var mfaToken));
+            Assert.False(string.IsNullOrEmpty(mfaToken.GetString()));
+        }
+
+        [Fact]
+        public async Task ResendVerification_ExistingUser_ReturnsSuccess()
+        {
+            // Arrange: Register a user
+            var email = $"resend_{Guid.NewGuid()}@example.com";
+            await this._client.PostAsJsonAsync("/auth/register", new { Email = email, Password = "Test123!" });
+
+            // Act: Resend verification
+            var response = await this._client.PostAsJsonAsync("/api/v1/auth/resend-verification", new { Email = email });
+
+            // Assert
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.True(content.GetProperty("success").GetBoolean());
+        }
+
+        [Fact]
+        public async Task ResendVerification_NonExistentUser_ReturnsSuccess()
+        {
+            // Act: Try to resend for non-existent user (should not reveal user existence)
+            var response = await this._client.PostAsJsonAsync("/api/v1/auth/resend-verification", new { Email = "nonexistent@example.com" });
+
+            // Assert: Always returns success to prevent email enumeration
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.True(content.GetProperty("success").GetBoolean());
         }
     }
 }

@@ -46,7 +46,7 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
-        await _dbContext.DisposeAsync().ConfigureAwait(false);
+        await this._dbContext.DisposeAsync().ConfigureAwait(false);
     }
 
     [Fact]

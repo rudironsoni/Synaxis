@@ -18,6 +18,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
     using Xunit;
     using Xunit.Abstractions;
 
+    [Collection("Integration")]
     public class AntigravityEndpointTests : IClassFixture<SynaxisWebApplicationFactory>
     {
         private readonly SynaxisWebApplicationFactory _factory;

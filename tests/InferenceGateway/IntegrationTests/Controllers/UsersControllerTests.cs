@@ -18,6 +18,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
     using Xunit.Abstractions;
 
     [Trait("Category", "Integration")]
+    [Collection("Integration")]
     public class UsersControllerTests : IClassFixture<SynaxisWebApplicationFactory>
     {
         private readonly SynaxisWebApplicationFactory _factory;

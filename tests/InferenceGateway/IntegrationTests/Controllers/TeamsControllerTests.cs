@@ -16,6 +16,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
     using Xunit.Abstractions;
 
     [Trait("Category", "Integration")]
+    [Collection("Integration")]
     public class TeamsControllerTests : IClassFixture<SynaxisWebApplicationFactory>
     {
         private readonly SynaxisWebApplicationFactory _factory;

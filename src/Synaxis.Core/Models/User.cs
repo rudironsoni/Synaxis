@@ -63,18 +63,18 @@ namespace Synaxis.Core.Models
         /// Gets or sets the first name.
         /// </summary>
         [StringLength(100)]
-        public string FirstName { get; set; }
+        public string FirstName { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the last name.
         /// </summary>
         [StringLength(100)]
-        public string LastName { get; set; }
+        public string LastName { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the avatar URL.
         /// </summary>
-        public string AvatarUrl { get; set; }
+        public string AvatarUrl { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the timezone.

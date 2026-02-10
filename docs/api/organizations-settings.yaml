@@ -1,0 +1,177 @@
+openapi: 3.0.3
+info:
+  title: Synaxis Organizations API
+  description: API for managing organization settings
+  version: 1.0.0
+  contact:
+    name: Synaxis Team
+    email: support@synaxis.io
+
+servers:
+  - url: https://api.synaxis.io
+    description: Production server
+  - url: http://localhost:5000
+    description: Local development server
+
+paths:
+  /api/v1/organizations/{id}/settings:
+    get:
+      summary: Get organization settings
+      description: Retrieves the settings for a specific organization. The authenticated user must be a member of the organization to access its settings.
+      operationId: getOrganizationSettings
+      tags:
+        - Organizations
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The unique identifier of the organization
+          schema:
+            type: string
+            format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        '200':
+          description: Successfully retrieved organization settings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationSettingsResponse'
+              examples:
+                free-tier:
+                  summary: Free tier organization with minimal settings
+                  value:
+                    tier: "free"
+                    dataRetentionDays: 30
+                    requireSso: false
+                    allowedEmailDomains: []
+                    availableRegions: []
+                    privacyConsent: {}
+                enterprise-tier:
+                  summary: Enterprise tier organization with full settings
+                  value:
+                    tier: "enterprise"
+                    dataRetentionDays: 90
+                    requireSso: true
+                    allowedEmailDomains:
+                      - "example.com"
+                      - "company.com"
+                    availableRegions:
+                      - "us-east-1"
+                      - "eu-west-1"
+                      - "ap-southeast-1"
+                    privacyConsent:
+                      dataProcessing: true
+                      marketing: false
+                      analytics: true
+        '401':
+          description: Unauthorized - Invalid or missing authentication token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Unauthorized"
+                message: "Authentication required"
+        '403':
+          description: Forbidden - User is not a member of the organization
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Forbidden"
+                message: "You do not have access to this organization"
+        '404':
+          description: Not Found - Organization does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Not Found"
+                message: "Organization not found"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from authentication endpoint
+
+  schemas:
+    OrganizationSettingsResponse:
+      type: object
+      required:
+        - tier
+        - dataRetentionDays
+        - requireSso
+        - allowedEmailDomains
+        - availableRegions
+        - privacyConsent
+      properties:
+        tier:
+          type: string
+          description: The subscription tier of the organization
+          enum:
+            - free
+            - pro
+            - enterprise
+          example: "free"
+        dataRetentionDays:
+          type: integer
+          description: Number of days to retain data
+          minimum: 1
+          maximum: 365
+          example: 30
+        requireSso:
+          type: boolean
+          description: Whether Single Sign-On is required for organization members
+          example: false
+        allowedEmailDomains:
+          type: array
+          description: List of email domains allowed for organization members
+          items:
+            type: string
+            format: hostname
+          example:
+            - "example.com"
+            - "company.com"
+        availableRegions:
+          type: array
+          description: List of available geographic regions for the organization
+          items:
+            type: string
+          example:
+            - "us-east-1"
+            - "eu-west-1"
+        privacyConsent:
+          type: object
+          description: Privacy consent settings for the organization
+          additionalProperties: true
+          example:
+            dataProcessing: true
+            marketing: false
+            analytics: true
+
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error type
+          example: "Not Found"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Organization not found"
+
+tags:
+  - name: Organizations
+    description: Operations related to organization management

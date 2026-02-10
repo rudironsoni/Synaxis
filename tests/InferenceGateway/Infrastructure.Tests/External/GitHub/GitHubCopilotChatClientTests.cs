@@ -112,7 +112,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.External.GitHub
             }
         }
 
-        private class DisposableAction : IDisposable
+        private sealed class DisposableAction : IDisposable
         {
             public void Dispose()
             {

@@ -61,13 +61,13 @@ namespace Synaxis.Core.Models
         /// Gets or sets the model used for the request.
         /// </summary>
         [StringLength(100)]
-        public string Model { get; set; }
+        public string Model { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the provider name.
         /// </summary>
         [StringLength(100)]
-        public string Provider { get; set; }
+        public string Provider { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the number of tokens used.
@@ -78,7 +78,7 @@ namespace Synaxis.Core.Models
         /// Gets or sets the region where the spend occurred.
         /// </summary>
         [StringLength(50)]
-        public string Region { get; set; }
+        public string Region { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the creation timestamp.

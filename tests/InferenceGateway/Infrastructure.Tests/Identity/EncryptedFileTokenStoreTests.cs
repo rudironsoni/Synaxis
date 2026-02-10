@@ -14,7 +14,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
     using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
     using Xunit;
 
-    public class EncryptedFileTokenStoreTests : IDisposable
+    public sealed class EncryptedFileTokenStoreTests : IDisposable
     {
         private readonly string _tmpPath;
 
