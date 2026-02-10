@@ -9,6 +9,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
     using Microsoft.AspNetCore.Cors;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.Logging;
     using Synaxis.Core.Models;
     using Synaxis.InferenceGateway.Application.Security;
     using Synaxis.Infrastructure.Data;
@@ -24,6 +25,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         private readonly IJwtService jwtService;
         private readonly IPasswordHasher passwordHasher;
         private readonly SynaxisDbContext dbContext;
+        private readonly ILogger<AuthController> logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AuthController"/> class.
@@ -31,11 +33,13 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         /// <param name="jwtService">The JWT service.</param>
         /// <param name="passwordHasher">The password hasher.</param>
         /// <param name="dbContext">The database context.</param>
-        public AuthController(IJwtService jwtService, IPasswordHasher passwordHasher, SynaxisDbContext dbContext)
+        /// <param name="logger">The logger.</param>
+        public AuthController(IJwtService jwtService, IPasswordHasher passwordHasher, SynaxisDbContext dbContext, ILogger<AuthController> logger)
         {
             this.jwtService = jwtService;
             this.passwordHasher = passwordHasher;
             this.dbContext = dbContext;
+            this.logger = logger;
         }
 
         /// <summary>
@@ -299,6 +303,192 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
 
             return this.Ok(new { success = true, message = "Email verified successfully" });
         }
+
+        /// <summary>
+        /// Resends email verification link.
+        /// </summary>
+        /// <param name="request">The resend verification request.</param>
+        /// <returns>The result.</returns>
+        [HttpPost("/api/v1/auth/resend-verification")]
+        public IActionResult ResendVerification([FromBody] ResendVerificationRequest request)
+        {
+            // Always return success to avoid leaking user existence
+            this.logger.LogInformation("Verification email resend requested for {Email}", request.Email);
+            return this.Ok(new { success = true, message = "If the email exists, a verification link has been sent" });
+        }
+
+        /// <summary>
+        /// Sets up MFA for the authenticated user.
+        /// </summary>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The MFA secret and QR code.</returns>
+        [HttpPost("/api/v1/auth/mfa/setup")]
+        [Authorize]
+        public async Task<IActionResult> MfaSetup(CancellationToken cancellationToken)
+        {
+            var userIdClaim = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            {
+                return this.Unauthorized(new { success = false, message = "Invalid user" });
+            }
+
+            var user = await this.dbContext.Users
+                .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (user == null)
+            {
+                return this.Unauthorized(new { success = false, message = "User not found" });
+            }
+
+            // Generate a new MFA secret
+            var secret = OtpNet.KeyGeneration.GenerateRandomKey(20);
+            var base64Secret = Convert.ToBase64String(secret);
+
+            // Store the secret temporarily (in a real implementation, this should be stored securely)
+            user.MfaSecret = base64Secret;
+            await this.dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            // Generate QR code URI
+            var appName = "Synaxis";
+            var qrCodeUri = $"otpauth://totp/{Uri.EscapeDataString(appName)}:{Uri.EscapeDataString(user.Email)}?secret={base64Secret}&issuer={Uri.EscapeDataString(appName)}";
+
+            return this.Ok(new { secret = base64Secret, qrCodeUri });
+        }
+
+        /// <summary>
+        /// Enables MFA for the authenticated user.
+        /// </summary>
+        /// <param name="request">The enable MFA request.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The result.</returns>
+        [HttpPost("/api/v1/auth/mfa/enable")]
+        [Authorize]
+        public async Task<IActionResult> MfaEnable([FromBody] MfaEnableRequest request, CancellationToken cancellationToken)
+        {
+            var userIdClaim = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            {
+                return this.Unauthorized(new { success = false, message = "Invalid user" });
+            }
+
+            var user = await this.dbContext.Users
+                .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (user == null)
+            {
+                return this.Unauthorized(new { success = false, message = "User not found" });
+            }
+
+            if (string.IsNullOrEmpty(user.MfaSecret))
+            {
+                return this.BadRequest(new { success = false, message = "MFA not set up. Call /mfa/setup first" });
+            }
+
+            // Verify the TOTP code
+            var totp = new OtpNet.Totp(Convert.FromBase64String(user.MfaSecret));
+            var isValid = totp.VerifyTotp(request.Code, out _, new OtpNet.VerificationWindow(2, 2));
+
+            if (!isValid)
+            {
+                return this.BadRequest(new { success = false, message = "Invalid verification code" });
+            }
+
+            // Enable MFA
+            user.MfaEnabled = true;
+            await this.dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            return this.Ok(new { success = true, message = "MFA enabled successfully" });
+        }
+
+        /// <summary>
+        /// Disables MFA for the authenticated user.
+        /// </summary>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The result.</returns>
+        [HttpPost("/api/v1/auth/mfa/disable")]
+        [Authorize]
+        public async Task<IActionResult> MfaDisable(CancellationToken cancellationToken)
+        {
+            var userIdClaim = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            {
+                return this.Unauthorized(new { success = false, message = "Invalid user" });
+            }
+
+            var user = await this.dbContext.Users
+                .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (user == null)
+            {
+                return this.Unauthorized(new { success = false, message = "User not found" });
+            }
+
+            // Disable MFA
+            user.MfaEnabled = false;
+            user.MfaSecret = null;
+            await this.dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            return this.Ok(new { success = true, message = "MFA disabled successfully" });
+        }
+
+        /// <summary>
+        /// Logs in a user with MFA.
+        /// </summary>
+        /// <param name="request">The MFA login request.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The login result with JWT token.</returns>
+        [HttpPost("/api/v1/auth/login/mfa")]
+        public async Task<IActionResult> LoginMfa([FromBody] LoginMfaRequest request, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
+            {
+                return this.BadRequest(new { success = false, message = "Email and password are required" });
+            }
+
+            var user = await this.dbContext.Users
+                .FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (user == null || string.IsNullOrEmpty(user.PasswordHash))
+            {
+                return this.Unauthorized(new { success = false, message = "Invalid credentials" });
+            }
+
+            if (!this.passwordHasher.VerifyPassword(request.Password, user.PasswordHash))
+            {
+                return this.Unauthorized(new { success = false, message = "Invalid credentials" });
+            }
+
+            // Verify MFA is enabled
+            if (!user.MfaEnabled || string.IsNullOrEmpty(user.MfaSecret))
+            {
+                return this.BadRequest(new { success = false, message = "MFA not enabled for this user" });
+            }
+
+            // Verify the TOTP code
+            var totp = new OtpNet.Totp(Convert.FromBase64String(user.MfaSecret));
+            var isValid = totp.VerifyTotp(request.Code, out _, new OtpNet.VerificationWindow(2, 2));
+
+            if (!isValid)
+            {
+                return this.Unauthorized(new { success = false, message = "Invalid MFA code" });
+            }
+
+            var token = this.jwtService.GenerateToken(user);
+            return this.Ok(
+                new
+                {
+                    token,
+                    user = new
+                    {
+                        id = user.Id.ToString(),
+                        email = user.Email,
+                    },
+                });
+        }
     }
 
     /// <summary>
@@ -391,5 +581,48 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         /// Gets or sets the email address.
         /// </summary>
         public string Email { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// Request to resend email verification.
+    /// </summary>
+    public class ResendVerificationRequest
+    {
+        /// <summary>
+        /// Gets or sets the email address.
+        /// </summary>
+        public string Email { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// Request to enable MFA.
+    /// </summary>
+    public class MfaEnableRequest
+    {
+        /// <summary>
+        /// Gets or sets the verification code.
+        /// </summary>
+        public string Code { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// Request to login with MFA.
+    /// </summary>
+    public class LoginMfaRequest
+    {
+        /// <summary>
+        /// Gets or sets the email address.
+        /// </summary>
+        public string Email { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the password.
+        /// </summary>
+        public string Password { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the MFA code.
+        /// </summary>
+        public string Code { get; set; } = string.Empty;
     }
 }

@@ -55,6 +55,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<ISuperAdminService, SuperAdminService>();
 builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 
 // Configure HTTP clients for cross-region communication
 builder.Services.AddHttpClient("eu-west-1", client =>

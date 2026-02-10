@@ -311,9 +311,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var token1 = jwtService.GenerateToken(user);
             var token2 = jwtService.GenerateToken(user);
 
-            // JWT tokens for the same user should be identical because they don't include a jti (JWT ID) by default
-            // This is expected behavior - the tokens should be deterministic for the same input
-            Assert.Equal(token1, token2);
+            // JWT tokens for the same user should be different because they include a unique jti (JWT ID) claim
+            // This is expected behavior - each token should be unique even for the same user
+            Assert.NotEqual(token1, token2);
         }
 
         [Fact]

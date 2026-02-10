@@ -101,6 +101,7 @@ try
     // 1. Add Services
     builder.Services.AddHttpClient();
     builder.Services.AddHttpContextAccessor();
+    builder.Services.AddScoped<Synaxis.InferenceGateway.Application.Interfaces.IOrganizationUserContext, Synaxis.InferenceGateway.Infrastructure.Auth.OrganizationUserContext>();
     builder.Services.AddControlPlane(builder.Configuration);
     builder.Services.AddSynaxisInfrastructure(builder.Configuration);
     builder.Services.AddSynaxisApplication(builder.Configuration);

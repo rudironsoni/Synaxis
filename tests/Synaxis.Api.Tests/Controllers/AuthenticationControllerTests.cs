@@ -1,0 +1,404 @@
+// <copyright file="AuthenticationControllerTests.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
+using FluentAssertions;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Moq;
+using Synaxis.Api.Controllers;
+using Synaxis.Api.DTOs.Authentication;
+using Synaxis.Core.Contracts;
+using Synaxis.Core.Models;
+using Synaxis.Infrastructure.Data;
+using System;
+using System.Threading.Tasks;
+using Xunit;
+
+namespace Synaxis.Api.Tests.Controllers
+{
+    public class AuthenticationControllerTests
+    {
+        private readonly Mock<IAuthenticationService> _mockAuthService;
+        private readonly Mock<IConfiguration> _mockConfiguration;
+        private readonly AuthenticationController _controller;
+
+        public AuthenticationControllerTests()
+        {
+            _mockAuthService = new Mock<IAuthenticationService>();
+            _mockConfiguration = new Mock<IConfiguration>();
+            _controller = new AuthenticationController(_mockAuthService.Object, _mockConfiguration.Object);
+        }
+
+        [Fact]
+        public async Task Register_ValidRequest_ReturnsOkWithTokens()
+        {
+            // Arrange
+            var request = new RegisterRequest
+            {
+                Email = "test@example.com",
+                Password = "SecurePassword123!",
+                FirstName = "John",
+                LastName = "Doe",
+                OrganizationName = "Test Org",
+                DataResidencyRegion = "eu-west-1"
+            };
+
+            var authResult = new AuthenticationResult
+            {
+                Success = true,
+                AccessToken = "access_token",
+                RefreshToken = "refresh_token",
+                ExpiresIn = 3600,
+                User = new UserDto
+                {
+                    Id = Guid.NewGuid(),
+                    Email = request.Email,
+                    FirstName = request.FirstName,
+                    LastName = request.LastName
+                }
+            };
+
+            _mockAuthService
+                .Setup(s => s.RegisterAsync(It.IsAny<RegisterRequest>()))
+                .ReturnsAsync(authResult);
+
+            // Act
+            var result = await _controller.Register(request);
+
+            // Assert
+            result.Should().BeOfType<OkObjectResult>();
+            var okResult = result as OkObjectResult;
+            okResult.Value.Should().BeEquivalentTo(authResult);
+            _mockAuthService.Verify(s => s.RegisterAsync(request), Times.Once);
+        }
+
+        [Fact]
+        public async Task Register_InvalidRequest_ReturnsBadRequest()
+        {
+            // Arrange
+            var request = new RegisterRequest
+            {
+                Email = "invalid-email",
+                Password = "weak"
+            };
+
+            var authResult = new AuthenticationResult
+            {
+                Success = false,
+                ErrorMessage = "Invalid email format"
+            };
+
+            _mockAuthService
+                .Setup(s => s.RegisterAsync(It.IsAny<RegisterRequest>()))
+                .ReturnsAsync(authResult);
+
+            // Act
+            var result = await _controller.Register(request);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>();
+        }
+
+        [Fact]
+        public async Task Register_DuplicateEmail_ReturnsConflict()
+        {
+            // Arrange
+            var request = new RegisterRequest
+            {
+                Email = "existing@example.com",
+                Password = "SecurePassword123!",
+                FirstName = "Jane",
+                LastName = "Doe",
+                OrganizationName = "Test Org",
+                DataResidencyRegion = "eu-west-1"
+            };
+
+            var authResult = new AuthenticationResult
+            {
+                Success = false,
+                ErrorMessage = "Email already registered"
+            };
+
+            _mockAuthService
+                .Setup(s => s.RegisterAsync(It.IsAny<RegisterRequest>()))
+                .ReturnsAsync(authResult);
+
+            // Act
+            var result = await _controller.Register(request);
+
+            // Assert
+            result.Should().BeOfType<ConflictObjectResult>();
+        }
+
+        [Fact]
+        public async Task Login_ValidCredentials_ReturnsOkWithTokens()
+        {
+            // Arrange
+            var request = new LoginRequest
+            {
+                Email = "test@example.com",
+                Password = "SecurePassword123!"
+            };
+
+            var authResult = new AuthenticationResult
+            {
+                Success = true,
+                AccessToken = "access_token",
+                RefreshToken = "refresh_token",
+                ExpiresIn = 3600,
+                User = new UserDto
+                {
+                    Id = Guid.NewGuid(),
+                    Email = request.Email
+                }
+            };
+
+            _mockAuthService
+                .Setup(s => s.LoginAsync(It.IsAny<LoginRequest>()))
+                .ReturnsAsync(authResult);
+
+            // Act
+            var result = await _controller.Login(request);
+
+            // Assert
+            result.Should().BeOfType<OkObjectResult>();
+            var okResult = result as OkObjectResult;
+            okResult.Value.Should().BeEquivalentTo(authResult);
+        }
+
+        [Fact]
+        public async Task Login_InvalidCredentials_ReturnsUnauthorized()
+        {
+            // Arrange
+            var request = new LoginRequest
+            {
+                Email = "test@example.com",
+                Password = "WrongPassword"
+            };
+
+            var authResult = new AuthenticationResult
+            {
+                Success = false,
+                ErrorMessage = "Invalid credentials"
+            };
+
+            _mockAuthService
+                .Setup(s => s.LoginAsync(It.IsAny<LoginRequest>()))
+                .ReturnsAsync(authResult);
+
+            // Act
+            var result = await _controller.Login(request);
+
+            // Assert
+            result.Should().BeOfType<UnauthorizedObjectResult>();
+        }
+
+        [Fact]
+        public async Task Login_LockedAccount_ReturnsUnauthorized()
+        {
+            // Arrange
+            var request = new LoginRequest
+            {
+                Email = "locked@example.com",
+                Password = "SecurePassword123!"
+            };
+
+            var authResult = new AuthenticationResult
+            {
+                Success = false,
+                ErrorMessage = "Account is locked until 2026-02-10 12:00:00"
+            };
+
+            _mockAuthService
+                .Setup(s => s.LoginAsync(It.IsAny<LoginRequest>()))
+                .ReturnsAsync(authResult);
+
+            // Act
+            var result = await _controller.Login(request);
+
+            // Assert
+            result.Should().BeOfType<UnauthorizedObjectResult>();
+        }
+
+        [Fact]
+        public async Task Logout_ValidToken_ReturnsOk()
+        {
+            // Arrange
+            var request = new LogoutRequest
+            {
+                RefreshToken = "valid_refresh_token"
+            };
+
+            _mockAuthService
+                .Setup(s => s.LogoutAsync(It.IsAny<string>()))
+                .ReturnsAsync(true);
+
+            // Act
+            var result = await _controller.Logout(request);
+
+            // Assert
+            result.Should().BeOfType<OkObjectResult>();
+        }
+
+        [Fact]
+        public async Task RefreshToken_ValidToken_ReturnsNewTokens()
+        {
+            // Arrange
+            var request = new RefreshTokenRequest
+            {
+                RefreshToken = "valid_refresh_token"
+            };
+
+            var authResult = new AuthenticationResult
+            {
+                Success = true,
+                AccessToken = "new_access_token",
+                RefreshToken = "new_refresh_token",
+                ExpiresIn = 3600
+            };
+
+            _mockAuthService
+                .Setup(s => s.RefreshTokenAsync(It.IsAny<string>()))
+                .ReturnsAsync(authResult);
+
+            // Act
+            var result = await _controller.RefreshToken(request);
+
+            // Assert
+            result.Should().BeOfType<OkObjectResult>();
+            var okResult = result as OkObjectResult;
+            okResult.Value.Should().BeEquivalentTo(authResult);
+        }
+
+        [Fact]
+        public async Task RefreshToken_InvalidToken_ReturnsUnauthorized()
+        {
+            // Arrange
+            var request = new RefreshTokenRequest
+            {
+                RefreshToken = "invalid_refresh_token"
+            };
+
+            var authResult = new AuthenticationResult
+            {
+                Success = false,
+                ErrorMessage = "Invalid refresh token"
+            };
+
+            _mockAuthService
+                .Setup(s => s.RefreshTokenAsync(It.IsAny<string>()))
+                .ReturnsAsync(authResult);
+
+            // Act
+            var result = await _controller.RefreshToken(request);
+
+            // Assert
+            result.Should().BeOfType<UnauthorizedObjectResult>();
+        }
+
+        [Fact]
+        public async Task ForgotPassword_ValidEmail_ReturnsOk()
+        {
+            // Arrange
+            var request = new ForgotPasswordRequest
+            {
+                Email = "test@example.com"
+            };
+
+            _mockAuthService
+                .Setup(s => s.ForgotPasswordAsync(It.IsAny<string>()))
+                .ReturnsAsync(true);
+
+            // Act
+            var result = await _controller.ForgotPassword(request);
+
+            // Assert
+            result.Should().BeOfType<OkObjectResult>();
+        }
+
+        [Fact]
+        public async Task ResetPassword_ValidToken_ReturnsOk()
+        {
+            // Arrange
+            var request = new ResetPasswordRequest
+            {
+                Token = "valid_reset_token",
+                NewPassword = "NewSecurePassword123!"
+            };
+
+            _mockAuthService
+                .Setup(s => s.ResetPasswordAsync(It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync(true);
+
+            // Act
+            var result = await _controller.ResetPassword(request);
+
+            // Assert
+            result.Should().BeOfType<OkObjectResult>();
+        }
+
+        [Fact]
+        public async Task ResetPassword_InvalidToken_ReturnsBadRequest()
+        {
+            // Arrange
+            var request = new ResetPasswordRequest
+            {
+                Token = "invalid_reset_token",
+                NewPassword = "NewSecurePassword123!"
+            };
+
+            _mockAuthService
+                .Setup(s => s.ResetPasswordAsync(It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync(false);
+
+            // Act
+            var result = await _controller.ResetPassword(request);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>();
+        }
+
+        [Fact]
+        public async Task VerifyEmail_ValidToken_ReturnsOk()
+        {
+            // Arrange
+            var request = new VerifyEmailRequest
+            {
+                Token = "valid_verification_token"
+            };
+
+            _mockAuthService
+                .Setup(s => s.VerifyEmailAsync(It.IsAny<string>()))
+                .ReturnsAsync(true);
+
+            // Act
+            var result = await _controller.VerifyEmail(request);
+
+            // Assert
+            result.Should().BeOfType<OkObjectResult>();
+        }
+
+        [Fact]
+        public async Task VerifyEmail_InvalidToken_ReturnsBadRequest()
+        {
+            // Arrange
+            var request = new VerifyEmailRequest
+            {
+                Token = "invalid_verification_token"
+            };
+
+            _mockAuthService
+                .Setup(s => s.VerifyEmailAsync(It.IsAny<string>()))
+                .ReturnsAsync(false);
+
+            // Act
+            var result = await _controller.VerifyEmail(request);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>();
+        }
+    }
+}

@@ -7,16 +7,15 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Security.Claims;
     using System.Threading;
     using System.Threading.Tasks;
     using FluentAssertions;
-    using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
     using Moq;
     using Synaxis.Core.Models;
     using Synaxis.Infrastructure.Data;
+    using Synaxis.InferenceGateway.Application.Interfaces;
     using Synaxis.InferenceGateway.WebApi.Controllers;
     using Xunit;
 
@@ -24,6 +23,7 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
     public class UsersControllerTests
     {
         private readonly Mock<SynaxisDbContext> _mockDbContext;
+        private readonly Mock<IOrganizationUserContext> _mockUserContext;
         private readonly UsersController _controller;
         private readonly Guid _testUserId = Guid.NewGuid();
         private readonly Guid _testOrganizationId = Guid.NewGuid();
@@ -34,9 +34,14 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
                 .UseInMemoryDatabase(databaseName: $"TestDb_{Guid.NewGuid()}")
                 .Options;
             _mockDbContext = new Mock<SynaxisDbContext>(options);
+            _mockUserContext = new Mock<IOrganizationUserContext>();
 
-            _controller = new UsersController(_mockDbContext.Object);
-            SetupControllerContext();
+            // Setup default user context
+            _mockUserContext.Setup(x => x.UserId).Returns(_testUserId);
+            _mockUserContext.Setup(x => x.OrganizationId).Returns(_testOrganizationId);
+            _mockUserContext.Setup(x => x.IsAuthenticated).Returns(true);
+
+            _controller = new UsersController(_mockDbContext.Object, _mockUserContext.Object);
         }
 
         [Fact]
@@ -54,6 +59,15 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             result.Should().BeOfType<OkObjectResult>();
             var okResult = result as OkObjectResult;
             okResult!.Value.Should().NotBeNull();
+
+            // Verify the response structure
+            var response = okResult.Value;
+            response.Should().NotBeNull();
+            var props = response!.GetType().GetProperties();
+            props.Should().Contain(p => p.Name == "id");
+            props.Should().Contain(p => p.Name == "email");
+            props.Should().Contain(p => p.Name == "firstName");
+            props.Should().Contain(p => p.Name == "lastName");
         }
 
         [Fact]
@@ -205,6 +219,35 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
         }
 
         [Fact]
+        public async Task GetMyOrganizations_WithPagination_ReturnsCorrectPage()
+        {
+            // Arrange
+            var organizations = Enumerable.Range(1, 15)
+                .Select(i => CreateTestOrganization($"Org{i}"))
+                .ToList();
+
+            foreach (var org in organizations)
+            {
+                var team = CreateTestTeam(org.Id);
+                var membership = CreateTestTeamMembership(_testUserId, team.Id, org.Id);
+                team.TeamMemberships = new List<TeamMembership> { membership };
+                org.Teams = new List<Team> { team };
+            }
+
+            var mockOrgSet = CreateMockDbSet(organizations);
+            _mockDbContext.Setup(x => x.Organizations).Returns(mockOrgSet.Object);
+
+            // Act
+            var result = await _controller.GetMyOrganizations(page: 2, pageSize: 10, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<OkObjectResult>();
+            var okResult = result as OkObjectResult;
+            var response = okResult!.Value;
+            response.Should().NotBeNull();
+        }
+
+        [Fact]
         public async Task GetMyTeams_ReturnsOkWithPaginatedResults()
         {
             // Arrange
@@ -226,6 +269,33 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             result.Should().BeOfType<OkObjectResult>();
             var okResult = result as OkObjectResult;
             okResult!.Value.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async Task GetMyTeams_WithPagination_ReturnsCorrectPage()
+        {
+            // Arrange
+            var teams = Enumerable.Range(1, 15)
+                .Select(i => CreateTestTeamWithName(_testOrganizationId, $"Team{i}"))
+                .ToList();
+
+            foreach (var team in teams)
+            {
+                var membership = CreateTestTeamMembership(_testUserId, team.Id, _testOrganizationId);
+                team.TeamMemberships = new List<TeamMembership> { membership };
+            }
+
+            var mockTeamSet = CreateMockDbSet(teams);
+            _mockDbContext.Setup(x => x.Teams).Returns(mockTeamSet.Object);
+
+            // Act
+            var result = await _controller.GetMyTeams(page: 2, pageSize: 10, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<OkObjectResult>();
+            var okResult = result as OkObjectResult;
+            var response = okResult!.Value;
+            response.Should().NotBeNull();
         }
 
         [Fact]
@@ -273,6 +343,39 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             // Assert
             result.Should().BeOfType<BadRequestObjectResult>();
             _mockDbContext.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task GetMe_UsesUserContextForUserId()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            var mockSet = CreateMockDbSet(new[] { testUser });
+            _mockDbContext.Setup(x => x.Users).Returns(mockSet.Object);
+
+            // Act
+            await _controller.GetMe(CancellationToken.None);
+
+            // Assert
+            _mockUserContext.Verify(x => x.UserId, Times.AtLeastOnce);
+        }
+
+        [Fact]
+        public async Task UpdateMe_UsesUserContextForUserId()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            var mockSet = CreateMockDbSet(new[] { testUser });
+            _mockDbContext.Setup(x => x.Users).Returns(mockSet.Object);
+            _mockDbContext.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+
+            var request = new UpdateUserRequest { FirstName = "Test" };
+
+            // Act
+            await _controller.UpdateMe(request, CancellationToken.None);
+
+            // Assert
+            _mockUserContext.Verify(x => x.UserId, Times.AtLeastOnce);
         }
 
         private User CreateTestUser()
@@ -328,6 +431,22 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             };
         }
 
+        private Team CreateTestTeamWithName(Guid organizationId, string name)
+        {
+            return new Team
+            {
+                Id = Guid.NewGuid(),
+                OrganizationId = organizationId,
+                Name = name,
+                Slug = name.ToLowerInvariant(),
+                Description = "Test team",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                TeamMemberships = new List<TeamMembership>()
+            };
+        }
+
         private TeamMembership CreateTestTeamMembership(Guid userId, Guid teamId, Guid organizationId)
         {
             return new TeamMembership
@@ -354,26 +473,6 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             mockSet.As<IAsyncEnumerable<T>>().Setup(m => m.GetAsyncEnumerator(It.IsAny<CancellationToken>())).Returns(new TestAsyncEnumerator<T>(queryableData.GetEnumerator()));
 
             return mockSet;
-        }
-
-        private void SetupControllerContext()
-        {
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, _testUserId.ToString()),
-                new Claim("sub", _testUserId.ToString())
-            };
-
-            var identity = new ClaimsIdentity(claims, "TestAuth");
-            var claimsPrincipal = new ClaimsPrincipal(identity);
-
-            _controller.ControllerContext = new ControllerContext
-            {
-                HttpContext = new DefaultHttpContext
-                {
-                    User = claimsPrincipal
-                }
-            };
         }
     }
 }

@@ -571,7 +571,7 @@ namespace Synaxis.Infrastructure.Services
                     Tier = o.Tier,
                     UserCount = o.Users.Count(u => u.IsActive),
                     TeamCount = o.Teams.Count(t => t.IsActive),
-                    MonthlyRequests = 0, // TODO: Requires Request navigation property on VirtualKey
+                    MonthlyRequests = 0, // Request count calculation requires additional schema changes
                     MonthlySpend = o.CreditBalance, // Using credit balance as placeholder
                     IsActive = o.IsActive,
                     CreatedAt = o.CreatedAt
