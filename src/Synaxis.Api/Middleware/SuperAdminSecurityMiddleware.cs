@@ -5,6 +5,7 @@
 namespace Synaxis.Api.Middleware
 {
     using System;
+    using System.Globalization;
     using System.Linq;
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Http;
@@ -18,9 +19,9 @@ namespace Synaxis.Api.Middleware
     /// </summary>
     public class SuperAdminSecurityMiddleware
     {
+        private const int IdleTimeoutMinutes = 15;
         private readonly RequestDelegate _next;
         private readonly ILogger<SuperAdminSecurityMiddleware> _logger;
-        private const int IdleTimeoutMinutes = 15;
 
         public SuperAdminSecurityMiddleware(
             RequestDelegate next,
@@ -39,25 +40,23 @@ namespace Synaxis.Api.Middleware
             {
                 // Check session timeout
                 var lastActivity = context.Session.GetString("SuperAdminLastActivity");
-                if (!string.IsNullOrEmpty(lastActivity))
+                if (!string.IsNullOrEmpty(lastActivity) &&
+                    DateTime.TryParse(lastActivity, CultureInfo.InvariantCulture, DateTimeStyles.None, out var lastActivityTime))
                 {
-                    if (DateTime.TryParse(lastActivity, out var lastActivityTime))
+                    var idleTime = DateTime.UtcNow - lastActivityTime;
+                    if (idleTime.TotalMinutes > IdleTimeoutMinutes)
                     {
-                        var idleTime = DateTime.UtcNow - lastActivityTime;
-                        if (idleTime.TotalMinutes > IdleTimeoutMinutes)
-                        {
-                            this._logger.LogWarning(
-                                "Super admin session timed out after {IdleMinutes} minutes of inactivity",
-                                idleTime.TotalMinutes);
+                        this._logger.LogWarning(
+                            "Super admin session timed out after {IdleMinutes} minutes of inactivity",
+                            idleTime.TotalMinutes);
 
-                            context.Response.StatusCode = 401;
-                            await context.Response.WriteAsJsonAsync(new
-                            {
-                                error = "Session expired",
-                                message = $"Super admin sessions expire after {IdleTimeoutMinutes} minutes of inactivity",
-                            }).ConfigureAwait(false);
-                            return;
-                        }
+                        context.Response.StatusCode = 401;
+                        await context.Response.WriteAsJsonAsync(new
+                        {
+                            error = "Session expired",
+                            message = $"Super admin sessions expire after {IdleTimeoutMinutes} minutes of inactivity",
+                        }).ConfigureAwait(false);
+                        return;
                     }
                 }
 
@@ -66,18 +65,21 @@ namespace Synaxis.Api.Middleware
 
                 // Log all super admin access
                 var userId = context.User?.FindFirst("sub")?.Value ?? "unknown";
-                var ipAddress = this.GetClientIpAddress(context);
+                var ipAddress = GetClientIpAddress(context);
                 var method = context.Request.Method;
 
                 this._logger.LogWarning(
                     "🔒 SUPER ADMIN ACCESS - User: {UserId}, IP: {IpAddress}, Method: {Method}, Path: {Path}",
-                    userId, ipAddress, method, path);
+                    userId,
+                    ipAddress,
+                    method,
+                    path);
             }
 
             await this._next(context).ConfigureAwait(false);
         }
 
-        private string GetClientIpAddress(HttpContext context)
+        private static string GetClientIpAddress(HttpContext context)
         {
             var forwardedFor = context.Request.Headers["X-Forwarded-For"].ToString();
             if (!string.IsNullOrEmpty(forwardedFor))

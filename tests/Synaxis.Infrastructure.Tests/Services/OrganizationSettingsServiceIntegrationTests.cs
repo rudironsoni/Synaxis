@@ -170,7 +170,10 @@ namespace Synaxis.Infrastructure.Tests.Services
             await Task.WhenAll(tasks);
 
             // Assert - Verify final state (last write wins in this implementation)
-            var finalOrg = await this.context!.Organizations.FindAsync(organization.Id);
+            // Reload from database to get fresh data
+            var finalOrg = await this.context!.Organizations
+                .AsNoTracking()
+                .FirstOrDefaultAsync(o => o.Id == organization.Id);
             finalOrg.Should().NotBeNull();
             (finalOrg!.MaxTeams == 20 || finalOrg.MaxUsersPerTeam == 50).Should().BeTrue();
         }
