@@ -1,0 +1,333 @@
+openapi: 3.0.3
+info:
+  title: Team Memberships API
+  version: 1.0.0
+  description: API endpoints for managing team memberships in organizations
+
+servers:
+  - url: http://localhost:5000
+    description: Local development server
+
+paths:
+  /api/v1/organizations/{orgId}/teams/{teamId}/memberships:
+    get:
+      summary: List team memberships
+      description: Retrieves a paginated list of all memberships in a team
+      operationId: listMemberships
+      tags:
+        - Team Memberships
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          description: Organization ID
+          schema:
+            type: string
+            format: uuid
+        - name: teamId
+          in: path
+          required: true
+          description: Team ID
+          schema:
+            type: string
+            format: uuid
+        - name: pageSize
+          in: query
+          required: false
+          description: Number of items per page
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+        - name: page
+          in: query
+          required: false
+          description: Page number (0-indexed)
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+      responses:
+        '200':
+          description: Successful response with memberships list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  memberships:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Membership'
+                  total:
+                    type: integer
+                    description: Total number of memberships
+                  page:
+                    type: integer
+                    description: Current page number
+                  pageSize:
+                    type: integer
+                    description: Items per page
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/organizations/{orgId}/teams/{teamId}/memberships/{id}:
+    get:
+      summary: Get a specific membership
+      description: Retrieves details of a specific team membership by ID
+      operationId: getMembership
+      tags:
+        - Team Memberships
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          description: Organization ID
+          schema:
+            type: string
+            format: uuid
+        - name: teamId
+          in: path
+          required: true
+          description: Team ID
+          schema:
+            type: string
+            format: uuid
+        - name: id
+          in: path
+          required: true
+          description: Membership ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful response with membership details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Membership'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      summary: Update a membership
+      description: Updates the role of a team membership
+      operationId: updateMembership
+      tags:
+        - Team Memberships
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          description: Organization ID
+          schema:
+            type: string
+            format: uuid
+        - name: teamId
+          in: path
+          required: true
+          description: Team ID
+          schema:
+            type: string
+            format: uuid
+        - name: id
+          in: path
+          required: true
+          description: Membership ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMembershipRequest'
+      responses:
+        '200':
+          description: Membership updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MembershipUpdateResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      summary: Delete a membership
+      description: Removes a member from a team
+      operationId: deleteMembership
+      tags:
+        - Team Memberships
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          description: Organization ID
+          schema:
+            type: string
+            format: uuid
+        - name: teamId
+          in: path
+          required: true
+          description: Team ID
+          schema:
+            type: string
+            format: uuid
+        - name: id
+          in: path
+          required: true
+          description: Membership ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Membership deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Membership:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique membership identifier
+        userId:
+          type: string
+          format: uuid
+          description: User ID
+        email:
+          type: string
+          format: email
+          description: User email address
+        firstName:
+          type: string
+          nullable: true
+          description: User first name
+        lastName:
+          type: string
+          nullable: true
+          description: User last name
+        role:
+          type: string
+          description: Membership role
+          enum:
+            - TeamAdmin
+            - OrgAdmin
+            - Member
+            - Viewer
+        joinedAt:
+          type: string
+          format: date-time
+          description: Timestamp when the user joined the team
+
+    UpdateMembershipRequest:
+      type: object
+      required:
+        - role
+      properties:
+        role:
+          type: string
+          description: New role for the member
+          enum:
+            - admin
+            - teamadmin
+            - orgadmin
+            - member
+            - viewer
+
+    MembershipUpdateResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Membership ID
+        userId:
+          type: string
+          format: uuid
+          description: User ID
+        role:
+          type: string
+          description: Updated role
+        joinedAt:
+          type: string
+          format: date-time
+          description: Join timestamp
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+        code:
+          type: string
+          description: Error code
+
+  responses:
+    BadRequest:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    Forbidden:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
