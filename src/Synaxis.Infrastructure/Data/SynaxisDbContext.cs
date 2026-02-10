@@ -54,6 +54,10 @@ namespace Synaxis.Infrastructure.Data
 
         public DbSet<EmailVerificationToken> EmailVerificationTokens { get; set; }
 
+        public DbSet<Collection> Collections { get; set; }
+
+        public DbSet<CollectionMembership> CollectionMemberships { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -721,6 +725,108 @@ namespace Synaxis.Infrastructure.Data
                 entity.HasIndex(e => e.TokenHash).IsUnique();
                 entity.HasIndex(e => e.UserId);
                 entity.HasIndex(e => e.ExpiresAt);
+            });
+
+            // Configure Collections
+            modelBuilder.Entity<Collection>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id)
+                    .HasColumnName("id")
+                    .ValueGeneratedOnAdd();
+
+                entity.Property(e => e.OrganizationId).HasColumnName("organization_id");
+                entity.Property(e => e.TeamId).HasColumnName("team_id");
+                entity.Property(e => e.Slug).HasColumnName("slug");
+                entity.Property(e => e.Name).HasColumnName("name");
+                entity.Property(e => e.Description).HasColumnName("description");
+                entity.Property(e => e.IsActive).HasColumnName("is_active");
+                entity.Property(e => e.Type).HasColumnName("type");
+                entity.Property(e => e.Visibility).HasColumnName("visibility");
+                entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+                entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+                entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+
+                // Configure Metadata as JSON column
+                entity.Property(e => e.Metadata)
+                    .HasColumnName("metadata")
+                    .HasConversion(
+                        v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null!),
+                        v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(),
+                        new ValueComparer<IDictionary<string, object>>(
+                            (c1, c2) => c1.Count == c2.Count && !c1.Except(c2).Any(),
+                            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
+                            c => c.ToDictionary(entry => entry.Key, entry => entry.Value)))
+                    .HasColumnType("jsonb");
+
+                entity.HasOne(e => e.Organization)
+                    .WithMany(o => o.Collections)
+                    .HasForeignKey(e => e.OrganizationId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Team)
+                    .WithMany(t => t.Collections)
+                    .HasForeignKey(e => e.TeamId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Creator)
+                    .WithMany()
+                    .HasForeignKey(e => e.CreatedBy)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => new { e.OrganizationId, e.Slug }).IsUnique();
+                entity.HasIndex(e => new { e.OrganizationId, e.Name });
+                entity.HasIndex(e => e.TeamId);
+                entity.HasIndex(e => e.Type);
+                entity.HasIndex(e => e.Visibility);
+                entity.HasIndex(e => e.IsActive);
+
+                // Data integrity constraints
+                entity.ToTable(t =>
+                {
+                    t.HasCheckConstraint("CK_Collection_Type_Valid", "type IN ('general', 'models', 'prompts', 'datasets', 'workflows')");
+                    t.HasCheckConstraint("CK_Collection_Visibility_Valid", "visibility IN ('public', 'private', 'team')");
+                });
+            });
+
+            // Configure CollectionMemberships
+            modelBuilder.Entity<CollectionMembership>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id)
+                    .HasColumnName("id")
+                    .ValueGeneratedOnAdd();
+
+                entity.Property(e => e.UserId).HasColumnName("user_id");
+                entity.Property(e => e.CollectionId).HasColumnName("collection_id");
+                entity.Property(e => e.OrganizationId).HasColumnName("organization_id");
+                entity.Property(e => e.Role).HasColumnName("role");
+                entity.Property(e => e.JoinedAt).HasColumnName("joined_at");
+                entity.Property(e => e.AddedBy).HasColumnName("added_by");
+
+                entity.HasOne(e => e.User)
+                    .WithMany(u => u.CollectionMemberships)
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Collection)
+                    .WithMany(c => c.CollectionMemberships)
+                    .HasForeignKey(e => e.CollectionId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Adder)
+                    .WithMany()
+                    .HasForeignKey(e => e.AddedBy)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => new { e.UserId, e.CollectionId }).IsUnique();
+
+                // Add composite indexes for tenant queries
+                entity.HasIndex(e => new { e.OrganizationId, e.UserId });
+                entity.HasIndex(e => new { e.CollectionId, e.UserId });
+
+                // Data integrity constraints
+                entity.ToTable(t => t.HasCheckConstraint("CK_CollectionMembership_Role_Valid", "role IN ('Admin', 'Member', 'Viewer')"));
             });
         }
     }

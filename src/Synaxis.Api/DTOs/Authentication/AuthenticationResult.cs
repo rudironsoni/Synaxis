@@ -4,6 +4,8 @@
 
 namespace Synaxis.Api.DTOs.Authentication
 {
+    using Synaxis.Core.Models;
+
     public class AuthenticationResult
     {
         public bool Success { get; set; }
@@ -17,5 +19,9 @@ namespace Synaxis.Api.DTOs.Authentication
         public UserDto User { get; set; }
 
         public string ErrorMessage { get; set; }
+
+        public string Message { get; set; }
+
+        public bool RequiresMfa { get; set; }
     }
 }

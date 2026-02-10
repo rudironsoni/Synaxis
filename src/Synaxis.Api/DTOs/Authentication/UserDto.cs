@@ -18,8 +18,14 @@ namespace Synaxis.Api.DTOs.Authentication
 
         public string FullName => $"{this.FirstName} {this.LastName}".Trim();
 
-        public bool EmailVerified { get; set; }
+        public string AvatarUrl { get; set; }
+
+        public DateTime? EmailVerifiedAt { get; set; }
+
+        public bool EmailVerified => this.EmailVerifiedAt.HasValue;
 
         public string Role { get; set; }
+
+        public bool MfaEnabled { get; set; }
     }
 }
