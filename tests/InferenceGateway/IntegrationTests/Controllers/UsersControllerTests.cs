@@ -268,6 +268,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
                 CreatedInRegion = "us-east-1",
                 FirstName = "Test",
                 LastName = "User",
+                AvatarUrl = "https://example.com/avatar.png",
                 Timezone = "UTC",
                 Locale = "en-US",
                 CreatedAt = DateTime.UtcNow,
@@ -325,6 +326,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
                 Slug = $"team-{Guid.NewGuid():N}"[..20],
                 Name = "Default Team",
                 Description = "Default team",
+                AllowedModels = new List<string> { "gpt-4", "gpt-3.5-turbo" },
+                BlockedModels = new List<string>(),
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -356,6 +359,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
                 Slug = $"{name.ToLowerInvariant().Replace(" ", "-", StringComparison.Ordinal)}-{Guid.NewGuid():N}"[..20],
                 Name = name,
                 Description = "Test Team",
+                AllowedModels = new List<string> { "gpt-4", "gpt-3.5-turbo" },
+                BlockedModels = new List<string>(),
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
