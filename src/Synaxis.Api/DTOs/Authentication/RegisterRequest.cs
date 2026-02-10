@@ -4,10 +4,14 @@
 
 namespace Synaxis.Api.DTOs.Authentication
 {
+    using System;
     using System.ComponentModel.DataAnnotations;
 
     public class RegisterRequest
     {
+        [Required]
+        public Guid? OrganizationId { get; set; }
+
         [Required]
         [EmailAddress]
         public string Email { get; set; }
@@ -22,10 +26,8 @@ namespace Synaxis.Api.DTOs.Authentication
         [Required]
         public string LastName { get; set; }
 
-        [Required]
-        public string OrganizationName { get; set; }
-
-        [Required]
         public string DataResidencyRegion { get; set; }
+
+        public string CreatedInRegion { get; set; }
     }
 }

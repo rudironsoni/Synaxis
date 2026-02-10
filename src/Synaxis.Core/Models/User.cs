@@ -164,6 +164,11 @@ namespace Synaxis.Core.Models
         public virtual ICollection<VirtualKey> VirtualKeys { get; set; }
 
         /// <summary>
+        /// Gets or sets the collection memberships navigation property.
+        /// </summary>
+        public virtual ICollection<CollectionMembership> CollectionMemberships { get; set; }
+
+        /// <summary>
         /// Gets the full name of the user.
         /// </summary>
         public string FullName => $"{this.FirstName} {this.LastName}".Trim();

@@ -1,0 +1,671 @@
+openapi: 3.0.3
+info:
+  title: Synaxis Collections API
+  description: API endpoints for managing collections (groupings of resources) within organizations in the Synaxis platform
+  version: 1.0.0
+  contact:
+    name: Synaxis Team
+servers:
+  - url: /api/v1
+    description: API v1 Base URL
+tags:
+  - name: Collections
+    description: Collection management operations
+  - name: Collection Members
+    description: Collection membership operations
+security:
+  - bearerAuth: []
+paths:
+  /organizations/{orgId}/collections:
+    post:
+      tags:
+        - Collections
+      summary: Create a new collection
+      description: Creates a new collection in an organization. The creator is automatically added as an Admin.
+      operationId: createCollection
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          description: Organization ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCollectionRequest'
+      responses:
+        '201':
+          description: Collection created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionResponse'
+        '400':
+          description: Bad request (e.g., invalid type, invalid visibility, team not found)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - User is not a member of the organization
+        '404':
+          description: Organization or team not found
+    get:
+      tags:
+        - Collections
+      summary: List collections in organization
+      description: Returns a paginated list of collections in the organization with optional filters
+      operationId: listCollections
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          description: Organization ID
+          schema:
+            type: string
+            format: uuid
+        - name: teamId
+          in: query
+          description: Filter by team ID
+          schema:
+            type: string
+            format: uuid
+        - name: type
+          in: query
+          description: Filter by collection type
+          schema:
+            type: string
+            enum:
+              - general
+              - models
+              - prompts
+              - datasets
+              - workflows
+        - name: visibility
+          in: query
+          description: Filter by visibility
+          schema:
+            type: string
+            enum:
+              - public
+              - private
+              - team
+        - name: page
+          in: query
+          description: Page number (0-indexed)
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: pageSize
+          in: query
+          description: Number of collections per page
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: List of collections retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionListResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - User is not a member of the organization
+  /organizations/{orgId}/collections/{id}:
+    get:
+      tags:
+        - Collections
+      summary: Get collection details
+      description: Returns detailed information about a specific collection
+      operationId: getCollection
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          description: Organization ID
+          schema:
+            type: string
+            format: uuid
+        - name: id
+          in: path
+          required: true
+          description: Collection ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Collection details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionDetailResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - User is not a member of the collection
+        '404':
+          description: Collection not found
+    put:
+      tags:
+        - Collections
+      summary: Update collection
+      description: Updates collection information. Requires Collection Admin or Org Admin permissions.
+      operationId: updateCollection
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          description: Organization ID
+          schema:
+            type: string
+            format: uuid
+        - name: id
+          in: path
+          required: true
+          description: Collection ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCollectionRequest'
+      responses:
+        '200':
+          description: Collection updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - User does not have permission to update the collection
+        '404':
+          description: Collection not found
+    delete:
+      tags:
+        - Collections
+      summary: Delete collection
+      description: Deletes a collection. Requires Collection Admin or Org Admin permissions.
+      operationId: deleteCollection
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          description: Organization ID
+          schema:
+            type: string
+            format: uuid
+        - name: id
+          in: path
+          required: true
+          description: Collection ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Collection deleted successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - User does not have permission to delete the collection
+        '404':
+          description: Collection not found
+  /organizations/{orgId}/collections/{id}/members:
+    get:
+      tags:
+        - Collection Members
+      summary: List collection members
+      description: Returns a list of all members in the collection
+      operationId: listCollectionMembers
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          description: Organization ID
+          schema:
+            type: string
+            format: uuid
+        - name: id
+          in: path
+          required: true
+          description: Collection ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of members retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionMembersResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - User is not a member of the collection
+        '404':
+          description: Collection not found
+    post:
+      tags:
+        - Collection Members
+      summary: Add member to collection
+      description: Adds a user to a collection. Requires Collection Admin or Org Admin permissions.
+      operationId: addCollectionMember
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          description: Organization ID
+          schema:
+            type: string
+            format: uuid
+        - name: id
+          in: path
+          required: true
+          description: Collection ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddCollectionMemberRequest'
+      responses:
+        '201':
+          description: Member added successfully
+        '400':
+          description: Bad request (e.g., invalid role, user already a member, user not in organization)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - User does not have permission to add members
+        '404':
+          description: Collection or user not found
+  /organizations/{orgId}/collections/{id}/members/{userId}:
+    delete:
+      tags:
+        - Collection Members
+      summary: Remove member from collection
+      description: Removes a user from a collection. Collection Admin/Org Admin can remove any member. Users can remove themselves.
+      operationId: removeCollectionMember
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          description: Organization ID
+          schema:
+            type: string
+            format: uuid
+        - name: id
+          in: path
+          required: true
+          description: Collection ID
+          schema:
+            type: string
+            format: uuid
+        - name: userId
+          in: path
+          required: true
+          description: User ID to remove
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Member removed successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - User does not have permission to remove this member
+        '404':
+          description: Collection or member not found
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    CreateCollectionRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Collection name
+          minLength: 1
+          maxLength: 255
+          example: "Production Models"
+        description:
+          type: string
+          description: Collection description
+          maxLength: 1000
+          example: "Production-ready models for customer-facing applications"
+        teamId:
+          type: string
+          format: uuid
+          description: Team ID (optional - for team-specific collections)
+          nullable: true
+        type:
+          type: string
+          description: Collection type
+          enum:
+            - general
+            - models
+            - prompts
+            - datasets
+            - workflows
+          default: general
+          example: "models"
+        visibility:
+          type: string
+          description: Collection visibility
+          enum:
+            - public
+            - private
+            - team
+          default: private
+          example: "private"
+        tags:
+          type: array
+          description: Tags for the collection
+          items:
+            type: string
+          example:
+            - "production"
+            - "v1"
+    UpdateCollectionRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Updated collection name
+          minLength: 1
+          maxLength: 255
+          example: "Production Models v2"
+        description:
+          type: string
+          description: Updated collection description
+          maxLength: 1000
+          example: "Updated description for the collection"
+        type:
+          type: string
+          description: Updated collection type
+          enum:
+            - general
+            - models
+            - prompts
+            - datasets
+            - workflows
+          example: "models"
+        visibility:
+          type: string
+          description: Updated collection visibility
+          enum:
+            - public
+            - private
+            - team
+          example: "public"
+        isActive:
+          type: boolean
+          description: Whether the collection is active
+          example: true
+        tags:
+          type: array
+          description: Updated tags for the collection
+          items:
+            type: string
+          example:
+            - "production"
+            - "v2"
+    AddCollectionMemberRequest:
+      type: object
+      required:
+        - userId
+        - role
+      properties:
+        userId:
+          type: string
+          format: uuid
+          description: ID of the user to add to the collection
+        role:
+          type: string
+          description: Role for the member
+          enum:
+            - admin
+            - member
+            - viewer
+          example: "member"
+    CollectionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Collection ID
+        name:
+          type: string
+          description: Collection name
+        description:
+          type: string
+          description: Collection description
+          nullable: true
+        slug:
+          type: string
+          description: Collection slug (URL-friendly identifier)
+        type:
+          type: string
+          description: Collection type
+          enum:
+            - general
+            - models
+            - prompts
+            - datasets
+            - workflows
+        visibility:
+          type: string
+          description: Collection visibility
+          enum:
+            - public
+            - private
+            - team
+        isActive:
+          type: boolean
+          description: Whether the collection is active
+        tags:
+          type: array
+          description: Collection tags
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+          description: Collection creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          nullable: true
+    CollectionDetailResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Collection ID
+        name:
+          type: string
+          description: Collection name
+        description:
+          type: string
+          description: Collection description
+          nullable: true
+        slug:
+          type: string
+          description: Collection slug
+        type:
+          type: string
+          description: Collection type
+          enum:
+            - general
+            - models
+            - prompts
+            - datasets
+            - workflows
+        visibility:
+          type: string
+          description: Collection visibility
+          enum:
+            - public
+            - private
+            - team
+        teamId:
+          type: string
+          format: uuid
+          description: Team ID (if collection is team-specific)
+          nullable: true
+        isActive:
+          type: boolean
+          description: Whether the collection is active
+        tags:
+          type: array
+          description: Collection tags
+          items:
+            type: string
+        metadata:
+          type: object
+          description: Collection metadata
+          additionalProperties: true
+        memberCount:
+          type: integer
+          description: Number of collection members
+        createdAt:
+          type: string
+          format: date-time
+          description: Collection creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+        createdBy:
+          type: string
+          format: uuid
+          description: ID of the user who created the collection
+    CollectionListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          description: List of collections
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              name:
+                type: string
+              description:
+                type: string
+                nullable: true
+              slug:
+                type: string
+              type:
+                type: string
+              visibility:
+                type: string
+              teamId:
+                type: string
+                format: uuid
+                nullable: true
+              isActive:
+                type: boolean
+              memberCount:
+                type: integer
+              createdAt:
+                type: string
+                format: date-time
+              updatedAt:
+                type: string
+                format: date-time
+        page:
+          type: integer
+          description: Current page number
+        pageSize:
+          type: integer
+          description: Number of items per page
+        total:
+          type: integer
+          description: Total number of collections
+        totalPages:
+          type: integer
+          description: Total number of pages
+    CollectionMembersResponse:
+      type: object
+      properties:
+        members:
+          type: array
+          description: List of collection members
+          items:
+            type: object
+            properties:
+              userId:
+                type: string
+                format: uuid
+                description: User ID
+              role:
+                type: string
+                description: Member role
+                enum:
+                  - Admin
+                  - Member
+                  - Viewer
+              joinedAt:
+                type: string
+                format: date-time
+                description: When the user joined the collection
+              addedBy:
+                type: string
+                format: uuid
+                description: ID of the user who added this member
+                nullable: true
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+        details:
+          type: object
+          description: Additional error details
+          nullable: true

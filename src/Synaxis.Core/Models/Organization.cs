@@ -192,5 +192,10 @@ namespace Synaxis.Core.Models
         /// Gets or sets the requests navigation property.
         /// </summary>
         public virtual ICollection<Request> Requests { get; set; }
+
+        /// <summary>
+        /// Gets or sets the collections navigation property.
+        /// </summary>
+        public virtual ICollection<Collection> Collections { get; set; }
     }
 }

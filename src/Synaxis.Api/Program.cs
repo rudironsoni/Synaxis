@@ -61,6 +61,14 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<ISuperAdminService, SuperAdminService>();
 builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+
+// Configure JWT options
+builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
+
+// Configure Email options
+builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection("Email"));
 
 // Configure HTTP clients for cross-region communication
 var euWest1Endpoint = builder.Configuration["Regions:EuWest1:Endpoint"];

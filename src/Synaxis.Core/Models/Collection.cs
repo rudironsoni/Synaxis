@@ -1,4 +1,4 @@
-// <copyright file="Team.cs" company="Synaxis">
+// <copyright file="Collection.cs" company="Synaxis">
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
@@ -9,9 +9,9 @@ namespace Synaxis.Core.Models
     using System.ComponentModel.DataAnnotations;
 
     /// <summary>
-    /// Team within an organization.
+    /// Collection within an organization - a grouping of resources (models, prompts, etc.).
     /// </summary>
-    public class Team
+    public class Collection
     {
         /// <summary>
         /// Gets or sets the unique identifier.
@@ -29,48 +29,62 @@ namespace Synaxis.Core.Models
         public virtual Organization Organization { get; set; }
 
         /// <summary>
-        /// Gets or sets the team slug.
+        /// Gets or sets the team identifier (optional - collections can be org-wide or team-specific).
+        /// </summary>
+        public Guid? TeamId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the team navigation property.
+        /// </summary>
+        public virtual Team Team { get; set; }
+
+        /// <summary>
+        /// Gets or sets the collection slug.
         /// </summary>
         [Required]
         [StringLength(100)]
         public string Slug { get; set; }
 
         /// <summary>
-        /// Gets or sets the team name.
+        /// Gets or sets the collection name.
         /// </summary>
         [Required]
         [StringLength(255)]
         public string Name { get; set; }
 
         /// <summary>
-        /// Gets or sets the team description.
+        /// Gets or sets the collection description.
         /// </summary>
         public string Description { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets a value indicating whether the team is active.
+        /// Gets or sets a value indicating whether the collection is active.
         /// </summary>
         public bool IsActive { get; set; } = true;
 
         /// <summary>
-        /// Gets or sets the monthly budget for all team keys (NULL = no limit).
+        /// Gets or sets the collection type (e.g., 'models', 'prompts', 'datasets').
         /// </summary>
-        public decimal? MonthlyBudget { get; set; }
+        [Required]
+        [StringLength(50)]
+        public string Type { get; set; } = "general";
 
         /// <summary>
-        /// Gets or sets the alert threshold (percentage of budget).
+        /// Gets or sets the collection visibility (public, private, team).
         /// </summary>
-        public decimal BudgetAlertThreshold { get; set; } = 80.00m;
+        [Required]
+        [StringLength(20)]
+        public string Visibility { get; set; } = "private";
 
         /// <summary>
-        /// Gets or sets the allowed models (NULL = inherit from org).
+        /// Gets or sets the tags for the collection.
         /// </summary>
-        public IList<string> AllowedModels { get; set; } = new List<string>();
+        public IList<string> Tags { get; set; } = new List<string>();
 
         /// <summary>
-        /// Gets or sets the blocked models.
+        /// Gets or sets the metadata for the collection.
         /// </summary>
-        public IList<string> BlockedModels { get; set; } = new List<string>();
+        public IDictionary<string, object> Metadata { get; set; } = new Dictionary<string, object>();
 
         /// <summary>
         /// Gets or sets the creation timestamp.
@@ -83,18 +97,18 @@ namespace Synaxis.Core.Models
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         /// <summary>
-        /// Gets or sets the team memberships navigation property.
+        /// Gets or sets the identifier of the user who created the collection.
         /// </summary>
-        public virtual ICollection<TeamMembership> TeamMemberships { get; set; }
+        public Guid CreatedBy { get; set; }
 
         /// <summary>
-        /// Gets or sets the virtual keys navigation property.
+        /// Gets or sets the creator navigation property.
         /// </summary>
-        public virtual ICollection<VirtualKey> VirtualKeys { get; set; }
+        public virtual User Creator { get; set; }
 
         /// <summary>
-        /// Gets or sets the collections navigation property.
+        /// Gets or sets the collection memberships navigation property.
         /// </summary>
-        public virtual ICollection<Collection> Collections { get; set; }
+        public virtual ICollection<CollectionMembership> CollectionMemberships { get; set; }
     }
 }
