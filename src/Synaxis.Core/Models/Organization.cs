@@ -197,5 +197,10 @@ namespace Synaxis.Core.Models
         /// Gets or sets the collections navigation property.
         /// </summary>
         public virtual ICollection<Collection> Collections { get; set; }
+
+        /// <summary>
+        /// Gets or sets the password policy navigation property.
+        /// </summary>
+        public virtual PasswordPolicy PasswordPolicy { get; set; }
     }
 }

@@ -108,7 +108,6 @@ namespace Synaxis.Api.Tests.Controllers
 
             // Assert
             result.Should().BeOfType<OkObjectResult>();
-            var okResult = result as OkObjectResult;
 
             // Verify user email is marked as verified
             var updatedUser = await _context.Users.FindAsync(user.Id);

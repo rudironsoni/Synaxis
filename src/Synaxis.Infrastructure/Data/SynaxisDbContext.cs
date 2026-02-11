@@ -60,6 +60,10 @@ namespace Synaxis.Infrastructure.Data
 
         public DbSet<CollectionMembership> CollectionMemberships { get; set; }
 
+        public DbSet<PasswordPolicy> PasswordPolicies { get; set; }
+
+        public DbSet<PasswordHistory> PasswordHistories { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -181,9 +185,15 @@ namespace Synaxis.Infrastructure.Data
                 entity.Property(e => e.CrossBorderConsentVersion).HasColumnName("cross_border_consent_version");
                 entity.Property(e => e.MfaEnabled).HasColumnName("mfa_enabled");
                 entity.Property(e => e.MfaSecret).HasColumnName("mfa_secret");
+                entity.Property(e => e.MfaBackupCodes).HasColumnName("mfa_backup_codes");
                 entity.Property(e => e.LastLoginAt).HasColumnName("last_login_at");
                 entity.Property(e => e.FailedLoginAttempts).HasColumnName("failed_login_attempts");
                 entity.Property(e => e.LockedUntil).HasColumnName("locked_until");
+                entity.Property(e => e.PasswordChangedAt).HasColumnName("password_changed_at");
+                entity.Property(e => e.PasswordExpiresAt).HasColumnName("password_expires_at");
+                entity.Property(e => e.MustChangePassword).HasColumnName("must_change_password");
+                entity.Property(e => e.FailedPasswordChangeAttempts).HasColumnName("failed_password_change_attempts");
+                entity.Property(e => e.PasswordChangeLockedUntil).HasColumnName("password_change_locked_until");
                 entity.Property(e => e.IsActive).HasColumnName("is_active");
                 entity.Property(e => e.CreatedAt).HasColumnName("created_at");
                 entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
@@ -729,6 +739,59 @@ namespace Synaxis.Infrastructure.Data
                 entity.HasIndex(e => e.ExpiresAt);
             });
 
+            // Configure PasswordPolicies
+            modelBuilder.Entity<PasswordPolicy>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id)
+                    .HasColumnName("id")
+                    .ValueGeneratedOnAdd();
+
+                entity.Property(e => e.OrganizationId).HasColumnName("organization_id");
+                entity.Property(e => e.MinLength).HasColumnName("min_length");
+                entity.Property(e => e.RequireUppercase).HasColumnName("require_uppercase");
+                entity.Property(e => e.RequireLowercase).HasColumnName("require_lowercase");
+                entity.Property(e => e.RequireNumbers).HasColumnName("require_numbers");
+                entity.Property(e => e.RequireSpecialCharacters).HasColumnName("require_special_characters");
+                entity.Property(e => e.PasswordHistoryCount).HasColumnName("password_history_count");
+                entity.Property(e => e.PasswordExpirationDays).HasColumnName("password_expiration_days");
+                entity.Property(e => e.PasswordExpirationWarningDays).HasColumnName("password_expiration_warning_days");
+                entity.Property(e => e.MaxFailedChangeAttempts).HasColumnName("max_failed_change_attempts");
+                entity.Property(e => e.LockoutDurationMinutes).HasColumnName("lockout_duration_minutes");
+                entity.Property(e => e.BlockCommonPasswords).HasColumnName("block_common_passwords");
+                entity.Property(e => e.BlockUserInfoInPassword).HasColumnName("block_user_info_in_password");
+                entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+                entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+
+                entity.HasOne(e => e.Organization)
+                    .WithOne(o => o.PasswordPolicy)
+                    .HasForeignKey<PasswordPolicy>(e => e.OrganizationId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(e => e.OrganizationId).IsUnique();
+            });
+
+            // Configure PasswordHistories
+            modelBuilder.Entity<PasswordHistory>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id)
+                    .HasColumnName("id")
+                    .ValueGeneratedOnAdd();
+
+                entity.Property(e => e.UserId).HasColumnName("user_id");
+                entity.Property(e => e.PasswordHash).HasColumnName("password_hash");
+                entity.Property(e => e.SetAt).HasColumnName("set_at");
+
+                entity.HasOne(e => e.User)
+                    .WithMany(u => u.PasswordHistory)
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(e => e.UserId);
+                entity.HasIndex(e => new { e.UserId, e.SetAt });
+            });
+
             // Configure JwtBlacklists
             modelBuilder.Entity<JwtBlacklist>(entity =>
             {
@@ -853,6 +916,10 @@ namespace Synaxis.Infrastructure.Data
                 // Data integrity constraints
                 entity.ToTable(t => t.HasCheckConstraint("CK_CollectionMembership_Role_Valid", "role IN ('Admin', 'Member', 'Viewer')"));
             });
+
+            // Configure table names for new entities
+            modelBuilder.Entity<PasswordPolicy>().ToTable("password_policies");
+            modelBuilder.Entity<PasswordHistory>().ToTable("password_histories");
         }
     }
 }

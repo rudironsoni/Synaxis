@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using QRCoder;
 using Synaxis.Core.Contracts;
 using Synaxis.Core.Models;
 using Synaxis.Infrastructure.Data;
@@ -204,8 +205,9 @@ namespace Synaxis.Infrastructure.Services
             if (user == null)
                 throw new InvalidOperationException($"User with ID '{userId}' not found");
 
-            // Generate TOTP secret (Base32 encoded)
-            var secret = GenerateTotpSecret();
+            // Generate TOTP secret using Otp.NET
+            var key = OtpNet.KeyGeneration.GenerateRandomKey(20);
+            var secret = OtpNet.Base32Encoding.ToString(key);
 
             user.MfaSecret = secret;
             user.UpdatedAt = DateTime.UtcNow;
@@ -215,13 +217,17 @@ namespace Synaxis.Infrastructure.Services
             // Generate QR code URL for authenticator apps
             var issuer = "Synaxis";
             var accountName = user.Email;
-            var qrCodeUri = $"otpauth://totp/{issuer}:{accountName}?secret={secret}&issuer={issuer}";
+            var qrCodeUri = $"otpauth://totp/{Uri.EscapeDataString(issuer)}:{Uri.EscapeDataString(accountName)}?secret={secret}&issuer={Uri.EscapeDataString(issuer)}";
+
+            // Generate QR code as base64 image
+            var qrCodeImage = GenerateQrCodeImage(qrCodeUri);
 
             return new MfaSetupResult
             {
                 Secret = secret,
                 QrCodeUrl = qrCodeUri,
-                ManualEntryKey = secret
+                QrCodeImage = qrCodeImage,
+                ManualEntryKey = FormatSecretForManualEntry(secret)
             };
         }
 
@@ -238,8 +244,10 @@ namespace Synaxis.Infrastructure.Services
             if (string.IsNullOrWhiteSpace(user.MfaSecret))
                 throw new InvalidOperationException("MFA setup not completed. Call SetupMfaAsync first.");
 
-            // Verify the TOTP code
-            if (!VerifyTotpCode(user.MfaSecret, totpCode))
+            // Verify the TOTP code using Otp.NET
+            var key = OtpNet.Base32Encoding.ToBytes(user.MfaSecret);
+            var totp = new OtpNet.Totp(key);
+            if (!totp.VerifyTotp(totpCode, out var timeWindowUsed))
                 throw new InvalidOperationException("Invalid TOTP code");
 
             // Generate backup codes
@@ -290,17 +298,22 @@ namespace Synaxis.Infrastructure.Services
             if (!user.MfaEnabled)
                 throw new InvalidOperationException("MFA is not enabled for this user");
 
-            // Try TOTP code first
-            if (!string.IsNullOrWhiteSpace(user.MfaSecret) && VerifyTotpCode(user.MfaSecret, code))
+            // Try TOTP code first using Otp.NET
+            if (!string.IsNullOrWhiteSpace(user.MfaSecret))
             {
-                user.MfaEnabled = false;
-                user.MfaSecret = null;
-                user.MfaBackupCodes = null;
-                user.UpdatedAt = DateTime.UtcNow;
+                var key = OtpNet.Base32Encoding.ToBytes(user.MfaSecret);
+                var totp = new OtpNet.Totp(key);
+                if (totp.VerifyTotp(code, out var timeWindowUsed))
+                {
+                    user.MfaEnabled = false;
+                    user.MfaSecret = null;
+                    user.MfaBackupCodes = null;
+                    user.UpdatedAt = DateTime.UtcNow;
 
-                await _context.SaveChangesAsync();
+                    await _context.SaveChangesAsync();
 
-                return true;
+                    return true;
+                }
             }
 
             // Try backup code
@@ -340,7 +353,10 @@ namespace Synaxis.Infrastructure.Services
             if (user == null || !user.MfaEnabled || string.IsNullOrWhiteSpace(user.MfaSecret))
                 return false;
 
-            return VerifyTotpCode(user.MfaSecret, code);
+            // Verify TOTP code using Otp.NET
+            var key = OtpNet.Base32Encoding.ToBytes(user.MfaSecret);
+            var totp = new OtpNet.Totp(key);
+            return totp.VerifyTotp(code, out var timeWindowUsed);
         }
 
         public async Task<bool> UpdateCrossBorderConsentAsync(Guid userId, bool consentGiven, string version)
@@ -394,18 +410,6 @@ namespace Synaxis.Infrastructure.Services
             }
         }
 
-        private string GenerateTotpSecret()
-        {
-            // Generate 20 random bytes (160 bits) for TOTP secret
-            var bytes = new byte[20];
-            using (var rng = RandomNumberGenerator.Create())
-            {
-                rng.GetBytes(bytes);
-            }
-
-            return Base32Encode(bytes);
-        }
-
         private IList<string> GenerateBackupCodes()
         {
             var codes = new List<string>();
@@ -425,33 +429,6 @@ namespace Synaxis.Infrastructure.Services
             return codes;
         }
 
-        private string Base32Encode(byte[] data)
-        {
-            const string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
-            var result = new StringBuilder();
-
-            for (int i = 0; i < data.Length; i += 5)
-            {
-                int byteCount = Math.Min(5, data.Length - i);
-                ulong buffer = 0;
-
-                for (int j = 0; j < byteCount; j++)
-                {
-                    buffer = (buffer << 8) | data[i + j];
-                }
-
-                int bitCount = byteCount * 8;
-                while (bitCount > 0)
-                {
-                    int index = (int)((buffer >> (bitCount - 5)) & 0x1F);
-                    result.Append(alphabet[index]);
-                    bitCount -= 5;
-                }
-            }
-
-            return result.ToString();
-        }
-
         private string FormatSecretForManualEntry(string secret)
         {
             // Format as groups of 4 characters for easier manual entry
@@ -465,72 +442,14 @@ namespace Synaxis.Infrastructure.Services
             return formatted.ToString();
         }
 
-        private bool VerifyTotpCode(string secret, string code)
+        private string GenerateQrCodeImage(string qrCodeUri)
         {
-            // Simple TOTP verification (30-second window)
-            var unixTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-            var timeStep = unixTime / 30;
+            using var qrGenerator = new QRCodeGenerator();
+            using var qrCodeData = qrGenerator.CreateQrCode(qrCodeUri, QRCodeGenerator.ECCLevel.Q);
+            using var qrCode = new PngByteQRCode(qrCodeData);
+            var qrCodeBytes = qrCode.GetGraphic(20);
 
-            // Check current window and ±1 window for clock drift
-            for (long i = -1; i <= 1; i++)
-            {
-                var generatedCode = GenerateTotpCode(secret, timeStep + i);
-                if (generatedCode == code)
-                    return true;
-            }
-
-            return false;
-        }
-
-        private string GenerateTotpCode(string secret, long timeStep)
-        {
-            var key = Base32Decode(secret);
-            var timeBytes = BitConverter.GetBytes(timeStep);
-
-            if (BitConverter.IsLittleEndian)
-                Array.Reverse(timeBytes);
-
-            using (var hmac = new HMACSHA1(key))
-            {
-                var hash = hmac.ComputeHash(timeBytes);
-                var offset = hash[hash.Length - 1] & 0x0F;
-
-                var binary = ((hash[offset] & 0x7F) << 24)
-                    | ((hash[offset + 1] & 0xFF) << 16)
-                    | ((hash[offset + 2] & 0xFF) << 8)
-                    | (hash[offset + 3] & 0xFF);
-
-                var otp = binary % 1000000;
-                return otp.ToString("D6");
-            }
-        }
-
-        private byte[] Base32Decode(string input)
-        {
-            const string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
-            input = input.ToUpperInvariant().Replace(" ", "");
-
-            var bytes = new System.Collections.Generic.List<byte>();
-            ulong buffer = 0;
-            int bitsInBuffer = 0;
-
-            foreach (char c in input)
-            {
-                int value = alphabet.IndexOf(c);
-                if (value < 0)
-                    continue;
-
-                buffer = (buffer << 5) | (uint)value;
-                bitsInBuffer += 5;
-
-                if (bitsInBuffer >= 8)
-                {
-                    bytes.Add((byte)(buffer >> (bitsInBuffer - 8)));
-                    bitsInBuffer -= 8;
-                }
-            }
-
-            return bytes.ToArray();
+            return Convert.ToBase64String(qrCodeBytes);
         }
     }
 }

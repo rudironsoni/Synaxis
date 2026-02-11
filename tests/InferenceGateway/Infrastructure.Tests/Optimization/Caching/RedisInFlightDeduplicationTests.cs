@@ -127,6 +127,7 @@ public class RedisInFlightDeduplicationTests
                 {
                     return (RedisValue)System.Text.Json.JsonSerializer.Serialize("Result from operation");
                 }
+
                 return RedisValue.Null;
             });
 
@@ -326,8 +327,8 @@ public class RedisInFlightDeduplicationTests
                 requestHash,
                 operation,
                 lockTimeout,
-                this._cancellationToken).ConfigureAwait(false);
-            Assert.True(false, "Expected exception to be thrown");
+                this._cancellationToken);
+            Assert.Fail("Expected exception to be thrown");
         }
         catch (InvalidOperationException)
         {
