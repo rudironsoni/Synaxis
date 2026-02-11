@@ -237,6 +237,270 @@ public sealed class UsersControllerTests : IDisposable
             responseType.GetProperty("mfaEnabled")?.GetValue(response).Should().NotBeNull();
         }
 
+        [Fact]
+        public async Task UpdateMe_WithAuthenticatedUser_UpdatesProfileSuccessfully()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            var request = new Synaxis.Core.Contracts.UpdateUserRequest
+            {
+                FirstName = "Updated",
+                LastName = "Name",
+                Timezone = "America/New_York",
+            };
+
+            // Act
+            var result = await _controller.UpdateMe(request, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<OkObjectResult>();
+            var okResult = result as OkObjectResult;
+            okResult!.Value.Should().NotBeNull();
+
+            var response = okResult.Value!;
+            var responseType = response.GetType();
+            responseType.GetProperty("firstName")?.GetValue(response).Should().Be("Updated");
+            responseType.GetProperty("lastName")?.GetValue(response).Should().Be("Name");
+            responseType.GetProperty("timezone")?.GetValue(response).Should().Be("America/New_York");
+
+            // Verify database was updated
+            var updatedUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == _testUserId);
+            updatedUser.Should().NotBeNull();
+            updatedUser!.FirstName.Should().Be("Updated");
+            updatedUser.LastName.Should().Be("Name");
+            updatedUser.Timezone.Should().Be("America/New_York");
+        }
+
+        [Fact]
+        public async Task UpdateMe_WithUnauthenticatedUser_ReturnsUnauthorized()
+        {
+            // Arrange
+            _userContext.SetAuthenticated(false);
+            var request = new Synaxis.Core.Contracts.UpdateUserRequest { FirstName = "Updated" };
+
+            // Act
+            var result = await _controller.UpdateMe(request, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<UnauthorizedResult>();
+        }
+
+        [Fact]
+        public async Task UpdateMe_WithInvalidFirstName_ReturnsBadRequest()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            var request = new Synaxis.Core.Contracts.UpdateUserRequest { FirstName = new string('A', 101) }; // Exceeds max length
+
+            // Act
+            var result = await _controller.UpdateMe(request, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>();
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult!.Value.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async Task UpdateMe_WithInvalidLastName_ReturnsBadRequest()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            var request = new Synaxis.Core.Contracts.UpdateUserRequest { LastName = new string('A', 101) }; // Exceeds max length
+
+            // Act
+            var result = await _controller.UpdateMe(request, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>();
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult!.Value.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async Task UpdateMe_WithInvalidTimezone_ReturnsBadRequest()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            var request = new Synaxis.Core.Contracts.UpdateUserRequest { Timezone = "Invalid" }; // Single part, no slash
+
+            // Act
+            var result = await _controller.UpdateMe(request, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>();
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult!.Value.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async Task UpdateMe_WithNonExistentUser_ReturnsNotFound()
+        {
+            // Arrange
+            // User not added to database
+            var request = new Synaxis.Core.Contracts.UpdateUserRequest { FirstName = "Updated" };
+
+            // Act
+            var result = await _controller.UpdateMe(request, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<NotFoundResult>();
+        }
+
+        [Fact]
+        public async Task UpdateMe_WithBlacklistedToken_ReturnsUnauthorized()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            _dbContext.Users.Add(testUser);
+
+            var blacklistedToken = new JwtBlacklist
+            {
+                Id = Guid.NewGuid(),
+                TokenId = "test-jti-123",
+                CreatedAt = DateTime.UtcNow,
+                ExpiresAt = DateTime.UtcNow.AddHours(1),
+            };
+            _dbContext.JwtBlacklists.Add(blacklistedToken);
+            await _dbContext.SaveChangesAsync();
+
+            // Setup Authorization header with blacklisted token
+            _controller.ControllerContext.HttpContext.Request.Headers["Authorization"] =
+                "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJ0ZXN0LWp0aS0xMjMifQ.test";
+
+            var request = new Synaxis.Core.Contracts.UpdateUserRequest { FirstName = "Updated" };
+
+            // Act
+            var result = await _controller.UpdateMe(request, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<UnauthorizedResult>();
+        }
+
+        [Fact]
+        public async Task UpdateMe_WithPartialUpdate_UpdatesOnlyProvidedFields()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            var request = new Synaxis.Core.Contracts.UpdateUserRequest { FirstName = "Updated" };
+
+            // Act
+            var result = await _controller.UpdateMe(request, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<OkObjectResult>();
+            var okResult = result as OkObjectResult;
+            okResult!.Value.Should().NotBeNull();
+
+            var response = okResult.Value!;
+            var responseType = response.GetType();
+            responseType.GetProperty("firstName")?.GetValue(response).Should().Be("Updated");
+            responseType.GetProperty("lastName")?.GetValue(response).Should().Be(testUser.LastName); // Unchanged
+            responseType.GetProperty("timezone")?.GetValue(response).Should().Be(testUser.Timezone); // Unchanged
+
+            // Verify database was updated
+            var updatedUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == _testUserId);
+            updatedUser.Should().NotBeNull();
+            updatedUser!.FirstName.Should().Be("Updated");
+            updatedUser.LastName.Should().Be(testUser.LastName);
+            updatedUser.Timezone.Should().Be(testUser.Timezone);
+        }
+
+        [Fact]
+        public async Task UpdateMe_WithEmptyFields_DoesNotUpdateFields()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            var request = new Synaxis.Core.Contracts.UpdateUserRequest { FirstName = string.Empty, LastName = string.Empty, Timezone = string.Empty };
+
+            // Act
+            var result = await _controller.UpdateMe(request, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<OkObjectResult>();
+            var okResult = result as OkObjectResult;
+            okResult!.Value.Should().NotBeNull();
+
+            var response = okResult.Value!;
+            var responseType = response.GetType();
+            responseType.GetProperty("firstName")?.GetValue(response).Should().Be(testUser.FirstName);
+            responseType.GetProperty("lastName")?.GetValue(response).Should().Be(testUser.LastName);
+            responseType.GetProperty("timezone")?.GetValue(response).Should().Be(testUser.Timezone);
+        }
+
+        [Fact]
+        public async Task UpdateMe_WithNullFields_DoesNotUpdateFields()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            var request = new Synaxis.Core.Contracts.UpdateUserRequest { FirstName = null, LastName = null, Timezone = null };
+
+            // Act
+            var result = await _controller.UpdateMe(request, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<OkObjectResult>();
+            var okResult = result as OkObjectResult;
+            okResult!.Value.Should().NotBeNull();
+
+            var response = okResult.Value!;
+            var responseType = response.GetType();
+            responseType.GetProperty("firstName")?.GetValue(response).Should().Be(testUser.FirstName);
+            responseType.GetProperty("lastName")?.GetValue(response).Should().Be(testUser.LastName);
+            responseType.GetProperty("timezone")?.GetValue(response).Should().Be(testUser.Timezone);
+        }
+
+        [Fact]
+        public async Task UpdateMe_UpdatesUpdatedAtTimestamp()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            var originalUpdatedAt = testUser.UpdatedAt;
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            var request = new Synaxis.Core.Contracts.UpdateUserRequest { FirstName = "Updated" };
+
+            // Act
+            var result = await _controller.UpdateMe(request, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<OkObjectResult>();
+            var okResult = result as OkObjectResult;
+            okResult!.Value.Should().NotBeNull();
+
+            var response = okResult.Value!;
+            var responseType = response.GetType();
+            var updatedAt = responseType.GetProperty("updatedAt")?.GetValue(response);
+            updatedAt.Should().NotBeNull();
+            updatedAt.Should().BeOfType<DateTime>();
+
+            var updatedUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == _testUserId);
+            updatedUser.Should().NotBeNull();
+            updatedUser!.UpdatedAt.Should().BeAfter(originalUpdatedAt);
+        }
+
         private void SetupControllerContext()
         {
             var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
