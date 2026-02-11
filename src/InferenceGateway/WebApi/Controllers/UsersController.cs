@@ -14,6 +14,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
     using Synaxis.Core.Contracts;
+    using Synaxis.Core.Models;
     using Synaxis.InferenceGateway.Application.Interfaces;
     using Synaxis.Infrastructure.Data;
 
@@ -111,8 +112,21 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         [HttpPut("me")]
         public async Task<IActionResult> UpdateMe([FromBody] UpdateUserRequest request, CancellationToken cancellationToken)
         {
-            var userId = this._userContext.UserId;
+            // Check authentication
+            var authResult = await this.CheckAuthenticationAsync(cancellationToken);
+            if (authResult != null)
+            {
+                return authResult;
+            }
 
+            // Validate request
+            var validationResult = this.ValidateUpdateUserRequest(request);
+            if (validationResult != null)
+            {
+                return validationResult;
+            }
+
+            var userId = this._userContext.UserId;
             var user = await this._synaxisDbContext.Users
                 .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken)
                 .ConfigureAwait(false);
@@ -122,6 +136,35 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
                 return this.NotFound();
             }
 
+            UsersController.UpdateUserFields(user, request);
+            user.UpdatedAt = DateTime.UtcNow;
+            await this._synaxisDbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            return this.Ok(this.CreateUpdateUserResponse(user));
+        }
+
+        private async Task<IActionResult?> CheckAuthenticationAsync(CancellationToken cancellationToken)
+        {
+            if (!this._userContext.IsAuthenticated)
+            {
+                return this.Unauthorized();
+            }
+
+            var authHeader = this.Request.Headers.Authorization.FirstOrDefault();
+            if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer ", StringComparison.Ordinal))
+            {
+                var token = authHeader.Substring("Bearer ".Length).Trim();
+                if (await this.IsTokenBlacklistedAsync(token, cancellationToken))
+                {
+                    return this.Unauthorized();
+                }
+            }
+
+            return null;
+        }
+
+        private static void UpdateUserFields(User user, UpdateUserRequest request)
+        {
             if (!string.IsNullOrWhiteSpace(request.FirstName))
             {
                 user.FirstName = request.FirstName;
@@ -141,11 +184,11 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
             {
                 user.Locale = request.Locale;
             }
+        }
 
-            user.UpdatedAt = DateTime.UtcNow;
-            await this._synaxisDbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
-            var response = new
+        private object CreateUpdateUserResponse(User user)
+        {
+            return new
             {
                 id = user.Id,
                 email = user.Email,
@@ -157,8 +200,6 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
                 role = user.Role,
                 updatedAt = user.UpdatedAt,
             };
-
-            return this.Ok(response);
         }
 
         /// <summary>
@@ -483,32 +524,50 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
 
             return null;
         }
-    }
 
-    /// <summary>
-    /// Request to update user profile.
-    /// </summary>
-    public class UpdateUserRequest
-    {
-        /// <summary>
-        /// Gets or sets the first name.
-        /// </summary>
-        public string? FirstName { get; set; }
+        private IActionResult? ValidateUpdateUserRequest(UpdateUserRequest request)
+        {
+            // Validate FirstName
+            if (request.FirstName != null && request.FirstName.Length > 100)
+            {
+                return this.BadRequest("FirstName must not exceed 100 characters");
+            }
 
-        /// <summary>
-        /// Gets or sets the last name.
-        /// </summary>
-        public string? LastName { get; set; }
+            // Validate LastName
+            if (request.LastName != null && request.LastName.Length > 100)
+            {
+                return this.BadRequest("LastName must not exceed 100 characters");
+            }
 
-        /// <summary>
-        /// Gets or sets the timezone.
-        /// </summary>
-        public string? Timezone { get; set; }
+            // Validate Timezone
+            if (!string.IsNullOrWhiteSpace(request.Timezone) && !IsValidTimezone(request.Timezone))
+            {
+                return this.BadRequest("Invalid timezone format");
+            }
 
-        /// <summary>
-        /// Gets or sets the locale.
-        /// </summary>
-        public string? Locale { get; set; }
+            return null;
+        }
+
+        private static bool IsValidTimezone(string timezone)
+        {
+            // Basic timezone validation - check if it matches common IANA timezone patterns
+            // This is a simplified validation. In production, you might want to use
+            // TimeZoneInfo.TryConvertToSystemTimeZoneId or a more comprehensive library
+            if (string.IsNullOrWhiteSpace(timezone))
+            {
+                return false;
+            }
+
+            // Check for common IANA timezone patterns like "America/New_York", "Europe/London", etc.
+            var parts = timezone.Split('/');
+            if (parts.Length < 2)
+            {
+                return false;
+            }
+
+            // Each part should be alphanumeric with underscores or hyphens
+            return parts.All(part => !string.IsNullOrWhiteSpace(part) && part.All(c => char.IsLetterOrDigit(c) || c == '_' || c == '-'));
+        }
     }
 
     /// <summary>
