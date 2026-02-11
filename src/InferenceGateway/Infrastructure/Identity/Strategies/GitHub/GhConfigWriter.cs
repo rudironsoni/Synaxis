@@ -38,7 +38,17 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
 
         private static string PrepareConfigDirectory()
         {
+            // On non-Windows platforms, check HOME environment variable first
             var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                var homeEnv = Environment.GetEnvironmentVariable("HOME");
+                if (!string.IsNullOrEmpty(homeEnv))
+                {
+                    home = homeEnv;
+                }
+            }
+
             var cfgDir = Path.Combine(home, ".config", "gh");
             var path = Path.Combine(cfgDir, "hosts.yml");
 
