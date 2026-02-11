@@ -1314,11 +1314,12 @@
             Supports GDPR (EU) and LGPD (Brazil) with fallback strategy.
             </summary>
         </member>
-        <member name="M:Synaxis.InferenceGateway.Infrastructure.Compliance.ComplianceProviderFactory.#ctor(Synaxis.InferenceGateway.Infrastructure.ControlPlane.SynaxisDbContext)">
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Compliance.ComplianceProviderFactory.#ctor(Synaxis.Infrastructure.Data.SynaxisDbContext,Synaxis.InferenceGateway.Infrastructure.ControlPlane.SynaxisDbContext)">
             <summary>
             Initializes a new instance of the <see cref="T:Synaxis.InferenceGateway.Infrastructure.Compliance.ComplianceProviderFactory"/> class.
             </summary>
-            <param name="dbContext">The dbContext.</param>
+            <param name="auditDbContext">The audit database context.</param>
+            <param name="controlPlaneDbContext">The control plane database context.</param>
         </member>
         <member name="M:Synaxis.InferenceGateway.Infrastructure.Compliance.ComplianceProviderFactory.GetProvider(System.String)">
             <summary>
@@ -1361,11 +1362,12 @@
             Enforces 72-hour breach notification, data residency in EU, and user rights (export, erasure).
             </summary>
         </member>
-        <member name="M:Synaxis.InferenceGateway.Infrastructure.Compliance.GdprComplianceProvider.#ctor(Synaxis.InferenceGateway.Infrastructure.ControlPlane.SynaxisDbContext)">
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Compliance.GdprComplianceProvider.#ctor(Synaxis.InferenceGateway.Infrastructure.ControlPlane.SynaxisDbContext,Synaxis.Infrastructure.Data.SynaxisDbContext)">
             <summary>
             Initializes a new instance of the <see cref="T:Synaxis.InferenceGateway.Infrastructure.Compliance.GdprComplianceProvider"/> class.
             </summary>
-            <param name="dbContext">The database context.</param>
+            <param name="controlPlaneDbContext">The control plane database context.</param>
+            <param name="auditDbContext">The audit database context.</param>
         </member>
         <member name="P:Synaxis.InferenceGateway.Infrastructure.Compliance.GdprComplianceProvider.RegulationCode">
             <inheritdoc/>
@@ -1400,11 +1402,12 @@
             Enforces ANPD notification, 10 legal bases validation, and Brazilian data protection rules.
             </summary>
         </member>
-        <member name="M:Synaxis.InferenceGateway.Infrastructure.Compliance.LgpdComplianceProvider.#ctor(Synaxis.InferenceGateway.Infrastructure.ControlPlane.SynaxisDbContext)">
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Compliance.LgpdComplianceProvider.#ctor(Synaxis.Infrastructure.Data.SynaxisDbContext,Synaxis.InferenceGateway.Infrastructure.ControlPlane.SynaxisDbContext)">
             <summary>
             Initializes a new instance of the <see cref="T:Synaxis.InferenceGateway.Infrastructure.Compliance.LgpdComplianceProvider"/> class.
             </summary>
-            <param name="dbContext">The database context.</param>
+            <param name="auditDbContext">The audit database context.</param>
+            <param name="controlPlaneDbContext">The control plane database context.</param>
         </member>
         <member name="P:Synaxis.InferenceGateway.Infrastructure.Compliance.LgpdComplianceProvider.RegulationCode">
             <inheritdoc/>
@@ -1912,76 +1915,6 @@
         </member>
         <member name="M:Synaxis.InferenceGateway.Infrastructure.ControlPlane.DeviationRegistry.UpdateStatusAsync(System.Guid,Synaxis.InferenceGateway.Application.ControlPlane.Entities.DeviationStatus,System.Threading.CancellationToken)">
             <inheritdoc/>
-        </member>
-        <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit.AuditLog">
-            <summary>
-            Represents an audit log entry for tracking all system activities.
-            </summary>
-        </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit.AuditLog.Id">
-            <summary>
-            Gets or sets the audit log ID.
-            </summary>
-        </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit.AuditLog.OrganizationId">
-            <summary>
-            Gets or sets the organization ID.
-            </summary>
-        </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit.AuditLog.UserId">
-            <summary>
-            Gets or sets the user ID.
-            </summary>
-        </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit.AuditLog.Action">
-            <summary>
-            Gets or sets the action performed.
-            </summary>
-        </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit.AuditLog.EntityType">
-            <summary>
-            Gets or sets the entity type.
-            </summary>
-        </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit.AuditLog.EntityId">
-            <summary>
-            Gets or sets the entity ID.
-            </summary>
-        </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit.AuditLog.PreviousValues">
-            <summary>
-            Gets or sets the previous values.
-            </summary>
-        </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit.AuditLog.NewValues">
-            <summary>
-            Gets or sets the new values.
-            </summary>
-        </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit.AuditLog.IpAddress">
-            <summary>
-            Gets or sets the IP address.
-            </summary>
-        </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit.AuditLog.UserAgent">
-            <summary>
-            Gets or sets the user agent.
-            </summary>
-        </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit.AuditLog.CorrelationId">
-            <summary>
-            Gets or sets the correlation ID.
-            </summary>
-        </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit.AuditLog.CreatedAt">
-            <summary>
-            Gets or sets the creation timestamp.
-            </summary>
-        </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit.AuditLog.PartitionDate">
-            <summary>
-            Gets or sets the partition date.
-            </summary>
         </member>
         <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.Group">
             <summary>
@@ -3272,14 +3205,10 @@
         </member>
         <member name="T:Synaxis.InferenceGateway.Infrastructure.ControlPlane.SynaxisDbContext">
             <summary>
-            Multi-tenant DbContext for Synaxis with four separate schemas:
+            Multi-tenant DbContext for Synaxis with three separate schemas:
             - platform: Tenant-agnostic provider and model catalog
             - identity: Multi-tenant organization, user, and group management
-            - operations: Runtime provider configurations and API keys
-            - audit: System-wide audit logging.
-            </summary>
-            <summary>
-            SynaxisDbContext class.
+            - operations: Runtime provider configurations and API keys.
             </summary>
         </member>
         <member name="M:Synaxis.InferenceGateway.Infrastructure.ControlPlane.SynaxisDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Synaxis.InferenceGateway.Infrastructure.ControlPlane.SynaxisDbContext})">
@@ -3351,11 +3280,6 @@
         <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.SynaxisDbContext.ApiKeys">
             <summary>
             Gets the DbSet for managing API keys in the operations schema.
-            </summary>
-        </member>
-        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.SynaxisDbContext.AuditLogs">
-            <summary>
-            Gets the DbSet for managing audit logs in the audit schema.
             </summary>
         </member>
         <member name="M:Synaxis.InferenceGateway.Infrastructure.ControlPlane.SynaxisDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">

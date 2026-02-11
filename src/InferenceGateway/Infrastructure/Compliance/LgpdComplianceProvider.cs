@@ -13,9 +13,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
     using System.Text.Json;
     using System.Threading.Tasks;
     using Microsoft.EntityFrameworkCore;
+    using Synaxis.Core.Models;
     using Synaxis.InferenceGateway.Infrastructure.Contracts;
     using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
-    using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit;
+    using Synaxis.Infrastructure.Data;
 
     /// <summary>
     /// LGPD (Lei Geral de Proteção de Dados) compliance provider for Brazilian data protection.
@@ -23,7 +24,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
     /// </summary>
     public class LgpdComplianceProvider : IComplianceProvider
     {
-        private readonly SynaxisDbContext _dbContext;
+        private readonly Synaxis.Infrastructure.Data.SynaxisDbContext _auditDbContext;
+        private readonly Synaxis.InferenceGateway.Infrastructure.ControlPlane.SynaxisDbContext _controlPlaneDbContext;
 
         // Brazilian regions for data residency validation
         private static readonly HashSet<string> BrazilianRegions = new()
@@ -34,10 +36,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
         /// <summary>
         /// Initializes a new instance of the <see cref="LgpdComplianceProvider"/> class.
         /// </summary>
-        /// <param name="dbContext">The database context.</param>
-        public LgpdComplianceProvider(SynaxisDbContext dbContext)
+        /// <param name="auditDbContext">The audit database context.</param>
+        /// <param name="controlPlaneDbContext">The control plane database context.</param>
+        public LgpdComplianceProvider(
+            Synaxis.Infrastructure.Data.SynaxisDbContext auditDbContext,
+            Synaxis.InferenceGateway.Infrastructure.ControlPlane.SynaxisDbContext controlPlaneDbContext)
         {
-            this._dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+            this._auditDbContext = auditDbContext ?? throw new ArgumentNullException(nameof(auditDbContext));
+            this._controlPlaneDbContext = controlPlaneDbContext ?? throw new ArgumentNullException(nameof(controlPlaneDbContext));
         }
 
         /// <inheritdoc/>
@@ -126,26 +132,32 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                 Id = Guid.NewGuid(),
                 OrganizationId = context.OrganizationId,
                 UserId = context.UserId,
-                Action = "transferencia_internacional", // Portuguese for international transfer
-                EntityType = "transferencia_dados",
-                EntityId = context.UserId?.ToString(),
-                NewValues = JsonSerializer.Serialize(new
+                EventType = "transferencia_internacional", // Portuguese for international transfer
+                EventCategory = "compliance",
+                Action = "transferencia_internacional",
+                ResourceType = "transferencia_dados",
+                ResourceId = context.UserId?.ToString() ?? string.Empty,
+                Metadata = new Dictionary<string, object>
                 {
-                    regiao_origem = context.FromRegion,
-                    regiao_destino = context.ToRegion,
-                    base_legal = context.LegalBasis,
-                    finalidade = context.Purpose,
-                    categorias_dados = context.DataCategories,
-                    criptografia_utilizada = context.EncryptionUsed,
-                    consentimento_obtido = context.UserConsentObtained,
-                    regulamento = "LGPD",
-                }),
-                CreatedAt = DateTime.UtcNow,
-                PartitionDate = DateTime.UtcNow.Date,
+                    { "regiao_origem", context.FromRegion },
+                    { "regiao_destino", context.ToRegion },
+                    { "base_legal", context.LegalBasis },
+                    { "finalidade", context.Purpose },
+                    { "categorias_dados", context.DataCategories },
+                    { "criptografia_utilizada", context.EncryptionUsed },
+                    { "consentimento_obtido", context.UserConsentObtained },
+                    { "regulamento", "LGPD" },
+                },
+                IpAddress = string.Empty,
+                UserAgent = string.Empty,
+                Region = context.FromRegion ?? "unknown",
+                IntegrityHash = string.Empty,
+                PreviousHash = string.Empty,
+                Timestamp = DateTime.UtcNow,
             };
 
-            this._dbContext.AuditLogs.Add(auditLog);
-            return this._dbContext.SaveChangesAsync();
+            this._auditDbContext.AuditLogs.Add(auditLog);
+            return this._auditDbContext.SaveChangesAsync();
         }
 
         /// <inheritdoc/>
@@ -182,7 +194,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
 
         private async Task<object> GetUserProfileAsync(Guid userId)
         {
-            var user = await this._dbContext.Users
+            var user = await this._controlPlaneDbContext.Users
                 .Where(u => u.Id == userId)
                 .Select(u => new
                 {
@@ -190,8 +202,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                     u.Email,
                     u.FirstName,
                     u.LastName,
-                    u.PhoneNumber,
-                    u.Status,
                 })
                 .FirstOrDefaultAsync().ConfigureAwait(false);
 
@@ -205,7 +215,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
 
         private async Task<object> GetOrganizationMembershipsAsync(Guid userId)
         {
-            return await this._dbContext.UserOrganizationMemberships
+            return await this._controlPlaneDbContext.UserOrganizationMemberships
                 .Where(m => m.UserId == userId)
                 .Select(m => new
                 {
@@ -218,7 +228,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
 
         private async Task<object> GetGroupMembershipsAsync(Guid userId)
         {
-            return await this._dbContext.UserGroupMemberships
+            return await this._controlPlaneDbContext.UserGroupMemberships
                 .Where(m => m.UserId == userId)
                 .Select(m => new
                 {
@@ -231,7 +241,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
 
         private async Task<object> GetApiKeysAsync(Guid userId)
         {
-            return await this._dbContext.ApiKeys
+            return await this._controlPlaneDbContext.ApiKeys
                 .Where(k => k.CreatedBy == userId)
                 .Select(k => new
                 {
@@ -247,16 +257,18 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
 
         private async Task<object> GetAuditLogsAsync(Guid userId)
         {
-            return await this._dbContext.AuditLogs
+            return await this._auditDbContext.AuditLogs
                 .Where(a => a.UserId == userId)
-                .OrderByDescending(a => a.CreatedAt)
+                .OrderByDescending(a => a.Timestamp)
                 .Take(1000) // Limit to last 1000 entries
                 .Select(a => new
                 {
                     a.Action,
-                    a.EntityType,
-                    a.EntityId,
-                    a.CreatedAt,
+                    a.EventType,
+                    a.EventCategory,
+                    a.ResourceType,
+                    a.ResourceId,
+                    a.Timestamp,
                 })
                 .ToListAsync().ConfigureAwait(false);
         }
@@ -303,13 +315,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
         /// <inheritdoc/>
         public async Task<bool> DeleteUserDataAsync(Guid userId)
         {
-            using var transaction = await this._dbContext.Database.BeginTransactionAsync().ConfigureAwait(false);
+            using var transaction = await this._controlPlaneDbContext.Database.BeginTransactionAsync().ConfigureAwait(false);
 
             try
             {
                 await this.LogDeletionRequestAsync(userId).ConfigureAwait(false);
                 await this.DeleteUserRelatedDataAsync(userId).ConfigureAwait(false);
-                await this._dbContext.SaveChangesAsync().ConfigureAwait(false);
+                await this._controlPlaneDbContext.SaveChangesAsync().ConfigureAwait(false);
                 await transaction.CommitAsync().ConfigureAwait(false);
 
                 return true;
@@ -326,41 +338,48 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
             var deletionLog = new AuditLog
             {
                 Id = Guid.NewGuid(),
+                OrganizationId = Guid.Empty, // System-level event
                 UserId = userId,
+                EventType = "eliminacao_dados",
+                EventCategory = "compliance",
                 Action = "eliminacao_dados",
-                EntityType = "usuario",
-                EntityId = userId.ToString(),
-                NewValues = JsonSerializer.Serialize(new
+                ResourceType = "usuario",
+                ResourceId = userId.ToString(),
+                Metadata = new Dictionary<string, object>
                 {
-                    regulamento = "LGPD",
-                    direito = "direito_eliminacao",
-                    artigo = "Artigo 18, VI",
-                    data_hora = DateTime.UtcNow,
-                }),
-                CreatedAt = DateTime.UtcNow,
-                PartitionDate = DateTime.UtcNow.Date,
+                    { "regulamento", "LGPD" },
+                    { "direito", "direito_eliminacao" },
+                    { "artigo", "Artigo 18, VI" },
+                    { "data_hora", DateTime.UtcNow },
+                },
+                IpAddress = string.Empty,
+                UserAgent = string.Empty,
+                Region = "unknown",
+                IntegrityHash = string.Empty,
+                PreviousHash = string.Empty,
+                Timestamp = DateTime.UtcNow,
             };
 
-            this._dbContext.AuditLogs.Add(deletionLog);
-            return this._dbContext.SaveChangesAsync();
+            this._auditDbContext.AuditLogs.Add(deletionLog);
+            return this._auditDbContext.SaveChangesAsync();
         }
 
         private async Task DeleteUserRelatedDataAsync(Guid userId)
         {
             // Delete group memberships
-            var groupMemberships = await this._dbContext.UserGroupMemberships
+            var groupMemberships = await this._controlPlaneDbContext.UserGroupMemberships
                 .Where(m => m.UserId == userId)
                 .ToListAsync().ConfigureAwait(false);
-            this._dbContext.UserGroupMemberships.RemoveRange(groupMemberships);
+            this._controlPlaneDbContext.UserGroupMemberships.RemoveRange(groupMemberships);
 
             // Delete organization memberships
-            var orgMemberships = await this._dbContext.UserOrganizationMemberships
+            var orgMemberships = await this._controlPlaneDbContext.UserOrganizationMemberships
                 .Where(m => m.UserId == userId)
                 .ToListAsync().ConfigureAwait(false);
-            this._dbContext.UserOrganizationMemberships.RemoveRange(orgMemberships);
+            this._controlPlaneDbContext.UserOrganizationMemberships.RemoveRange(orgMemberships);
 
             // Revoke API keys
-            var apiKeys = await this._dbContext.ApiKeys
+            var apiKeys = await this._controlPlaneDbContext.ApiKeys
                 .Where(k => k.CreatedBy == userId)
                 .ToListAsync().ConfigureAwait(false);
 
@@ -372,10 +391,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
             }
 
             // Delete user account
-            var user = await this._dbContext.Users.FindAsync(userId).ConfigureAwait(false);
+            var user = await this._controlPlaneDbContext.Users.FindAsync(userId).ConfigureAwait(false);
             if (user != null)
             {
-                this._dbContext.Users.Remove(user);
+                this._controlPlaneDbContext.Users.Remove(user);
             }
         }
 
@@ -395,11 +414,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                 "public_administration",      // III - Public administration
                 "research",                   // IV - Studies and research
                 "contract",                   // V - Contract execution
-                "legal_proceedings", // VI - Exercise of rights in legal proceedings
-                "life_protection", // VII - Protection of life or physical safety
-                "health_protection", // VIII - Health protection
-                "legitimate_interests", // IX - Legitimate interests (not for sensitive data)
-                "credit_protection", // X - Credit protection
+                "legal_proceedings",          // VI - Exercise of rights in legal proceedings
+                "life_protection",            // VII - Protection of life or physical safety
+                "health_protection",          // VIII - Health protection
+                "legitimate_interests",      // IX - Legitimate interests (not for sensitive data)
+                "credit_protection",          // X - Credit protection
             };
 
             if (string.IsNullOrWhiteSpace(context.LegalBasis))

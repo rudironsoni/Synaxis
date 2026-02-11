@@ -7,20 +7,15 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
     using Microsoft.AspNetCore.Identity;
     using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore;
-    using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit;
     using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity;
     using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Operations;
     using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Platform;
 
     /// <summary>
-    /// Multi-tenant DbContext for Synaxis with four separate schemas:
+    /// Multi-tenant DbContext for Synaxis with three separate schemas:
     /// - platform: Tenant-agnostic provider and model catalog
     /// - identity: Multi-tenant organization, user, and group management
-    /// - operations: Runtime provider configurations and API keys
-    /// - audit: System-wide audit logging.
-    /// </summary>
-    /// <summary>
-    /// SynaxisDbContext class.
+    /// - operations: Runtime provider configurations and API keys.
     /// </summary>
     public sealed class SynaxisDbContext : IdentityDbContext<SynaxisUser, Role, Guid>
     {
@@ -104,13 +99,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
         /// </summary>
         public DbSet<ApiKey> ApiKeys => this.Set<ApiKey>();
 
-        // Audit Schema (logs)
-
-        /// <summary>
-        /// Gets the DbSet for managing audit logs in the audit schema.
-        /// </summary>
-        public DbSet<AuditLog> AuditLogs => this.Set<AuditLog>();
-
         /// <summary>
         /// Configures the entity model and database schema using the Entity Framework Fluent API.
         /// </summary>
@@ -122,7 +110,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
             ConfigurePlatformSchema(builder);
             ConfigureIdentitySchema(builder);
             ConfigureOperationsSchema(builder);
-            ConfigureAuditSchema(builder);
         }
 
         private static void ConfigurePlatformSchema(ModelBuilder modelBuilder)
@@ -522,39 +509,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                 entity.HasIndex(ak => ak.OrganizationId);
                 entity.HasIndex(ak => ak.IsActive);
                 entity.HasIndex(ak => ak.ExpiresAt);
-            });
-        }
-
-        private static void ConfigureAuditSchema(ModelBuilder modelBuilder)
-        {
-            // AuditLog Configuration
-            modelBuilder.Entity<AuditLog>(entity =>
-            {
-                entity.ToTable(
-                    "AuditLogs",
-                    "audit",
-                    t => t.HasCheckConstraint(
-                        "CK_AuditLog_Action",
-                        "\"Action\" IN ('Create', 'Update', 'Delete', 'Read', 'Login', 'Logout', 'ApiCall', 'PermissionChange', 'ConfigChange')"));
-
-                entity.HasKey(al => al.Id);
-
-                entity.Property(al => al.Action).HasMaxLength(200).IsRequired();
-                entity.Property(al => al.EntityType).HasMaxLength(100);
-                entity.Property(al => al.EntityId).HasMaxLength(100);
-                entity.Property(al => al.PreviousValues).HasColumnType("jsonb");
-                entity.Property(al => al.NewValues).HasColumnType("jsonb");
-                entity.Property(al => al.IpAddress).HasMaxLength(45);
-                entity.Property(al => al.UserAgent).HasMaxLength(500);
-                entity.Property(al => al.CorrelationId).HasMaxLength(100);
-
-                entity.HasIndex(al => al.OrganizationId);
-                entity.HasIndex(al => al.UserId);
-                entity.HasIndex(al => al.Action);
-                entity.HasIndex(al => al.EntityType);
-                entity.HasIndex(al => al.CreatedAt);
-                entity.HasIndex(al => al.PartitionDate);
-                entity.HasIndex(al => al.CorrelationId);
             });
         }
     }

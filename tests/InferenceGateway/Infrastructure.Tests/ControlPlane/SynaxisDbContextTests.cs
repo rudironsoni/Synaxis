@@ -7,7 +7,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.ControlPlane;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
-using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Audit;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Operations;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Platform;
@@ -431,60 +430,6 @@ public sealed class SynaxisDbContextTests : IDisposable
         savedKey.Should().NotBeNull();
         savedKey!.Name.Should().Be("Production API Key");
         savedKey.IsActive.Should().BeTrue();
-    }
-
-    [Fact]
-    public void Should_Create_AuditLog()
-    {
-        // Arrange
-        var organization = new Organization
-        {
-            Id = Guid.NewGuid(),
-            LegalName = "Test Org",
-            DisplayName = "Test",
-            Slug = "test-org",
-            Status = "Active",
-            PlanTier = "Free",
-        };
-
-        var user = new SynaxisUser
-        {
-            Id = Guid.NewGuid(),
-            UserName = "testuser@example.com",
-            Email = "testuser@example.com",
-            Status = "Active",
-            EmailConfirmed = true,
-        };
-
-        var auditLog = new AuditLog
-        {
-            Id = Guid.NewGuid(),
-            OrganizationId = organization.Id,
-            UserId = user.Id,
-            Action = "Create",
-            EntityType = "Organization",
-            EntityId = organization.Id.ToString(),
-            NewValues = "{\"name\":\"Test Org\"}",
-            IpAddress = "192.168.1.1",
-            UserAgent = "Mozilla/5.0",
-            CorrelationId = Guid.NewGuid().ToString(),
-            CreatedAt = DateTime.UtcNow,
-            PartitionDate = DateTime.UtcNow.Date,
-        };
-
-        // Act
-        this._context.Organizations.Add(organization);
-        this._context.Users.Add(user);
-        this._context.AuditLogs.Add(auditLog);
-        this._context.SaveChanges();
-
-        // Assert
-        var savedLog = this._context.AuditLogs
-            .FirstOrDefault(l => l.Id == auditLog.Id);
-
-        savedLog.Should().NotBeNull();
-        savedLog!.Action.Should().Be("Create");
-        savedLog.EntityType.Should().Be("Organization");
     }
 
     [Fact]
