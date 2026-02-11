@@ -147,10 +147,24 @@ namespace Synaxis.Api.Controllers
                     Role = "member",
                 });
 
-                // Send verification email
+                // Generate and store verification token
                 var verificationToken = Guid.NewGuid().ToString();
                 var verificationUrl = $"{this.Request.Scheme}://{this.Request.Host}/api/auth/verify-email?token={verificationToken}";
 
+                var tokenEntity = new Core.Models.EmailVerificationToken
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = user.Id,
+                    TokenHash = HashToken(verificationToken),
+                    ExpiresAt = DateTime.UtcNow.AddHours(24),
+                    IsUsed = false,
+                    CreatedAt = DateTime.UtcNow,
+                };
+
+                this._dbContext.EmailVerificationTokens.Add(tokenEntity);
+                await this._dbContext.SaveChangesAsync();
+
+                // Send verification email
                 await this._emailService.SendVerificationEmailAsync(user.Email, verificationUrl);
 
                 this._logger.LogInformation("Registration successful for email: {Email}", request.Email);
@@ -186,14 +200,105 @@ namespace Synaxis.Api.Controllers
             {
                 this._logger.LogInformation("Email verification attempt for token: {Token}", request.Token);
 
-                // In a real implementation, you'd validate the token and update the user's email verification status
-                // For now, we'll just return success
+                // Validate request
+                if (string.IsNullOrEmpty(request.Token))
+                {
+                    return this.BadRequest(new { message = "Token is required" });
+                }
+
+                var validationResult = await this.ValidateAndVerifyEmailTokenAsync(request.Token);
+                if (validationResult != null)
+                {
+                    return validationResult;
+                }
+
                 return this.Ok(new { message = "Email verified successfully" });
             }
             catch (Exception ex)
             {
                 this._logger.LogError(ex, "Error during email verification");
                 return this.StatusCode(500, new { message = "An error occurred during email verification" });
+            }
+        }
+
+        /// <summary>
+        /// Resend verification email.
+        /// </summary>
+        /// <param name="request">The resend verification request.</param>
+        /// <returns>The resend result.</returns>
+        [HttpPost("resend-verification")]
+        public async Task<ActionResult> ResendVerificationEmail([FromBody] ResendVerificationRequest request)
+        {
+            try
+            {
+                this._logger.LogInformation("Resend verification email request for: {Email}", request.Email);
+
+                // Validate request
+                if (string.IsNullOrEmpty(request.Email))
+                {
+                    return this.BadRequest(new { message = "Email is required" });
+                }
+
+                var user = await this._dbContext.Users
+                    .FirstOrDefaultAsync(u => u.Email == request.Email);
+
+                if (user == null)
+                {
+                    // Don't reveal that user doesn't exist
+                    this._logger.LogInformation("Resend verification email for non-existent email: {Email}", request.Email);
+                    return this.Ok(new { message = "If the email exists, a verification link has been sent" });
+                }
+
+                // Check if email is already verified
+                if (user.EmailVerifiedAt.HasValue)
+                {
+                    this._logger.LogInformation("Email already verified for user: {UserId}", user.Id);
+                    return this.Ok(new { message = "Email is already verified" });
+                }
+
+                await this.InvalidateExistingTokensAsync(user.Id);
+                await this.SendNewVerificationEmailAsync(user);
+
+                this._logger.LogInformation("Verification email resent for user: {UserId}", user.Id);
+
+                return this.Ok(new { message = "Verification email sent" });
+            }
+            catch (Exception ex)
+            {
+                this._logger.LogError(ex, "Error during resend verification email for: {Email}", request.Email);
+                return this.StatusCode(500, new { message = "An error occurred while resending verification email" });
+            }
+        }
+
+        /// <summary>
+        /// Get email verification status for the current user.
+        /// </summary>
+        /// <returns>The email verification status.</returns>
+        [HttpGet("me/verification-status")]
+        [Authorize]
+        public async Task<ActionResult<EmailVerificationStatusDto>> GetVerificationStatus()
+        {
+            try
+            {
+                var userIdClaim = this.User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
+                {
+                    return this.Unauthorized(new { message = "Invalid user" });
+                }
+
+                var user = await this._userService.GetUserAsync(userId);
+
+                return this.Ok(new EmailVerificationStatusDto
+                {
+                    IsVerified = user.EmailVerifiedAt.HasValue,
+                    Email = user.Email,
+                    VerifiedAt = user.EmailVerifiedAt,
+                });
+            }
+            catch (Exception ex)
+            {
+                this._logger.LogError(ex, "Error getting verification status");
+                return this.StatusCode(500, new { message = "An error occurred while getting verification status" });
             }
         }
 
@@ -538,6 +643,97 @@ namespace Synaxis.Api.Controllers
                 MfaEnabled = user.MfaEnabled,
                 EmailVerifiedAt = user.EmailVerifiedAt,
             };
+        }
+
+        private async Task<ActionResult> ValidateAndVerifyEmailTokenAsync(string token)
+        {
+            // Find the verification token
+            var verificationToken = await this._dbContext.EmailVerificationTokens
+                .Include(t => t.User)
+                .FirstOrDefaultAsync(t => t.TokenHash == HashToken(token));
+
+            if (verificationToken == null)
+            {
+                this._logger.LogWarning("Invalid email verification token");
+                return this.BadRequest(new { message = "Invalid or expired token" });
+            }
+
+            // Check if token is expired
+            if (verificationToken.ExpiresAt < DateTime.UtcNow)
+            {
+                this._logger.LogWarning("Expired email verification token for user: {UserId}", verificationToken.UserId);
+                return this.BadRequest(new { message = "Invalid or expired token" });
+            }
+
+            // Check if token has already been used
+            if (verificationToken.IsUsed)
+            {
+                this._logger.LogWarning("Already used email verification token for user: {UserId}", verificationToken.UserId);
+                return this.BadRequest(new { message = "Token has already been used" });
+            }
+
+            // Check if email is already verified
+            if (verificationToken.User.EmailVerifiedAt.HasValue)
+            {
+                this._logger.LogWarning("Email already verified for user: {UserId}", verificationToken.UserId);
+                return this.BadRequest(new { message = "Email is already verified" });
+            }
+
+            // Update user's email verification status
+            verificationToken.User.EmailVerifiedAt = DateTime.UtcNow;
+            verificationToken.User.UpdatedAt = DateTime.UtcNow;
+
+            // Mark token as used
+            verificationToken.IsUsed = true;
+
+            await this._dbContext.SaveChangesAsync();
+
+            this._logger.LogInformation("Email verified successfully for user: {UserId}", verificationToken.UserId);
+
+            return null;
+        }
+
+        private async Task InvalidateExistingTokensAsync(Guid userId)
+        {
+            var existingTokens = await this._dbContext.EmailVerificationTokens
+                .Where(t => t.UserId == userId && !t.IsUsed)
+                .ToListAsync();
+
+            foreach (var token in existingTokens)
+            {
+                token.IsUsed = true;
+            }
+
+            await this._dbContext.SaveChangesAsync();
+        }
+
+        private async Task SendNewVerificationEmailAsync(Core.Models.User user)
+        {
+            var verificationToken = Guid.NewGuid().ToString();
+            var verificationUrl = $"{this.Request.Scheme}://{this.Request.Host}/api/auth/verify-email?token={verificationToken}";
+
+            var tokenEntity = new Core.Models.EmailVerificationToken
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                TokenHash = HashToken(verificationToken),
+                ExpiresAt = DateTime.UtcNow.AddHours(24),
+                IsUsed = false,
+                CreatedAt = DateTime.UtcNow,
+            };
+
+            this._dbContext.EmailVerificationTokens.Add(tokenEntity);
+            await this._dbContext.SaveChangesAsync();
+
+            await this._emailService.SendVerificationEmailAsync(user.Email, verificationUrl);
+        }
+
+        private static string HashToken(string token)
+        {
+            using var sha256 = System.Security.Cryptography.SHA256.Create();
+            var bytes = System.Text.Encoding.UTF8.GetBytes(token);
+            var hash = sha256.ComputeHash(bytes);
+            return Convert.ToBase64String(hash);
         }
     }
 }

@@ -1,0 +1,205 @@
+openapi: 3.0.3
+info:
+  title: Synaxis Email Verification API
+  description: Email verification endpoints for user account verification
+  version: 1.0.0
+servers:
+  - url: https://api.synaxis.com/v1
+    description: Production server
+  - url: https://staging-api.synaxis.com/v1
+    description: Staging server
+  - url: http://localhost:5000/v1
+    description: Local development server
+
+paths:
+  /auth/verify-email:
+    post:
+      summary: Verify email address
+      description: Verifies a user's email address using a verification token
+      operationId: verifyEmail
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyEmailRequest'
+      responses:
+        '200':
+          description: Email verified successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyEmailResponse'
+        '400':
+          description: Invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/resend-verification:
+    post:
+      summary: Resend verification email
+      description: Resends a verification email to the user's email address
+      operationId: resendVerificationEmail
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResendVerificationRequest'
+      responses:
+        '200':
+          description: Verification email sent
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ResendVerificationSuccessResponse'
+                  - $ref: '#/components/schemas/ResendVerificationAlreadyVerifiedResponse'
+                  - $ref: '#/components/schemas/ResendVerificationUserNotFoundResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/me/verification-status:
+    get:
+      summary: Get email verification status
+      description: Gets the email verification status for the current user
+      operationId: getVerificationStatus
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Verification status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailVerificationStatusResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    VerifyEmailRequest:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+          description: The email verification token
+          example: "550e8400-e29b-41d4-a716-446655440000"
+
+    VerifyEmailResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Success message
+          example: "Email verified successfully"
+
+    ResendVerificationRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          description: The email address to resend verification to
+          example: "user@example.com"
+
+    ResendVerificationSuccessResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Success message
+          example: "Verification email sent"
+
+    ResendVerificationAlreadyVerifiedResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Message indicating email is already verified
+          example: "Email is already verified"
+
+    ResendVerificationUserNotFoundResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Generic message for security (doesn't reveal if user exists)
+          example: "If the email exists, a verification link has been sent"
+
+    EmailVerificationStatusResponse:
+      type: object
+      properties:
+        isVerified:
+          type: boolean
+          description: Whether the email is verified
+          example: true
+        email:
+          type: string
+          format: email
+          description: The user's email address
+          example: "user@example.com"
+        verifiedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: The timestamp when the email was verified
+          example: "2024-01-15T10:30:00Z"
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+          example: "Invalid or expired token"
+
+tags:
+  - name: Authentication
+    description: Authentication and authorization endpoints
+  - name: Users
+    description: User management endpoints
