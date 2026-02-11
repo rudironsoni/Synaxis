@@ -14,6 +14,12 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.Formats.Gif;
+using SixLabors.ImageSharp.Formats.Webp;
+using SixLabors.ImageSharp.PixelFormats;
 using Synaxis.Core.Contracts;
 using Synaxis.Core.Models;
 using Synaxis.Infrastructure.Data;
@@ -832,6 +838,349 @@ public sealed class UsersControllerTests : IDisposable
             {
                 return Task.FromResult(policy);
             }
+        }
+
+        [Fact]
+        public async Task UploadAvatar_WithAuthenticatedUser_UploadsAvatarSuccessfully()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            var testImage = CreateTestImageFile(200, 200, "image/jpeg");
+            var formFile = CreateFormFile(testImage, "avatar.jpg", "image/jpeg");
+
+            // Act
+            var result = await _controller.UploadAvatar(formFile, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<OkObjectResult>();
+            var okResult = result as OkObjectResult;
+            okResult!.Value.Should().NotBeNull();
+
+            var response = okResult.Value!;
+            var responseType = response.GetType();
+            var avatarUrl = responseType.GetProperty("avatarUrl")?.GetValue(response);
+            avatarUrl.Should().NotBeNull();
+            avatarUrl.Should().BeOfType<string>();
+            var avatarUrlString = (string)avatarUrl!;
+            avatarUrlString.Should().StartWith("/uploads/avatars/");
+            avatarUrlString.Should().Contain(_testUserId.ToString());
+
+            // Verify database was updated
+            var updatedUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == _testUserId);
+            updatedUser.Should().NotBeNull();
+            updatedUser!.AvatarUrl.Should().Be(avatarUrlString);
+        }
+
+        [Fact]
+        public async Task UploadAvatar_WithUnauthenticatedUser_ReturnsUnauthorized()
+        {
+            // Arrange
+            _userContext.SetAuthenticated(false);
+            var formFile = CreateFormFile(Array.Empty<byte>(), "avatar.jpg", "image/jpeg");
+
+            // Act
+            var result = await _controller.UploadAvatar(formFile, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<UnauthorizedResult>();
+        }
+
+        [Fact]
+        public async Task UploadAvatar_WithNonExistentUser_ReturnsNotFound()
+        {
+            // Arrange
+            // User not added to database
+            var formFile = CreateFormFile(Array.Empty<byte>(), "avatar.jpg", "image/jpeg");
+
+            // Act
+            var result = await _controller.UploadAvatar(formFile, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<NotFoundResult>();
+        }
+
+        [Fact]
+        public async Task UploadAvatar_WithNoFile_ReturnsBadRequest()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            IFormFile? formFile = null;
+
+            // Act
+            var result = await _controller.UploadAvatar(formFile, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>();
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult!.Value.Should().Be("Avatar file is required");
+        }
+
+        [Fact]
+        public async Task UploadAvatar_WithInvalidFileType_ReturnsBadRequest()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            var testFile = System.Text.Encoding.UTF8.GetBytes("not an image");
+            var formFile = CreateFormFile(testFile, "document.pdf", "application/pdf");
+
+            // Act
+            var result = await _controller.UploadAvatar(formFile, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>();
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult!.Value.Should().Be("Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed");
+        }
+
+        [Fact]
+        public async Task UploadAvatar_WithFileTooLarge_ReturnsBadRequest()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            var largeFile = new byte[6 * 1024 * 1024]; // 6MB
+            var formFile = CreateFormFile(largeFile, "avatar.jpg", "image/jpeg");
+
+            // Act
+            var result = await _controller.UploadAvatar(formFile, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>();
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult!.Value.Should().Be("File size exceeds maximum limit of 5MB");
+        }
+
+        [Fact]
+        public async Task UploadAvatar_WithImageTooSmall_ReturnsBadRequest()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            var testImage = CreateTestImageFile(32, 32, "image/jpeg");
+            var formFile = CreateFormFile(testImage, "avatar.jpg", "image/jpeg");
+
+            // Act
+            var result = await _controller.UploadAvatar(formFile, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>();
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult!.Value.Should().Be("Image dimensions must be at least 64x64 pixels");
+        }
+
+        [Fact]
+        public async Task UploadAvatar_WithImageTooLarge_ReturnsBadRequest()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            var testImage = CreateTestImageFile(1200, 1200, "image/jpeg");
+            var formFile = CreateFormFile(testImage, "avatar.jpg", "image/jpeg");
+
+            // Act
+            var result = await _controller.UploadAvatar(formFile, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>();
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult!.Value.Should().Be("Image dimensions must not exceed 1024x1024 pixels");
+        }
+
+        [Fact]
+        public async Task UploadAvatar_WithValidJpeg_UploadsSuccessfully()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            var testImage = CreateTestImageFile(200, 200, "image/jpeg");
+            var formFile = CreateFormFile(testImage, "avatar.jpg", "image/jpeg");
+
+            // Act
+            var result = await _controller.UploadAvatar(formFile, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<OkObjectResult>();
+            var okResult = result as OkObjectResult;
+            okResult!.Value.Should().NotBeNull();
+
+            var response = okResult.Value!;
+            var responseType = response.GetType();
+            var avatarUrl = responseType.GetProperty("avatarUrl")?.GetValue(response);
+            avatarUrl.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async Task UploadAvatar_WithValidPng_UploadsSuccessfully()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            var testImage = CreateTestImageFile(200, 200, "image/png");
+            var formFile = CreateFormFile(testImage, "avatar.png", "image/png");
+
+            // Act
+            var result = await _controller.UploadAvatar(formFile, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<OkObjectResult>();
+            var okResult = result as OkObjectResult;
+            okResult!.Value.Should().NotBeNull();
+
+            var response = okResult.Value!;
+            var responseType = response.GetType();
+            var avatarUrl = responseType.GetProperty("avatarUrl")?.GetValue(response);
+            avatarUrl.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async Task UploadAvatar_WithValidGif_UploadsSuccessfully()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            var testImage = CreateTestImageFile(200, 200, "image/gif");
+            var formFile = CreateFormFile(testImage, "avatar.gif", "image/gif");
+
+            // Act
+            var result = await _controller.UploadAvatar(formFile, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<OkObjectResult>();
+            var okResult = result as OkObjectResult;
+            okResult!.Value.Should().NotBeNull();
+
+            var response = okResult.Value!;
+            var responseType = response.GetType();
+            var avatarUrl = responseType.GetProperty("avatarUrl")?.GetValue(response);
+            avatarUrl.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async Task UploadAvatar_WithValidWebP_UploadsSuccessfully()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            var testImage = CreateTestImageFile(200, 200, "image/webp");
+            var formFile = CreateFormFile(testImage, "avatar.webp", "image/webp");
+
+            // Act
+            var result = await _controller.UploadAvatar(formFile, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<OkObjectResult>();
+            var okResult = result as OkObjectResult;
+            okResult!.Value.Should().NotBeNull();
+
+            var response = okResult.Value!;
+            var responseType = response.GetType();
+            var avatarUrl = responseType.GetProperty("avatarUrl")?.GetValue(response);
+            avatarUrl.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async Task UploadAvatar_GeneratesUniqueFilename()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            var testImage = CreateTestImageFile(200, 200, "image/jpeg");
+            var formFile1 = CreateFormFile(testImage, "avatar.jpg", "image/jpeg");
+            var formFile2 = CreateFormFile(testImage, "avatar.jpg", "image/jpeg");
+
+            // Act
+            var result1 = await _controller.UploadAvatar(formFile1, CancellationToken.None);
+            var result2 = await _controller.UploadAvatar(formFile2, CancellationToken.None);
+
+            // Assert
+            var okResult1 = result1 as OkObjectResult;
+            var okResult2 = result2 as OkObjectResult;
+            okResult1.Should().NotBeNull();
+            okResult2.Should().NotBeNull();
+
+            var response1 = okResult1!.Value!;
+            var response2 = okResult2!.Value!;
+            var responseType = response1.GetType();
+            var avatarUrl1 = (string)responseType.GetProperty("avatarUrl")?.GetValue(response1)!;
+            var avatarUrl2 = (string)responseType.GetProperty("avatarUrl")?.GetValue(response2)!;
+
+            avatarUrl1.Should().NotBe(avatarUrl2);
+        }
+
+        [Fact]
+        public async Task UploadAvatar_UpdatesUpdatedAtTimestamp()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            var originalUpdatedAt = testUser.UpdatedAt;
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            var testImage = CreateTestImageFile(200, 200, "image/jpeg");
+            var formFile = CreateFormFile(testImage, "avatar.jpg", "image/jpeg");
+
+            // Act
+            var result = await _controller.UploadAvatar(formFile, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<OkObjectResult>();
+
+            var updatedUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == _testUserId);
+            updatedUser.Should().NotBeNull();
+            updatedUser!.UpdatedAt.Should().BeAfter(originalUpdatedAt);
+        }
+
+        private byte[] CreateTestImageFile(int width, int height, string mimeType)
+        {
+            // Create a simple test image with the specified dimensions
+            using var image = new Image<Rgb24>(width, height);
+            using var stream = new MemoryStream();
+            var encoder = mimeType switch
+            {
+                "image/jpeg" => new JpegEncoder(),
+                "image/png" => new PngEncoder(),
+                "image/gif" => new GifEncoder(),
+                "image/webp" => new WebpEncoder(),
+                _ => new JpegEncoder()
+            };
+            image.Save(stream, encoder);
+            return stream.ToArray();
+        }
+
+        private IFormFile CreateFormFile(byte[] content, string fileName, string contentType)
+        {
+            var stream = new MemoryStream(content);
+            var formFile = new FormFile(stream, 0, content.Length, "avatar", fileName)
+            {
+                Headers = new HeaderDictionary(),
+                ContentType = contentType
+            };
+            return formFile;
         }
     }
 }

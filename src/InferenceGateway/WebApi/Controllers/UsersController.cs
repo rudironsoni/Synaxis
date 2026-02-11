@@ -6,13 +6,17 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
 {
     using System;
     using System.IdentityModel.Tokens.Jwt;
+    using System.IO;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Cors;
+    using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
+    using SixLabors.ImageSharp;
+    using SixLabors.ImageSharp.Formats;
     using Synaxis.Core.Contracts;
     using Synaxis.Core.Models;
     using Synaxis.InferenceGateway.Application.Interfaces;
@@ -253,13 +257,27 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         /// <summary>
         /// Uploads an avatar for the current user.
         /// </summary>
+        /// <param name="file">The avatar file to upload.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>Avatar upload response.</returns>
         [HttpPost("me/avatar")]
-        public async Task<IActionResult> UploadAvatar(CancellationToken cancellationToken)
+        public async Task<IActionResult> UploadAvatar(IFormFile? file, CancellationToken cancellationToken)
         {
-            var userId = this._userContext.UserId;
+            // Check authentication
+            var authResult = await this.CheckAuthenticationAsync(cancellationToken);
+            if (authResult != null)
+            {
+                return authResult;
+            }
 
+            // Validate file
+            var validationResult = this.ValidateAvatarFile(file);
+            if (validationResult != null)
+            {
+                return validationResult;
+            }
+
+            var userId = this._userContext.UserId;
             var user = await this._synaxisDbContext.Users
                 .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken)
                 .ConfigureAwait(false);
@@ -269,13 +287,92 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
                 return this.NotFound();
             }
 
+            // Save file and update user (file is guaranteed non-null after validation)
+            var avatarUrl = await this.SaveAvatarFileAsync(file!, userId, cancellationToken);
+
+            user.AvatarUrl = avatarUrl;
+            user.UpdatedAt = DateTime.UtcNow;
+            await this._synaxisDbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
             var response = new
             {
-                message = "Avatar upload placeholder - actual S3 upload to be implemented",
-                userId = user.Id,
+                avatarUrl = avatarUrl,
             };
 
             return this.Ok(response);
+        }
+
+        private IActionResult? ValidateAvatarFile(IFormFile? file)
+        {
+            // Validate file is present
+            if (file == null || file.Length == 0)
+            {
+                return this.BadRequest("Avatar file is required");
+            }
+
+            // Validate file type
+            var allowedContentTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
+            if (!allowedContentTypes.Contains(file.ContentType))
+            {
+                return this.BadRequest("Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed");
+            }
+
+            // Validate file size (max 5MB)
+            const long maxFileSize = 5 * 1024 * 1024;
+            if (file.Length > maxFileSize)
+            {
+                return this.BadRequest("File size exceeds maximum limit of 5MB");
+            }
+
+            return null;
+        }
+
+        private static (bool IsValid, string? ErrorMessage) ValidateImageDimensions(IFormFile file)
+        {
+            using var imageStream = file.OpenReadStream();
+            using var image = Image.Load(imageStream);
+            const int minDimension = 64;
+            const int maxDimension = 1024;
+
+            if (image.Width < minDimension || image.Height < minDimension)
+            {
+                return (false, "Image dimensions must be at least 64x64 pixels");
+            }
+
+            if (image.Width > maxDimension || image.Height > maxDimension)
+            {
+                return (false, "Image dimensions must not exceed 1024x1024 pixels");
+            }
+
+            return (true, null);
+        }
+
+        private static async Task<string> SaveAvatarFileAsync(IFormFile file, Guid userId, CancellationToken cancellationToken)
+        {
+            // Validate image dimensions
+            var dimensionValidation = ValidateImageDimensions(file);
+            if (!dimensionValidation.IsValid)
+            {
+                throw new InvalidOperationException(dimensionValidation.ErrorMessage);
+            }
+
+            // Generate unique filename
+            var fileExtension = Path.GetExtension(file.FileName);
+            var uniqueFileName = $"{Guid.NewGuid()}{fileExtension}";
+
+            // Create upload directory if it doesn't exist
+            var uploadPath = Path.Combine("uploads", "avatars", userId.ToString());
+            Directory.CreateDirectory(uploadPath);
+
+            // Save file to disk
+            var filePath = Path.Combine(uploadPath, uniqueFileName);
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(fileStream, cancellationToken).ConfigureAwait(false);
+            }
+
+            // Generate avatar URL
+            return $"/uploads/avatars/{userId}/{uniqueFileName}";
         }
 
         /// <summary>
