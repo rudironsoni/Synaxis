@@ -1,0 +1,26 @@
+name: Setup MFA
+method: POST
+url: "{{baseUrl}}/api/v1/auth/mfa/setup"
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+body:
+  type: json
+  content: |
+    {}
+tests:
+  - name: Status code is 200
+    script: |
+      expect(response.status).toBe(200);
+  - name: Response contains secret
+    script: |
+      expect(response.body.secret).toBeDefined();
+      expect(response.body.secret).toMatch(/^[A-Z2-7]{16}$/);
+  - name: Response contains QR code URL
+    script: |
+      expect(response.body.qrCodeUrl).toBeDefined();
+      expect(response.body.qrCodeUrl).toContain('otpauth://totp');
+  - name: Response contains backup codes
+    script: |
+      expect(response.body.backupCodes).toBeDefined();
+      expect(response.body.backupCodes).toHaveLength(10);
