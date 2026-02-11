@@ -27,23 +27,23 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserProfile'
-                example:
-                   id: "550e8400-e29b-41d4-a716-446655440000"
-                   email: "user@example.com"
-                   firstName: "John"
-                   lastName: "Doe"
-                   avatarUrl: "https://example.com/avatar.jpg"
-                   timezone: "UTC"
-                   locale: "en-US"
-                   role: "user"
-                   organizationId: "650e8400-e29b-41d4-a716-446655440000"
-                   dataResidencyRegion: "us-east-1"
-                   crossBorderConsentGiven: true
-                   crossBorderConsentDate: "2024-01-15T10:30:00Z"
-                   mfaEnabled: false
-                   isActive: true
-                   createdAt: "2024-01-01T00:00:00Z"
-                   updatedAt: "2024-01-15T10:30:00Z"
+              example:
+                 id: "550e8400-e29b-41d4-a716-446655440000"
+                 email: "user@example.com"
+                 firstName: "John"
+                 lastName: "Doe"
+                 avatarUrl: "https://example.com/avatar.jpg"
+                 timezone: "UTC"
+                 locale: "en-US"
+                 role: "user"
+                 organizationId: "650e8400-e29b-41d4-a716-446655440000"
+                 dataResidencyRegion: "us-east-1"
+                 crossBorderConsentGiven: true
+                 crossBorderConsentDate: "2024-01-15T10:30:00Z"
+                 mfaEnabled: false
+                 isActive: true
+                 createdAt: "2024-01-01T00:00:00Z"
+                 updatedAt: "2024-01-15T10:30:00Z"
         '401':
           description: Unauthorized - Invalid or missing authentication token
         '404':
@@ -227,191 +227,262 @@ paths:
          '401':
            description: Unauthorized - Invalid or missing authentication token
 
- components:
-   securitySchemes:
-     bearerAuth:
-       type: http
-       scheme: bearer
-       bearerFormat: JWT
+  /api/v1/users/me/avatar:
+    post:
+      summary: Upload user avatar
+      description: |
+        Uploads an avatar image for the authenticated user.
 
-   schemas:
-     UserProfile:
+        **Requirements:**
+        - File type: JPEG, PNG, GIF, or WebP
+        - File size: Maximum 5MB
+        - Image dimensions: Minimum 64x64, Maximum 1024x1024 pixels
+
+        The avatar is stored locally and a URL is returned.
+      operationId: uploadAvatar
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+                  description: The avatar image file
+              required:
+                - avatar
+      responses:
+        '200':
+          description: Avatar uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  avatarUrl:
+                    type: string
+                    format: uri
+                    description: URL to the uploaded avatar image
+              example:
+                avatarUrl: "/uploads/avatars/550e8400-e29b-41d4-a716-446655440000/a1b2c3d4-e5f6-7890-abcd-ef1234567890.jpg"
+        '400':
+          description: Bad request - Invalid file (type, size, or dimensions)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              examples:
+                invalidType:
+                  value:
+                    message: "Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed"
+                tooLarge:
+                  value:
+                    message: "File size exceeds maximum limit of 5MB"
+                tooSmall:
+                  value:
+                    message: "Image dimensions must be at least 64x64 pixels"
+                tooLargeDimensions:
+                  value:
+                    message: "Image dimensions must not exceed 1024x1024 pixels"
+        '401':
+          description: Unauthorized - Invalid or missing authentication token
+        '404':
+          description: User not found
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the user
+        email:
+          type: string
+          format: email
+          description: User's email address
+        firstName:
+          type: string
+          description: User's first name
+        lastName:
+          type: string
+          description: User's last name
+        avatarUrl:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to user's avatar image
+        timezone:
+          type: string
+          description: User's timezone (IANA format)
+        locale:
+          type: string
+          description: User's locale (e.g., en-US, en-GB)
+        role:
+          type: string
+          description: User's role in the system
+        organizationId:
+          type: string
+          format: uuid
+          description: User's organization identifier
+        dataResidencyRegion:
+          type: string
+          description: Data residency region for the user
+        crossBorderConsentGiven:
+          type: boolean
+          description: Whether user has given cross-border data transfer consent
+        crossBorderConsentDate:
+          type: string
+          format: date-time
+          nullable: true
+          description: Date when consent was given
+        mfaEnabled:
+          type: boolean
+          description: Whether MFA is enabled for the user
+        isActive:
+          type: boolean
+          description: Whether the user account is active
+        createdAt:
+          type: string
+          format: date-time
+          description: Account creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+
+    UpdateUserRequest:
        type: object
        properties:
-         id:
-           type: string
-           format: uuid
-           description: Unique identifier for the user
-         email:
-           type: string
-           format: email
-           description: User's email address
          firstName:
            type: string
-           description: User's first name
+           nullable: true
+           description: Updated first name
          lastName:
            type: string
-           description: User's last name
-         avatarUrl:
-           type: string
-           format: uri
            nullable: true
-           description: URL to user's avatar image
+           description: Updated last name
          timezone:
            type: string
-           description: User's timezone (IANA format)
+           nullable: true
+           description: Updated timezone (IANA format)
          locale:
            type: string
-           description: User's locale (e.g., en-US, en-GB)
-         role:
-           type: string
-           description: User's role in the system
-         organizationId:
-           type: string
-           format: uuid
-           description: User's organization identifier
-         dataResidencyRegion:
-           type: string
-           description: Data residency region for the user
-         crossBorderConsentGiven:
-           type: boolean
-           description: Whether user has given cross-border data transfer consent
-         crossBorderConsentDate:
-           type: string
-           format: date-time
            nullable: true
-           description: Date when consent was given
-         mfaEnabled:
-           type: boolean
-           description: Whether MFA is enabled for the user
-         isActive:
-           type: boolean
-           description: Whether the user account is active
-         createdAt:
-           type: string
-           format: date-time
-           description: Account creation timestamp
-         updatedAt:
-           type: string
-           format: date-time
-           description: Last update timestamp
+           description: Updated locale (e.g., en-US, en-GB)
 
-     UpdateUserRequest:
-        type: object
-        properties:
-          firstName:
-            type: string
-            nullable: true
-            description: Updated first name
-          lastName:
-            type: string
-            nullable: true
-            description: Updated last name
-          timezone:
-            type: string
-            nullable: true
-            description: Updated timezone (IANA format)
-          locale:
-            type: string
-            nullable: true
-            description: Updated locale (e.g., en-US, en-GB)
+    UserProfileUpdate:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        avatarUrl:
+          type: string
+          format: uri
+          nullable: true
+        timezone:
+          type: string
+        locale:
+          type: string
+        role:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
 
-      UserProfileUpdate:
-        type: object
-        properties:
-          id:
-            type: string
-            format: uuid
-          email:
-            type: string
-            format: email
-          firstName:
-            type: string
-          lastName:
-            type: string
-          avatarUrl:
-            type: string
-            format: uri
-            nullable: true
-          timezone:
-            type: string
-          locale:
-            type: string
-          role:
-            type: string
-          updatedAt:
-            type: string
-            format: date-time
+    OrganizationSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        tier:
+          type: string
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
 
-      OrganizationSummary:
-        type: object
-        properties:
-          id:
-            type: string
-            format: uuid
-          name:
-            type: string
-          slug:
-            type: string
-          description:
-            type: string
-          tier:
-            type: string
-          isActive:
-            type: boolean
-          createdAt:
-            type: string
-            format: date-time
-
-      OrganizationListResponse:
-        type: object
-        properties:
+    OrganizationListResponse:
+      type: object
+      properties:
+        items:
+          type: array
           items:
-            type: array
-            items:
-              $ref: '#/components/schemas/OrganizationSummary'
-          page:
-            type: integer
-          pageSize:
-            type: integer
-          totalCount:
-            type: integer
-          totalPages:
-            type: integer
+            $ref: '#/components/schemas/OrganizationSummary'
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        totalCount:
+          type: integer
+        totalPages:
+          type: integer
 
-      TeamSummary:
-        type: object
-        properties:
-          id:
-            type: string
-            format: uuid
-          organizationId:
-            type: string
-            format: uuid
-          name:
-            type: string
-          slug:
-            type: string
-          description:
-            type: string
-          isActive:
-            type: boolean
-          createdAt:
-            type: string
-            format: date-time
+    TeamSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        organizationId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
 
-      TeamListResponse:
-        type: object
-        properties:
+    TeamListResponse:
+      type: object
+      properties:
+        items:
+          type: array
           items:
-            type: array
-            items:
-              $ref: '#/components/schemas/TeamSummary'
-          page:
-            type: integer
-          pageSize:
-            type: integer
-          totalCount:
-            type: integer
-          totalPages:
-            type: integer
+            $ref: '#/components/schemas/TeamSummary'
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        totalCount:
+          type: integer
+        totalPages:
+          type: integer
