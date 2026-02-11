@@ -89,7 +89,7 @@ public class RedisSessionStoreTests
         var key = $"session:{sessionId}:affinity";
 
         this._mockDatabase
-            .Setup(db => db.StringSetAsync(key, providerId, ttl, false, When.Always, CommandFlags.None))
+            .Setup(db => db.StringSetAsync(key, providerId, ttl))
             .ReturnsAsync(true);
 
         var store = new RedisSessionStore(this._mockRedis.Object);
@@ -99,7 +99,7 @@ public class RedisSessionStoreTests
 
         // Assert
         this._mockDatabase.Verify(
-            db => db.StringSetAsync(key, providerId, ttl, false, When.Always, CommandFlags.None),
+            db => db.StringSetAsync(key, providerId, ttl),
             Times.Once);
     }
 
@@ -143,10 +143,7 @@ public class RedisSessionStoreTests
             .Setup(db => db.StringSetAsync(
                 key,
                 It.IsAny<RedisValue>(),
-                ttl,
-                false,
-                When.Always,
-                CommandFlags.None))
+                ttl))
             .ReturnsAsync(true);
 
         var store = new RedisSessionStore(this._mockRedis.Object);
@@ -159,10 +156,7 @@ public class RedisSessionStoreTests
             db => db.StringSetAsync(
                 key,
                 It.Is<RedisValue>(v => Math.Abs((long)v - timestamp.ToUnixTimeSeconds()) <= 1),
-                ttl,
-                false,
-                When.Always,
-                CommandFlags.None),
+                ttl),
             Times.Once);
     }
 
@@ -288,7 +282,7 @@ public class RedisSessionStoreTests
         var ttl = TimeSpan.FromHours(1);
 
         this._mockDatabase
-            .Setup(db => db.StringSetAsync(key, providerId, ttl, false, When.Always, CommandFlags.None))
+            .Setup(db => db.StringSetAsync(key, providerId, ttl))
             .ReturnsAsync(true);
 
         this._mockDatabase
@@ -314,7 +308,7 @@ public class RedisSessionStoreTests
         Assert.All(results, r => Assert.Equal(providerId, r));
 
         this._mockDatabase.Verify(
-            db => db.StringSetAsync(key, providerId, ttl, false, When.Always, CommandFlags.None),
+            db => db.StringSetAsync(key, providerId, ttl),
             Times.Exactly(10));
 
         this._mockDatabase.Verify(

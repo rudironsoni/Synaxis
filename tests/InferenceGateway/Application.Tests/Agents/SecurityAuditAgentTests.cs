@@ -10,6 +10,7 @@ using Quartz;
 using Synaxis.InferenceGateway.Infrastructure.Agents.Tools;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 using Synaxis.InferenceGateway.Infrastructure.Jobs;
+using Synaxis.Infrastructure.Data;
 using Xunit;
 
 namespace Synaxis.InferenceGateway.Application.Tests.Agents;
@@ -39,6 +40,12 @@ public class SecurityAuditAgentTests
             .UseInMemoryDatabase($"SecurityAuditTest_{Guid.NewGuid()}")
             .Options;
         using var db = new ControlPlaneDbContext(dbOptions);
+
+        var synaxisDbOptions = new DbContextOptionsBuilder<Synaxis.Infrastructure.Data.SynaxisDbContext>()
+            .UseInMemoryDatabase($"SynaxisSecurityAuditTest_{Guid.NewGuid()}")
+            .Options;
+        using var synaxisDb = new Synaxis.Infrastructure.Data.SynaxisDbContext(synaxisDbOptions);
+
         var configMock = new Mock<IConfiguration>();
         var alertToolMock = new Mock<IAlertTool>();
         var auditToolMock = new Mock<IAuditTool>();
@@ -46,6 +53,8 @@ public class SecurityAuditAgentTests
         scopeMock.Setup(s => s.ServiceProvider).Returns(this._serviceProviderMock.Object);
         this._serviceProviderMock.Setup(sp => sp.GetService(typeof(ControlPlaneDbContext)))
             .Returns(db);
+        this._serviceProviderMock.Setup(sp => sp.GetService(typeof(Synaxis.Infrastructure.Data.SynaxisDbContext)))
+            .Returns(synaxisDb);
         this._serviceProviderMock.Setup(sp => sp.GetService(typeof(IConfiguration)))
             .Returns(configMock.Object);
         this._serviceProviderMock.Setup(sp => sp.GetService(typeof(IAlertTool)))
@@ -77,6 +86,12 @@ public class SecurityAuditAgentTests
             .UseInMemoryDatabase($"SecurityAuditTest_{Guid.NewGuid()}")
             .Options;
         using var db = new ControlPlaneDbContext(dbOptions);
+
+        var synaxisDbOptions = new DbContextOptionsBuilder<Synaxis.Infrastructure.Data.SynaxisDbContext>()
+            .UseInMemoryDatabase($"SynaxisSecurityAuditTest_{Guid.NewGuid()}")
+            .Options;
+        using var synaxisDb = new Synaxis.Infrastructure.Data.SynaxisDbContext(synaxisDbOptions);
+
         var configMock = new Mock<IConfiguration>();
         var alertToolMock = new Mock<IAlertTool>();
         var auditToolMock = new Mock<IAuditTool>();
@@ -84,6 +99,8 @@ public class SecurityAuditAgentTests
         scopeMock.Setup(s => s.ServiceProvider).Returns(this._serviceProviderMock.Object);
         this._serviceProviderMock.Setup(sp => sp.GetService(typeof(ControlPlaneDbContext)))
             .Returns(db);
+        this._serviceProviderMock.Setup(sp => sp.GetService(typeof(Synaxis.Infrastructure.Data.SynaxisDbContext)))
+            .Returns(synaxisDb);
         this._serviceProviderMock.Setup(sp => sp.GetService(typeof(IConfiguration)))
             .Returns(configMock.Object);
         this._serviceProviderMock.Setup(sp => sp.GetService(typeof(IAlertTool)))

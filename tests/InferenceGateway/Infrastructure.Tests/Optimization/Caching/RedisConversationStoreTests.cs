@@ -112,13 +112,11 @@ public class RedisConversationStoreTests
         this._mockDatabase
             .Setup(db => db.ListRightPushAsync(
                 key,
-                It.IsAny<RedisValue>(),
-                When.Always,
-                CommandFlags.None))
+                It.IsAny<RedisValue>()))
             .ReturnsAsync(1);
 
         this._mockDatabase
-            .Setup(db => db.KeyExpireAsync(key, ttl, ExpireWhen.Always, CommandFlags.None))
+            .Setup(db => db.KeyExpireAsync(key, ttl))
             .ReturnsAsync(true);
 
         var store = new RedisConversationStore(this._mockRedis.Object);
@@ -130,13 +128,11 @@ public class RedisConversationStoreTests
         this._mockDatabase.Verify(
             db => db.ListRightPushAsync(
                 key,
-                It.Is<RedisValue>(v => v.ToString().Contains("New message")),
-                When.Always,
-                CommandFlags.None),
+                It.Is<RedisValue>(v => v.ToString().Contains("New message"))),
             Times.Once);
 
         this._mockDatabase.Verify(
-            db => db.KeyExpireAsync(key, ttl, ExpireWhen.Always, CommandFlags.None),
+            db => db.KeyExpireAsync(key, ttl),
             Times.Once);
     }
 
@@ -297,24 +293,21 @@ StringComparer.Ordinal)
             },
         };
 
-        RedisValue capturedValue = RedisValue.Null;
+        var serializedMessage = JsonSerializer.Serialize(originalMessage);
 
         this._mockDatabase
             .Setup(db => db.ListRightPushAsync(
                 key,
-                It.IsAny<RedisValue>(),
-                When.Always,
-                CommandFlags.None))
-            .Callback<RedisKey, RedisValue, When, CommandFlags>((k, v, w, f) => capturedValue = v)
+                It.IsAny<RedisValue>()))
             .ReturnsAsync(1);
 
         this._mockDatabase
-            .Setup(db => db.KeyExpireAsync(key, ttl, ExpireWhen.Always, CommandFlags.None))
+            .Setup(db => db.KeyExpireAsync(key, ttl))
             .ReturnsAsync(true);
 
         this._mockDatabase
             .Setup(db => db.ListRangeAsync(key, 0, -1, It.IsAny<CommandFlags>()))
-            .ReturnsAsync(() => new[] { capturedValue });
+            .ReturnsAsync(new[] { (RedisValue)serializedMessage });
 
         var store = new RedisConversationStore(this._mockRedis.Object);
 
