@@ -26,7 +26,7 @@ namespace Synaxis.Api.Tests.Controllers
     /// <summary>
     /// Tests for the AuthController refresh endpoint.
     /// </summary>
-    public class AuthControllerRefreshTests : IDisposable
+    public sealed class AuthControllerRefreshTests : IDisposable
     {
         private readonly SynaxisDbContext _context;
         private readonly Mock<IUserService> _mockUserService;
@@ -254,10 +254,7 @@ namespace Synaxis.Api.Tests.Controllers
             };
 
             // Act - First refresh
-            var firstResult = await _controller.RefreshToken(request);
-            var firstOkResult = firstResult.Result as OkObjectResult;
-            var firstAuthResult = firstOkResult.Value as Core.Contracts.AuthenticationResult;
-            var newToken = firstAuthResult.RefreshToken;
+            _ = await _controller.RefreshToken(request);
 
             // Act - Try to reuse the old token
             var secondRequest = new RefreshTokenRequest
@@ -291,7 +288,6 @@ namespace Synaxis.Api.Tests.Controllers
             // We need to find the actual token value from the database
             var token2Entity = await _context.RefreshTokens
                 .FirstOrDefaultAsync(rt => rt.TokenHash == token2Hash);
-            var token2Value = token2Entity.TokenHash; // In real scenario, we'd need the actual token value
 
             // For this test, we'll create a new refresh token to simulate the second refresh
             var token3Value = await CreateRefreshTokenAsync(user.Id);
@@ -448,7 +444,7 @@ namespace Synaxis.Api.Tests.Controllers
             return tokenValue;
         }
 
-        private string HashToken(string token)
+        private static string HashToken(string token)
         {
             using var sha256 = SHA256.Create();
             var bytes = Encoding.UTF8.GetBytes(token);
