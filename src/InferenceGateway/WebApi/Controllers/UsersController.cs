@@ -13,6 +13,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
     using Microsoft.AspNetCore.Cors;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
+    using Synaxis.Core.Contracts;
     using Synaxis.InferenceGateway.Application.Interfaces;
     using Synaxis.Infrastructure.Data;
 
@@ -27,16 +28,19 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
     {
         private readonly SynaxisDbContext _synaxisDbContext;
         private readonly IOrganizationUserContext _userContext;
+        private readonly IPasswordService _passwordService;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UsersController"/> class.
         /// </summary>
         /// <param name="synaxisDbContext">The Synaxis database context.</param>
         /// <param name="userContext">The organization user context.</param>
-        public UsersController(SynaxisDbContext synaxisDbContext, IOrganizationUserContext userContext)
+        /// <param name="passwordService">The password service.</param>
+        public UsersController(SynaxisDbContext synaxisDbContext, IOrganizationUserContext userContext, IPasswordService passwordService)
         {
             this._synaxisDbContext = synaxisDbContext;
             this._userContext = userContext;
+            this._passwordService = passwordService;
         }
 
         /// <summary>
@@ -405,6 +409,73 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
                 return false;
             }
         }
+
+        /// <summary>
+        /// Changes the current user's password.
+        /// </summary>
+        /// <param name="request">The password change request.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The password change result.</returns>
+        [HttpPost("me/password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request, CancellationToken cancellationToken)
+        {
+            var userId = this._userContext.UserId;
+
+            var validationResult = this.ValidateChangePasswordRequest(request);
+            if (validationResult != null)
+            {
+                return validationResult;
+            }
+
+            var result = await this._passwordService.ChangePasswordAsync(userId, request.CurrentPassword, request.NewPassword);
+
+            if (!result.Success)
+            {
+                return this.BadRequest(new { success = false, errorMessage = result.ErrorMessage });
+            }
+
+            return this.Ok(new
+            {
+                success = true,
+                passwordExpiresAt = result.PasswordExpiresAt,
+            });
+        }
+
+        /// <summary>
+        /// Validates a password against the organization's password policy.
+        /// </summary>
+        /// <param name="request">The password validation request.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The password validation result.</returns>
+        [HttpPost("me/password/validate")]
+        public async Task<IActionResult> ValidatePassword([FromBody] ValidatePasswordRequest request, CancellationToken cancellationToken)
+        {
+            var userId = this._userContext.UserId;
+
+            var result = await this._passwordService.ValidatePasswordAsync(userId, request.Password);
+
+            return this.Ok(result);
+        }
+
+        private IActionResult? ValidateChangePasswordRequest(ChangePasswordRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.CurrentPassword))
+            {
+                return this.BadRequest("CurrentPassword is required");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.NewPassword))
+            {
+                return this.BadRequest("NewPassword is required");
+            }
+
+            if (string.Equals(request.CurrentPassword, request.NewPassword, StringComparison.Ordinal))
+            {
+                return this.BadRequest("New password must be different from current password");
+            }
+
+            return null;
+        }
     }
 
     /// <summary>
@@ -447,5 +518,32 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         /// Gets or sets the consent version.
         /// </summary>
         public string? ConsentVersion { get; set; }
+    }
+
+    /// <summary>
+    /// Request to change password.
+    /// </summary>
+    public class ChangePasswordRequest
+    {
+        /// <summary>
+        /// Gets or sets the current password.
+        /// </summary>
+        public required string CurrentPassword { get; set; }
+
+        /// <summary>
+        /// Gets or sets the new password.
+        /// </summary>
+        public required string NewPassword { get; set; }
+    }
+
+    /// <summary>
+    /// Request to validate password.
+    /// </summary>
+    public class ValidatePasswordRequest
+    {
+        /// <summary>
+        /// Gets or sets the password to validate.
+        /// </summary>
+        public required string Password { get; set; }
     }
 }

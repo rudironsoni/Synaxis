@@ -220,6 +220,11 @@ namespace Synaxis.Core.Contracts
         public string QrCodeUrl { get; set; }
 
         /// <summary>
+        /// Gets or sets the QR code image as base64 string.
+        /// </summary>
+        public string QrCodeImage { get; set; }
+
+        /// <summary>
         /// Gets or sets the manual entry key.
         /// </summary>
         public string ManualEntryKey { get; set; }

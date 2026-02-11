@@ -25,6 +25,7 @@
     <PackageReference Include="Microsoft.Extensions.Options" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
     <PackageReference Include="Otp.NET" />
+    <PackageReference Include="QRCoder" />
     <PackageReference Include="StackExchange.Redis" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
   </ItemGroup>

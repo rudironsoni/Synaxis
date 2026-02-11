@@ -120,6 +120,10 @@ try
             });
     });
 
+    // Register Synaxis services
+    builder.Services.AddScoped<Synaxis.Core.Contracts.IUserService, Synaxis.Infrastructure.Services.UserService>();
+    builder.Services.AddScoped<Synaxis.Core.Contracts.IPasswordService, Synaxis.Infrastructure.Services.PasswordService>();
+
     // Add ASP.NET Core Identity
     builder.Services.AddIdentity<SynaxisUser, IdentityRole<Guid>>(options =>
     {

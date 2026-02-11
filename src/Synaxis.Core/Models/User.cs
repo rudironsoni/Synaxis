@@ -144,6 +144,31 @@ namespace Synaxis.Core.Models
         public DateTime? LockedUntil { get; set; }
 
         /// <summary>
+        /// Gets or sets the password last changed timestamp.
+        /// </summary>
+        public DateTime? PasswordChangedAt { get; set; }
+
+        /// <summary>
+        /// Gets or sets the password expiration timestamp.
+        /// </summary>
+        public DateTime? PasswordExpiresAt { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the user must change password on next login.
+        /// </summary>
+        public bool MustChangePassword { get; set; }
+
+        /// <summary>
+        /// Gets or sets the number of failed password change attempts.
+        /// </summary>
+        public int FailedPasswordChangeAttempts { get; set; }
+
+        /// <summary>
+        /// Gets or sets the password change lockout expiration timestamp.
+        /// </summary>
+        public DateTime? PasswordChangeLockedUntil { get; set; }
+
+        /// <summary>
         /// Gets or sets a value indicating whether the user account is active.
         /// </summary>
         public bool IsActive { get; set; } = true;
@@ -172,6 +197,11 @@ namespace Synaxis.Core.Models
         /// Gets or sets the collection memberships navigation property.
         /// </summary>
         public virtual ICollection<CollectionMembership> CollectionMemberships { get; set; }
+
+        /// <summary>
+        /// Gets or sets the password history navigation property.
+        /// </summary>
+        public virtual ICollection<PasswordHistory> PasswordHistory { get; set; }
 
         /// <summary>
         /// Gets the full name of the user.

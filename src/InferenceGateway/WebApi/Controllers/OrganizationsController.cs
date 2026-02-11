@@ -29,14 +29,17 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
     public class OrganizationsController : ControllerBase
     {
         private readonly SynaxisDbContext _synaxisDbContext;
+        private readonly IPasswordService _passwordService;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OrganizationsController"/> class.
         /// </summary>
         /// <param name="synaxisDbContext">The Synaxis database context.</param>
-        public OrganizationsController(SynaxisDbContext synaxisDbContext)
+        /// <param name="passwordService">The password service.</param>
+        public OrganizationsController(SynaxisDbContext synaxisDbContext, IPasswordService passwordService)
         {
             this._synaxisDbContext = synaxisDbContext;
+            this._passwordService = passwordService;
         }
 
         /// <summary>
@@ -621,6 +624,178 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
 
             return user != null && (string.Equals(user.Role, "admin", StringComparison.OrdinalIgnoreCase) || string.Equals(user.Role, "owner", StringComparison.OrdinalIgnoreCase));
         }
+
+        /// <summary>
+        /// Gets the password policy for an organization.
+        /// </summary>
+        /// <param name="id">The organization ID.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The password policy.</returns>
+        [HttpGet("{id}/password-policy")]
+        public async Task<IActionResult> GetPasswordPolicy(Guid id, CancellationToken cancellationToken)
+        {
+            var userId = Guid.Parse(this.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? this.User.FindFirstValue("sub")!);
+
+            var organization = await this._synaxisDbContext.Organizations
+                .FirstOrDefaultAsync(o => o.Id == id, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (organization == null)
+            {
+                return this.NotFound();
+            }
+
+            var isMember = await this._synaxisDbContext.TeamMemberships
+                .AnyAsync(tm => tm.OrganizationId == id && tm.UserId == userId, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (!isMember)
+            {
+                return this.Forbid();
+            }
+
+            var policy = await this._passwordService.GetPasswordPolicyAsync(id);
+
+            var response = new PasswordPolicyResponse
+            {
+                Id = policy.Id,
+                OrganizationId = policy.OrganizationId,
+                MinLength = policy.MinLength,
+                RequireUppercase = policy.RequireUppercase,
+                RequireLowercase = policy.RequireLowercase,
+                RequireNumbers = policy.RequireNumbers,
+                RequireSpecialCharacters = policy.RequireSpecialCharacters,
+                PasswordHistoryCount = policy.PasswordHistoryCount,
+                PasswordExpirationDays = policy.PasswordExpirationDays,
+                PasswordExpirationWarningDays = policy.PasswordExpirationWarningDays,
+                MaxFailedChangeAttempts = policy.MaxFailedChangeAttempts,
+                LockoutDurationMinutes = policy.LockoutDurationMinutes,
+                BlockCommonPasswords = policy.BlockCommonPasswords,
+                BlockUserInfoInPassword = policy.BlockUserInfoInPassword,
+                CreatedAt = policy.CreatedAt,
+                UpdatedAt = policy.UpdatedAt,
+            };
+
+            return this.Ok(response);
+        }
+
+        /// <summary>
+        /// Updates the password policy for an organization.
+        /// </summary>
+        /// <param name="id">The organization ID.</param>
+        /// <param name="request">The update password policy request.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The updated password policy.</returns>
+        [HttpPut("{id}/password-policy")]
+        public async Task<IActionResult> UpdatePasswordPolicy(Guid id, [FromBody] UpdatePasswordPolicyRequest request, CancellationToken cancellationToken)
+        {
+            var userId = Guid.Parse(this.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? this.User.FindFirstValue("sub")!);
+
+            var organization = await this._synaxisDbContext.Organizations
+                .FirstOrDefaultAsync(o => o.Id == id, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (organization == null)
+            {
+                return this.NotFound();
+            }
+
+            var isOrgAdmin = await this.IsOrgAdminAsync(userId, id, cancellationToken).ConfigureAwait(false);
+
+            if (!isOrgAdmin)
+            {
+                return this.Forbid();
+            }
+
+            var validationResult = this.ValidatePasswordPolicyRequest(request);
+            if (validationResult != null)
+            {
+                return validationResult;
+            }
+
+            var policy = this.CreatePasswordPolicyFromRequest(request);
+            var updatedPolicy = await this._passwordService.UpdatePasswordPolicyAsync(id, policy);
+            var response = this.MapToPasswordPolicyResponse(updatedPolicy);
+
+            return this.Ok(response);
+        }
+
+        private Synaxis.Core.Models.PasswordPolicy CreatePasswordPolicyFromRequest(UpdatePasswordPolicyRequest request)
+        {
+            return new Synaxis.Core.Models.PasswordPolicy
+            {
+                MinLength = request.MinLength,
+                RequireUppercase = request.RequireUppercase,
+                RequireLowercase = request.RequireLowercase,
+                RequireNumbers = request.RequireNumbers,
+                RequireSpecialCharacters = request.RequireSpecialCharacters,
+                PasswordHistoryCount = request.PasswordHistoryCount,
+                PasswordExpirationDays = request.PasswordExpirationDays,
+                PasswordExpirationWarningDays = request.PasswordExpirationWarningDays,
+                MaxFailedChangeAttempts = request.MaxFailedChangeAttempts,
+                LockoutDurationMinutes = request.LockoutDurationMinutes,
+                BlockCommonPasswords = request.BlockCommonPasswords,
+                BlockUserInfoInPassword = request.BlockUserInfoInPassword,
+            };
+        }
+
+        private PasswordPolicyResponse MapToPasswordPolicyResponse(Synaxis.Core.Models.PasswordPolicy policy)
+        {
+            return new PasswordPolicyResponse
+            {
+                Id = policy.Id,
+                OrganizationId = policy.OrganizationId,
+                MinLength = policy.MinLength,
+                RequireUppercase = policy.RequireUppercase,
+                RequireLowercase = policy.RequireLowercase,
+                RequireNumbers = policy.RequireNumbers,
+                RequireSpecialCharacters = policy.RequireSpecialCharacters,
+                PasswordHistoryCount = policy.PasswordHistoryCount,
+                PasswordExpirationDays = policy.PasswordExpirationDays,
+                PasswordExpirationWarningDays = policy.PasswordExpirationWarningDays,
+                MaxFailedChangeAttempts = policy.MaxFailedChangeAttempts,
+                LockoutDurationMinutes = policy.LockoutDurationMinutes,
+                BlockCommonPasswords = policy.BlockCommonPasswords,
+                BlockUserInfoInPassword = policy.BlockUserInfoInPassword,
+                CreatedAt = policy.CreatedAt,
+                UpdatedAt = policy.UpdatedAt,
+            };
+        }
+
+        private IActionResult? ValidatePasswordPolicyRequest(UpdatePasswordPolicyRequest request)
+        {
+            if (request.MinLength < 8 || request.MinLength > 128)
+            {
+                return this.BadRequest("MinLength must be between 8 and 128");
+            }
+
+            if (request.PasswordHistoryCount < 0 || request.PasswordHistoryCount > 24)
+            {
+                return this.BadRequest("PasswordHistoryCount must be between 0 and 24");
+            }
+
+            if (request.PasswordExpirationDays < 0 || request.PasswordExpirationDays > 365)
+            {
+                return this.BadRequest("PasswordExpirationDays must be between 0 and 365");
+            }
+
+            if (request.PasswordExpirationWarningDays < 0 || request.PasswordExpirationWarningDays > 30)
+            {
+                return this.BadRequest("PasswordExpirationWarningDays must be between 0 and 30");
+            }
+
+            if (request.MaxFailedChangeAttempts < 3 || request.MaxFailedChangeAttempts > 10)
+            {
+                return this.BadRequest("MaxFailedChangeAttempts must be between 3 and 10");
+            }
+
+            if (request.LockoutDurationMinutes < 5 || request.LockoutDurationMinutes > 60)
+            {
+                return this.BadRequest("LockoutDurationMinutes must be between 5 and 60");
+            }
+
+            return null;
+        }
     }
 
     /// <summary>
@@ -784,5 +959,163 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         /// Gets or sets the organization description.
         /// </summary>
         public string? Description { get; set; }
+    }
+
+    /// <summary>
+    /// Password policy response model.
+    /// </summary>
+    public class PasswordPolicyResponse
+    {
+        /// <summary>
+        /// Gets or sets the password policy ID.
+        /// </summary>
+        public Guid Id { get; set; }
+
+        /// <summary>
+        /// Gets or sets the organization ID.
+        /// </summary>
+        public Guid OrganizationId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the minimum password length.
+        /// </summary>
+        public int MinLength { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether password must contain uppercase letters.
+        /// </summary>
+        public bool RequireUppercase { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether password must contain lowercase letters.
+        /// </summary>
+        public bool RequireLowercase { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether password must contain numbers.
+        /// </summary>
+        public bool RequireNumbers { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether password must contain special characters.
+        /// </summary>
+        public bool RequireSpecialCharacters { get; set; }
+
+        /// <summary>
+        /// Gets or sets the number of previous passwords to remember for history check.
+        /// </summary>
+        public int PasswordHistoryCount { get; set; }
+
+        /// <summary>
+        /// Gets or sets the password expiration period in days (0 = never expires).
+        /// </summary>
+        public int PasswordExpirationDays { get; set; }
+
+        /// <summary>
+        /// Gets or sets the number of days before expiration to show warning.
+        /// </summary>
+        public int PasswordExpirationWarningDays { get; set; }
+
+        /// <summary>
+        /// Gets or sets the maximum number of failed password change attempts before lockout.
+        /// </summary>
+        public int MaxFailedChangeAttempts { get; set; }
+
+        /// <summary>
+        /// Gets or sets the lockout duration in minutes after failed attempts.
+        /// </summary>
+        public int LockoutDurationMinutes { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether common passwords are blocked.
+        /// </summary>
+        public bool BlockCommonPasswords { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether user info (email, name) is blocked in password.
+        /// </summary>
+        public bool BlockUserInfoInPassword { get; set; }
+
+        /// <summary>
+        /// Gets or sets the creation timestamp.
+        /// </summary>
+        public DateTime CreatedAt { get; set; }
+
+        /// <summary>
+        /// Gets or sets the last update timestamp.
+        /// </summary>
+        public DateTime UpdatedAt { get; set; }
+    }
+
+    /// <summary>
+    /// Request to update password policy.
+    /// </summary>
+    public class UpdatePasswordPolicyRequest
+    {
+        /// <summary>
+        /// Gets or sets the minimum password length.
+        /// </summary>
+        [Range(8, 128)]
+        public int MinLength { get; set; } = 12;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether password must contain uppercase letters.
+        /// </summary>
+        public bool RequireUppercase { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether password must contain lowercase letters.
+        /// </summary>
+        public bool RequireLowercase { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether password must contain numbers.
+        /// </summary>
+        public bool RequireNumbers { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether password must contain special characters.
+        /// </summary>
+        public bool RequireSpecialCharacters { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets the number of previous passwords to remember for history check.
+        /// </summary>
+        [Range(0, 24)]
+        public int PasswordHistoryCount { get; set; } = 5;
+
+        /// <summary>
+        /// Gets or sets the password expiration period in days (0 = never expires).
+        /// </summary>
+        [Range(0, 365)]
+        public int PasswordExpirationDays { get; set; } = 90;
+
+        /// <summary>
+        /// Gets or sets the number of days before expiration to show warning.
+        /// </summary>
+        [Range(0, 30)]
+        public int PasswordExpirationWarningDays { get; set; } = 14;
+
+        /// <summary>
+        /// Gets or sets the maximum number of failed password change attempts before lockout.
+        /// </summary>
+        [Range(3, 10)]
+        public int MaxFailedChangeAttempts { get; set; } = 5;
+
+        /// <summary>
+        /// Gets or sets the lockout duration in minutes after failed attempts.
+        /// </summary>
+        [Range(5, 60)]
+        public int LockoutDurationMinutes { get; set; } = 15;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether common passwords are blocked.
+        /// </summary>
+        public bool BlockCommonPasswords { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether user info (email, name) is blocked in password.
+        /// </summary>
+        public bool BlockUserInfoInPassword { get; set; } = true;
     }
 }
