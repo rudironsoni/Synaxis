@@ -27,22 +27,23 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserProfile'
-              example:
-                id: "550e8400-e29b-41d4-a716-446655440000"
-                email: "user@example.com"
-                firstName: "John"
-                lastName: "Doe"
-                avatarUrl: "https://example.com/avatar.jpg"
-                timezone: "UTC"
-                locale: "en-US"
-                role: "user"
-                dataResidencyRegion: "us-east-1"
-                crossBorderConsentGiven: true
-                crossBorderConsentDate: "2024-01-15T10:30:00Z"
-                mfaEnabled: false
-                isActive: true
-                createdAt: "2024-01-01T00:00:00Z"
-                updatedAt: "2024-01-15T10:30:00Z"
+                example:
+                   id: "550e8400-e29b-41d4-a716-446655440000"
+                   email: "user@example.com"
+                   firstName: "John"
+                   lastName: "Doe"
+                   avatarUrl: "https://example.com/avatar.jpg"
+                   timezone: "UTC"
+                   locale: "en-US"
+                   role: "user"
+                   organizationId: "650e8400-e29b-41d4-a716-446655440000"
+                   dataResidencyRegion: "us-east-1"
+                   crossBorderConsentGiven: true
+                   crossBorderConsentDate: "2024-01-15T10:30:00Z"
+                   mfaEnabled: false
+                   isActive: true
+                   createdAt: "2024-01-01T00:00:00Z"
+                   updatedAt: "2024-01-15T10:30:00Z"
         '401':
           description: Unauthorized - Invalid or missing authentication token
         '404':
@@ -229,62 +230,66 @@ components:
       bearerFormat: JWT
 
   schemas:
-    UserProfile:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-          description: Unique identifier for the user
-        email:
-          type: string
-          format: email
-          description: User's email address
-        firstName:
-          type: string
-          description: User's first name
-        lastName:
-          type: string
-          description: User's last name
-        avatarUrl:
-          type: string
-          format: uri
-          nullable: true
-          description: URL to user's avatar image
-        timezone:
-          type: string
-          description: User's timezone (IANA format)
-        locale:
-          type: string
-          description: User's locale (e.g., en-US, en-GB)
-        role:
-          type: string
-          description: User's role in the system
-        dataResidencyRegion:
-          type: string
-          description: Data residency region for the user
-        crossBorderConsentGiven:
-          type: boolean
-          description: Whether user has given cross-border data transfer consent
-        crossBorderConsentDate:
-          type: string
-          format: date-time
-          nullable: true
-          description: Date when consent was given
-        mfaEnabled:
-          type: boolean
-          description: Whether MFA is enabled for the user
-        isActive:
-          type: boolean
-          description: Whether the user account is active
-        createdAt:
-          type: string
-          format: date-time
-          description: Account creation timestamp
-        updatedAt:
-          type: string
-          format: date-time
-          description: Last update timestamp
+     UserProfile:
+       type: object
+       properties:
+         id:
+           type: string
+           format: uuid
+           description: Unique identifier for the user
+         email:
+           type: string
+           format: email
+           description: User's email address
+         firstName:
+           type: string
+           description: User's first name
+         lastName:
+           type: string
+           description: User's last name
+         avatarUrl:
+           type: string
+           format: uri
+           nullable: true
+           description: URL to user's avatar image
+         timezone:
+           type: string
+           description: User's timezone (IANA format)
+         locale:
+           type: string
+           description: User's locale (e.g., en-US, en-GB)
+         role:
+           type: string
+           description: User's role in the system
+         organizationId:
+           type: string
+           format: uuid
+           description: User's organization identifier
+         dataResidencyRegion:
+           type: string
+           description: Data residency region for the user
+         crossBorderConsentGiven:
+           type: boolean
+           description: Whether user has given cross-border data transfer consent
+         crossBorderConsentDate:
+           type: string
+           format: date-time
+           nullable: true
+           description: Date when consent was given
+         mfaEnabled:
+           type: boolean
+           description: Whether MFA is enabled for the user
+         isActive:
+           type: boolean
+           description: Whether the user account is active
+         createdAt:
+           type: string
+           format: date-time
+           description: Account creation timestamp
+         updatedAt:
+           type: string
+           format: date-time
+           description: Last update timestamp
 
     UpdateUserRequest:
       type: object
