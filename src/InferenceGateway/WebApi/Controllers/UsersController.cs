@@ -288,7 +288,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
             }
 
             // Save file and update user (file is guaranteed non-null after validation)
-            var avatarUrl = await this.SaveAvatarFileAsync(file!, userId, cancellationToken);
+            var avatarUrl = await SaveAvatarFileAsync(file!, userId, cancellationToken);
 
             user.AvatarUrl = avatarUrl;
             user.UpdatedAt = DateTime.UtcNow;
