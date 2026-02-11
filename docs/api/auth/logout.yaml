@@ -11,9 +11,9 @@ body:
       "refreshToken": "{{refreshToken}}"
     }
 tests:
-  - name: Status code is 200
+  - name: Status code is 204
     script: |
-      expect(response.status).toBe(200);
-  - name: Response contains success message
+      expect(response.status).toBe(204);
+  - name: Response is empty
     script: |
-      expect(response.body.message).toBe("Logged out successfully");
+      expect(response.body).toBeUndefined();

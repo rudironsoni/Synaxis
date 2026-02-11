@@ -1,0 +1,910 @@
+openapi: 3.0.3
+info:
+  title: Authentication API
+  description: Comprehensive authentication and authorization endpoints for user registration, login, MFA, password management, and email verification
+  version: 1.0.0
+  contact:
+    name: Synaxis Team
+    email: support@synaxis.dev
+
+servers:
+  - url: http://localhost:5000
+    description: Local development server
+  - url: https://api.synaxis.dev
+    description: Production server
+
+tags:
+  - name: Authentication
+    description: User authentication and session management
+  - name: Registration
+    description: User registration and onboarding
+  - name: Password Management
+    description: Password reset and recovery
+  - name: Email Verification
+    description: Email verification and confirmation
+  - name: MFA
+    description: Multi-factor authentication management
+
+paths:
+  /api/v1/auth/register:
+    post:
+      summary: Register new user
+      description: Creates a new user account with optional organization creation. Returns authentication tokens upon successful registration.
+      operationId: registerUser
+      tags:
+        - Registration
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            example:
+              email: "john.doe@example.com"
+              password: "SecurePassword123!"
+              firstName: "John"
+              lastName: "Doe"
+              organizationName: "Acme Corp"
+              dataResidencyRegion: "us-east-1"
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+              example:
+                accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                refreshToken: "dGhpcy1pcy1hLXJlZnJlc2gtdG9rZW4..."
+                tokenType: "Bearer"
+                expiresIn: 3600
+                user:
+                  id: "550e8400-e29b-41d4-a716-446655440000"
+                  email: "john.doe@example.com"
+                  firstName: "John"
+                  lastName: "Doe"
+                  role: "user"
+                  mfaEnabled: false
+                  emailVerified: false
+                  isActive: true
+                  createdAt: "2024-01-15T10:30:00Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /api/v1/auth/login:
+    post:
+      summary: User login
+      description: Authenticates a user with email and password. Returns JWT access and refresh tokens.
+      operationId: loginUser
+      tags:
+        - Authentication
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              email: "john.doe@example.com"
+              password: "SecurePassword123!"
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+              example:
+                accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                refreshToken: "dGhpcy1pcy1hLXJlZnJlc2gtdG9rZW4..."
+                tokenType: "Bearer"
+                expiresIn: 3600
+                user:
+                  id: "550e8400-e29b-41d4-a716-446655440000"
+                  email: "john.doe@example.com"
+                  firstName: "John"
+                  lastName: "Doe"
+                  role: "user"
+                  mfaEnabled: false
+                  emailVerified: true
+                  isActive: true
+                  createdAt: "2024-01-15T10:30:00Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '423':
+          description: Account locked - Too many failed login attempts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "AccountLocked"
+                message: "Account has been locked due to too many failed login attempts. Please reset your password."
+                retryAfter: 900
+
+  /api/v1/auth/login/mfa:
+    post:
+      summary: MFA login
+      description: Completes authentication with multi-factor authentication code. Used after initial login when MFA is enabled.
+      operationId: loginWithMfa
+      tags:
+        - Authentication
+        - MFA
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MfaLoginRequest'
+            example:
+              email: "john.doe@example.com"
+              password: "SecurePassword123!"
+              mfaCode: "123456"
+      responses:
+        '200':
+          description: MFA login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+              example:
+                accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                refreshToken: "dGhpcy1pcy1hLXJlZnJlc2gtdG9rZW4..."
+                tokenType: "Bearer"
+                expiresIn: 3600
+                user:
+                  id: "550e8400-e29b-41d4-a716-446655440000"
+                  email: "john.doe@example.com"
+                  firstName: "John"
+                  lastName: "Doe"
+                  role: "user"
+                  mfaEnabled: true
+                  emailVerified: true
+                  isActive: true
+                  createdAt: "2024-01-15T10:30:00Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Invalid MFA code or credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "InvalidMfaCode"
+                message: "The MFA code provided is invalid or has expired."
+
+  /api/v1/auth/logout:
+    post:
+      summary: User logout
+      description: Invalidates the current session and refresh token. Requires authentication.
+      operationId: logoutUser
+      tags:
+        - Authentication
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+            example:
+              refreshToken: "dGhpcy1pcy1hLXJlZnJlc2gtdG9rZW4..."
+      responses:
+        '204':
+          description: Logout successful
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/auth/refresh:
+    post:
+      summary: Refresh access token
+      description: Obtains a new access token using a valid refresh token. The refresh token is rotated for security.
+      operationId: refreshToken
+      tags:
+        - Authentication
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+            example:
+              refreshToken: "dGhpcy1pcy1hLXJlZnJlc2gtdG9rZW4..."
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+              example:
+                accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                refreshToken: "bmV3LXJlZnJlc2gtdG9rZW4..."
+                tokenType: "Bearer"
+                expiresIn: 3600
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Invalid or expired refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "InvalidRefreshToken"
+                message: "The refresh token is invalid or has expired. Please login again."
+
+  /api/v1/auth/forgot-password:
+    post:
+      summary: Request password reset
+      description: Initiates password reset process by sending a reset link to the user's email. Valid for 1 hour.
+      operationId: forgotPassword
+      tags:
+        - Password Management
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ForgotPasswordRequest'
+            example:
+              email: "john.doe@example.com"
+      responses:
+        '200':
+          description: Password reset email sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: "If an account exists with this email, a password reset link has been sent."
+                expiresAt: "2024-01-15T11:30:00Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          description: Too many requests - Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "RateLimitExceeded"
+                message: "Too many password reset requests. Please try again later."
+                retryAfter: 300
+
+  /api/v1/auth/reset-password:
+    post:
+      summary: Reset password
+      description: Completes password reset using a valid reset token from the email link.
+      operationId: resetPassword
+      tags:
+        - Password Management
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordRequest'
+            example:
+              token: "aGVsbG8td29ybGQtcGFzc3dvcmQtcmVzZXQtdG9rZW4..."
+              newPassword: "NewSecurePassword456!"
+      responses:
+        '200':
+          description: Password reset successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: "Password has been reset successfully. Please login with your new password."
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Invalid or expired reset token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "InvalidResetToken"
+                message: "The password reset token is invalid or has expired. Please request a new reset link."
+
+  /api/v1/auth/verify-email:
+    post:
+      summary: Verify email address
+      description: Verifies user's email address using a verification token sent during registration.
+      operationId: verifyEmail
+      tags:
+        - Email Verification
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyEmailRequest'
+            example:
+              token: "ZW1haWwtdmVyaWZpY2F0aW9uLXRva2Vu..."
+      responses:
+        '200':
+          description: Email verified successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: "Email verified successfully. You can now login to your account."
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Invalid or expired verification token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "InvalidVerificationToken"
+                message: "The email verification token is invalid or has expired. Please request a new verification email."
+
+  /api/v1/auth/resend-verification:
+    post:
+      summary: Resend verification email
+      description: Resends email verification link to the user's email address.
+      operationId: resendVerification
+      tags:
+        - Email Verification
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResendVerificationRequest'
+            example:
+              email: "john.doe@example.com"
+      responses:
+        '200':
+          description: Verification email sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: "If an account exists with this email and is not verified, a verification link has been sent."
+                expiresAt: "2024-01-15T11:30:00Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          description: Too many requests - Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "RateLimitExceeded"
+                message: "Too many verification email requests. Please try again later."
+                retryAfter: 300
+
+  /api/v1/auth/mfa/setup:
+    post:
+      summary: Setup MFA
+      description: Initiates MFA setup by generating a secret key and QR code for authenticator app registration. Requires authentication.
+      operationId: setupMfa
+      tags:
+        - MFA
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: MFA setup initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MfaSetupResponse'
+              example:
+                secret: "JBSWY3DPEHPK3PXP"
+                qrCodeUrl: "otpauth://totp/Synaxis:john.doe@example.com?secret=JBSWY3DPEHPK3PXP&issuer=Synaxis"
+                backupCodes:
+                  - "12345678"
+                  - "87654321"
+                  - "11112222"
+                  - "22223333"
+                  - "33334444"
+                  - "44445555"
+                  - "55556666"
+                  - "66667777"
+                  - "77778888"
+                  - "88889999"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: MFA already enabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "MfaAlreadyEnabled"
+                message: "MFA is already enabled for this account."
+
+  /api/v1/auth/mfa/enable:
+    post:
+      summary: Enable MFA
+      description: Completes MFA setup by verifying the authenticator app code. Requires authentication.
+      operationId: enableMfa
+      tags:
+        - MFA
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MfaEnableRequest'
+            example:
+              code: "123456"
+      responses:
+        '200':
+          description: MFA enabled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: "MFA has been enabled successfully for your account."
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: MFA already enabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "MfaAlreadyEnabled"
+                message: "MFA is already enabled for this account."
+
+  /api/v1/auth/mfa/disable:
+    post:
+      summary: Disable MFA
+      description: Disables MFA for the authenticated user. Requires password confirmation for security.
+      operationId: disableMfa
+      tags:
+        - MFA
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MfaDisableRequest'
+            example:
+              password: "SecurePassword123!"
+      responses:
+        '200':
+          description: MFA disabled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: "MFA has been disabled successfully for your account."
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: MFA not enabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "MfaNotEnabled"
+                message: "MFA is not enabled for this account."
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+        - firstName
+        - lastName
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "john.doe@example.com"
+        password:
+          type: string
+          format: password
+          minLength: 8
+          description: User's password (min 8 characters, must include uppercase, lowercase, number, and special character)
+          example: "SecurePassword123!"
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: User's first name
+          example: "John"
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: User's last name
+          example: "Doe"
+        organizationName:
+          type: string
+          maxLength: 200
+          description: Optional organization name to create during registration
+          example: "Acme Corp"
+        dataResidencyRegion:
+          type: string
+          description: Data residency region for the user/organization
+          enum:
+            - us-east-1
+            - us-west-2
+            - eu-west-1
+            - eu-central-1
+            - ap-southeast-1
+            - ap-northeast-1
+          example: "us-east-1"
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "john.doe@example.com"
+        password:
+          type: string
+          format: password
+          description: User's password
+          example: "SecurePassword123!"
+
+    MfaLoginRequest:
+      type: object
+      required:
+        - email
+        - password
+        - mfaCode
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "john.doe@example.com"
+        password:
+          type: string
+          format: password
+          description: User's password
+          example: "SecurePassword123!"
+        mfaCode:
+          type: string
+          pattern: '^\d{6}$'
+          description: 6-digit MFA code from authenticator app
+          example: "123456"
+
+    LogoutRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          description: Refresh token to invalidate
+          example: "dGhpcy1pcy1hLXJlZnJlc2gtdG9rZW4..."
+
+    RefreshTokenRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          description: Valid refresh token
+          example: "dGhpcy1pcy1hLXJlZnJlc2gtdG9rZW4..."
+
+    ForgotPasswordRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "john.doe@example.com"
+
+    ResetPasswordRequest:
+      type: object
+      required:
+        - token
+        - newPassword
+      properties:
+        token:
+          type: string
+          description: Password reset token from email
+          example: "aGVsbG8td29ybGQtcGFzc3dvcmQtcmVzZXQtdG9rZW4..."
+        newPassword:
+          type: string
+          format: password
+          minLength: 8
+          description: New password (min 8 characters, must include uppercase, lowercase, number, and special character)
+          example: "NewSecurePassword456!"
+
+    VerifyEmailRequest:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+          description: Email verification token
+          example: "ZW1haWwtdmVyaWZpY2F0aW9uLXRva2Vu..."
+
+    ResendVerificationRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "john.doe@example.com"
+
+    MfaEnableRequest:
+      type: object
+      required:
+        - code
+      properties:
+        code:
+          type: string
+          pattern: '^\d{6}$'
+          description: 6-digit MFA code from authenticator app
+          example: "123456"
+
+    MfaDisableRequest:
+      type: object
+      required:
+        - password
+      properties:
+        password:
+          type: string
+          format: password
+          description: Current password for verification
+          example: "SecurePassword123!"
+
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: JWT access token
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refreshToken:
+          type: string
+          description: Refresh token for obtaining new access tokens
+          example: "dGhpcy1pcy1hLXJlZnJlc2gtdG9rZW4..."
+        tokenType:
+          type: string
+          description: Token type
+          example: "Bearer"
+        expiresIn:
+          type: integer
+          description: Access token expiration time in seconds
+          example: 3600
+        user:
+          $ref: '#/components/schemas/User'
+
+    TokenResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: New JWT access token
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refreshToken:
+          type: string
+          description: New refresh token (rotated for security)
+          example: "bmV3LXJlZnJlc2gtdG9rZW4..."
+        tokenType:
+          type: string
+          description: Token type
+          example: "Bearer"
+        expiresIn:
+          type: integer
+          description: Access token expiration time in seconds
+          example: 3600
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Response message
+          example: "Operation completed successfully"
+        expiresAt:
+          type: string
+          format: date-time
+          description: Expiration timestamp for time-sensitive operations
+          example: "2024-01-15T11:30:00Z"
+
+    MfaSetupResponse:
+      type: object
+      properties:
+        secret:
+          type: string
+          description: MFA secret key for authenticator app
+          example: "JBSWY3DPEHPK3PXP"
+        qrCodeUrl:
+          type: string
+          format: uri
+          description: QR code URL for authenticator app scanning
+          example: "otpauth://totp/Synaxis:john.doe@example.com?secret=JBSWY3DPEHPK3PXP&issuer=Synaxis"
+        backupCodes:
+          type: array
+          description: Backup codes for account recovery
+          items:
+            type: string
+            pattern: '^\d{8}$'
+          example:
+            - "12345678"
+            - "87654321"
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique user identifier
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "john.doe@example.com"
+        firstName:
+          type: string
+          description: User's first name
+          example: "John"
+        lastName:
+          type: string
+          description: User's last name
+          example: "Doe"
+        role:
+          type: string
+          description: User's role
+          enum:
+            - user
+            - admin
+            - superadmin
+          example: "user"
+        mfaEnabled:
+          type: boolean
+          description: Whether MFA is enabled for the user
+          example: false
+        emailVerified:
+          type: boolean
+          description: Whether the user's email is verified
+          example: true
+        isActive:
+          type: boolean
+          description: Whether the user account is active
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          description: Account creation timestamp
+          example: "2024-01-15T10:30:00Z"
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error code
+          example: "ValidationError"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "The request contains invalid data."
+        details:
+          type: object
+          description: Additional error details
+          nullable: true
+          example:
+            field: "email"
+            issue: "Invalid email format"
+        retryAfter:
+          type: integer
+          description: Seconds to wait before retrying (for rate limits)
+          nullable: true
+          example: 300
+
+  responses:
+    BadRequest:
+      description: Bad request - Invalid input data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "BadRequest"
+            message: "The request contains invalid data."
+            details:
+              field: "email"
+              issue: "Invalid email format"
+
+    Unauthorized:
+      description: Unauthorized - Invalid or missing authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Unauthorized"
+            message: "Authentication is required to access this resource."
+
+    Conflict:
+      description: Conflict - Resource already exists
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "UserAlreadyExists"
+            message: "A user with this email address already exists."
+
+    ValidationError:
+      description: Validation error - Request data failed validation
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "ValidationError"
+            message: "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character."
+            details:
+              field: "password"
+              constraints:
+                minLength: 8
+                pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]"
