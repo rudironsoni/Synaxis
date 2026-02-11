@@ -480,7 +480,7 @@ namespace Synaxis.Infrastructure.Services
             score += varietyCount * 6;
 
             // Pattern detection (deduct points for common patterns)
-            if (Regex.IsMatch(password, @"(.)\1{2,}", RegexOptions.ExplicitCapture, TimeSpan.FromMilliseconds(100)))
+            if (Regex.IsMatch(password, @"(?<ch>.)\k<ch>{2,}", RegexOptions.ExplicitCapture, TimeSpan.FromMilliseconds(100)))
             {
                 // Repeated characters
                 score -= 10;
