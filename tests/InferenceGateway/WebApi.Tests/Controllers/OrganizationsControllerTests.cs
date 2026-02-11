@@ -15,7 +15,6 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
-    using Moq;
     using Synaxis.Core.Models;
     using Synaxis.Infrastructure.Data;
     using Synaxis.InferenceGateway.WebApi.Controllers;
@@ -23,22 +22,32 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
     using OrganizationSettingsResponse = Synaxis.Core.Contracts.OrganizationSettingsResponse;
 
     [Trait("Category", "Unit")]
-    public class OrganizationsControllerTests
+    public class OrganizationsControllerTests : IDisposable
     {
-        private readonly Mock<SynaxisDbContext> _mockDbContext;
+        private readonly SynaxisDbContext _dbContext;
         private readonly OrganizationsController _controller;
         private readonly Guid _testUserId = Guid.NewGuid();
         private readonly Guid _testOrganizationId = Guid.NewGuid();
+        private bool _disposed;
 
         public OrganizationsControllerTests()
         {
             var options = new DbContextOptionsBuilder<SynaxisDbContext>()
                 .UseInMemoryDatabase(databaseName: $"TestDb_{Guid.NewGuid()}")
                 .Options;
-            _mockDbContext = new Mock<SynaxisDbContext>(options);
+            _dbContext = new SynaxisDbContext(options);
 
-            _controller = new OrganizationsController(_mockDbContext.Object);
+            _controller = new OrganizationsController(_dbContext);
             SetupControllerContext();
+        }
+
+        public void Dispose()
+        {
+            if (!_disposed)
+            {
+                _dbContext.Dispose();
+                _disposed = true;
+            }
         }
 
         [Fact]
@@ -46,8 +55,6 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
         {
             // Arrange
             var nonExistentOrgId = Guid.NewGuid();
-            var mockSet = CreateMockDbSet(Array.Empty<Organization>());
-            _mockDbContext.Setup(x => x.Organizations).Returns(mockSet.Object);
 
             // Act
             var result = await _controller.GetOrganizationSettings(nonExistentOrgId, CancellationToken.None);
@@ -61,11 +68,8 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
         {
             // Arrange
             var organization = CreateTestOrganization();
-            var mockOrgSet = CreateMockDbSet(new[] { organization });
-            _mockDbContext.Setup(x => x.Organizations).Returns(mockOrgSet.Object);
-
-            var mockMembershipSet = CreateMockDbSet(Array.Empty<TeamMembership>());
-            _mockDbContext.Setup(x => x.TeamMemberships).Returns(mockMembershipSet.Object);
+            _dbContext.Organizations.Add(organization);
+            await _dbContext.SaveChangesAsync();
 
             // Act
             var result = await _controller.GetOrganizationSettings(_testOrganizationId, CancellationToken.None);
@@ -79,12 +83,11 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
         {
             // Arrange
             var organization = CreateTestOrganization();
-            var mockOrgSet = CreateMockDbSet(new[] { organization });
-            _mockDbContext.Setup(x => x.Organizations).Returns(mockOrgSet.Object);
-
             var membership = CreateTestTeamMembership(_testUserId, Guid.NewGuid(), _testOrganizationId);
-            var mockMembershipSet = CreateMockDbSet(new[] { membership });
-            _mockDbContext.Setup(x => x.TeamMemberships).Returns(mockMembershipSet.Object);
+
+            _dbContext.Organizations.Add(organization);
+            _dbContext.TeamMemberships.Add(membership);
+            await _dbContext.SaveChangesAsync();
 
             // Act
             var result = await _controller.GetOrganizationSettings(_testOrganizationId, CancellationToken.None);
@@ -120,12 +123,11 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
                 { "analytics", true }
             };
 
-            var mockOrgSet = CreateMockDbSet(new[] { organization });
-            _mockDbContext.Setup(x => x.Organizations).Returns(mockOrgSet.Object);
-
             var membership = CreateTestTeamMembership(_testUserId, Guid.NewGuid(), _testOrganizationId);
-            var mockMembershipSet = CreateMockDbSet(new[] { membership });
-            _mockDbContext.Setup(x => x.TeamMemberships).Returns(mockMembershipSet.Object);
+
+            _dbContext.Organizations.Add(organization);
+            _dbContext.TeamMemberships.Add(membership);
+            await _dbContext.SaveChangesAsync();
 
             // Act
             var result = await _controller.GetOrganizationSettings(_testOrganizationId, CancellationToken.None);
@@ -159,12 +161,11 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             organization.AvailableRegions = null;
             organization.PrivacyConsent = null;
 
-            var mockOrgSet = CreateMockDbSet(new[] { organization });
-            _mockDbContext.Setup(x => x.Organizations).Returns(mockOrgSet.Object);
-
             var membership = CreateTestTeamMembership(_testUserId, Guid.NewGuid(), _testOrganizationId);
-            var mockMembershipSet = CreateMockDbSet(new[] { membership });
-            _mockDbContext.Setup(x => x.TeamMemberships).Returns(mockMembershipSet.Object);
+
+            _dbContext.Organizations.Add(organization);
+            _dbContext.TeamMemberships.Add(membership);
+            await _dbContext.SaveChangesAsync();
 
             // Act
             var result = await _controller.GetOrganizationSettings(_testOrganizationId, CancellationToken.None);
@@ -184,15 +185,15 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
         {
             // Arrange
             var organization = CreateTestOrganization();
-            var mockOrgSet = CreateMockDbSet(new[] { organization });
-            _mockDbContext.Setup(x => x.Organizations).Returns(mockOrgSet.Object);
 
             var teamId1 = Guid.NewGuid();
             var teamId2 = Guid.NewGuid();
             var membership1 = CreateTestTeamMembership(_testUserId, teamId1, _testOrganizationId);
             var membership2 = CreateTestTeamMembership(_testUserId, teamId2, _testOrganizationId);
-            var mockMembershipSet = CreateMockDbSet(new[] { membership1, membership2 });
-            _mockDbContext.Setup(x => x.TeamMemberships).Returns(mockMembershipSet.Object);
+
+            _dbContext.Organizations.Add(organization);
+            _dbContext.TeamMemberships.AddRange(membership1, membership2);
+            await _dbContext.SaveChangesAsync();
 
             // Act
             var result = await _controller.GetOrganizationSettings(_testOrganizationId, CancellationToken.None);
@@ -208,13 +209,13 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             var differentOrgId = Guid.NewGuid();
             var organization = CreateTestOrganization();
             organization.Id = differentOrgId;
-            var mockOrgSet = CreateMockDbSet(new[] { organization });
-            _mockDbContext.Setup(x => x.Organizations).Returns(mockOrgSet.Object);
 
             // Membership is for a different organization
             var membership = CreateTestTeamMembership(_testUserId, Guid.NewGuid(), _testOrganizationId);
-            var mockMembershipSet = CreateMockDbSet(new[] { membership });
-            _mockDbContext.Setup(x => x.TeamMemberships).Returns(mockMembershipSet.Object);
+
+            _dbContext.Organizations.Add(organization);
+            _dbContext.TeamMemberships.Add(membership);
+            await _dbContext.SaveChangesAsync();
 
             // Act
             var result = await _controller.GetOrganizationSettings(differentOrgId, CancellationToken.None);
@@ -261,22 +262,6 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
                 Role = "Member",
                 JoinedAt = DateTime.UtcNow
             };
-        }
-
-        private static Mock<DbSet<T>> CreateMockDbSet<T>(IEnumerable<T> data)
-            where T : class
-        {
-            var queryableData = data.AsQueryable();
-            var mockSet = new Mock<DbSet<T>>();
-
-            var testAsyncProvider = new TestAsyncQueryProvider<T>(queryableData.Provider);
-            mockSet.As<IQueryable<T>>().Setup(m => m.Provider).Returns(testAsyncProvider);
-            mockSet.As<IQueryable<T>>().Setup(m => m.Expression).Returns(queryableData.Expression);
-            mockSet.As<IQueryable<T>>().Setup(m => m.ElementType).Returns(queryableData.ElementType);
-            mockSet.As<IQueryable<T>>().Setup(m => m.GetEnumerator()).Returns(() => queryableData.GetEnumerator());
-            mockSet.As<IAsyncEnumerable<T>>().Setup(m => m.GetAsyncEnumerator(It.IsAny<CancellationToken>())).Returns(() => new TestAsyncEnumerator<T>(queryableData.GetEnumerator()));
-
-            return mockSet;
         }
 
         private void SetupControllerContext()

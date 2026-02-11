@@ -22,25 +22,35 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
     using Xunit;
 
     [Trait("Category", "Unit")]
-    public class TeamsControllerTests
+    public class TeamsControllerTests : IDisposable
     {
-        private readonly Mock<SynaxisDbContext> _mockDbContext;
+        private readonly SynaxisDbContext _dbContext;
         private readonly Mock<IAuditService> _mockAuditService;
         private readonly TeamsController _controller;
         private readonly Guid _testUserId = Guid.NewGuid();
         private readonly Guid _testOrganizationId = Guid.NewGuid();
         private readonly Guid _testTeamId = Guid.NewGuid();
+        private bool _disposed;
 
         public TeamsControllerTests()
         {
             var options = new DbContextOptionsBuilder<SynaxisDbContext>()
                 .UseInMemoryDatabase(databaseName: $"TestDb_{Guid.NewGuid()}")
                 .Options;
-            _mockDbContext = new Mock<SynaxisDbContext>(options);
+            _dbContext = new SynaxisDbContext(options);
             _mockAuditService = new Mock<IAuditService>();
 
-            _controller = new TeamsController(_mockDbContext.Object, _mockAuditService.Object);
+            _controller = new TeamsController(_dbContext, _mockAuditService.Object);
             SetupControllerContext();
+        }
+
+        public void Dispose()
+        {
+            if (!_disposed)
+            {
+                _dbContext.Dispose();
+                _disposed = true;
+            }
         }
 
         [Fact]
@@ -48,8 +58,6 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
         {
             // Arrange
             var request = new CreateTeamRequest { Name = "Test Team" };
-            var mockUserSet = CreateMockDbSet(Array.Empty<User>());
-            _mockDbContext.Setup(x => x.Users).Returns(mockUserSet.Object);
 
             // Act
             var result = await _controller.CreateTeam(_testOrganizationId, request, CancellationToken.None);
@@ -64,11 +72,8 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             // Arrange
             var request = new CreateTeamRequest { Name = "Test Team" };
             var user = CreateTestUser();
-            var mockUserSet = CreateMockDbSet(new[] { user });
-            _mockDbContext.Setup(x => x.Users).Returns(mockUserSet.Object);
-
-            var mockOrgSet = CreateMockDbSet(Array.Empty<Organization>());
-            _mockDbContext.Setup(x => x.Organizations).Returns(mockOrgSet.Object);
+            _dbContext.Users.Add(user);
+            await _dbContext.SaveChangesAsync();
 
             // Act
             var result = await _controller.CreateTeam(_testOrganizationId, request, CancellationToken.None);
@@ -85,16 +90,13 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             // Arrange
             var request = new CreateTeamRequest { Name = "Test Team" };
             var user = CreateTestUser();
-            var mockUserSet = CreateMockDbSet(new[] { user });
-            _mockDbContext.Setup(x => x.Users).Returns(mockUserSet.Object);
-
             var org = CreateTestOrganization();
-            var mockOrgSet = CreateMockDbSet(new[] { org });
-            _mockDbContext.Setup(x => x.Organizations).Returns(mockOrgSet.Object);
+            var existingTeam = new Team { Id = Guid.NewGuid(), OrganizationId = _testOrganizationId, Name = "Test Team", Slug = "test-team" };
 
-            var existingTeam = new Team { Id = Guid.NewGuid(), OrganizationId = _testOrganizationId, Name = "Test Team" };
-            var mockTeamSet = CreateMockDbSet(new[] { existingTeam });
-            _mockDbContext.Setup(x => x.Teams).Returns(mockTeamSet.Object);
+            _dbContext.Users.Add(user);
+            _dbContext.Organizations.Add(org);
+            _dbContext.Teams.Add(existingTeam);
+            await _dbContext.SaveChangesAsync();
 
             // Act
             var result = await _controller.CreateTeam(_testOrganizationId, request, CancellationToken.None);
@@ -111,22 +113,11 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             // Arrange
             var request = new CreateTeamRequest { Name = "Test Team", Description = "Test Description" };
             var user = CreateTestUser();
-            var mockUserSet = CreateMockDbSet(new[] { user });
-            _mockDbContext.Setup(x => x.Users).Returns(mockUserSet.Object);
-
             var org = CreateTestOrganization();
-            var mockOrgSet = CreateMockDbSet(new[] { org });
-            _mockDbContext.Setup(x => x.Organizations).Returns(mockOrgSet.Object);
 
-            var mockTeamSet = CreateMockDbSet(Array.Empty<Team>());
-            _mockDbContext.Setup(x => x.Teams).Returns(mockTeamSet.Object);
-            _mockDbContext.Setup(x => x.Teams.Add(It.IsAny<Team>()));
-
-            var mockMembershipSet = CreateMockDbSet(Array.Empty<TeamMembership>());
-            _mockDbContext.Setup(x => x.TeamMemberships).Returns(mockMembershipSet.Object);
-            _mockDbContext.Setup(x => x.TeamMemberships.Add(It.IsAny<TeamMembership>()));
-
-            _mockDbContext.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+            _dbContext.Users.Add(user);
+            _dbContext.Organizations.Add(org);
+            await _dbContext.SaveChangesAsync();
 
             _mockAuditService.Setup(x => x.LogAsync(
                 It.IsAny<Guid>(),
@@ -147,10 +138,16 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             var value = createdResult.Value;
             value.Should().NotBeNull();
 
-            // Verify DbContext interactions
-            _mockDbContext.Verify(x => x.Teams.Add(It.IsAny<Team>()), Times.Once);
-            _mockDbContext.Verify(x => x.TeamMemberships.Add(It.IsAny<TeamMembership>()), Times.Once);
-            _mockDbContext.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+            // Verify team was created
+            var teams = await _dbContext.Teams.ToListAsync();
+            teams.Should().HaveCount(1);
+            teams[0].Name.Should().Be("Test Team");
+
+            // Verify membership was created
+            var memberships = await _dbContext.TeamMemberships.ToListAsync();
+            memberships.Should().HaveCount(1);
+            memberships[0].UserId.Should().Be(_testUserId);
+            memberships[0].TeamId.Should().Be(teams[0].Id);
 
             // Verify audit log
             _mockAuditService.Verify(x => x.LogAsync(
@@ -167,11 +164,6 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
         {
             // Arrange
             var request = new AddMemberRequest { UserId = Guid.NewGuid(), Role = "member" };
-            var mockMembershipSet = CreateMockDbSet(Array.Empty<TeamMembership>());
-            _mockDbContext.Setup(x => x.TeamMemberships).Returns(mockMembershipSet.Object);
-
-            var mockUserSet = CreateMockDbSet(Array.Empty<User>());
-            _mockDbContext.Setup(x => x.Users).Returns(mockUserSet.Object);
 
             // Act
             var result = await _controller.AddMember(_testOrganizationId, _testTeamId, request, CancellationToken.None);
@@ -203,9 +195,6 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             var request = new AddMemberRequest { UserId = Guid.NewGuid(), Role = "member" };
             SetupTeamAdminPermission();
 
-            var mockTeamSet = CreateMockDbSet(Array.Empty<Team>());
-            _mockDbContext.Setup(x => x.Teams).Returns(mockTeamSet.Object);
-
             // Act
             var result = await _controller.AddMember(_testOrganizationId, _testTeamId, request, CancellationToken.None);
 
@@ -224,11 +213,8 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             SetupTeamAdminPermission();
 
             var team = CreateTestTeam();
-            var mockTeamSet = CreateMockDbSet(new[] { team });
-            _mockDbContext.Setup(x => x.Teams).Returns(mockTeamSet.Object);
-
-            var mockUserSet = CreateMockDbSet(Array.Empty<User>());
-            _mockDbContext.Setup(x => x.Users).Returns(mockUserSet.Object);
+            _dbContext.Teams.Add(team);
+            await _dbContext.SaveChangesAsync();
 
             // Act
             var result = await _controller.AddMember(_testOrganizationId, _testTeamId, request, CancellationToken.None);
@@ -248,12 +234,11 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             SetupTeamAdminPermission();
 
             var team = CreateTestTeam();
-            var mockTeamSet = CreateMockDbSet(new[] { team });
-            _mockDbContext.Setup(x => x.Teams).Returns(mockTeamSet.Object);
-
             var userToAdd = new User { Id = userIdToAdd, OrganizationId = Guid.NewGuid() }; // Different org
-            var mockUserSet = CreateMockDbSet(new[] { userToAdd });
-            _mockDbContext.Setup(x => x.Users).Returns(mockUserSet.Object);
+
+            _dbContext.Teams.Add(team);
+            _dbContext.Users.Add(userToAdd);
+            await _dbContext.SaveChangesAsync();
 
             // Act
             var result = await _controller.AddMember(_testOrganizationId, _testTeamId, request, CancellationToken.None);
@@ -273,16 +258,13 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             SetupTeamAdminPermission();
 
             var team = CreateTestTeam();
-            var mockTeamSet = CreateMockDbSet(new[] { team });
-            _mockDbContext.Setup(x => x.Teams).Returns(mockTeamSet.Object);
-
             var userToAdd = new User { Id = userIdToAdd, OrganizationId = _testOrganizationId };
-            var existingMembership = new TeamMembership { UserId = userIdToAdd, TeamId = _testTeamId };
-            var mockUserSet = CreateMockDbSet(new[] { userToAdd });
-            _mockDbContext.Setup(x => x.Users).Returns(mockUserSet.Object);
+            var existingMembership = new TeamMembership { UserId = userIdToAdd, TeamId = _testTeamId, OrganizationId = _testOrganizationId };
 
-            var mockMembershipSet = CreateMockDbSet(new[] { existingMembership });
-            _mockDbContext.Setup(x => x.TeamMemberships).Returns(mockMembershipSet.Object);
+            _dbContext.Teams.Add(team);
+            _dbContext.Users.Add(userToAdd);
+            _dbContext.TeamMemberships.Add(existingMembership);
+            await _dbContext.SaveChangesAsync();
 
             // Act
             var result = await _controller.AddMember(_testOrganizationId, _testTeamId, request, CancellationToken.None);
@@ -302,18 +284,11 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             SetupTeamAdminPermission();
 
             var team = CreateTestTeam();
-            var mockTeamSet = CreateMockDbSet(new[] { team });
-            _mockDbContext.Setup(x => x.Teams).Returns(mockTeamSet.Object);
-
             var userToAdd = new User { Id = userIdToAdd, OrganizationId = _testOrganizationId };
-            var mockUserSet = CreateMockDbSet(new[] { userToAdd });
-            _mockDbContext.Setup(x => x.Users).Returns(mockUserSet.Object);
 
-            var mockMembershipSet = CreateMockDbSet(Array.Empty<TeamMembership>());
-            _mockDbContext.Setup(x => x.TeamMemberships).Returns(mockMembershipSet.Object);
-            _mockDbContext.Setup(x => x.TeamMemberships.Add(It.IsAny<TeamMembership>()));
-
-            _mockDbContext.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+            _dbContext.Teams.Add(team);
+            _dbContext.Users.Add(userToAdd);
+            await _dbContext.SaveChangesAsync();
 
             _mockAuditService.Setup(x => x.LogAsync(
                 It.IsAny<Guid>(),
@@ -331,9 +306,10 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             var statusResult = result as StatusCodeResult;
             statusResult!.StatusCode.Should().Be(201);
 
-            // Verify DbContext interactions
-            _mockDbContext.Verify(x => x.TeamMemberships.Add(It.IsAny<TeamMembership>()), Times.Once);
-            _mockDbContext.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+            // Verify membership was created
+            var memberships = await _dbContext.TeamMemberships.ToListAsync();
+            memberships.Should().HaveCount(2); // 1 from SetupTeamAdminPermission + 1 new
+            memberships.Should().Contain(m => m.UserId == userIdToAdd && m.TeamId == _testTeamId);
 
             // Verify audit log
             _mockAuditService.Verify(x => x.LogAsync(
@@ -351,11 +327,6 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             // Arrange
             var memberId = Guid.NewGuid();
             var request = new Synaxis.InferenceGateway.WebApi.Controllers.UpdateMemberRoleRequest { Role = "admin" };
-            var mockMembershipSet = CreateMockDbSet(Array.Empty<TeamMembership>());
-            _mockDbContext.Setup(x => x.TeamMemberships).Returns(mockMembershipSet.Object);
-
-            var mockUserSet = CreateMockDbSet(Array.Empty<User>());
-            _mockDbContext.Setup(x => x.Users).Returns(mockUserSet.Object);
 
             // Act
             var result = await _controller.UpdateMemberRole(_testOrganizationId, _testTeamId, memberId, request, CancellationToken.None);
@@ -389,9 +360,6 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             var request = new Synaxis.InferenceGateway.WebApi.Controllers.UpdateMemberRoleRequest { Role = "admin" };
             SetupTeamAdminPermission();
 
-            var mockTeamSet = CreateMockDbSet(Array.Empty<Team>());
-            _mockDbContext.Setup(x => x.Teams).Returns(mockTeamSet.Object);
-
             // Act
             var result = await _controller.UpdateMemberRole(_testOrganizationId, _testTeamId, memberId, request, CancellationToken.None);
 
@@ -410,11 +378,8 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             SetupTeamAdminPermission();
 
             var team = CreateTestTeam();
-            var mockTeamSet = CreateMockDbSet(new[] { team });
-            _mockDbContext.Setup(x => x.Teams).Returns(mockTeamSet.Object);
-
-            var mockMembershipSet = CreateMockDbSet(Array.Empty<TeamMembership>());
-            _mockDbContext.Setup(x => x.TeamMemberships).Returns(mockMembershipSet.Object);
+            _dbContext.Teams.Add(team);
+            await _dbContext.SaveChangesAsync();
 
             // Act
             var result = await _controller.UpdateMemberRole(_testOrganizationId, _testTeamId, memberId, request, CancellationToken.None);
@@ -434,21 +399,19 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             SetupTeamAdminPermission();
 
             var team = CreateTestTeam();
-            var mockTeamSet = CreateMockDbSet(new[] { team });
-            _mockDbContext.Setup(x => x.Teams).Returns(mockTeamSet.Object);
-
             var membership = new TeamMembership
             {
                 Id = Guid.NewGuid(),
                 UserId = memberId,
                 TeamId = _testTeamId,
+                OrganizationId = _testOrganizationId,
                 Role = "Member",
                 JoinedAt = DateTime.UtcNow
             };
-            var mockMembershipSet = CreateMockDbSet(new[] { membership });
-            _mockDbContext.Setup(x => x.TeamMemberships).Returns(mockMembershipSet.Object);
 
-            _mockDbContext.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+            _dbContext.Teams.Add(team);
+            _dbContext.TeamMemberships.Add(membership);
+            await _dbContext.SaveChangesAsync();
 
             _mockAuditService.Setup(x => x.LogAsync(
                 It.IsAny<Guid>(),
@@ -466,10 +429,9 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             var okResult = result as OkObjectResult;
             okResult!.Value.Should().NotBeNull();
 
+            // Refresh from database
+            await _dbContext.Entry(membership).ReloadAsync();
             membership.Role.Should().Be("TeamAdmin");
-
-            // Verify DbContext interactions
-            _mockDbContext.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
 
             // Verify audit log
             _mockAuditService.Verify(x => x.LogAsync(
@@ -521,32 +483,15 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             {
                 UserId = _testUserId,
                 TeamId = _testTeamId,
+                OrganizationId = _testOrganizationId,
                 Role = "TeamAdmin"
             };
             var user = CreateTestUser();
             user.Role = "admin";
 
-            var mockMembershipSet = CreateMockDbSet(new[] { membership });
-            _mockDbContext.Setup(x => x.TeamMemberships).Returns(mockMembershipSet.Object);
-
-            var mockUserSet = CreateMockDbSet(new[] { user });
-            _mockDbContext.Setup(x => x.Users).Returns(mockUserSet.Object);
-        }
-
-        private static Mock<DbSet<T>> CreateMockDbSet<T>(IEnumerable<T> data)
-            where T : class
-        {
-            var queryableData = data.AsQueryable();
-            var mockSet = new Mock<DbSet<T>>();
-
-            var testAsyncProvider = new TestAsyncQueryProvider<T>(queryableData.Provider);
-            mockSet.As<IQueryable<T>>().Setup(m => m.Provider).Returns(testAsyncProvider);
-            mockSet.As<IQueryable<T>>().Setup(m => m.Expression).Returns(queryableData.Expression);
-            mockSet.As<IQueryable<T>>().Setup(m => m.ElementType).Returns(queryableData.ElementType);
-            mockSet.As<IQueryable<T>>().Setup(m => m.GetEnumerator()).Returns(() => queryableData.GetEnumerator());
-            mockSet.As<IAsyncEnumerable<T>>().Setup(m => m.GetAsyncEnumerator(It.IsAny<CancellationToken>())).Returns(() => new TestAsyncEnumerator<T>(queryableData.GetEnumerator()));
-
-            return mockSet;
+            _dbContext.TeamMemberships.Add(membership);
+            _dbContext.Users.Add(user);
+            _dbContext.SaveChanges();
         }
 
         private void SetupControllerContext()
