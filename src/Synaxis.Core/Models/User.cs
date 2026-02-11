@@ -174,6 +174,11 @@ namespace Synaxis.Core.Models
         public bool IsActive { get; set; } = true;
 
         /// <summary>
+        /// Gets or sets the deletion timestamp (soft delete).
+        /// </summary>
+        public DateTime? DeletedAt { get; set; }
+
+        /// <summary>
         /// Gets or sets the creation timestamp.
         /// </summary>
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

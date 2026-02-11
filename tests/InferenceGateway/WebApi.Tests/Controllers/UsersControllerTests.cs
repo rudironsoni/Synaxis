@@ -501,6 +501,194 @@ public sealed class UsersControllerTests : IDisposable
             updatedUser!.UpdatedAt.Should().BeAfter(originalUpdatedAt);
         }
 
+        [Fact]
+        public async Task DeleteMe_WithAuthenticatedUser_SoftDeletesAccount()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            // Act
+            var result = await _controller.DeleteMe(CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<NoContentResult>();
+
+            // Verify soft delete in database
+            var deletedUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == _testUserId);
+            deletedUser.Should().NotBeNull();
+            deletedUser!.IsActive.Should().BeFalse();
+            deletedUser.DeletedAt.Should().NotBeNull();
+            deletedUser.DeletedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
+        }
+
+        [Fact]
+        public async Task DeleteMe_WithUnauthenticatedUser_ReturnsUnauthorized()
+        {
+            // Arrange
+            _userContext.SetAuthenticated(false);
+
+            // Act
+            var result = await _controller.DeleteMe(CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<UnauthorizedResult>();
+        }
+
+        [Fact]
+        public async Task DeleteMe_WithNonExistentUser_ReturnsNotFound()
+        {
+            // Arrange
+            // User not added to database
+
+            // Act
+            var result = await _controller.DeleteMe(CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<NotFoundResult>();
+        }
+
+        [Fact]
+        public async Task DeleteMe_WithBlacklistedToken_ReturnsUnauthorized()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            _dbContext.Users.Add(testUser);
+
+            var blacklistedToken = new JwtBlacklist
+            {
+                Id = Guid.NewGuid(),
+                TokenId = "test-jti-123",
+                CreatedAt = DateTime.UtcNow,
+                ExpiresAt = DateTime.UtcNow.AddHours(1),
+            };
+            _dbContext.JwtBlacklists.Add(blacklistedToken);
+            await _dbContext.SaveChangesAsync();
+
+            // Setup Authorization header with blacklisted token
+            _controller.ControllerContext.HttpContext.Request.Headers["Authorization"] =
+                "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJ0ZXN0LWp0aS0xMjMifQ.test";
+
+            // Act
+            var result = await _controller.DeleteMe(CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<UnauthorizedResult>();
+        }
+
+        [Fact]
+        public async Task DeleteMe_WithActiveRefreshTokens_RevokesAllTokens()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            _dbContext.Users.Add(testUser);
+
+            var activeRefreshToken1 = new RefreshToken
+            {
+                Id = Guid.NewGuid(),
+                UserId = _testUserId,
+                TokenHash = "hash1",
+                ExpiresAt = DateTime.UtcNow.AddDays(7),
+                IsRevoked = false,
+                CreatedAt = DateTime.UtcNow,
+            };
+
+            var activeRefreshToken2 = new RefreshToken
+            {
+                Id = Guid.NewGuid(),
+                UserId = _testUserId,
+                TokenHash = "hash2",
+                ExpiresAt = DateTime.UtcNow.AddDays(14),
+                IsRevoked = false,
+                CreatedAt = DateTime.UtcNow,
+            };
+
+            _dbContext.RefreshTokens.Add(activeRefreshToken1);
+            _dbContext.RefreshTokens.Add(activeRefreshToken2);
+            await _dbContext.SaveChangesAsync();
+
+            // Act
+            var result = await _controller.DeleteMe(CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<NoContentResult>();
+
+            // Verify all refresh tokens are revoked
+            var revokedTokens = await _dbContext.RefreshTokens
+                .Where(rt => rt.UserId == _testUserId)
+                .ToListAsync();
+
+            revokedTokens.Should().HaveCount(2);
+            revokedTokens.Should().OnlyContain(rt => rt.IsRevoked);
+            revokedTokens.Should().OnlyContain(rt => rt.RevokedAt.HasValue);
+        }
+
+        [Fact]
+        public async Task DeleteMe_WithActiveOrganizationMemberships_DeletesMemberships()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            var testOrganization = CreateTestOrganization();
+            var testTeam = CreateTestTeam(testOrganization);
+            var testTeamMembership = CreateTestTeamMembership(testUser, testTeam, testOrganization);
+
+            _dbContext.Organizations.Add(testOrganization);
+            _dbContext.Teams.Add(testTeam);
+            _dbContext.Users.Add(testUser);
+            _dbContext.TeamMemberships.Add(testTeamMembership);
+            await _dbContext.SaveChangesAsync();
+
+            // Act
+            var result = await _controller.DeleteMe(CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<NoContentResult>();
+
+            // Verify user is soft deleted
+            var deletedUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == _testUserId);
+            deletedUser.Should().NotBeNull();
+            deletedUser!.IsActive.Should().BeFalse();
+            deletedUser.DeletedAt.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async Task DeleteMe_UpdatesUpdatedAtTimestamp()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            var originalUpdatedAt = testUser.UpdatedAt;
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            // Act
+            var result = await _controller.DeleteMe(CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<NoContentResult>();
+
+            var deletedUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == _testUserId);
+            deletedUser.Should().NotBeNull();
+            deletedUser!.UpdatedAt.Should().BeAfter(originalUpdatedAt);
+        }
+
+        [Fact]
+        public async Task DeleteMe_Returns204NoContent()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            // Act
+            var result = await _controller.DeleteMe(CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<NoContentResult>();
+            var noContentResult = result as NoContentResult;
+            noContentResult!.StatusCode.Should().Be(204);
+        }
+
         private void SetupControllerContext()
         {
             var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
