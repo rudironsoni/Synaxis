@@ -4,27 +4,29 @@
 
 namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Globalization;
-    using System.Linq;
-    using System.Security.Claims;
-    using System.Threading;
-    using System.Threading.Tasks;
-    using FluentAssertions;
-    using Microsoft.AspNetCore.Http;
-    using Microsoft.AspNetCore.Mvc;
-    using Microsoft.EntityFrameworkCore;
-    using Synaxis.Core.Models;
-    using Synaxis.Infrastructure.Data;
-    using Synaxis.InferenceGateway.WebApi.Controllers;
-    using Xunit;
-    using OrganizationSettingsResponse = Synaxis.Core.Contracts.OrganizationSettingsResponse;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading;
+using System.Threading.Tasks;
+using FluentAssertions;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Synaxis.Core.Contracts;
+using Synaxis.Core.Models;
+using Synaxis.Infrastructure.Data;
+using Synaxis.InferenceGateway.WebApi.Controllers;
+using Xunit;
+using OrganizationSettingsResponse = Synaxis.Core.Contracts.OrganizationSettingsResponse;
 
-    [Trait("Category", "Unit")]
-    public class OrganizationsControllerTests : IDisposable
-    {
+[Trait("Category", "Unit")]
+public class OrganizationsControllerTests : IDisposable
+{
         private readonly SynaxisDbContext _dbContext;
+        private readonly TestPasswordService _passwordService;
         private readonly OrganizationsController _controller;
         private readonly Guid _testUserId = Guid.NewGuid();
         private readonly Guid _testOrganizationId = Guid.NewGuid();
@@ -36,8 +38,9 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
                 .UseInMemoryDatabase(databaseName: $"TestDb_{Guid.NewGuid()}")
                 .Options;
             _dbContext = new SynaxisDbContext(options);
+            _passwordService = new TestPasswordService();
 
-            _controller = new OrganizationsController(_dbContext);
+            _controller = new OrganizationsController(_dbContext, _passwordService);
             SetupControllerContext();
         }
 
@@ -282,6 +285,47 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
                     User = claimsPrincipal
                 }
             };
+        }
+
+        /// <summary>
+        /// Test implementation of IPasswordService.
+        /// </summary>
+        private class TestPasswordService : IPasswordService
+        {
+            public Task<ChangePasswordResult> ChangePasswordAsync(Guid userId, string currentPassword, string newPassword)
+            {
+                return Task.FromResult(new ChangePasswordResult { Success = true });
+            }
+
+            public Task<PasswordExpirationStatus> CheckPasswordExpirationAsync(Guid userId)
+            {
+                return Task.FromResult(new PasswordExpirationStatus { IsExpired = false, IsExpiringSoon = false, DaysUntilExpiration = 90 });
+            }
+
+            public int GetPasswordStrength(string password)
+            {
+                return 80;
+            }
+
+            public Task<PasswordPolicy> GetPasswordPolicyAsync(Guid organizationId)
+            {
+                return Task.FromResult(new PasswordPolicy());
+            }
+
+            public Task<ResetPasswordResult> ResetPasswordAsync(Guid userId, string newPassword)
+            {
+                return Task.FromResult(new ResetPasswordResult { Success = true });
+            }
+
+            public Task<PasswordValidationResult> ValidatePasswordAsync(Guid userId, string password)
+            {
+                return Task.FromResult(new PasswordValidationResult { IsValid = true, StrengthScore = 80, StrengthLevel = "Strong" });
+            }
+
+            public Task<PasswordPolicy> UpdatePasswordPolicyAsync(Guid organizationId, PasswordPolicy policy)
+            {
+                return Task.FromResult(policy);
+            }
         }
     }
 }

@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <NoWarn>SA1200;SA1210;SA1111;IDISP001;IDISP004;IDISP026;IDISP007;SA1129;MA0002;S2325;CS0252;SA1633;SA1009;SA1028</NoWarn>
+    <NoWarn>SA1200;SA1210;SA1111;IDISP001;IDISP004;IDISP025;IDISP026;IDISP007;SA1129;MA0002;MA0051;S2325;S3881;CS0252;SA1633;SA1009;SA1028</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="coverlet.collector">

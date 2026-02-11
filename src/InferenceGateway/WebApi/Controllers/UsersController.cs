@@ -51,6 +51,12 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         [HttpGet("me")]
         public async Task<IActionResult> GetMe(CancellationToken cancellationToken)
         {
+            // Check if user is authenticated
+            if (!this._userContext.IsAuthenticated)
+            {
+                return this.Unauthorized();
+            }
+
             // Check if JWT token is blacklisted
             var authHeader = this.Request.Headers.Authorization.FirstOrDefault();
             if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer ", StringComparison.Ordinal))
@@ -83,6 +89,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
                 timezone = user.Timezone,
                 locale = user.Locale,
                 role = user.Role,
+                organizationId = user.OrganizationId,
                 dataResidencyRegion = user.DataResidencyRegion,
                 crossBorderConsentGiven = user.CrossBorderConsentGiven,
                 crossBorderConsentDate = user.CrossBorderConsentDate,
