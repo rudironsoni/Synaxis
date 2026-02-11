@@ -210,6 +210,13 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         [HttpDelete("me")]
         public async Task<IActionResult> DeleteMe(CancellationToken cancellationToken)
         {
+            // Check authentication
+            var authResult = await this.CheckAuthenticationAsync(cancellationToken);
+            if (authResult != null)
+            {
+                return authResult;
+            }
+
             var userId = this._userContext.UserId;
 
             var user = await this._synaxisDbContext.Users
@@ -221,8 +228,23 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
                 return this.NotFound();
             }
 
+            // Soft delete: set IsActive to false and DeletedAt timestamp
             user.IsActive = false;
+            user.DeletedAt = DateTime.UtcNow;
             user.UpdatedAt = DateTime.UtcNow;
+
+            // Revoke all refresh tokens for the user
+            var refreshTokens = await this._synaxisDbContext.RefreshTokens
+                .Where(rt => rt.UserId == userId && !rt.IsRevoked)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            foreach (var token in refreshTokens)
+            {
+                token.IsRevoked = true;
+                token.RevokedAt = DateTime.UtcNow;
+            }
+
             await this._synaxisDbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
             return this.NoContent();
