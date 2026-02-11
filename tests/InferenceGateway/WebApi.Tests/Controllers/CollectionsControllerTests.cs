@@ -22,26 +22,36 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
     using Xunit;
 
     [Trait("Category", "Unit")]
-    public class CollectionsControllerTests
+    public class CollectionsControllerTests : IDisposable
     {
-        private readonly Mock<SynaxisDbContext> _mockDbContext;
+        private readonly SynaxisDbContext _dbContext;
         private readonly Mock<IAuditService> _mockAuditService;
         private readonly CollectionsController _controller;
         private readonly Guid _testUserId = Guid.NewGuid();
         private readonly Guid _testOrganizationId = Guid.NewGuid();
         private readonly Guid _testCollectionId = Guid.NewGuid();
         private readonly Guid _testTeamId = Guid.NewGuid();
+        private bool _disposed;
 
         public CollectionsControllerTests()
         {
             var options = new DbContextOptionsBuilder<SynaxisDbContext>()
                 .UseInMemoryDatabase(databaseName: $"TestDb_{Guid.NewGuid()}")
                 .Options;
-            _mockDbContext = new Mock<SynaxisDbContext>(options);
+            _dbContext = new SynaxisDbContext(options);
             _mockAuditService = new Mock<IAuditService>();
 
-            _controller = new CollectionsController(_mockDbContext.Object, _mockAuditService.Object);
+            _controller = new CollectionsController(_dbContext, _mockAuditService.Object);
             SetupControllerContext();
+        }
+
+        public void Dispose()
+        {
+            if (!_disposed)
+            {
+                _dbContext.Dispose();
+                _disposed = true;
+            }
         }
 
         [Fact]
@@ -49,8 +59,6 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
         {
             // Arrange
             var request = new CreateCollectionRequest { Name = "Test Collection" };
-            var mockUserSet = CreateMockDbSet(Array.Empty<User>());
-            _mockDbContext.Setup(x => x.Users).Returns(mockUserSet.Object);
 
             // Act
             var result = await _controller.CreateCollection(_testOrganizationId, request, CancellationToken.None);
@@ -65,11 +73,8 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             // Arrange
             var request = new CreateCollectionRequest { Name = "Test Collection" };
             var user = CreateTestUser();
-            var mockUserSet = CreateMockDbSet(new[] { user });
-            _mockDbContext.Setup(x => x.Users).Returns(mockUserSet.Object);
-
-            var mockOrgSet = CreateMockDbSet(Array.Empty<Organization>());
-            _mockDbContext.Setup(x => x.Organizations).Returns(mockOrgSet.Object);
+            _dbContext.Users.Add(user);
+            await _dbContext.SaveChangesAsync();
 
             // Act
             var result = await _controller.CreateCollection(_testOrganizationId, request, CancellationToken.None);
@@ -86,12 +91,11 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             // Arrange
             var request = new CreateCollectionRequest { Name = string.Empty };
             var user = CreateTestUser();
-            var mockUserSet = CreateMockDbSet(new[] { user });
-            _mockDbContext.Setup(x => x.Users).Returns(mockUserSet.Object);
-
             var org = CreateTestOrganization();
-            var mockOrgSet = CreateMockDbSet(new[] { org });
-            _mockDbContext.Setup(x => x.Organizations).Returns(mockOrgSet.Object);
+
+            _dbContext.Users.Add(user);
+            _dbContext.Organizations.Add(org);
+            await _dbContext.SaveChangesAsync();
 
             // Act
             var result = await _controller.CreateCollection(_testOrganizationId, request, CancellationToken.None);
@@ -108,12 +112,11 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             // Arrange
             var request = new CreateCollectionRequest { Name = "Test Collection", Type = "invalid_type" };
             var user = CreateTestUser();
-            var mockUserSet = CreateMockDbSet(new[] { user });
-            _mockDbContext.Setup(x => x.Users).Returns(mockUserSet.Object);
-
             var org = CreateTestOrganization();
-            var mockOrgSet = CreateMockDbSet(new[] { org });
-            _mockDbContext.Setup(x => x.Organizations).Returns(mockOrgSet.Object);
+
+            _dbContext.Users.Add(user);
+            _dbContext.Organizations.Add(org);
+            await _dbContext.SaveChangesAsync();
 
             // Act
             var result = await _controller.CreateCollection(_testOrganizationId, request, CancellationToken.None);
@@ -130,12 +133,11 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             // Arrange
             var request = new CreateCollectionRequest { Name = "Test Collection", Visibility = "invalid_visibility" };
             var user = CreateTestUser();
-            var mockUserSet = CreateMockDbSet(new[] { user });
-            _mockDbContext.Setup(x => x.Users).Returns(mockUserSet.Object);
-
             var org = CreateTestOrganization();
-            var mockOrgSet = CreateMockDbSet(new[] { org });
-            _mockDbContext.Setup(x => x.Organizations).Returns(mockOrgSet.Object);
+
+            _dbContext.Users.Add(user);
+            _dbContext.Organizations.Add(org);
+            await _dbContext.SaveChangesAsync();
 
             // Act
             var result = await _controller.CreateCollection(_testOrganizationId, request, CancellationToken.None);
@@ -152,15 +154,11 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             // Arrange
             var request = new CreateCollectionRequest { Name = "Test Collection", TeamId = _testTeamId };
             var user = CreateTestUser();
-            var mockUserSet = CreateMockDbSet(new[] { user });
-            _mockDbContext.Setup(x => x.Users).Returns(mockUserSet.Object);
-
             var org = CreateTestOrganization();
-            var mockOrgSet = CreateMockDbSet(new[] { org });
-            _mockDbContext.Setup(x => x.Organizations).Returns(mockOrgSet.Object);
 
-            var mockTeamSet = CreateMockDbSet(Array.Empty<Team>());
-            _mockDbContext.Setup(x => x.Teams).Returns(mockTeamSet.Object);
+            _dbContext.Users.Add(user);
+            _dbContext.Organizations.Add(org);
+            await _dbContext.SaveChangesAsync();
 
             // Act
             var result = await _controller.CreateCollection(_testOrganizationId, request, CancellationToken.None);
@@ -183,22 +181,11 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
                 Visibility = "private",
             };
             var user = CreateTestUser();
-            var mockUserSet = CreateMockDbSet(new[] { user });
-            _mockDbContext.Setup(x => x.Users).Returns(mockUserSet.Object);
-
             var org = CreateTestOrganization();
-            var mockOrgSet = CreateMockDbSet(new[] { org });
-            _mockDbContext.Setup(x => x.Organizations).Returns(mockOrgSet.Object);
 
-            var mockCollectionSet = CreateMockDbSet(Array.Empty<Collection>());
-            _mockDbContext.Setup(x => x.Collections).Returns(mockCollectionSet.Object);
-            _mockDbContext.Setup(x => x.Collections.Add(It.IsAny<Collection>()));
-
-            var mockMembershipSet = CreateMockDbSet(Array.Empty<CollectionMembership>());
-            _mockDbContext.Setup(x => x.CollectionMemberships).Returns(mockMembershipSet.Object);
-            _mockDbContext.Setup(x => x.CollectionMemberships.Add(It.IsAny<CollectionMembership>()));
-
-            _mockDbContext.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+            _dbContext.Users.Add(user);
+            _dbContext.Organizations.Add(org);
+            await _dbContext.SaveChangesAsync();
 
             _mockAuditService.Setup(x => x.LogAsync(
                 It.IsAny<Guid>(),
@@ -219,10 +206,16 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             var value = createdResult.Value;
             value.Should().NotBeNull();
 
-            // Verify DbContext interactions
-            _mockDbContext.Verify(x => x.Collections.Add(It.IsAny<Collection>()), Times.Once);
-            _mockDbContext.Verify(x => x.CollectionMemberships.Add(It.IsAny<CollectionMembership>()), Times.Once);
-            _mockDbContext.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
+            // Verify collection was created
+            var collections = await _dbContext.Collections.ToListAsync();
+            collections.Should().HaveCount(1);
+            collections[0].Name.Should().Be("Test Collection");
+
+            // Verify membership was created
+            var memberships = await _dbContext.CollectionMemberships.ToListAsync();
+            memberships.Should().HaveCount(1);
+            memberships[0].UserId.Should().Be(_testUserId);
+            memberships[0].CollectionId.Should().Be(collections[0].Id);
 
             // Verify audit log
             _mockAuditService.Verify(x => x.LogAsync(
@@ -238,8 +231,6 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
         public async Task ListCollections_WhenUserNotInOrganization_ReturnsForbid()
         {
             // Arrange
-            var mockUserSet = CreateMockDbSet(Array.Empty<User>());
-            _mockDbContext.Setup(x => x.Users).Returns(mockUserSet.Object);
 
             // Act
             var result = await _controller.ListCollections(_testOrganizationId, null, null, null, 0, 20, CancellationToken.None);
@@ -253,9 +244,6 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
         {
             // Arrange
             var user = CreateTestUser();
-            var mockUserSet = CreateMockDbSet(new[] { user });
-            _mockDbContext.Setup(x => x.Users).Returns(mockUserSet.Object);
-
             var collections = new[]
             {
                 new Collection
@@ -290,8 +278,9 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
                 },
             };
 
-            var mockCollectionSet = CreateMockDbSet(collections);
-            _mockDbContext.Setup(x => x.Collections).Returns(mockCollectionSet.Object);
+            _dbContext.Users.Add(user);
+            _dbContext.Collections.AddRange(collections);
+            await _dbContext.SaveChangesAsync();
 
             // Act
             var result = await _controller.ListCollections(_testOrganizationId, null, null, null, 0, 20, CancellationToken.None);
@@ -306,8 +295,6 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
         public async Task GetCollection_WhenUserNotMember_ReturnsForbid()
         {
             // Arrange
-            var mockMembershipSet = CreateMockDbSet(Array.Empty<CollectionMembership>());
-            _mockDbContext.Setup(x => x.CollectionMemberships).Returns(mockMembershipSet.Object);
 
             // Act
             var result = await _controller.GetCollection(_testOrganizationId, _testCollectionId, CancellationToken.None);
@@ -329,11 +316,9 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
                 Role = "Admin",
                 JoinedAt = DateTime.UtcNow,
             };
-            var mockMembershipSet = CreateMockDbSet(new[] { membership });
-            _mockDbContext.Setup(x => x.CollectionMemberships).Returns(mockMembershipSet.Object);
 
-            var mockCollectionSet = CreateMockDbSet(Array.Empty<Collection>());
-            _mockDbContext.Setup(x => x.Collections).Returns(mockCollectionSet.Object);
+            _dbContext.CollectionMemberships.Add(membership);
+            await _dbContext.SaveChangesAsync();
 
             // Act
             var result = await _controller.GetCollection(_testOrganizationId, _testCollectionId, CancellationToken.None);
@@ -357,8 +342,6 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
                 Role = "Admin",
                 JoinedAt = DateTime.UtcNow,
             };
-            var mockMembershipSet = CreateMockDbSet(new[] { membership });
-            _mockDbContext.Setup(x => x.CollectionMemberships).Returns(mockMembershipSet.Object);
 
             var collection = new Collection
             {
@@ -377,8 +360,10 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
                 CreatedBy = _testUserId,
                 CollectionMemberships = new List<CollectionMembership> { membership },
             };
-            var mockCollectionSet = CreateMockDbSet(new[] { collection });
-            _mockDbContext.Setup(x => x.Collections).Returns(mockCollectionSet.Object);
+
+            _dbContext.CollectionMemberships.Add(membership);
+            _dbContext.Collections.Add(collection);
+            await _dbContext.SaveChangesAsync();
 
             // Act
             var result = await _controller.GetCollection(_testOrganizationId, _testCollectionId, CancellationToken.None);
@@ -394,11 +379,6 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
         {
             // Arrange
             var request = new UpdateCollectionRequest { Name = "Updated Name" };
-            var mockMembershipSet = CreateMockDbSet(Array.Empty<CollectionMembership>());
-            _mockDbContext.Setup(x => x.CollectionMemberships).Returns(mockMembershipSet.Object);
-
-            var mockUserSet = CreateMockDbSet(Array.Empty<User>());
-            _mockDbContext.Setup(x => x.Users).Returns(mockUserSet.Object);
 
             // Act
             var result = await _controller.UpdateCollection(_testOrganizationId, _testCollectionId, request, CancellationToken.None);
@@ -413,9 +393,6 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             // Arrange
             var request = new UpdateCollectionRequest { Name = "Updated Name" };
             SetupCollectionAdminPermission();
-
-            var mockCollectionSet = CreateMockDbSet(Array.Empty<Collection>());
-            _mockDbContext.Setup(x => x.Collections).Returns(mockCollectionSet.Object);
 
             // Act
             var result = await _controller.UpdateCollection(_testOrganizationId, _testCollectionId, request, CancellationToken.None);
@@ -454,10 +431,9 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
                 CreatedBy = _testUserId,
                 CollectionMemberships = new List<CollectionMembership>(),
             };
-            var mockCollectionSet = CreateMockDbSet(new[] { collection });
-            _mockDbContext.Setup(x => x.Collections).Returns(mockCollectionSet.Object);
 
-            _mockDbContext.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+            _dbContext.Collections.Add(collection);
+            await _dbContext.SaveChangesAsync();
 
             _mockAuditService.Setup(x => x.LogAsync(
                 It.IsAny<Guid>(),
@@ -475,8 +451,12 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             var okResult = result as OkObjectResult;
             okResult!.Value.Should().NotBeNull();
 
-            // Verify DbContext interactions
-            _mockDbContext.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+            // Refresh from database
+            await _dbContext.Entry(collection).ReloadAsync();
+            collection.Name.Should().Be("Updated Name");
+            collection.Description.Should().Be("Updated Description");
+            collection.Type.Should().Be("prompts");
+            collection.Visibility.Should().Be("public");
 
             // Verify audit log
             _mockAuditService.Verify(x => x.LogAsync(
@@ -492,11 +472,6 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
         public async Task DeleteCollection_WhenUserNotAdmin_ReturnsForbid()
         {
             // Arrange
-            var mockMembershipSet = CreateMockDbSet(Array.Empty<CollectionMembership>());
-            _mockDbContext.Setup(x => x.CollectionMemberships).Returns(mockMembershipSet.Object);
-
-            var mockUserSet = CreateMockDbSet(Array.Empty<User>());
-            _mockDbContext.Setup(x => x.Users).Returns(mockUserSet.Object);
 
             // Act
             var result = await _controller.DeleteCollection(_testOrganizationId, _testCollectionId, CancellationToken.None);
@@ -510,9 +485,6 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
         {
             // Arrange
             SetupCollectionAdminPermission();
-
-            var mockCollectionSet = CreateMockDbSet(Array.Empty<Collection>());
-            _mockDbContext.Setup(x => x.Collections).Returns(mockCollectionSet.Object);
 
             // Act
             var result = await _controller.DeleteCollection(_testOrganizationId, _testCollectionId, CancellationToken.None);
@@ -544,11 +516,9 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
                 CreatedBy = _testUserId,
                 CollectionMemberships = new List<CollectionMembership>(),
             };
-            var mockCollectionSet = CreateMockDbSet(new[] { collection });
-            _mockDbContext.Setup(x => x.Collections).Returns(mockCollectionSet.Object);
-            _mockDbContext.Setup(x => x.Collections.Remove(It.IsAny<Collection>()));
 
-            _mockDbContext.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+            _dbContext.Collections.Add(collection);
+            await _dbContext.SaveChangesAsync();
 
             _mockAuditService.Setup(x => x.LogAsync(
                 It.IsAny<Guid>(),
@@ -564,9 +534,9 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             // Assert
             result.Should().BeOfType<NoContentResult>();
 
-            // Verify DbContext interactions
-            _mockDbContext.Verify(x => x.Collections.Remove(It.IsAny<Collection>()), Times.Once);
-            _mockDbContext.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+            // Verify collection was deleted
+            var collections = await _dbContext.Collections.ToListAsync();
+            collections.Should().BeEmpty();
 
             // Verify audit log
             _mockAuditService.Verify(x => x.LogAsync(
@@ -582,8 +552,6 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
         public async Task ListMembers_WhenUserNotMember_ReturnsForbid()
         {
             // Arrange
-            var mockMembershipSet = CreateMockDbSet(Array.Empty<CollectionMembership>());
-            _mockDbContext.Setup(x => x.CollectionMemberships).Returns(mockMembershipSet.Object);
 
             // Act
             var result = await _controller.ListMembers(_testOrganizationId, _testCollectionId, CancellationToken.None);
@@ -605,8 +573,9 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
                 Role = "Admin",
                 JoinedAt = DateTime.UtcNow,
             };
-            var mockMembershipSet = CreateMockDbSet(new[] { membership });
-            _mockDbContext.Setup(x => x.CollectionMemberships).Returns(mockMembershipSet.Object);
+
+            _dbContext.CollectionMemberships.Add(membership);
+            await _dbContext.SaveChangesAsync();
 
             // Act
             var result = await _controller.ListMembers(_testOrganizationId, _testCollectionId, CancellationToken.None);
@@ -622,11 +591,6 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
         {
             // Arrange
             var request = new AddCollectionMemberRequest { UserId = Guid.NewGuid(), Role = "member" };
-            var mockMembershipSet = CreateMockDbSet(Array.Empty<CollectionMembership>());
-            _mockDbContext.Setup(x => x.CollectionMemberships).Returns(mockMembershipSet.Object);
-
-            var mockUserSet = CreateMockDbSet(Array.Empty<User>());
-            _mockDbContext.Setup(x => x.Users).Returns(mockUserSet.Object);
 
             // Act
             var result = await _controller.AddMember(_testOrganizationId, _testCollectionId, request, CancellationToken.None);
@@ -657,9 +621,6 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             // Arrange
             var request = new AddCollectionMemberRequest { UserId = Guid.NewGuid(), Role = "member" };
             SetupCollectionAdminPermission();
-
-            var mockCollectionSet = CreateMockDbSet(Array.Empty<Collection>());
-            _mockDbContext.Setup(x => x.Collections).Returns(mockCollectionSet.Object);
 
             // Act
             var result = await _controller.AddMember(_testOrganizationId, _testCollectionId, request, CancellationToken.None);
@@ -692,11 +653,9 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
                 CreatedBy = _testUserId,
                 CollectionMemberships = new List<CollectionMembership>(),
             };
-            var mockCollectionSet = CreateMockDbSet(new[] { collection });
-            _mockDbContext.Setup(x => x.Collections).Returns(mockCollectionSet.Object);
 
-            var mockUserSet = CreateMockDbSet(Array.Empty<User>());
-            _mockDbContext.Setup(x => x.Users).Returns(mockUserSet.Object);
+            _dbContext.Collections.Add(collection);
+            await _dbContext.SaveChangesAsync();
 
             // Act
             var result = await _controller.AddMember(_testOrganizationId, _testCollectionId, request, CancellationToken.None);
@@ -730,8 +689,6 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
                 CreatedBy = _testUserId,
                 CollectionMemberships = new List<CollectionMembership>(),
             };
-            var mockCollectionSet = CreateMockDbSet(new[] { collection });
-            _mockDbContext.Setup(x => x.Collections).Returns(mockCollectionSet.Object);
 
             var otherOrgId = Guid.NewGuid();
             var otherUser = new User
@@ -747,8 +704,10 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
             };
-            var mockUserSet = CreateMockDbSet(new[] { otherUser });
-            _mockDbContext.Setup(x => x.Users).Returns(mockUserSet.Object);
+
+            _dbContext.Collections.Add(collection);
+            _dbContext.Users.Add(otherUser);
+            await _dbContext.SaveChangesAsync();
 
             // Act
             var result = await _controller.AddMember(_testOrganizationId, _testCollectionId, request, CancellationToken.None);
@@ -782,8 +741,6 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
                 CreatedBy = _testUserId,
                 CollectionMemberships = new List<CollectionMembership>(),
             };
-            var mockCollectionSet = CreateMockDbSet(new[] { collection });
-            _mockDbContext.Setup(x => x.Collections).Returns(mockCollectionSet.Object);
 
             var otherUser = new User
             {
@@ -798,8 +755,6 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
             };
-            var mockUserSet = CreateMockDbSet(new[] { otherUser });
-            _mockDbContext.Setup(x => x.Users).Returns(mockUserSet.Object);
 
             var existingMembership = new CollectionMembership
             {
@@ -810,8 +765,11 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
                 Role = "Member",
                 JoinedAt = DateTime.UtcNow,
             };
-            var mockMembershipSet = CreateMockDbSet(new[] { existingMembership });
-            _mockDbContext.Setup(x => x.CollectionMemberships).Returns(mockMembershipSet.Object);
+
+            _dbContext.Collections.Add(collection);
+            _dbContext.Users.Add(otherUser);
+            _dbContext.CollectionMemberships.Add(existingMembership);
+            await _dbContext.SaveChangesAsync();
 
             // Act
             var result = await _controller.AddMember(_testOrganizationId, _testCollectionId, request, CancellationToken.None);
@@ -831,18 +789,11 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             SetupCollectionAdminPermission();
 
             var collection = CreateTestCollection();
-            var mockCollectionSet = CreateMockDbSet(new[] { collection });
-            _mockDbContext.Setup(x => x.Collections).Returns(mockCollectionSet.Object);
-
             var otherUser = CreateTestUser(otherUserId);
-            var mockUserSet = CreateMockDbSet(new[] { otherUser });
-            _mockDbContext.Setup(x => x.Users).Returns(mockUserSet.Object);
 
-            var mockMembershipSet = CreateMockDbSet(Array.Empty<CollectionMembership>());
-            _mockDbContext.Setup(x => x.CollectionMemberships).Returns(mockMembershipSet.Object);
-            _mockDbContext.Setup(x => x.CollectionMemberships.Add(It.IsAny<CollectionMembership>()));
-
-            _mockDbContext.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+            _dbContext.Collections.Add(collection);
+            _dbContext.Users.Add(otherUser);
+            await _dbContext.SaveChangesAsync();
 
             _mockAuditService.Setup(x => x.LogAsync(
                 It.IsAny<Guid>(),
@@ -860,9 +811,10 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             var statusCodeResult = result as StatusCodeResult;
             statusCodeResult!.StatusCode.Should().Be(201);
 
-            // Verify DbContext interactions
-            _mockDbContext.Verify(x => x.CollectionMemberships.Add(It.IsAny<CollectionMembership>()), Times.Once);
-            _mockDbContext.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+            // Verify membership was created
+            var memberships = await _dbContext.CollectionMemberships.ToListAsync();
+            memberships.Should().HaveCount(2); // 1 from SetupCollectionAdminPermission + 1 new
+            memberships.Should().Contain(m => m.UserId == otherUserId && m.CollectionId == _testCollectionId);
 
             // Verify audit log
             _mockAuditService.Verify(x => x.LogAsync(
@@ -879,11 +831,6 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
         {
             // Arrange
             var otherUserId = Guid.NewGuid();
-            var mockMembershipSet = CreateMockDbSet(Array.Empty<CollectionMembership>());
-            _mockDbContext.Setup(x => x.CollectionMemberships).Returns(mockMembershipSet.Object);
-
-            var mockUserSet = CreateMockDbSet(Array.Empty<User>());
-            _mockDbContext.Setup(x => x.Users).Returns(mockUserSet.Object);
 
             // Act
             var result = await _controller.RemoveMember(_testOrganizationId, _testCollectionId, otherUserId, CancellationToken.None);
@@ -897,9 +844,6 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
         {
             // Arrange
             SetupCollectionAdminPermission();
-
-            var mockCollectionSet = CreateMockDbSet(Array.Empty<Collection>());
-            _mockDbContext.Setup(x => x.Collections).Returns(mockCollectionSet.Object);
 
             // Act
             var result = await _controller.RemoveMember(_testOrganizationId, _testCollectionId, _testUserId, CancellationToken.None);
@@ -931,11 +875,9 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
                 CreatedBy = _testUserId,
                 CollectionMemberships = new List<CollectionMembership>(),
             };
-            var mockCollectionSet = CreateMockDbSet(new[] { collection });
-            _mockDbContext.Setup(x => x.Collections).Returns(mockCollectionSet.Object);
 
-            var mockMembershipSet = CreateMockDbSet(Array.Empty<CollectionMembership>());
-            _mockDbContext.Setup(x => x.CollectionMemberships).Returns(mockMembershipSet.Object);
+            _dbContext.Collections.Add(collection);
+            await _dbContext.SaveChangesAsync();
 
             // Act
             var result = await _controller.RemoveMember(_testOrganizationId, _testCollectionId, _testUserId, CancellationToken.None);
@@ -953,8 +895,6 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             SetupCollectionAdminPermission();
 
             var collection = CreateTestCollection();
-            var mockCollectionSet = CreateMockDbSet(new[] { collection });
-            _mockDbContext.Setup(x => x.Collections).Returns(mockCollectionSet.Object);
 
             var membership = new CollectionMembership
             {
@@ -965,11 +905,10 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
                 Role = "Member",
                 JoinedAt = DateTime.UtcNow,
             };
-            var mockMembershipSet = CreateMockDbSet(new[] { membership });
-            _mockDbContext.Setup(x => x.CollectionMemberships).Returns(mockMembershipSet.Object);
-            _mockDbContext.Setup(x => x.CollectionMemberships.Remove(It.IsAny<CollectionMembership>()));
 
-            _mockDbContext.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+            _dbContext.Collections.Add(collection);
+            _dbContext.CollectionMemberships.Add(membership);
+            await _dbContext.SaveChangesAsync();
 
             _mockAuditService.Setup(x => x.LogAsync(
                 It.IsAny<Guid>(),
@@ -985,9 +924,9 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             // Assert
             result.Should().BeOfType<NoContentResult>();
 
-            // Verify DbContext interactions
-            _mockDbContext.Verify(x => x.CollectionMemberships.Remove(It.IsAny<CollectionMembership>()), Times.Once);
-            _mockDbContext.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+            // Verify membership was removed
+            var memberships = await _dbContext.CollectionMemberships.ToListAsync();
+            memberships.Should().HaveCount(1); // Only the admin membership from SetupCollectionAdminPermission remains
 
             // Verify audit log
             _mockAuditService.Verify(x => x.LogAsync(
@@ -1081,22 +1020,9 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
                 Role = "Admin",
                 JoinedAt = DateTime.UtcNow,
             };
-            var mockMembershipSet = CreateMockDbSet(new[] { membership });
-            _mockDbContext.Setup(x => x.CollectionMemberships).Returns(mockMembershipSet.Object);
-        }
 
-        private static Mock<DbSet<T>> CreateMockDbSet<T>(IEnumerable<T> data)
-            where T : class
-        {
-            var queryable = data.AsQueryable();
-            var mockSet = new Mock<DbSet<T>>();
-
-            mockSet.As<IQueryable<T>>().Setup(m => m.Provider).Returns(queryable.Provider);
-            mockSet.As<IQueryable<T>>().Setup(m => m.Expression).Returns(queryable.Expression);
-            mockSet.As<IQueryable<T>>().Setup(m => m.ElementType).Returns(queryable.ElementType);
-            mockSet.As<IQueryable<T>>().Setup(m => m.GetEnumerator()).Returns(queryable.GetEnumerator());
-
-            return mockSet;
+            _dbContext.CollectionMemberships.Add(membership);
+            _dbContext.SaveChanges();
         }
     }
 }
