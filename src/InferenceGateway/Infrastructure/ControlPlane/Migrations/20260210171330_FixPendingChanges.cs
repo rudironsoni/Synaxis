@@ -1,4 +1,4 @@
-﻿// <copyright file="20260210171330_FixPendingChanges.cs" company="PlaceholderCompany">
+// <copyright file="20260210171330_FixPendingChanges.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 

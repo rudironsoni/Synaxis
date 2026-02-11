@@ -69,7 +69,8 @@ namespace Synaxis.Api.Tests.Controllers
                 _authenticationService,
                 _mockUserService.Object,
                 _mockEmailService.Object,
-                _mockLogger.Object);
+                _mockLogger.Object,
+                _context);
         }
 
         public void Dispose()

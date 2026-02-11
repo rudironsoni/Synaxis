@@ -11,6 +11,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
     using System.Linq;
     using Synaxis.InferenceGateway.Infrastructure.Contracts;
     using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
+    using Synaxis.Infrastructure.Data;
+    using ControlPlaneSynaxisDbContext = Synaxis.InferenceGateway.Infrastructure.ControlPlane.SynaxisDbContext;
 
     /// <summary>
     /// Factory for creating and managing compliance providers based on region.
@@ -24,17 +26,25 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
         /// <summary>
         /// Initializes a new instance of the <see cref="ComplianceProviderFactory"/> class.
         /// </summary>
-        /// <param name="dbContext">The dbContext.</param>
-        public ComplianceProviderFactory(SynaxisDbContext dbContext)
+        /// <param name="auditDbContext">The audit database context.</param>
+        /// <param name="controlPlaneDbContext">The control plane database context.</param>
+        public ComplianceProviderFactory(
+            Synaxis.Infrastructure.Data.SynaxisDbContext auditDbContext,
+            ControlPlaneSynaxisDbContext controlPlaneDbContext)
         {
-            if (dbContext == null)
+            if (auditDbContext == null)
             {
-                throw new ArgumentNullException(nameof(dbContext));
+                throw new ArgumentNullException(nameof(auditDbContext));
+            }
+
+            if (controlPlaneDbContext == null)
+            {
+                throw new ArgumentNullException(nameof(controlPlaneDbContext));
             }
 
             // Initialize providers
-            var gdprProvider = new GdprComplianceProvider(dbContext);
-            var lgpdProvider = new LgpdComplianceProvider(dbContext);
+            var gdprProvider = new GdprComplianceProvider(controlPlaneDbContext, auditDbContext);
+            var lgpdProvider = new LgpdComplianceProvider(auditDbContext, controlPlaneDbContext);
 
             this._providers = new Dictionary<string, IComplianceProvider>(StringComparer.OrdinalIgnoreCase)
             {
