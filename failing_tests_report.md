@@ -81,6 +81,8 @@
 ## Verification
 After fixes, run:
 ```bash
-dotnet test tests/InferenceGateway/IntegrationTests/ -c Release
+dotnet format Synaxis.sln --verify-no-changes
+dotnet build Synaxis.sln -c Release -warnaserror
+dotnet test Synaxis.sln --no-build -p:Configuration=Release
 ```
 Expect all 21 failures to pass.

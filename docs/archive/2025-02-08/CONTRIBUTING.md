@@ -463,13 +463,20 @@ Fixes #456
    git rebase upstream/main
    ```
 
-2. **Run all tests**
+2. **Run verification gate**
+   ```bash
+   dotnet format Synaxis.sln --verify-no-changes
+   dotnet build Synaxis.sln -c Release -warnaserror
+   dotnet test Synaxis.sln --no-build -p:Configuration=Release
+   ```
+
+3. **Run additional tests**
    ```bash
    dotnet test src/InferenceGateway/InferenceGateway.sln
    cd src/Synaxis.WebApp/ClientApp && npm test
    ```
 
-3. **Check code style**
+4. **Check code style**
    ```bash
    # C# formatting
 dotnet format src/InferenceGateway/InferenceGateway.sln --verify-no-changes
@@ -479,7 +486,7 @@ dotnet format src/InferenceGateway/InferenceGateway.sln --verify-no-changes
    npm run lint
    ```
 
-4. **Update documentation** if needed
+5. **Update documentation** if needed
 
 ### Creating a PR
 

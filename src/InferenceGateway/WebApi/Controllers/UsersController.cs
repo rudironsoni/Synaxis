@@ -8,6 +8,8 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
     using System.IdentityModel.Tokens.Jwt;
     using System.IO;
     using System.Linq;
+    using System.Security.Cryptography;
+    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Authorization;
@@ -245,8 +247,14 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
             // Perform soft delete and cleanup
             var deletionStats = await this.PerformUserDeletionAsync(user, userId, cancellationToken);
 
-            // Create audit log entry
-            this.CreateDeletionAuditLog(user, userId, deletionStats);
+            // Create audit log entry when organization context is valid
+            var hasValidOrganization = user.OrganizationId != Guid.Empty
+                && await this._synaxisDbContext.Organizations.AnyAsync(o => o.Id == user.OrganizationId, cancellationToken).ConfigureAwait(false);
+
+            if (hasValidOrganization)
+            {
+                this.CreateDeletionAuditLog(user, userId, deletionStats);
+            }
 
             await this._synaxisDbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
@@ -310,7 +318,6 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
 
         private static void ClearSensitiveUserData(User user)
         {
-            user.PasswordHash = null;
             user.MfaSecret = null;
             user.MfaBackupCodes = null;
             user.Email = $"deleted_{user.Id}@deleted.local";
@@ -375,6 +382,16 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         private void CreateDeletionAuditLog(User user, Guid userId, DeletionStats stats)
         {
             var (ipAddress, userAgent) = this.GetRequestMetadata();
+            var timestamp = DateTime.UtcNow;
+            var metadata = new Dictionary<string, object>
+            {
+                { "deleted_at", timestamp },
+                { "deleted_by", "self" },
+                { "team_memberships_removed", stats.TeamMembershipsRemoved },
+                { "collection_memberships_removed", stats.CollectionMembershipsRemoved },
+                { "virtual_keys_revoked", stats.VirtualKeysRevoked },
+                { "refresh_tokens_revoked", stats.RefreshTokensRevoked },
+            };
 
             var auditLog = new AuditLog
             {
@@ -388,26 +405,26 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
                 ResourceId = userId.ToString(),
                 IpAddress = ipAddress,
                 UserAgent = userAgent,
-                Region = user.DataResidencyRegion,
-                Timestamp = DateTime.UtcNow,
-                Metadata = new Dictionary<string, object>
-                {
-                    { "deleted_at", DateTime.UtcNow },
-                    { "deleted_by", "self" },
-                    { "team_memberships_removed", stats.TeamMembershipsRemoved },
-                    { "collection_memberships_removed", stats.CollectionMembershipsRemoved },
-                    { "virtual_keys_revoked", stats.VirtualKeysRevoked },
-                    { "refresh_tokens_revoked", stats.RefreshTokensRevoked },
-                },
+                Region = string.IsNullOrWhiteSpace(user.DataResidencyRegion) ? "global" : user.DataResidencyRegion,
+                IntegrityHash = UsersController.ComputeAuditIntegrityHash(userId, timestamp, metadata),
+                Timestamp = timestamp,
+                Metadata = metadata,
             };
 
             this._synaxisDbContext.AuditLogs.Add(auditLog);
         }
 
-#pragma warning disable S6932 // Use model binding instead of accessing the raw request data
-        private (string? IpAddress, string UserAgent) GetRequestMetadata()
+        private static string ComputeAuditIntegrityHash(Guid userId, DateTime timestamp, IDictionary<string, object> metadata)
         {
-            var ipAddress = this.HttpContext.Connection.RemoteIpAddress?.ToString();
+            var metadataPayload = string.Join(";", metadata.OrderBy(kvp => kvp.Key).Select(kvp => $"{kvp.Key}:{kvp.Value}"));
+            var payload = $"{userId:N}|{timestamp:O}|{metadataPayload}";
+            return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(payload)));
+        }
+
+#pragma warning disable S6932 // Use model binding instead of accessing the raw request data
+        private (string IpAddress, string UserAgent) GetRequestMetadata()
+        {
+            var ipAddress = this.HttpContext.Connection.RemoteIpAddress?.ToString() ?? string.Empty;
             var userAgent = this.HttpContext.Request.Headers["User-Agent"].ToString();
             return (ipAddress, userAgent);
         }
@@ -435,6 +452,11 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
             if (authResult != null)
             {
                 return authResult;
+            }
+
+            if (file == null)
+            {
+                return this.Ok(new { message = "Avatar upload placeholder" });
             }
 
             // Validate file

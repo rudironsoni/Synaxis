@@ -115,6 +115,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
             var mockStore = new Mock<ISecureTokenStore>();
             var logger = new Mock<ILogger<IdentityManager>>();
 
+            mockStore.Setup(s => s.LoadAsync()).ReturnsAsync(new List<IdentityAccount>());
+            mockStore.Setup(s => s.SaveAsync(It.IsAny<IList<IdentityAccount>>())).Returns(Task.CompletedTask);
+
             var refreshedToken = new TokenResponse
             {
                 AccessToken = "new-access-token",
@@ -126,6 +129,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
                 .ReturnsAsync(refreshedToken);
 
             var manager = new IdentityManager(new[] { mockStrat.Object }, mockStore.Object, logger.Object);
+            await manager.WaitForInitialLoadAsync();
 
             var account = new IdentityAccount
             {

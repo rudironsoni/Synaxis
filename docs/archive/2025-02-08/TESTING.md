@@ -47,6 +47,14 @@ src/Synaxis.WebApp/ClientApp/
 
 ### Backend Tests (.NET)
 
+#### Verification Gate Order
+
+```bash
+dotnet format Synaxis.sln --verify-no-changes
+dotnet build Synaxis.sln -c Release -warnaserror
+dotnet test Synaxis.sln --no-build -p:Configuration=Release
+```
+
 #### Run All Tests
 
 ```bash
@@ -56,8 +64,8 @@ dotnet test src/InferenceGateway/InferenceGateway.sln
 # Run with verbosity (for when you need to see what's happening)
 dotnet test src/InferenceGateway/InferenceGateway.sln --verbosity normal
 
-# Run in Release mode (faster, like your provider rotation)
-dotnet test src/InferenceGateway/InferenceGateway.sln --configuration Release
+# Run against Release artifacts after building
+dotnet test src/InferenceGateway/InferenceGateway.sln --no-build -p:Configuration=Release
 ```
 
 #### Run Specific Test Projects

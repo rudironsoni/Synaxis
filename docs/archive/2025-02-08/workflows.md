@@ -232,14 +232,17 @@ docker buildx build --platform linux/amd64,linux/arm64 -f src/Synaxis.Api/Docker
 
 ### Run Tests Locally
 ```bash
-# Run all tests
-dotnet test --configuration Release
+# Verify formatting
+dotnet format Synaxis.sln --verify-no-changes
+
+# Build with warnings as errors
+dotnet build Synaxis.sln -c Release -warnaserror
+
+# Run all tests (use Release artifacts)
+dotnet test Synaxis.sln --no-build -p:Configuration=Release
 
 # Run with coverage
-dotnet test --collect:"XPlat Code Coverage" --results-directory ./coverage
-
-# Check formatting
-dotnet format --verify-no-changes
+dotnet test Synaxis.sln --no-build -p:Configuration=Release --collect:"XPlat Code Coverage" --results-directory ./coverage
 
 # Check for vulnerabilities
 dotnet list package --vulnerable --include-transitive

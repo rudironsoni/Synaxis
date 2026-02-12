@@ -45,7 +45,7 @@ public class RedisInFlightDeduplicationTests
                 It.IsAny<RedisKey>(),
                 It.IsAny<RedisValue>(),
                 It.IsAny<TimeSpan?>(),
-                When.Always,
+                When.NotExists,
                 CommandFlags.None))
             .ReturnsAsync(true);
 
@@ -89,7 +89,8 @@ public class RedisInFlightDeduplicationTests
                 It.Is<RedisKey>(k => k.ToString() == lockKey),
                 It.IsAny<RedisValue>(),
                 It.IsAny<TimeSpan?>(),
-                When.NotExists),
+                When.NotExists,
+                It.IsAny<CommandFlags>()),
             Times.Once);
     }
 
@@ -104,7 +105,6 @@ public class RedisInFlightDeduplicationTests
         var resultStored = false;
         var lockReleased = false;
         var lockAcquired = false;
-        var lockObj = new System.Threading.Lock();
 
         // Lock acquisition: use a lock to ensure thread-safe behavior
         this._mockDatabase
@@ -112,7 +112,8 @@ public class RedisInFlightDeduplicationTests
                 It.Is<RedisKey>(k => k.ToString() == lockKey),
                 It.IsAny<RedisValue>(),
                 It.IsAny<TimeSpan?>(),
-                When.NotExists))
+                When.NotExists,
+                It.IsAny<CommandFlags>()))
             .ReturnsAsync(() =>
             {
                 using var scope = this._lock.EnterScope();
@@ -142,10 +143,11 @@ public class RedisInFlightDeduplicationTests
                 It.Is<RedisKey>(k => k.ToString() == resultKey),
                 It.IsAny<RedisValue>(),
                 It.IsAny<TimeSpan?>(),
-                When.Always))
+                When.Always,
+                It.IsAny<CommandFlags>()))
             .Callback(() =>
             {
-                using var scope = lockObj.EnterScope();
+                using var scope = this._lock.EnterScope();
                 resultStored = true;
             })
             .ReturnsAsync(true);
@@ -529,7 +531,7 @@ public class RedisInFlightDeduplication : IInFlightDeduplication
             var resultKey = $"result:{requestHash}";
 
             // Try to acquire lock
-            var lockAcquired = await db.StringSetAsync(lockKey, "locked", lockTimeout, when: When.NotExists).ConfigureAwait(false);
+            var lockAcquired = await db.StringSetAsync(lockKey, "locked", lockTimeout, when: When.NotExists, flags: CommandFlags.None).ConfigureAwait(false);
 
             if (lockAcquired)
             {
@@ -540,7 +542,7 @@ public class RedisInFlightDeduplication : IInFlightDeduplication
 
                     // Store the result for other waiters
                     var serialized = System.Text.Json.JsonSerializer.Serialize(result);
-                    await db.StringSetAsync(resultKey, serialized, TimeSpan.FromMinutes(5)).ConfigureAwait(false);
+                    await db.StringSetAsync(resultKey, serialized, TimeSpan.FromMinutes(5), when: When.Always, flags: CommandFlags.None).ConfigureAwait(false);
 
                     return result;
                 }

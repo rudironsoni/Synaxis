@@ -239,6 +239,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var batchSizes = new[] { 10, 50, 100 };
             var results = new Dictionary<int, (long TotalTime, double Throughput)>();
 
+            await smartRouter.GetCandidatesAsync(modelId, streaming, cancellationToken);
+
             foreach (var batchSize in batchSizes)
             {
                 var stopwatch = Stopwatch.StartNew();
@@ -253,7 +255,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 await Task.WhenAll(tasks);
                 stopwatch.Stop();
 
-                var throughput = batchSize / (stopwatch.ElapsedMilliseconds / 1000.0);
+                var elapsedSeconds = Math.Max(stopwatch.Elapsed.TotalSeconds, 0.001d);
+                var throughput = batchSize / elapsedSeconds;
                 results[batchSize] = (stopwatch.ElapsedMilliseconds, throughput);
 
                 this._output.WriteLine($"Batch Size: {batchSize}, Time: {stopwatch.ElapsedMilliseconds}ms, Throughput: {throughput:F2} req/s");

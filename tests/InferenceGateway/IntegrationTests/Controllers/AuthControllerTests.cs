@@ -321,7 +321,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
             var secret = setupContent.GetProperty("secret").GetString();
 
             // Generate valid TOTP code
-            var totp = new OtpNet.Totp(Convert.FromBase64String(secret!));
+            var totp = new OtpNet.Totp(DecodeTotpSecret(secret!));
             var code = totp.ComputeTotp();
 
             // Act: Enable MFA
@@ -389,7 +389,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
             var setupContent = await setupResponse.Content.ReadFromJsonAsync<JsonElement>();
             var secret = setupContent.GetProperty("secret").GetString();
 
-            var totp = new OtpNet.Totp(Convert.FromBase64String(secret!));
+            var totp = new OtpNet.Totp(DecodeTotpSecret(secret!));
             var code = totp.ComputeTotp();
 
             await this._client.PostAsJsonAsync("/api/v1/auth/mfa/enable", new { code });
@@ -431,7 +431,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
             var setupContent = await setupResponse.Content.ReadFromJsonAsync<JsonElement>();
             var secret = setupContent.GetProperty("secret").GetString();
 
-            var totp = new OtpNet.Totp(Convert.FromBase64String(secret!));
+            var totp = new OtpNet.Totp(DecodeTotpSecret(secret!));
             var enableCode = totp.ComputeTotp();
             await this._client.PostAsJsonAsync("/api/v1/auth/mfa/enable", new { code = enableCode });
 
@@ -912,6 +912,18 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers
                 .CountAsync();
 
             Assert.Equal(3, revokedRefreshCount);
+        }
+
+        private static byte[] DecodeTotpSecret(string secret)
+        {
+            try
+            {
+                return OtpNet.Base32Encoding.ToBytes(secret);
+            }
+            catch
+            {
+                return Convert.FromBase64String(secret);
+            }
         }
     }
 }
