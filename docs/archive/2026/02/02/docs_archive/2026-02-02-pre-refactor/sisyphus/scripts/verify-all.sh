@@ -206,24 +206,22 @@ run_backend_checks() {
     if run_check "Restore NuGet packages" "dotnet restore Synaxis.sln"; then
         true
     fi
-    
-    # Build solution
-    print_section "Building solution..."
-    if run_check "Build solution" "dotnet build Synaxis.sln --no-restore --nologo -v q"; then
+
+    # Verify formatting
+    print_section "Verifying code formatting..."
+    if run_check "Code formatting" "dotnet format Synaxis.sln --verify-no-changes"; then
         true
     fi
     
-    # Run unit tests
-    print_section "Running Unit Tests..."
-    run_check "Unit tests pass" "dotnet test tests/InferenceGateway.UnitTests --no-build --nologo -v q"
-    
-    # Run application tests
-    print_section "Running Application Tests..."
-    run_check "Application tests pass" "dotnetGateway.Application.Tests -- test tests/Inferenceno-build --nologo -v q"
-    
-    # Run infrastructure tests
-    print_section "Running Infrastructure Tests..."
-    run_check "Infrastructure tests pass" "dotnet test tests/InferenceGateway.Infrastructure.Tests --no-build --nologo -v q"
+    # Build solution
+    print_section "Building solution..."
+    if run_check "Build solution" "dotnet build Synaxis.sln -c Release -warnaserror --no-restore --nologo -v q"; then
+        true
+    fi
+
+    # Run all tests
+    print_section "Running all tests..."
+    run_check "All tests pass" "dotnet test Synaxis.sln --no-build -p:Configuration=Release --nologo -v q"
 }
 
 ################################################################################

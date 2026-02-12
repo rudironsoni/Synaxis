@@ -520,17 +520,17 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
 
             // Generate a new MFA secret
             var secret = OtpNet.KeyGeneration.GenerateRandomKey(20);
-            var base64Secret = Convert.ToBase64String(secret);
+            var base32Secret = OtpNet.Base32Encoding.ToString(secret);
 
             // Store the secret temporarily (in a real implementation, this should be stored securely)
-            user.MfaSecret = base64Secret;
+            user.MfaSecret = base32Secret;
             await this.dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
             // Generate QR code URI
             var appName = "Synaxis";
-            var qrCodeUri = $"otpauth://totp/{Uri.EscapeDataString(appName)}:{Uri.EscapeDataString(user.Email)}?secret={base64Secret}&issuer={Uri.EscapeDataString(appName)}";
+            var qrCodeUri = $"otpauth://totp/{Uri.EscapeDataString(appName)}:{Uri.EscapeDataString(user.Email)}?secret={base32Secret}&issuer={Uri.EscapeDataString(appName)}";
 
-            return this.Ok(new { secret = base64Secret, qrCodeUri });
+            return this.Ok(new { secret = base32Secret, qrCodeUri });
         }
 
         /// <summary>
@@ -564,8 +564,12 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
                 return this.BadRequest(new { success = false, message = "MFA not set up. Call /mfa/setup first" });
             }
 
+            if (!TryCreateTotp(user.MfaSecret, out var totp))
+            {
+                return this.BadRequest(new { success = false, message = "Invalid MFA secret" });
+            }
+
             // Verify the TOTP code
-            var totp = new OtpNet.Totp(Convert.FromBase64String(user.MfaSecret));
             var isValid = totp.VerifyTotp(request.Code, out _, new OtpNet.VerificationWindow(2, 2));
 
             if (!isValid)
@@ -681,20 +685,35 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         /// <returns>True if the code is a valid TOTP code; otherwise, false.</returns>
         private static bool IsTotpValid(User user, string code)
         {
-            if (string.IsNullOrEmpty(user.MfaSecret))
+            if (string.IsNullOrEmpty(user.MfaSecret) || !TryCreateTotp(user.MfaSecret, out var totp))
             {
                 return false;
             }
 
+            return totp.VerifyTotp(code, out _, new OtpNet.VerificationWindow(2, 2));
+        }
+
+        private static bool TryCreateTotp(string secret, out OtpNet.Totp totp)
+        {
             try
             {
-                var totp = new OtpNet.Totp(Convert.FromBase64String(user.MfaSecret));
-                return totp.VerifyTotp(code, out _, new OtpNet.VerificationWindow(2, 2));
+                var bytes = OtpNet.Base32Encoding.ToBytes(secret);
+                totp = new OtpNet.Totp(bytes);
+                return true;
             }
             catch
             {
-                // Invalid secret format
-                return false;
+                try
+                {
+                    var bytes = Convert.FromBase64String(secret);
+                    totp = new OtpNet.Totp(bytes);
+                    return true;
+                }
+                catch
+                {
+                    totp = null!;
+                    return false;
+                }
             }
         }
 
@@ -732,8 +751,12 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
                 return this.BadRequest(new { success = false, message = "MFA not enabled for this user" });
             }
 
+            if (!TryCreateTotp(user.MfaSecret, out var totp))
+            {
+                return this.BadRequest(new { success = false, message = "Invalid MFA secret" });
+            }
+
             // Verify the TOTP code
-            var totp = new OtpNet.Totp(Convert.FromBase64String(user.MfaSecret));
             var isValid = totp.VerifyTotp(request.Code, out _, new OtpNet.VerificationWindow(2, 2));
 
             if (!isValid)
