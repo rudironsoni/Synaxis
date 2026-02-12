@@ -211,6 +211,174 @@ namespace Synaxis.Api.Tests.Controllers
                 Times.Once);
         }
 
+        [Fact]
+        public async Task VerifyEmail_ExpiredToken_ReturnsBadRequest()
+        {
+            // Arrange
+            var user = CreateTestUser();
+            var token = await CreateExpiredEmailVerificationTokenAsync(user.Id);
+
+            var request = new VerifyEmailRequest
+            {
+                Token = token
+            };
+
+            // Act
+            var result = await _controller.VerifyEmail(request);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>();
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult.Should().NotBeNull();
+
+            // Verify user email is NOT marked as verified
+            var updatedUser = await _context.Users.FindAsync(user.Id);
+            updatedUser.EmailVerifiedAt.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task VerifyEmail_UsedToken_ReturnsBadRequest()
+        {
+            // Arrange
+            var user = CreateTestUser();
+            var token = await CreateUsedEmailVerificationTokenAsync(user.Id);
+
+            var request = new VerifyEmailRequest
+            {
+                Token = token
+            };
+
+            // Act
+            var result = await _controller.VerifyEmail(request);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>();
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult.Should().NotBeNull();
+
+            // Verify user email is NOT marked as verified
+            var updatedUser = await _context.Users.FindAsync(user.Id);
+            updatedUser.EmailVerifiedAt.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task VerifyEmail_InvalidToken_ReturnsBadRequest()
+        {
+            // Arrange
+            var request = new VerifyEmailRequest
+            {
+                Token = "invalid_token"
+            };
+
+            // Act
+            var result = await _controller.VerifyEmail(request);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>();
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async Task VerifyEmail_AlreadyVerified_ReturnsBadRequest()
+        {
+            // Arrange
+            var verifiedAt = DateTime.UtcNow.AddHours(-1);
+            var user = CreateTestUser(emailVerified: true, verifiedAt: verifiedAt);
+            var token = await CreateEmailVerificationTokenAsync(user.Id);
+
+            var request = new VerifyEmailRequest
+            {
+                Token = token
+            };
+
+            // Act
+            var result = await _controller.VerifyEmail(request);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>();
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async Task ResendVerificationEmail_ValidEmail_SendsNewEmail()
+        {
+            // Arrange
+            var user = CreateTestUser(emailVerified: false);
+            var request = new ResendVerificationRequest
+            {
+                Email = user.Email
+            };
+
+            // Act
+            var result = await _controller.ResendVerificationEmail(request);
+
+            // Assert
+            result.Should().BeOfType<OkObjectResult>();
+            var okResult = result as OkObjectResult;
+            okResult.Should().NotBeNull();
+
+            // Verify email service was called
+            _mockEmailService.Verify(
+                x => x.SendVerificationEmailAsync(
+                    user.Email,
+                    It.Is<string>(url => url.Contains("token="))),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task ResendVerificationEmail_AlreadyVerified_ReturnsSuccess()
+        {
+            // Arrange
+            var verifiedAt = DateTime.UtcNow.AddHours(-1);
+            var user = CreateTestUser(emailVerified: true, verifiedAt: verifiedAt);
+            var request = new ResendVerificationRequest
+            {
+                Email = user.Email
+            };
+
+            // Act
+            var result = await _controller.ResendVerificationEmail(request);
+
+            // Assert
+            result.Should().BeOfType<OkObjectResult>();
+            var okResult = result as OkObjectResult;
+            okResult.Should().NotBeNull();
+
+            // Verify email service was NOT called
+            _mockEmailService.Verify(
+                x => x.SendVerificationEmailAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>()),
+                Times.Never);
+        }
+
+        [Fact]
+        public async Task ResendVerificationEmail_NonExistentEmail_ReturnsSuccess()
+        {
+            // Arrange
+            var request = new ResendVerificationRequest
+            {
+                Email = "nonexistent@example.com"
+            };
+
+            // Act
+            var result = await _controller.ResendVerificationEmail(request);
+
+            // Assert
+            result.Should().BeOfType<OkObjectResult>();
+            var okResult = result as OkObjectResult;
+            okResult.Should().NotBeNull();
+
+            // Verify email service was NOT called
+            _mockEmailService.Verify(
+                x => x.SendVerificationEmailAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>()),
+                Times.Never);
+        }
+
         private User CreateTestUser(bool emailVerified = false, DateTime? verifiedAt = null)
         {
             var organization = new Organization
