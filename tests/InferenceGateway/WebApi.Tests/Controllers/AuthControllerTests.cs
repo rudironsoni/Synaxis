@@ -229,6 +229,318 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             resetTokens[0].TokenHash.Length.Should().BeGreaterThan(0);
         }
 
+        [Fact]
+        public async Task ResetPassword_WithValidToken_ResetsPasswordSuccessfully()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            var (tokenEntity, tokenValue) = await CreatePasswordResetTokenAsync(testUser.Id);
+            var newPassword = "NewSecurePassword123!";
+
+            var request = new ResetPasswordRequest
+            {
+                Token = tokenValue,
+                Password = newPassword
+            };
+
+            _mockPasswordHasher
+                .Setup(x => x.HashPassword(newPassword))
+                .Returns("new_hashed_password");
+
+            // Act
+            var result = await _controller.ResetPassword(request, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<OkObjectResult>();
+            var okResult = result as OkObjectResult;
+            okResult!.Value.Should().NotBeNull();
+
+            var response = okResult.Value!.GetType().GetProperty("success")?.GetValue(okResult.Value);
+            response.Should().Be(true);
+
+            // Verify password was updated
+            var updatedUser = await _dbContext.Users.FindAsync(testUser.Id);
+            updatedUser.Should().NotBeNull();
+            updatedUser!.PasswordHash.Should().Be("new_hashed_password");
+            updatedUser.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
+
+            // Verify token is marked as used
+            var resetToken = await _dbContext.PasswordResetTokens.FindAsync(tokenEntity.Id);
+            resetToken.IsUsed.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task ResetPassword_WithInvalidToken_ReturnsBadRequest()
+        {
+            // Arrange
+            var request = new ResetPasswordRequest
+            {
+                Token = "invalid_token",
+                Password = "NewPassword123!"
+            };
+
+            // Act
+            var result = await _controller.ResetPassword(request, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>();
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult!.Value.Should().NotBeNull();
+
+            var response = badRequestResult.Value!.GetType().GetProperty("success")?.GetValue(badRequestResult.Value);
+            response.Should().Be(false);
+        }
+
+        [Fact]
+        public async Task ResetPassword_WithExpiredToken_ReturnsBadRequest()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            var (_, tokenValue) = await CreateExpiredPasswordResetTokenAsync(testUser.Id);
+
+            var request = new ResetPasswordRequest
+            {
+                Token = tokenValue,
+                Password = "NewPassword123!"
+            };
+
+            // Act
+            var result = await _controller.ResetPassword(request, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>();
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult!.Value.Should().NotBeNull();
+
+            var response = badRequestResult.Value!.GetType().GetProperty("success")?.GetValue(badRequestResult.Value);
+            response.Should().Be(false);
+        }
+
+        [Fact]
+        public async Task ResetPassword_WithUsedToken_ReturnsBadRequest()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            var (_, tokenValue) = await CreateUsedPasswordResetTokenAsync(testUser.Id);
+
+            var request = new ResetPasswordRequest
+            {
+                Token = tokenValue,
+                Password = "NewPassword123!"
+            };
+
+            // Act
+            var result = await _controller.ResetPassword(request, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>();
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult!.Value.Should().NotBeNull();
+
+            var response = badRequestResult.Value!.GetType().GetProperty("success")?.GetValue(badRequestResult.Value);
+            response.Should().Be(false);
+        }
+
+        [Fact]
+        public async Task ResetPassword_WithInactiveUser_ReturnsBadRequest()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            testUser.IsActive = false;
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            var (_, tokenValue) = await CreatePasswordResetTokenAsync(testUser.Id);
+
+            var request = new ResetPasswordRequest
+            {
+                Token = tokenValue,
+                Password = "NewPassword123!"
+            };
+
+            // Act
+            var result = await _controller.ResetPassword(request, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>();
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult!.Value.Should().NotBeNull();
+
+            var response = badRequestResult.Value!.GetType().GetProperty("success")?.GetValue(badRequestResult.Value);
+            response.Should().Be(false);
+        }
+
+        [Fact]
+        public async Task ResetPassword_WithEmptyToken_ReturnsBadRequest()
+        {
+            // Arrange
+            var request = new ResetPasswordRequest
+            {
+                Token = string.Empty,
+                Password = "NewPassword123!"
+            };
+
+            // Act
+            var result = await _controller.ResetPassword(request, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>();
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult!.Value.Should().NotBeNull();
+
+            var response = badRequestResult.Value!.GetType().GetProperty("success")?.GetValue(badRequestResult.Value);
+            response.Should().Be(false);
+        }
+
+        [Fact]
+        public async Task ResetPassword_WithEmptyPassword_ReturnsBadRequest()
+        {
+            // Arrange
+            var request = new ResetPasswordRequest
+            {
+                Token = "some_token",
+                Password = string.Empty
+            };
+
+            // Act
+            var result = await _controller.ResetPassword(request, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>();
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult!.Value.Should().NotBeNull();
+
+            var response = badRequestResult.Value!.GetType().GetProperty("success")?.GetValue(badRequestResult.Value);
+            response.Should().Be(false);
+        }
+
+        [Fact]
+        public async Task ResetPassword_WithNonExistentUser_ReturnsBadRequest()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            var (_, tokenValue) = await CreatePasswordResetTokenAsync(testUser.Id);
+
+            // Remove the user
+            _dbContext.Users.Remove(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            var request = new ResetPasswordRequest
+            {
+                Token = tokenValue,
+                Password = "NewPassword123!"
+            };
+
+            // Act
+            var result = await _controller.ResetPassword(request, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>();
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult!.Value.Should().NotBeNull();
+
+            var response = badRequestResult.Value!.GetType().GetProperty("success")?.GetValue(badRequestResult.Value);
+            response.Should().Be(false);
+        }
+
+        [Fact]
+        public async Task ForgotPassword_ResetPassword_CompleteFlow()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            var oldPasswordHash = testUser.PasswordHash;
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            // Step 1: Request password reset
+            var forgotRequest = new ForgotPasswordRequest
+            {
+                Email = testUser.Email
+            };
+
+            var forgotResult = await _controller.ForgotPassword(forgotRequest, CancellationToken.None);
+            forgotResult.Should().BeOfType<OkObjectResult>();
+
+            // Get the created token
+            var resetTokens = await _dbContext.PasswordResetTokens
+                .Where(t => t.UserId == testUser.Id && !t.IsUsed)
+                .ToListAsync();
+            resetTokens.Should().HaveCount(1);
+
+            var resetToken = resetTokens.First();
+
+            // Step 2: Reset password
+            var newPassword = "NewSecurePassword123!";
+            var resetRequest = new ResetPasswordRequest
+            {
+                Token = resetToken.TokenHash, // This is the hash, we need the actual token
+                Password = newPassword
+            };
+
+            // We need to get the actual token value from the token hash
+            // Since we can't reverse the hash, we'll create a new token with the same hash
+            var actualToken = GenerateSecureToken();
+            _mockPasswordHasher
+                .Setup(x => x.VerifyPassword(actualToken, resetToken.TokenHash))
+                .Returns(true);
+
+            resetRequest.Token = actualToken;
+            _mockPasswordHasher
+                .Setup(x => x.HashPassword(newPassword))
+                .Returns("new_hashed_password");
+
+            var resetResult = await _controller.ResetPassword(resetRequest, CancellationToken.None);
+            resetResult.Should().BeOfType<OkObjectResult>();
+
+            // Verify password was changed
+            var updatedUser = await _dbContext.Users.FindAsync(testUser.Id);
+            updatedUser.Should().NotBeNull();
+            updatedUser!.PasswordHash.Should().NotBe(oldPasswordHash);
+            updatedUser.PasswordHash.Should().Be("new_hashed_password");
+        }
+
+        [Fact]
+        public async Task ForgotPassword_WithInactiveUser_ReturnsSuccessForSecurity()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            testUser.IsActive = false;
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            var request = new ForgotPasswordRequest
+            {
+                Email = testUser.Email
+            };
+
+            // Act
+            var result = await _controller.ForgotPassword(request, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<OkObjectResult>();
+            var okResult = result as OkObjectResult;
+            okResult!.Value.Should().NotBeNull();
+
+            var response = okResult.Value!.GetType().GetProperty("success")?.GetValue(okResult.Value);
+            response.Should().Be(true);
+
+            // Verify that no password reset token was added
+            var resetTokens = await _dbContext.PasswordResetTokens.ToListAsync();
+            resetTokens.Should().BeEmpty();
+        }
+
         private User CreateTestUser()
         {
             return new User
@@ -243,6 +555,74 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow,
             };
+        }
+
+        private async Task<(PasswordResetToken TokenEntity, string TokenValue)> CreatePasswordResetTokenAsync(Guid userId)
+        {
+            var tokenValue = GenerateSecureToken();
+            var token = new PasswordResetToken
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                TokenHash = _mockPasswordHasher.Object.HashPassword(tokenValue),
+                CreatedAt = DateTime.UtcNow,
+                ExpiresAt = DateTime.UtcNow.AddHours(1),
+                IsUsed = false
+            };
+
+            _dbContext.PasswordResetTokens.Add(token);
+            await _dbContext.SaveChangesAsync();
+
+            return (token, tokenValue);
+        }
+
+        private async Task<(PasswordResetToken TokenEntity, string TokenValue)> CreateExpiredPasswordResetTokenAsync(Guid userId)
+        {
+            var tokenValue = GenerateSecureToken();
+            var token = new PasswordResetToken
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                TokenHash = _mockPasswordHasher.Object.HashPassword(tokenValue),
+                CreatedAt = DateTime.UtcNow.AddHours(-2),
+                ExpiresAt = DateTime.UtcNow.AddHours(-1),
+                IsUsed = false
+            };
+
+            _dbContext.PasswordResetTokens.Add(token);
+            await _dbContext.SaveChangesAsync();
+
+            return (token, tokenValue);
+        }
+
+        private async Task<(PasswordResetToken TokenEntity, string TokenValue)> CreateUsedPasswordResetTokenAsync(Guid userId)
+        {
+            var tokenValue = GenerateSecureToken();
+            var token = new PasswordResetToken
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                TokenHash = _mockPasswordHasher.Object.HashPassword(tokenValue),
+                CreatedAt = DateTime.UtcNow.AddHours(-1),
+                ExpiresAt = DateTime.UtcNow.AddHours(1),
+                IsUsed = true
+            };
+
+            _dbContext.PasswordResetTokens.Add(token);
+            await _dbContext.SaveChangesAsync();
+
+            return (token, tokenValue);
+        }
+
+        private static string GenerateSecureToken()
+        {
+            using var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
+            var tokenBytes = new byte[32];
+            rng.GetBytes(tokenBytes);
+            return Convert.ToBase64String(tokenBytes)
+                .Replace("+", "-")
+                .Replace("/", "_")
+                .Replace("=", string.Empty);
         }
     }
 }

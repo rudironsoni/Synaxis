@@ -207,7 +207,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         }
 
         /// <summary>
-        /// Deletes the current user's account (soft delete).
+        /// Deletes the current user's account (soft delete with cascading cleanup).
         /// </summary>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>No content.</returns>
@@ -224,6 +224,9 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
             var userId = this._userContext.UserId;
 
             var user = await this._synaxisDbContext.Users
+                .Include(u => u.TeamMemberships)
+                .Include(u => u.CollectionMemberships)
+                .Include(u => u.VirtualKeys)
                 .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -232,12 +235,89 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
                 return this.NotFound();
             }
 
+            // Check if user is the only owner of any organization
+            var ownershipCheckResult = await this.CheckOrganizationOwnershipAsync(user, cancellationToken);
+            if (ownershipCheckResult != null)
+            {
+                return ownershipCheckResult;
+            }
+
+            // Perform soft delete and cleanup
+            var deletionStats = await this.PerformUserDeletionAsync(user, userId, cancellationToken);
+
+            // Create audit log entry
+            this.CreateDeletionAuditLog(user, userId, deletionStats);
+
+            await this._synaxisDbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            return this.NoContent();
+        }
+
+        private async Task<IActionResult?> CheckOrganizationOwnershipAsync(User user, CancellationToken cancellationToken)
+        {
+            var organizationIds = user.TeamMemberships.Select(tm => tm.OrganizationId).Distinct().ToList();
+            foreach (var orgId in organizationIds)
+            {
+                var ownerCount = await this._synaxisDbContext.TeamMemberships
+                    .Where(tm => tm.OrganizationId == orgId && string.Equals(tm.Role, "OrgAdmin", StringComparison.Ordinal))
+                    .CountAsync(cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (ownerCount == 1 && user.TeamMemberships.Any(tm => tm.OrganizationId == orgId && string.Equals(tm.Role, "OrgAdmin", StringComparison.Ordinal)))
+                {
+                    return this.BadRequest(new
+                    {
+                        error = "Cannot delete account",
+                        message = "You are the only owner of an organization. Please transfer ownership or delete the organization first.",
+                        organizationId = orgId,
+                    });
+                }
+            }
+
+            return null;
+        }
+
+        private async Task<DeletionStats> PerformUserDeletionAsync(User user, Guid userId, CancellationToken cancellationToken)
+        {
             // Soft delete: set IsActive to false and DeletedAt timestamp
             user.IsActive = false;
             user.DeletedAt = DateTime.UtcNow;
             user.UpdatedAt = DateTime.UtcNow;
 
+            // Clear sensitive data (GDPR/LGPD compliance)
+            UsersController.ClearSensitiveUserData(user);
+
             // Revoke all refresh tokens for the user
+            var refreshTokens = await this.RevokeRefreshTokensAsync(userId, cancellationToken);
+
+            // Revoke all virtual keys created by the user
+            var virtualKeys = await this.RevokeVirtualKeysAsync(userId, cancellationToken);
+
+            // Remove team memberships
+            var teamMemberships = await this.RemoveTeamMembershipsAsync(userId, cancellationToken);
+
+            // Remove collection memberships
+            var collectionMemberships = await this.RemoveCollectionMembershipsAsync(userId, cancellationToken);
+
+            return new DeletionStats
+            {
+                TeamMembershipsRemoved = teamMemberships.Count,
+                CollectionMembershipsRemoved = collectionMemberships.Count,
+                VirtualKeysRevoked = virtualKeys.Count,
+                RefreshTokensRevoked = refreshTokens.Count,
+            };
+        }
+
+        private static void ClearSensitiveUserData(User user)
+        {
+            user.PasswordHash = null;
+            user.MfaSecret = null;
+            user.MfaBackupCodes = null;
+            user.Email = $"deleted_{user.Id}@deleted.local";
+        }
+
+        private async Task<List<RefreshToken>> RevokeRefreshTokensAsync(Guid userId, CancellationToken cancellationToken)
+        {
             var refreshTokens = await this._synaxisDbContext.RefreshTokens
                 .Where(rt => rt.UserId == userId && !rt.IsRevoked)
                 .ToListAsync(cancellationToken)
@@ -249,9 +329,96 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
                 token.RevokedAt = DateTime.UtcNow;
             }
 
-            await this._synaxisDbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return refreshTokens;
+        }
 
-            return this.NoContent();
+        private async Task<List<VirtualKey>> RevokeVirtualKeysAsync(Guid userId, CancellationToken cancellationToken)
+        {
+            var virtualKeys = await this._synaxisDbContext.VirtualKeys
+                .Where(vk => vk.CreatedBy == userId && vk.IsActive)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            foreach (var key in virtualKeys)
+            {
+                key.IsActive = false;
+                key.IsRevoked = true;
+                key.RevokedAt = DateTime.UtcNow;
+                key.RevokedReason = "User account deleted";
+            }
+
+            return virtualKeys;
+        }
+
+        private async Task<List<TeamMembership>> RemoveTeamMembershipsAsync(Guid userId, CancellationToken cancellationToken)
+        {
+            var teamMemberships = await this._synaxisDbContext.TeamMemberships
+                .Where(tm => tm.UserId == userId)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            this._synaxisDbContext.TeamMemberships.RemoveRange(teamMemberships);
+            return teamMemberships;
+        }
+
+        private async Task<List<CollectionMembership>> RemoveCollectionMembershipsAsync(Guid userId, CancellationToken cancellationToken)
+        {
+            var collectionMemberships = await this._synaxisDbContext.CollectionMemberships
+                .Where(cm => cm.UserId == userId)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            this._synaxisDbContext.CollectionMemberships.RemoveRange(collectionMemberships);
+            return collectionMemberships;
+        }
+
+        private void CreateDeletionAuditLog(User user, Guid userId, DeletionStats stats)
+        {
+            var (ipAddress, userAgent) = this.GetRequestMetadata();
+
+            var auditLog = new AuditLog
+            {
+                Id = Guid.NewGuid(),
+                OrganizationId = user.OrganizationId,
+                UserId = userId,
+                EventType = "UserDeleted",
+                EventCategory = "Account",
+                Action = "Delete",
+                ResourceType = "User",
+                ResourceId = userId.ToString(),
+                IpAddress = ipAddress,
+                UserAgent = userAgent,
+                Region = user.DataResidencyRegion,
+                Timestamp = DateTime.UtcNow,
+                Metadata = new Dictionary<string, object>
+                {
+                    { "deleted_at", DateTime.UtcNow },
+                    { "deleted_by", "self" },
+                    { "team_memberships_removed", stats.TeamMembershipsRemoved },
+                    { "collection_memberships_removed", stats.CollectionMembershipsRemoved },
+                    { "virtual_keys_revoked", stats.VirtualKeysRevoked },
+                    { "refresh_tokens_revoked", stats.RefreshTokensRevoked },
+                },
+            };
+
+            this._synaxisDbContext.AuditLogs.Add(auditLog);
+        }
+
+#pragma warning disable S6932 // Use model binding instead of accessing the raw request data
+        private (string? IpAddress, string UserAgent) GetRequestMetadata()
+        {
+            var ipAddress = this.HttpContext.Connection.RemoteIpAddress?.ToString();
+            var userAgent = this.HttpContext.Request.Headers["User-Agent"].ToString();
+            return (ipAddress, userAgent);
+        }
+#pragma warning restore S6932 // Use model binding instead of accessing the raw request data
+
+        private sealed class DeletionStats
+        {
+            public int TeamMembershipsRemoved { get; set; }
+            public int CollectionMembershipsRemoved { get; set; }
+            public int VirtualKeysRevoked { get; set; }
+            public int RefreshTokensRevoked { get; set; }
         }
 
         /// <summary>

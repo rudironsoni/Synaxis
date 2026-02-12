@@ -695,6 +695,301 @@ public sealed class UsersControllerTests : IDisposable
             noContentResult!.StatusCode.Should().Be(204);
         }
 
+        [Fact]
+        public async Task DeleteMe_ClearsSensitiveData()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            testUser.PasswordHash = "hashedpassword";
+            testUser.MfaSecret = "mfa-secret";
+            testUser.MfaBackupCodes = "backup-codes";
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            // Act
+            var result = await _controller.DeleteMe(CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<NoContentResult>();
+
+            var deletedUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == _testUserId);
+            deletedUser.Should().NotBeNull();
+            deletedUser!.PasswordHash.Should().BeNull();
+            deletedUser.MfaSecret.Should().BeNull();
+            deletedUser.MfaBackupCodes.Should().BeNull();
+            deletedUser.Email.Should().StartWith("deleted_");
+            deletedUser.Email.Should().EndWith("@deleted.local");
+        }
+
+        [Fact]
+        public async Task DeleteMe_WithVirtualKeys_RevokesAllKeys()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            var testOrganization = CreateTestOrganization();
+            var testTeam = CreateTestTeam(testOrganization);
+
+            var virtualKey1 = new VirtualKey
+            {
+                Id = Guid.NewGuid(),
+                KeyHash = "hash1",
+                OrganizationId = _testOrganizationId,
+                TeamId = _testTeamId,
+                CreatedBy = _testUserId,
+                Name = "Key 1",
+                IsActive = true,
+                IsRevoked = false,
+                CreatedAt = DateTime.UtcNow,
+            };
+
+            var virtualKey2 = new VirtualKey
+            {
+                Id = Guid.NewGuid(),
+                KeyHash = "hash2",
+                OrganizationId = _testOrganizationId,
+                TeamId = _testTeamId,
+                CreatedBy = _testUserId,
+                Name = "Key 2",
+                IsActive = true,
+                IsRevoked = false,
+                CreatedAt = DateTime.UtcNow,
+            };
+
+            _dbContext.Organizations.Add(testOrganization);
+            _dbContext.Teams.Add(testTeam);
+            _dbContext.Users.Add(testUser);
+            _dbContext.VirtualKeys.Add(virtualKey1);
+            _dbContext.VirtualKeys.Add(virtualKey2);
+            await _dbContext.SaveChangesAsync();
+
+            // Act
+            var result = await _controller.DeleteMe(CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<NoContentResult>();
+
+            var revokedKeys = await _dbContext.VirtualKeys
+                .Where(vk => vk.CreatedBy == _testUserId)
+                .ToListAsync();
+
+            revokedKeys.Should().HaveCount(2);
+            revokedKeys.Should().OnlyContain(vk => !vk.IsActive);
+            revokedKeys.Should().OnlyContain(vk => vk.IsRevoked);
+            revokedKeys.Should().OnlyContain(vk => vk.RevokedAt.HasValue);
+            revokedKeys.Should().OnlyContain(vk => vk.RevokedReason == "User account deleted");
+        }
+
+        [Fact]
+        public async Task DeleteMe_RemovesTeamMemberships()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            var testOrganization = CreateTestOrganization();
+            var testTeam = CreateTestTeam(testOrganization);
+            var testTeamMembership = CreateTestTeamMembership(testUser, testTeam, testOrganization);
+
+            _dbContext.Organizations.Add(testOrganization);
+            _dbContext.Teams.Add(testTeam);
+            _dbContext.Users.Add(testUser);
+            _dbContext.TeamMemberships.Add(testTeamMembership);
+            await _dbContext.SaveChangesAsync();
+
+            // Act
+            var result = await _controller.DeleteMe(CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<NoContentResult>();
+
+            var memberships = await _dbContext.TeamMemberships
+                .Where(tm => tm.UserId == _testUserId)
+                .ToListAsync();
+
+            memberships.Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task DeleteMe_WithCollectionMemberships_RemovesMemberships()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            var testOrganization = CreateTestOrganization();
+            var testTeam = CreateTestTeam(testOrganization);
+
+            var collection = new Collection
+            {
+                Id = Guid.NewGuid(),
+                OrganizationId = _testOrganizationId,
+                TeamId = _testTeamId,
+                Slug = "test-collection",
+                Name = "Test Collection",
+                Type = "general",
+                Visibility = "private",
+                IsActive = true,
+                CreatedBy = _testUserId,
+                CreatedAt = DateTime.UtcNow,
+            };
+
+            var collectionMembership = new CollectionMembership
+            {
+                Id = Guid.NewGuid(),
+                UserId = _testUserId,
+                CollectionId = collection.Id,
+                OrganizationId = _testOrganizationId,
+                Role = "Admin",
+                JoinedAt = DateTime.UtcNow,
+                AddedBy = _testUserId,
+            };
+
+            _dbContext.Organizations.Add(testOrganization);
+            _dbContext.Teams.Add(testTeam);
+            _dbContext.Users.Add(testUser);
+            _dbContext.Collections.Add(collection);
+            _dbContext.CollectionMemberships.Add(collectionMembership);
+            await _dbContext.SaveChangesAsync();
+
+            // Act
+            var result = await _controller.DeleteMe(CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<NoContentResult>();
+
+            var memberships = await _dbContext.CollectionMemberships
+                .Where(cm => cm.UserId == _testUserId)
+                .ToListAsync();
+
+            memberships.Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task DeleteMe_CreatesAuditLogEntry()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            // Act
+            var result = await _controller.DeleteMe(CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<NoContentResult>();
+
+            var auditLogs = await _dbContext.AuditLogs
+                .Where(al => al.UserId == _testUserId && al.EventType == "UserDeleted")
+                .ToListAsync();
+
+            auditLogs.Should().HaveCount(1);
+            var auditLog = auditLogs.First();
+            auditLog.EventCategory.Should().Be("Account");
+            auditLog.Action.Should().Be("Delete");
+            auditLog.ResourceType.Should().Be("User");
+            auditLog.ResourceId.Should().Be(_testUserId.ToString());
+        }
+
+        [Fact]
+        public async Task DeleteMe_WithOnlyOwnerRole_ReturnsBadRequest()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            var testOrganization = CreateTestOrganization();
+            var testTeam = CreateTestTeam(testOrganization);
+
+            // Create user as OrgAdmin
+            var testTeamMembership = new TeamMembership
+            {
+                Id = Guid.NewGuid(),
+                UserId = _testUserId,
+                TeamId = _testTeamId,
+                OrganizationId = _testOrganizationId,
+                Role = "OrgAdmin",
+                JoinedAt = DateTime.UtcNow,
+            };
+
+            _dbContext.Organizations.Add(testOrganization);
+            _dbContext.Teams.Add(testTeam);
+            _dbContext.Users.Add(testUser);
+            _dbContext.TeamMemberships.Add(testTeamMembership);
+            await _dbContext.SaveChangesAsync();
+
+            // Act
+            var result = await _controller.DeleteMe(CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>();
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult.Should().NotBeNull();
+
+            var errorResponse = badRequestResult!.Value!;
+            var responseType = errorResponse.GetType();
+            responseType.GetProperty("error")?.GetValue(errorResponse).Should().Be("Cannot delete account");
+            responseType.GetProperty("organizationId")?.GetValue(errorResponse).Should().Be(_testOrganizationId);
+        }
+
+        [Fact]
+        public async Task DeleteMe_WithMultipleOwners_AllowsDeletion()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            var testOrganization = CreateTestOrganization();
+            var testTeam = CreateTestTeam(testOrganization);
+
+            var otherUserId = Guid.NewGuid();
+            var otherUser = new User
+            {
+                Id = otherUserId,
+                OrganizationId = _testOrganizationId,
+                Email = "other@example.com",
+                PasswordHash = "hashedpassword",
+                FirstName = "Other",
+                LastName = "User",
+                Role = "member",
+                DataResidencyRegion = "us-east-1",
+                CreatedInRegion = "us-east-1",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+            };
+
+            // Create both users as OrgAdmin
+            var testTeamMembership = new TeamMembership
+            {
+                Id = Guid.NewGuid(),
+                UserId = _testUserId,
+                TeamId = _testTeamId,
+                OrganizationId = _testOrganizationId,
+                Role = "OrgAdmin",
+                JoinedAt = DateTime.UtcNow,
+            };
+
+            var otherTeamMembership = new TeamMembership
+            {
+                Id = Guid.NewGuid(),
+                UserId = otherUserId,
+                TeamId = _testTeamId,
+                OrganizationId = _testOrganizationId,
+                Role = "OrgAdmin",
+                JoinedAt = DateTime.UtcNow,
+            };
+
+            _dbContext.Organizations.Add(testOrganization);
+            _dbContext.Teams.Add(testTeam);
+            _dbContext.Users.Add(testUser);
+            _dbContext.Users.Add(otherUser);
+            _dbContext.TeamMemberships.Add(testTeamMembership);
+            _dbContext.TeamMemberships.Add(otherTeamMembership);
+            await _dbContext.SaveChangesAsync();
+
+            // Act
+            var result = await _controller.DeleteMe(CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<NoContentResult>();
+
+            var deletedUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == _testUserId);
+            deletedUser.Should().NotBeNull();
+            deletedUser!.IsActive.Should().BeFalse();
+        }
+
         private void SetupControllerContext()
         {
             var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
