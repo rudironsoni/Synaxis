@@ -365,17 +365,24 @@ namespace Synaxis.Api.Controllers
             {
                 this._logger.LogInformation("Password reset request for email: {Email}", request.Email);
 
-                // In a real implementation, you'd:
-                // 1. Find the user by email
-                // 2. Generate a password reset token
-                // 3. Save the token to the database
-                // 4. Send an email with the reset link
-                var resetToken = Guid.NewGuid().ToString();
-                var resetUrl = $"{this.Request.Scheme}://{this.Request.Host}/api/auth/reset-password?token={resetToken}";
+                var validationResult = this.ValidateForgotPasswordRequest(request);
+                if (validationResult != null)
+                {
+                    return validationResult;
+                }
 
-                await this._emailService.SendPasswordResetEmailAsync(request.Email, resetUrl);
+                var user = await this._dbContext.Users
+                    .FirstOrDefaultAsync(u => u.Email == request.Email);
 
-                return this.Ok(new { message = "Password reset email sent" });
+                var userCheckResult = this.CheckUserForPasswordReset(user);
+                if (userCheckResult != null)
+                {
+                    return userCheckResult;
+                }
+
+                await this.ProcessPasswordResetRequestAsync(user);
+
+                return this.Ok(new { message = "If the email exists, a password reset link has been sent" });
             }
             catch (Exception ex)
             {
@@ -396,44 +403,23 @@ namespace Synaxis.Api.Controllers
             {
                 this._logger.LogInformation("Password reset attempt for token: {Token}", request.Token);
 
-                // Validate request
-                if (string.IsNullOrEmpty(request.Token) || string.IsNullOrEmpty(request.NewPassword))
+                var validationResult = this.ValidateResetPasswordRequest(request);
+                if (validationResult != null)
                 {
-                    return this.BadRequest(new { success = false, message = "Token and password are required" });
+                    return validationResult;
                 }
 
-                // Find the reset token
                 var resetToken = await this._dbContext.PasswordResetTokens
                     .Include(rt => rt.User)
-                    .FirstOrDefaultAsync(rt => rt.TokenHash == this._userService.HashPassword(request.Token));
+                    .FirstOrDefaultAsync(rt => rt.TokenHash == HashToken(request.Token));
 
-                if (resetToken == null)
+                var tokenValidationResult = this.ValidatePasswordResetToken(resetToken);
+                if (tokenValidationResult != null)
                 {
-                    return this.BadRequest(new { success = false, message = "Invalid or expired token" });
+                    return tokenValidationResult;
                 }
 
-                // Check if token is expired
-                if (resetToken.ExpiresAt < DateTime.UtcNow)
-                {
-                    return this.BadRequest(new { success = false, message = "Token has expired" });
-                }
-
-                // Check if token has already been used
-                if (resetToken.IsUsed)
-                {
-                    return this.BadRequest(new { success = false, message = "Token has already been used" });
-                }
-
-                // Update user's password
-                resetToken.User.PasswordHash = this._userService.HashPassword(request.NewPassword);
-                resetToken.User.UpdatedAt = DateTime.UtcNow;
-
-                // Mark token as used
-                resetToken.IsUsed = true;
-
-                await this._dbContext.SaveChangesAsync();
-
-                this._logger.LogInformation("Password reset successful for user: {UserId}", resetToken.UserId);
+                await this.ProcessPasswordResetAsync(resetToken, request.NewPassword);
 
                 return this.Ok(new { success = true, message = "Password reset successful" });
             }
@@ -707,6 +693,20 @@ namespace Synaxis.Api.Controllers
             await this._dbContext.SaveChangesAsync();
         }
 
+        private async Task InvalidateExistingPasswordResetTokensAsync(Guid userId)
+        {
+            var existingTokens = await this._dbContext.PasswordResetTokens
+                .Where(t => t.UserId == userId && !t.IsUsed)
+                .ToListAsync();
+
+            foreach (var token in existingTokens)
+            {
+                token.IsUsed = true;
+            }
+
+            await this._dbContext.SaveChangesAsync();
+        }
+
         private async Task SendNewVerificationEmailAsync(Core.Models.User user)
         {
             var verificationToken = Guid.NewGuid().ToString();
@@ -734,6 +734,113 @@ namespace Synaxis.Api.Controllers
             var bytes = System.Text.Encoding.UTF8.GetBytes(token);
             var hash = sha256.ComputeHash(bytes);
             return Convert.ToBase64String(hash);
+        }
+
+        private ActionResult ValidateForgotPasswordRequest(ForgotPasswordRequest request)
+        {
+            if (string.IsNullOrEmpty(request.Email))
+            {
+                return this.BadRequest(new { message = "Email is required" });
+            }
+
+            return null;
+        }
+
+        private ActionResult CheckUserForPasswordReset(Core.Models.User user)
+        {
+            if (user == null)
+            {
+                this._logger.LogInformation("Password reset request for non-existent email");
+                return this.Ok(new { message = "If the email exists, a password reset link has been sent" });
+            }
+
+            if (!user.IsActive)
+            {
+                this._logger.LogWarning("Password reset request for inactive user: {UserId}", user.Id);
+                return this.Ok(new { message = "If the email exists, a password reset link has been sent" });
+            }
+
+            return null;
+        }
+
+        private async Task ProcessPasswordResetRequestAsync(Core.Models.User user)
+        {
+            await this.InvalidateExistingPasswordResetTokensAsync(user.Id);
+
+            var resetToken = Guid.NewGuid().ToString();
+            var resetUrl = $"{this.Request.Scheme}://{this.Request.Host}/api/auth/reset-password?token={resetToken}";
+
+            var tokenEntity = new Core.Models.PasswordResetToken
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                TokenHash = HashToken(resetToken),
+                ExpiresAt = DateTime.UtcNow.AddHours(1),
+                IsUsed = false,
+                CreatedAt = DateTime.UtcNow,
+            };
+
+            this._dbContext.PasswordResetTokens.Add(tokenEntity);
+            await this._dbContext.SaveChangesAsync();
+
+            await this._emailService.SendPasswordResetEmailAsync(user.Email, resetUrl);
+
+            this._logger.LogInformation("Password reset email sent for user: {UserId}", user.Id);
+        }
+
+        private ActionResult ValidateResetPasswordRequest(ResetPasswordRequest request)
+        {
+            if (string.IsNullOrEmpty(request.Token) || string.IsNullOrEmpty(request.NewPassword))
+            {
+                return this.BadRequest(new { success = false, message = "Token and password are required" });
+            }
+
+            return null;
+        }
+
+        private ActionResult ValidatePasswordResetToken(Core.Models.PasswordResetToken resetToken)
+        {
+            if (resetToken == null)
+            {
+                this._logger.LogWarning("Invalid password reset token");
+                return this.BadRequest(new { success = false, message = "Invalid or expired token" });
+            }
+
+            if (resetToken.ExpiresAt < DateTime.UtcNow)
+            {
+                this._logger.LogWarning("Expired password reset token for user: {UserId}", resetToken.UserId);
+                return this.BadRequest(new { success = false, message = "Token has expired" });
+            }
+
+            if (resetToken.IsUsed)
+            {
+                this._logger.LogWarning("Already used password reset token for user: {UserId}", resetToken.UserId);
+                return this.BadRequest(new { success = false, message = "Token has already been used" });
+            }
+
+            if (!resetToken.User.IsActive)
+            {
+                this._logger.LogWarning("Password reset attempt for inactive user: {UserId}", resetToken.UserId);
+                return this.BadRequest(new { success = false, message = "User account is inactive" });
+            }
+
+            return null;
+        }
+
+        private async Task ProcessPasswordResetAsync(Core.Models.PasswordResetToken resetToken, string newPassword)
+        {
+            resetToken.User.PasswordHash = this._userService.HashPassword(newPassword);
+            resetToken.User.PasswordChangedAt = DateTime.UtcNow;
+            resetToken.User.UpdatedAt = DateTime.UtcNow;
+            resetToken.User.MustChangePassword = false;
+            resetToken.User.FailedPasswordChangeAttempts = 0;
+            resetToken.User.PasswordChangeLockedUntil = null;
+
+            resetToken.IsUsed = true;
+
+            await this._dbContext.SaveChangesAsync();
+
+            this._logger.LogInformation("Password reset successful for user: {UserId}", resetToken.UserId);
         }
     }
 }
