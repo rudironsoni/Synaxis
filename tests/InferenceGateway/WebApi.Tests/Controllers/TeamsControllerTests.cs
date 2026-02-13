@@ -234,7 +234,19 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             SetupTeamAdminPermission();
 
             var team = CreateTestTeam();
-            var userToAdd = new User { Id = userIdToAdd, OrganizationId = Guid.NewGuid() }; // Different org
+            var userToAdd = new User
+            {
+                Id = userIdToAdd,
+                OrganizationId = Guid.NewGuid(), // Different org
+                Email = "other@example.com",
+                PasswordHash = "hashedpassword",
+                Role = "member",
+                DataResidencyRegion = "us-east-1",
+                CreatedInRegion = "us-east-1",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+            };
 
             _dbContext.Teams.Add(team);
             _dbContext.Users.Add(userToAdd);
@@ -258,7 +270,19 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             SetupTeamAdminPermission();
 
             var team = CreateTestTeam();
-            var userToAdd = new User { Id = userIdToAdd, OrganizationId = _testOrganizationId };
+            var userToAdd = new User
+            {
+                Id = userIdToAdd,
+                OrganizationId = _testOrganizationId,
+                Email = "existing@example.com",
+                PasswordHash = "hashedpassword",
+                Role = "member",
+                DataResidencyRegion = "us-east-1",
+                CreatedInRegion = "us-east-1",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+            };
             var existingMembership = new TeamMembership { UserId = userIdToAdd, TeamId = _testTeamId, OrganizationId = _testOrganizationId };
 
             _dbContext.Teams.Add(team);
@@ -284,7 +308,19 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             SetupTeamAdminPermission();
 
             var team = CreateTestTeam();
-            var userToAdd = new User { Id = userIdToAdd, OrganizationId = _testOrganizationId };
+            var userToAdd = new User
+            {
+                Id = userIdToAdd,
+                OrganizationId = _testOrganizationId,
+                Email = "newmember@example.com",
+                PasswordHash = "hashedpassword",
+                Role = "member",
+                DataResidencyRegion = "us-east-1",
+                CreatedInRegion = "us-east-1",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+            };
 
             _dbContext.Teams.Add(team);
             _dbContext.Users.Add(userToAdd);
@@ -443,6 +479,458 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
                 Times.Once);
         }
 
+        [Fact]
+        public async Task RemoveMember_WhenUserNotTeamAdminAndNotSelf_ReturnsForbid()
+        {
+            // Arrange
+            var memberId = Guid.NewGuid();
+
+            // Act
+            var result = await _controller.RemoveMember(_testOrganizationId, _testTeamId, memberId, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<ForbidResult>();
+        }
+
+        [Fact]
+        public async Task RemoveMember_WhenTeamDoesNotExist_ReturnsNotFound()
+        {
+            // Arrange
+            var memberId = Guid.NewGuid();
+            SetupTeamAdminPermission();
+
+            // Act
+            var result = await _controller.RemoveMember(_testOrganizationId, _testTeamId, memberId, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<NotFoundObjectResult>();
+            var notFoundResult = result as NotFoundObjectResult;
+            notFoundResult!.Value.Should().Be("Team not found");
+        }
+
+        [Fact]
+        public async Task RemoveMember_WhenMemberNotFound_ReturnsNotFound()
+        {
+            // Arrange
+            var memberId = Guid.NewGuid();
+            SetupTeamAdminPermission();
+
+            var team = CreateTestTeam();
+            _dbContext.Teams.Add(team);
+            await _dbContext.SaveChangesAsync();
+
+            // Act
+            var result = await _controller.RemoveMember(_testOrganizationId, _testTeamId, memberId, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<NotFoundObjectResult>();
+            var notFoundResult = result as NotFoundObjectResult;
+            notFoundResult!.Value.Should().Be("Member not found in team");
+        }
+
+        [Fact]
+        public async Task RemoveMember_WithTeamAdminPermission_RemovesMemberSuccessfully()
+        {
+            // Arrange
+            var memberId = Guid.NewGuid();
+            SetupTeamAdminPermission();
+
+            var team = CreateTestTeam();
+            var membership = new TeamMembership
+            {
+                Id = Guid.NewGuid(),
+                UserId = memberId,
+                TeamId = _testTeamId,
+                OrganizationId = _testOrganizationId,
+                Role = "Member",
+                JoinedAt = DateTime.UtcNow
+            };
+
+            _dbContext.Teams.Add(team);
+            _dbContext.TeamMemberships.Add(membership);
+            await _dbContext.SaveChangesAsync();
+
+            _mockAuditService.Setup(x => x.LogAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<Guid>(),
+                It.IsAny<string>(),
+                It.IsAny<object>(),
+                It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
+
+            // Act
+            var result = await _controller.RemoveMember(_testOrganizationId, _testTeamId, memberId, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<NoContentResult>();
+
+            // Verify membership was removed
+            var memberships = await _dbContext.TeamMemberships.ToListAsync();
+            memberships.Should().HaveCount(1); // Only the admin membership remains
+            memberships.Should().NotContain(m => m.UserId == memberId);
+
+            // Verify audit log
+            _mockAuditService.Verify(x => x.LogAsync(
+                _testOrganizationId,
+                _testUserId,
+                "RemoveTeamMember",
+                It.IsAny<object>(),
+                It.IsAny<CancellationToken>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task RemoveMember_WithSelfRemoval_AllowsRemoval()
+        {
+            // Arrange
+            var team = CreateTestTeam();
+            var membership = new TeamMembership
+            {
+                Id = Guid.NewGuid(),
+                UserId = _testUserId,
+                TeamId = _testTeamId,
+                OrganizationId = _testOrganizationId,
+                Role = "Member",
+                JoinedAt = DateTime.UtcNow
+            };
+
+            var user = CreateTestUser();
+            _dbContext.Teams.Add(team);
+            _dbContext.Users.Add(user);
+            _dbContext.TeamMemberships.Add(membership);
+            await _dbContext.SaveChangesAsync();
+
+            _mockAuditService.Setup(x => x.LogAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<Guid>(),
+                It.IsAny<string>(),
+                It.IsAny<object>(),
+                It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
+
+            // Act
+            var result = await _controller.RemoveMember(_testOrganizationId, _testTeamId, _testUserId, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<NoContentResult>();
+
+            // Verify membership was removed
+            var memberships = await _dbContext.TeamMemberships.ToListAsync();
+            memberships.Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task ListMembers_WhenUserNotTeamMember_ReturnsForbid()
+        {
+            // Arrange
+            // No team membership set up
+
+            // Act
+            var result = await _controller.ListMembers(_testOrganizationId, _testTeamId, 0, 20, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<ForbidResult>();
+        }
+
+        [Fact]
+        public async Task ListMembers_WhenTeamDoesNotExist_ReturnsNotFound()
+        {
+            // Arrange
+            SetupTeamAdminPermission();
+
+            // Act
+            var result = await _controller.ListMembers(_testOrganizationId, _testTeamId, 0, 20, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<NotFoundObjectResult>();
+            var notFoundResult = result as NotFoundObjectResult;
+            notFoundResult!.Value.Should().Be("Team not found");
+        }
+
+        [Fact]
+        public async Task ListMembers_WithValidRequest_ReturnsPaginatedMembers()
+        {
+            // Arrange
+            SetupTeamAdminPermission();
+
+            var team = CreateTestTeam();
+            _dbContext.Teams.Add(team);
+            await _dbContext.SaveChangesAsync();
+
+            var member1Id = Guid.NewGuid();
+            var member2Id = Guid.NewGuid();
+            var member3Id = Guid.NewGuid();
+
+            var user1 = new User
+            {
+                Id = member1Id,
+                OrganizationId = _testOrganizationId,
+                Email = "member1@example.com",
+                PasswordHash = "hashedpassword",
+                FirstName = "Member",
+                LastName = "One",
+                Role = "member",
+                DataResidencyRegion = "us-east-1",
+                CreatedInRegion = "us-east-1",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+            };
+            var user2 = new User
+            {
+                Id = member2Id,
+                OrganizationId = _testOrganizationId,
+                Email = "member2@example.com",
+                PasswordHash = "hashedpassword",
+                FirstName = "Member",
+                LastName = "Two",
+                Role = "member",
+                DataResidencyRegion = "us-east-1",
+                CreatedInRegion = "us-east-1",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+            };
+            var user3 = new User
+            {
+                Id = member3Id,
+                OrganizationId = _testOrganizationId,
+                Email = "member3@example.com",
+                PasswordHash = "hashedpassword",
+                FirstName = "Member",
+                LastName = "Three",
+                Role = "member",
+                DataResidencyRegion = "us-east-1",
+                CreatedInRegion = "us-east-1",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+            };
+
+            var membership1 = new TeamMembership
+            {
+                Id = Guid.NewGuid(),
+                UserId = member1Id,
+                TeamId = _testTeamId,
+                OrganizationId = _testOrganizationId,
+                Role = "Member",
+                JoinedAt = DateTime.UtcNow.AddDays(-3)
+            };
+            var membership2 = new TeamMembership
+            {
+                Id = Guid.NewGuid(),
+                UserId = member2Id,
+                TeamId = _testTeamId,
+                OrganizationId = _testOrganizationId,
+                Role = "TeamAdmin",
+                JoinedAt = DateTime.UtcNow.AddDays(-2)
+            };
+            var membership3 = new TeamMembership
+            {
+                Id = Guid.NewGuid(),
+                UserId = member3Id,
+                TeamId = _testTeamId,
+                OrganizationId = _testOrganizationId,
+                Role = "Member",
+                JoinedAt = DateTime.UtcNow.AddDays(-1)
+            };
+
+            _dbContext.Users.AddRange(user1, user2, user3);
+            _dbContext.TeamMemberships.AddRange(membership1, membership2, membership3);
+            await _dbContext.SaveChangesAsync();
+
+            // Act
+            var result = await _controller.ListMembers(_testOrganizationId, _testTeamId, 0, 20, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<OkObjectResult>();
+            var okResult = result as OkObjectResult;
+            okResult!.Value.Should().NotBeNull();
+
+            var response = okResult.Value!;
+            var responseType = response.GetType();
+            var items = responseType.GetProperty("items")?.GetValue(response) as System.Collections.IList;
+            items.Should().NotBeNull();
+            items!.Count.Should().Be(4); // 3 new members + 1 admin from SetupTeamAdminPermission
+
+            var total = responseType.GetProperty("total")?.GetValue(response);
+            total.Should().Be(4);
+
+            var page = responseType.GetProperty("page")?.GetValue(response);
+            page.Should().Be(0);
+
+            var pageSize = responseType.GetProperty("pageSize")?.GetValue(response);
+            pageSize.Should().Be(20);
+
+            var totalPages = responseType.GetProperty("totalPages")?.GetValue(response);
+            totalPages.Should().Be(1);
+        }
+
+        [Fact]
+        public async Task ListMembers_WithPagination_ReturnsCorrectPage()
+        {
+            // Arrange
+            SetupTeamAdminPermission();
+
+            var team = CreateTestTeam();
+            _dbContext.Teams.Add(team);
+            await _dbContext.SaveChangesAsync();
+
+            // Create 5 members
+            for (int i = 1; i <= 5; i++)
+            {
+                var userId = Guid.NewGuid();
+                var user = new User
+                {
+                    Id = userId,
+                    OrganizationId = _testOrganizationId,
+                    Email = $"member{i}@example.com",
+                    PasswordHash = "hashedpassword",
+                    FirstName = "Member",
+                    LastName = i.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    Role = "member",
+                    DataResidencyRegion = "us-east-1",
+                    CreatedInRegion = "us-east-1",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                };
+                var membership = new TeamMembership
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = userId,
+                    TeamId = _testTeamId,
+                    OrganizationId = _testOrganizationId,
+                    Role = "Member",
+                    JoinedAt = DateTime.UtcNow
+                };
+                _dbContext.Users.Add(user);
+                _dbContext.TeamMemberships.Add(membership);
+            }
+            await _dbContext.SaveChangesAsync();
+
+            // Act - Get first page with 2 items
+            var result = await _controller.ListMembers(_testOrganizationId, _testTeamId, 0, 2, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<OkObjectResult>();
+            var okResult = result as OkObjectResult;
+            okResult!.Value.Should().NotBeNull();
+
+            var response = okResult.Value!;
+            var responseType = response.GetType();
+            var items = responseType.GetProperty("items")?.GetValue(response) as System.Collections.IList;
+            items.Should().NotBeNull();
+            items!.Count.Should().Be(2);
+
+            var total = responseType.GetProperty("total")?.GetValue(response);
+            total.Should().Be(6); // 5 new members + 1 admin
+
+            var totalPages = responseType.GetProperty("totalPages")?.GetValue(response);
+            totalPages.Should().Be(3);
+        }
+
+        [Fact]
+        public async Task ListMembers_WithEmptyTeam_ReturnsEmptyList()
+        {
+            // Arrange
+            SetupTeamAdminPermission();
+
+            var team = CreateTestTeam();
+            _dbContext.Teams.Add(team);
+            await _dbContext.SaveChangesAsync();
+
+            // Act
+            var result = await _controller.ListMembers(_testOrganizationId, _testTeamId, 0, 20, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<OkObjectResult>();
+            var okResult = result as OkObjectResult;
+            okResult!.Value.Should().NotBeNull();
+
+            var response = okResult.Value!;
+            var responseType = response.GetType();
+            var items = responseType.GetProperty("items")?.GetValue(response) as System.Collections.IList;
+            items.Should().NotBeNull();
+            items!.Count.Should().Be(1); // Only the admin from SetupTeamAdminPermission
+
+            var total = responseType.GetProperty("total")?.GetValue(response);
+            total.Should().Be(1);
+        }
+
+        [Fact]
+        public async Task ListMembers_ReturnsMemberDetails()
+        {
+            // Arrange
+            SetupTeamAdminPermission();
+
+            var team = CreateTestTeam();
+            _dbContext.Teams.Add(team);
+            await _dbContext.SaveChangesAsync();
+
+            var memberId = Guid.NewGuid();
+            var user = new User
+            {
+                Id = memberId,
+                OrganizationId = _testOrganizationId,
+                Email = "test@example.com",
+                PasswordHash = "hashedpassword",
+                FirstName = "Test",
+                LastName = "User",
+                Role = "member",
+                DataResidencyRegion = "us-east-1",
+                CreatedInRegion = "us-east-1",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+            };
+            var membership = new TeamMembership
+            {
+                Id = Guid.NewGuid(),
+                UserId = memberId,
+                TeamId = _testTeamId,
+                OrganizationId = _testOrganizationId,
+                Role = "TeamAdmin",
+                JoinedAt = DateTime.UtcNow.AddDays(-1),
+                InvitedBy = _testUserId
+            };
+
+            _dbContext.Users.Add(user);
+            _dbContext.TeamMemberships.Add(membership);
+            await _dbContext.SaveChangesAsync();
+
+            // Act
+            var result = await _controller.ListMembers(_testOrganizationId, _testTeamId, 0, 20, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<OkObjectResult>();
+            var okResult = result as OkObjectResult;
+            okResult!.Value.Should().NotBeNull();
+
+            var response = okResult.Value!;
+            var responseType = response.GetType();
+            var items = responseType.GetProperty("items")?.GetValue(response) as System.Collections.IList;
+            items.Should().NotBeNull();
+
+            // Find the member we added
+            var memberItem = items!.Cast<object>().FirstOrDefault(item =>
+            {
+                var itemType = item.GetType();
+                var userId = itemType.GetProperty("userId")?.GetValue(item);
+                return userId?.Equals(memberId) == true;
+            });
+
+            memberItem.Should().NotBeNull();
+            var memberType = memberItem!.GetType();
+            memberType.GetProperty("userId")?.GetValue(memberItem).Should().Be(memberId);
+            memberType.GetProperty("email")?.GetValue(memberItem).Should().Be("test@example.com");
+            memberType.GetProperty("firstName")?.GetValue(memberItem).Should().Be("Test");
+            memberType.GetProperty("lastName")?.GetValue(memberItem).Should().Be("User");
+            memberType.GetProperty("role")?.GetValue(memberItem).Should().Be("TeamAdmin");
+            memberType.GetProperty("joinedAt")?.GetValue(memberItem).Should().NotBeNull();
+            memberType.GetProperty("invitedBy")?.GetValue(memberItem).Should().Be(_testUserId);
+        }
+
         private User CreateTestUser()
         {
             return new User
@@ -450,7 +938,13 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
                 Id = _testUserId,
                 OrganizationId = _testOrganizationId,
                 Email = "test@example.com",
-                Role = "member"
+                PasswordHash = "hashedpassword",
+                Role = "member",
+                DataResidencyRegion = "us-east-1",
+                CreatedInRegion = "us-east-1",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
             };
         }
 
@@ -461,7 +955,11 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
                 Id = _testOrganizationId,
                 Name = "Test Organization",
                 Slug = "test-org",
-                IsActive = true
+                PrimaryRegion = "us-east-1",
+                Tier = "free",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
             };
         }
 

@@ -642,6 +642,77 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
             };
         }
 
+        /// <summary>
+        /// Lists members of a team.
+        /// </summary>
+        /// <param name="orgId">The organization ID.</param>
+        /// <param name="teamId">The team ID.</param>
+        /// <param name="page">The page number (0-based).</param>
+        /// <param name="pageSize">The page size.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>Paginated list of team members.</returns>
+        [HttpGet("{teamId}/members")]
+        public async Task<IActionResult> ListMembers(
+            Guid orgId,
+            Guid teamId,
+            [FromQuery] int page = 0,
+            [FromQuery] int pageSize = 20,
+            CancellationToken cancellationToken = default)
+        {
+            var userId = this.GetUserId();
+
+            // Check if user is a member of the team
+            var teamMembership = await this._dbContext.TeamMemberships
+                .FirstOrDefaultAsync(m => m.UserId == userId && m.TeamId == teamId, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (teamMembership == null)
+            {
+                return this.Forbid();
+            }
+
+            var team = await this._dbContext.Teams
+                .FirstOrDefaultAsync(g => g.Id == teamId && g.OrganizationId == orgId, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (team == null)
+            {
+                return this.NotFound("Team not found");
+            }
+
+            var query = this._dbContext.TeamMemberships
+                .Where(m => m.TeamId == teamId)
+                .Include(m => m.User);
+
+            var totalCount = await query.CountAsync(cancellationToken).ConfigureAwait(false);
+
+            var members = await query
+                .OrderBy(m => m.User!.Email)
+                .Skip(page * pageSize)
+                .Take(pageSize)
+                .Select(m => new
+                {
+                    userId = m.UserId,
+                    email = m.User!.Email,
+                    firstName = m.User.FirstName,
+                    lastName = m.User.LastName,
+                    role = m.Role,
+                    joinedAt = m.JoinedAt,
+                    invitedBy = m.InvitedBy,
+                })
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            return this.Ok(new
+            {
+                items = members,
+                total = totalCount,
+                page,
+                pageSize,
+                totalPages = (int)Math.Ceiling((double)totalCount / pageSize),
+            });
+        }
+
         private static string GenerateSlug(string name)
         {
             return name.ToLowerInvariant()

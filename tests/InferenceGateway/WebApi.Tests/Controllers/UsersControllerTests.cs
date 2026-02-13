@@ -1755,5 +1755,170 @@ public sealed class UsersControllerTests : IDisposable
             var requestedAt = responseType.GetProperty("requestedAt")?.GetValue(response);
             requestedAt.Should().NotBeNull();
         }
+
+        [Fact]
+        public async Task UpdateCrossBorderConsent_WithValidRequest_UpdatesConsentSuccessfully()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            var request = new Synaxis.InferenceGateway.WebApi.Controllers.UpdateCrossBorderConsentRequest
+            {
+                ConsentGiven = true,
+                ConsentVersion = "v1.0",
+            };
+
+            // Act
+            var result = await _controller.UpdateCrossBorderConsent(request, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<OkObjectResult>();
+            var okResult = result as OkObjectResult;
+            okResult!.Value.Should().NotBeNull();
+
+            var response = okResult.Value!;
+            var responseType = response.GetType();
+            responseType.GetProperty("crossBorderConsentGiven")?.GetValue(response).Should().Be(true);
+            responseType.GetProperty("crossBorderConsentDate")?.GetValue(response).Should().NotBeNull();
+            responseType.GetProperty("crossBorderConsentVersion")?.GetValue(response).Should().Be("v1.0");
+
+            // Verify database was updated
+            var updatedUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == _testUserId);
+            updatedUser.Should().NotBeNull();
+            updatedUser!.CrossBorderConsentGiven.Should().BeTrue();
+            updatedUser.CrossBorderConsentDate.Should().NotBeNull();
+            updatedUser.CrossBorderConsentDate.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
+            updatedUser.CrossBorderConsentVersion.Should().Be("v1.0");
+        }
+
+        [Fact]
+        public async Task UpdateCrossBorderConsent_WithNullConsentGiven_ReturnsBadRequest()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            var request = new Synaxis.InferenceGateway.WebApi.Controllers.UpdateCrossBorderConsentRequest
+            {
+                ConsentGiven = null,
+            };
+
+            // Act
+            var result = await _controller.UpdateCrossBorderConsent(request, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>();
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult!.Value.Should().Be("ConsentGiven is required");
+        }
+
+        [Fact]
+        public async Task UpdateCrossBorderConsent_WithNonExistentUser_ReturnsNotFound()
+        {
+            // Arrange
+            // User not added to database
+            var request = new Synaxis.InferenceGateway.WebApi.Controllers.UpdateCrossBorderConsentRequest
+            {
+                ConsentGiven = true,
+            };
+
+            // Act
+            var result = await _controller.UpdateCrossBorderConsent(request, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<NotFoundResult>();
+        }
+
+        [Fact]
+        public async Task UpdateCrossBorderConsent_WithFalseConsent_UpdatesConsentSuccessfully()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            testUser.CrossBorderConsentGiven = true;
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            var request = new Synaxis.InferenceGateway.WebApi.Controllers.UpdateCrossBorderConsentRequest
+            {
+                ConsentGiven = false,
+            };
+
+            // Act
+            var result = await _controller.UpdateCrossBorderConsent(request, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<OkObjectResult>();
+            var okResult = result as OkObjectResult;
+            okResult!.Value.Should().NotBeNull();
+
+            var response = okResult.Value!;
+            var responseType = response.GetType();
+            responseType.GetProperty("crossBorderConsentGiven")?.GetValue(response).Should().Be(false);
+
+            // Verify database was updated
+            var updatedUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == _testUserId);
+            updatedUser.Should().NotBeNull();
+            updatedUser!.CrossBorderConsentGiven.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task UpdateCrossBorderConsent_WithDefaultConsentVersion_UsesDefaultVersion()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            var request = new Synaxis.InferenceGateway.WebApi.Controllers.UpdateCrossBorderConsentRequest
+            {
+                ConsentGiven = true,
+                // ConsentVersion not provided
+            };
+
+            // Act
+            var result = await _controller.UpdateCrossBorderConsent(request, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<OkObjectResult>();
+            var okResult = result as OkObjectResult;
+            okResult!.Value.Should().NotBeNull();
+
+            var response = okResult.Value!;
+            var responseType = response.GetType();
+            responseType.GetProperty("crossBorderConsentVersion")?.GetValue(response).Should().Be("v1.0");
+
+            // Verify database was updated
+            var updatedUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == _testUserId);
+            updatedUser.Should().NotBeNull();
+            updatedUser!.CrossBorderConsentVersion.Should().Be("v1.0");
+        }
+
+        [Fact]
+        public async Task UpdateCrossBorderConsent_UpdatesUpdatedAtTimestamp()
+        {
+            // Arrange
+            var testUser = CreateTestUser();
+            var originalUpdatedAt = testUser.UpdatedAt;
+            _dbContext.Users.Add(testUser);
+            await _dbContext.SaveChangesAsync();
+
+            var request = new Synaxis.InferenceGateway.WebApi.Controllers.UpdateCrossBorderConsentRequest
+            {
+                ConsentGiven = true,
+            };
+
+            // Act
+            var result = await _controller.UpdateCrossBorderConsent(request, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<OkObjectResult>();
+
+            var updatedUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == _testUserId);
+            updatedUser.Should().NotBeNull();
+            updatedUser!.UpdatedAt.Should().BeAfter(originalUpdatedAt);
+        }
     }
 }
