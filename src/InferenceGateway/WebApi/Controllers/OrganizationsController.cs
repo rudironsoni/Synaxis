@@ -6,6 +6,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
 {
     using System;
     using System.ComponentModel.DataAnnotations;
+    using System.Globalization;
     using System.Linq;
     using System.Security.Claims;
     using System.Text.RegularExpressions;
@@ -1067,6 +1068,200 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
             var hash = sha256.ComputeHash(bytes);
             return Convert.ToHexString(hash).ToLowerInvariant();
         }
+
+        /// <summary>
+        /// Deletes an API key.
+        /// </summary>
+        /// <param name="id">The organization ID.</param>
+        /// <param name="keyId">The API key ID.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>No content.</returns>
+        [HttpDelete("{id}/api-keys/{keyId}")]
+        public async Task<IActionResult> DeleteApiKey(Guid id, Guid keyId, CancellationToken cancellationToken)
+        {
+            var userId = Guid.Parse(this.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? this.User.FindFirstValue("sub")!);
+
+            var organization = await this._synaxisDbContext.Organizations
+                .FirstOrDefaultAsync(o => o.Id == id, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (organization == null)
+            {
+                return this.NotFound("Organization not found");
+            }
+
+            var isOrgAdmin = await this.IsOrgAdminAsync(userId, id, cancellationToken).ConfigureAwait(false);
+
+            if (!isOrgAdmin)
+            {
+                return this.Forbid();
+            }
+
+            var apiKey = await this._synaxisDbContext.OrganizationApiKeys
+                .FirstOrDefaultAsync(k => k.Id == keyId && k.OrganizationId == id, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (apiKey == null)
+            {
+                return this.NotFound("API key not found");
+            }
+
+            if (!apiKey.IsActive || apiKey.RevokedAt.HasValue)
+            {
+                return this.StatusCode(410, "API key has already been revoked");
+            }
+
+            this._synaxisDbContext.OrganizationApiKeys.Remove(apiKey);
+            await this._synaxisDbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            return this.NoContent();
+        }
+
+        /// <summary>
+        /// Rotates an API key (generates a new key value while keeping the same key ID).
+        /// </summary>
+        /// <param name="id">The organization ID.</param>
+        /// <param name="keyId">The API key ID.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The rotated API key with the new key value.</returns>
+        [HttpPost("{id}/api-keys/{keyId}/rotate")]
+        public async Task<IActionResult> RotateApiKey(Guid id, Guid keyId, CancellationToken cancellationToken)
+        {
+            var userId = Guid.Parse(this.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? this.User.FindFirstValue("sub")!);
+
+            var organization = await this._synaxisDbContext.Organizations
+                .FirstOrDefaultAsync(o => o.Id == id, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (organization == null)
+            {
+                return this.NotFound("Organization not found");
+            }
+
+            var isOrgAdmin = await this.IsOrgAdminAsync(userId, id, cancellationToken).ConfigureAwait(false);
+
+            if (!isOrgAdmin)
+            {
+                return this.Forbid();
+            }
+
+            var apiKey = await this._synaxisDbContext.OrganizationApiKeys
+                .FirstOrDefaultAsync(k => k.Id == keyId && k.OrganizationId == id, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (apiKey == null)
+            {
+                return this.NotFound("API key not found");
+            }
+
+            if (!apiKey.IsActive || apiKey.RevokedAt.HasValue)
+            {
+                return this.StatusCode(410, "API key has already been revoked");
+            }
+
+            // Generate new key value
+            var newKeyValue = GenerateSecureApiKey();
+            var newKeyHash = ComputeSha256Hash(newKeyValue);
+            var newKeyPrefix = newKeyValue.Substring(0, 8);
+
+            // Update the API key with new hash and prefix
+            apiKey.KeyHash = newKeyHash;
+            apiKey.KeyPrefix = newKeyPrefix;
+            apiKey.UpdatedAt = DateTime.UtcNow;
+
+            await this._synaxisDbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            var response = new RotateOrganizationApiKeyResponse
+            {
+                Id = apiKey.Id,
+                Name = apiKey.Name,
+                Key = newKeyValue,
+                KeyPrefix = newKeyPrefix,
+                Permissions = apiKey.Permissions,
+                ExpiresAt = apiKey.ExpiresAt,
+                IsActive = apiKey.IsActive,
+                CreatedAt = apiKey.CreatedAt,
+                RotatedAt = DateTime.UtcNow,
+            };
+
+            return this.Ok(response);
+        }
+
+        /// <summary>
+        /// Gets usage statistics for an API key.
+        /// </summary>
+        /// <param name="id">The organization ID.</param>
+        /// <param name="keyId">The API key ID.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The API key usage statistics.</returns>
+        [HttpGet("{id}/api-keys/{keyId}/usage")]
+        public async Task<IActionResult> GetApiKeyUsage(Guid id, Guid keyId, CancellationToken cancellationToken)
+        {
+            var userId = Guid.Parse(this.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? this.User.FindFirstValue("sub")!);
+
+            var organization = await this._synaxisDbContext.Organizations
+                .FirstOrDefaultAsync(o => o.Id == id, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (organization == null)
+            {
+                return this.NotFound("Organization not found");
+            }
+
+            var isMember = await this._synaxisDbContext.TeamMemberships
+                .AnyAsync(tm => tm.OrganizationId == id && tm.UserId == userId, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (!isMember)
+            {
+                return this.Forbid();
+            }
+
+            var apiKey = await this._synaxisDbContext.OrganizationApiKeys
+                .FirstOrDefaultAsync(k => k.Id == keyId && k.OrganizationId == id, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (apiKey == null)
+            {
+                return this.NotFound("API key not found");
+            }
+
+            var response = this.BuildUsageResponse(apiKey);
+            return this.Ok(response);
+        }
+
+        private OrganizationApiKeyUsageResponse BuildUsageResponse(OrganizationApiKey apiKey)
+        {
+            var now = DateTime.UtcNow;
+            var oneHourAgo = now.AddHours(-1);
+            var oneDayAgo = now.AddDays(-1);
+            var oneWeekAgo = now.AddDays(-7);
+
+            var totalRequests = apiKey.TotalRequests ?? 0;
+            var errorCount = apiKey.ErrorCount ?? 0;
+            var errorRate = totalRequests > 0 ? (double)errorCount / totalRequests : 0.0;
+
+            return new OrganizationApiKeyUsageResponse
+            {
+                ApiKeyId = apiKey.Id,
+                TotalRequests = totalRequests,
+                ErrorCount = errorCount,
+                ErrorRate = errorRate,
+                LastUsedAt = apiKey.LastUsedAt,
+                RequestsByHour = new Dictionary<string, int>
+                {
+                    { oneHourAgo.ToString("yyyy-MM-ddTHH:00:00Z", CultureInfo.InvariantCulture), 0 },
+                },
+                RequestsByDay = new Dictionary<string, int>
+                {
+                    { oneDayAgo.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), 0 },
+                },
+                RequestsByWeek = new Dictionary<string, int>
+                {
+                    { oneWeekAgo.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), 0 },
+                },
+            };
+        }
     }
 
     /// <summary>
@@ -1571,5 +1766,102 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         /// </summary>
         [StringLength(500)]
         public string? RevokedReason { get; set; }
+    }
+
+    /// <summary>
+    /// Response for rotating an organization API key (includes the new key value).
+    /// </summary>
+    public class RotateOrganizationApiKeyResponse
+    {
+        /// <summary>
+        /// Gets or sets the API key ID.
+        /// </summary>
+        public Guid Id { get; set; }
+
+        /// <summary>
+        /// Gets or sets the API key name.
+        /// </summary>
+        public string Name { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the new API key value (shown only once).
+        /// </summary>
+        public string Key { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the new key prefix.
+        /// </summary>
+        public string KeyPrefix { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the permissions.
+        /// </summary>
+        public IDictionary<string, object> Permissions { get; set; } = new Dictionary<string, object>();
+
+        /// <summary>
+        /// Gets or sets the expiration timestamp.
+        /// </summary>
+        public DateTime? ExpiresAt { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the key is active.
+        /// </summary>
+        public bool IsActive { get; set; }
+
+        /// <summary>
+        /// Gets or sets the creation timestamp.
+        /// </summary>
+        public DateTime CreatedAt { get; set; }
+
+        /// <summary>
+        /// Gets or sets the rotation timestamp.
+        /// </summary>
+        public DateTime RotatedAt { get; set; }
+    }
+
+    /// <summary>
+    /// Response for organization API key usage statistics.
+    /// </summary>
+    public class OrganizationApiKeyUsageResponse
+    {
+        /// <summary>
+        /// Gets or sets the API key ID.
+        /// </summary>
+        public Guid ApiKeyId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the total number of requests made with this key.
+        /// </summary>
+        public long TotalRequests { get; set; }
+
+        /// <summary>
+        /// Gets or sets the number of error requests.
+        /// </summary>
+        public long ErrorCount { get; set; }
+
+        /// <summary>
+        /// Gets or sets the error rate (0.0 to 1.0).
+        /// </summary>
+        public double ErrorRate { get; set; }
+
+        /// <summary>
+        /// Gets or sets the last used timestamp.
+        /// </summary>
+        public DateTime? LastUsedAt { get; set; }
+
+        /// <summary>
+        /// Gets or sets the requests by hour (key: hour in ISO format, value: count).
+        /// </summary>
+        public IDictionary<string, int> RequestsByHour { get; set; } = new Dictionary<string, int>();
+
+        /// <summary>
+        /// Gets or sets the requests by day (key: date in ISO format, value: count).
+        /// </summary>
+        public IDictionary<string, int> RequestsByDay { get; set; } = new Dictionary<string, int>();
+
+        /// <summary>
+        /// Gets or sets the requests by week (key: date in ISO format, value: count).
+        /// </summary>
+        public IDictionary<string, int> RequestsByWeek { get; set; } = new Dictionary<string, int>();
     }
 }
