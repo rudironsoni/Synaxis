@@ -1,0 +1,1100 @@
+time=2026-02-12T15:41:10.718+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:41:10.719+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:41:10.792+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:41:10.792+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:41:10.792+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:41:10.792+01:00 level=ERROR msg="repository fingerprint validation failed" error="\nLEGACY DATABASE DETECTED!\n\nThis database was created before version 0.17.5 and lacks a repository fingerprint.\nTo continue using this database, you must explicitly set its repository ID:\n\n  bd migrate --update-repo-id\n\nThis ensures the database is bound to this repository and prevents accidental\ndatabase sharing between different repositories.\n\nIf this is a fresh clone, run:\n  rm -rf .beads && bd init\n\nNote: Auto-claiming legacy databases is intentionally disabled to prevent\nsilent corruption when databases are copied between repositories.\n"
+time=2026-02-12T15:41:10.804+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:41:10.804+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:41:10.847+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:41:10.847+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:41:10.847+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:41:10.848+01:00 level=ERROR msg="repository fingerprint validation failed" error="\nLEGACY DATABASE DETECTED!\n\nThis database was created before version 0.17.5 and lacks a repository fingerprint.\nTo continue using this database, you must explicitly set its repository ID:\n\n  bd migrate --update-repo-id\n\nThis ensures the database is bound to this repository and prevents accidental\ndatabase sharing between different repositories.\n\nIf this is a fresh clone, run:\n  rm -rf .beads && bd init\n\nNote: Auto-claiming legacy databases is intentionally disabled to prevent\nsilent corruption when databases are copied between repositories.\n"
+time=2026-02-12T15:41:23.815+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:41:23.815+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:41:23.861+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:41:23.861+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:41:23.861+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:41:23.861+01:00 level=ERROR msg="repository fingerprint validation failed" error="\nLEGACY DATABASE DETECTED!\n\nThis database was created before version 0.17.5 and lacks a repository fingerprint.\nTo continue using this database, you must explicitly set its repository ID:\n\n  bd migrate --update-repo-id\n\nThis ensures the database is bound to this repository and prevents accidental\ndatabase sharing between different repositories.\n\nIf this is a fresh clone, run:\n  rm -rf .beads && bd init\n\nNote: Auto-claiming legacy databases is intentionally disabled to prevent\nsilent corruption when databases are copied between repositories.\n"
+time=2026-02-12T15:41:36.076+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:41:36.076+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:41:36.085+01:00 level=INFO msg="daemon already running (lock held), exiting"
+time=2026-02-12T15:41:36.126+01:00 level=INFO msg="daemon already running (lock held), exiting"
+time=2026-02-12T15:41:36.141+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:41:36.141+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:41:36.141+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:41:36.141+01:00 level=ERROR msg="repository fingerprint validation failed" error="\nLEGACY DATABASE DETECTED!\n\nThis database was created before version 0.17.5 and lacks a repository fingerprint.\nTo continue using this database, you must explicitly set its repository ID:\n\n  bd migrate --update-repo-id\n\nThis ensures the database is bound to this repository and prevents accidental\ndatabase sharing between different repositories.\n\nIf this is a fresh clone, run:\n  rm -rf .beads && bd init\n\nNote: Auto-claiming legacy databases is intentionally disabled to prevent\nsilent corruption when databases are copied between repositories.\n"
+time=2026-02-12T15:41:36.145+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:41:36.145+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:41:36.192+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:41:36.192+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:41:36.192+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:41:36.192+01:00 level=ERROR msg="repository fingerprint validation failed" error="\nLEGACY DATABASE DETECTED!\n\nThis database was created before version 0.17.5 and lacks a repository fingerprint.\nTo continue using this database, you must explicitly set its repository ID:\n\n  bd migrate --update-repo-id\n\nThis ensures the database is bound to this repository and prevents accidental\ndatabase sharing between different repositories.\n\nIf this is a fresh clone, run:\n  rm -rf .beads && bd init\n\nNote: Auto-claiming legacy databases is intentionally disabled to prevent\nsilent corruption when databases are copied between repositories.\n"
+time=2026-02-12T15:41:49.960+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:41:49.960+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:41:50.008+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:41:50.008+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:41:50.008+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:41:50.008+01:00 level=ERROR msg="repository fingerprint validation failed" error="\nLEGACY DATABASE DETECTED!\n\nThis database was created before version 0.17.5 and lacks a repository fingerprint.\nTo continue using this database, you must explicitly set its repository ID:\n\n  bd migrate --update-repo-id\n\nThis ensures the database is bound to this repository and prevents accidental\ndatabase sharing between different repositories.\n\nIf this is a fresh clone, run:\n  rm -rf .beads && bd init\n\nNote: Auto-claiming legacy databases is intentionally disabled to prevent\nsilent corruption when databases are copied between repositories.\n"
+time=2026-02-12T15:41:58.051+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:41:58.051+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:41:58.100+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:41:58.100+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:41:58.100+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:41:58.100+01:00 level=ERROR msg="repository fingerprint validation failed" error="\nLEGACY DATABASE DETECTED!\n\nThis database was created before version 0.17.5 and lacks a repository fingerprint.\nTo continue using this database, you must explicitly set its repository ID:\n\n  bd migrate --update-repo-id\n\nThis ensures the database is bound to this repository and prevents accidental\ndatabase sharing between different repositories.\n\nIf this is a fresh clone, run:\n  rm -rf .beads && bd init\n\nNote: Auto-claiming legacy databases is intentionally disabled to prevent\nsilent corruption when databases are copied between repositories.\n"
+time=2026-02-12T15:42:09.133+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:42:09.134+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:42:09.184+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:42:09.184+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:42:09.184+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:42:09.184+01:00 level=ERROR msg="repository fingerprint validation failed" error="\nLEGACY DATABASE DETECTED!\n\nThis database was created before version 0.17.5 and lacks a repository fingerprint.\nTo continue using this database, you must explicitly set its repository ID:\n\n  bd migrate --update-repo-id\n\nThis ensures the database is bound to this repository and prevents accidental\ndatabase sharing between different repositories.\n\nIf this is a fresh clone, run:\n  rm -rf .beads && bd init\n\nNote: Auto-claiming legacy databases is intentionally disabled to prevent\nsilent corruption when databases are copied between repositories.\n"
+time=2026-02-12T15:46:50.802+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:46:50.802+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:46:50.863+01:00 level=INFO msg="daemon already running (lock held), exiting"
+time=2026-02-12T15:46:50.866+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:46:50.866+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:46:50.866+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:46:50.866+01:00 level=ERROR msg="repository fingerprint validation failed" error="\nLEGACY DATABASE DETECTED!\n\nThis database was created before version 0.17.5 and lacks a repository fingerprint.\nTo continue using this database, you must explicitly set its repository ID:\n\n  bd migrate --update-repo-id\n\nThis ensures the database is bound to this repository and prevents accidental\ndatabase sharing between different repositories.\n\nIf this is a fresh clone, run:\n  rm -rf .beads && bd init\n\nNote: Auto-claiming legacy databases is intentionally disabled to prevent\nsilent corruption when databases are copied between repositories.\n"
+time=2026-02-12T15:47:10.054+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:47:10.055+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:47:10.114+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:47:10.114+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:47:10.114+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:47:10.115+01:00 level=ERROR msg="repository fingerprint validation failed" error="\nLEGACY DATABASE DETECTED!\n\nThis database was created before version 0.17.5 and lacks a repository fingerprint.\nTo continue using this database, you must explicitly set its repository ID:\n\n  bd migrate --update-repo-id\n\nThis ensures the database is bound to this repository and prevents accidental\ndatabase sharing between different repositories.\n\nIf this is a fresh clone, run:\n  rm -rf .beads && bd init\n\nNote: Auto-claiming legacy databases is intentionally disabled to prevent\nsilent corruption when databases are copied between repositories.\n"
+time=2026-02-12T15:47:38.572+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:47:38.572+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:47:38.627+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:47:38.627+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:47:38.627+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:47:38.627+01:00 level=ERROR msg="repository fingerprint validation failed" error="\nLEGACY DATABASE DETECTED!\n\nThis database was created before version 0.17.5 and lacks a repository fingerprint.\nTo continue using this database, you must explicitly set its repository ID:\n\n  bd migrate --update-repo-id\n\nThis ensures the database is bound to this repository and prevents accidental\ndatabase sharing between different repositories.\n\nIf this is a fresh clone, run:\n  rm -rf .beads && bd init\n\nNote: Auto-claiming legacy databases is intentionally disabled to prevent\nsilent corruption when databases are copied between repositories.\n"
+time=2026-02-12T15:47:43.734+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:47:43.734+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:47:43.787+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:47:43.787+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:47:43.787+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:47:43.788+01:00 level=ERROR msg="repository fingerprint validation failed" error="\nLEGACY DATABASE DETECTED!\n\nThis database was created before version 0.17.5 and lacks a repository fingerprint.\nTo continue using this database, you must explicitly set its repository ID:\n\n  bd migrate --update-repo-id\n\nThis ensures the database is bound to this repository and prevents accidental\ndatabase sharing between different repositories.\n\nIf this is a fresh clone, run:\n  rm -rf .beads && bd init\n\nNote: Auto-claiming legacy databases is intentionally disabled to prevent\nsilent corruption when databases are copied between repositories.\n"
+time=2026-02-12T15:47:51.675+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:47:51.675+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:47:51.745+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:47:51.745+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:47:51.745+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:47:51.746+01:00 level=ERROR msg="repository fingerprint validation failed" error="\nLEGACY DATABASE DETECTED!\n\nThis database was created before version 0.17.5 and lacks a repository fingerprint.\nTo continue using this database, you must explicitly set its repository ID:\n\n  bd migrate --update-repo-id\n\nThis ensures the database is bound to this repository and prevents accidental\ndatabase sharing between different repositories.\n\nIf this is a fresh clone, run:\n  rm -rf .beads && bd init\n\nNote: Auto-claiming legacy databases is intentionally disabled to prevent\nsilent corruption when databases are copied between repositories.\n"
+time=2026-02-12T15:48:05.601+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:48:05.601+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:48:05.648+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:48:05.648+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:48:05.648+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:48:05.648+01:00 level=ERROR msg="repository fingerprint validation failed" error="\nLEGACY DATABASE DETECTED!\n\nThis database was created before version 0.17.5 and lacks a repository fingerprint.\nTo continue using this database, you must explicitly set its repository ID:\n\n  bd migrate --update-repo-id\n\nThis ensures the database is bound to this repository and prevents accidental\ndatabase sharing between different repositories.\n\nIf this is a fresh clone, run:\n  rm -rf .beads && bd init\n\nNote: Auto-claiming legacy databases is intentionally disabled to prevent\nsilent corruption when databases are copied between repositories.\n"
+time=2026-02-12T15:48:10.731+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:48:10.731+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:48:10.777+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:48:10.777+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:48:10.777+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:48:10.777+01:00 level=ERROR msg="repository fingerprint validation failed" error="\nLEGACY DATABASE DETECTED!\n\nThis database was created before version 0.17.5 and lacks a repository fingerprint.\nTo continue using this database, you must explicitly set its repository ID:\n\n  bd migrate --update-repo-id\n\nThis ensures the database is bound to this repository and prevents accidental\ndatabase sharing between different repositories.\n\nIf this is a fresh clone, run:\n  rm -rf .beads && bd init\n\nNote: Auto-claiming legacy databases is intentionally disabled to prevent\nsilent corruption when databases are copied between repositories.\n"
+time=2026-02-12T15:48:19.728+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:48:19.728+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:48:19.775+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:48:19.775+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:48:19.775+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:48:19.775+01:00 level=ERROR msg="repository fingerprint validation failed" error="\nLEGACY DATABASE DETECTED!\n\nThis database was created before version 0.17.5 and lacks a repository fingerprint.\nTo continue using this database, you must explicitly set its repository ID:\n\n  bd migrate --update-repo-id\n\nThis ensures the database is bound to this repository and prevents accidental\ndatabase sharing between different repositories.\n\nIf this is a fresh clone, run:\n  rm -rf .beads && bd init\n\nNote: Auto-claiming legacy databases is intentionally disabled to prevent\nsilent corruption when databases are copied between repositories.\n"
+time=2026-02-12T15:48:32.844+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:48:32.844+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:48:32.891+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:48:32.891+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:48:32.891+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:48:32.891+01:00 level=ERROR msg="repository fingerprint validation failed" error="\nLEGACY DATABASE DETECTED!\n\nThis database was created before version 0.17.5 and lacks a repository fingerprint.\nTo continue using this database, you must explicitly set its repository ID:\n\n  bd migrate --update-repo-id\n\nThis ensures the database is bound to this repository and prevents accidental\ndatabase sharing between different repositories.\n\nIf this is a fresh clone, run:\n  rm -rf .beads && bd init\n\nNote: Auto-claiming legacy databases is intentionally disabled to prevent\nsilent corruption when databases are copied between repositories.\n"
+time=2026-02-12T15:48:40.958+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:48:40.958+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:48:41.006+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:48:41.006+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:48:41.006+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:48:41.006+01:00 level=ERROR msg="repository fingerprint validation failed" error="\nLEGACY DATABASE DETECTED!\n\nThis database was created before version 0.17.5 and lacks a repository fingerprint.\nTo continue using this database, you must explicitly set its repository ID:\n\n  bd migrate --update-repo-id\n\nThis ensures the database is bound to this repository and prevents accidental\ndatabase sharing between different repositories.\n\nIf this is a fresh clone, run:\n  rm -rf .beads && bd init\n\nNote: Auto-claiming legacy databases is intentionally disabled to prevent\nsilent corruption when databases are copied between repositories.\n"
+time=2026-02-12T15:49:07.300+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:49:07.300+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:49:07.346+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:49:07.346+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:49:07.346+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:49:07.346+01:00 level=ERROR msg="repository fingerprint validation failed" error="\nLEGACY DATABASE DETECTED!\n\nThis database was created before version 0.17.5 and lacks a repository fingerprint.\nTo continue using this database, you must explicitly set its repository ID:\n\n  bd migrate --update-repo-id\n\nThis ensures the database is bound to this repository and prevents accidental\ndatabase sharing between different repositories.\n\nIf this is a fresh clone, run:\n  rm -rf .beads && bd init\n\nNote: Auto-claiming legacy databases is intentionally disabled to prevent\nsilent corruption when databases are copied between repositories.\n"
+time=2026-02-12T15:49:12.634+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:49:12.635+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:49:12.683+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:49:12.683+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:49:12.683+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:49:12.684+01:00 level=ERROR msg="repository fingerprint validation failed" error="\nLEGACY DATABASE DETECTED!\n\nThis database was created before version 0.17.5 and lacks a repository fingerprint.\nTo continue using this database, you must explicitly set its repository ID:\n\n  bd migrate --update-repo-id\n\nThis ensures the database is bound to this repository and prevents accidental\ndatabase sharing between different repositories.\n\nIf this is a fresh clone, run:\n  rm -rf .beads && bd init\n\nNote: Auto-claiming legacy databases is intentionally disabled to prevent\nsilent corruption when databases are copied between repositories.\n"
+time=2026-02-12T15:49:29.995+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:49:29.996+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:49:30.048+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:49:30.048+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:49:30.048+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:49:30.048+01:00 level=ERROR msg="repository fingerprint validation failed" error="\nLEGACY DATABASE DETECTED!\n\nThis database was created before version 0.17.5 and lacks a repository fingerprint.\nTo continue using this database, you must explicitly set its repository ID:\n\n  bd migrate --update-repo-id\n\nThis ensures the database is bound to this repository and prevents accidental\ndatabase sharing between different repositories.\n\nIf this is a fresh clone, run:\n  rm -rf .beads && bd init\n\nNote: Auto-claiming legacy databases is intentionally disabled to prevent\nsilent corruption when databases are copied between repositories.\n"
+time=2026-02-12T15:49:35.129+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:49:35.130+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:49:35.175+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:49:35.175+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:49:35.175+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:49:35.175+01:00 level=ERROR msg="repository fingerprint validation failed" error="\nLEGACY DATABASE DETECTED!\n\nThis database was created before version 0.17.5 and lacks a repository fingerprint.\nTo continue using this database, you must explicitly set its repository ID:\n\n  bd migrate --update-repo-id\n\nThis ensures the database is bound to this repository and prevents accidental\ndatabase sharing between different repositories.\n\nIf this is a fresh clone, run:\n  rm -rf .beads && bd init\n\nNote: Auto-claiming legacy databases is intentionally disabled to prevent\nsilent corruption when databases are copied between repositories.\n"
+time=2026-02-12T15:49:57.809+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:49:57.809+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:49:57.860+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:49:57.860+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:49:57.860+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:49:57.860+01:00 level=ERROR msg="repository fingerprint validation failed" error="\nLEGACY DATABASE DETECTED!\n\nThis database was created before version 0.17.5 and lacks a repository fingerprint.\nTo continue using this database, you must explicitly set its repository ID:\n\n  bd migrate --update-repo-id\n\nThis ensures the database is bound to this repository and prevents accidental\ndatabase sharing between different repositories.\n\nIf this is a fresh clone, run:\n  rm -rf .beads && bd init\n\nNote: Auto-claiming legacy databases is intentionally disabled to prevent\nsilent corruption when databases are copied between repositories.\n"
+time=2026-02-12T15:50:02.966+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:50:02.966+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:50:03.015+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:50:03.015+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:50:03.015+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:50:03.015+01:00 level=ERROR msg="repository fingerprint validation failed" error="\nLEGACY DATABASE DETECTED!\n\nThis database was created before version 0.17.5 and lacks a repository fingerprint.\nTo continue using this database, you must explicitly set its repository ID:\n\n  bd migrate --update-repo-id\n\nThis ensures the database is bound to this repository and prevents accidental\ndatabase sharing between different repositories.\n\nIf this is a fresh clone, run:\n  rm -rf .beads && bd init\n\nNote: Auto-claiming legacy databases is intentionally disabled to prevent\nsilent corruption when databases are copied between repositories.\n"
+time=2026-02-12T15:50:16.632+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:50:16.633+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:50:16.701+01:00 level=INFO msg="daemon already running (lock held), exiting"
+time=2026-02-12T15:50:16.715+01:00 level=INFO msg="daemon already running (lock held), exiting"
+time=2026-02-12T15:50:16.730+01:00 level=INFO msg="daemon already running (lock held), exiting"
+time=2026-02-12T15:50:16.737+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:50:16.737+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:50:16.737+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:50:16.738+01:00 level=ERROR msg="repository fingerprint validation failed" error="\nLEGACY DATABASE DETECTED!\n\nThis database was created before version 0.17.5 and lacks a repository fingerprint.\nTo continue using this database, you must explicitly set its repository ID:\n\n  bd migrate --update-repo-id\n\nThis ensures the database is bound to this repository and prevents accidental\ndatabase sharing between different repositories.\n\nIf this is a fresh clone, run:\n  rm -rf .beads && bd init\n\nNote: Auto-claiming legacy databases is intentionally disabled to prevent\nsilent corruption when databases are copied between repositories.\n"
+time=2026-02-12T15:50:38.895+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:50:38.899+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:50:38.951+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:50:38.951+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:50:38.951+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:50:38.951+01:00 level=ERROR msg="repository fingerprint validation failed" error="\nLEGACY DATABASE DETECTED!\n\nThis database was created before version 0.17.5 and lacks a repository fingerprint.\nTo continue using this database, you must explicitly set its repository ID:\n\n  bd migrate --update-repo-id\n\nThis ensures the database is bound to this repository and prevents accidental\ndatabase sharing between different repositories.\n\nIf this is a fresh clone, run:\n  rm -rf .beads && bd init\n\nNote: Auto-claiming legacy databases is intentionally disabled to prevent\nsilent corruption when databases are copied between repositories.\n"
+time=2026-02-12T15:50:44.093+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:50:44.094+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:50:44.195+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:50:44.195+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:50:44.195+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:50:44.195+01:00 level=ERROR msg="repository fingerprint validation failed" error="\nLEGACY DATABASE DETECTED!\n\nThis database was created before version 0.17.5 and lacks a repository fingerprint.\nTo continue using this database, you must explicitly set its repository ID:\n\n  bd migrate --update-repo-id\n\nThis ensures the database is bound to this repository and prevents accidental\ndatabase sharing between different repositories.\n\nIf this is a fresh clone, run:\n  rm -rf .beads && bd init\n\nNote: Auto-claiming legacy databases is intentionally disabled to prevent\nsilent corruption when databases are copied between repositories.\n"
+time=2026-02-12T15:51:00.013+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:51:00.013+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:51:00.075+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:51:00.075+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:51:00.075+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:51:00.075+01:00 level=ERROR msg="repository fingerprint validation failed" error="\nLEGACY DATABASE DETECTED!\n\nThis database was created before version 0.17.5 and lacks a repository fingerprint.\nTo continue using this database, you must explicitly set its repository ID:\n\n  bd migrate --update-repo-id\n\nThis ensures the database is bound to this repository and prevents accidental\ndatabase sharing between different repositories.\n\nIf this is a fresh clone, run:\n  rm -rf .beads && bd init\n\nNote: Auto-claiming legacy databases is intentionally disabled to prevent\nsilent corruption when databases are copied between repositories.\n"
+time=2026-02-12T15:51:05.135+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:51:05.136+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:51:05.193+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:51:05.193+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:51:05.193+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:51:05.193+01:00 level=ERROR msg="repository fingerprint validation failed" error="\nLEGACY DATABASE DETECTED!\n\nThis database was created before version 0.17.5 and lacks a repository fingerprint.\nTo continue using this database, you must explicitly set its repository ID:\n\n  bd migrate --update-repo-id\n\nThis ensures the database is bound to this repository and prevents accidental\ndatabase sharing between different repositories.\n\nIf this is a fresh clone, run:\n  rm -rf .beads && bd init\n\nNote: Auto-claiming legacy databases is intentionally disabled to prevent\nsilent corruption when databases are copied between repositories.\n"
+time=2026-02-12T15:51:16.613+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:51:16.613+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:51:16.692+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:51:16.692+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:51:16.692+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:51:16.692+01:00 level=ERROR msg="repository fingerprint validation failed" error="\nLEGACY DATABASE DETECTED!\n\nThis database was created before version 0.17.5 and lacks a repository fingerprint.\nTo continue using this database, you must explicitly set its repository ID:\n\n  bd migrate --update-repo-id\n\nThis ensures the database is bound to this repository and prevents accidental\ndatabase sharing between different repositories.\n\nIf this is a fresh clone, run:\n  rm -rf .beads && bd init\n\nNote: Auto-claiming legacy databases is intentionally disabled to prevent\nsilent corruption when databases are copied between repositories.\n"
+time=2026-02-12T15:51:21.948+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:51:21.948+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:51:22.062+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:51:22.062+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:51:22.062+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:51:22.062+01:00 level=ERROR msg="repository fingerprint validation failed" error="\nLEGACY DATABASE DETECTED!\n\nThis database was created before version 0.17.5 and lacks a repository fingerprint.\nTo continue using this database, you must explicitly set its repository ID:\n\n  bd migrate --update-repo-id\n\nThis ensures the database is bound to this repository and prevents accidental\ndatabase sharing between different repositories.\n\nIf this is a fresh clone, run:\n  rm -rf .beads && bd init\n\nNote: Auto-claiming legacy databases is intentionally disabled to prevent\nsilent corruption when databases are copied between repositories.\n"
+time=2026-02-12T15:55:58.050+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:55:58.050+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:55:58.100+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:55:58.100+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:55:58.100+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:55:58.100+01:00 level=ERROR msg="repository fingerprint validation failed" error="\nLEGACY DATABASE DETECTED!\n\nThis database was created before version 0.17.5 and lacks a repository fingerprint.\nTo continue using this database, you must explicitly set its repository ID:\n\n  bd migrate --update-repo-id\n\nThis ensures the database is bound to this repository and prevents accidental\ndatabase sharing between different repositories.\n\nIf this is a fresh clone, run:\n  rm -rf .beads && bd init\n\nNote: Auto-claiming legacy databases is intentionally disabled to prevent\nsilent corruption when databases are copied between repositories.\n"
+time=2026-02-12T15:56:03.304+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:56:03.305+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:56:03.358+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:56:03.358+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:56:03.358+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:56:03.358+01:00 level=ERROR msg="repository fingerprint validation failed" error="\nLEGACY DATABASE DETECTED!\n\nThis database was created before version 0.17.5 and lacks a repository fingerprint.\nTo continue using this database, you must explicitly set its repository ID:\n\n  bd migrate --update-repo-id\n\nThis ensures the database is bound to this repository and prevents accidental\ndatabase sharing between different repositories.\n\nIf this is a fresh clone, run:\n  rm -rf .beads && bd init\n\nNote: Auto-claiming legacy databases is intentionally disabled to prevent\nsilent corruption when databases are copied between repositories.\n"
+time=2026-02-12T15:56:13.413+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:56:13.413+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:56:13.486+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:56:13.486+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:56:13.486+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:56:13.486+01:00 level=ERROR msg="repository fingerprint validation failed" error="\nLEGACY DATABASE DETECTED!\n\nThis database was created before version 0.17.5 and lacks a repository fingerprint.\nTo continue using this database, you must explicitly set its repository ID:\n\n  bd migrate --update-repo-id\n\nThis ensures the database is bound to this repository and prevents accidental\ndatabase sharing between different repositories.\n\nIf this is a fresh clone, run:\n  rm -rf .beads && bd init\n\nNote: Auto-claiming legacy databases is intentionally disabled to prevent\nsilent corruption when databases are copied between repositories.\n"
+time=2026-02-12T15:56:38.644+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:56:38.645+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:56:38.697+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:56:38.697+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:56:38.697+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:56:38.697+01:00 level=ERROR msg="repository fingerprint validation failed" error="\nLEGACY DATABASE DETECTED!\n\nThis database was created before version 0.17.5 and lacks a repository fingerprint.\nTo continue using this database, you must explicitly set its repository ID:\n\n  bd migrate --update-repo-id\n\nThis ensures the database is bound to this repository and prevents accidental\ndatabase sharing between different repositories.\n\nIf this is a fresh clone, run:\n  rm -rf .beads && bd init\n\nNote: Auto-claiming legacy databases is intentionally disabled to prevent\nsilent corruption when databases are copied between repositories.\n"
+time=2026-02-12T15:58:37.965+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:58:37.965+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:58:38.020+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:58:38.020+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:58:38.020+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:58:38.021+01:00 level=ERROR msg="repository fingerprint validation failed" error="\nLEGACY DATABASE DETECTED!\n\nThis database was created before version 0.17.5 and lacks a repository fingerprint.\nTo continue using this database, you must explicitly set its repository ID:\n\n  bd migrate --update-repo-id\n\nThis ensures the database is bound to this repository and prevents accidental\ndatabase sharing between different repositories.\n\nIf this is a fresh clone, run:\n  rm -rf .beads && bd init\n\nNote: Auto-claiming legacy databases is intentionally disabled to prevent\nsilent corruption when databases are copied between repositories.\n"
+time=2026-02-12T15:58:51.572+01:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T15:58:51.573+01:00 level=INFO msg="using database" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db
+time=2026-02-12T15:58:51.630+01:00 level=INFO msg="database opened" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T15:58:51.630+01:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T15:58:51.630+01:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T15:58:51.632+01:00 level=INFO msg="Repository fingerprint validated" repo_id=fba369a3
+time=2026-02-12T15:58:51.632+01:00 level=WARN msg="database missing version metadata" setting_to=0.49.6
+time=2026-02-12T15:58:51.632+01:00 level=INFO msg="starting RPC server" socket=/home/rrj/src/github/rudironsoni/Synaxis/.beads/bd.sock
+time=2026-02-12T15:58:51.632+01:00 level=INFO msg="RPC server ready (socket listening)"
+time=2026-02-12T15:58:51.634+01:00 level=INFO msg="registered in global registry"
+time=2026-02-12T15:58:51.653+01:00 level=INFO msg="initial import complete"
+time=2026-02-12T15:58:51.654+01:00 level=INFO msg="Starting sync cycle" mode="sync cycle"
+time=2026-02-12T15:58:51.707+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-12T15:58:53.217+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-12T15:58:53.258+01:00 level=INFO msg="Imported from JSONL"
+time=2026-02-12T15:58:53.269+01:00 level=INFO msg="Sync cycle complete"
+time=2026-02-12T15:58:53.269+01:00 level=INFO msg="monitoring parent process" pid=0
+time=2026-02-12T15:58:53.269+01:00 level=INFO msg="using event-driven mode"
+time=2026-02-12T15:58:53.269+01:00 level=INFO msg="Auto-pull disabled: use 'git pull' manually to sync remote changes"
+time=2026-02-12T15:59:49.858+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T15:59:49.858+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T15:59:50.858+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-12T15:59:50.859+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-12T15:59:50.895+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T15:59:50.895+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-12T15:59:50.895+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-12T15:59:52.546+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-12T15:59:52.546+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-12T15:59:52.547+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-12T16:02:51.969+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T16:02:51.969+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T16:02:52.970+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-12T16:02:52.972+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-12T16:02:52.979+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T16:02:52.979+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-12T16:02:52.979+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-12T16:02:54.626+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-12T16:02:54.626+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-12T16:02:54.627+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-12T16:03:00.223+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T16:03:00.223+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T16:03:01.223+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-12T16:03:01.225+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-12T16:03:01.229+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T16:03:01.229+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-12T16:03:01.229+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-12T16:03:02.764+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-12T16:03:02.764+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-12T16:03:02.766+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-12T16:05:05.131+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T16:05:05.134+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T16:05:06.134+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-12T16:05:06.135+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-12T16:05:06.138+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T16:05:06.138+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-12T16:05:06.138+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-12T16:05:07.677+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-12T16:05:07.677+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-12T16:05:07.678+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-12T16:05:14.083+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T16:05:14.083+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T16:05:15.128+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-12T16:05:15.128+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-12T16:05:15.162+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T16:05:15.162+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-12T16:05:15.162+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-12T16:05:16.886+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-12T16:05:16.886+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-12T16:05:16.889+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-12T16:06:18.518+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T16:06:18.518+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T16:06:18.685+01:00 level=INFO msg="Git ref change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.git/refs/heads/main.lock
+time=2026-02-12T16:06:18.837+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T16:06:19.838+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-12T16:06:19.842+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-12T16:06:21.418+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-12T16:06:21.418+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-12T16:06:21.421+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-12T18:51:59.605+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T18:51:59.605+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T18:52:00.606+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-12T18:52:00.608+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-12T18:52:02.116+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-12T18:52:02.116+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-12T18:52:02.116+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-12T18:54:55.061+01:00 level=INFO msg="Mutation detected" type=create issue_id=Synaxis-ds7l
+time=2026-02-12T18:54:55.561+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-12T18:54:55.561+01:00 level=INFO msg=Starting mode=export
+time=2026-02-12T18:54:55.626+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T18:54:55.627+01:00 level=INFO msg="JSONL removed/renamed, re-establishing watch"
+time=2026-02-12T18:54:55.662+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-12T18:54:55.662+01:00 level=INFO msg="Export complete"
+time=2026-02-12T18:54:55.677+01:00 level=INFO msg="Successfully re-established JSONL watch" delay=50ms
+time=2026-02-12T18:54:56.679+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-12T18:54:56.680+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-12T18:54:56.683+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T18:54:56.683+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-12T18:54:56.683+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-12T18:54:58.261+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-12T18:54:58.261+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-12T18:54:58.262+01:00 level=INFO msg="JSONL content changed, proceeding with operation..." mode=auto-import
+time=2026-02-12T18:54:58.286+01:00 level=INFO msg="Imported from JSONL"
+time=2026-02-12T18:54:58.290+01:00 level=INFO msg="Auto-import complete"
+time=2026-02-12T18:54:58.959+01:00 level=INFO msg="Mutation detected" type=status issue_id=Synaxis-ds7l
+time=2026-02-12T18:54:59.459+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-12T18:54:59.460+01:00 level=INFO msg=Starting mode=export
+time=2026-02-12T18:54:59.461+01:00 level=INFO msg="JSONL changed externally, importing before export"
+time=2026-02-12T18:54:59.490+01:00 level=INFO msg="Auto-import complete, proceeding with export"
+time=2026-02-12T18:54:59.525+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T18:54:59.541+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-12T18:54:59.541+01:00 level=INFO msg="Export complete"
+time=2026-02-12T18:55:00.526+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-12T18:55:00.526+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-12T18:55:00.530+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T18:55:00.530+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-12T18:55:00.530+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-12T18:55:02.150+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-12T18:55:02.150+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-12T18:55:02.151+01:00 level=INFO msg="JSONL content changed, proceeding with operation..." mode=auto-import
+time=2026-02-12T18:55:02.185+01:00 level=INFO msg="Imported from JSONL"
+time=2026-02-12T18:55:02.188+01:00 level=INFO msg="Auto-import complete"
+time=2026-02-12T19:10:17.608+01:00 level=INFO msg="Mutation detected" type=create issue_id=Synaxis-koc1
+time=2026-02-12T19:10:17.676+01:00 level=INFO msg="Mutation detected" type=create issue_id=Synaxis-69rj
+time=2026-02-12T19:10:17.728+01:00 level=INFO msg="Mutation detected" type=create issue_id=Synaxis-eewb
+time=2026-02-12T19:10:18.229+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-12T19:10:18.230+01:00 level=INFO msg=Starting mode=export
+time=2026-02-12T19:10:18.231+01:00 level=INFO msg="JSONL changed externally, importing before export"
+time=2026-02-12T19:10:18.266+01:00 level=INFO msg="Auto-import complete, proceeding with export"
+time=2026-02-12T19:10:18.304+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T19:10:18.304+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T19:10:18.327+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-12T19:10:18.327+01:00 level=INFO msg="Export complete"
+time=2026-02-12T19:10:19.305+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-12T19:10:19.309+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-12T19:10:19.312+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T19:10:19.312+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-12T19:10:19.312+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-12T19:10:20.909+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-12T19:10:20.909+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-12T19:10:20.910+01:00 level=INFO msg="JSONL content changed, proceeding with operation..." mode=auto-import
+time=2026-02-12T19:10:20.941+01:00 level=INFO msg="Imported from JSONL"
+time=2026-02-12T19:10:20.947+01:00 level=INFO msg="Auto-import complete"
+time=2026-02-12T19:10:23.112+01:00 level=INFO msg="Mutation detected" type=update issue_id=Synaxis-eewb
+time=2026-02-12T19:10:23.121+01:00 level=INFO msg="Mutation detected" type=update issue_id=Synaxis-koc1
+time=2026-02-12T19:10:23.129+01:00 level=INFO msg="Mutation detected" type=update issue_id=Synaxis-69rj
+time=2026-02-12T19:10:23.630+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-12T19:10:23.630+01:00 level=INFO msg=Starting mode=export
+time=2026-02-12T19:10:23.631+01:00 level=INFO msg="JSONL changed externally, importing before export"
+time=2026-02-12T19:10:23.656+01:00 level=INFO msg="Auto-import complete, proceeding with export"
+time=2026-02-12T19:10:23.690+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T19:10:23.705+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-12T19:10:23.705+01:00 level=INFO msg="Export complete"
+time=2026-02-12T19:10:24.691+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-12T19:10:24.691+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-12T19:10:24.695+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T19:10:24.695+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-12T19:10:24.695+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-12T19:10:26.243+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-12T19:10:26.243+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-12T19:10:26.244+01:00 level=INFO msg="JSONL content changed, proceeding with operation..." mode=auto-import
+time=2026-02-12T19:10:26.265+01:00 level=INFO msg="Imported from JSONL"
+time=2026-02-12T19:10:26.271+01:00 level=INFO msg="Auto-import complete"
+time=2026-02-12T19:10:28.231+01:00 level=INFO msg="Mutation detected" type=update issue_id=Synaxis-ds7l
+time=2026-02-12T19:10:28.731+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-12T19:10:28.732+01:00 level=INFO msg=Starting mode=export
+time=2026-02-12T19:10:28.733+01:00 level=INFO msg="JSONL changed externally, importing before export"
+time=2026-02-12T19:10:28.763+01:00 level=INFO msg="Auto-import complete, proceeding with export"
+time=2026-02-12T19:10:28.798+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T19:10:28.830+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-12T19:10:28.830+01:00 level=INFO msg="Export complete"
+time=2026-02-12T19:10:29.800+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-12T19:10:29.802+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-12T19:10:29.807+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T19:10:29.807+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-12T19:10:29.807+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-12T19:10:30.996+01:00 level=INFO msg="Mutation detected" type=status issue_id=Synaxis-ds7l
+time=2026-02-12T19:10:31.411+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-12T19:10:31.411+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-12T19:10:31.412+01:00 level=INFO msg="JSONL content changed, proceeding with operation..." mode=auto-import
+time=2026-02-12T19:10:31.432+01:00 level=INFO msg="Imported from JSONL"
+time=2026-02-12T19:10:31.436+01:00 level=INFO msg="Auto-import complete"
+time=2026-02-12T19:10:31.497+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-12T19:10:31.497+01:00 level=INFO msg=Starting mode=export
+time=2026-02-12T19:10:31.504+01:00 level=INFO msg="JSONL changed externally, importing before export"
+time=2026-02-12T19:10:31.535+01:00 level=INFO msg="Auto-import complete, proceeding with export"
+time=2026-02-12T19:10:31.568+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T19:10:31.568+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T19:10:31.584+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-12T19:10:31.584+01:00 level=INFO msg="Export complete"
+time=2026-02-12T19:10:32.569+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-12T19:10:32.569+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-12T19:10:32.575+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T19:10:32.575+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-12T19:10:32.575+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-12T19:10:34.129+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-12T19:10:34.129+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-12T19:10:34.130+01:00 level=INFO msg="JSONL content changed, proceeding with operation..." mode=auto-import
+time=2026-02-12T19:10:34.157+01:00 level=INFO msg="Imported from JSONL"
+time=2026-02-12T19:10:34.163+01:00 level=INFO msg="Auto-import complete"
+time=2026-02-12T19:11:43.099+01:00 level=INFO msg="Mutation detected" type=status issue_id=Synaxis-koc1
+time=2026-02-12T19:11:43.600+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-12T19:11:43.601+01:00 level=INFO msg=Starting mode=export
+time=2026-02-12T19:11:43.601+01:00 level=INFO msg="JSONL changed externally, importing before export"
+time=2026-02-12T19:11:43.629+01:00 level=INFO msg="Auto-import complete, proceeding with export"
+time=2026-02-12T19:11:43.665+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T19:11:43.665+01:00 level=INFO msg="JSONL removed/renamed, re-establishing watch"
+time=2026-02-12T19:11:43.684+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-12T19:11:43.684+01:00 level=INFO msg="Export complete"
+time=2026-02-12T19:11:43.716+01:00 level=INFO msg="Successfully re-established JSONL watch" delay=50ms
+time=2026-02-12T19:11:44.718+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-12T19:11:44.726+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-12T19:11:44.732+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T19:11:44.732+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-12T19:11:44.732+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-12T19:11:46.225+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-12T19:11:46.225+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-12T19:11:46.229+01:00 level=INFO msg="JSONL content changed, proceeding with operation..." mode=auto-import
+time=2026-02-12T19:11:46.256+01:00 level=INFO msg="Imported from JSONL"
+time=2026-02-12T19:11:46.260+01:00 level=INFO msg="Auto-import complete"
+time=2026-02-12T19:54:40.246+01:00 level=INFO msg="Mutation detected" type=create issue_id=Synaxis-v5n2
+time=2026-02-12T19:54:40.747+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-12T19:54:40.747+01:00 level=INFO msg=Starting mode=export
+time=2026-02-12T19:54:40.748+01:00 level=INFO msg="JSONL changed externally, importing before export"
+time=2026-02-12T19:54:40.783+01:00 level=INFO msg="Auto-import complete, proceeding with export"
+time=2026-02-12T19:54:40.841+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T19:54:40.841+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T19:54:40.895+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-12T19:54:40.895+01:00 level=INFO msg="Export complete"
+time=2026-02-12T19:54:41.846+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-12T19:54:41.847+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-12T19:54:41.854+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T19:54:41.855+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-12T19:54:41.855+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-12T19:54:43.423+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-12T19:54:43.423+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-12T19:54:43.424+01:00 level=INFO msg="JSONL content changed, proceeding with operation..." mode=auto-import
+time=2026-02-12T19:54:43.453+01:00 level=INFO msg="Imported from JSONL"
+time=2026-02-12T19:54:43.462+01:00 level=INFO msg="Auto-import complete"
+time=2026-02-12T19:54:58.615+01:00 level=INFO msg="Mutation detected" type=status issue_id=Synaxis-v5n2
+time=2026-02-12T19:54:59.115+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-12T19:54:59.116+01:00 level=INFO msg=Starting mode=export
+time=2026-02-12T19:54:59.118+01:00 level=INFO msg="JSONL changed externally, importing before export"
+time=2026-02-12T19:54:59.148+01:00 level=INFO msg="Auto-import complete, proceeding with export"
+time=2026-02-12T19:54:59.184+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T19:54:59.184+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T19:54:59.212+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-12T19:54:59.212+01:00 level=INFO msg="Export complete"
+time=2026-02-12T19:55:00.185+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-12T19:55:00.186+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-12T19:55:00.189+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T19:55:00.189+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-12T19:55:00.189+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-12T19:55:01.726+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-12T19:55:01.726+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-12T19:55:01.727+01:00 level=INFO msg="JSONL content changed, proceeding with operation..." mode=auto-import
+time=2026-02-12T19:55:01.753+01:00 level=INFO msg="Imported from JSONL"
+time=2026-02-12T19:55:01.757+01:00 level=INFO msg="Auto-import complete"
+time=2026-02-12T20:09:23.508+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T20:09:23.508+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T20:09:23.771+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T20:09:23.856+01:00 level=INFO msg="Git ref change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.git/refs/heads/main.lock
+time=2026-02-12T20:09:23.985+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T20:09:24.986+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-12T20:09:24.986+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-12T20:09:25.496+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T20:09:25.496+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T20:09:26.497+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-12T20:09:26.499+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-12T20:09:26.566+01:00 level=INFO msg="Pull failed" error="git pull failed: exit status 1\nFrom github.com:rudironsoni/Synaxis\n * branch            main       -> FETCH_HEAD\nThere are no candidates for merging among the refs that you just fetched.\nGenerally this means that you provided a wildcard refspec which had no\nmatches on the remote end.\n" backoff=1m0s
+time=2026-02-12T20:09:27.984+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-12T20:09:27.984+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-12T20:09:27.985+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-12T20:33:26.525+01:00 level=INFO msg="Mutation detected" type=status issue_id=Synaxis-69rj
+time=2026-02-12T20:33:27.025+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-12T20:33:27.025+01:00 level=INFO msg=Starting mode=export
+time=2026-02-12T20:33:27.062+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T20:33:27.081+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-12T20:33:27.081+01:00 level=INFO msg="Export complete"
+time=2026-02-12T20:33:28.063+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-12T20:33:28.063+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-12T20:33:28.067+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T20:33:28.067+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-12T20:33:28.067+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-12T20:33:29.685+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-12T20:33:29.685+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-12T20:33:29.685+01:00 level=INFO msg="JSONL content changed, proceeding with operation..." mode=auto-import
+time=2026-02-12T20:33:29.718+01:00 level=INFO msg="Imported from JSONL"
+time=2026-02-12T20:33:29.722+01:00 level=INFO msg="Auto-import complete"
+time=2026-02-12T23:21:15.993+01:00 level=INFO msg="Mutation detected" type=status issue_id=Synaxis-koc1
+time=2026-02-12T23:21:16.493+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-12T23:21:16.494+01:00 level=INFO msg=Starting mode=export
+time=2026-02-12T23:21:16.496+01:00 level=INFO msg="JSONL changed externally, importing before export"
+time=2026-02-12T23:21:16.531+01:00 level=INFO msg="Auto-import complete, proceeding with export"
+time=2026-02-12T23:21:16.605+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T23:21:16.605+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T23:21:16.657+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-12T23:21:16.657+01:00 level=INFO msg="Export complete"
+time=2026-02-12T23:21:17.606+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-12T23:21:17.607+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-12T23:21:17.610+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T23:21:17.610+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-12T23:21:17.610+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-12T23:21:19.188+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-12T23:21:19.188+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-12T23:21:19.189+01:00 level=INFO msg="JSONL content changed, proceeding with operation..." mode=auto-import
+time=2026-02-12T23:21:19.224+01:00 level=INFO msg="Imported from JSONL"
+time=2026-02-12T23:21:19.229+01:00 level=INFO msg="Auto-import complete"
+time=2026-02-12T23:33:33.532+01:00 level=INFO msg="Mutation detected" type=status issue_id=Synaxis-eewb
+time=2026-02-12T23:33:34.032+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-12T23:33:34.032+01:00 level=INFO msg=Starting mode=export
+time=2026-02-12T23:33:34.034+01:00 level=INFO msg="JSONL changed externally, importing before export"
+time=2026-02-12T23:33:34.065+01:00 level=INFO msg="Auto-import complete, proceeding with export"
+time=2026-02-12T23:33:34.119+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T23:33:34.119+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T23:33:34.166+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-12T23:33:34.166+01:00 level=INFO msg="Export complete"
+time=2026-02-12T23:33:35.164+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-12T23:33:35.171+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-12T23:33:35.179+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T23:33:35.179+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-12T23:33:35.179+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-12T23:33:37.177+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-12T23:33:37.177+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-12T23:33:37.178+01:00 level=INFO msg="JSONL content changed, proceeding with operation..." mode=auto-import
+time=2026-02-12T23:33:37.207+01:00 level=INFO msg="Imported from JSONL"
+time=2026-02-12T23:33:37.212+01:00 level=INFO msg="Auto-import complete"
+time=2026-02-12T23:42:32.391+01:00 level=INFO msg="Mutation detected" type=status issue_id=Synaxis-eewb
+time=2026-02-12T23:42:32.892+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-12T23:42:32.892+01:00 level=INFO msg=Starting mode=export
+time=2026-02-12T23:42:32.894+01:00 level=INFO msg="JSONL changed externally, importing before export"
+time=2026-02-12T23:42:32.958+01:00 level=INFO msg="Auto-import complete, proceeding with export"
+time=2026-02-12T23:42:33.033+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T23:42:33.033+01:00 level=INFO msg="JSONL removed/renamed, re-establishing watch"
+time=2026-02-12T23:42:33.060+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-12T23:42:33.060+01:00 level=INFO msg="Export complete"
+time=2026-02-12T23:42:33.084+01:00 level=INFO msg="Successfully re-established JSONL watch" delay=50ms
+time=2026-02-12T23:42:34.086+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-12T23:42:34.086+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-12T23:42:34.090+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-12T23:42:34.091+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-12T23:42:34.091+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-12T23:42:35.651+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-12T23:42:35.651+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-12T23:42:35.653+01:00 level=INFO msg="JSONL content changed, proceeding with operation..." mode=auto-import
+time=2026-02-12T23:42:35.676+01:00 level=INFO msg="Imported from JSONL"
+time=2026-02-12T23:42:35.682+01:00 level=INFO msg="Auto-import complete"
+time=2026-02-13T07:00:01.012+01:00 level=INFO msg="Mutation detected" type=status issue_id=Synaxis-cg3a
+time=2026-02-13T07:00:01.513+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-13T07:00:01.513+01:00 level=INFO msg=Starting mode=export
+time=2026-02-13T07:00:01.514+01:00 level=INFO msg="JSONL changed externally, importing before export"
+time=2026-02-13T07:00:01.541+01:00 level=INFO msg="Auto-import complete, proceeding with export"
+time=2026-02-13T07:00:01.577+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:00:01.595+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-13T07:00:01.595+01:00 level=INFO msg="Export complete"
+time=2026-02-13T07:00:02.578+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T07:00:02.578+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T07:00:02.581+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:00:02.581+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-13T07:00:02.581+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-13T07:00:04.100+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T07:00:04.100+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T07:00:04.101+01:00 level=INFO msg="JSONL content changed, proceeding with operation..." mode=auto-import
+time=2026-02-13T07:00:04.124+01:00 level=INFO msg="Imported from JSONL"
+time=2026-02-13T07:00:04.128+01:00 level=INFO msg="Auto-import complete"
+time=2026-02-13T07:07:10.205+01:00 level=INFO msg="Mutation detected" type=status issue_id=Synaxis-cg3a
+time=2026-02-13T07:07:10.707+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-13T07:07:10.709+01:00 level=INFO msg=Starting mode=export
+time=2026-02-13T07:07:10.739+01:00 level=INFO msg="JSONL changed externally, importing before export"
+time=2026-02-13T07:07:10.772+01:00 level=INFO msg="Auto-import complete, proceeding with export"
+time=2026-02-13T07:07:10.828+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:07:10.906+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-13T07:07:10.906+01:00 level=INFO msg="Export complete"
+time=2026-02-13T07:07:11.857+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T07:07:11.860+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T07:07:11.887+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:07:11.887+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-13T07:07:11.887+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-13T07:07:13.480+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T07:07:13.480+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T07:07:13.482+01:00 level=INFO msg="JSONL content changed, proceeding with operation..." mode=auto-import
+time=2026-02-13T07:07:13.545+01:00 level=INFO msg="Imported from JSONL"
+time=2026-02-13T07:07:13.557+01:00 level=INFO msg="Auto-import complete"
+time=2026-02-13T07:14:19.135+01:00 level=INFO msg="Mutation detected" type=status issue_id=Synaxis-d37
+time=2026-02-13T07:14:19.635+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-13T07:14:19.636+01:00 level=INFO msg=Starting mode=export
+time=2026-02-13T07:14:19.636+01:00 level=INFO msg="JSONL changed externally, importing before export"
+time=2026-02-13T07:14:19.663+01:00 level=INFO msg="Auto-import complete, proceeding with export"
+time=2026-02-13T07:14:19.698+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:14:19.698+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:14:19.718+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-13T07:14:19.718+01:00 level=INFO msg="Export complete"
+time=2026-02-13T07:14:20.700+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T07:14:20.700+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T07:14:20.704+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:14:20.705+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-13T07:14:20.705+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-13T07:14:22.295+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T07:14:22.295+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T07:14:22.296+01:00 level=INFO msg="JSONL content changed, proceeding with operation..." mode=auto-import
+time=2026-02-13T07:14:22.319+01:00 level=INFO msg="Imported from JSONL"
+time=2026-02-13T07:14:22.324+01:00 level=INFO msg="Auto-import complete"
+time=2026-02-13T07:17:44.473+01:00 level=INFO msg="Mutation detected" type=create issue_id=Synaxis-0lvh
+time=2026-02-13T07:17:44.974+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-13T07:17:44.974+01:00 level=INFO msg=Starting mode=export
+time=2026-02-13T07:17:44.975+01:00 level=INFO msg="JSONL changed externally, importing before export"
+time=2026-02-13T07:17:45.006+01:00 level=INFO msg="Auto-import complete, proceeding with export"
+time=2026-02-13T07:17:45.044+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:17:45.045+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:17:45.074+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-13T07:17:45.074+01:00 level=INFO msg="Export complete"
+time=2026-02-13T07:17:46.047+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T07:17:46.051+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T07:17:46.055+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:17:46.055+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-13T07:17:46.055+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-13T07:17:47.617+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T07:17:47.617+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T07:17:47.618+01:00 level=INFO msg="JSONL content changed, proceeding with operation..." mode=auto-import
+time=2026-02-13T07:17:47.648+01:00 level=INFO msg="Imported from JSONL"
+time=2026-02-13T07:17:47.662+01:00 level=INFO msg="Auto-import complete"
+time=2026-02-13T07:17:48.638+01:00 level=INFO msg="Mutation detected" type=status issue_id=Synaxis-0lvh
+time=2026-02-13T07:17:49.138+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-13T07:17:49.138+01:00 level=INFO msg=Starting mode=export
+time=2026-02-13T07:17:49.140+01:00 level=INFO msg="JSONL changed externally, importing before export"
+time=2026-02-13T07:17:49.166+01:00 level=INFO msg="Auto-import complete, proceeding with export"
+time=2026-02-13T07:17:49.206+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:17:49.222+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-13T07:17:49.222+01:00 level=INFO msg="Export complete"
+time=2026-02-13T07:17:50.208+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T07:17:50.208+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T07:17:50.212+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:17:50.212+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-13T07:17:50.212+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-13T07:17:51.801+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T07:17:51.801+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T07:17:51.802+01:00 level=INFO msg="JSONL content changed, proceeding with operation..." mode=auto-import
+time=2026-02-13T07:17:51.823+01:00 level=INFO msg="Imported from JSONL"
+time=2026-02-13T07:17:51.827+01:00 level=INFO msg="Auto-import complete"
+time=2026-02-13T07:18:05.634+01:00 level=INFO msg="Mutation detected" type=create issue_id=Synaxis-bmf4
+time=2026-02-13T07:18:06.135+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-13T07:18:06.135+01:00 level=INFO msg=Starting mode=export
+time=2026-02-13T07:18:06.136+01:00 level=INFO msg="JSONL changed externally, importing before export"
+time=2026-02-13T07:18:06.167+01:00 level=INFO msg="Auto-import complete, proceeding with export"
+time=2026-02-13T07:18:06.202+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:18:06.202+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:18:06.240+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-13T07:18:06.240+01:00 level=INFO msg="Export complete"
+time=2026-02-13T07:18:07.205+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T07:18:07.209+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T07:18:07.214+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:18:07.214+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-13T07:18:07.214+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-13T07:18:08.800+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T07:18:08.800+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T07:18:08.801+01:00 level=INFO msg="JSONL content changed, proceeding with operation..." mode=auto-import
+time=2026-02-13T07:18:08.822+01:00 level=INFO msg="Imported from JSONL"
+time=2026-02-13T07:18:08.826+01:00 level=INFO msg="Auto-import complete"
+time=2026-02-13T07:18:48.259+01:00 level=INFO msg="Mutation detected" type=status issue_id=Synaxis-bmf4
+time=2026-02-13T07:18:48.760+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-13T07:18:48.760+01:00 level=INFO msg=Starting mode=export
+time=2026-02-13T07:18:48.761+01:00 level=INFO msg="JSONL changed externally, importing before export"
+time=2026-02-13T07:18:48.790+01:00 level=INFO msg="Auto-import complete, proceeding with export"
+time=2026-02-13T07:18:48.827+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:18:48.845+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-13T07:18:48.845+01:00 level=INFO msg="Export complete"
+time=2026-02-13T07:18:49.829+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T07:18:49.829+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T07:18:49.832+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:18:49.833+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-13T07:18:49.833+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-13T07:18:51.387+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T07:18:51.387+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T07:18:51.388+01:00 level=INFO msg="JSONL content changed, proceeding with operation..." mode=auto-import
+time=2026-02-13T07:18:51.423+01:00 level=INFO msg="Imported from JSONL"
+time=2026-02-13T07:18:51.428+01:00 level=INFO msg="Auto-import complete"
+time=2026-02-13T07:28:46.530+01:00 level=INFO msg="Mutation detected" type=status issue_id=Synaxis-0lvh
+time=2026-02-13T07:28:47.031+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-13T07:28:47.032+01:00 level=INFO msg=Starting mode=export
+time=2026-02-13T07:28:47.033+01:00 level=INFO msg="JSONL changed externally, importing before export"
+time=2026-02-13T07:28:47.091+01:00 level=INFO msg="Auto-import complete, proceeding with export"
+time=2026-02-13T07:28:47.221+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:28:47.326+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-13T07:28:47.326+01:00 level=INFO msg="Export complete"
+time=2026-02-13T07:28:48.469+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T07:28:48.484+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T07:28:48.564+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:28:48.564+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-13T07:28:48.564+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-13T07:28:50.340+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T07:28:50.340+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T07:28:50.345+01:00 level=INFO msg="JSONL content changed, proceeding with operation..." mode=auto-import
+time=2026-02-13T07:28:50.417+01:00 level=INFO msg="Imported from JSONL"
+time=2026-02-13T07:28:50.422+01:00 level=INFO msg="Auto-import complete"
+time=2026-02-13T07:34:41.195+01:00 level=INFO msg="Mutation detected" type=create issue_id=Synaxis-1qrl
+time=2026-02-13T07:34:41.696+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-13T07:34:41.696+01:00 level=INFO msg=Starting mode=export
+time=2026-02-13T07:34:41.697+01:00 level=INFO msg="JSONL changed externally, importing before export"
+time=2026-02-13T07:34:41.724+01:00 level=INFO msg="Auto-import complete, proceeding with export"
+time=2026-02-13T07:34:41.761+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:34:41.778+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-13T07:34:41.778+01:00 level=INFO msg="Export complete"
+time=2026-02-13T07:34:42.762+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T07:34:42.762+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T07:34:42.766+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:34:42.766+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-13T07:34:42.766+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-13T07:34:43.970+01:00 level=INFO msg="Mutation detected" type=status issue_id=Synaxis-1qrl
+time=2026-02-13T07:34:44.242+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T07:34:44.242+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T07:34:44.245+01:00 level=INFO msg="JSONL content changed, proceeding with operation..." mode=auto-import
+time=2026-02-13T07:34:44.327+01:00 level=INFO msg="Imported from JSONL"
+time=2026-02-13T07:34:44.332+01:00 level=INFO msg="Auto-import complete"
+time=2026-02-13T07:34:44.470+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-13T07:34:44.471+01:00 level=INFO msg=Starting mode=export
+time=2026-02-13T07:34:44.471+01:00 level=INFO msg="JSONL changed externally, importing before export"
+time=2026-02-13T07:34:44.559+01:00 level=INFO msg="Auto-import complete, proceeding with export"
+time=2026-02-13T07:34:44.625+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:34:44.625+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:34:44.645+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-13T07:34:44.645+01:00 level=INFO msg="Export complete"
+time=2026-02-13T07:34:45.626+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T07:34:45.639+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T07:34:45.643+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:34:45.643+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-13T07:34:45.643+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-13T07:34:47.349+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T07:34:47.350+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T07:34:47.352+01:00 level=INFO msg="JSONL content changed, proceeding with operation..." mode=auto-import
+time=2026-02-13T07:34:47.423+01:00 level=INFO msg="Imported from JSONL"
+time=2026-02-13T07:34:47.428+01:00 level=INFO msg="Auto-import complete"
+time=2026-02-13T07:35:36.868+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:35:36.868+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:35:37.696+01:00 level=INFO msg="Git ref change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.git/refs/heads/main.lock
+time=2026-02-13T07:35:37.869+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T07:35:37.884+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T07:35:38.701+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T07:35:38.701+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T07:35:39.715+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T07:35:39.715+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T07:35:39.716+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-13T07:35:40.722+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T07:35:40.722+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T07:35:40.723+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-13T07:35:41.390+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:35:41.390+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:35:42.407+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T07:35:42.407+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T07:35:44.004+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T07:35:44.004+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T07:35:44.009+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-13T07:35:45.173+01:00 level=INFO msg="Mutation detected" type=status issue_id=Synaxis-1qrl
+time=2026-02-13T07:35:45.674+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-13T07:35:45.674+01:00 level=INFO msg=Starting mode=export
+time=2026-02-13T07:35:45.770+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:35:45.770+01:00 level=INFO msg="JSONL removed/renamed, re-establishing watch"
+time=2026-02-13T07:35:45.787+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-13T07:35:45.787+01:00 level=INFO msg="Export complete"
+time=2026-02-13T07:35:45.820+01:00 level=INFO msg="Successfully re-established JSONL watch" delay=50ms
+time=2026-02-13T07:35:46.821+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T07:35:46.822+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T07:35:46.831+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:35:46.831+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-13T07:35:46.831+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-13T07:35:48.467+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:35:48.467+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:35:48.623+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T07:35:48.623+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T07:35:48.624+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-13T07:35:49.467+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T07:35:49.468+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T07:35:49.536+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:35:49.536+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-13T07:35:49.536+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-13T07:35:50.242+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:35:50.242+01:00 level=INFO msg="JSONL removed/renamed, re-establishing watch"
+time=2026-02-13T07:35:50.293+01:00 level=INFO msg="Successfully re-established JSONL watch" delay=50ms
+time=2026-02-13T07:35:50.293+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:35:51.183+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T07:35:51.183+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T07:35:51.186+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-13T07:35:51.294+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T07:35:51.296+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T07:35:51.322+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:35:51.322+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-13T07:35:51.322+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-13T07:35:52.994+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T07:35:52.994+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T07:35:52.996+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-13T07:35:58.924+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:35:58.924+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:35:59.038+01:00 level=INFO msg="Git ref change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.git/refs/heads/main.lock
+time=2026-02-13T07:36:00.040+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T07:36:00.043+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T07:36:00.624+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:36:00.625+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:36:01.638+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T07:36:01.640+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T07:36:01.839+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T07:36:01.839+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T07:36:01.840+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-13T07:36:03.133+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T07:36:03.134+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T07:36:03.135+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-13T07:43:27.716+01:00 level=INFO msg="Mutation detected" type=status issue_id=Synaxis-bmf4
+time=2026-02-13T07:43:28.217+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-13T07:43:28.217+01:00 level=INFO msg=Starting mode=export
+time=2026-02-13T07:43:28.271+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:43:28.309+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-13T07:43:28.309+01:00 level=INFO msg="Export complete"
+time=2026-02-13T07:43:29.272+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T07:43:29.273+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T07:43:29.278+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:43:29.278+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-13T07:43:29.279+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-13T07:43:30.831+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T07:43:30.831+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T07:43:30.834+01:00 level=INFO msg="JSONL content changed, proceeding with operation..." mode=auto-import
+time=2026-02-13T07:43:30.880+01:00 level=INFO msg="Imported from JSONL"
+time=2026-02-13T07:43:30.884+01:00 level=INFO msg="Auto-import complete"
+time=2026-02-13T07:43:36.313+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:43:36.313+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:43:36.473+01:00 level=INFO msg="Git ref change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.git/refs/heads/main.lock
+time=2026-02-13T07:43:37.520+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T07:43:37.523+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T07:43:39.341+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T07:43:39.341+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T07:43:39.342+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-13T07:43:39.702+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:43:39.702+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:43:40.703+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T07:43:40.704+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T07:43:42.212+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T07:43:42.213+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T07:43:42.214+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-13T07:43:46.305+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:43:46.305+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T07:43:47.306+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T07:43:47.309+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T07:43:48.901+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T07:43:48.901+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T07:43:48.903+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-13T08:41:11.311+01:00 level=INFO msg="Mutation detected" type=status issue_id=Synaxis-d37
+time=2026-02-13T08:41:11.777+01:00 level=INFO msg="Mutation detected" type=create issue_id=Synaxis-33ab
+time=2026-02-13T08:41:12.277+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-13T08:41:12.278+01:00 level=INFO msg=Starting mode=export
+time=2026-02-13T08:41:12.331+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T08:41:12.331+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T08:41:12.352+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-13T08:41:12.353+01:00 level=INFO msg="Export complete"
+time=2026-02-13T08:41:13.333+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T08:41:13.333+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T08:41:13.336+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T08:41:13.336+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-13T08:41:13.336+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-13T08:41:14.941+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T08:41:14.941+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T08:41:14.942+01:00 level=INFO msg="JSONL content changed, proceeding with operation..." mode=auto-import
+time=2026-02-13T08:41:14.966+01:00 level=INFO msg="Imported from JSONL"
+time=2026-02-13T08:41:14.970+01:00 level=INFO msg="Auto-import complete"
+time=2026-02-13T10:05:57.969+01:00 level=INFO msg="Mutation detected" type=status issue_id=Synaxis-33ab
+time=2026-02-13T10:05:58.469+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-13T10:05:58.470+01:00 level=INFO msg=Starting mode=export
+time=2026-02-13T10:05:58.470+01:00 level=INFO msg="JSONL changed externally, importing before export"
+time=2026-02-13T10:05:58.497+01:00 level=INFO msg="Auto-import complete, proceeding with export"
+time=2026-02-13T10:05:58.533+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T10:05:58.550+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-13T10:05:58.550+01:00 level=INFO msg="Export complete"
+time=2026-02-13T10:05:59.533+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T10:05:59.534+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T10:05:59.540+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T10:05:59.540+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-13T10:05:59.540+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-13T10:06:01.049+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T10:06:01.049+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T10:06:01.050+01:00 level=INFO msg="JSONL content changed, proceeding with operation..." mode=auto-import
+time=2026-02-13T10:06:01.071+01:00 level=INFO msg="Imported from JSONL"
+time=2026-02-13T10:06:01.075+01:00 level=INFO msg="Auto-import complete"
+time=2026-02-13T10:42:29.069+01:00 level=INFO msg="Mutation detected" type=status issue_id=Synaxis-33ab
+time=2026-02-13T10:42:29.569+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-13T10:42:29.569+01:00 level=INFO msg=Starting mode=export
+time=2026-02-13T10:42:29.570+01:00 level=INFO msg="JSONL changed externally, importing before export"
+time=2026-02-13T10:42:29.606+01:00 level=INFO msg="Auto-import complete, proceeding with export"
+time=2026-02-13T10:42:29.611+01:00 level=INFO msg="Mutation detected" type=create issue_id=Synaxis-dmq6
+time=2026-02-13T10:42:29.642+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T10:42:29.663+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-13T10:42:29.663+01:00 level=INFO msg="Export complete"
+time=2026-02-13T10:42:30.111+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-13T10:42:30.113+01:00 level=INFO msg=Starting mode=export
+time=2026-02-13T10:42:30.117+01:00 level=INFO msg="JSONL changed externally, importing before export"
+time=2026-02-13T10:42:30.156+01:00 level=INFO msg="Auto-import complete, proceeding with export"
+time=2026-02-13T10:42:30.192+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T10:42:30.192+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T10:42:30.209+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-13T10:42:30.209+01:00 level=INFO msg="Export complete"
+time=2026-02-13T10:42:30.642+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T10:42:30.643+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T10:42:30.648+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T10:42:30.648+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-13T10:42:30.648+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-13T10:42:31.193+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T10:42:31.197+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T10:42:31.203+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T10:42:31.203+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-13T10:42:31.203+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-13T10:42:32.324+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T10:42:32.324+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T10:42:32.326+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-13T10:42:32.746+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T10:42:32.746+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T10:42:32.747+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-13T12:26:00.969+01:00 level=INFO msg="Mutation detected" type=status issue_id=Synaxis-dmq6
+time=2026-02-13T12:26:01.470+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-13T12:26:01.470+01:00 level=INFO msg=Starting mode=export
+time=2026-02-13T12:26:01.505+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T12:26:01.521+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-13T12:26:01.521+01:00 level=INFO msg="Export complete"
+time=2026-02-13T12:26:02.507+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T12:26:02.507+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T12:26:02.511+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T12:26:02.511+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-13T12:26:02.511+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-13T12:26:04.132+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T12:26:04.132+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T12:26:04.134+01:00 level=INFO msg="JSONL content changed, proceeding with operation..." mode=auto-import
+time=2026-02-13T12:26:04.183+01:00 level=INFO msg="Imported from JSONL"
+time=2026-02-13T12:26:04.191+01:00 level=INFO msg="Auto-import complete"
+time=2026-02-13T12:52:33.102+01:00 level=INFO msg="Mutation detected" type=update issue_id=Synaxis-dmq6
+time=2026-02-13T12:52:33.602+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-13T12:52:33.603+01:00 level=INFO msg=Starting mode=export
+time=2026-02-13T12:52:33.604+01:00 level=INFO msg="JSONL changed externally, importing before export"
+time=2026-02-13T12:52:33.669+01:00 level=INFO msg="Auto-import complete, proceeding with export"
+time=2026-02-13T12:52:33.743+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T12:52:33.744+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T12:52:33.785+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-13T12:52:33.785+01:00 level=INFO msg="Export complete"
+time=2026-02-13T12:52:34.745+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T12:52:34.755+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T12:52:34.760+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T12:52:34.760+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-13T12:52:34.760+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-13T12:52:36.327+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T12:52:36.327+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T12:52:36.329+01:00 level=INFO msg="JSONL content changed, proceeding with operation..." mode=auto-import
+time=2026-02-13T12:52:36.363+01:00 level=INFO msg="Imported from JSONL"
+time=2026-02-13T12:52:36.373+01:00 level=INFO msg="Auto-import complete"
+time=2026-02-13T12:52:40.600+01:00 level=INFO msg="Mutation detected" type=update issue_id=Synaxis-dmq6
+time=2026-02-13T12:52:41.124+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-13T12:52:41.125+01:00 level=INFO msg=Starting mode=export
+time=2026-02-13T12:52:41.126+01:00 level=INFO msg="JSONL changed externally, importing before export"
+time=2026-02-13T12:52:41.164+01:00 level=INFO msg="Auto-import complete, proceeding with export"
+time=2026-02-13T12:52:41.227+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T12:52:41.227+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T12:52:41.286+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-13T12:52:41.286+01:00 level=INFO msg="Export complete"
+time=2026-02-13T12:52:42.228+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T12:52:42.228+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T12:52:42.233+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T12:52:42.233+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-13T12:52:42.233+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-13T12:52:42.971+01:00 level=INFO msg="Mutation detected" type=status issue_id=Synaxis-dmq6
+time=2026-02-13T12:52:43.225+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T12:52:43.225+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T12:52:43.471+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-13T12:52:43.476+01:00 level=INFO msg=Starting mode=export
+time=2026-02-13T12:52:43.477+01:00 level=INFO msg="JSONL changed externally, importing before export"
+time=2026-02-13T12:52:43.545+01:00 level=INFO msg="Auto-import complete, proceeding with export"
+time=2026-02-13T12:52:43.651+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T12:52:43.682+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-13T12:52:43.682+01:00 level=INFO msg="Export complete"
+time=2026-02-13T12:52:43.870+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T12:52:43.870+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T12:52:43.871+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-13T12:52:44.682+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T12:52:44.683+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T12:52:44.697+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T12:52:44.697+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-13T12:52:44.697+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-13T12:52:46.394+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T12:52:46.394+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T12:52:46.399+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-13T12:52:58.793+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T12:52:58.793+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T12:52:58.959+01:00 level=INFO msg="Git ref change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.git/refs/heads/main.lock
+time=2026-02-13T12:52:59.960+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T12:52:59.968+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T12:53:01.528+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T12:53:01.528+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T12:53:01.529+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-13T12:53:01.849+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T12:53:01.849+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T12:53:02.850+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T12:53:02.850+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T12:53:03.679+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T12:53:03.679+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T12:53:04.424+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T12:53:04.424+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T12:53:04.432+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-13T12:53:04.681+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T12:53:04.682+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T12:53:06.362+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T12:53:06.362+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T12:53:06.363+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-13T12:58:11.567+01:00 level=INFO msg="Mutation detected" type=update issue_id=Synaxis-q9sl
+time=2026-02-13T12:58:12.067+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-13T12:58:12.067+01:00 level=INFO msg=Starting mode=export
+time=2026-02-13T12:58:12.121+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T12:58:12.162+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-13T12:58:12.162+01:00 level=INFO msg="Export complete"
+time=2026-02-13T12:58:13.123+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T12:58:13.124+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T12:58:13.130+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T12:58:13.130+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-13T12:58:13.130+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-13T12:58:14.741+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T12:58:14.741+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T12:58:14.742+01:00 level=INFO msg="JSONL content changed, proceeding with operation..." mode=auto-import
+time=2026-02-13T12:58:14.774+01:00 level=INFO msg="Imported from JSONL"
+time=2026-02-13T12:58:14.779+01:00 level=INFO msg="Auto-import complete"
+time=2026-02-13T13:07:41.519+01:00 level=INFO msg="Mutation detected" type=update issue_id=Synaxis-q9sl
+time=2026-02-13T13:07:42.020+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-13T13:07:42.020+01:00 level=INFO msg=Starting mode=export
+time=2026-02-13T13:07:42.021+01:00 level=INFO msg="JSONL changed externally, importing before export"
+time=2026-02-13T13:07:42.049+01:00 level=INFO msg="Auto-import complete, proceeding with export"
+time=2026-02-13T13:07:42.084+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T13:07:42.085+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T13:07:42.102+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-13T13:07:42.102+01:00 level=INFO msg="Export complete"
+time=2026-02-13T13:07:42.678+01:00 level=INFO msg="Mutation detected" type=status issue_id=Synaxis-q9sl
+time=2026-02-13T13:07:43.085+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T13:07:43.085+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T13:07:43.090+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T13:07:43.090+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-13T13:07:43.090+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-13T13:07:43.178+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-13T13:07:43.178+01:00 level=INFO msg=Starting mode=export
+time=2026-02-13T13:07:43.179+01:00 level=INFO msg="JSONL changed externally, importing before export"
+time=2026-02-13T13:07:43.215+01:00 level=INFO msg="Auto-import complete, proceeding with export"
+time=2026-02-13T13:07:43.251+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T13:07:43.251+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T13:07:43.274+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-13T13:07:43.274+01:00 level=INFO msg="Export complete"
+time=2026-02-13T13:07:44.252+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T13:07:44.256+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T13:07:44.259+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T13:07:44.259+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-13T13:07:44.259+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-13T13:07:44.608+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T13:07:44.608+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T13:07:44.609+01:00 level=INFO msg="JSONL content changed, proceeding with operation..." mode=auto-import
+time=2026-02-13T13:07:44.631+01:00 level=INFO msg="Imported from JSONL"
+time=2026-02-13T13:07:44.635+01:00 level=INFO msg="Auto-import complete"
+time=2026-02-13T13:07:45.815+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T13:07:45.815+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T13:07:45.816+01:00 level=INFO msg="JSONL content changed, proceeding with operation..." mode=auto-import
+time=2026-02-13T13:07:45.853+01:00 level=INFO msg="Imported from JSONL"
+time=2026-02-13T13:07:45.858+01:00 level=INFO msg="Auto-import complete"
+time=2026-02-13T13:07:50.630+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T13:07:50.630+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T13:07:50.725+01:00 level=INFO msg="Git ref change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.git/refs/heads/main.lock
+time=2026-02-13T13:07:51.727+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T13:07:51.729+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T13:07:53.233+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T13:07:53.233+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T13:07:53.234+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-13T13:07:56.489+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T13:07:56.489+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T13:07:57.441+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T13:07:57.441+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T13:07:57.490+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T13:07:57.492+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T13:07:58.442+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T13:07:58.442+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T13:07:58.963+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T13:07:58.963+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T13:07:58.964+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-13T13:07:59.989+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T13:07:59.989+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T13:07:59.989+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
