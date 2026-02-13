@@ -64,6 +64,8 @@ namespace Synaxis.Infrastructure.Data
 
         public DbSet<PasswordHistory> PasswordHistories { get; set; }
 
+        public DbSet<OrganizationApiKey> OrganizationApiKeys { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -921,6 +923,55 @@ namespace Synaxis.Infrastructure.Data
             // Configure table names for new entities
             modelBuilder.Entity<PasswordPolicy>().ToTable("password_policies");
             modelBuilder.Entity<PasswordHistory>().ToTable("password_histories");
+            modelBuilder.Entity<OrganizationApiKey>().ToTable("organization_api_keys");
+
+            // Configure OrganizationApiKeys
+            modelBuilder.Entity<OrganizationApiKey>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id)
+                    .HasColumnName("id")
+                    .ValueGeneratedOnAdd();
+
+                entity.Property(e => e.OrganizationId).HasColumnName("organization_id");
+                entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+                entity.Property(e => e.Name).HasColumnName("name");
+                entity.Property(e => e.KeyHash).HasColumnName("key_hash");
+                entity.Property(e => e.KeyPrefix).HasColumnName("key_prefix");
+                entity.Property(e => e.ExpiresAt).HasColumnName("expires_at");
+                entity.Property(e => e.LastUsedAt).HasColumnName("last_used_at");
+                entity.Property(e => e.RevokedAt).HasColumnName("revoked_at");
+                entity.Property(e => e.RevokedReason).HasColumnName("revoked_reason");
+                entity.Property(e => e.IsActive).HasColumnName("is_active");
+                entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+                entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+
+                // Configure Permissions as JSON column
+                entity.Property(e => e.Permissions)
+                    .HasColumnName("permissions")
+                    .HasConversion(
+                        v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions)null!),
+                        v => System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(v, (System.Text.Json.JsonSerializerOptions)null!) ?? new Dictionary<string, object>(),
+                        new Microsoft.EntityFrameworkCore.ChangeTracking.ValueComparer<IDictionary<string, object>>(
+                            (c1, c2) => c1.Count == c2.Count && !c1.Except(c2).Any(),
+                            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
+                            c => c.ToDictionary(entry => entry.Key, entry => entry.Value)))
+                    .HasColumnType("jsonb");
+
+                entity.HasOne(e => e.Organization)
+                    .WithMany(o => o.OrganizationApiKeys)
+                    .HasForeignKey(e => e.OrganizationId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Creator)
+                    .WithMany()
+                    .HasForeignKey(e => e.CreatedBy)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => e.KeyHash).IsUnique();
+                entity.HasIndex(e => new { e.OrganizationId, e.Name });
+                entity.HasIndex(e => new { e.OrganizationId, e.IsActive });
+            });
         }
     }
 }

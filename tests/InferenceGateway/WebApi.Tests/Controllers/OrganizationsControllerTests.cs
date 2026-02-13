@@ -97,134 +97,199 @@ public class OrganizationsControllerTests : IDisposable
 
             // Assert
             result.Should().BeOfType<OkObjectResult>();
-            var okResult = result as OkObjectResult;
-            okResult!.Value.Should().BeOfType<OrganizationSettingsResponse>();
-
-            var response = okResult.Value as OrganizationSettingsResponse;
-            response!.Tier.Should().Be(organization.Tier);
-            response.DataRetentionDays.Should().Be(organization.DataRetentionDays);
-            response.RequireSso.Should().Be(organization.RequireSso);
-            response.AllowedEmailDomains.Should().NotBeNull();
-            response.AvailableRegions.Should().NotBeNull();
-            response.PrivacyConsent.Should().NotBeNull();
         }
 
         [Fact]
-        public async Task GetOrganizationSettings_WithCompleteSettings_ReturnsAllFields()
+        public async Task GetApiKey_WhenOrganizationNotFound_ReturnsNotFound()
+        {
+            // Arrange
+            var nonExistentOrgId = Guid.NewGuid();
+            var apiKeyId = Guid.NewGuid();
+
+            // Act
+            var result = await _controller.GetApiKey(nonExistentOrgId, apiKeyId, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<NotFoundObjectResult>();
+            var notFoundResult = result as NotFoundObjectResult;
+            notFoundResult!.Value.Should().Be("Organization not found");
+        }
+
+        [Fact]
+        public async Task GetApiKey_WhenApiKeyNotFound_ReturnsNotFound()
         {
             // Arrange
             var organization = CreateTestOrganization();
-            organization.Tier = "enterprise";
-            organization.DataRetentionDays = 90;
-            organization.RequireSso = true;
-            organization.AllowedEmailDomains = new List<string> { "example.com", "test.com" };
-            organization.AvailableRegions = new List<string> { "us-east-1", "eu-west-1" };
-            organization.PrivacyConsent = new Dictionary<string, object>
+            var membership = CreateTestTeamMembership(_testUserId, Guid.NewGuid(), _testOrganizationId, "Member");
+
+            _dbContext.Organizations.Add(organization);
+            _dbContext.TeamMemberships.Add(membership);
+            await _dbContext.SaveChangesAsync();
+
+            var nonExistentKeyId = Guid.NewGuid();
+
+            // Act
+            var result = await _controller.GetApiKey(_testOrganizationId, nonExistentKeyId, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<NotFoundObjectResult>();
+            var notFoundResult = result as NotFoundObjectResult;
+            notFoundResult!.Value.Should().Be("API key not found");
+        }
+
+        [Fact]
+        public async Task UpdateApiKey_WithValidRequest_ReturnsOk()
+        {
+            // Arrange
+            var organization = CreateTestOrganization();
+            var membership = CreateTestTeamMembership(_testUserId, Guid.NewGuid(), _testOrganizationId, "OrgAdmin");
+
+            _dbContext.Organizations.Add(organization);
+            _dbContext.TeamMemberships.Add(membership);
+
+            var apiKey = new OrganizationApiKey
             {
-                { "dataProcessing", true },
-                { "marketing", false },
-                { "analytics", true }
+                Id = Guid.NewGuid(),
+                OrganizationId = _testOrganizationId,
+                CreatedBy = _testUserId,
+                Name = "Original Name",
+                KeyHash = "test-hash",
+                KeyPrefix = "testpref",
+                Permissions = new Dictionary<string, object>(),
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            _dbContext.OrganizationApiKeys.Add(apiKey);
+            await _dbContext.SaveChangesAsync();
+
+            var request = new UpdateOrganizationApiKeyRequest
+            {
+                Name = "Updated Name",
+                Permissions = new Dictionary<string, object> { { "write", true } }
             };
 
-            var membership = CreateTestTeamMembership(_testUserId, Guid.NewGuid(), _testOrganizationId);
-
-            _dbContext.Organizations.Add(organization);
-            _dbContext.TeamMemberships.Add(membership);
-            await _dbContext.SaveChangesAsync();
-
             // Act
-            var result = await _controller.GetOrganizationSettings(_testOrganizationId, CancellationToken.None);
+            var result = await _controller.UpdateApiKey(_testOrganizationId, apiKey.Id, request, CancellationToken.None);
 
             // Assert
             result.Should().BeOfType<OkObjectResult>();
             var okResult = result as OkObjectResult;
-            var response = okResult!.Value as OrganizationSettingsResponse;
+            var response = okResult!.Value as OrganizationApiKeyResponse;
+            response.Should().NotBeNull();
+            response!.Name.Should().Be("Updated Name");
 
-            response!.Tier.Should().Be("enterprise");
-            response.DataRetentionDays.Should().Be(90);
-            response.RequireSso.Should().BeTrue();
-            response.AllowedEmailDomains.Should().HaveCount(2);
-            response.AllowedEmailDomains.Should().Contain("example.com");
-            response.AllowedEmailDomains.Should().Contain("test.com");
-            response.AvailableRegions.Should().HaveCount(2);
-            response.AvailableRegions.Should().Contain("us-east-1");
-            response.AvailableRegions.Should().Contain("eu-west-1");
-            response.PrivacyConsent.Should().HaveCount(3);
-            response.PrivacyConsent["dataProcessing"].Should().Be(true);
-            response.PrivacyConsent["marketing"].Should().Be(false);
-            response.PrivacyConsent["analytics"].Should().Be(true);
+            // Verify API key was updated
+            var updatedApiKey = await _dbContext.OrganizationApiKeys.FindAsync(apiKey.Id);
+            updatedApiKey!.Name.Should().Be("Updated Name");
         }
 
         [Fact]
-        public async Task GetOrganizationSettings_WithMinimalSettings_ReturnsDefaultValues()
+        public async Task UpdateApiKey_WhenRevokeIsTrue_SetsRevokedAt()
         {
             // Arrange
             var organization = CreateTestOrganization();
-            organization.AllowedEmailDomains = null;
-            organization.AvailableRegions = null;
-            organization.PrivacyConsent = null;
-
-            var membership = CreateTestTeamMembership(_testUserId, Guid.NewGuid(), _testOrganizationId);
+            var membership = CreateTestTeamMembership(_testUserId, Guid.NewGuid(), _testOrganizationId, "OrgAdmin");
 
             _dbContext.Organizations.Add(organization);
             _dbContext.TeamMemberships.Add(membership);
+
+            var apiKey = new OrganizationApiKey
+            {
+                Id = Guid.NewGuid(),
+                OrganizationId = _testOrganizationId,
+                CreatedBy = _testUserId,
+                Name = "Test API Key",
+                KeyHash = "test-hash",
+                KeyPrefix = "testpref",
+                Permissions = new Dictionary<string, object>(),
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            _dbContext.OrganizationApiKeys.Add(apiKey);
             await _dbContext.SaveChangesAsync();
 
+            var request = new UpdateOrganizationApiKeyRequest
+            {
+                Revoke = true,
+                RevokedReason = "Security concern"
+            };
+
             // Act
-            var result = await _controller.GetOrganizationSettings(_testOrganizationId, CancellationToken.None);
+            var result = await _controller.UpdateApiKey(_testOrganizationId, apiKey.Id, request, CancellationToken.None);
 
             // Assert
             result.Should().BeOfType<OkObjectResult>();
             var okResult = result as OkObjectResult;
-            var response = okResult!.Value as OrganizationSettingsResponse;
+            var response = okResult!.Value as OrganizationApiKeyResponse;
+            response.Should().NotBeNull();
+            response!.IsActive.Should().BeFalse();
+            response.RevokedAt.Should().NotBeNull();
 
-            response!.Tier.Should().Be("free");
-            response.DataRetentionDays.Should().Be(30);
-            response.RequireSso.Should().BeFalse();
+            // Verify API key was revoked
+            var revokedApiKey = await _dbContext.OrganizationApiKeys.FindAsync(apiKey.Id);
+            revokedApiKey!.IsActive.Should().BeFalse();
+            revokedApiKey.RevokedAt.Should().NotBeNull();
+            revokedApiKey.RevokedReason.Should().Be("Security concern");
         }
 
         [Fact]
-        public async Task GetOrganizationSettings_WithMultipleMemberships_AllowsAccess()
+        public async Task UpdateApiKey_WhenNotAdmin_ReturnsForbid()
         {
             // Arrange
             var organization = CreateTestOrganization();
-
-            var teamId1 = Guid.NewGuid();
-            var teamId2 = Guid.NewGuid();
-            var membership1 = CreateTestTeamMembership(_testUserId, teamId1, _testOrganizationId);
-            var membership2 = CreateTestTeamMembership(_testUserId, teamId2, _testOrganizationId);
-
-            _dbContext.Organizations.Add(organization);
-            _dbContext.TeamMemberships.AddRange(membership1, membership2);
-            await _dbContext.SaveChangesAsync();
-
-            // Act
-            var result = await _controller.GetOrganizationSettings(_testOrganizationId, CancellationToken.None);
-
-            // Assert
-            result.Should().BeOfType<OkObjectResult>();
-        }
-
-        [Fact]
-        public async Task GetOrganizationSettings_WithDifferentUserAndOrganization_ReturnsForbid()
-        {
-            // Arrange
-            var differentOrgId = Guid.NewGuid();
-            var organization = CreateTestOrganization();
-            organization.Id = differentOrgId;
-
-            // Membership is for a different organization
-            var membership = CreateTestTeamMembership(_testUserId, Guid.NewGuid(), _testOrganizationId);
+            var membership = CreateTestTeamMembership(_testUserId, Guid.NewGuid(), _testOrganizationId, "Member");
 
             _dbContext.Organizations.Add(organization);
             _dbContext.TeamMemberships.Add(membership);
+
+            var apiKey = new OrganizationApiKey
+            {
+                Id = Guid.NewGuid(),
+                OrganizationId = _testOrganizationId,
+                CreatedBy = _testUserId,
+                Name = "Test API Key",
+                KeyHash = "test-hash",
+                KeyPrefix = "testpref",
+                Permissions = new Dictionary<string, object>(),
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            _dbContext.OrganizationApiKeys.Add(apiKey);
             await _dbContext.SaveChangesAsync();
 
+            var request = new UpdateOrganizationApiKeyRequest { Name = "Updated Name" };
+
             // Act
-            var result = await _controller.GetOrganizationSettings(differentOrgId, CancellationToken.None);
+            var result = await _controller.UpdateApiKey(_testOrganizationId, apiKey.Id, request, CancellationToken.None);
 
             // Assert
             result.Should().BeOfType<ForbidResult>();
+        }
+
+        [Fact]
+        public async Task UpdateApiKey_WhenApiKeyNotFound_ReturnsNotFound()
+        {
+            // Arrange
+            var organization = CreateTestOrganization();
+            var membership = CreateTestTeamMembership(_testUserId, Guid.NewGuid(), _testOrganizationId, "OrgAdmin");
+
+            _dbContext.Organizations.Add(organization);
+            _dbContext.TeamMemberships.Add(membership);
+            await _dbContext.SaveChangesAsync();
+
+            var nonExistentKeyId = Guid.NewGuid();
+            var request = new UpdateOrganizationApiKeyRequest { Name = "Updated Name" };
+
+            // Act
+            var result = await _controller.UpdateApiKey(_testOrganizationId, nonExistentKeyId, request, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<NotFoundObjectResult>();
+            var notFoundResult = result as NotFoundObjectResult;
+            notFoundResult!.Value.Should().Be("API key not found");
         }
 
         private Organization CreateTestOrganization()
@@ -254,7 +319,7 @@ public class OrganizationsControllerTests : IDisposable
             };
         }
 
-        private TeamMembership CreateTestTeamMembership(Guid userId, Guid teamId, Guid organizationId)
+        private TeamMembership CreateTestTeamMembership(Guid userId, Guid teamId, Guid organizationId, string role = "Member")
         {
             return new TeamMembership
             {
@@ -262,7 +327,7 @@ public class OrganizationsControllerTests : IDisposable
                 UserId = userId,
                 TeamId = teamId,
                 OrganizationId = organizationId,
-                Role = "Member",
+                Role = role,
                 JoinedAt = DateTime.UtcNow
             };
         }

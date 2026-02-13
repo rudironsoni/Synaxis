@@ -796,6 +796,277 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
 
             return null;
         }
+
+        /// <summary>
+        /// Creates a new API key for an organization.
+        /// </summary>
+        /// <param name="id">The organization ID.</param>
+        /// <param name="request">The create API key request.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The created API key with the actual key value.</returns>
+        [HttpPost("{id}/api-keys")]
+        public async Task<IActionResult> CreateApiKey(Guid id, [FromBody] CreateOrganizationApiKeyRequest request, CancellationToken cancellationToken)
+        {
+            var userId = Guid.Parse(this.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? this.User.FindFirstValue("sub")!);
+
+            var organization = await this._synaxisDbContext.Organizations
+                .FirstOrDefaultAsync(o => o.Id == id, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (organization == null)
+            {
+                return this.NotFound("Organization not found");
+            }
+
+            var isOrgAdmin = await this.IsOrgAdminAsync(userId, id, cancellationToken).ConfigureAwait(false);
+
+            if (!isOrgAdmin)
+            {
+                return this.Forbid();
+            }
+
+            var (apiKey, keyValue) = this.CreateApiKeyEntity(id, userId, request);
+            this._synaxisDbContext.OrganizationApiKeys.Add(apiKey);
+            await this._synaxisDbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            var response = new CreateOrganizationApiKeyResponse
+            {
+                Id = apiKey.Id,
+                Name = apiKey.Name,
+                Key = keyValue,
+                KeyPrefix = apiKey.KeyPrefix,
+                Permissions = apiKey.Permissions,
+                ExpiresAt = apiKey.ExpiresAt,
+                IsActive = apiKey.IsActive,
+                CreatedAt = apiKey.CreatedAt,
+            };
+
+            return this.CreatedAtAction(nameof(this.GetApiKey), new { id = id, keyId = apiKey.Id }, response);
+        }
+
+        private (OrganizationApiKey ApiKey, string KeyValue) CreateApiKeyEntity(Guid organizationId, Guid userId, CreateOrganizationApiKeyRequest request)
+        {
+            var keyValue = GenerateSecureApiKey();
+            var keyHash = ComputeSha256Hash(keyValue);
+            var keyPrefix = keyValue.Substring(0, 8);
+
+            var apiKey = new OrganizationApiKey
+            {
+                Id = Guid.NewGuid(),
+                OrganizationId = organizationId,
+                CreatedBy = userId,
+                Name = request.Name ?? "API Key",
+                KeyHash = keyHash,
+                KeyPrefix = keyPrefix,
+                Permissions = request.Permissions ?? new Dictionary<string, object>(),
+                ExpiresAt = request.ExpiresAt,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+            };
+
+            return (apiKey, keyValue);
+        }
+
+        /// <summary>
+        /// Lists API keys for an organization.
+        /// </summary>
+        /// <param name="id">The organization ID.</param>
+        /// <param name="page">The page number (1-based).</param>
+        /// <param name="pageSize">The page size.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A paginated list of API keys.</returns>
+        [HttpGet("{id}/api-keys")]
+        public async Task<IActionResult> ListApiKeys(Guid id, [FromQuery] int page = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
+        {
+            var userId = Guid.Parse(this.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? this.User.FindFirstValue("sub")!);
+
+            var organization = await this._synaxisDbContext.Organizations
+                .FirstOrDefaultAsync(o => o.Id == id, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (organization == null)
+            {
+                return this.NotFound("Organization not found");
+            }
+
+            var isMember = await this._synaxisDbContext.TeamMemberships
+                .AnyAsync(tm => tm.OrganizationId == id && tm.UserId == userId, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (!isMember)
+            {
+                return this.Forbid();
+            }
+
+            var query = this._synaxisDbContext.OrganizationApiKeys
+                .Where(k => k.OrganizationId == id)
+                .Include(k => k.Creator);
+
+            var totalCount = await query.CountAsync(cancellationToken).ConfigureAwait(false);
+
+            var apiKeys = await query
+                .OrderByDescending(k => k.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(k => OrganizationsController.MapToOrganizationApiKeyResponse(k))
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            return this.Ok(new
+            {
+                items = apiKeys,
+                page,
+                pageSize,
+                totalCount,
+                totalPages = (int)Math.Ceiling((double)totalCount / pageSize),
+            });
+        }
+
+        /// <summary>
+        /// Gets an API key by ID.
+        /// </summary>
+        /// <param name="id">The organization ID.</param>
+        /// <param name="keyId">The API key ID.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The API key details.</returns>
+        [HttpGet("{id}/api-keys/{keyId}")]
+        public async Task<IActionResult> GetApiKey(Guid id, Guid keyId, CancellationToken cancellationToken)
+        {
+            var userId = Guid.Parse(this.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? this.User.FindFirstValue("sub")!);
+
+            var organization = await this._synaxisDbContext.Organizations
+                .FirstOrDefaultAsync(o => o.Id == id, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (organization == null)
+            {
+                return this.NotFound("Organization not found");
+            }
+
+            var isMember = await this._synaxisDbContext.TeamMemberships
+                .AnyAsync(tm => tm.OrganizationId == id && tm.UserId == userId, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (!isMember)
+            {
+                return this.Forbid();
+            }
+
+            var apiKey = await this._synaxisDbContext.OrganizationApiKeys
+                .Include(k => k.Creator)
+                .FirstOrDefaultAsync(k => k.Id == keyId && k.OrganizationId == id, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (apiKey == null)
+            {
+                return this.NotFound("API key not found");
+            }
+
+            var response = OrganizationsController.MapToOrganizationApiKeyResponse(apiKey);
+            return this.Ok(response);
+        }
+
+        private static OrganizationApiKeyResponse MapToOrganizationApiKeyResponse(OrganizationApiKey apiKey)
+        {
+            return new OrganizationApiKeyResponse
+            {
+                Id = apiKey.Id,
+                Name = apiKey.Name,
+                KeyPrefix = apiKey.KeyPrefix,
+                Permissions = apiKey.Permissions,
+                ExpiresAt = apiKey.ExpiresAt,
+                LastUsedAt = apiKey.LastUsedAt,
+                RevokedAt = apiKey.RevokedAt,
+                IsActive = apiKey.IsActive,
+                CreatedAt = apiKey.CreatedAt,
+                UpdatedAt = apiKey.UpdatedAt,
+                CreatedBy = apiKey.Creator != null
+                    ? new OrganizationApiKeyCreatorInfo
+                    {
+                        Id = apiKey.Creator.Id,
+                        Email = apiKey.Creator.Email,
+                        FirstName = apiKey.Creator.FirstName,
+                        LastName = apiKey.Creator.LastName,
+                    }
+                    : null,
+            };
+        }
+
+        /// <summary>
+        /// Updates an API key.
+        /// </summary>
+        /// <param name="id">The organization ID.</param>
+        /// <param name="keyId">The API key ID.</param>
+        /// <param name="request">The update API key request.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The updated API key.</returns>
+        [HttpPut("{id}/api-keys/{keyId}")]
+        public async Task<IActionResult> UpdateApiKey(Guid id, Guid keyId, [FromBody] UpdateOrganizationApiKeyRequest request, CancellationToken cancellationToken)
+        {
+            var userId = Guid.Parse(this.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? this.User.FindFirstValue("sub")!);
+
+            var organization = await this._synaxisDbContext.Organizations
+                .FirstOrDefaultAsync(o => o.Id == id, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (organization == null)
+            {
+                return this.NotFound("Organization not found");
+            }
+
+            var isOrgAdmin = await this.IsOrgAdminAsync(userId, id, cancellationToken).ConfigureAwait(false);
+
+            if (!isOrgAdmin)
+            {
+                return this.Forbid();
+            }
+
+            var apiKey = await this._synaxisDbContext.OrganizationApiKeys
+                .FirstOrDefaultAsync(k => k.Id == keyId && k.OrganizationId == id, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (apiKey == null)
+            {
+                return this.NotFound("API key not found");
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.Name))
+            {
+                apiKey.Name = request.Name;
+            }
+
+            if (request.Permissions != null)
+            {
+                apiKey.Permissions = request.Permissions;
+            }
+
+            if (request.Revoke.HasValue && request.Revoke.Value)
+            {
+                apiKey.IsActive = false;
+                apiKey.RevokedAt = DateTime.UtcNow;
+                apiKey.RevokedReason = request.RevokedReason ?? "Manually revoked";
+            }
+
+            apiKey.UpdatedAt = DateTime.UtcNow;
+            await this._synaxisDbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            var response = OrganizationsController.MapToOrganizationApiKeyResponse(apiKey);
+            return this.Ok(response);
+        }
+
+        private static string GenerateSecureApiKey()
+        {
+            return "sk-" + Guid.NewGuid().ToString("N").Substring(0, 32);
+        }
+
+        private static string ComputeSha256Hash(string input)
+        {
+            using var sha256 = System.Security.Cryptography.SHA256.Create();
+            var bytes = System.Text.Encoding.UTF8.GetBytes(input);
+            var hash = sha256.ComputeHash(bytes);
+            return Convert.ToHexString(hash).ToLowerInvariant();
+        }
     }
 
     /// <summary>
@@ -1117,5 +1388,188 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         /// Gets or sets a value indicating whether user info (email, name) is blocked in password.
         /// </summary>
         public bool BlockUserInfoInPassword { get; set; } = true;
+    }
+
+    /// <summary>
+    /// Request to create a new organization API key.
+    /// </summary>
+    public class CreateOrganizationApiKeyRequest
+    {
+        /// <summary>
+        /// Gets or sets the API key name.
+        /// </summary>
+        [StringLength(255)]
+        public string? Name { get; set; }
+
+        /// <summary>
+        /// Gets or sets the permissions.
+        /// </summary>
+        public IDictionary<string, object>? Permissions { get; set; }
+
+        /// <summary>
+        /// Gets or sets the expiration timestamp (null = never expires).
+        /// </summary>
+        public DateTime? ExpiresAt { get; set; }
+    }
+
+    /// <summary>
+    /// Response for creating an organization API key (includes the actual key value).
+    /// </summary>
+    public class CreateOrganizationApiKeyResponse
+    {
+        /// <summary>
+        /// Gets or sets the API key ID.
+        /// </summary>
+        public Guid Id { get; set; }
+
+        /// <summary>
+        /// Gets or sets the API key name.
+        /// </summary>
+        public string Name { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the actual API key value (shown only once).
+        /// </summary>
+        public string Key { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the key prefix.
+        /// </summary>
+        public string KeyPrefix { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the permissions.
+        /// </summary>
+        public IDictionary<string, object> Permissions { get; set; } = new Dictionary<string, object>();
+
+        /// <summary>
+        /// Gets or sets the expiration timestamp.
+        /// </summary>
+        public DateTime? ExpiresAt { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the key is active.
+        /// </summary>
+        public bool IsActive { get; set; }
+
+        /// <summary>
+        /// Gets or sets the creation timestamp.
+        /// </summary>
+        public DateTime CreatedAt { get; set; }
+    }
+
+    /// <summary>
+    /// Response for organization API key details (does NOT include the actual key value).
+    /// </summary>
+    public class OrganizationApiKeyResponse
+    {
+        /// <summary>
+        /// Gets or sets the API key ID.
+        /// </summary>
+        public Guid Id { get; set; }
+
+        /// <summary>
+        /// Gets or sets the API key name.
+        /// </summary>
+        public string Name { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the key prefix.
+        /// </summary>
+        public string KeyPrefix { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the permissions.
+        /// </summary>
+        public IDictionary<string, object> Permissions { get; set; } = new Dictionary<string, object>();
+
+        /// <summary>
+        /// Gets or sets the expiration timestamp.
+        /// </summary>
+        public DateTime? ExpiresAt { get; set; }
+
+        /// <summary>
+        /// Gets or sets the last used timestamp.
+        /// </summary>
+        public DateTime? LastUsedAt { get; set; }
+
+        /// <summary>
+        /// Gets or sets the revocation timestamp.
+        /// </summary>
+        public DateTime? RevokedAt { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the key is active.
+        /// </summary>
+        public bool IsActive { get; set; }
+
+        /// <summary>
+        /// Gets or sets the creation timestamp.
+        /// </summary>
+        public DateTime CreatedAt { get; set; }
+
+        /// <summary>
+        /// Gets or sets the last update timestamp.
+        /// </summary>
+        public DateTime UpdatedAt { get; set; }
+
+        /// <summary>
+        /// Gets or sets the creator information.
+        /// </summary>
+        public OrganizationApiKeyCreatorInfo? CreatedBy { get; set; }
+    }
+
+    /// <summary>
+    /// Creator information for organization API keys.
+    /// </summary>
+    public class OrganizationApiKeyCreatorInfo
+    {
+        /// <summary>
+        /// Gets or sets the user ID.
+        /// </summary>
+        public Guid Id { get; set; }
+
+        /// <summary>
+        /// Gets or sets the email address.
+        /// </summary>
+        public string Email { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the first name.
+        /// </summary>
+        public string? FirstName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the last name.
+        /// </summary>
+        public string? LastName { get; set; }
+    }
+
+    /// <summary>
+    /// Request to update an organization API key.
+    /// </summary>
+    public class UpdateOrganizationApiKeyRequest
+    {
+        /// <summary>
+        /// Gets or sets the API key name.
+        /// </summary>
+        [StringLength(255)]
+        public string? Name { get; set; }
+
+        /// <summary>
+        /// Gets or sets the permissions.
+        /// </summary>
+        public IDictionary<string, object>? Permissions { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to revoke the key.
+        /// </summary>
+        public bool? Revoke { get; set; }
+
+        /// <summary>
+        /// Gets or sets the revocation reason.
+        /// </summary>
+        [StringLength(500)]
+        public string? RevokedReason { get; set; }
     }
 }

@@ -390,6 +390,13 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
                 return this.NotFound("Invitation not found");
             }
 
+            // Cannot cancel already accepted or declined invitations
+            if (string.Equals(invitation.Status, "accepted", StringComparison.Ordinal) ||
+                string.Equals(invitation.Status, "declined", StringComparison.Ordinal))
+            {
+                return this.StatusCode(410, "Invitation has already been accepted or declined");
+            }
+
             var hasPermission = await this.CheckCancelPermissionAsync(userId, invitation, cancellationToken).ConfigureAwait(false);
             if (!hasPermission)
             {
