@@ -1475,3 +1475,6 @@ time=2026-02-13T15:54:47.008+01:00 level=INFO msg="Exported to JSONL"
 time=2026-02-13T15:54:47.008+01:00 level=INFO msg="Export complete"
 time=2026-02-13T15:54:47.973+01:00 level=INFO msg="Import triggered by file change"
 time=2026-02-13T15:54:47.974+01:00 level=INFO msg="Skipping: in backoff period" mode=auto-import
+time=2026-02-13T15:54:57.400+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T15:54:57.400+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T15:54:57.493+01:00 level=INFO msg="Git ref change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.git/refs/heads/main.lock
