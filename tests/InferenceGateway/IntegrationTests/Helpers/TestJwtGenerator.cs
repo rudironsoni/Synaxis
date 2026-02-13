@@ -50,10 +50,17 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Helpers
                 new Claim("organizationId", (organizationId ?? Guid.NewGuid()).ToString()),
             };
 
+            var now = DateTime.UtcNow;
+            var expiration = now.Add(expiresIn ?? TimeSpan.FromHours(1));
+
+            // When creating expired tokens, set NotBefore before expiration to avoid JWT validation error
+            var notBefore = expiration < now ? expiration.AddMinutes(-5) : now;
+
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.Add(expiresIn ?? TimeSpan.FromHours(1)),
+                NotBefore = notBefore,
+                Expires = expiration,
                 Issuer = "Synaxis",
                 Audience = "Synaxis",
                 SigningCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256Signature),

@@ -10,6 +10,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
     using Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub;
     using Xunit;
 
+    [CollectionDefinition("GitHubAuthTests", DisableParallelization = true)]
+    public class GitHubAuthTestCollection : ICollectionFixture<object>
+    {
+    }
+
+    [Collection("GitHubAuthTests")]
     public sealed class GhConfigWriterTests : IDisposable
     {
         private readonly string _tempHome;

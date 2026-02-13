@@ -23,7 +23,6 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Transport.Grpc
     /// <summary>
     /// Integration tests for the ChatGrpcService.
     /// </summary>
-    [Collection("Integration")]
     public class ChatGrpcServiceTests : IClassFixture<SynaxisWebApplicationFactory>
     {
         private readonly SynaxisWebApplicationFactory _factory;
@@ -32,11 +31,11 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Transport.Grpc
         /// <summary>
         /// Initializes a new instance of the <see cref="ChatGrpcServiceTests"/> class.
         /// </summary>
-        /// <param name="factory">The web application factory.</param>
+        /// <param name="fixture">The test fixture.</param>
         /// <param name="output">The test output helper.</param>
-        public ChatGrpcServiceTests(SynaxisWebApplicationFactory factory, ITestOutputHelper output)
+        public ChatGrpcServiceTests(SynaxisWebApplicationFactory fixture, ITestOutputHelper output)
         {
-            this._factory = factory;
+            this._factory = fixture;
             this._factory.OutputHelper = output;
             this._output = output;
         }

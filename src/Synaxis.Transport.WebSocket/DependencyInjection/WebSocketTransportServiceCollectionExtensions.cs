@@ -42,8 +42,8 @@ namespace Synaxis.Transport.WebSocket.DependencyInjection
                 services.Configure<WebSocketTransportOptions>(_ => { });
             }
 
-            // Register handler
-            services.TryAddScoped<WebSocketHandler>();
+            // Register handler as transient (middleware needs to resolve from root provider)
+            services.TryAddTransient<WebSocketHandler>();
 
             return services;
         }

@@ -24,22 +24,22 @@ namespace Synaxis.Transport.WebSocket.Handlers
     /// </summary>
     public class WebSocketHandler
     {
-        private readonly IServiceProvider serviceProvider;
+        private readonly IServiceScopeFactory scopeFactory;
         private readonly ILogger<WebSocketHandler> logger;
         private readonly WebSocketTransportOptions options;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="WebSocketHandler"/> class.
         /// </summary>
-        /// <param name="serviceProvider">The service provider.</param>
+        /// <param name="scopeFactory">The service scope factory.</param>
         /// <param name="logger">The logger.</param>
         /// <param name="options">The WebSocket transport options.</param>
         public WebSocketHandler(
-            IServiceProvider serviceProvider,
+            IServiceScopeFactory scopeFactory,
             ILogger<WebSocketHandler> logger,
             IOptions<WebSocketTransportOptions> options)
         {
-            this.serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+            this.scopeFactory = scopeFactory ?? throw new ArgumentNullException(nameof(scopeFactory));
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this.options = options?.Value ?? throw new ArgumentNullException(nameof(options));
         }
@@ -152,7 +152,7 @@ namespace Synaxis.Transport.WebSocket.Handlers
             WebSocketMessage message,
             CancellationToken cancellationToken)
         {
-            using var scope = this.serviceProvider.CreateScope();
+            using var scope = this.scopeFactory.CreateScope();
 
             try
             {

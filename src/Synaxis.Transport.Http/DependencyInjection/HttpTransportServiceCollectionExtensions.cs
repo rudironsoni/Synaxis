@@ -6,6 +6,7 @@ namespace Synaxis.Transport.Http.DependencyInjection
 {
     using System;
     using Microsoft.AspNetCore.Builder;
+    using Microsoft.AspNetCore.Mvc;
     using Microsoft.AspNetCore.Routing;
     using Microsoft.Extensions.DependencyInjection;
     using Synaxis.Transport.Http.Filters;
@@ -49,7 +50,7 @@ namespace Synaxis.Transport.Http.DependencyInjection
             // Configure options
             services.Configure(configureOptions);
 
-            // Add controllers
+            // Add controllers from this assembly
             services.AddControllers(options =>
             {
                 options.Filters.Add<SynaxisExceptionFilter>();
@@ -57,7 +58,8 @@ namespace Synaxis.Transport.Http.DependencyInjection
             .AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
-            });
+            })
+            .AddApplicationPart(typeof(HttpTransportServiceCollectionExtensions).Assembly);
 
             return services;
         }

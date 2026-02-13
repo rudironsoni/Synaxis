@@ -18,6 +18,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
     using Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub;
     using Xunit;
 
+    [Collection("GitHubAuthTests")]
     public sealed class GitHubAuthStrategyTests : IDisposable
     {
         private readonly string? _origHome;

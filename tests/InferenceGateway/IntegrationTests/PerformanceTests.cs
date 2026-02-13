@@ -262,13 +262,16 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 this._output.WriteLine($"Batch Size: {batchSize}, Time: {stopwatch.ElapsedMilliseconds}ms, Throughput: {throughput:F2} req/s");
             }
 
-            // Assert - Check for reasonable scaling
-            var firstBatch = results[batchSizes[0]];
-            var lastBatch = results[batchSizes[2]];
+            // Assert - check scaling using medium/large batches to reduce timer quantization noise
+            var mediumBatch = results[batchSizes[1]];
+            var largeBatch = results[batchSizes[2]];
 
-            // Throughput may degrade with larger batches due to overhead - adjust expectation
-            var throughputRatio = lastBatch.Throughput / firstBatch.Throughput;
-            Assert.True(throughputRatio > 0.2, $"Throughput degraded significantly: {throughputRatio:F2}");
+            var mediumLatencyMs = mediumBatch.TotalTime / (double)batchSizes[1];
+            var largeLatencyMs = largeBatch.TotalTime / (double)batchSizes[2];
+
+            Assert.True(
+                largeLatencyMs <= mediumLatencyMs * 5.0,
+                $"Per-request latency regressed too much: medium={mediumLatencyMs:F2}ms, large={largeLatencyMs:F2}ms");
         }
 
         [Fact]
