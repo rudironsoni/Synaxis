@@ -17,10 +17,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Transport
 
     /// <summary>
     /// Integration tests for the WebSocket transport layer.
-    /// Tests use WebApplicationFactory with ClientWebSocket for self-contained testing.
+    /// Tests use WebApplicationFactory with TestServer.CreateWebSocketClient() for self-contained testing.
     /// </summary>
-    [Collection("Integration")]
-    public class WebSocketTransportTests : IAsyncLifetime
+    public class WebSocketTransportTests : IClassFixture<SynaxisWebApplicationFactory>
     {
         private readonly SynaxisWebApplicationFactory _factory;
         private readonly ITestOutputHelper _output;
@@ -28,38 +27,26 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Transport
         /// <summary>
         /// Initializes a new instance of the <see cref="WebSocketTransportTests"/> class.
         /// </summary>
-        /// <param name="factory">The web application factory.</param>
+        /// <param name="fixture">The test fixture.</param>
         /// <param name="output">The test output helper.</param>
-        public WebSocketTransportTests(SynaxisWebApplicationFactory factory, ITestOutputHelper output)
+        public WebSocketTransportTests(SynaxisWebApplicationFactory fixture, ITestOutputHelper output)
         {
-            this._factory = factory;
+            this._factory = fixture;
             this._output = output;
             this._factory.OutputHelper = output;
-        }
-
-        public Task InitializeAsync()
-        {
-            // Setup can be done here if needed
-            return Task.CompletedTask;
-        }
-
-        public Task DisposeAsync()
-        {
-            // Cleanup can be done here if needed
-            return Task.CompletedTask;
         }
 
         [Fact]
         public async Task ConnectionUpgradeToWs_Succeeds()
         {
             // Arrange
-            var wsUrl = new Uri(this._factory.Server.BaseAddress, "/ws");
-            using var client = new ClientWebSocket();
+            var wsUrl = new Uri("ws://localhost/ws");
+            var webSocketClient = this._factory.Server.CreateWebSocketClient();
 
             this._output.WriteLine($"[Observability] Attempting WebSocket connection - Url: {wsUrl}, Timestamp: {DateTime.UtcNow:O}");
 
             // Act
-            await client.ConnectAsync(wsUrl, CancellationToken.None);
+            using var client = await webSocketClient.ConnectAsync(wsUrl, CancellationToken.None);
 
             // Assert
             Assert.Equal(WebSocketState.Open, client.State);
@@ -73,11 +60,11 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Transport
         public async Task CommandMessage_ReturnsResponseMessage()
         {
             // Arrange
-            var wsUrl = new Uri(this._factory.Server.BaseAddress, "/ws");
-            using var client = new ClientWebSocket();
+            var wsUrl = new Uri("ws://localhost/ws");
+            var webSocketClient = this._factory.Server.CreateWebSocketClient();
             var correlationId = Guid.NewGuid().ToString();
 
-            await client.ConnectAsync(wsUrl, CancellationToken.None);
+            using var client = await webSocketClient.ConnectAsync(wsUrl, CancellationToken.None);
 
             var commandMessage = new WebSocketMessage
             {
@@ -130,11 +117,11 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Transport
         public async Task Streaming_SendsMultipleMessages()
         {
             // Arrange
-            var wsUrl = new Uri(this._factory.Server.BaseAddress, "/ws");
-            using var client = new ClientWebSocket();
+            var wsUrl = new Uri("ws://localhost/ws");
+            var webSocketClient = this._factory.Server.CreateWebSocketClient();
             var correlationId = Guid.NewGuid().ToString();
 
-            await client.ConnectAsync(wsUrl, CancellationToken.None);
+            using var client = await webSocketClient.ConnectAsync(wsUrl, CancellationToken.None);
 
             var streamCommandMessage = new WebSocketMessage
             {
@@ -210,11 +197,11 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Transport
         public async Task ErrorHandling_ReturnsProperErrorMessages()
         {
             // Arrange
-            var wsUrl = new Uri(this._factory.Server.BaseAddress, "/ws");
-            using var client = new ClientWebSocket();
+            var wsUrl = new Uri("ws://localhost/ws");
+            var webSocketClient = this._factory.Server.CreateWebSocketClient();
             var correlationId = Guid.NewGuid().ToString();
 
-            await client.ConnectAsync(wsUrl, CancellationToken.None);
+            using var client = await webSocketClient.ConnectAsync(wsUrl, CancellationToken.None);
 
             // Send an invalid command type
             var invalidCommandMessage = new WebSocketMessage
@@ -250,7 +237,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Transport
             Assert.Equal("error", responseMessage.Type);
             Assert.Equal(correlationId, responseMessage.CorrelationId);
             Assert.True(responseMessage.Payload.TryGetProperty("error", out var errorProperty));
-            Assert.Contains("Unknown command type", errorProperty.GetString());
+            Assert.Contains("Unknown command type", errorProperty.GetString(), StringComparison.Ordinal);
             this._output.WriteLine($"[Observability] Received error message - Type: {responseMessage.Type}, Error: {errorProperty.GetString()}, Timestamp: {DateTime.UtcNow:O}");
 
             // Cleanup
@@ -261,10 +248,10 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Transport
         public async Task ConnectionClose_IsHandledProperly()
         {
             // Arrange
-            var wsUrl = new Uri(this._factory.Server.BaseAddress, "/ws");
-            using var client = new ClientWebSocket();
+            var wsUrl = new Uri("ws://localhost/ws");
+            var webSocketClient = this._factory.Server.CreateWebSocketClient();
 
-            await client.ConnectAsync(wsUrl, CancellationToken.None);
+            using var client = await webSocketClient.ConnectAsync(wsUrl, CancellationToken.None);
             Assert.Equal(WebSocketState.Open, client.State);
 
             this._output.WriteLine($"[Observability] Connection established - State: {client.State}, Timestamp: {DateTime.UtcNow:O}");
@@ -281,10 +268,10 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Transport
         public async Task InvalidMessageFormat_ReturnsError()
         {
             // Arrange
-            var wsUrl = new Uri(this._factory.Server.BaseAddress, "/ws");
-            using var client = new ClientWebSocket();
+            var wsUrl = new Uri("ws://localhost/ws");
+            var webSocketClient = this._factory.Server.CreateWebSocketClient();
 
-            await client.ConnectAsync(wsUrl, CancellationToken.None);
+            using var client = await webSocketClient.ConnectAsync(wsUrl, CancellationToken.None);
 
             // Send invalid JSON
             var invalidJson = Encoding.UTF8.GetBytes("{ invalid json }");
@@ -311,7 +298,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Transport
             Assert.Equal(WebSocketMessageType.Text, receiveResult.MessageType);
             Assert.Equal("error", responseMessage.Type);
             Assert.True(responseMessage.Payload.TryGetProperty("error", out var errorProperty));
-            Assert.Contains("Invalid message format", errorProperty.GetString());
+            Assert.Contains("Invalid message format", errorProperty.GetString(), StringComparison.Ordinal);
             this._output.WriteLine($"[Observability] Received error for invalid format - Type: {responseMessage.Type}, Error: {errorProperty.GetString()}, Timestamp: {DateTime.UtcNow:O}");
 
             // Cleanup
@@ -322,11 +309,11 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Transport
         public async Task UnknownMessageType_ReturnsError()
         {
             // Arrange
-            var wsUrl = new Uri(this._factory.Server.BaseAddress, "/ws");
-            using var client = new ClientWebSocket();
+            var wsUrl = new Uri("ws://localhost/ws");
+            var webSocketClient = this._factory.Server.CreateWebSocketClient();
             var correlationId = Guid.NewGuid().ToString();
 
-            await client.ConnectAsync(wsUrl, CancellationToken.None);
+            using var client = await webSocketClient.ConnectAsync(wsUrl, CancellationToken.None);
 
             var unknownTypeMessage = new WebSocketMessage
             {
@@ -361,7 +348,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Transport
             Assert.Equal("error", responseMessage.Type);
             Assert.Equal(correlationId, responseMessage.CorrelationId);
             Assert.True(responseMessage.Payload.TryGetProperty("error", out var errorProperty));
-            Assert.Contains("Unknown message type", errorProperty.GetString());
+            Assert.Contains("Unknown message type", errorProperty.GetString(), StringComparison.Ordinal);
             this._output.WriteLine($"[Observability] Received error for unknown type - Type: {responseMessage.Type}, Error: {errorProperty.GetString()}, Timestamp: {DateTime.UtcNow:O}");
 
             // Cleanup

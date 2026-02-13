@@ -59,6 +59,11 @@ namespace Synaxis.Transport.Grpc.Interceptors
 
                 return response;
             }
+            catch (RpcException)
+            {
+                stopwatch.Stop();
+                throw;
+            }
             catch (Exception ex)
             {
                 stopwatch.Stop();
@@ -104,6 +109,11 @@ namespace Synaxis.Transport.Grpc.Interceptors
                     method,
                     stopwatch.ElapsedMilliseconds,
                     StatusCode.OK);
+            }
+            catch (RpcException)
+            {
+                stopwatch.Stop();
+                throw;
             }
             catch (Exception ex)
             {

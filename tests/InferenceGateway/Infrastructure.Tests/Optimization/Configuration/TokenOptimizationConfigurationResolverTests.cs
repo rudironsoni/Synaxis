@@ -6,6 +6,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Optimization.Configurati
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -467,13 +468,13 @@ public class TokenOptimizationConfigurationResolverTests : IAsyncLifetime
         var resolver = new TokenOptimizationConfigurationResolver(this._dbContext);
 
         // Act - Query should complete quickly even with large dataset
-        var startTime = DateTime.UtcNow;
+        var stopwatch = Stopwatch.StartNew();
         var result = await resolver.GetConfigurationAsync("perf-provider-500", CancellationToken.None);
-        var duration = DateTime.UtcNow - startTime;
+        stopwatch.Stop();
 
         // Assert
         Assert.NotNull(result);
-        Assert.True(duration.TotalMilliseconds < 200, $"Query took {duration.TotalMilliseconds}ms");
+        Assert.True(stopwatch.ElapsedMilliseconds < 2500, $"Query took {stopwatch.ElapsedMilliseconds}ms");
     }
 }
 

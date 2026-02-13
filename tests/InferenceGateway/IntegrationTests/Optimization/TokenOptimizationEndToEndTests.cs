@@ -67,9 +67,8 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Optimization
                 return; // Don't start containers if we're skipping
             }
 
-            // Start optimization containers (factory starts PostgreSQL automatically)
+            // Start optimization containers (factory starts PostgreSQL automatically in constructor)
             await Task.WhenAll(_redis.StartAsync(), _qdrant.StartAsync()).ConfigureAwait(false);
-            await _factory.InitializeAsync().ConfigureAwait(false);
 
             this._output.WriteLine($"Redis started: {this._redis.GetConnectionString()}");
             this._output.WriteLine($"Qdrant started: {this._qdrant.Hostname}:{this._qdrant.GetMappedPublicPort(6333)}");
@@ -125,8 +124,10 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Optimization
 
             await Task.WhenAll(
                 _redis.DisposeAsync().AsTask(),
-                _qdrant.DisposeAsync().AsTask(),
-                _factory.DisposeAsync().AsTask()).ConfigureAwait(false);
+                _qdrant.DisposeAsync().AsTask()).ConfigureAwait(false);
+
+            // Factory is disposed via its Dispose method (inherited from WebApplicationFactory)
+            _factory.Dispose();
         }
 
         private bool ShouldSkipTest()

@@ -48,9 +48,9 @@ namespace Synaxis.Transport.Grpc.DependencyInjection
             services.AddSingleton<LoggingInterceptor>();
             services.AddSingleton<AuthenticationInterceptor>();
 
-            // Register gRPC services
-            services.AddSingleton<ChatGrpcService>();
-            services.AddSingleton<EmbeddingsGrpcService>();
+            // Register gRPC services (transient to avoid root provider issues)
+            services.AddTransient<ChatGrpcService>();
+            services.AddTransient<EmbeddingsGrpcService>();
 
             return services;
         }

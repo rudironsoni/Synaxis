@@ -9,16 +9,25 @@ using System.Linq;
 using System.Threading.Tasks;
 using DotNetEnv;
 using MartinCostello.Logging.XUnit;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Synaxis.DependencyInjection;
 using Synaxis.InferenceGateway.Application.ControlPlane;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 using Synaxis.Infrastructure.Data;
+using Synaxis.Transport.Grpc;
+using Synaxis.Transport.Grpc.DependencyInjection;
+using Synaxis.Transport.Http;
+using Synaxis.Transport.Http.DependencyInjection;
+using Synaxis.Transport.WebSocket;
+using Synaxis.Transport.WebSocket.DependencyInjection;
 using Testcontainers.PostgreSql;
 using Testcontainers.Redis;
 using Tests.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure;
@@ -27,7 +36,7 @@ using Xunit.Abstractions;
 
 namespace Synaxis.InferenceGateway.IntegrationTests
 {
-    public class SynaxisWebApplicationFactory : WebApplicationFactory<Program>, IAsyncLifetime, ITestOutputHelperAccessor
+    public class SynaxisWebApplicationFactory : WebApplicationFactory<Program>, ITestOutputHelperAccessor
     {
         private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:16-alpine")
             .WithCommand("-c", "max_connections=200")
@@ -38,10 +47,13 @@ namespace Synaxis.InferenceGateway.IntegrationTests
 
         public ITestOutputHelper? OutputHelper { get; set; }
 
-        public async Task InitializeAsync()
+        public SynaxisWebApplicationFactory()
         {
+            // Set base address for HTTP client testing
+            this.ClientOptions.BaseAddress = new Uri("http://localhost:5001");
+
             // Start containers in parallel
-            await Task.WhenAll(_postgres.StartAsync(), _redis.StartAsync()).ConfigureAwait(false);
+            Task.WhenAll(_postgres.StartAsync(), _redis.StartAsync()).GetAwaiter().GetResult();
 
             // Initialize the ControlPlane database schema
             var controlPlaneOptionsBuilder = new DbContextOptionsBuilder<ControlPlaneDbContext>();
@@ -52,7 +64,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             using var controlPlaneContext = new ControlPlaneDbContext(controlPlaneOptionsBuilder.Options);
 
             // Apply EF Core migrations for ControlPlaneDbContext (infrastructure tables: identity.Users, etc.)
-            await controlPlaneContext.Database.MigrateAsync().ConfigureAwait(false);
+            controlPlaneContext.Database.MigrateAsync().GetAwaiter().GetResult();
 
             // Apply EF Core migrations for SynaxisDbContext (multi-tenant tables: public.users, etc.)
             // Both contexts target the same database but create DIFFERENT tables
@@ -60,7 +72,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             synaxisOptionsBuilder.UseNpgsql(connectionString);
             synaxisOptionsBuilder.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
             using var synaxisContext = new Synaxis.Infrastructure.Data.SynaxisDbContext(synaxisOptionsBuilder.Options);
-            await synaxisContext.Database.MigrateAsync().ConfigureAwait(false);
+            synaxisContext.Database.MigrateAsync().GetAwaiter().GetResult();
 
             // Build temporary configuration to seed test data. Reuse logic from SmokeTestDataGenerator.
             var builder = new ConfigurationBuilder();
@@ -112,13 +124,18 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var config = builder.Build();
 
             // Seed the database
-            await TestDatabaseSeeder.SeedAsync(controlPlaneContext, config).ConfigureAwait(false);
+            TestDatabaseSeeder.SeedAsync(controlPlaneContext, config).GetAwaiter().GetResult();
         }
 
-        Task IAsyncLifetime.DisposeAsync()
+        protected override void Dispose(bool disposing)
         {
-            // Dispose containers
-            return Task.WhenAll(this._postgres.DisposeAsync().AsTask(), this._redis.DisposeAsync().AsTask());
+            if (disposing)
+            {
+                // Dispose containers synchronously
+                _postgres.DisposeAsync().GetAwaiter().GetResult();
+                _redis.DisposeAsync().GetAwaiter().GetResult();
+            }
+            base.Dispose(disposing);
         }
 
         protected override IHost CreateHost(IHostBuilder builder)
@@ -255,7 +272,43 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                     options.UseNpgsql(connectionString);
                     options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
                 });
+
+                // Register core Synaxis services (includes Mediator, handlers, ProviderSelector)
+                services.AddSynaxis();
+
+                // Register transport services for integration testing
+                services.AddSynaxisTransportHttp();
+                services.AddSynaxisTransportGrpc();
+                services.AddSynaxisTransportWebSocket();
+
+                // Register startup filter to configure middleware pipeline
+                services.AddSingleton<IStartupFilter, TransportStartupFilter>();
             });
+        }
+
+        /// <summary>
+        /// Startup filter to configure transport middleware pipeline.
+        /// </summary>
+        private class TransportStartupFilter : IStartupFilter
+        {
+            public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
+            {
+                return app =>
+                {
+                    app.UseRouting();
+
+                    app.UseSynaxisTransportHttp();
+                    app.UseSynaxisTransportWebSocket();
+
+                    app.UseEndpoints(endpoints =>
+                    {
+                        endpoints.MapControllers();
+                        endpoints.MapSynaxisTransportGrpc();
+                    });
+
+                    next(app);
+                };
+            }
         }
     }
 
