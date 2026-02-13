@@ -1189,7 +1189,8 @@ public sealed class UsersControllerTests : IDisposable
         {
             // Arrange
             // User not added to database
-            var formFile = CreateFormFile(Array.Empty<byte>(), "avatar.jpg", "image/jpeg");
+            var testImage = CreateTestImageFile(200, 200, "image/jpeg");
+            var formFile = CreateFormFile(testImage, "avatar.jpg", "image/jpeg");
 
             // Act
             var result = await _controller.UploadAvatar(formFile, CancellationToken.None);
