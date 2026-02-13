@@ -269,7 +269,8 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
 
             // Verify token is marked as used
             var resetToken = await _dbContext.PasswordResetTokens.FindAsync(tokenEntity.Id);
-            resetToken.IsUsed.Should().BeTrue();
+            resetToken.Should().NotBeNull();
+            resetToken!.IsUsed.Should().BeTrue();
         }
 
         [Fact]
@@ -479,7 +480,7 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
                 .ToListAsync();
             resetTokens.Should().HaveCount(1);
 
-            var resetToken = resetTokens.First();
+            var resetToken = resetTokens[0];
 
             // Step 2: Reset password
             var newPassword = "NewSecurePassword123!";

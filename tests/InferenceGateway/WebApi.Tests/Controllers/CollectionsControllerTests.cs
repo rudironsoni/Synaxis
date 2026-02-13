@@ -858,7 +858,16 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
         public async Task RemoveMember_WhenMemberNotFound_ReturnsNotFound()
         {
             // Arrange
-            SetupCollectionAdminPermission();
+            // Create an organization membership for the current user so they have permission
+            var orgMembership = new OrganizationMembership
+            {
+                Id = Guid.NewGuid(),
+                UserId = _testUserId,
+                OrganizationId = _testOrganizationId,
+                Role = "Admin",
+                JoinedAt = DateTime.UtcNow,
+            };
+            _dbContext.OrganizationMemberships.Add(orgMembership);
 
             var collection = new Collection
             {
@@ -880,7 +889,8 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             await _dbContext.SaveChangesAsync();
 
             // Act
-            var result = await _controller.RemoveMember(_testOrganizationId, _testCollectionId, _testUserId, CancellationToken.None);
+            var nonMemberUserId = Guid.NewGuid();
+            var result = await _controller.RemoveMember(_testOrganizationId, _testCollectionId, nonMemberUserId, CancellationToken.None);
 
             // Assert
             result.Should().BeOfType<NotFoundObjectResult>();

@@ -1416,3 +1416,62 @@ time=2026-02-13T15:25:21.830+01:00 level=INFO msg="🔍 Checking JSONL content h
 time=2026-02-13T15:25:21.831+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
 time=2026-02-13T15:25:31.842+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
 time=2026-02-13T15:25:31.843+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T15:25:32.130+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T15:25:32.220+01:00 level=INFO msg="Git ref change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.git/refs/heads/main.lock
+time=2026-02-13T15:25:33.221+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T15:25:33.223+01:00 level=INFO msg="Skipping: in backoff period" mode=auto-import
+time=2026-02-13T15:25:33.693+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T15:25:33.693+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T15:25:34.694+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T15:25:34.699+01:00 level=INFO msg="Skipping: in backoff period" mode=auto-import
+time=2026-02-13T15:54:39.789+01:00 level=INFO msg="Mutation detected" type=status issue_id=Synaxis-3ab
+time=2026-02-13T15:54:40.290+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-13T15:54:40.291+01:00 level=INFO msg=Starting mode=export
+time=2026-02-13T15:54:40.351+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T15:54:40.351+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T15:54:40.380+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-13T15:54:40.380+01:00 level=INFO msg="Export complete"
+time=2026-02-13T15:54:41.264+01:00 level=INFO msg="Mutation detected" type=status issue_id=Synaxis-ucg
+time=2026-02-13T15:54:41.352+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T15:54:41.353+01:00 level=INFO msg="Skipping: in backoff period" mode=auto-import
+time=2026-02-13T15:54:41.765+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-13T15:54:41.765+01:00 level=INFO msg=Starting mode=export
+time=2026-02-13T15:54:41.766+01:00 level=INFO msg="JSONL changed externally, importing before export"
+time=2026-02-13T15:54:41.802+01:00 level=INFO msg="Auto-import complete, proceeding with export"
+time=2026-02-13T15:54:41.840+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T15:54:41.859+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-13T15:54:41.859+01:00 level=INFO msg="Export complete"
+time=2026-02-13T15:54:42.842+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T15:54:42.842+01:00 level=INFO msg="Skipping: in backoff period" mode=auto-import
+time=2026-02-13T15:54:43.126+01:00 level=INFO msg="Mutation detected" type=status issue_id=Synaxis-v04
+time=2026-02-13T15:54:43.626+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-13T15:54:43.626+01:00 level=INFO msg=Starting mode=export
+time=2026-02-13T15:54:43.627+01:00 level=INFO msg="JSONL changed externally, importing before export"
+time=2026-02-13T15:54:43.658+01:00 level=INFO msg="Auto-import complete, proceeding with export"
+time=2026-02-13T15:54:43.694+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T15:54:43.718+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-13T15:54:43.718+01:00 level=INFO msg="Export complete"
+time=2026-02-13T15:54:44.695+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T15:54:44.700+01:00 level=INFO msg="Skipping: in backoff period" mode=auto-import
+time=2026-02-13T15:54:44.782+01:00 level=INFO msg="Mutation detected" type=status issue_id=Synaxis-qyd
+time=2026-02-13T15:54:45.282+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-13T15:54:45.283+01:00 level=INFO msg=Starting mode=export
+time=2026-02-13T15:54:45.283+01:00 level=INFO msg="JSONL changed externally, importing before export"
+time=2026-02-13T15:54:45.309+01:00 level=INFO msg="Auto-import complete, proceeding with export"
+time=2026-02-13T15:54:45.346+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T15:54:45.346+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T15:54:45.364+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-13T15:54:45.364+01:00 level=INFO msg="Export complete"
+time=2026-02-13T15:54:46.346+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T15:54:46.347+01:00 level=INFO msg="Skipping: in backoff period" mode=auto-import
+time=2026-02-13T15:54:46.378+01:00 level=INFO msg="Mutation detected" type=status issue_id=Synaxis-pwb
+time=2026-02-13T15:54:46.879+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-13T15:54:46.879+01:00 level=INFO msg=Starting mode=export
+time=2026-02-13T15:54:46.880+01:00 level=INFO msg="JSONL changed externally, importing before export"
+time=2026-02-13T15:54:46.920+01:00 level=INFO msg="Auto-import complete, proceeding with export"
+time=2026-02-13T15:54:46.972+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T15:54:46.972+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T15:54:47.008+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-13T15:54:47.008+01:00 level=INFO msg="Export complete"
+time=2026-02-13T15:54:47.973+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T15:54:47.974+01:00 level=INFO msg="Skipping: in backoff period" mode=auto-import
