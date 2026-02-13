@@ -1,7 +1,7 @@
 {
-  "last_failure": "2026-02-13T13:57:59.330018175+01:00",
-  "failure_count": 2,
-  "backoff_until": "2026-02-13T13:58:59.330018366+01:00",
-  "needs_manual_sync": false,
+  "last_failure": "2026-02-13T14:57:57.849368812+01:00",
+  "failure_count": 4,
+  "backoff_until": "2026-02-13T15:02:57.849369006+01:00",
+  "needs_manual_sync": true,
   "failure_reason": "git pull failed: exit status 1\nFrom github.com:rudironsoni/Synaxis\n * branch            main       -\u003e FETCH_HEAD\nThere are no candidates for merging among the refs that you just fetched.\nGenerally this means that you provided a wildcard refspec which had no\nmatches on the remote end.\n"
 }
