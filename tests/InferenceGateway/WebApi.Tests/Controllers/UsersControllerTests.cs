@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.Formats.Gif;
@@ -879,7 +880,7 @@ public sealed class UsersControllerTests : IDisposable
                 .ToListAsync();
 
             auditLogs.Should().HaveCount(1);
-            var auditLog = auditLogs.First();
+            var auditLog = auditLogs[0];
             auditLog.EventCategory.Should().Be("Account");
             auditLog.Action.Should().Be("Delete");
             auditLog.ResourceType.Should().Be("User");
@@ -1455,7 +1456,7 @@ public sealed class UsersControllerTests : IDisposable
             // Create a simple test image with the specified dimensions
             using var image = new Image<Rgb24>(width, height);
             using var stream = new MemoryStream();
-            var encoder = mimeType switch
+            IImageEncoder encoder = mimeType switch
             {
                 "image/jpeg" => new JpegEncoder(),
                 "image/png" => new PngEncoder(),
@@ -1476,6 +1477,282 @@ public sealed class UsersControllerTests : IDisposable
                 ContentType = contentType
             };
             return formFile;
+        }
+
+        /// <summary>
+        /// Tests that GetMyOrganizations returns the user's organizations.
+        /// </summary>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        [Fact]
+        [Trait("Category", "Unit")]
+        [Trait("Feature", "Organizations")]
+        public async Task GetMyOrganizations_ReturnsOrganizationsList()
+        {
+            // Arrange
+            var user = CreateTestUser();
+            var org1 = new Organization
+            {
+                Id = Guid.NewGuid(),
+                Slug = "org-1",
+                Name = "Organization 1",
+                PrimaryRegion = "us-east-1",
+                Tier = "free",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+            };
+            var org2 = new Organization
+            {
+                Id = Guid.NewGuid(),
+                Slug = "org-2",
+                Name = "Organization 2",
+                PrimaryRegion = "us-east-1",
+                Tier = "free",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+            };
+            var org3 = new Organization
+            {
+                Id = Guid.NewGuid(),
+                Slug = "org-3",
+                Name = "Organization 3",
+                PrimaryRegion = "us-east-1",
+                Tier = "free",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+            };
+
+            var team1 = new Team
+            {
+                Id = Guid.NewGuid(),
+                OrganizationId = org1.Id,
+                Slug = "team-1",
+                Name = "Team 1",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+            };
+            var team2 = new Team
+            {
+                Id = Guid.NewGuid(),
+                OrganizationId = org2.Id,
+                Slug = "team-2",
+                Name = "Team 2",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+            };
+            var team3 = new Team
+            {
+                Id = Guid.NewGuid(),
+                OrganizationId = org3.Id,
+                Slug = "team-3",
+                Name = "Team 3",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+            };
+
+            var membership1 = new TeamMembership
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                TeamId = team1.Id,
+                OrganizationId = org1.Id,
+                Role = "member",
+                JoinedAt = DateTime.UtcNow,
+            };
+            var membership2 = new TeamMembership
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                TeamId = team2.Id,
+                OrganizationId = org2.Id,
+                Role = "member",
+                JoinedAt = DateTime.UtcNow,
+            };
+            var membership3 = new TeamMembership
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                TeamId = team3.Id,
+                OrganizationId = org3.Id,
+                Role = "member",
+                JoinedAt = DateTime.UtcNow,
+            };
+
+            _dbContext.Organizations.AddRange(org1, org2, org3);
+            _dbContext.Teams.AddRange(team1, team2, team3);
+            _dbContext.Users.Add(user);
+            _dbContext.TeamMemberships.AddRange(membership1, membership2, membership3);
+            await _dbContext.SaveChangesAsync();
+
+            // Act
+            var result = await _controller.GetMyOrganizations(1, 10, CancellationToken.None);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            okResult.Value.Should().NotBeNull();
+
+            var response = okResult.Value!;
+            var responseType = response.GetType();
+            var items = responseType.GetProperty("items")?.GetValue(response) as System.Collections.IList;
+            items.Should().NotBeNull();
+            items!.Count.Should().Be(3);
+
+            var totalCount = responseType.GetProperty("totalCount")?.GetValue(response);
+            totalCount.Should().Be(3);
+        }
+
+        /// <summary>
+        /// Tests that GetMyTeams returns the user's teams.
+        /// </summary>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        [Fact]
+        [Trait("Category", "Unit")]
+        [Trait("Feature", "Teams")]
+        public async Task GetMyTeams_ReturnsTeamsList()
+        {
+            // Arrange
+            var user = CreateTestUser();
+            var org1 = new Organization
+            {
+                Id = Guid.NewGuid(),
+                Slug = "org-1",
+                Name = "Organization 1",
+                PrimaryRegion = "us-east-1",
+                Tier = "free",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+            };
+            var org2 = new Organization
+            {
+                Id = Guid.NewGuid(),
+                Slug = "org-2",
+                Name = "Organization 2",
+                PrimaryRegion = "us-east-1",
+                Tier = "free",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+            };
+
+            var team1 = new Team
+            {
+                Id = Guid.NewGuid(),
+                OrganizationId = org1.Id,
+                Slug = "team-1",
+                Name = "Team 1",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+            };
+            var team2 = new Team
+            {
+                Id = Guid.NewGuid(),
+                OrganizationId = org1.Id,
+                Slug = "team-2",
+                Name = "Team 2",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+            };
+            var team3 = new Team
+            {
+                Id = Guid.NewGuid(),
+                OrganizationId = org2.Id,
+                Slug = "team-3",
+                Name = "Team 3",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+            };
+
+            var membership1 = new TeamMembership
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                TeamId = team1.Id,
+                OrganizationId = org1.Id,
+                Role = "member",
+                JoinedAt = DateTime.UtcNow,
+            };
+            var membership2 = new TeamMembership
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                TeamId = team2.Id,
+                OrganizationId = org1.Id,
+                Role = "member",
+                JoinedAt = DateTime.UtcNow,
+            };
+            var membership3 = new TeamMembership
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                TeamId = team3.Id,
+                OrganizationId = org2.Id,
+                Role = "member",
+                JoinedAt = DateTime.UtcNow,
+            };
+
+            _dbContext.Organizations.AddRange(org1, org2);
+            _dbContext.Teams.AddRange(team1, team2, team3);
+            _dbContext.Users.Add(user);
+            _dbContext.TeamMemberships.AddRange(membership1, membership2, membership3);
+            await _dbContext.SaveChangesAsync();
+
+            // Act
+            var result = await _controller.GetMyTeams(1, 10, CancellationToken.None);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            okResult.Value.Should().NotBeNull();
+
+            var response = okResult.Value!;
+            var responseType = response.GetType();
+            var items = responseType.GetProperty("items")?.GetValue(response) as System.Collections.IList;
+            items.Should().NotBeNull();
+            items!.Count.Should().Be(3);
+
+            var totalCount = responseType.GetProperty("totalCount")?.GetValue(response);
+            totalCount.Should().Be(3);
+        }
+
+        /// <summary>
+        /// Tests that RequestDataExport returns an accepted response.
+        /// </summary>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        [Fact]
+        [Trait("Category", "Unit")]
+        [Trait("Feature", "DataExport")]
+        public async Task RequestDataExport_ReturnsAccepted()
+        {
+            // Arrange
+            var user = CreateTestUser();
+            _dbContext.Users.Add(user);
+            await _dbContext.SaveChangesAsync();
+
+            // Act
+            var result = await _controller.RequestDataExport(CancellationToken.None);
+
+            // Assert
+            var acceptedResult = Assert.IsType<AcceptedResult>(result);
+            acceptedResult.Value.Should().NotBeNull();
+
+            var response = acceptedResult.Value!;
+            var responseType = response.GetType();
+            var message = responseType.GetProperty("message")?.GetValue(response) as string;
+            message.Should().Be("Data export request received - actual export processing to be implemented");
+
+            var userId = responseType.GetProperty("userId")?.GetValue(response);
+            userId.Should().Be(_testUserId);
+
+            var requestedAt = responseType.GetProperty("requestedAt")?.GetValue(response);
+            requestedAt.Should().NotBeNull();
         }
     }
 }
