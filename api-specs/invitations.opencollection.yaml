@@ -1,0 +1,319 @@
+openapi: 3.0.3
+info:
+  title: Synaxis Invitations API
+  description: API endpoints for managing invitations to organizations and teams in the Synaxis platform
+  version: 1.0.0
+  contact:
+    name: Synaxis Team
+servers:
+  - url: /api/v1
+    description: API v1 Base URL
+tags:
+  - name: Invitations
+    description: Invitation management operations
+security:
+  - bearerAuth: []
+paths:
+  /invitations:
+    post:
+      tags:
+        - Invitations
+      summary: Create a new invitation
+      description: Creates a new invitation for a user to join an organization or team. Sends invitation email to the recipient.
+      operationId: createInvitation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInvitationRequest'
+      responses:
+        '201':
+          description: Invitation created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvitationResponse'
+        '400':
+          description: Bad request (e.g., invalid email, missing organization/team)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - User is not an admin of the organization
+        '404':
+          description: Organization or team not found
+        '409':
+          description: Conflict - Invitation already exists for this email
+
+  /invitations/{token}:
+    get:
+      tags:
+        - Invitations
+      summary: Get invitation by token
+      description: Retrieves invitation details using the invitation token. Used by recipients to view invitation details before accepting or declining.
+      operationId: getInvitationByToken
+      parameters:
+        - name: token
+          in: path
+          required: true
+          description: Invitation token (UUID)
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Invitation found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvitationResponse'
+        '400':
+          description: Bad request - Invalid token format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Invitation not found or expired
+        '410':
+          description: Invitation already accepted or declined
+
+  /invitations/{token}/accept:
+    post:
+      tags:
+        - Invitations
+      summary: Accept invitation
+      description: Accepts an invitation to join an organization or team. Adds the user as a member.
+      operationId: acceptInvitation
+      parameters:
+        - name: token
+          in: path
+          required: true
+          description: Invitation token (UUID)
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Invitation accepted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvitationAcceptResponse'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Invitation not found
+        '410':
+          description: Invitation already accepted, declined, or expired
+        '409':
+          description: Conflict - User is already a member of the organization/team
+
+  /invitations/{token}/decline:
+    post:
+      tags:
+        - Invitations
+      summary: Decline invitation
+      description: Declines an invitation to join an organization or team.
+      operationId: declineInvitation
+      parameters:
+        - name: token
+          in: path
+          required: true
+          description: Invitation token (UUID)
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Invitation declined successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvitationDeclineResponse'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Invitation not found
+        '410':
+          description: Invitation already accepted or declined
+
+  /invitations/{id}:
+    delete:
+      tags:
+        - Invitations
+      summary: Cancel invitation
+      description: Cancels (deletes) an invitation. Can only be performed by organization admins.
+      operationId: cancelInvitation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Invitation ID (UUID)
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Invitation cancelled successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - User is not an admin
+        '404':
+          description: Invitation not found
+        '410':
+          description: Invitation already accepted or declined
+
+  /organizations/{orgId}/invitations:
+    get:
+      tags:
+        - Invitations
+      summary: List organization invitations
+      description: Returns a paginated list of pending invitations for an organization.
+      operationId: listOrganizationInvitations
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          description: Organization ID (UUID)
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          description: Page number (1-based)
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          description: Number of items per page
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: List of invitations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedInvitationsResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - User is not a member of the organization
+        '404':
+          description: Organization not found
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    CreateInvitationRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          description: Email address of the invited user
+          example: "user@example.com"
+        organizationId:
+          type: string
+          format: uuid
+          description: Organization ID (required if teamId not provided)
+        teamId:
+          type: string
+          format: uuid
+          description: Team ID (optional, requires organizationId)
+        role:
+          type: string
+          enum: [Admin, Member]
+          default: Member
+          description: Role to assign when invitation is accepted
+
+    InvitationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        token:
+          type: string
+          format: uuid
+        organizationId:
+          type: string
+          format: uuid
+        teamId:
+          type: string
+          format: uuid
+        role:
+          type: string
+          enum: [Admin, Member]
+        status:
+          type: string
+          enum: [Pending, Accepted, Declined, Cancelled]
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+
+    InvitationAcceptResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Invitation accepted successfully"
+        organizationId:
+          type: string
+          format: uuid
+        teamId:
+          type: string
+          format: uuid
+
+    InvitationDeclineResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Invitation declined"
+
+    PaginatedInvitationsResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/InvitationResponse'
+        totalCount:
+          type: integer
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        totalPages:
+          type: integer
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        statusCode:
+          type: integer
