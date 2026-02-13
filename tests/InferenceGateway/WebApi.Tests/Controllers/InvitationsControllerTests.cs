@@ -971,6 +971,178 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             totalPages.Should().Be(0);
         }
 
+        [Fact]
+        public async Task CancelInvitation_WithValidId_ReturnsNoContent()
+        {
+            // Arrange
+            var organization = CreateTestOrganization();
+            var team = CreateTestTeam(_testOrganizationId);
+            var membership = CreateTestTeamMembership(_testUserId, _testTeamId, _testOrganizationId, "TeamAdmin");
+
+            _dbContext.Organizations.Add(organization);
+            _dbContext.Teams.Add(team);
+            _dbContext.TeamMemberships.Add(membership);
+
+            var invitation = new Invitation
+            {
+                Id = Guid.NewGuid(),
+                OrganizationId = _testOrganizationId,
+                TeamId = _testTeamId,
+                Email = "invitee@example.com",
+                Role = "member",
+                Token = "cancel-token",
+                InvitedBy = _testUserId,
+                Status = "pending",
+                CreatedAt = DateTime.UtcNow,
+                ExpiresAt = DateTime.UtcNow.AddDays(7)
+            };
+            _dbContext.Invitations.Add(invitation);
+            await _dbContext.SaveChangesAsync();
+
+            // Act
+            var result = await _controller.CancelInvitation(invitation.Id, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<NoContentResult>();
+
+            // Verify invitation was cancelled
+            var updatedInvitation = await _dbContext.Invitations.FindAsync(invitation.Id);
+            updatedInvitation!.Status.Should().Be("cancelled");
+            updatedInvitation.CancelledAt.Should().NotBeNull();
+            updatedInvitation.CancelledBy.Should().Be(_testUserId);
+        }
+
+        [Fact]
+        public async Task CancelInvitation_WithInvalidId_ReturnsNotFound()
+        {
+            // Arrange
+            var nonExistentId = Guid.NewGuid();
+
+            // Act
+            var result = await _controller.CancelInvitation(nonExistentId, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<NotFoundObjectResult>();
+            var notFoundResult = result as NotFoundObjectResult;
+            notFoundResult!.Value.Should().Be("Invitation not found");
+        }
+
+        [Fact]
+        public async Task CancelInvitation_WhenNotAuthorized_ReturnsForbid()
+        {
+            // Arrange
+            var organization = CreateTestOrganization();
+            var team = CreateTestTeam(_testOrganizationId);
+            var otherUserId = Guid.NewGuid();
+            var otherMembership = CreateTestTeamMembership(otherUserId, _testTeamId, _testOrganizationId, "TeamAdmin");
+
+            _dbContext.Organizations.Add(organization);
+            _dbContext.Teams.Add(team);
+            _dbContext.TeamMemberships.Add(otherMembership);
+
+            var invitation = new Invitation
+            {
+                Id = Guid.NewGuid(),
+                OrganizationId = _testOrganizationId,
+                TeamId = _testTeamId,
+                Email = "invitee@example.com",
+                Role = "member",
+                Token = "cancel-token-unauth",
+                InvitedBy = otherUserId,
+                Status = "pending",
+                CreatedAt = DateTime.UtcNow,
+                ExpiresAt = DateTime.UtcNow.AddDays(7)
+            };
+            _dbContext.Invitations.Add(invitation);
+            await _dbContext.SaveChangesAsync();
+
+            // Act
+            var result = await _controller.CancelInvitation(invitation.Id, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<ForbidResult>();
+        }
+
+        [Fact]
+        public async Task CancelInvitation_WhenAlreadyAccepted_ReturnsGone()
+        {
+            // Arrange
+            var organization = CreateTestOrganization();
+            var team = CreateTestTeam(_testOrganizationId);
+            var membership = CreateTestTeamMembership(_testUserId, _testTeamId, _testOrganizationId, "TeamAdmin");
+
+            _dbContext.Organizations.Add(organization);
+            _dbContext.Teams.Add(team);
+            _dbContext.TeamMemberships.Add(membership);
+
+            var invitation = new Invitation
+            {
+                Id = Guid.NewGuid(),
+                OrganizationId = _testOrganizationId,
+                TeamId = _testTeamId,
+                Email = "invitee@example.com",
+                Role = "member",
+                Token = "accepted-cancel-token",
+                InvitedBy = _testUserId,
+                Status = "accepted",
+                CreatedAt = DateTime.UtcNow.AddDays(-1),
+                ExpiresAt = DateTime.UtcNow.AddDays(6),
+                AcceptedAt = DateTime.UtcNow.AddHours(-1),
+                AcceptedBy = Guid.NewGuid()
+            };
+            _dbContext.Invitations.Add(invitation);
+            await _dbContext.SaveChangesAsync();
+
+            // Act
+            var result = await _controller.CancelInvitation(invitation.Id, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<ObjectResult>();
+            var objectResult = result as ObjectResult;
+            objectResult!.StatusCode.Should().Be(410);
+            objectResult.Value.Should().Be("Invitation has already been accepted or declined");
+        }
+
+        [Fact]
+        public async Task CancelInvitation_WhenAlreadyDeclined_ReturnsGone()
+        {
+            // Arrange
+            var organization = CreateTestOrganization();
+            var team = CreateTestTeam(_testOrganizationId);
+            var membership = CreateTestTeamMembership(_testUserId, _testTeamId, _testOrganizationId, "TeamAdmin");
+
+            _dbContext.Organizations.Add(organization);
+            _dbContext.Teams.Add(team);
+            _dbContext.TeamMemberships.Add(membership);
+
+            var invitation = new Invitation
+            {
+                Id = Guid.NewGuid(),
+                OrganizationId = _testOrganizationId,
+                TeamId = _testTeamId,
+                Email = "invitee@example.com",
+                Role = "member",
+                Token = "declined-cancel-token",
+                InvitedBy = _testUserId,
+                Status = "declined",
+                CreatedAt = DateTime.UtcNow.AddDays(-1),
+                ExpiresAt = DateTime.UtcNow.AddDays(6),
+                DeclinedAt = DateTime.UtcNow.AddHours(-1),
+                DeclinedBy = Guid.NewGuid()
+            };
+            _dbContext.Invitations.Add(invitation);
+            await _dbContext.SaveChangesAsync();
+
+            // Act
+            var result = await _controller.CancelInvitation(invitation.Id, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<ObjectResult>();
+            var objectResult = result as ObjectResult;
+            objectResult!.StatusCode.Should().Be(410);
+            objectResult.Value.Should().Be("Invitation has already been accepted or declined");
+        }
+
         private Organization CreateTestOrganization()
         {
             return new Organization
