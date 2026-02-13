@@ -15,7 +15,7 @@ namespace Synaxis.Transport.WebSocket.Protocol
     /// </summary>
     public static class MessageSerializer
     {
-        private static readonly JsonSerializerOptions JsonOptions = new ()
+        private static readonly JsonSerializerOptions JsonOptions = new()
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             WriteIndented = false,

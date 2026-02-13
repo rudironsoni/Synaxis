@@ -11,6 +11,7 @@
   <ItemGroup>
     <PackageReference Include="DotNetEnv" />
     <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="Grpc.Net.Client" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
@@ -33,6 +34,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\InferenceGateway\WebApi\Synaxis.InferenceGateway.WebApi.csproj" />
     <ProjectReference Include="..\..\..\src\Synaxis.Infrastructure\Synaxis.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\src\Synaxis.Transport.Grpc\Synaxis.Transport.Grpc.csproj" />
+    <ProjectReference Include="..\..\..\src\Synaxis.Transport.WebSocket\Synaxis.Transport.WebSocket.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />
