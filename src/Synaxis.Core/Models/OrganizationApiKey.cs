@@ -101,6 +101,16 @@ namespace Synaxis.Core.Models
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         /// <summary>
+        /// Gets or sets the total number of requests made with this API key.
+        /// </summary>
+        public long? TotalRequests { get; set; }
+
+        /// <summary>
+        /// Gets or sets the number of error requests made with this API key.
+        /// </summary>
+        public long? ErrorCount { get; set; }
+
+        /// <summary>
         /// Gets a value indicating whether the API key is expired.
         /// </summary>
         public bool IsExpired => this.ExpiresAt.HasValue && DateTime.UtcNow > this.ExpiresAt.Value;

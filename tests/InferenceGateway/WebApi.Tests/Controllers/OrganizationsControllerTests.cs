@@ -292,6 +292,410 @@ public class OrganizationsControllerTests : IDisposable
             notFoundResult!.Value.Should().Be("API key not found");
         }
 
+        [Fact]
+        public async Task DeleteApiKey_WithValidRequest_ReturnsNoContent()
+        {
+            // Arrange
+            var organization = CreateTestOrganization();
+            var membership = CreateTestTeamMembership(_testUserId, Guid.NewGuid(), _testOrganizationId, "OrgAdmin");
+
+            _dbContext.Organizations.Add(organization);
+            _dbContext.TeamMemberships.Add(membership);
+
+            var apiKey = new OrganizationApiKey
+            {
+                Id = Guid.NewGuid(),
+                OrganizationId = _testOrganizationId,
+                CreatedBy = _testUserId,
+                Name = "Test API Key",
+                KeyHash = "test-hash",
+                KeyPrefix = "testpref",
+                Permissions = new Dictionary<string, object>(),
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            _dbContext.OrganizationApiKeys.Add(apiKey);
+            await _dbContext.SaveChangesAsync();
+
+            // Act
+            var result = await _controller.DeleteApiKey(_testOrganizationId, apiKey.Id, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<NoContentResult>();
+
+            // Verify API key was deleted
+            var deletedApiKey = await _dbContext.OrganizationApiKeys.FindAsync(apiKey.Id);
+            deletedApiKey.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task DeleteApiKey_WhenOrganizationNotFound_ReturnsNotFound()
+        {
+            // Arrange
+            var nonExistentOrgId = Guid.NewGuid();
+            var apiKeyId = Guid.NewGuid();
+
+            // Act
+            var result = await _controller.DeleteApiKey(nonExistentOrgId, apiKeyId, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<NotFoundObjectResult>();
+            var notFoundResult = result as NotFoundObjectResult;
+            notFoundResult!.Value.Should().Be("Organization not found");
+        }
+
+        [Fact]
+        public async Task DeleteApiKey_WhenApiKeyNotFound_ReturnsNotFound()
+        {
+            // Arrange
+            var organization = CreateTestOrganization();
+            var membership = CreateTestTeamMembership(_testUserId, Guid.NewGuid(), _testOrganizationId, "OrgAdmin");
+
+            _dbContext.Organizations.Add(organization);
+            _dbContext.TeamMemberships.Add(membership);
+            await _dbContext.SaveChangesAsync();
+
+            var nonExistentKeyId = Guid.NewGuid();
+
+            // Act
+            var result = await _controller.DeleteApiKey(_testOrganizationId, nonExistentKeyId, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<NotFoundObjectResult>();
+            var notFoundResult = result as NotFoundObjectResult;
+            notFoundResult!.Value.Should().Be("API key not found");
+        }
+
+        [Fact]
+        public async Task DeleteApiKey_WhenNotAdmin_ReturnsForbid()
+        {
+            // Arrange
+            var organization = CreateTestOrganization();
+            var membership = CreateTestTeamMembership(_testUserId, Guid.NewGuid(), _testOrganizationId, "Member");
+
+            _dbContext.Organizations.Add(organization);
+            _dbContext.TeamMemberships.Add(membership);
+
+            var apiKey = new OrganizationApiKey
+            {
+                Id = Guid.NewGuid(),
+                OrganizationId = _testOrganizationId,
+                CreatedBy = _testUserId,
+                Name = "Test API Key",
+                KeyHash = "test-hash",
+                KeyPrefix = "testpref",
+                Permissions = new Dictionary<string, object>(),
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            _dbContext.OrganizationApiKeys.Add(apiKey);
+            await _dbContext.SaveChangesAsync();
+
+            // Act
+            var result = await _controller.DeleteApiKey(_testOrganizationId, apiKey.Id, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<ForbidResult>();
+        }
+
+        [Fact]
+        public async Task DeleteApiKey_WhenKeyAlreadyRevoked_ReturnsGone()
+        {
+            // Arrange
+            var organization = CreateTestOrganization();
+            var membership = CreateTestTeamMembership(_testUserId, Guid.NewGuid(), _testOrganizationId, "OrgAdmin");
+
+            _dbContext.Organizations.Add(organization);
+            _dbContext.TeamMemberships.Add(membership);
+
+            var apiKey = new OrganizationApiKey
+            {
+                Id = Guid.NewGuid(),
+                OrganizationId = _testOrganizationId,
+                CreatedBy = _testUserId,
+                Name = "Test API Key",
+                KeyHash = "test-hash",
+                KeyPrefix = "testpref",
+                Permissions = new Dictionary<string, object>(),
+                IsActive = false,
+                RevokedAt = DateTime.UtcNow.AddDays(-1),
+                CreatedAt = DateTime.UtcNow.AddDays(-2),
+                UpdatedAt = DateTime.UtcNow.AddDays(-1)
+            };
+            _dbContext.OrganizationApiKeys.Add(apiKey);
+            await _dbContext.SaveChangesAsync();
+
+            // Act
+            var result = await _controller.DeleteApiKey(_testOrganizationId, apiKey.Id, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<ObjectResult>();
+            var objectResult = result as ObjectResult;
+            objectResult!.StatusCode.Should().Be(410);
+            objectResult.Value.Should().Be("API key has already been revoked");
+        }
+
+        [Fact]
+        public async Task RotateApiKey_WithValidRequest_ReturnsOkWithNewKey()
+        {
+            // Arrange
+            var organization = CreateTestOrganization();
+            var membership = CreateTestTeamMembership(_testUserId, Guid.NewGuid(), _testOrganizationId, "OrgAdmin");
+
+            _dbContext.Organizations.Add(organization);
+            _dbContext.TeamMemberships.Add(membership);
+
+            var apiKey = new OrganizationApiKey
+            {
+                Id = Guid.NewGuid(),
+                OrganizationId = _testOrganizationId,
+                CreatedBy = _testUserId,
+                Name = "Test API Key",
+                KeyHash = "old-hash",
+                KeyPrefix = "oldpref",
+                Permissions = new Dictionary<string, object>(),
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            _dbContext.OrganizationApiKeys.Add(apiKey);
+            await _dbContext.SaveChangesAsync();
+
+            // Act
+            var result = await _controller.RotateApiKey(_testOrganizationId, apiKey.Id, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<OkObjectResult>();
+            var okResult = result as OkObjectResult;
+            var response = okResult!.Value as RotateOrganizationApiKeyResponse;
+            response.Should().NotBeNull();
+            response!.Id.Should().Be(apiKey.Id);
+            response.Name.Should().Be("Test API Key");
+            response.Key.Should().NotBeNullOrEmpty();
+            response.Key.Should().StartWith("sk-");
+            response.KeyPrefix.Should().NotBe("oldpref");
+            response.RotatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
+
+            // Verify API key was updated with new hash
+            var updatedApiKey = await _dbContext.OrganizationApiKeys.FindAsync(apiKey.Id);
+            updatedApiKey!.KeyHash.Should().NotBe("old-hash");
+            updatedApiKey.KeyPrefix.Should().NotBe("oldpref");
+        }
+
+        [Fact]
+        public async Task RotateApiKey_WhenOrganizationNotFound_ReturnsNotFound()
+        {
+            // Arrange
+            var nonExistentOrgId = Guid.NewGuid();
+            var apiKeyId = Guid.NewGuid();
+
+            // Act
+            var result = await _controller.RotateApiKey(nonExistentOrgId, apiKeyId, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<NotFoundObjectResult>();
+            var notFoundResult = result as NotFoundObjectResult;
+            notFoundResult!.Value.Should().Be("Organization not found");
+        }
+
+        [Fact]
+        public async Task RotateApiKey_WhenApiKeyNotFound_ReturnsNotFound()
+        {
+            // Arrange
+            var organization = CreateTestOrganization();
+            var membership = CreateTestTeamMembership(_testUserId, Guid.NewGuid(), _testOrganizationId, "OrgAdmin");
+
+            _dbContext.Organizations.Add(organization);
+            _dbContext.TeamMemberships.Add(membership);
+            await _dbContext.SaveChangesAsync();
+
+            var nonExistentKeyId = Guid.NewGuid();
+
+            // Act
+            var result = await _controller.RotateApiKey(_testOrganizationId, nonExistentKeyId, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<NotFoundObjectResult>();
+            var notFoundResult = result as NotFoundObjectResult;
+            notFoundResult!.Value.Should().Be("API key not found");
+        }
+
+        [Fact]
+        public async Task RotateApiKey_WhenNotAdmin_ReturnsForbid()
+        {
+            // Arrange
+            var organization = CreateTestOrganization();
+            var membership = CreateTestTeamMembership(_testUserId, Guid.NewGuid(), _testOrganizationId, "Member");
+
+            _dbContext.Organizations.Add(organization);
+            _dbContext.TeamMemberships.Add(membership);
+
+            var apiKey = new OrganizationApiKey
+            {
+                Id = Guid.NewGuid(),
+                OrganizationId = _testOrganizationId,
+                CreatedBy = _testUserId,
+                Name = "Test API Key",
+                KeyHash = "test-hash",
+                KeyPrefix = "testpref",
+                Permissions = new Dictionary<string, object>(),
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            _dbContext.OrganizationApiKeys.Add(apiKey);
+            await _dbContext.SaveChangesAsync();
+
+            // Act
+            var result = await _controller.RotateApiKey(_testOrganizationId, apiKey.Id, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<ForbidResult>();
+        }
+
+        [Fact]
+        public async Task RotateApiKey_WhenKeyAlreadyRevoked_ReturnsGone()
+        {
+            // Arrange
+            var organization = CreateTestOrganization();
+            var membership = CreateTestTeamMembership(_testUserId, Guid.NewGuid(), _testOrganizationId, "OrgAdmin");
+
+            _dbContext.Organizations.Add(organization);
+            _dbContext.TeamMemberships.Add(membership);
+
+            var apiKey = new OrganizationApiKey
+            {
+                Id = Guid.NewGuid(),
+                OrganizationId = _testOrganizationId,
+                CreatedBy = _testUserId,
+                Name = "Test API Key",
+                KeyHash = "test-hash",
+                KeyPrefix = "testpref",
+                Permissions = new Dictionary<string, object>(),
+                IsActive = false,
+                RevokedAt = DateTime.UtcNow.AddDays(-1),
+                CreatedAt = DateTime.UtcNow.AddDays(-2),
+                UpdatedAt = DateTime.UtcNow.AddDays(-1)
+            };
+            _dbContext.OrganizationApiKeys.Add(apiKey);
+            await _dbContext.SaveChangesAsync();
+
+            // Act
+            var result = await _controller.RotateApiKey(_testOrganizationId, apiKey.Id, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<ObjectResult>();
+            var objectResult = result as ObjectResult;
+            objectResult!.StatusCode.Should().Be(410);
+            objectResult.Value.Should().Be("API key has already been revoked");
+        }
+
+        [Fact]
+        public async Task GetApiKeyUsage_WithValidRequest_ReturnsOkWithUsageData()
+        {
+            // Arrange
+            var organization = CreateTestOrganization();
+            var membership = CreateTestTeamMembership(_testUserId, Guid.NewGuid(), _testOrganizationId, "Member");
+
+            _dbContext.Organizations.Add(organization);
+            _dbContext.TeamMemberships.Add(membership);
+
+            var apiKey = new OrganizationApiKey
+            {
+                Id = Guid.NewGuid(),
+                OrganizationId = _testOrganizationId,
+                CreatedBy = _testUserId,
+                Name = "Test API Key",
+                KeyHash = "test-hash",
+                KeyPrefix = "testpref",
+                Permissions = new Dictionary<string, object>(),
+                IsActive = true,
+                TotalRequests = 100,
+                ErrorCount = 5,
+                LastUsedAt = DateTime.UtcNow.AddMinutes(-10),
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            _dbContext.OrganizationApiKeys.Add(apiKey);
+            await _dbContext.SaveChangesAsync();
+
+            // Act
+            var result = await _controller.GetApiKeyUsage(_testOrganizationId, apiKey.Id, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<OkObjectResult>();
+            var okResult = result as OkObjectResult;
+            var response = okResult!.Value as OrganizationApiKeyUsageResponse;
+            response.Should().NotBeNull();
+            response!.ApiKeyId.Should().Be(apiKey.Id);
+            response.TotalRequests.Should().Be(100);
+            response.ErrorCount.Should().Be(5);
+            response.ErrorRate.Should().Be(0.05);
+            response.LastUsedAt.Should().BeCloseTo(DateTime.UtcNow.AddMinutes(-10), TimeSpan.FromSeconds(5));
+            response.RequestsByHour.Should().NotBeNull();
+            response.RequestsByDay.Should().NotBeNull();
+            response.RequestsByWeek.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async Task GetApiKeyUsage_WhenOrganizationNotFound_ReturnsNotFound()
+        {
+            // Arrange
+            var nonExistentOrgId = Guid.NewGuid();
+            var apiKeyId = Guid.NewGuid();
+
+            // Act
+            var result = await _controller.GetApiKeyUsage(nonExistentOrgId, apiKeyId, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<NotFoundObjectResult>();
+            var notFoundResult = result as NotFoundObjectResult;
+            notFoundResult!.Value.Should().Be("Organization not found");
+        }
+
+        [Fact]
+        public async Task GetApiKeyUsage_WhenApiKeyNotFound_ReturnsNotFound()
+        {
+            // Arrange
+            var organization = CreateTestOrganization();
+            var membership = CreateTestTeamMembership(_testUserId, Guid.NewGuid(), _testOrganizationId, "Member");
+
+            _dbContext.Organizations.Add(organization);
+            _dbContext.TeamMemberships.Add(membership);
+            await _dbContext.SaveChangesAsync();
+
+            var nonExistentKeyId = Guid.NewGuid();
+
+            // Act
+            var result = await _controller.GetApiKeyUsage(_testOrganizationId, nonExistentKeyId, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<NotFoundObjectResult>();
+            var notFoundResult = result as NotFoundObjectResult;
+            notFoundResult!.Value.Should().Be("API key not found");
+        }
+
+        [Fact]
+        public async Task GetApiKeyUsage_WhenNotMember_ReturnsForbid()
+        {
+            // Arrange
+            var organization = CreateTestOrganization();
+            // Don't add membership - user is not a member
+
+            _dbContext.Organizations.Add(organization);
+            await _dbContext.SaveChangesAsync();
+
+            var apiKeyId = Guid.NewGuid();
+
+            // Act
+            var result = await _controller.GetApiKeyUsage(_testOrganizationId, apiKeyId, CancellationToken.None);
+
+            // Assert
+            result.Should().BeOfType<ForbidResult>();
+        }
+
         private Organization CreateTestOrganization()
         {
             return new Organization
