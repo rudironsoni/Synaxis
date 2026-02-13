@@ -276,6 +276,17 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 // Register core Synaxis services (includes Mediator, handlers, ProviderSelector)
                 services.AddSynaxis();
 
+                // Register CORS policy
+                services.AddCors(options =>
+                {
+                    options.AddDefaultPolicy(policy =>
+                    {
+                        policy.AllowAnyOrigin()
+                              .AllowAnyMethod()
+                              .AllowAnyHeader();
+                    });
+                });
+
                 // Register transport services for integration testing
                 services.AddSynaxisTransportHttp();
                 services.AddSynaxisTransportGrpc();
@@ -296,6 +307,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 return app =>
                 {
                     app.UseRouting();
+                    app.UseCors();
+                    app.UseAuthentication();
+                    app.UseAuthorization();
 
                     app.UseSynaxisTransportHttp();
                     app.UseSynaxisTransportWebSocket();
