@@ -1,0 +1,434 @@
+openapi: 3.0.3
+info:
+  title: Synaxis Organization API Keys
+  description: API endpoints for managing organization-level API keys in the Synaxis platform
+  version: 1.0.0
+  contact:
+    name: Synaxis Team
+servers:
+  - url: /api/v1
+    description: API v1 Base URL
+tags:
+  - name: API Keys
+    description: Organization API key management operations
+security:
+  - bearerAuth: []
+paths:
+  /organizations/{orgId}/api-keys:
+    get:
+      tags:
+        - API Keys
+      summary: List organization API keys
+      description: Returns a paginated list of API keys for an organization. Does not include the actual key values (only metadata).
+      operationId: listOrganizationApiKeys
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          description: Organization ID (UUID)
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          description: Page number (1-based)
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          description: Number of items per page
+          schema:
+            type: integer
+            default: 20
+        - name: includeRevoked
+          in: query
+          description: Whether to include revoked keys in results
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: List of API keys (without actual key values)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedApiKeysResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - User is not a member of the organization
+        '404':
+          description: Organization not found
+
+    post:
+      tags:
+        - API Keys
+      summary: Create API key
+      description: Creates a new API key for the organization. Returns the key value only once - it cannot be retrieved later.
+      operationId: createOrganizationApiKey
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          description: Organization ID (UUID)
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateApiKeyRequest'
+      responses:
+        '201':
+          description: API key created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiKeyWithValueResponse'
+        '400':
+          description: Bad request (e.g., invalid name, expiration in the past)
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - User is not an admin
+        '404':
+          description: Organization not found
+
+  /organizations/{orgId}/api-keys/{keyId}:
+    get:
+      tags:
+        - API Keys
+      summary: Get API key details
+      description: Returns details for a specific API key (does not include the actual key value).
+      operationId: getOrganizationApiKey
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          description: Organization ID (UUID)
+          schema:
+            type: string
+            format: uuid
+        - name: keyId
+          in: path
+          required: true
+          description: API Key ID (UUID)
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: API key details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiKeyResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - User is not a member
+        '404':
+          description: Organization or API key not found
+
+    put:
+      tags:
+        - API Keys
+      summary: Update API key
+      description: Updates an API key's metadata (name, permissions) or revokes the key.
+      operationId: updateOrganizationApiKey
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          description: Organization ID (UUID)
+          schema:
+            type: string
+            format: uuid
+        - name: keyId
+          in: path
+          required: true
+          description: API Key ID (UUID)
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateApiKeyRequest'
+      responses:
+        '200':
+          description: API key updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiKeyResponse'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - User is not an admin
+        '404':
+          description: Organization or API key not found
+        '410':
+          description: API key already revoked
+
+    delete:
+      tags:
+        - API Keys
+      summary: Delete API key
+      description: Deletes an API key. Cannot delete already revoked keys.
+      operationId: deleteOrganizationApiKey
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          description: Organization ID (UUID)
+          schema:
+            type: string
+            format: uuid
+        - name: keyId
+          in: path
+          required: true
+          description: API Key ID (UUID)
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: API key deleted successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - User is not an admin
+        '404':
+          description: Organization or API key not found
+        '410':
+          description: API key already revoked
+
+  /organizations/{orgId}/api-keys/{keyId}/rotate:
+    post:
+      tags:
+        - API Keys
+      summary: Rotate API key
+      description: Generates a new key value for an existing API key. The old key becomes immediately invalid. Returns the new key value only once.
+      operationId: rotateOrganizationApiKey
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          description: Organization ID (UUID)
+          schema:
+            type: string
+            format: uuid
+        - name: keyId
+          in: path
+          required: true
+          description: API Key ID (UUID)
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: API key rotated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RotateApiKeyResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - User is not an admin
+        '404':
+          description: Organization or API key not found
+        '410':
+          description: API key already revoked
+
+  /organizations/{orgId}/api-keys/{keyId}/usage:
+    get:
+      tags:
+        - API Keys
+      summary: Get API key usage statistics
+      description: Returns usage statistics for a specific API key including total requests, error rate, and last used timestamp.
+      operationId: getOrganizationApiKeyUsage
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          description: Organization ID (UUID)
+          schema:
+            type: string
+            format: uuid
+        - name: keyId
+          in: path
+          required: true
+          description: API Key ID (UUID)
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: API key usage statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiKeyUsageResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - User is not a member
+        '404':
+          description: Organization or API key not found
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    CreateApiKeyRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          description: Human-readable name for the API key
+          example: "Production API Key"
+        permissions:
+          type: array
+          items:
+            type: string
+          description: List of permissions/scopes for the key
+          example: ["read:users", "write:collections"]
+        expiresAt:
+          type: string
+          format: date-time
+          description: Optional expiration date
+          example: "2024-12-31T23:59:59Z"
+
+    UpdateApiKeyRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          description: New name for the API key
+        permissions:
+          type: array
+          items:
+            type: string
+          description: New permissions/scopes
+        revoked:
+          type: boolean
+          description: Set to true to revoke the key
+
+    ApiKeyResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        revokedAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+          format: uuid
+        isActive:
+          type: boolean
+
+    ApiKeyWithValueResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiKeyResponse'
+        - type: object
+          properties:
+            keyValue:
+              type: string
+              description: The actual API key value (shown only once)
+              example: "synaxis_sk_live_abc123..."
+            warning:
+              type: string
+              example: "This is the only time the key value will be shown. Store it securely."
+
+    RotateApiKeyResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        keyValue:
+          type: string
+          description: The new API key value (shown only once)
+        rotatedAt:
+          type: string
+          format: date-time
+        warning:
+          type: string
+          example: "Previous key value is now invalid. Store this new value securely."
+
+    ApiKeyUsageResponse:
+      type: object
+      properties:
+        keyId:
+          type: string
+          format: uuid
+        totalRequests:
+          type: integer
+          description: Total number of requests made with this key
+        errorCount:
+          type: integer
+          description: Number of failed requests
+        errorRate:
+          type: number
+          format: float
+          description: Error rate as a percentage
+          example: 2.5
+        lastUsedAt:
+          type: string
+          format: date-time
+          description: Timestamp of last request
+        requestsByDay:
+          type: array
+          description: Request counts by day (last 30 days)
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              count:
+                type: integer
+
+    PaginatedApiKeysResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApiKeyResponse'
+        totalCount:
+          type: integer
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        totalPages:
+          type: integer
