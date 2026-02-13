@@ -1575,3 +1575,6 @@ time=2026-02-13T16:10:20.769+01:00 level=INFO msg="🔍 Checking JSONL content h
 time=2026-02-13T16:10:20.770+01:00 level=INFO msg="JSONL content changed, proceeding with operation..." mode=auto-import
 time=2026-02-13T16:10:20.793+01:00 level=INFO msg="Imported from JSONL"
 time=2026-02-13T16:10:20.797+01:00 level=INFO msg="Auto-import complete"
+time=2026-02-13T16:10:29.494+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T16:10:29.495+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T16:10:29.586+01:00 level=INFO msg="Git ref change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.git/refs/heads/main.lock
