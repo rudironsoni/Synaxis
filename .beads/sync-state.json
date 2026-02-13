@@ -1,7 +1,7 @@
 {
-  "last_failure": "2026-02-13T15:10:47.636888761+01:00",
-  "failure_count": 4,
-  "backoff_until": "2026-02-13T15:15:47.636888968+01:00",
+  "last_failure": "2026-02-13T15:25:20.45659831+01:00",
+  "failure_count": 6,
+  "backoff_until": "2026-02-13T15:55:20.456598507+01:00",
   "needs_manual_sync": true,
-  "failure_reason": "git pull failed: exit status 128\nFrom github.com:rudironsoni/Synaxis\n * branch            main       -\u003e FETCH_HEAD\nwarning: fetch updated the current branch head.\nfast-forwarding your working tree from\ncommit 6841f6958de0e118b50de387815229533e81a1b8.\nerror: Your local changes to the following files would be overwritten by merge:\n\t.beads/beads.db\n\t.beads/beads.db-shm\n\t.beads/beads.db-wal\n\t.beads/daemon.log\n\t.beads/export-state/29aceb0dba5c125c.json\n\t.beads/issues.jsonl\n\t.beads/last-touched\nPlease commit your changes or stash them before you merge.\nAborting\nfatal: Cannot fast-forward your working tree.\nAfter making sure that you saved anything precious from\n$ git diff 6841f6958de0e118b50de387815229533e81a1b8\noutput, run\n$ git reset --hard\nto recover.\n"
+  "failure_reason": "git pull failed: exit status 1\nFrom github.com:rudironsoni/Synaxis\n * branch            main       -\u003e FETCH_HEAD\nThere are no candidates for merging among the refs that you just fetched.\nGenerally this means that you provided a wildcard refspec which had no\nmatches on the remote end.\n"
 }

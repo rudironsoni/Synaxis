@@ -1396,3 +1396,23 @@ time=2026-02-13T15:10:49.257+01:00 level=INFO msg="Skipping: in backoff period" 
 time=2026-02-13T15:25:17.028+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
 time=2026-02-13T15:25:17.028+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
 time=2026-02-13T15:25:17.123+01:00 level=INFO msg="Git ref change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.git/refs/heads/main.lock
+time=2026-02-13T15:25:17.786+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T15:25:17.786+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T15:25:17.875+01:00 level=INFO msg="Git ref change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.git/refs/heads/main.lock
+time=2026-02-13T15:25:18.125+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T15:25:18.127+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T15:25:18.876+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T15:25:18.877+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T15:25:19.318+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T15:25:19.318+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T15:25:19.633+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T15:25:19.633+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T15:25:19.635+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-13T15:25:20.319+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T15:25:20.320+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T15:25:20.442+01:00 level=INFO msg="Pull failed" error="git pull failed: exit status 1\nFrom github.com:rudironsoni/Synaxis\n * branch            main       -> FETCH_HEAD\nThere are no candidates for merging among the refs that you just fetched.\nGenerally this means that you provided a wildcard refspec which had no\nmatches on the remote end.\n" backoff=10m0s
+time=2026-02-13T15:25:21.830+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T15:25:21.830+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T15:25:21.831+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-13T15:25:31.842+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T15:25:31.843+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
