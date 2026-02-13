@@ -456,7 +456,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
 
             if (file == null)
             {
-                return this.Ok(new { message = "Avatar upload placeholder" });
+                return this.BadRequest("Avatar file is required");
             }
 
             // Validate file
@@ -513,11 +513,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
                 return this.BadRequest("File size exceeds maximum limit of 5MB");
             }
 
-            return null;
-        }
-
-        private static (bool IsValid, string? ErrorMessage) ValidateImageDimensions(IFormFile file)
-        {
+            // Validate image dimensions
             using var imageStream = file.OpenReadStream();
             using var image = Image.Load(imageStream);
             const int minDimension = 64;
@@ -525,26 +521,19 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
 
             if (image.Width < minDimension || image.Height < minDimension)
             {
-                return (false, "Image dimensions must be at least 64x64 pixels");
+                return this.BadRequest("Image dimensions must be at least 64x64 pixels");
             }
 
             if (image.Width > maxDimension || image.Height > maxDimension)
             {
-                return (false, "Image dimensions must not exceed 1024x1024 pixels");
+                return this.BadRequest("Image dimensions must not exceed 1024x1024 pixels");
             }
 
-            return (true, null);
+            return null;
         }
 
         private static async Task<string> SaveAvatarFileAsync(IFormFile file, Guid userId, CancellationToken cancellationToken)
         {
-            // Validate image dimensions
-            var dimensionValidation = ValidateImageDimensions(file);
-            if (!dimensionValidation.IsValid)
-            {
-                throw new InvalidOperationException(dimensionValidation.ErrorMessage);
-            }
-
             // Generate unique filename
             var fileExtension = Path.GetExtension(file.FileName);
             var uniqueFileName = $"{Guid.NewGuid()}{fileExtension}";
