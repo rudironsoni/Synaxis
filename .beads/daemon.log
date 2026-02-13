@@ -1862,3 +1862,48 @@ time=2026-02-13T17:05:21.754+01:00 level=INFO msg="Auto-import complete"
 time=2026-02-13T17:05:30.511+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
 time=2026-02-13T17:05:30.511+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
 time=2026-02-13T17:05:30.609+01:00 level=INFO msg="Git ref change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.git/refs/heads/main.lock
+time=2026-02-13T17:05:31.079+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T17:05:31.079+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T17:05:31.179+01:00 level=INFO msg="Git ref change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.git/refs/heads/main.lock
+time=2026-02-13T17:05:32.180+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T17:05:32.182+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T17:05:32.760+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T17:05:32.760+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T17:05:33.684+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T17:05:33.684+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T17:05:33.686+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-13T17:05:33.762+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T17:05:33.762+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T17:05:35.293+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T17:05:35.293+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T17:05:35.294+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-13T17:05:40.791+01:00 level=INFO msg="Mutation detected" type=status issue_id=Synaxis-10r
+time=2026-02-13T17:05:41.291+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-13T17:05:41.292+01:00 level=INFO msg=Starting mode=export
+time=2026-02-13T17:05:41.328+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T17:05:41.328+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T17:05:41.351+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-13T17:05:41.351+01:00 level=INFO msg="Export complete"
+time=2026-02-13T17:05:42.328+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T17:05:42.329+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T17:05:42.333+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T17:05:42.333+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-13T17:05:42.333+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-13T17:05:43.810+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-13T17:05:43.810+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-13T17:05:43.811+01:00 level=INFO msg="JSONL content changed, proceeding with operation..." mode=auto-import
+time=2026-02-13T17:05:43.833+01:00 level=INFO msg="Imported from JSONL"
+time=2026-02-13T17:05:43.836+01:00 level=INFO msg="Auto-import complete"
+time=2026-02-13T17:06:25.455+01:00 level=INFO msg="Mutation detected" type=status issue_id=Synaxis-10r
+time=2026-02-13T17:06:25.955+01:00 level=INFO msg="Export triggered by mutation events"
+time=2026-02-13T17:06:25.956+01:00 level=INFO msg=Starting mode=export
+time=2026-02-13T17:06:25.957+01:00 level=INFO msg="JSONL changed externally, importing before export"
+time=2026-02-13T17:06:25.983+01:00 level=INFO msg="Auto-import complete, proceeding with export"
+time=2026-02-13T17:06:26.017+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T17:06:26.034+01:00 level=INFO msg="Exported to JSONL"
+time=2026-02-13T17:06:26.034+01:00 level=INFO msg="Export complete"
+time=2026-02-13T17:06:27.019+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-13T17:06:27.019+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-13T17:06:27.022+01:00 level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-13T17:06:27.022+01:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-13T17:06:27.022+01:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
