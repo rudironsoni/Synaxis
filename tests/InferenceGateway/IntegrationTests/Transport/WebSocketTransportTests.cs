@@ -25,6 +25,17 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Transport
         private readonly ITestOutputHelper _output;
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="WebSocketTransportTests"/> class.
+        /// </summary>
+        /// <param name="factory">The web application factory.</param>
+        /// <param name="output">The test output helper.</param>
+        public WebSocketTransportTests(SynaxisWebApplicationFactory factory, ITestOutputHelper output)
+        {
+            this._factory = factory;
+            this._output = output;
+        }
+
+        /// <summary>
         /// Tests that a Command message returns a Response message.
         /// </summary>
         /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>

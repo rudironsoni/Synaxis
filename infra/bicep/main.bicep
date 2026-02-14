@@ -689,6 +689,53 @@ module policyAssignments './modules/policy-assignments.bicep' = {
 }
 
 // =============================================================================
+// Deploy Azure Front Door
+// =============================================================================
+
+module frontDoor './modules/frontdoor.bicep' = {
+  name: 'frontdoor-deployment'
+  params: {
+    environment: environment
+    tags: tags
+    frontDoorSku: environment == 'prod' ? 'Premium_AzureFrontDoor' : 'Standard_AzureFrontDoor'
+    stampOrigins: environment == 'prod' ? [
+      {
+        name: 'stamp-weu-01'
+        hostName: 'synaxis-ingress-weu-01.${environment}.synaxis.io'
+        priority: 1
+        weight: 1000
+      }
+      {
+        name: 'stamp-eus-01'
+        hostName: 'synaxis-ingress-eus-01.${environment}.synaxis.io'
+        priority: 1
+        weight: 1000
+      }
+      {
+        name: 'stamp-sea-01'
+        hostName: 'synaxis-ingress-sea-01.${environment}.synaxis.io'
+        priority: 1
+        weight: 1000
+      }
+    ] : [
+      {
+        name: 'stamp-dev-01'
+        hostName: aks.outputs.ingressIp
+        priority: 1
+        weight: 1000
+      }
+    ]
+    enableWaf: environment == 'prod'
+    wafMode: 'Prevention'
+    logAnalyticsWorkspaceId: logAnalyticsWorkspace.id
+  }
+  dependsOn: [
+    aks
+    logAnalyticsWorkspace
+  ]
+}
+
+// =============================================================================
 // Outputs
 // =============================================================================
 
@@ -814,6 +861,21 @@ output serviceBusNamespaceName string = serviceBus.outputs.namespaceName
 
 @description('Service Bus Endpoint')
 output serviceBusEndpoint string = serviceBus.outputs.endpoint
+
+@description('Front Door ID')
+output frontDoorId string = frontDoor.outputs.frontDoorId
+
+@description('Front Door Name')
+output frontDoorName string = frontDoor.outputs.frontDoorName
+
+@description('Front Door Endpoint Hostname')
+output frontDoorEndpoint string = frontDoor.outputs.frontDoorEndpoint
+
+@description('Front Door FQDN')
+output frontDoorFqdn string = frontDoor.outputs.frontDoorFqdn
+
+@description('WAF Policy ID')
+output wafPolicyId string = frontDoor.outputs.wafPolicyId
 
 @description('Deployment Summary')
 output deploymentSummary object = {
