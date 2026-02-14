@@ -4,24 +4,22 @@
 
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Synaxis.Common.Tests.Fixtures;
 using Synaxis.Core.Contracts;
 using Synaxis.Core.Models;
 using Synaxis.Infrastructure.Data;
 using Synaxis.Infrastructure.Services;
-using Testcontainers.PostgreSql;
 using Xunit;
 
 namespace Synaxis.Infrastructure.Tests.Services
 {
     [Trait("Category", "Integration")]
-    public sealed class TeamMembershipServiceIntegrationTests : IAsyncLifetime, IDisposable
+    [Collection("PostgresIntegration")]
+#pragma warning disable IDISP003 // False positive: _context is only assigned once in InitializeAsync
+#pragma warning disable IDISP006 // IAsyncLifetime provides async cleanup, IDisposable not needed
+    public sealed class TeamMembershipServiceIntegrationTests : IAsyncLifetime
     {
-        private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:16-alpine")
-            .WithDatabase("synaxis_test")
-            .WithUsername("test")
-            .WithPassword("test")
-            .Build();
-
+        private readonly Synaxis.Common.Tests.Fixtures.PostgresFixture _postgresFixture;
         private SynaxisDbContext? _context;
         private ITeamMembershipService? _service;
         private Organization _org = null!;
@@ -29,22 +27,19 @@ namespace Synaxis.Infrastructure.Tests.Services
         private User _user1 = null!;
         private User _user2 = null!;
         private Guid _adminUserId;
+        private string _connectionString = string.Empty;
+
+        public TeamMembershipServiceIntegrationTests(Synaxis.Common.Tests.Fixtures.PostgresFixture postgresFixture)
+        {
+            _postgresFixture = postgresFixture ?? throw new ArgumentNullException(nameof(postgresFixture));
+        }
 
         public async Task InitializeAsync()
         {
-            await _postgres.StartAsync();
-
-            var options = new DbContextOptionsBuilder<SynaxisDbContext>()
-                .UseNpgsql(_postgres.GetConnectionString())
-                .Options;
-
-            if (_context is not null)
-            {
-                await _context.DisposeAsync();
-            }
-
-            _context = new SynaxisDbContext(options);
-            await _context.Database.EnsureCreatedAsync();
+            _connectionString = await _postgresFixture.CreateIsolatedDatabaseAsync("teammembership");
+            var context = _postgresFixture.CreateContext(_connectionString);
+            await context.Database.MigrateAsync();
+            _context = context;
 
             _service = new TeamMembershipService(_context);
 
@@ -107,13 +102,10 @@ namespace Synaxis.Infrastructure.Tests.Services
                 await _context.DisposeAsync();
             }
 
-            await _postgres.DisposeAsync();
-        }
-
-        public void Dispose()
-        {
-            _context?.Dispose();
-            _postgres.DisposeAsync().AsTask().Wait();
+            if (!string.IsNullOrEmpty(_connectionString))
+            {
+                await _postgresFixture.DropDatabaseAsync(_connectionString);
+            }
         }
 
         [Fact]

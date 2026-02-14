@@ -1,0 +1,183 @@
+openapi: 3.0.3
+info:
+  title: Enable MFA
+  description: Completes MFA setup by verifying the authenticator app code. Requires authentication.
+  version: 1.0.0
+  contact:
+    name: Synaxis Team
+    email: support@synaxis.dev
+
+servers:
+  - url: http://localhost:5000
+    description: Local development server
+  - url: https://api.synaxis.dev
+    description: Production server
+
+tags:
+  - name: MFA
+    description: Multi-factor authentication management
+
+paths:
+  /api/v1/auth/mfa/enable:
+    post:
+      summary: Enable MFA
+      description: Completes MFA setup by verifying the authenticator app code. Requires authentication.
+      operationId: enableMfa
+      tags:
+        - MFA
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MfaEnableRequest'
+            examples:
+              success:
+                summary: Successful MFA enable
+                value:
+                  code: "123456"
+              error_invalid_code:
+                summary: Enable with invalid code (will fail)
+                value:
+                  code: "000000"
+              error_wrong_code:
+                summary: Enable with wrong code (will fail)
+                value:
+                  code: "654321"
+              error_missing_code:
+                summary: Enable with missing code (will fail)
+                value: {}
+      responses:
+        '200':
+          description: MFA enabled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              examples:
+                success:
+                  summary: Successful MFA enable response
+                  value:
+                    message: "MFA has been enabled successfully for your account."
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: MFA already enabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                mfa_already_enabled:
+                  summary: MFA already enabled for account
+                  value:
+                    error: "MfaAlreadyEnabled"
+                    message: "MFA is already enabled for this account."
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    MfaEnableRequest:
+      type: object
+      required:
+        - code
+      properties:
+        code:
+          type: string
+          pattern: '^\d{6}$'
+          description: 6-digit MFA code from authenticator app
+          example: "123456"
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Response message
+          example: "Operation completed successfully"
+        expiresAt:
+          type: string
+          format: date-time
+          description: Expiration timestamp for time-sensitive operations
+          example: "2024-01-15T11:30:00Z"
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error code
+          example: "ValidationError"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "The request contains invalid data."
+        details:
+          type: object
+          description: Additional error details
+          nullable: true
+          example:
+            field: "email"
+            issue: "Invalid email format"
+        retryAfter:
+          type: integer
+          description: Seconds to wait before retrying (for rate limits)
+          nullable: true
+          example: 300
+
+  responses:
+    BadRequest:
+      description: Bad request - Invalid input data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            missing_code:
+              summary: Missing MFA code
+              value:
+                error: "BadRequest"
+                message: "The request contains invalid data."
+                details:
+                  field: "code"
+                  issue: "Field is required"
+            invalid_code_format:
+              summary: Invalid MFA code format
+              value:
+                error: "BadRequest"
+                message: "The request contains invalid data."
+                details:
+                  field: "code"
+                  issue: "MFA code must be exactly 6 digits"
+            invalid_code:
+              summary: Invalid MFA code
+              value:
+                error: "InvalidMfaCode"
+                message: "The MFA code provided is invalid. Please try again."
+
+    Unauthorized:
+      description: Unauthorized - Invalid or missing authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            missing_auth:
+              summary: Missing authentication header
+              value:
+                error: "Unauthorized"
+                message: "Authentication is required to access this resource."
+            invalid_token:
+              summary: Invalid access token
+              value:
+                error: "Unauthorized"
+                message: "Invalid or expired access token."

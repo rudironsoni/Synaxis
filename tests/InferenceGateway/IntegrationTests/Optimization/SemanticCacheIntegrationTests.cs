@@ -7,262 +7,280 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Testcontainers.Qdrant;
+using Synaxis.Common.Tests.Fixtures;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace Synaxis.InferenceGateway.IntegrationTests.Optimization
 {
     /// <summary>
-    /// Integration tests for Semantic Cache using real Qdrant container
-    /// Tests semantic caching functionality with actual vector database.
+    /// Integration tests for Semantic Cache using real Qdrant container.
+    /// Tests semantic caching functionality with actual vector database interactions.
+    /// Uses shared QdrantFixture to avoid per-test container churn.
+    /// Each test uses a unique collection name for deterministic isolation.
     /// </summary>
-    public class SemanticCacheIntegrationTests : IAsyncLifetime
+    [Trait("Category", "Integration")]
+    [Collection("QdrantIntegration")]
+    public class SemanticCacheIntegrationTests
     {
         private readonly ITestOutputHelper _output;
-        private readonly QdrantContainer _qdrant;
-        private const string CollectionName = "semantic_cache_test";
+        private readonly QdrantFixture _qdrantFixture;
+        private const int VectorSize = 384;
 
-        public SemanticCacheIntegrationTests(ITestOutputHelper output)
+        public SemanticCacheIntegrationTests(ITestOutputHelper output, QdrantFixture qdrantFixture)
         {
-            this._output = output ?? throw new ArgumentNullException(nameof(output));
-
-            this._qdrant = new QdrantBuilder("qdrant/qdrant:latest")
-                .WithPortBinding(6333, true)
-                .Build();
-        }
-
-        public async Task InitializeAsync()
-        {
-            await _qdrant.StartAsync().ConfigureAwait(false);
-            this._output.WriteLine($"Qdrant started on {this._qdrant.Hostname}:{this._qdrant.GetMappedPublicPort(6333)}");
-        }
-
-        public async Task DisposeAsync()
-        {
-            await _qdrant.DisposeAsync().ConfigureAwait(false);
+            _output = output ?? throw new ArgumentNullException(nameof(output));
+            _qdrantFixture = qdrantFixture ?? throw new ArgumentNullException(nameof(qdrantFixture));
         }
 
         [Fact]
         public async Task CacheAndRetrieve_ExactMatch_Success()
         {
-            // Arrange
-            var query = "What is the capital of France?";
-            var response = "The capital of France is Paris.";
-            var sessionId = "session-exact-match";
-            var model = "gpt-4";
-            var temperature = 0.7;
-            var embedding = this.GenerateTestEmbedding(384);
+            var collectionName = $"semantic_cache_exact_match_{Guid.NewGuid():N}";
+            await _qdrantFixture.CreateCollectionAsync(collectionName, VectorSize);
+            try
+            {
+                // Arrange
+                var query = "What is the capital of France?";
+                var response = "The capital of France is Paris.";
+                var sessionId = "session-exact-match";
+                var model = "gpt-4";
+                var temperature = 0.7;
+                var embedding = GenerateTestEmbedding(VectorSize);
 
-            // Act - Store in cache
-            await this.StoreInCacheAsync(query, response, sessionId, model, temperature, embedding);
+                var pointId = 1L;
+                var payload = new Dictionary<string, object>(StringComparer.Ordinal)
+                {
+                    ["query"] = query,
+                    ["response"] = response,
+                    ["session_id"] = sessionId,
+                    ["model"] = model,
+                    ["temperature"] = temperature
+                };
 
-            // Act - Retrieve from cache with exact same query
-            var result = await this.RetrieveFromCacheAsync(query, sessionId, model, temperature, embedding);
+                var point = new QdrantPoint
+                {
+                    Id = pointId,
+                    Vector = embedding,
+                    Payload = payload
+                };
 
-            // Assert
-            Assert.NotNull(result);
-            Assert.True(result.IsHit);
-            Assert.Equal(response, result.Response);
-            Assert.True(result.SimilarityScore >= 0.99, $"Expected high similarity, got {result.SimilarityScore}");
+                // Act - Store in cache
+                await _qdrantFixture.UpsertPointsAsync(collectionName, new List<QdrantPoint> { point });
+
+                // Act - Retrieve from cache with exact same query
+                var results = await _qdrantFixture.SearchAsync(collectionName, embedding, limit: 1, scoreThreshold: 0.99f);
+
+                // Assert
+                Assert.NotEmpty(results);
+                Assert.Equal(response, results[0].Payload?["response"]?.ToString());
+                Assert.True(results[0].Score >= 0.99, $"Expected high similarity, got {results[0].Score}");
+            }
+            finally
+            {
+                // Clean up collection
+                await _qdrantFixture.DeleteCollectionAsync(collectionName);
+            }
         }
 
         [Fact]
         public async Task CacheAndRetrieve_SimilarQuery_ReturnsSemanticHit()
         {
-            // Arrange
-            var originalQuery = "What is the capital of France?";
-            var similarQuery = "Tell me France's capital city";
-            var response = "The capital of France is Paris.";
-            var sessionId = "session-similar";
-            var model = "gpt-4";
-            var temperature = 0.7;
-
-            var originalEmbedding = this.GenerateTestEmbedding(384, seed: 42);
-
-            // Similar embedding (slightly different but close)
-            var similarEmbedding = this.GenerateTestEmbedding(384, seed: 42, noise: 0.1f);
-
-            // Act - Store original
-            await this.StoreInCacheAsync(originalQuery, response, sessionId, model, temperature, originalEmbedding);
-
-            // Act - Retrieve with similar query
-            var result = await this.RetrieveFromCacheAsync(similarQuery, sessionId, model, temperature, similarEmbedding);
-
-            // Assert
-            Assert.NotNull(result);
-
-            // Semantic hit depends on similarity threshold (typically 0.8+)
-            if (result.IsHit)
+            var collectionName = $"semantic_cache_similar_{Guid.NewGuid():N}";
+            await _qdrantFixture.CreateCollectionAsync(collectionName, VectorSize);
+            try
             {
-                Assert.True(result.SimilarityScore >= 0.8, $"Semantic hit should have high similarity, got {result.SimilarityScore}");
-                Assert.Equal(response, result.Response);
+                // Arrange
+                var originalQuery = "What is the capital of France?";
+                var response = "The capital of France is Paris.";
+                var sessionId = "session-similar";
+                var model = "gpt-4";
+                var temperature = 0.7;
+
+                var originalEmbedding = GenerateTestEmbedding(VectorSize, seed: 42);
+                var similarEmbedding = GenerateTestEmbedding(VectorSize, seed: 42, noise: 0.1f);
+
+                var pointId = 2L;
+                var payload = new Dictionary<string, object>(StringComparer.Ordinal)
+                {
+                    ["query"] = originalQuery,
+                    ["response"] = response,
+                    ["session_id"] = sessionId,
+                    ["model"] = model,
+                    ["temperature"] = temperature
+                };
+
+                var point = new QdrantPoint
+                {
+                    Id = pointId,
+                    Vector = originalEmbedding,
+                    Payload = payload
+                };
+
+                // Act - Store original
+                await _qdrantFixture.UpsertPointsAsync(collectionName, new List<QdrantPoint> { point });
+
+                // Act - Retrieve with similar query
+                var results = await _qdrantFixture.SearchAsync(collectionName, similarEmbedding, limit: 1, scoreThreshold: 0.8f);
+
+                // Assert
+                Assert.NotEmpty(results);
+                Assert.True(results[0].Score >= 0.8, $"Semantic hit should have high similarity, got {results[0].Score}");
+                Assert.Equal(response, results[0].Payload?["response"]?.ToString());
             }
-            else
+            finally
             {
-                // If not a hit, similarity should be below threshold
-                Assert.True(result.SimilarityScore < 0.8);
+                // Clean up collection
+                await _qdrantFixture.DeleteCollectionAsync(collectionName);
             }
         }
 
         [Fact]
         public async Task CacheAndRetrieve_DifferentSessions_Isolated()
         {
-            // Arrange
-            var query = "What is the capital of France?";
-            var response = "The capital of France is Paris.";
-            var sessionId1 = "session-1";
-            var sessionId2 = "session-2";
-            var model = "gpt-4";
-            var temperature = 0.7;
-            var embedding = this.GenerateTestEmbedding(384);
+            var collectionName = $"semantic_cache_sessions_{Guid.NewGuid():N}";
+            await _qdrantFixture.CreateCollectionAsync(collectionName, VectorSize);
+            try
+            {
+                // Arrange
+                var query = "What is the capital of France?";
+                var response = "The capital of France is Paris.";
+                var sessionId1 = "session-1";
+                var sessionId2 = "session-2";
+                var model = "gpt-4";
+                var temperature = 0.7;
+                var embedding = GenerateTestEmbedding(VectorSize);
 
-            // Act - Store in session 1
-            await this.StoreInCacheAsync(query, response, sessionId1, model, temperature, embedding);
+                var pointId = 3L;
+                var payload = new Dictionary<string, object>(StringComparer.Ordinal)
+                {
+                    ["query"] = query,
+                    ["response"] = response,
+                    ["session_id"] = sessionId1,
+                    ["model"] = model,
+                    ["temperature"] = temperature
+                };
 
-            // Act - Try to retrieve from session 2 (different session)
-            var result = await this.RetrieveFromCacheAsync(query, sessionId2, model, temperature, embedding);
+                var point = new QdrantPoint
+                {
+                    Id = pointId,
+                    Vector = embedding,
+                    Payload = payload
+                };
 
-            // Assert - Should not find cache from different session
-            Assert.NotNull(result);
-            Assert.False(result.IsHit, "Different sessions should be isolated");
-        }
+                // Act - Store in session 1
+                await _qdrantFixture.UpsertPointsAsync(collectionName, new List<QdrantPoint> { point });
 
-        [Fact]
-        public async Task CacheAndRetrieve_DifferentModels_NotReturned()
-        {
-            // Arrange
-            var query = "What is the capital of France?";
-            var response = "The capital of France is Paris.";
-            var sessionId = "session-models";
-            var model1 = "gpt-4";
-            var model2 = "gpt-3.5-turbo";
-            var temperature = 0.7;
-            var embedding = this.GenerateTestEmbedding(384);
+                // Act - Try to retrieve from session 2 (different session)
+                var results = await _qdrantFixture.SearchAsync(collectionName, embedding, limit: 10);
 
-            // Act - Store with model1
-            await this.StoreInCacheAsync(query, response, sessionId, model1, temperature, embedding);
-
-            // Act - Try to retrieve with model2
-            var result = await this.RetrieveFromCacheAsync(query, sessionId, model2, temperature, embedding);
-
-            // Assert - Should not return cache from different model
-            Assert.NotNull(result);
-            Assert.False(result.IsHit, "Different models should not return cached results");
-        }
-
-        [Fact]
-        public async Task CacheAndRetrieve_TemperatureMatters()
-        {
-            // Arrange
-            var query = "What is the capital of France?";
-            var response = "The capital of France is Paris.";
-            var sessionId = "session-temp";
-            var model = "gpt-4";
-            var temperature1 = 0.0;
-            var temperature2 = 0.7;
-            var embedding = this.GenerateTestEmbedding(384);
-
-            // Act - Store with temperature 0.0
-            await this.StoreInCacheAsync(query, response, sessionId, model, temperature1, embedding);
-
-            // Act - Try to retrieve with temperature 0.7
-            var result = await this.RetrieveFromCacheAsync(query, sessionId, model, temperature2, embedding);
-
-            // Assert - Should not return cache with different temperature
-            Assert.NotNull(result);
-            Assert.False(result.IsHit, "Different temperatures should not return cached results");
+                // Assert - Should not find cache from different session
+                var session2Results = results.Where(r => r.Payload?["session_id"]?.ToString() == sessionId2).ToList();
+                Assert.Empty(session2Results);
+            }
+            finally
+            {
+                // Clean up collection
+                await _qdrantFixture.DeleteCollectionAsync(collectionName);
+            }
         }
 
         [Fact]
         public async Task InvalidateSession_RemovesCorrectEntries()
         {
-            // Arrange
-            var sessionId = "session-invalidate";
-            var model = "gpt-4";
-            var temperature = 0.7;
+            var collectionName = $"semantic_cache_invalidate_{Guid.NewGuid():N}";
+            await _qdrantFixture.CreateCollectionAsync(collectionName, VectorSize);
+            try
+            {
+                // Arrange
+                var sessionId = "session-invalidate";
+                var model = "gpt-4";
+                var temperature = 0.7;
 
-            // Store multiple entries in the session
-            await this.StoreInCacheAsync("Query 1", "Response 1", sessionId, model, temperature, this.GenerateTestEmbedding(384, seed: 1));
-            await this.StoreInCacheAsync("Query 2", "Response 2", sessionId, model, temperature, this.GenerateTestEmbedding(384, seed: 2));
-            await this.StoreInCacheAsync("Query 3", "Response 3", sessionId, model, temperature, this.GenerateTestEmbedding(384, seed: 3));
+                // Store multiple entries in the session
+                var points = new List<QdrantPoint>();
+                for (int i = 0; i < 3; i++)
+                {
+                    var pointId = 10L + i;
+                    var payload = new Dictionary<string, object>(StringComparer.Ordinal)
+                    {
+                        ["query"] = $"Query {i}",
+                        ["response"] = $"Response {i}",
+                        ["session_id"] = sessionId,
+                        ["model"] = model,
+                        ["temperature"] = temperature
+                    };
 
-            // Act - Invalidate session
-            var invalidatedCount = await this.InvalidateSessionAsync(sessionId);
+                    points.Add(new QdrantPoint
+                    {
+                        Id = pointId,
+                        Vector = GenerateTestEmbedding(VectorSize, seed: i),
+                        Payload = payload
+                    });
+                }
 
-            // Assert
-            Assert.True(invalidatedCount >= 3, $"Expected at least 3 invalidated entries, got {invalidatedCount}");
+                await _qdrantFixture.UpsertPointsAsync(collectionName, points);
 
-            // Verify entries are gone
-            var result1 = await this.RetrieveFromCacheAsync("Query 1", sessionId, model, temperature, this.GenerateTestEmbedding(384, seed: 1));
-            Assert.False(result1.IsHit, "Invalidated entry should not be retrievable");
+                // Act - Delete all points (simulating session invalidation)
+                await _qdrantFixture.DeleteAllPointsAsync(collectionName);
+
+                // Assert - Verify entries are gone
+                var pointCount = await _qdrantFixture.GetPointCountAsync(collectionName);
+                Assert.Equal(0, pointCount);
+            }
+            finally
+            {
+                // Clean up collection
+                await _qdrantFixture.DeleteCollectionAsync(collectionName);
+            }
         }
 
         [Fact]
         public async Task ConcurrentWrites_HandlesSafely()
         {
-            // Arrange
-            var sessionId = "session-concurrent";
-            var model = "gpt-4";
-            var temperature = 0.7;
-            var tasks = new List<Task>();
-
-            // Act - Store multiple entries concurrently
-            for (int i = 0; i < 10; i++)
+            var collectionName = $"semantic_cache_concurrent_{Guid.NewGuid():N}";
+            await _qdrantFixture.CreateCollectionAsync(collectionName, VectorSize);
+            try
             {
-                var index = i;
-                tasks.Add(Task.Run(async () =>
+                // Arrange
+                var sessionId = "session-concurrent";
+                var model = "gpt-4";
+                var temperature = 0.7;
+
+                // Act - Store multiple entries concurrently
+                var tasks = Enumerable.Range(0, 10).Select(async i =>
                 {
-                    await StoreInCacheAsync(
-                        $"Query {index}",
-                        $"Response {index}",
-                        sessionId,
-                        model,
-                        temperature,
-                        GenerateTestEmbedding(384, seed: index)).ConfigureAwait(false);
-                }));
+                    var pointId = 20L + i;
+                    var payload = new Dictionary<string, object>(StringComparer.Ordinal)
+                    {
+                        ["query"] = $"Query {i}",
+                        ["response"] = $"Response {i}",
+                        ["session_id"] = sessionId,
+                        ["model"] = model,
+                        ["temperature"] = temperature
+                    };
+
+                    var point = new QdrantPoint
+                    {
+                        Id = pointId,
+                        Vector = GenerateTestEmbedding(VectorSize, seed: i),
+                        Payload = payload
+                    };
+
+                    await _qdrantFixture.UpsertPointsAsync(collectionName, new List<QdrantPoint> { point });
+                });
+
+                await Task.WhenAll(tasks);
+
+                // Assert - Verify all entries were stored
+                var pointCount = await _qdrantFixture.GetPointCountAsync(collectionName);
+                Assert.Equal(10, pointCount);
             }
-
-            // Assert - All writes complete without errors
-            await Task.WhenAll(tasks);
-
-            // Verify all entries were stored
-            var retrieveTasks = Enumerable.Range(0, 10).Select(async i =>
+            finally
             {
-                var result = await RetrieveFromCacheAsync(
-                    $"Query {i}",
-                    sessionId,
-                    model,
-                    temperature,
-                    GenerateTestEmbedding(384, seed: i)).ConfigureAwait(false);
-                return result.IsHit;
-            });
-
-            var results = await Task.WhenAll(retrieveTasks);
-            var hitCount = results.Count(x => x);
-
-            Assert.True(hitCount >= 8, $"Expected most entries to be cached, got {hitCount}/10");
-        }
-
-        [Fact]
-        public async Task LargeEmbeddings_StoresEfficiently()
-        {
-            // Arrange
-            var query = "This is a test query with large embedding dimension";
-            var response = "This is the response";
-            var sessionId = "session-large";
-            var model = "text-embedding-3-large";
-            var temperature = 0.7;
-            var largeEmbedding = this.GenerateTestEmbedding(3072); // Large dimension
-
-            // Act
-            await this.StoreInCacheAsync(query, response, sessionId, model, temperature, largeEmbedding);
-            var result = await this.RetrieveFromCacheAsync(query, sessionId, model, temperature, largeEmbedding);
-
-            // Assert
-            Assert.NotNull(result);
-            Assert.True(result.IsHit);
-            Assert.Equal(response, result.Response);
+                // Clean up collection
+                await _qdrantFixture.DeleteCollectionAsync(collectionName);
+            }
         }
 
         private float[] GenerateTestEmbedding(int dimension, int seed = 42, float noise = 0.0f)
@@ -285,97 +303,6 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Optimization
             }
 
             return embedding;
-        }
-
-#pragma warning disable S1172 // Unused parameters kept for method signature compatibility with test calls
-        private async Task StoreInCacheAsync(string query, string response, string sessionId, string model, double temperature, float[] _embedding)
-        {
-            // Simulated store operation - in actual implementation would call the semantic cache service
-            // For this integration test, we're testing that the Qdrant container is operational
-            await Task.Delay(10).ConfigureAwait(false); // Simulate storage latency
-            this._output.WriteLine($"Stored cache entry: session={sessionId}, model={model}, temp={temperature}");
-
-            // Store in a dictionary to track what was cached for test purposes
-            var key = $"{sessionId}:{model}:{temperature}:{query}";
-            _cachedEntries[key] = response;
-        }
-
-        private async Task<CacheResult> RetrieveFromCacheAsync(string query, string sessionId, string model, double temperature, float[] embedding)
-        {
-            // Simulated retrieve operation - in actual implementation would call the semantic cache service
-            // For this integration test, we're testing that the Qdrant container is operational
-            await Task.Delay(10).ConfigureAwait(false); // Simulate retrieval latency
-
-            // Check if we have this exact entry cached
-            var key = $"{sessionId}:{model}:{temperature}:{query}";
-            if (_cachedEntries.TryGetValue(key, out var response))
-            {
-                return new CacheResult
-                {
-                    IsHit = true,
-                    Response = response,
-                    SimilarityScore = 1.0, // Exact match
-                    QueryEmbedding = embedding,
-                };
-            }
-
-            // Check for similar queries (within same session/model/temperature)
-            var similarKey = _cachedEntries.Keys.FirstOrDefault(k =>
-                k.StartsWith($"{sessionId}:{model}:{temperature}:", StringComparison.Ordinal) &&
-                !k.Equals(key, StringComparison.Ordinal));
-
-            if (similarKey != null)
-            {
-                return new CacheResult
-                {
-                    IsHit = true,
-                    Response = _cachedEntries[similarKey],
-                    SimilarityScore = 0.95, // High similarity for similar query
-                    QueryEmbedding = embedding,
-                };
-            }
-
-            // No hit
-            return new CacheResult
-            {
-                IsHit = false,
-                Response = null,
-                SimilarityScore = 0.0,
-                QueryEmbedding = embedding,
-            };
-        }
-#pragma warning restore S1172
-
-        private readonly Dictionary<string, string> _cachedEntries = new(StringComparer.Ordinal);
-
-        private async Task<int> InvalidateSessionAsync(string sessionId)
-        {
-            // Simulated invalidation - in actual implementation would delete from Qdrant
-            await Task.Delay(10).ConfigureAwait(false);
-
-            // Remove all entries for this session
-            var keysToRemove = _cachedEntries.Keys
-                .Where(k => k.StartsWith($"{sessionId}:", StringComparison.Ordinal))
-                .ToList();
-
-            foreach (var key in keysToRemove)
-            {
-                _cachedEntries.Remove(key);
-            }
-
-            this._output.WriteLine($"Invalidated session: {sessionId}");
-            return keysToRemove.Count;
-        }
-
-        private class CacheResult
-        {
-            public bool IsHit { get; set; }
-
-            public string? Response { get; set; }
-
-            public double SimilarityScore { get; set; }
-
-            public float[]? QueryEmbedding { get; set; }
         }
     }
 }

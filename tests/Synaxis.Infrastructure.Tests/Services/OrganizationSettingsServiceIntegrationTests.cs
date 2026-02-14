@@ -4,63 +4,56 @@
 
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Synaxis.Common.Tests.Fixtures;
 using Synaxis.Core.Contracts;
 using Synaxis.Core.Models;
 using Synaxis.Infrastructure.Data;
 using Synaxis.Infrastructure.Services;
-using Testcontainers.PostgreSql;
 using Xunit;
 
 namespace Synaxis.Infrastructure.Tests.Services
 {
     /// <summary>
     /// Integration tests for OrganizationSettingsService using TestContainers.
+    /// Uses shared PostgresFixture to avoid per-test container churn.
     /// </summary>
     [Trait("Category", "Integration")]
-    public sealed class OrganizationSettingsServiceIntegrationTests : IAsyncLifetime, IDisposable
+    [Collection("PostgresIntegration")]
+#pragma warning disable IDISP003 // False positive: _context is only assigned once in InitializeAsync
+#pragma warning disable IDISP006 // IAsyncLifetime provides async cleanup, IDisposable not needed
+    public sealed class OrganizationSettingsServiceIntegrationTests : IAsyncLifetime
     {
-        private readonly PostgreSqlContainer postgres = new PostgreSqlBuilder("postgres:16-alpine")
-            .WithDatabase("synaxis_test")
-            .WithUsername("test")
-            .WithPassword("test")
-            .Build();
+        private readonly Synaxis.Common.Tests.Fixtures.PostgresFixture _postgresFixture;
+        private SynaxisDbContext? _context;
+        private OrganizationSettingsService? _service;
+        private string _connectionString = string.Empty;
 
-        private SynaxisDbContext? context;
-        private OrganizationSettingsService? service;
+        public OrganizationSettingsServiceIntegrationTests(Synaxis.Common.Tests.Fixtures.PostgresFixture postgresFixture)
+        {
+            _postgresFixture = postgresFixture ?? throw new ArgumentNullException(nameof(postgresFixture));
+        }
 
         public async Task InitializeAsync()
         {
-            await this.postgres.StartAsync();
+            _connectionString = await _postgresFixture.CreateIsolatedDatabaseAsync("orgsettings");
+            var context = _postgresFixture.CreateContext(_connectionString);
+            await context.Database.MigrateAsync();
+            _context = context;
 
-            var options = new DbContextOptionsBuilder<SynaxisDbContext>()
-                .UseNpgsql(this.postgres.GetConnectionString())
-                .Options;
-
-            if (this.context is not null)
-            {
-                await this.context.DisposeAsync();
-            }
-
-            this.context = new SynaxisDbContext(options);
-            await this.context.Database.EnsureCreatedAsync();
-
-            this.service = new OrganizationSettingsService(this.context);
+            _service = new OrganizationSettingsService(_context);
         }
 
         public async Task DisposeAsync()
         {
-            if (this.context is not null)
+            if (_context is not null)
             {
-                await this.context.DisposeAsync();
+                await _context.DisposeAsync();
             }
 
-            await this.postgres.DisposeAsync();
-        }
-
-        public void Dispose()
-        {
-            this.context?.Dispose();
-            this.postgres.DisposeAsync().AsTask().Wait();
+            if (!string.IsNullOrEmpty(_connectionString))
+            {
+                await _postgresFixture.DropDatabaseAsync(_connectionString);
+            }
         }
 
         [Fact]
@@ -78,11 +71,11 @@ namespace Synaxis.Infrastructure.Tests.Services
                 MaxKeysPerUser = 8,
             };
 
-            this.context!.Organizations.Add(organization);
-            await this.context.SaveChangesAsync();
+            _context!.Organizations.Add(organization);
+            await _context.SaveChangesAsync();
 
             // Act
-            var result = await this.service!.GetOrganizationLimitsAsync(organization.Id);
+            var result = await _service!.GetOrganizationLimitsAsync(organization.Id);
 
             // Assert
             result.Should().NotBeNull();
@@ -104,8 +97,8 @@ namespace Synaxis.Infrastructure.Tests.Services
                 MaxTeams = 5,
             };
 
-            this.context!.Organizations.Add(organization);
-            await this.context.SaveChangesAsync();
+            _context!.Organizations.Add(organization);
+            await _context.SaveChangesAsync();
 
             var request = new UpdateOrganizationLimitsRequest
             {
@@ -114,7 +107,7 @@ namespace Synaxis.Infrastructure.Tests.Services
             };
 
             // Act
-            var result = await this.service!.UpdateOrganizationLimitsAsync(
+            var result = await _service!.UpdateOrganizationLimitsAsync(
                 organization.Id,
                 request,
                 Guid.NewGuid());
@@ -124,7 +117,7 @@ namespace Synaxis.Infrastructure.Tests.Services
             result.MaxUsersPerTeam.Should().Be(100);
 
             // Verify persistence by re-fetching
-            var updatedOrg = await this.context!.Organizations.FindAsync(organization.Id);
+            var updatedOrg = await _context!.Organizations.FindAsync(organization.Id);
             updatedOrg.Should().NotBeNull();
             updatedOrg!.MaxTeams.Should().Be(25);
             updatedOrg.MaxUsersPerTeam.Should().Be(100);
@@ -143,12 +136,12 @@ namespace Synaxis.Infrastructure.Tests.Services
                 MaxTeams = 10,
             };
 
-            this.context!.Organizations.Add(organization);
-            await this.context.SaveChangesAsync();
+            _context!.Organizations.Add(organization);
+            await _context.SaveChangesAsync();
 
             // Create two separate contexts to simulate concurrent updates
             var options = new DbContextOptionsBuilder<SynaxisDbContext>()
-                .UseNpgsql(this.postgres.GetConnectionString())
+                .UseNpgsql(_connectionString)
                 .Options;
 
             await using var context1 = new SynaxisDbContext(options);
@@ -171,7 +164,7 @@ namespace Synaxis.Infrastructure.Tests.Services
 
             // Assert - Verify final state (last write wins in this implementation)
             // Reload from database to get fresh data
-            var finalOrg = await this.context!.Organizations
+            var finalOrg = await _context!.Organizations
                 .AsNoTracking()
                 .FirstOrDefaultAsync(o => o.Id == organization.Id);
             finalOrg.Should().NotBeNull();
@@ -194,11 +187,11 @@ namespace Synaxis.Infrastructure.Tests.Services
                 AllowedEmailDomains = new List<string> { "company.com", "subsidiary.com" },
             };
 
-            this.context!.Organizations.Add(organization);
-            await this.context.SaveChangesAsync();
+            _context!.Organizations.Add(organization);
+            await _context.SaveChangesAsync();
 
             // Act
-            var result = await this.service!.GetOrganizationSettingsAsync(organization.Id);
+            var result = await _service!.GetOrganizationSettingsAsync(organization.Id);
 
             // Assert
             result.Should().NotBeNull();
@@ -223,8 +216,8 @@ namespace Synaxis.Infrastructure.Tests.Services
                 RequireSso = false,
             };
 
-            this.context!.Organizations.Add(organization);
-            await this.context.SaveChangesAsync();
+            _context!.Organizations.Add(organization);
+            await _context.SaveChangesAsync();
 
             var request = new UpdateOrganizationSettingsRequest
             {
@@ -234,7 +227,7 @@ namespace Synaxis.Infrastructure.Tests.Services
             };
 
             // Act
-            var result = await this.service!.UpdateOrganizationSettingsAsync(
+            var result = await _service!.UpdateOrganizationSettingsAsync(
                 organization.Id,
                 request,
                 Guid.NewGuid());
@@ -245,7 +238,7 @@ namespace Synaxis.Infrastructure.Tests.Services
             result.AllowedEmailDomains.Should().BeEquivalentTo("secure.com");
 
             // Verify persistence
-            var updatedOrg = await this.context!.Organizations.FindAsync(organization.Id);
+            var updatedOrg = await _context!.Organizations.FindAsync(organization.Id);
             updatedOrg.Should().NotBeNull();
             updatedOrg!.DataRetentionDays.Should().Be(365);
             updatedOrg.RequireSso.Should().BeTrue();
@@ -264,8 +257,8 @@ namespace Synaxis.Infrastructure.Tests.Services
                 MaxTeams = 5,
             };
 
-            this.context!.Organizations.Add(organization);
-            await this.context.SaveChangesAsync();
+            _context!.Organizations.Add(organization);
+            await _context.SaveChangesAsync();
 
             var request = new UpdateOrganizationLimitsRequest
             {
@@ -274,7 +267,7 @@ namespace Synaxis.Infrastructure.Tests.Services
             };
 
             // Act
-            var result = await this.service!.UpdateOrganizationLimitsAsync(
+            var result = await _service!.UpdateOrganizationLimitsAsync(
                 organization.Id,
                 request,
                 Guid.NewGuid());
@@ -284,7 +277,7 @@ namespace Synaxis.Infrastructure.Tests.Services
             result.MaxConcurrentRequests.Should().Be(10000);
 
             // Verify these large values are actually stored
-            var updatedOrg = await this.context!.Organizations.FindAsync(organization.Id);
+            var updatedOrg = await _context!.Organizations.FindAsync(organization.Id);
             updatedOrg!.MaxTeams.Should().Be(1000);
             updatedOrg.MaxConcurrentRequests.Should().Be(10000);
         }
@@ -301,8 +294,8 @@ namespace Synaxis.Infrastructure.Tests.Services
                 PrimaryRegion = "us-east-1",
             };
 
-            this.context!.Organizations.Add(organization);
-            await this.context.SaveChangesAsync();
+            _context!.Organizations.Add(organization);
+            await _context.SaveChangesAsync();
 
             var invalidRequest = new UpdateOrganizationSettingsRequest
             {
@@ -310,7 +303,7 @@ namespace Synaxis.Infrastructure.Tests.Services
             };
 
             // Act
-            Func<Task> act = async () => await this.service!.UpdateOrganizationSettingsAsync(
+            Func<Task> act = async () => await _service!.UpdateOrganizationSettingsAsync(
                 organization.Id,
                 invalidRequest,
                 Guid.NewGuid());

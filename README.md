@@ -160,6 +160,21 @@ We welcome contributions! Please read our [Contributing Guide](CONTRIBUTING.md) 
 - Pull request process
 - Issue reporting
 
+## Development
+
+To build and test the project locally, run the following commands from the repository root:
+
+```bash
+dotnet format --verify-no-changes
+dotnet build Synaxis.sln -c Release -warnaserror
+dotnet test Synaxis.sln --no-build
+```
+
+These commands ensure:
+- Code formatting compliance
+- Zero warnings and errors in the build
+- All tests pass
+
 ## Roadmap
 
 - [x] Core SDK architecture

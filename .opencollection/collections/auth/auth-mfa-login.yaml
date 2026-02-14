@@ -1,0 +1,260 @@
+openapi: 3.0.3
+info:
+  title: MFA Login
+  description: Completes authentication with multi-factor authentication code. Used after initial login when MFA is enabled.
+  version: 1.0.0
+  contact:
+    name: Synaxis Team
+    email: support@synaxis.dev
+
+servers:
+  - url: http://localhost:5000
+    description: Local development server
+  - url: https://api.synaxis.dev
+    description: Production server
+
+tags:
+  - name: Authentication
+    description: User authentication and session management
+  - name: MFA
+    description: Multi-factor authentication management
+
+paths:
+  /api/v1/auth/login/mfa:
+    post:
+      summary: MFA login
+      description: Completes authentication with multi-factor authentication code. Used after initial login when MFA is enabled.
+      operationId: loginWithMfa
+      tags:
+        - Authentication
+        - MFA
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MfaLoginRequest'
+            examples:
+              success:
+                summary: Successful MFA login
+                value:
+                  email: "john.doe@example.com"
+                  password: "SecurePassword123!"
+                  mfaCode: "123456"
+              error_invalid_code:
+                summary: MFA login with invalid code (will fail)
+                value:
+                  email: "john.doe@example.com"
+                  password: "SecurePassword123!"
+                  mfaCode: "000000"
+              error_expired_code:
+                summary: MFA login with expired code (will fail)
+                value:
+                  email: "john.doe@example.com"
+                  password: "SecurePassword123!"
+                  mfaCode: "654321"
+              error_wrong_credentials:
+                summary: MFA login with wrong credentials (will fail)
+                value:
+                  email: "john.doe@example.com"
+                  password: "WrongPassword123!"
+                  mfaCode: "123456"
+      responses:
+        '200':
+          description: MFA login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+              examples:
+                success:
+                  summary: Successful MFA login response
+                  value:
+                    accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDAiLCJlbWFpbCI6ImpvaG4uZG9lQGV4YW1wbGUuY29tIiwiaWF0IjoxNzA1MzIwNjAwLCJleHAiOjE3MDUzMjQyMDB9.signature"
+                    refreshToken: "dGhpcy1pcy1hLXJlZnJlc2gtdG9rZW4tYWZ0ZXItbWZhLWxvZ2lu"
+                    tokenType: "Bearer"
+                    expiresIn: 3600
+                    user:
+                      id: "550e8400-e29b-41d4-a716-446655440000"
+                      email: "john.doe@example.com"
+                      firstName: "John"
+                      lastName: "Doe"
+                      role: "user"
+                      mfaEnabled: true
+                      emailVerified: true
+                      isActive: true
+                      createdAt: "2024-01-15T10:30:00Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Invalid MFA code or credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_mfa_code:
+                  summary: Invalid MFA code
+                  value:
+                    error: "InvalidMfaCode"
+                    message: "The MFA code provided is invalid or has expired."
+                invalid_credentials:
+                  summary: Invalid email or password
+                  value:
+                    error: "Unauthorized"
+                    message: "Invalid email or password."
+                mfa_not_enabled:
+                  summary: MFA not enabled for account
+                  value:
+                    error: "MfaNotEnabled"
+                    message: "MFA is not enabled for this account. Please use regular login."
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    MfaLoginRequest:
+      type: object
+      required:
+        - email
+        - password
+        - mfaCode
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "john.doe@example.com"
+        password:
+          type: string
+          format: password
+          description: User's password
+          example: "SecurePassword123!"
+        mfaCode:
+          type: string
+          pattern: '^\d{6}$'
+          description: 6-digit MFA code from authenticator app
+          example: "123456"
+
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: JWT access token
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refreshToken:
+          type: string
+          description: Refresh token for obtaining new access tokens
+          example: "dGhpcy1pcy1hLXJlZnJlc2gtdG9rZW4..."
+        tokenType:
+          type: string
+          description: Token type
+          example: "Bearer"
+        expiresIn:
+          type: integer
+          description: Access token expiration time in seconds
+          example: 3600
+        user:
+          $ref: '#/components/schemas/User'
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique user identifier
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "john.doe@example.com"
+        firstName:
+          type: string
+          description: User's first name
+          example: "John"
+        lastName:
+          type: string
+          description: User's last name
+          example: "Doe"
+        role:
+          type: string
+          description: User's role
+          enum:
+            - user
+            - admin
+            - superadmin
+          example: "user"
+        mfaEnabled:
+          type: boolean
+          description: Whether MFA is enabled for the user
+          example: true
+        emailVerified:
+          type: boolean
+          description: Whether the user's email is verified
+          example: true
+        isActive:
+          type: boolean
+          description: Whether the user account is active
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          description: Account creation timestamp
+          example: "2024-01-15T10:30:00Z"
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error code
+          example: "ValidationError"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "The request contains invalid data."
+        details:
+          type: object
+          description: Additional error details
+          nullable: true
+          example:
+            field: "email"
+            issue: "Invalid email format"
+        retryAfter:
+          type: integer
+          description: Seconds to wait before retrying (for rate limits)
+          nullable: true
+          example: 300
+
+  responses:
+    BadRequest:
+      description: Bad request - Invalid input data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            invalid_mfa_format:
+              summary: Invalid MFA code format
+              value:
+                error: "BadRequest"
+                message: "The request contains invalid data."
+                details:
+                  field: "mfaCode"
+                  issue: "MFA code must be exactly 6 digits"
+            missing_fields:
+              summary: Missing required fields
+              value:
+                error: "BadRequest"
+                message: "The request contains invalid data."
+                details:
+                  field: "mfaCode"
+                  issue: "Field is required"

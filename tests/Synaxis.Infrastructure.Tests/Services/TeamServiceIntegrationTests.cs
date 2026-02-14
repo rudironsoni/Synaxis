@@ -10,45 +10,38 @@ namespace Synaxis.Infrastructure.Tests.Services
     using FluentAssertions;
     using Microsoft.EntityFrameworkCore;
     using Moq;
+    using Synaxis.Common.Tests.Fixtures;
     using Synaxis.Core.Contracts;
     using Synaxis.Core.Models;
     using Synaxis.Infrastructure.Data;
     using Synaxis.Infrastructure.Services;
-    using Testcontainers.PostgreSql;
     using Xunit;
 
     [Trait("Category", "Integration")]
-    public sealed class TeamServiceIntegrationTests : IAsyncLifetime, IDisposable
+    [Collection("PostgresIntegration")]
+#pragma warning disable IDISP003 // False positive: _context is only assigned once in InitializeAsync
+#pragma warning disable IDISP006 // IAsyncLifetime provides async cleanup, IDisposable not needed
+    public sealed class TeamServiceIntegrationTests : IAsyncLifetime
     {
-        private readonly PostgreSqlContainer _postgresContainer = new PostgreSqlBuilder("postgres:16-alpine")
-            .WithDatabase("synaxis_test")
-            .WithUsername("postgres")
-            .WithPassword("testpassword")
-            .Build();
-
+        private readonly Synaxis.Common.Tests.Fixtures.PostgresFixture _postgresFixture;
         private SynaxisDbContext? _context;
         private Mock<IInvitationService> _invitationServiceMock = null!;
         private TeamService? _service;
         private Guid _organizationId;
         private Guid _userId;
+        private string _connectionString = string.Empty;
+
+        public TeamServiceIntegrationTests(Synaxis.Common.Tests.Fixtures.PostgresFixture postgresFixture)
+        {
+            _postgresFixture = postgresFixture ?? throw new ArgumentNullException(nameof(postgresFixture));
+        }
 
         public async Task InitializeAsync()
         {
-            await _postgresContainer.StartAsync();
-
-            var options = new DbContextOptionsBuilder<SynaxisDbContext>()
-                .UseNpgsql(_postgresContainer.GetConnectionString())
-                .ConfigureWarnings(warnings =>
-                    warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning))
-                .Options;
-
-            if (_context is not null)
-            {
-                await _context.DisposeAsync();
-            }
-
-            _context = new SynaxisDbContext(options);
-            await _context!.Database.MigrateAsync();
+            _connectionString = await _postgresFixture.CreateIsolatedDatabaseAsync("teamservice");
+            var context = _postgresFixture.CreateContext(_connectionString);
+            await context.Database.MigrateAsync();
+            _context = context;
 
             _invitationServiceMock = new Mock<IInvitationService>();
             _service = new TeamService(_context, _invitationServiceMock.Object);
@@ -76,13 +69,10 @@ namespace Synaxis.Infrastructure.Tests.Services
                 await _context!.DisposeAsync();
             }
 
-            await _postgresContainer.DisposeAsync();
-        }
-
-        public void Dispose()
-        {
-            _context?.Dispose();
-            _postgresContainer.DisposeAsync().AsTask().Wait();
+            if (!string.IsNullOrEmpty(_connectionString))
+            {
+                await _postgresFixture.DropDatabaseAsync(_connectionString);
+            }
         }
 
         [Fact]

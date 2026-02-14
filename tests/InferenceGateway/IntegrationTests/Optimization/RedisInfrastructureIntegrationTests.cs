@@ -8,51 +8,51 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using StackExchange.Redis;
-using Testcontainers.Redis;
+using Synaxis.InferenceGateway.IntegrationTests;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace Synaxis.InferenceGateway.IntegrationTests.Optimization
 {
     /// <summary>
-    /// Integration tests for Redis-based infrastructure components
+    /// Integration tests for Redis-based infrastructure components.
     /// Tests session store, conversation store, deduplication service, and connection resilience.
+    /// Uses shared SynaxisWebApplicationFactory to avoid per-test container churn.
     /// </summary>
+    [Trait("Category", "Integration")]
+    [Collection("Integration")]
     public class RedisInfrastructureIntegrationTests : IAsyncLifetime
     {
         private readonly ITestOutputHelper _output;
-        private readonly RedisContainer _redis;
-        private IConnectionMultiplexer? _connection;
+        private readonly SynaxisWebApplicationFactory _factory;
+        private IConnectionMultiplexer? _redisConnection;
         private IDatabase? _database;
 
-        public RedisInfrastructureIntegrationTests(ITestOutputHelper output)
+        public RedisInfrastructureIntegrationTests(ITestOutputHelper output, SynaxisWebApplicationFactory factory)
         {
-            this._output = output ?? throw new ArgumentNullException(nameof(output));
-
-            this._redis = new RedisBuilder("redis:7-alpine")
-                .WithPortBinding(6379, true)
-                .Build();
+            _output = output ?? throw new ArgumentNullException(nameof(output));
+            _factory = factory ?? throw new ArgumentNullException(nameof(factory));
         }
 
         public async Task InitializeAsync()
         {
-            await _redis.StartAsync().ConfigureAwait(false);
-            this._output.WriteLine($"Redis started on {this._redis.GetConnectionString()}");
+            // Create Redis connection using factory's shared connection string
+            var redisConnectionString = _factory.RedisConnectionString;
+            _redisConnection = await ConnectionMultiplexer.ConnectAsync(redisConnectionString).ConfigureAwait(false);
+            _database = _redisConnection.GetDatabase();
 
-            var connectionString = this._redis.GetConnectionString();
-            this._connection = await ConnectionMultiplexer.ConnectAsync(connectionString).ConfigureAwait(false);
-            this._database = this._connection.GetDatabase();
+            // Flush Redis DB for deterministic state
+            await _database.ExecuteAsync("FLUSHDB").ConfigureAwait(false);
+            _output.WriteLine($"Redis database ready and flushed");
         }
 
         public async Task DisposeAsync()
         {
-            if (this._connection != null)
+            if (_redisConnection != null)
             {
-                await _connection.CloseAsync().ConfigureAwait(false);
-                this._connection.Dispose();
+                await _redisConnection.CloseAsync().ConfigureAwait(false);
+                _redisConnection.Dispose();
             }
-
-            await _redis.DisposeAsync().ConfigureAwait(false);
         }
 
         [Fact]
@@ -252,7 +252,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Optimization
             // In production, the application should degrade gracefully when Redis is unavailable
 
             // Arrange - Create a connection with aggressive timeout settings
-            var config = ConfigurationOptions.Parse(this._redis.GetConnectionString());
+            var config = ConfigurationOptions.Parse(_factory.RedisConnectionString);
             config.ConnectTimeout = 100;
             config.SyncTimeout = 100;
             config.AbortOnConnectFail = false;

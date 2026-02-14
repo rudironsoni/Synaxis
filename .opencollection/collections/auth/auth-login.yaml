@@ -1,0 +1,279 @@
+openapi: 3.0.3
+info:
+  title: User Login
+  description: Authenticates a user with email and password. Returns JWT access and refresh tokens.
+  version: 1.0.0
+  contact:
+    name: Synaxis Team
+    email: support@synaxis.dev
+
+servers:
+  - url: http://localhost:5000
+    description: Local development server
+  - url: https://api.synaxis.dev
+    description: Production server
+
+tags:
+  - name: Authentication
+    description: User authentication and session management
+
+paths:
+  /api/v1/auth/login:
+    post:
+      summary: User login
+      description: Authenticates a user with email and password. Returns JWT access and refresh tokens.
+      operationId: loginUser
+      tags:
+        - Authentication
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            examples:
+              success:
+                summary: Successful login
+                value:
+                  email: "john.doe@example.com"
+                  password: "SecurePassword123!"
+              error_wrong_password:
+                summary: Login with wrong password (will fail)
+                value:
+                  email: "john.doe@example.com"
+                  password: "WrongPassword123!"
+              error_nonexistent_user:
+                summary: Login with non-existent user (will fail)
+                value:
+                  email: "nonexistent@example.com"
+                  password: "SecurePassword123!"
+              error_missing_fields:
+                summary: Login with missing fields (will fail)
+                value:
+                  email: "john.doe@example.com"
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+              examples:
+                success:
+                  summary: Successful login response
+                  value:
+                    accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDAiLCJlbWFpbCI6ImpvaG4uZG9lQGV4YW1wbGUuY29tIiwiaWF0IjoxNzA1MzIwNjAwLCJleHAiOjE3MDUzMjQyMDB9.signature"
+                    refreshToken: "dGhpcy1pcy1hLXJlZnJlc2gtdG9rZW4tZm9yLXVzZXItbG9naW4"
+                    tokenType: "Bearer"
+                    expiresIn: 3600
+                    user:
+                      id: "550e8400-e29b-41d4-a716-446655440000"
+                      email: "john.doe@example.com"
+                      firstName: "John"
+                      lastName: "Doe"
+                      role: "user"
+                      mfaEnabled: false
+                      emailVerified: true
+                      isActive: true
+                      createdAt: "2024-01-15T10:30:00Z"
+                mfa_required:
+                  summary: Login successful but MFA required
+                  value:
+                    accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    refreshToken: "dGhpcy1pcy1hLXJlZnJlc2gtdG9rZW4..."
+                    tokenType: "Bearer"
+                    expiresIn: 3600
+                    user:
+                      id: "550e8400-e29b-41d4-a716-446655440000"
+                      email: "john.doe@example.com"
+                      firstName: "John"
+                      lastName: "Doe"
+                      role: "user"
+                      mfaEnabled: true
+                      emailVerified: true
+                      isActive: true
+                      createdAt: "2024-01-15T10:30:00Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '423':
+          description: Account locked - Too many failed login attempts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                account_locked:
+                  summary: Account locked due to too many failed attempts
+                  value:
+                    error: "AccountLocked"
+                    message: "Account has been locked due to too many failed login attempts. Please reset your password."
+                    retryAfter: 900
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "john.doe@example.com"
+        password:
+          type: string
+          format: password
+          description: User's password
+          example: "SecurePassword123!"
+
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: JWT access token
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refreshToken:
+          type: string
+          description: Refresh token for obtaining new access tokens
+          example: "dGhpcy1pcy1hLXJlZnJlc2gtdG9rZW4..."
+        tokenType:
+          type: string
+          description: Token type
+          example: "Bearer"
+        expiresIn:
+          type: integer
+          description: Access token expiration time in seconds
+          example: 3600
+        user:
+          $ref: '#/components/schemas/User'
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique user identifier
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "john.doe@example.com"
+        firstName:
+          type: string
+          description: User's first name
+          example: "John"
+        lastName:
+          type: string
+          description: User's last name
+          example: "Doe"
+        role:
+          type: string
+          description: User's role
+          enum:
+            - user
+            - admin
+            - superadmin
+          example: "user"
+        mfaEnabled:
+          type: boolean
+          description: Whether MFA is enabled for the user
+          example: false
+        emailVerified:
+          type: boolean
+          description: Whether the user's email is verified
+          example: true
+        isActive:
+          type: boolean
+          description: Whether the user account is active
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          description: Account creation timestamp
+          example: "2024-01-15T10:30:00Z"
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error code
+          example: "ValidationError"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "The request contains invalid data."
+        details:
+          type: object
+          description: Additional error details
+          nullable: true
+          example:
+            field: "email"
+            issue: "Invalid email format"
+        retryAfter:
+          type: integer
+          description: Seconds to wait before retrying (for rate limits)
+          nullable: true
+          example: 300
+
+  responses:
+    BadRequest:
+      description: Bad request - Invalid input data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            missing_email:
+              summary: Missing email field
+              value:
+                error: "BadRequest"
+                message: "The request contains invalid data."
+                details:
+                  field: "email"
+                  issue: "Field is required"
+            missing_password:
+              summary: Missing password field
+              value:
+                error: "BadRequest"
+                message: "The request contains invalid data."
+                details:
+                  field: "password"
+                  issue: "Field is required"
+
+    Unauthorized:
+      description: Unauthorized - Invalid or missing authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            invalid_credentials:
+              summary: Invalid email or password
+              value:
+                error: "Unauthorized"
+                message: "Invalid email or password."
+            inactive_account:
+              summary: Account is inactive
+              value:
+                error: "Unauthorized"
+                message: "Your account has been deactivated. Please contact support."
+            unverified_email:
+              summary: Email not verified
+              value:
+                error: "Unauthorized"
+                message: "Please verify your email address before logging in."

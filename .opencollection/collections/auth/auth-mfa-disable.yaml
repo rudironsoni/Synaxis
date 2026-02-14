@@ -1,0 +1,171 @@
+openapi: 3.0.3
+info:
+  title: Disable MFA
+  description: Disables MFA for the authenticated user. Requires password confirmation for security.
+  version: 1.0.0
+  contact:
+    name: Synaxis Team
+    email: support@synaxis.dev
+
+servers:
+  - url: http://localhost:5000
+    description: Local development server
+  - url: https://api.synaxis.dev
+    description: Production server
+
+tags:
+  - name: MFA
+    description: Multi-factor authentication management
+
+paths:
+  /api/v1/auth/mfa/disable:
+    post:
+      summary: Disable MFA
+      description: Disables MFA for the authenticated user. Requires password confirmation for security.
+      operationId: disableMfa
+      tags:
+        - MFA
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MfaDisableRequest'
+            examples:
+              success:
+                summary: Successful MFA disable
+                value:
+                  password: "SecurePassword123!"
+              error_wrong_password:
+                summary: Disable with wrong password (will fail)
+                value:
+                  password: "WrongPassword123!"
+              error_missing_password:
+                summary: Disable with missing password (will fail)
+                value: {}
+      responses:
+        '200':
+          description: MFA disabled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              examples:
+                success:
+                  summary: Successful MFA disable response
+                  value:
+                    message: "MFA has been disabled successfully for your account."
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: MFA not enabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                mfa_not_enabled:
+                  summary: MFA not enabled for account
+                  value:
+                    error: "MfaNotEnabled"
+                    message: "MFA is not enabled for this account."
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    MfaDisableRequest:
+      type: object
+      required:
+        - password
+      properties:
+        password:
+          type: string
+          format: password
+          description: Current password for verification
+          example: "SecurePassword123!"
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Response message
+          example: "Operation completed successfully"
+        expiresAt:
+          type: string
+          format: date-time
+          description: Expiration timestamp for time-sensitive operations
+          example: "2024-01-15T11:30:00Z"
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error code
+          example: "ValidationError"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "The request contains invalid data."
+        details:
+          type: object
+          description: Additional error details
+          nullable: true
+          example:
+            field: "email"
+            issue: "Invalid email format"
+        retryAfter:
+          type: integer
+          description: Seconds to wait before retrying (for rate limits)
+          nullable: true
+          example: 300
+
+  responses:
+    BadRequest:
+      description: Bad request - Invalid input data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            missing_password:
+              summary: Missing password
+              value:
+                error: "BadRequest"
+                message: "The request contains invalid data."
+                details:
+                  field: "password"
+                  issue: "Field is required"
+            invalid_password:
+              summary: Invalid password
+              value:
+                error: "InvalidPassword"
+                message: "The password provided is incorrect. Please try again."
+
+    Unauthorized:
+      description: Unauthorized - Invalid or missing authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            missing_auth:
+              summary: Missing authentication header
+              value:
+                error: "Unauthorized"
+                message: "Authentication is required to access this resource."
+            invalid_token:
+              summary: Invalid access token
+              value:
+                error: "Unauthorized"
+                message: "Invalid or expired access token."

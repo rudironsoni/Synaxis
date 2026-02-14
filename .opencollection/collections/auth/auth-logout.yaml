@@ -1,0 +1,144 @@
+openapi: 3.0.3
+info:
+  title: User Logout
+  description: Invalidates the current session and refresh token. Requires authentication.
+  version: 1.0.0
+  contact:
+    name: Synaxis Team
+    email: support@synaxis.dev
+
+servers:
+  - url: http://localhost:5000
+    description: Local development server
+  - url: https://api.synaxis.dev
+    description: Production server
+
+tags:
+  - name: Authentication
+    description: User authentication and session management
+
+paths:
+  /api/v1/auth/logout:
+    post:
+      summary: User logout
+      description: Invalidates the current session and refresh token. Requires authentication.
+      operationId: logoutUser
+      tags:
+        - Authentication
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+            examples:
+              success:
+                summary: Successful logout
+                value:
+                  refreshToken: "dGhpcy1pcy1hLXJlZnJlc2gtdG9rZW4tZnJvbS1sb2dpbg=="
+              error_invalid_token:
+                summary: Logout with invalid refresh token (will fail)
+                value:
+                  refreshToken: "invalid-refresh-token"
+              error_missing_token:
+                summary: Logout with missing refresh token (will fail)
+                value: {}
+      responses:
+        '204':
+          description: Logout successful
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    LogoutRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          description: Refresh token to invalidate
+          example: "dGhpcy1pcy1hLXJlZnJlc2gtdG9rZW4..."
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error code
+          example: "ValidationError"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "The request contains invalid data."
+        details:
+          type: object
+          description: Additional error details
+          nullable: true
+          example:
+            field: "email"
+            issue: "Invalid email format"
+        retryAfter:
+          type: integer
+          description: Seconds to wait before retrying (for rate limits)
+          nullable: true
+          example: 300
+
+  responses:
+    BadRequest:
+      description: Bad request - Invalid input data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            missing_token:
+              summary: Missing refresh token
+              value:
+                error: "BadRequest"
+                message: "The request contains invalid data."
+                details:
+                  field: "refreshToken"
+                  issue: "Field is required"
+            invalid_token_format:
+              summary: Invalid token format
+              value:
+                error: "BadRequest"
+                message: "The request contains invalid data."
+                details:
+                  field: "refreshToken"
+                  issue: "Invalid token format"
+
+    Unauthorized:
+      description: Unauthorized - Invalid or missing authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            missing_auth:
+              summary: Missing authentication header
+              value:
+                error: "Unauthorized"
+                message: "Authentication is required to access this resource."
+            invalid_token:
+              summary: Invalid access token
+              value:
+                error: "Unauthorized"
+                message: "Invalid or expired access token."
+            token_already_revoked:
+              summary: Refresh token already revoked
+              value:
+                error: "Unauthorized"
+                message: "The refresh token has already been revoked."

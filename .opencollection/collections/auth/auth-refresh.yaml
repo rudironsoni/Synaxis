@@ -1,0 +1,176 @@
+openapi: 3.0.3
+info:
+  title: Refresh Access Token
+  description: Obtains a new access token using a valid refresh token. The refresh token is rotated for security.
+  version: 1.0.0
+  contact:
+    name: Synaxis Team
+    email: support@synaxis.dev
+
+servers:
+  - url: http://localhost:5000
+    description: Local development server
+  - url: https://api.synaxis.dev
+    description: Production server
+
+tags:
+  - name: Authentication
+    description: User authentication and session management
+
+paths:
+  /api/v1/auth/refresh:
+    post:
+      summary: Refresh access token
+      description: Obtains a new access token using a valid refresh token. The refresh token is rotated for security.
+      operationId: refreshToken
+      tags:
+        - Authentication
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+            examples:
+              success:
+                summary: Successful token refresh
+                value:
+                  refreshToken: "dGhpcy1pcy1hLXJlZnJlc2gtdG9rZW4tZnJvbS1sb2dpbg=="
+              error_expired_token:
+                summary: Refresh with expired token (will fail)
+                value:
+                  refreshToken: "expired-refresh-token"
+              error_invalid_token:
+                summary: Refresh with invalid token (will fail)
+                value:
+                  refreshToken: "invalid-refresh-token"
+              error_missing_token:
+                summary: Refresh with missing token (will fail)
+                value: {}
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+              examples:
+                success:
+                  summary: Successful token refresh response
+                  value:
+                    accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDAiLCJpYXQiOjE3MDUzMjA2MDAsImV4cCI6MTcwNTMyNDIwMH0.signature"
+                    refreshToken: "bmV3LXJvdGF0ZWQtcmVmcmVzaC10b2tlbi1mb3Itc2VjdXJpdHk="
+                    tokenType: "Bearer"
+                    expiresIn: 3600
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Invalid or expired refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                expired_token:
+                  summary: Expired refresh token
+                  value:
+                    error: "InvalidRefreshToken"
+                    message: "The refresh token is invalid or has expired. Please login again."
+                invalid_token:
+                  summary: Invalid refresh token
+                  value:
+                    error: "InvalidRefreshToken"
+                    message: "The refresh token is invalid or has expired. Please login again."
+                revoked_token:
+                  summary: Revoked refresh token
+                  value:
+                    error: "InvalidRefreshToken"
+                    message: "The refresh token has been revoked. Please login again."
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    RefreshTokenRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          description: Valid refresh token
+          example: "dGhpcy1pcy1hLXJlZnJlc2gtdG9rZW4..."
+
+    TokenResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: New JWT access token
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refreshToken:
+          type: string
+          description: New refresh token (rotated for security)
+          example: "bmV3LXJlZnJlc2gtdG9rZW4..."
+        tokenType:
+          type: string
+          description: Token type
+          example: "Bearer"
+        expiresIn:
+          type: integer
+          description: Access token expiration time in seconds
+          example: 3600
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error code
+          example: "ValidationError"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "The request contains invalid data."
+        details:
+          type: object
+          description: Additional error details
+          nullable: true
+          example:
+            field: "email"
+            issue: "Invalid email format"
+        retryAfter:
+          type: integer
+          description: Seconds to wait before retrying (for rate limits)
+          nullable: true
+          example: 300
+
+  responses:
+    BadRequest:
+      description: Bad request - Invalid input data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            missing_token:
+              summary: Missing refresh token
+              value:
+                error: "BadRequest"
+                message: "The request contains invalid data."
+                details:
+                  field: "refreshToken"
+                  issue: "Field is required"
+            invalid_format:
+              summary: Invalid token format
+              value:
+                error: "BadRequest"
+                message: "The request contains invalid data."
+                details:
+                  field: "refreshToken"
+                  issue: "Invalid token format"

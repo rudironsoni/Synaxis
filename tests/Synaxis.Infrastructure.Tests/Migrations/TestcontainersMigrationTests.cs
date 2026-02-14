@@ -8,54 +8,62 @@ namespace Synaxis.Infrastructure.Tests.Migrations
     using System.Threading.Tasks;
     using FluentAssertions;
     using Microsoft.EntityFrameworkCore;
+    using Synaxis.Common.Tests.Fixtures;
     using Synaxis.Core.Models;
     using Synaxis.Infrastructure.Data;
-    using Testcontainers.PostgreSql;
     using Xunit;
 
     /// <summary>
     /// Integration tests for database migrations using Testcontainers PostgreSQL.
+    /// Uses shared PostgresFixture to avoid per-test container churn.
     /// </summary>
-    public class TestcontainersMigrationTests : IAsyncLifetime
+    [Trait("Category", "Integration")]
+    [Collection("PostgresIntegration")]
+#pragma warning disable IDISP003 // False positive: _context is only assigned once in InitializeAsync
+#pragma warning disable IDISP006 // IAsyncLifetime provides async cleanup, IDisposable not needed
+    public sealed class TestcontainersMigrationTests : IAsyncLifetime
     {
-        private PostgreSqlContainer _postgresContainer = null!;
+        private readonly Synaxis.Common.Tests.Fixtures.PostgresFixture _postgresFixture;
+        private SynaxisDbContext? _context;
+        private string _connectionString = string.Empty;
+
+        public TestcontainersMigrationTests(Synaxis.Common.Tests.Fixtures.PostgresFixture postgresFixture)
+        {
+            _postgresFixture = postgresFixture ?? throw new ArgumentNullException(nameof(postgresFixture));
+        }
 
         /// <summary>
-        /// Initializes the PostgreSQL container before tests run.
+        /// Initializes the test by creating a fresh database context.
         /// </summary>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         public async Task InitializeAsync()
         {
-            _postgresContainer = new PostgreSqlBuilder("postgres:16-alpine")
-                .WithDatabase("synaxis_test")
-                .WithUsername("postgres")
-                .WithPassword("testpassword")
-                .Build();
-
-            await _postgresContainer.StartAsync();
+            _connectionString = await _postgresFixture.CreateIsolatedDatabaseAsync("migrationtests");
+            var context = _postgresFixture.CreateContext(_connectionString);
+            await context.Database.MigrateAsync();
+            _context = context;
         }
 
         /// <summary>
-        /// Disposes the PostgreSQL container after tests complete.
+        /// Disposes the database context after tests complete.
         /// </summary>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         public async Task DisposeAsync()
         {
-            if (_postgresContainer != null)
+            if (_context != null)
             {
-                await _postgresContainer.DisposeAsync();
+                await _context.DisposeAsync();
+            }
+
+            if (!string.IsNullOrEmpty(_connectionString))
+            {
+                await _postgresFixture.DropDatabaseAsync(_connectionString);
             }
         }
 
         private SynaxisDbContext CreateContext()
         {
-            var options = new DbContextOptionsBuilder<SynaxisDbContext>()
-                .UseNpgsql(_postgresContainer.GetConnectionString())
-                .ConfigureWarnings(warnings =>
-                    warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning))
-                .Options;
-
-            return new SynaxisDbContext(options);
+            return _postgresFixture.CreateContext(_connectionString);
         }
 
         /// <summary>

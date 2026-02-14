@@ -14,10 +14,12 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Synaxis.Common.Tests.Fixtures;
 using Synaxis.DependencyInjection;
 using Synaxis.InferenceGateway.Application.ControlPlane;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
@@ -28,43 +30,68 @@ using Synaxis.Transport.Http;
 using Synaxis.Transport.Http.DependencyInjection;
 using Synaxis.Transport.WebSocket;
 using Synaxis.Transport.WebSocket.DependencyInjection;
-using Testcontainers.PostgreSql;
-using Testcontainers.Redis;
 using Tests.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace Synaxis.InferenceGateway.IntegrationTests
 {
-    public class SynaxisWebApplicationFactory : WebApplicationFactory<Program>, ITestOutputHelperAccessor
+    /// <summary>
+    /// Lightweight WebApplicationFactory for integration tests.
+    /// Owns PostgresFixture and RedisFixture as instance fields to avoid per-test container churn.
+    /// Constructor is lightweight; startup/migrations/seeding happen in async lifecycle.
+    /// </summary>
+    public class SynaxisWebApplicationFactory : WebApplicationFactory<Program>, ITestOutputHelperAccessor, IAsyncLifetime
     {
-        private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:16-alpine")
-            .WithCommand("-c", "max_connections=200")
-            .Build();
-
-        private readonly RedisContainer _redis = new RedisBuilder("redis:7-alpine")
-            .Build();
+        private readonly PostgresFixture _postgresFixture;
+        private readonly RedisFixture _redisFixture;
+        private bool _initialized = false;
 
         public ITestOutputHelper? OutputHelper { get; set; }
 
+        /// <summary>
+        /// Gets the PostgreSQL connection string.
+        /// </summary>
+        public string PostgresConnectionString => _postgresFixture.ConnectionString;
+
+        /// <summary>
+        /// Gets the Redis connection string.
+        /// </summary>
+        public string RedisConnectionString => _redisFixture.ConnectionString;
+
         public SynaxisWebApplicationFactory()
         {
-            // Set base address for HTTP client testing
-            this.ClientOptions.BaseAddress = new Uri("http://localhost:5001");
+            // Create fixture instances - lightweight constructor
+            _postgresFixture = new PostgresFixture();
+            _redisFixture = new RedisFixture();
+        }
 
-            // Start containers in parallel
-            Task.WhenAll(_postgres.StartAsync(), _redis.StartAsync()).GetAwaiter().GetResult();
+        /// <summary>
+        /// Initializes the factory asynchronously.
+        /// Starts fixtures, applies migrations, and seeds test data.
+        /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+        public async Task InitializeAsync()
+        {
+            if (_initialized)
+            {
+                return;
+            }
+
+            // Start fixtures once per factory instance
+            await _postgresFixture.InitializeAsync();
+            await _redisFixture.InitializeAsync();
 
             // Initialize the ControlPlane database schema
             var controlPlaneOptionsBuilder = new DbContextOptionsBuilder<ControlPlaneDbContext>();
-            var connectionString = $"{this._postgres.GetConnectionString()};Pooling=true;Maximum Pool Size=200";
+            var connectionString = $"{_postgresFixture.ConnectionString};Pooling=true;Maximum Pool Size=200";
             controlPlaneOptionsBuilder.UseNpgsql(connectionString);
             controlPlaneOptionsBuilder.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 
             using var controlPlaneContext = new ControlPlaneDbContext(controlPlaneOptionsBuilder.Options);
 
             // Apply EF Core migrations for ControlPlaneDbContext (infrastructure tables: identity.Users, etc.)
-            controlPlaneContext.Database.MigrateAsync().GetAwaiter().GetResult();
+            await controlPlaneContext.Database.MigrateAsync();
 
             // Apply EF Core migrations for SynaxisDbContext (multi-tenant tables: public.users, etc.)
             // Both contexts target the same database but create DIFFERENT tables
@@ -72,7 +99,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             synaxisOptionsBuilder.UseNpgsql(connectionString);
             synaxisOptionsBuilder.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
             using var synaxisContext = new Synaxis.Infrastructure.Data.SynaxisDbContext(synaxisOptionsBuilder.Options);
-            synaxisContext.Database.MigrateAsync().GetAwaiter().GetResult();
+            await synaxisContext.Database.MigrateAsync();
 
             // Build temporary configuration to seed test data. Reuse logic from SmokeTestDataGenerator.
             var builder = new ConfigurationBuilder();
@@ -124,18 +151,82 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             var config = builder.Build();
 
             // Seed the database
-            TestDatabaseSeeder.SeedAsync(controlPlaneContext, config).GetAwaiter().GetResult();
+            await TestDatabaseSeeder.SeedAsync(controlPlaneContext, config);
+
+            // Post-seed test data: create test-alias model for integration tests
+            await PostSeedTestDataAsync(controlPlaneContext);
+
+            _initialized = true;
         }
 
-        protected override void Dispose(bool disposing)
+        /// <summary>
+        /// Creates test-specific model data after initial seeding.
+        /// Ensures "test-alias" and "test-model" models exist for gRPC and WebSocket transport tests.
+        /// </summary>
+        private async Task PostSeedTestDataAsync(ControlPlaneDbContext context)
         {
-            if (disposing)
+            // Seed test-alias for gRPC tests
+            var existingAlias = await context.GlobalModels.FindAsync("test-alias");
+            if (existingAlias == null)
             {
-                // Dispose containers synchronously
-                _postgres.DisposeAsync().GetAwaiter().GetResult();
-                _redis.DisposeAsync().GetAwaiter().GetResult();
+                // Create GlobalModel for test-alias
+                var testAlias = new Synaxis.InferenceGateway.Application.ControlPlane.Entities.GlobalModel
+                {
+                    Id = "test-alias",
+                    Name = "Test Model",
+                    Family = "test",
+                    Description = "Test model alias for integration tests"
+                };
+                context.GlobalModels.Add(testAlias);
+
+                // Create ProviderModel linking test-alias to Pollinations provider (free, no API key required)
+                var aliasProviderModel = new Synaxis.InferenceGateway.Application.ControlPlane.Entities.ProviderModel
+                {
+                    ProviderId = "Pollinations",
+                    GlobalModelId = "test-alias",
+                    ProviderSpecificId = "test-alias",
+                    IsAvailable = true
+                };
+                context.ProviderModels.Add(aliasProviderModel);
             }
-            base.Dispose(disposing);
+
+            // Seed test-model for WebSocket tests
+            var existingTestModel = await context.GlobalModels.FindAsync("test-model");
+            if (existingTestModel == null)
+            {
+                // Create GlobalModel for test-model
+                var testModel = new Synaxis.InferenceGateway.Application.ControlPlane.Entities.GlobalModel
+                {
+                    Id = "test-model",
+                    Name = "Test Model",
+                    Family = "test",
+                    Description = "Test model for WebSocket integration tests"
+                };
+                context.GlobalModels.Add(testModel);
+
+                // Create ProviderModel linking test-model to Pollinations provider (free, no API key required)
+                var modelProviderModel = new Synaxis.InferenceGateway.Application.ControlPlane.Entities.ProviderModel
+                {
+                    ProviderId = "Pollinations",
+                    GlobalModelId = "test-model",
+                    ProviderSpecificId = "test-model",
+                    IsAvailable = true
+                };
+                context.ProviderModels.Add(modelProviderModel);
+            }
+
+            await context.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// Disposes the factory and owned fixtures asynchronously.
+        /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+        public new async Task DisposeAsync()
+        {
+            // Dispose owned fixtures
+            await _postgresFixture.DisposeAsync();
+            await _redisFixture.DisposeAsync();
         }
 
         protected override IHost CreateHost(IHostBuilder builder)
@@ -170,14 +261,14 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 // Load .env files if present so environment variables are available for tests
                 DotNetEnv.Env.TraversePath().Load();
 
-                var connectionString = $"{this._postgres.GetConnectionString()};Pooling=true;Maximum Pool Size=200";
+                var connectionString = $"{_postgresFixture.ConnectionString};Pooling=true;Maximum Pool Size=200";
                 var settings = new Dictionary<string, string?>
 (StringComparer.Ordinal)
                 {
                     ["Synaxis:ControlPlane:ConnectionString"] = connectionString,
                     ["Synaxis:ControlPlane:UseInMemory"] = "false",
                     ["Synaxis:ControlPlane:RunMigrations"] = "false",
-                    ["ConnectionStrings:Redis"] = $"{this._redis.GetConnectionString()},abortConnect=false",
+                    ["ConnectionStrings:Redis"] = $"{_redisFixture.ConnectionString},abortConnect=false",
                     ["Synaxis:InferenceGateway:EnableQuartz"] = "false",
                 };
 
@@ -244,7 +335,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests
             builder.ConfigureServices(services =>
             {
                 // Get connection string with pooling
-                var connectionString = $"{this._postgres.GetConnectionString()};Pooling=true;Maximum Pool Size=200";
+                var connectionString = $"{_postgresFixture.ConnectionString};Pooling=true;Maximum Pool Size=200";
 
                 // Remove the in-memory DbContext registrations from AddControlPlane
                 var controlPlaneDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ControlPlaneDbContext>));
@@ -292,6 +383,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 services.AddSynaxisTransportGrpc();
                 services.AddSynaxisTransportWebSocket();
 
+                // Register mock chat client for Pollinations provider to avoid external HTTP calls
+                services.AddKeyedSingleton<IChatClient>("Pollinations", new MockChatClient());
+
                 // Register startup filter to configure middleware pipeline
                 services.AddSingleton<IStartupFilter, TransportStartupFilter>();
             });
@@ -324,17 +418,42 @@ namespace Synaxis.InferenceGateway.IntegrationTests
                 };
             }
         }
-    }
 
-    /// <summary>
-    /// Collection fixture for integration tests to share the same SynaxisWebApplicationFactory instance.
-    /// This ensures all tests in the collection use the same PostgreSQL container, reducing connection overhead.
-    /// </summary>
-    [CollectionDefinition("Integration")]
-    public class IntegrationTestCollection : ICollectionFixture<SynaxisWebApplicationFactory>
-    {
-        // This class has no code, and is never created. Its purpose is simply
-        // to be the place to apply [CollectionDefinition] and all the
-        // ICollectionFixture<> interfaces.
+        /// <summary>
+        /// Mock chat client for integration tests.
+        /// Returns deterministic responses without making external HTTP calls.
+        /// </summary>
+        private class MockChatClient : IChatClient
+        {
+            public ChatClientMetadata Metadata => new("mock", new Uri("http://mock.local"));
+
+            public Task<ChatResponse> GetResponseAsync(
+                IEnumerable<ChatMessage> messages,
+                ChatOptions? options = null,
+                CancellationToken cancellationToken = default)
+            {
+                return Task.FromResult(new ChatResponse(new ChatMessage(ChatRole.Assistant, "Hello from mock!"))
+                {
+                    Usage = new UsageDetails { InputTokenCount = 10, OutputTokenCount = 5 },
+                });
+            }
+
+            public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
+                IEnumerable<ChatMessage> messages,
+                ChatOptions? options = null,
+                [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
+            {
+                yield return new ChatResponseUpdate { Role = ChatRole.Assistant, Contents = { new TextContent("Hello") } };
+                yield return new ChatResponseUpdate { Role = ChatRole.Assistant, Contents = { new TextContent(" from") } };
+                yield return new ChatResponseUpdate { Role = ChatRole.Assistant, Contents = { new TextContent(" mock!") } };
+                yield return new ChatResponseUpdate { FinishReason = ChatFinishReason.Stop };
+            }
+
+            public void Dispose()
+            {
+            }
+
+            public object? GetService(Type serviceType, object? serviceKey = null) => null;
+        }
     }
 }

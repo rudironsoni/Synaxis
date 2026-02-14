@@ -37,6 +37,7 @@
     <ProjectReference Include="..\..\..\src\Synaxis.Transport.Grpc\Synaxis.Transport.Grpc.csproj" />
     <ProjectReference Include="..\..\..\src\Synaxis.Transport.WebSocket\Synaxis.Transport.WebSocket.csproj" />
     <ProjectReference Include="..\..\..\src\Synaxis.Transport.Http\Synaxis.Transport.Http.csproj" />
+    <ProjectReference Include="..\..\Common\Synaxis.Common.Tests.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />
