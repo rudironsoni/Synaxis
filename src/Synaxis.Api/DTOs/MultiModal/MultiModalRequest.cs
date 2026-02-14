@@ -54,7 +54,7 @@ namespace Synaxis.Api.DTOs.MultiModal
         public double PresencePenalty { get; set; } = 0.0;
 
         /// <summary>
-        /// Gets or sets whether to stream the response.
+        /// Gets or sets a value indicating whether to stream the response.
         /// </summary>
         public bool Stream { get; set; } = false;
 
