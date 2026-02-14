@@ -11,6 +11,8 @@
     <PackageVersion Include="AsyncFixer" Version="2.1.0" />
     <PackageVersion Include="Azure.Core" Version="1.46.1" />
     <PackageVersion Include="Azure.Identity" Version="1.14.1" />
+    <PackageVersion Include="Azure.Messaging.ServiceBus" Version="7.19.0" />
+    <PackageVersion Include="Azure.Storage.Blobs" Version="12.23.0" />
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
     <PackageVersion Include="Bogus" Version="35.6.5" />
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
