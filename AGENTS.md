@@ -137,26 +137,39 @@ Verification is valid only when:
 3. Logs and test artifacts MUST redact secrets, tokens, credentials, and personal data.
 4. New data fields SHOULD include classification and retention impact when applicable.
 
-## 13. Migration Policy
+## 13. Multi-Tenancy Policy
+
+1. All components MUST support multi-tenant architecture.
+2. Tenant isolation is REQUIRED at database, cache, and API levels.
+3. Tenant context MUST be propagated through all service layers.
+4. Resources MUST be scoped to tenant (no global shared state).
+5. Tenant resolution MUST happen at API gateway/middleware level.
+6. Cross-tenant data access MUST be explicitly authorized.
+7. Database queries MUST include tenant filtering.
+8. Cache keys MUST include tenant identifier.
+9. Logs and metrics MUST include tenant attribution.
+10. All new features MUST be designed with multi-tenancy from inception.
+
+## 14. Migration Policy
 
 1. Schema/data migrations MUST be forward-safe.
 2. Destructive migrations MUST include phased rollout/backward compatibility plan.
 3. Migration changes MUST include validation and rollback strategy.
 4. Agents MUST NOT claim completion for migration work without migration verification evidence.
 
-## 14. Observability Policy
+## 15. Observability Policy
 
 1. Changed execution paths SHOULD preserve or improve structured logging and diagnostics.
 2. High-risk changes MUST include explicit observability checks in verification output.
 3. Error paths MUST produce actionable signals without leaking sensitive data.
 
-## 15. Performance Policy
+## 16. Performance Policy
 
 1. Agents MUST NOT introduce known regressions in hot paths.
 2. High-risk performance-impacting changes SHOULD include baseline vs. new evidence.
 3. Agents MUST document intentional performance tradeoffs.
 
-## 16. Mandatory Output Schema
+## 17. Mandatory Output Schema
 
 Final outputs for non-trivial changes MUST contain:
 
@@ -189,7 +202,7 @@ Migrations
 Completion Status: COMPLETE|NOT VERIFIED
 ```
 
-## 17. Canonical Definition of Done
+## 18. Canonical Definition of Done
 
 A change is "COMPLETE" if and only if all conditions below are true:
 
@@ -203,12 +216,12 @@ A change is "COMPLETE" if and only if all conditions below are true:
 
 If any condition is false, status MUST be `NOT VERIFIED` and completion MUST NOT be claimed.
 
-## 18. .NET 10 Baseline
+## 19. .NET 10 Baseline
 
 1. Active development paths MUST target .NET 10 toolchain and project settings.
 2. `global.json` SHOULD be pinned to an approved .NET 10 SDK band.
 3. CI-equivalent behavior MUST be preserved locally (no policy weakening for local success).
 
-## 19. Maintainer-Owned Repository Conventions
+## 20. Maintainer-Owned Repository Conventions
 
 Architecture and repository-specific conventions MAY be maintained in dedicated maintainer sections or separate docs and SHOULD remain consistent with this policy.

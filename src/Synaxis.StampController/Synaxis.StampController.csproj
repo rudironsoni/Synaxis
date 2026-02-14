@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Synaxis.StampController</AssemblyName>
+    <RootNamespace>Synaxis.StampController</RootNamespace>
+    <IsPackable>true</IsPackable>
+    <PackageId>Synaxis.StampController</PackageId>
+    <Authors>Synaxis Team</Authors>
+    <Description>Kubernetes controller for managing ephemeral stamp lifecycle</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="KubernetesClient" Version="15.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0-preview.1.25080.5" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.0-preview.1.25080.5" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0-preview.1.25080.5" />
+    <PackageReference Include="System.Text.Json" Version="10.0.0-preview.1.25080.5" />
+    <PackageReference Include="prometheus-net" Version="8.2.1" />
+    <PackageReference Include="prometheus-net.AspNetCore" Version="8.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Synaxis.Core/Synaxis.Core.csproj" />
+    <ProjectReference Include="../Synaxis.Abstractions/Synaxis.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>
