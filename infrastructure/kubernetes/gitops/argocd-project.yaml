@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: synaxis
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: synaxis
+    app.kubernetes.io/part-of: argocd
+spec:
+  description: Synaxis Application Project
+  sourceRepos:
+    - '*'
+  destinations:
+    - namespace: '*'
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
+  orphanedResources:
+    warn: false

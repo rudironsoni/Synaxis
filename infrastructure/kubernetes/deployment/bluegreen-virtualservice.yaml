@@ -1,0 +1,29 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: synaxis-vs
+  namespace: synaxis
+spec:
+  hosts:
+    - "*"
+  gateways:
+    - synaxis-gateway
+  http:
+    - match:
+        - headers:
+            x-canary:
+              exact: "true"
+      route:
+        - destination:
+            host: synaxis-api
+            subset: green
+          weight: 100
+    - route:
+        - destination:
+            host: synaxis-api
+            subset: blue
+          weight: 100
+        - destination:
+            host: synaxis-api
+            subset: green
+          weight: 0

@@ -1,0 +1,96 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: Workflow
+metadata:
+  name: synaxis-resilience-test
+  namespace: synaxis
+spec:
+  entry: entry
+  templates:
+    - name: entry
+      templateType: Serial
+      deadline: 30m
+      children:
+        - pod-failure
+        - network-delay
+        - cpu-stress
+        - memory-stress
+        - network-loss
+
+    - name: pod-failure
+      templateType: PodChaos
+      deadline: 5m
+      podChaos:
+        action: pod-failure
+        mode: one
+        selector:
+          namespaces:
+            - synaxis
+          labelSelectors:
+            app: synaxis-api
+        duration: "30s"
+
+    - name: network-delay
+      templateType: NetworkChaos
+      deadline: 5m
+      networkChaos:
+        action: delay
+        mode: one
+        selector:
+          namespaces:
+            - synaxis
+          labelSelectors:
+            app: synaxis-api
+        delay:
+          latency: "200ms"
+          correlation: "25"
+          jitter: "50ms"
+        duration: "60s"
+
+    - name: cpu-stress
+      templateType: StressChaos
+      deadline: 5m
+      stressChaos:
+        mode: one
+        selector:
+          namespaces:
+            - synaxis
+          labelSelectors:
+            app: synaxis-api
+        stressors:
+          cpu:
+            workers: 4
+            load: 80
+        duration: "90s"
+
+    - name: memory-stress
+      templateType: StressChaos
+      deadline: 5m
+      stressChaos:
+        mode: one
+        selector:
+          namespaces:
+            - synaxis
+          labelSelectors:
+            app: synaxis-api
+        stressors:
+          memory:
+            workers: 4
+            size: "512MB"
+            oomKillWorker: false
+        duration: "60s"
+
+    - name: network-loss
+      templateType: NetworkChaos
+      deadline: 5m
+      networkChaos:
+        action: loss
+        mode: one
+        selector:
+          namespaces:
+            - synaxis
+          labelSelectors:
+            app: synaxis-api
+        loss:
+          loss: "10"
+          correlation: "25"
+        duration: "45s"

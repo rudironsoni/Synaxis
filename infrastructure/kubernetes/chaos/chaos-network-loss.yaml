@@ -1,0 +1,23 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: network-loss-experiment
+  namespace: synaxis
+  labels:
+    experiment: network-loss
+    app: synaxis-api
+spec:
+  action: loss
+  mode: one
+  selector:
+    namespaces:
+      - synaxis
+    labelSelectors:
+      app: synaxis-api
+  loss:
+    loss: "10"
+    correlation: "25"
+  direction: both
+  scheduler:
+    cron: "@every 30m"
+  duration: "45s"

@@ -1,0 +1,23 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: HTTPChaos
+metadata:
+  name: http-abort-experiment
+  namespace: synaxis
+  labels:
+    experiment: http-abort
+    app: synaxis-api
+spec:
+  mode: one
+  selector:
+    namespaces:
+      - synaxis
+    labelSelectors:
+      app: synaxis-api
+  target: Request
+  port: 8080
+  path: "*"
+  method: "*"
+  abort: true
+  duration: "30s"
+  scheduler:
+    cron: "@every 35m"

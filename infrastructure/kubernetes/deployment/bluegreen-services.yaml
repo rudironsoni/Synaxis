@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: synaxis-api
+  namespace: synaxis
+  labels:
+    app: synaxis-api
+spec:
+  ports:
+    - port: 80
+      targetPort: 8080
+      name: http
+  selector:
+    app: synaxis-api
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: synaxis-api-blue
+  namespace: synaxis
+  labels:
+    app: synaxis-api
+    version: blue
+spec:
+  ports:
+    - port: 80
+      targetPort: 8080
+      name: http
+  selector:
+    app: synaxis-api
+    version: blue
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: synaxis-api-green
+  namespace: synaxis
+  labels:
+    app: synaxis-api
+    version: green
+spec:
+  ports:
+    - port: 80
+      targetPort: 8080
+      name: http
+  selector:
+    app: synaxis-api
+    version: green
+  type: ClusterIP

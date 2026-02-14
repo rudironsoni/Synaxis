@@ -1,0 +1,34 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: synaxis-dr
+  namespace: synaxis
+spec:
+  host: synaxis-api
+  trafficPolicy:
+    loadBalancer:
+      simple: ROUND_ROBIN
+    connectionPool:
+      tcp:
+        maxConnections: 100
+      http:
+        http1MaxPendingRequests: 50
+        http2MaxRequests: 100
+        maxRequestsPerConnection: 10
+    outlierDetection:
+      consecutiveErrors: 3
+      interval: 30s
+      baseEjectionTime: 30s
+  subsets:
+    - name: blue
+      labels:
+        version: blue
+      trafficPolicy:
+        loadBalancer:
+          simple: ROUND_ROBIN
+    - name: green
+      labels:
+        version: green
+      trafficPolicy:
+        loadBalancer:
+          simple: ROUND_ROBIN

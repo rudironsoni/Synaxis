@@ -1,0 +1,319 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-config
+  namespace: synaxis
+  labels:
+    app: otel-collector
+    component: observability
+data:
+  otel-collector-config.yaml: |
+    receivers:
+      # OTLP receiver for application telemetry
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+
+      # Prometheus receiver for scraping metrics
+      prometheus:
+        config:
+          scrape_configs:
+            - job_name: 'synaxis-api'
+              scrape_interval: 15s
+              static_configs:
+                - targets: ['synaxis-api:8080']
+              metrics_path: /metrics
+            - job_name: 'synaxis-stamp-controller'
+              scrape_interval: 15s
+              static_configs:
+                - targets: ['synaxis-stamp-controller:8080']
+              metrics_path: /metrics
+            - job_name: 'kubernetes-pods'
+              kubernetes_sd_configs:
+                - role: pod
+              relabel_configs:
+                - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+                  action: keep
+                  regex: true
+                - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+                  action: replace
+                  target_label: __metrics_path__
+                  regex: (.+)
+                - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+                  action: replace
+                  regex: ([^:]+)(?::\d+)?;(\d+)
+                  replacement: $1:$2
+                  target_label: __address__
+
+    processors:
+      # Batch metrics for efficient export
+      batch:
+        timeout: 5s
+        send_batch_size: 10000
+
+      # Memory limiter to prevent OOM
+      memory_limiter:
+        check_interval: 1s
+        limit_mib: 512
+        spike_limit_mib: 128
+
+      # Resource detection
+      resourcedetection:
+        detectors: [env, system]
+        timeout: 2s
+
+    exporters:
+      # Prometheus exporter for metrics
+      prometheusremotewrite:
+        endpoint: http://prometheus-server:9090/api/v1/write
+        tls:
+          insecure: true
+        send_queue_size: 100
+        retry_on_failure:
+          enabled: true
+          initial_interval: 5s
+          max_interval: 30s
+          max_elapsed_time: 120s
+
+      # Jaeger exporter for traces
+      jaeger:
+        endpoint: jaeger-collector:14250
+        tls:
+          insecure: true
+
+      # Azure Monitor exporter
+      azuremonitor:
+        instrumentation_key: "${AZURE_APPINSIGHTS_INSTRUMENTATION_KEY}"
+        max_batch_size: 512
+        max_batch_interval: 5s
+
+      # Logging exporter for debugging
+      logging:
+        loglevel: info
+
+    extensions:
+      # Health check extension
+      health_check:
+        endpoint: 0.0.0.0:13133
+
+      # Pprof extension for profiling
+      pprof:
+        endpoint: 0.0.0.0:1777
+
+      # ZPages extension for debugging
+      zpages:
+        endpoint: 0.0.0.0:55679
+
+    service:
+      extensions: [health_check, pprof, zpages]
+      pipelines:
+        # Metrics pipeline
+        metrics:
+          receivers: [otlp, prometheus]
+          processors: [memory_limiter, batch, resourcedetection]
+          exporters: [prometheusremotewrite, azuremonitor, logging]
+
+        # Traces pipeline
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter, batch, resourcedetection]
+          exporters: [jaeger, azuremonitor, logging]
+
+        # Logs pipeline
+        logs:
+          receivers: [otlp]
+          processors: [memory_limiter, batch, resourcedetection]
+          exporters: [azuremonitor, logging]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-collector
+  namespace: synaxis
+  labels:
+    app: otel-collector
+    component: observability
+spec:
+  type: ClusterIP
+  ports:
+    - name: otlp-grpc
+      port: 4317
+      targetPort: 4317
+      protocol: TCP
+    - name: otlp-http
+      port: 4318
+      targetPort: 4318
+      protocol: TCP
+    - name: health-check
+      port: 13133
+      targetPort: 13133
+      protocol: TCP
+    - name: pprof
+      port: 1777
+      targetPort: 1777
+      protocol: TCP
+    - name: zpages
+      port: 55679
+      targetPort: 55679
+      protocol: TCP
+  selector:
+    app: otel-collector
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-collector
+  namespace: synaxis
+  labels:
+    app: otel-collector
+    component: observability
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: otel-collector
+  template:
+    metadata:
+      labels:
+        app: otel-collector
+        component: observability
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8888"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: otel-collector
+      containers:
+        - name: otel-collector
+          image: otel/opentelemetry-collector-contrib:0.96.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - --config=/etc/otelcol-contrib/otel-collector-config.yaml
+            - --feature-gates=prometheusreceiver.writebackstats
+          ports:
+            - containerPort: 4317
+              name: otlp-grpc
+              protocol: TCP
+            - containerPort: 4318
+              name: otlp-http
+              protocol: TCP
+            - containerPort: 13133
+              name: health-check
+              protocol: TCP
+            - containerPort: 1777
+              name: pprof
+              protocol: TCP
+            - containerPort: 55679
+              name: zpages
+              protocol: TCP
+            - containerPort: 8888
+              name: metrics
+              protocol: TCP
+          env:
+            - name: AZURE_APPINSIGHTS_INSTRUMENTATION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: azure-secrets
+                  key: appinsights-instrumentation-key
+                  optional: true
+          volumeMounts:
+            - name: otel-collector-config-vol
+              mountPath: /etc/otelcol-contrib
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 13133
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 13133
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+      volumes:
+        - name: otel-collector-config-vol
+          configMap:
+            name: otel-collector-config
+            items:
+              - key: otel-collector-config.yaml
+                path: otel-collector-config.yaml
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: otel-collector
+  namespace: synaxis
+  labels:
+    app: otel-collector
+    component: observability
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: otel-collector
+  labels:
+    app: otel-collector
+    component: observability
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "nodes", "services", "endpoints"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets", "statefulsets"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: otel-collector
+  labels:
+    app: otel-collector
+    component: observability
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: otel-collector
+subjects:
+  - kind: ServiceAccount
+    name: otel-collector
+    namespace: synaxis
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: otel-collector
+  namespace: synaxis
+  labels:
+    app: otel-collector
+    component: observability
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: otel-collector
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80

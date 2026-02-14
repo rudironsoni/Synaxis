@@ -1,0 +1,147 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: synaxis-api-blue
+  namespace: synaxis
+  labels:
+    app: synaxis-api
+    version: blue
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: synaxis-api
+      version: blue
+  template:
+    metadata:
+      labels:
+        app: synaxis-api
+        version: blue
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: api
+          image: ghcr.io/rudironsoni/synaxis-api:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+            - containerPort: 9090
+              name: metrics
+              protocol: TCP
+          env:
+            - name: VERSION
+              value: "blue"
+            - name: ASPNETCORE_ENVIRONMENT
+              value: "Production"
+            - name: ConnectionStrings__CosmosDB
+              valueFrom:
+                secretKeyRef:
+                  name: synaxis-secrets
+                  key: cosmos-connection-string
+            - name: ConnectionStrings__Redis
+              valueFrom:
+                secretKeyRef:
+                  name: synaxis-secrets
+                  key: redis-connection-string
+          resources:
+            requests:
+              cpu: 500m
+              memory: 512Mi
+            limits:
+              cpu: 2000m
+              memory: 2Gi
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: synaxis-api-green
+  namespace: synaxis
+  labels:
+    app: synaxis-api
+    version: green
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: synaxis-api
+      version: green
+  template:
+    metadata:
+      labels:
+        app: synaxis-api
+        version: green
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: api
+          image: ghcr.io/rudironsoni/synaxis-api:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+            - containerPort: 9090
+              name: metrics
+              protocol: TCP
+          env:
+            - name: VERSION
+              value: "green"
+            - name: ASPNETCORE_ENVIRONMENT
+              value: "Production"
+            - name: ConnectionStrings__CosmosDB
+              valueFrom:
+                secretKeyRef:
+                  name: synaxis-secrets
+                  key: cosmos-connection-string
+            - name: ConnectionStrings__Redis
+              valueFrom:
+                secretKeyRef:
+                  name: synaxis-secrets
+                  key: redis-connection-string
+          resources:
+            requests:
+              cpu: 500m
+              memory: 512Mi
+            limits:
+              cpu: 2000m
+              memory: 2Gi
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
