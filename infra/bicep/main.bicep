@@ -1,0 +1,690 @@
+targetScope = 'subscription'
+
+// =============================================================================
+// Synaxis Mission-Critical Infrastructure
+// Main Bicep Deployment - Network Foundation
+// =============================================================================
+// This is the entry point for deploying Synaxis infrastructure following
+// Azure Mission-Critical patterns (Heyko Oelrichs, Hansjoerg Scherer)
+// =============================================================================
+
+@description('Environment name (dev, staging, prod)')
+@allowed(['dev', 'staging', 'prod'])
+param environment string = 'dev'
+
+@description('Azure region for deployment')
+@allowed(['eastus', 'westeurope', 'southeastasia'])
+param location string = 'eastus'
+
+@description('Enable DDoS Protection Standard')
+param enableDdosProtection bool = true
+
+@description('Tags to apply to all resources')
+param tags object = {
+  project: 'synaxis'
+  managedBy: 'bicep'
+  missionCritical: 'true'
+}
+
+@description('SSH public key for AKS nodes')
+@secure()
+param sshPublicKey string = 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCplaceholder synaxis-aks-key'
+
+// =============================================================================
+// Resource Group for Network Resources
+// =============================================================================
+
+resource networkResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
+  name: 'synaxis-network-${environment}-${location}'
+  location: location
+  tags: union(tags, {
+    layer: 'network'
+    environment: environment
+  })
+}
+
+// =============================================================================
+// Deploy Virtual Network Module
+// =============================================================================
+
+module vnet './modules/vnet.bicep' = {
+  name: 'vnet-deployment'
+  scope: networkResourceGroup
+  params: {
+    environment: environment
+    location: location
+    tags: tags
+    enableDdosProtection: enableDdosProtection
+  }
+}
+
+// =============================================================================
+// Deploy Network Security Groups Module
+// =============================================================================
+
+module nsg './modules/nsg.bicep' = {
+  name: 'nsg-deployment'
+  scope: networkResourceGroup
+  params: {
+    environment: environment
+    location: location
+    tags: tags
+  }
+}
+
+// =============================================================================
+// Deploy Route Table Module
+// =============================================================================
+
+module routeTable './modules/route-table.bicep' = {
+  name: 'route-table-deployment'
+  scope: networkResourceGroup
+  params: {
+    environment: environment
+    location: location
+    tags: tags
+  }
+}
+
+// =============================================================================
+// Associate NSGs with Subnets (requires VNet and NSG to be deployed first)
+// =============================================================================
+
+resource aksSubnet 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' = {
+  name: '${vnet.outputs.vnetName}/aks-subnet'
+  properties: {
+    addressPrefix: '10.0.0.0/20'
+    networkSecurityGroup: {
+      id: nsg.outputs.aksNsgId
+    }
+    serviceEndpoints: [
+      {
+        service: 'Microsoft.Sql'
+      }
+      {
+        service: 'Microsoft.Storage'
+      }
+    ]
+    delegations: [
+      {
+        name: 'aks-delegation'
+        properties: {
+          serviceName: 'Microsoft.ContainerService/managedClusters'
+        }
+      }
+    ]
+  }
+  dependsOn: [
+    vnet
+    nsg
+  ]
+}
+
+resource peSubnet 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' = {
+  name: '${vnet.outputs.vnetName}/private-endpoints'
+  properties: {
+    addressPrefix: '10.0.16.0/24'
+    networkSecurityGroup: {
+      id: nsg.outputs.peNsgId
+    }
+    privateEndpointNetworkPolicies: 'Enabled'
+    privateLinkServiceNetworkPolicies: 'Enabled'
+  }
+  dependsOn: [
+    vnet
+    nsg
+  ]
+}
+
+// =============================================================================
+// Associate Route Table with AKS Subnet
+// =============================================================================
+
+resource aksSubnetWithRouteTable 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' = {
+  name: '${vnet.outputs.vnetName}/aks-subnet'
+  properties: {
+    addressPrefix: '10.0.0.0/20'
+    routeTable: {
+      id: routeTable.outputs.routeTableId
+    }
+  }
+  dependsOn: [
+    aksSubnet
+    routeTable
+  ]
+}
+
+// =============================================================================
+// Resource Group for Security Resources
+// =============================================================================
+
+resource securityResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
+  name: 'synaxis-security-${environment}-${location}'
+  location: location
+  tags: union(tags, {
+    layer: 'security'
+    environment: environment
+  })
+}
+
+// =============================================================================
+// Private DNS Zone for Key Vault
+// =============================================================================
+
+resource keyVaultPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+  name: 'privatelink.vaultcore.azure.net'
+  location: 'global'
+  tags: tags
+}
+
+resource keyVaultPrivateDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
+  parent: keyVaultPrivateDnsZone
+  name: '${vnet.outputs.vnetName}-link'
+  location: 'global'
+  tags: tags
+  properties: {
+    registrationEnabled: false
+    virtualNetwork: {
+      id: vnet.outputs.vnetId
+    }
+  }
+}
+
+// =============================================================================
+// Deploy Key Vault Module
+// =============================================================================
+
+module keyVault './modules/keyvault.bicep' = {
+  name: 'keyvault-deployment'
+  scope: securityResourceGroup
+  params: {
+    keyVaultName: 'synaxis-kv-${environment}-${location}'
+    location: location
+    environment: environment
+    tags: tags
+    enableHsm: environment == 'prod'
+    softDeleteRetentionInDays: 90
+    enablePurgeProtection: true
+  }
+}
+
+// =============================================================================
+// Deploy Private Endpoint for Key Vault
+// =============================================================================
+
+module keyVaultPrivateEndpoint './modules/private-endpoint.bicep' = {
+  name: 'keyvault-pe-deployment'
+  scope: securityResourceGroup
+  params: {
+    privateEndpointName: 'synaxis-kv-pe-${environment}'
+    location: location
+    tags: tags
+    subnetId: peSubnet.id
+    privateLinkServiceId: keyVault.outputs.keyVaultId
+    groupIds: ['vault']
+    privateDnsZoneId: keyVaultPrivateDnsZone.id
+  }
+}
+
+// =============================================================================
+// Create Data Resource Group
+// =============================================================================
+
+resource dataResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
+  name: 'synaxis-data-${environment}-${location}'
+  location: location
+  tags: tags
+}
+
+// =============================================================================
+// Create Private DNS Zone for PostgreSQL
+// =============================================================================
+
+resource postgresPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+  name: 'privatelink.postgres.database.azure.com'
+  location: 'global'
+  tags: tags
+}
+
+// Link Private DNS Zone to VNet
+resource postgresPrivateDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
+  parent: postgresPrivateDnsZone
+  name: '${postgresPrivateDnsZone.name}-link'
+  location: 'global'
+  properties: {
+    registrationEnabled: false
+    virtualNetwork: {
+      id: vnet.outputs.vnetId
+    }
+  }
+}
+
+// =============================================================================
+// Create Private DNS Zone for Redis
+// =============================================================================
+
+resource redisPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+  name: 'privatelink.redis.cache.windows.net'
+  location: 'global'
+  tags: tags
+}
+
+// Link Private DNS Zone to VNet
+resource redisPrivateDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
+  parent: redisPrivateDnsZone
+  name: '${redisPrivateDnsZone.name}-link'
+  location: 'global'
+  properties: {
+    registrationEnabled: false
+    virtualNetwork: {
+      id: vnet.outputs.vnetId
+    }
+  }
+}
+
+// =============================================================================
+// Deploy Azure Firewall
+// =============================================================================
+
+module firewall './modules/firewall.bicep' = {
+  name: 'firewall-deployment'
+  scope: networkResourceGroup
+  params: {
+    firewallName: 'synaxis-firewall-${environment}-${location}'
+    location: location
+    tags: tags
+    vnetId: vnet.outputs.vnetId
+    firewallSubnetId: vnet.outputs.firewallSubnetId
+  }
+}
+
+// =============================================================================
+// Update Route Table to Use Firewall
+// =============================================================================
+
+module routeTableWithFirewall './modules/route-table.bicep' = {
+  name: 'route-table-firewall-update'
+  scope: networkResourceGroup
+  params: {
+    routeTableName: 'synaxis-aks-rt-${environment}'
+    location: location
+    tags: tags
+    firewallPrivateIp: firewall.outputs.firewallPrivateIp
+  }
+  dependsOn: [
+    firewall
+  ]
+}
+
+// =============================================================================
+// Re-associate Route Table with Firewall Routes
+// =============================================================================
+
+resource aksSubnetWithFirewallRouteTable 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' = {
+  name: '${vnet.outputs.vnetName}/aks-subnet'
+  properties: {
+    addressPrefix: '10.0.0.0/20'
+    routeTable: {
+      id: routeTableWithFirewall.outputs.routeTableId
+    }
+    delegations: [
+      {
+        name: 'aks-delegation'
+        properties: {
+          serviceName: 'Microsoft.ContainerService/managedClusters'
+        }
+      }
+    ]
+    serviceEndpoints: [
+      {
+        service: 'Microsoft.Sql'
+      }
+      {
+        service: 'Microsoft.Storage'
+      }
+    ]
+  }
+  dependsOn: [
+    aksSubnet
+    routeTableWithFirewall
+  ]
+}
+
+// =============================================================================
+// Deploy PostgreSQL with Private Endpoint
+// =============================================================================
+
+module postgresql './modules/postgresql.bicep' = {
+  name: 'postgresql-deployment'
+  scope: dataResourceGroup
+  params: {
+    serverName: 'synaxis-pg-${environment}-${location}'
+    location: location
+    tags: tags
+    administratorLogin: 'synaxisadmin'
+    administratorLoginPassword: keyVault.getSecret('postgres-admin-password')
+    skuTier: 'GeneralPurpose'
+    skuName: 'Standard_D4s_v3'
+    storageSizeGB: 256
+    storageAutoGrow: 'Enabled'
+    backupRetentionDays: 35
+    geoRedundantBackup: 'Disabled'
+    highAvailabilityMode: 'ZoneRedundant'
+    availabilityZone: '1'
+    standbyAvailabilityZone: '2'
+    subnetId: peSubnet.id
+    privateDnsZoneId: postgresPrivateDnsZone.id
+  }
+  dependsOn: [
+    dataResourceGroup
+    keyVault
+  ]
+}
+
+// =============================================================================
+// Deploy Private Endpoint for PostgreSQL
+// =============================================================================
+
+module postgresqlPrivateEndpoint './modules/private-endpoint.bicep' = {
+  name: 'postgresql-pe-deployment'
+  scope: dataResourceGroup
+  params: {
+    privateEndpointName: 'synaxis-pg-pe-${environment}'
+    location: location
+    tags: tags
+    subnetId: peSubnet.id
+    privateLinkServiceId: postgresql.outputs.serverId
+    groupIds: ['postgresqlServer']
+    privateDnsZoneId: postgresPrivateDnsZone.id
+  }
+  dependsOn: [
+    postgresql
+  ]
+}
+
+// =============================================================================
+// Deploy Redis Cache with Private Endpoint
+// =============================================================================
+
+module redis './modules/redis.bicep' = {
+  name: 'redis-deployment'
+  scope: dataResourceGroup
+  params: {
+    cacheName: 'synaxis-redis-${environment}-${location}'
+    location: location
+    tags: tags
+    sku: 'Premium'
+    capacity: 1
+    enableNonSslPort: false
+    minimumTlsVersion: '1.2'
+    subnetId: peSubnet.id
+    privateDnsZoneId: redisPrivateDnsZone.id
+  }
+  dependsOn: [
+    dataResourceGroup
+  ]
+}
+
+// =============================================================================
+// Deploy Private Endpoint for Redis
+// =============================================================================
+
+module redisPrivateEndpoint './modules/private-endpoint.bicep' = {
+  name: 'redis-pe-deployment'
+  scope: dataResourceGroup
+  params: {
+    privateEndpointName: 'synaxis-redis-pe-${environment}'
+    location: location
+    tags: tags
+    subnetId: peSubnet.id
+    privateLinkServiceId: redis.outputs.cacheId
+    groupIds: ['redisCache']
+    privateDnsZoneId: redisPrivateDnsZone.id
+  }
+  dependsOn: [
+    redis
+  ]
+}
+
+// =============================================================================
+// Create Compute Resource Group (for AKS)
+// =============================================================================
+
+resource computeResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
+  name: 'synaxis-compute-${environment}-${location}'
+  location: location
+  tags: union(tags, {
+    layer: 'compute'
+    environment: environment
+  })
+}
+
+// =============================================================================
+// Create Private DNS Zone for Azure Container Registry
+// =============================================================================
+
+resource acrPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+  name: 'privatelink.azurecr.io'
+  location: 'global'
+  tags: tags
+}
+
+// Link Private DNS Zone to VNet
+resource acrPrivateDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
+  parent: acrPrivateDnsZone
+  name: '${acrPrivateDnsZone.name}-link'
+  location: 'global'
+  properties: {
+    registrationEnabled: false
+    virtualNetwork: {
+      id: vnet.outputs.vnetId
+    }
+  }
+}
+
+// =============================================================================
+// Create Log Analytics Workspace for Container Insights
+// =============================================================================
+
+resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
+  name: 'synaxis-law-${environment}-${location}'
+  location: location
+  tags: union(tags, {
+    purpose: 'container-insights'
+    environment: environment
+  })
+  properties: {
+    sku: {
+      name: 'PerGB2018'
+    }
+    retentionInDays: 30
+    features: {
+      enableLogAccessUsingOnlyResourcePermissions: true
+    }
+  }
+}
+
+// =============================================================================
+// Deploy Azure Container Registry
+// =============================================================================
+
+module acr './modules/acr.bicep' = {
+  name: 'acr-deployment'
+  scope: computeResourceGroup
+  params: {
+    registryName: 'synaxisacr${environment}${location}'
+    location: location
+    environment: environment
+    tags: tags
+    enablePrivateEndpoint: true
+    subnetId: peSubnet.id
+    privateDnsZoneId: acrPrivateDnsZone.id
+    logAnalyticsWorkspaceId: logAnalyticsWorkspace.id
+  }
+}
+
+// =============================================================================
+// Deploy Azure Kubernetes Service (AKS)
+// =============================================================================
+
+module aks './modules/aks.bicep' = {
+  name: 'aks-deployment'
+  scope: computeResourceGroup
+  params: {
+    clusterName: 'synaxis-aks-${environment}-${location}'
+    location: location
+    environment: environment
+    kubernetesVersion: '1.29'
+    vnetId: vnet.outputs.vnetId
+    aksSubnetId: aksSubnet.id
+    logAnalyticsWorkspaceId: logAnalyticsWorkspace.id
+    keyVaultId: keyVault.outputs.keyVaultId
+    acrId: acr.outputs.registryId
+    sshPublicKey: sshPublicKey
+  }
+  dependsOn: [
+    computeResourceGroup
+    aksSubnetWithFirewallRouteTable
+  ]
+}
+
+// =============================================================================
+// Deploy Azure Policy Assignments (Governance)
+// =============================================================================
+
+module policyAssignments './modules/policy-assignments.bicep' = {
+  name: 'policy-assignments-deployment'
+  params: {
+    location: location
+    environment: environment
+    tags: tags
+  }
+  dependsOn: [
+    networkResourceGroup
+    dataResourceGroup
+    securityResourceGroup
+    computeResourceGroup
+  ]
+}
+
+// =============================================================================
+// Outputs
+// =============================================================================
+
+@description('Virtual Network ID')
+output vnetId string = vnet.outputs.vnetId
+
+@description('Virtual Network Name')
+output vnetName string = vnet.outputs.vnetName
+
+@description('AKS Subnet ID')
+output aksSubnetId string = aksSubnet.id
+
+@description('Private Endpoint Subnet ID')
+output privateEndpointSubnetId string = peSubnet.id
+
+@description('Bastion Subnet ID')
+output bastionSubnetId string = vnet.outputs.bastionSubnetId
+
+@description('Firewall Subnet ID')
+output firewallSubnetId string = vnet.outputs.firewallSubnetId
+
+@description('AKS NSG ID')
+output aksNsgId string = nsg.outputs.aksNsgId
+
+@description('Private Endpoint NSG ID')
+output peNsgId string = nsg.outputs.peNsgId
+
+@description('Route Table ID')
+output routeTableId string = routeTable.outputs.routeTableId
+
+@description('Resource Group Name')
+output resourceGroupName string = networkResourceGroup.name
+
+@description('Resource Group Name')
+output resourceGroupName string = networkResourceGroup.name
+
+@description('Security Resource Group Name')
+output securityResourceGroupName string = securityResourceGroup.name
+
+@description('Key Vault ID')
+output keyVaultId string = keyVault.outputs.keyVaultId
+
+@description('Key Vault Name')
+output keyVaultName string = keyVault.outputs.keyVaultName
+
+@description('Key Vault URI')
+output keyVaultUri string = keyVault.outputs.keyVaultUri
+
+@description('Tenant Data Encryption Key ID')
+output tenantDataKeyId string = keyVault.outputs.tenantDataKeyId
+
+@description('API Key Encryption Key ID')
+output apiKeyEncryptionKeyId string = keyVault.outputs.apiKeyEncryptionKeyId
+
+@description('Firewall ID')
+output firewallId string = firewall.outputs.firewallId
+
+@description('Firewall Name')
+output firewallName string = firewall.outputs.firewallName
+
+@description('Firewall Private IP')
+output firewallPrivateIp string = firewall.outputs.firewallPrivateIp
+
+@description('Firewall Public IP')
+output firewallPublicIp string = firewall.outputs.firewallPublicIp
+
+@description('Firewall Policy ID')
+output firewallPolicyId string = firewall.outputs.firewallPolicyId
+
+@description('Compute Resource Group Name')
+output computeResourceGroupName string = computeResourceGroup.name
+
+@description('ACR ID')
+output acrId string = acr.outputs.registryId
+
+@description('ACR Name')
+output acrName string = acr.outputs.registryName
+
+@description('ACR Login Server')
+output acrLoginServer string = acr.outputs.loginServer
+
+@description('Log Analytics Workspace ID')
+output logAnalyticsWorkspaceId string = logAnalyticsWorkspace.id
+
+@description('AKS Cluster ID')
+output aksClusterId string = aks.outputs.clusterId
+
+@description('AKS Cluster Name')
+output aksClusterName string = aks.outputs.clusterName
+
+@description('AKS Managed Identity Principal ID')
+output aksManagedIdentityPrincipalId string = aks.outputs.managedIdentityPrincipalId
+
+@description('AKS Managed Identity Client ID')
+output aksManagedIdentityClientId string = aks.outputs.managedIdentityClientId
+
+@description('AKS OIDC Issuer URL')
+output aksOidcIssuerUrl string = aks.outputs.oidcIssuerUrl
+
+@description('Deployment Summary')
+output deploymentSummary object = {
+  environment: environment
+  location: location
+  vnetName: vnet.outputs.vnetName
+  vnetAddressSpace: '10.0.0.0/16'
+  subnets: {
+    aks: '10.0.0.0/20'
+    privateEndpoints: '10.0.16.0/24'
+    bastion: '10.0.17.0/24'
+    firewall: '10.0.18.0/24'
+  }
+  security: {
+    ddosProtection: enableDdosProtection
+    nsgAttached: true
+    routeTableAttached: true
+    keyVaultDeployed: true
+    hsmEnabled: environment == 'prod'
+    privateEndpointsEnabled: true
+  }
+}
