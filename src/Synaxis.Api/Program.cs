@@ -10,6 +10,8 @@ using Synaxis.Api.Middleware;
 using Synaxis.Core.Contracts;
 using Synaxis.Infrastructure.Data;
 using Synaxis.Infrastructure.Services;
+using Synaxis.Providers;
+using Synaxis.Providers.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -63,6 +65,9 @@ builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+
+// Register provider services
+builder.Services.AddSynaxisProviders(builder.Configuration);
 
 // Configure JWT options
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));

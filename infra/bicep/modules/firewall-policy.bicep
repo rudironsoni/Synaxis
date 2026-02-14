@@ -1,18 +1,25 @@
 // =============================================================================
-// Azure Firewall Policy Module - E1-T4 Security Foundation
+// Azure Firewall Policy Module - E1-T1.3 Network Security
 // =============================================================================
-// This module implements comprehensive firewall rules for:
-// - Application rules for HTTPS traffic (443)
+// Heyko Oelrichs Pattern: Comprehensive firewall policy with Premium features
+// Features:
+// - Premium SKU with advanced threat protection
+// - Application rules for AKS egress (MCR, Azure AD, etc.)
+// - Network rules for internal traffic
 // - DNAT rules for inbound traffic
-// - Network rules for internal service communication
-// - Threat intelligence-based filtering (Alert/Deny)
-// - Custom FQDN filtering
+// - Threat intelligence filtering (Alert/Deny)
+// - IDPS (Intrusion Detection and Prevention System)
+// - TLS inspection capabilities
+// - Web category filtering
 //
 // Rules cover:
 // - AKS egress (MicrosoftContainerRegistry, AzureActiveDirectory)
 // - PostgreSQL private endpoint
 // - Redis private endpoint
 // - Service Bus private endpoint
+// - Cosmos DB private endpoint
+// - Key Vault private endpoint
+// - Azure Container Registry private endpoint
 // =============================================================================
 
 @description('Azure region for the firewall policy')
@@ -48,12 +55,13 @@ resource firewallPolicy 'Microsoft.Network/firewallPolicies@2023-09-01' = {
   location: location
   properties: {
     sku: {
-      tier: 'Standard'
+      tier: 'Premium'
     }
     threatIntelMode: 'Alert'
     dnsSettings: {
       enableProxy: true
       servers: []
+      requireProxyForNetworkRules: true
     }
     intrusionDetection: {
       mode: 'Alert'
@@ -62,8 +70,22 @@ resource firewallPolicy 'Microsoft.Network/firewallPolicies@2023-09-01' = {
         trafficBypass: []
       }
     }
+    tlsSettings: {
+      mode: 'Inspection'
+      keyVaultSecretId: '' // Configure for TLS inspection if needed
+    }
+    explicitProxySettings: {
+      enableExplicitProxy: false
+      httpPort: 8080
+      httpsPort: 8443
+      enablePacFile: false
+      pacFilePort: 3128
+    }
   }
-  tags: tags
+  tags: union(tags, {
+    tier: 'Premium'
+    managedBy: 'bicep'
+  })
 }
 
 // =============================================================================
@@ -162,6 +184,99 @@ resource aksEgressRuleCollectionGroup 'Microsoft.Network/firewallPolicies/ruleCo
               '*.ods.opinsights.azure.com'
               '*.oms.opinsights.azure.com'
               '*.monitoring.azure.com'
+            ]
+            sourceAddresses: [
+              aksSubnetCidr
+            ]
+          }
+          {
+            ruleType: 'ApplicationRule'
+            name: 'Allow-AKS-Time'
+            protocols: [
+              {
+                protocolType: 'Https'
+                port: 443
+              }
+            ]
+            targetFqdns: [
+              'ntp.ubuntu.com'
+              'time.windows.com'
+              'pool.ntp.org'
+            ]
+            sourceAddresses: [
+              aksSubnetCidr
+            ]
+          }
+          {
+            ruleType: 'ApplicationRule'
+            name: 'Allow-AKS-Storage'
+            protocols: [
+              {
+                protocolType: 'Https'
+                port: 443
+              }
+            ]
+            targetFqdns: [
+              '*.blob.core.windows.net'
+              '*.table.core.windows.net'
+              '*.queue.core.windows.net'
+              '*.file.core.windows.net'
+            ]
+            sourceAddresses: [
+              aksSubnetCidr
+            ]
+          }
+          {
+            ruleType: 'ApplicationRule'
+            name: 'Allow-AKS-GitHub'
+            protocols: [
+              {
+                protocolType: 'Https'
+                port: 443
+              }
+            ]
+            targetFqdns: [
+              'github.com'
+              '*.github.com'
+              'raw.githubusercontent.com'
+              '*.raw.githubusercontent.com'
+            ]
+            sourceAddresses: [
+              aksSubnetCidr
+            ]
+          }
+          {
+            ruleType: 'ApplicationRule'
+            name: 'Allow-AKS-Helm'
+            protocols: [
+              {
+                protocolType: 'Https'
+                port: 443
+              }
+            ]
+            targetFqdns: [
+              'helm.sh'
+              '*.helm.sh'
+              'kubernetes-charts.storage.googleapis.com'
+            ]
+            sourceAddresses: [
+              aksSubnetCidr
+            ]
+          }
+          {
+            ruleType: 'ApplicationRule'
+            name: 'Allow-AKS-PackageManagers'
+            protocols: [
+              {
+                protocolType: 'Https'
+                port: 443
+              }
+            ]
+            targetFqdns: [
+              'packages.microsoft.com'
+              '*.packages.microsoft.com'
+              'apt.llvm.org'
+              'ppa.launchpad.net'
             ]
             sourceAddresses: [
               aksSubnetCidr
@@ -303,6 +418,58 @@ resource privateServicesRuleCollectionGroup 'Microsoft.Network/firewallPolicies/
           }
         ]
       }
+      {
+        ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
+        name: 'Allow-CosmosDB-Private-Endpoint'
+        priority: 500
+        action: {
+          type: 'Allow'
+        }
+        rules: [
+          {
+            ruleType: 'NetworkRule'
+            name: 'Allow-CosmosDB-443'
+            protocols: [
+              'TCP'
+            ]
+            sourceAddresses: [
+              aksSubnetCidr
+            ]
+            destinationAddresses: [
+              privateEndpointSubnetCidr
+            ]
+            destinationPorts: [
+              '443'
+            ]
+          }
+        ]
+      }
+      {
+        ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
+        name: 'Allow-ACR-Private-Endpoint'
+        priority: 600
+        action: {
+          type: 'Allow'
+        }
+        rules: [
+          {
+            ruleType: 'NetworkRule'
+            name: 'Allow-ACR-443'
+            protocols: [
+              'TCP'
+            ]
+            sourceAddresses: [
+              aksSubnetCidr
+            ]
+            destinationAddresses: [
+              privateEndpointSubnetCidr
+            ]
+            destinationPorts: [
+              '443'
+            ]
+          }
+        ]
+      }
     ]
   }
 }
@@ -350,6 +517,10 @@ resource internalVnetRuleCollectionGroup 'Microsoft.Network/firewallPolicies/rul
 // =============================================================================
 // Rule Collection Group: DNAT Rules (Priority 400)
 // =============================================================================
+// Note: DNAT rules require the firewall public IP address to be configured
+// The destinationAddresses should be set to the firewall public IP
+// The translatedAddress should be set to the target service IP (e.g., AKS load balancer)
+// =============================================================================
 
 resource dnatRuleCollectionGroup 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2023-09-01' = {
   parent: firewallPolicy
@@ -375,14 +546,43 @@ resource dnatRuleCollectionGroup 'Microsoft.Network/firewallPolicies/ruleCollect
               '*'
             ]
             destinationAddresses: [
-              // This will be populated with the firewall public IP
-              // Reference: firewallPublicIp.properties.ipAddress
+              // Configure with firewall public IP after deployment
+              // Example: '20.45.123.45'
             ]
             destinationPorts: [
               '443'
             ]
-            translatedAddress: '10.0.0.4' // AKS load balancer IP (example)
+            translatedAddress: '10.0.0.4' // AKS load balancer IP (configure as needed)
             translatedPort: '443'
+          }
+        ]
+      }
+      {
+        ruleCollectionType: 'FirewallPolicyNatRuleCollection'
+        name: 'DNAT-SSH-Inbound'
+        priority: 200
+        action: {
+          type: 'DNAT'
+        }
+        rules: [
+          {
+            ruleType: 'NatRule'
+            name: 'DNAT-SSH-to-Bastion'
+            protocols: [
+              'TCP'
+            ]
+            sourceAddresses: [
+              // Restrict to specific IP ranges for security
+              // Example: '203.0.113.0/24'
+            ]
+            destinationAddresses: [
+              // Configure with firewall public IP after deployment
+            ]
+            destinationPorts: [
+              '22'
+            ]
+            translatedAddress: '10.0.17.4' // Bastion IP (configure as needed)
+            translatedPort: '22'
           }
         ]
       }

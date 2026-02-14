@@ -20,11 +20,11 @@ param softDeleteRetentionInDays int = 90
 @description('Enable purge protection')
 param enablePurgeProtection bool = true
 
+@description('Log Analytics workspace ID for diagnostics')
+param logAnalyticsWorkspaceId string = ''
+
 @description('Tags')
 param tags object = {}
-
-@description('Diagnostic settings')
-param diagnosticSettings object = {}
 
 // Key Vault resource
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
@@ -206,12 +206,220 @@ resource googleSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   }
 }
 
+// =============================================================================
+// Connection String Secrets
+// =============================================================================
+
+resource postgresConnectionStringSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: keyVault
+  name: 'postgres-connection-string'
+  tags: union(tags, {
+    purpose: 'database-connection'
+    database: 'postgresql'
+    status: 'placeholder'
+  })
+  properties: {
+    value: 'postgresql://synaxisadmin:PLACEHOLDER-PASSWORD@synaxis-pg-${environment}-${location}.postgres.database.azure.com:5432/synaxis?sslmode=require'
+    contentType: 'text/plain'
+    attributes: {
+      enabled: false  // Disabled until manually set with actual connection string
+    }
+  }
+}
+
+resource cosmosConnectionStringSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: keyVault
+  name: 'cosmos-connection-string'
+  tags: union(tags, {
+    purpose: 'database-connection'
+    database: 'cosmosdb'
+    status: 'placeholder'
+  })
+  properties: {
+    value: 'AccountEndpoint=https://synaxis-cosmos-${environment}-${location}.documents.azure.com:443/;AccountKey=PLACEHOLDER-KEY;'
+    contentType: 'text/plain'
+    attributes: {
+      enabled: false
+    }
+  }
+}
+
+resource redisConnectionStringSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: keyVault
+  name: 'redis-connection-string'
+  tags: union(tags, {
+    purpose: 'cache-connection'
+    cache: 'redis'
+    status: 'placeholder'
+  })
+  properties: {
+    value: 'synaxis-redis-${environment}-${location}.redis.cache.windows.net:6380,password=PLACEHOLDER-PASSWORD,ssl=True,abortConnect=False'
+    contentType: 'text/plain'
+    attributes: {
+      enabled: false
+    }
+  }
+}
+
+resource redisEnterpriseConnectionStringSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: keyVault
+  name: 'redis-enterprise-connection-string'
+  tags: union(tags, {
+    purpose: 'cache-connection'
+    cache: 'redis-enterprise'
+    status: 'placeholder'
+  })
+  properties: {
+    value: 'synaxis-redis-ent-${environment}-${location}.redisenterprise.cache.azure.net:10000,password=PLACEHOLDER-PASSWORD,ssl=True,abortConnect=False'
+    contentType: 'text/plain'
+    attributes: {
+      enabled: false
+    }
+  }
+}
+
+resource serviceBusConnectionStringSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: keyVault
+  name: 'servicebus-connection-string'
+  tags: union(tags, {
+    purpose: 'messaging-connection'
+    messaging: 'servicebus'
+    status: 'placeholder'
+  })
+  properties: {
+    value: 'Endpoint=sb://synaxis-sb-${environment}-${location}.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=PLACEHOLDER-KEY;'
+    contentType: 'text/plain'
+    attributes: {
+      enabled: false
+    }
+  }
+}
+
+// =============================================================================
+// TLS Certificates (Placeholders - to be updated with actual certificates)
+// =============================================================================
+
+resource tlsCertificate 'Microsoft.KeyVault/vaults/certificates@2023-07-01' = {
+  parent: keyVault
+  name: 'synaxis-tls-cert'
+  tags: union(tags, {
+    purpose: 'tls-certificate'
+    status: 'placeholder'
+  })
+  properties: {
+    certificatePolicy: {
+      issuerParameters: {
+        name: 'Self'
+      }
+      keyProperties: {
+        keyType: 'RSA'
+        keySize: 4096
+        exportable: true
+        reuseKey: true
+      }
+      secretProperties: {
+        contentType: 'application/x-pkcs12'
+      }
+      x509CertificateProperties: {
+        subject: 'CN=synaxis-${environment}.synaxis.io'
+        subjectAlternativeNames: {
+          dnsNames: [
+            'synaxis-${environment}.synaxis.io'
+            '*.synaxis-${environment}.synaxis.io'
+          ]
+        }
+        validityInMonths: 12
+        keyUsage: [
+          'cRLSign'
+          'dataEncipherment'
+          'digitalSignature'
+          'keyEncipherment'
+          'keyAgreement'
+          'keyCertSign'
+        ]
+        enhancedKeyUsage: [
+          '1.3.6.1.5.5.7.3.1'  # Server Authentication
+          '1.3.6.1.5.5.7.3.2'  # Client Authentication
+        ]
+      }
+      lifetimeActions: [
+        {
+          trigger: {
+            percentageThreshold: 80
+          }
+          action: {
+            actionType: 'AutoRenew'
+          }
+        }
+      ]
+    }
+    attributes: {
+      enabled: false  // Disabled until manually configured with proper CA
+    }
+  }
+}
+
+resource ingressCertificate 'Microsoft.KeyVault/vaults/certificates@2023-07-01' = {
+  parent: keyVault
+  name: 'synaxis-ingress-cert'
+  tags: union(tags, {
+    purpose: 'ingress-tls-certificate'
+    status: 'placeholder'
+  })
+  properties: {
+    certificatePolicy: {
+      issuerParameters: {
+        name: 'Self'
+      }
+      keyProperties: {
+        keyType: 'RSA'
+        keySize: 2048
+        exportable: true
+        reuseKey: true
+      }
+      secretProperties: {
+        contentType: 'application/x-pkcs12'
+      }
+      x509CertificateProperties: {
+        subject: 'CN=*.synaxis-ingress-${environment}.synaxis.io'
+        subjectAlternativeNames: {
+          dnsNames: [
+            '*.synaxis-ingress-${environment}.synaxis.io'
+            'synaxis-ingress-${environment}.synaxis.io'
+          ]
+        }
+        validityInMonths: 12
+        keyUsage: [
+          'digitalSignature'
+          'keyEncipherment'
+        ]
+        enhancedKeyUsage: [
+          '1.3.6.1.5.5.7.3.1'  # Server Authentication
+        ]
+      }
+      lifetimeActions: [
+        {
+          trigger: {
+            percentageThreshold: 80
+          }
+          action: {
+            actionType: 'AutoRenew'
+          }
+        }
+      ]
+    }
+    attributes: {
+      enabled: false  // Disabled until manually configured with proper CA
+    }
+  }
+}
+
 // Diagnostic settings
-resource diagnosticSetting 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (!empty(diagnosticSettings)) {
+resource diagnosticSetting 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (!empty(logAnalyticsWorkspaceId)) {
   name: '${keyVaultName}-diagnostics'
   scope: keyVault
   properties: {
-    workspaceId: contains(diagnosticSettings, 'workspaceId') ? diagnosticSettings.workspaceId : ''
+    workspaceId: logAnalyticsWorkspaceId
     logs: [
       {
         category: 'AuditEvent'
