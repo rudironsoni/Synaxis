@@ -2606,3 +2606,34 @@ time=2026-02-14T13:57:42.043+01:00 level=INFO msg="   Consider running 'bd sync'
 time=2026-02-14T13:57:43.530+01:00 level=INFO msg="Pulled from remote"
 time=2026-02-14T13:57:43.531+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
 time=2026-02-14T13:57:43.532+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-14T13:57:55.475+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-14T13:57:55.475+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-14T13:57:55.593+01:00 level=INFO msg="Git ref change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.git/refs/heads/main.lock
+time=2026-02-14T13:57:56.595+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-14T13:57:56.603+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-14T13:57:58.187+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-14T13:57:58.187+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-14T13:57:58.189+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-14T13:57:59.145+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-14T13:57:59.145+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-14T13:58:00.147+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-14T13:58:00.147+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-14T13:58:00.844+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-14T13:58:00.844+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-14T13:58:01.710+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-14T13:58:01.710+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-14T13:58:01.713+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-14T13:58:01.847+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-14T13:58:01.848+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-14T13:58:03.469+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-14T13:58:03.469+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-14T13:58:03.470+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-14T13:58:36.641+01:00 level=INFO msg="JSONL file created" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-14T13:58:36.641+01:00 level=INFO msg="JSONL removed/renamed, re-establishing watch"
+time=2026-02-14T13:58:36.692+01:00 level=INFO msg="Successfully re-established JSONL watch" delay=50ms
+time=2026-02-14T13:58:36.693+01:00 level=INFO msg="File change detected" path=/home/rrj/src/github/rudironsoni/Synaxis/.beads/issues.jsonl
+time=2026-02-14T13:58:37.694+01:00 level=INFO msg="Import triggered by file change"
+time=2026-02-14T13:58:37.694+01:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-14T13:58:39.197+01:00 level=INFO msg="Pulled from remote"
+time=2026-02-14T13:58:39.197+01:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-14T13:58:39.198+01:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
