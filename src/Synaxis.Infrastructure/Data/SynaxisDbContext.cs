@@ -1020,7 +1020,12 @@ namespace Synaxis.Infrastructure.Data
                 entity.Property(e => e.TurnNumber).HasColumnName("turn_number");
                 entity.Property(e => e.Role).HasColumnName("role");
                 entity.Property(e => e.Content).HasColumnName("content");
-                entity.Property(e => e.Metadata).HasColumnName("metadata").HasColumnType("jsonb");
+                entity.Property(e => e.Metadata)
+                    .HasColumnName("metadata")
+                    .HasColumnType("jsonb")
+                    .HasConversion(
+                        v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null!),
+                        v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, string>());
                 entity.Property(e => e.CreatedAt).HasColumnName("created_at");
 
                 entity.HasOne(e => e.Conversation)
