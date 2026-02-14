@@ -1,11 +1,24 @@
-// Azure Firewall Module
-// Heyko Oelrichs Pattern: Central network security control with forced tunneling
+// =============================================================================
+// Azure Firewall Module - E1-T1.3 Network Security
+// =============================================================================
+// Heyko Oelrichs Pattern: Central network security control with Premium SKU
+// Features:
+// - Premium SKU with advanced threat protection
+// - Zone-redundant deployment for high availability
+// - Forced tunneling support
+// - TLS inspection capabilities
+// - IDPS (Intrusion Detection and Prevention System)
+// - Web category filtering
+// =============================================================================
 
 @description('Azure region for the firewall')
 param location string = resourceGroup().location
 
 @description('Environment name')
 param environment string
+
+@description('Firewall name')
+param firewallName string
 
 @description('Availability zones for the firewall')
 param availabilityZones array = ['1', '2', '3']
@@ -26,8 +39,7 @@ param logAnalyticsWorkspaceId string
 param tags object = {}
 
 // Variables
-var firewallName = 'synaxis-firewall-${location}'
-var publicIpName = 'synaxis-firewall-pip-${location}'
+var publicIpName = '${firewallName}-pip'
 
 // Public IP for Azure Firewall
 resource firewallPublicIp 'Microsoft.Network/publicIPAddresses@2023-09-01' = {
@@ -44,7 +56,7 @@ resource firewallPublicIp 'Microsoft.Network/publicIPAddresses@2023-09-01' = {
   tags: tags
 }
 
-// Azure Firewall
+// Azure Firewall Premium
 resource firewall 'Microsoft.Network/azureFirewalls@2023-09-01' = {
   name: firewallName
   location: location
@@ -52,7 +64,7 @@ resource firewall 'Microsoft.Network/azureFirewalls@2023-09-01' = {
   properties: {
     sku: {
       name: 'AZFW_VNet'
-      tier: 'Standard'
+      tier: 'Premium'
     }
     firewallPolicy: {
       id: firewallPolicyId
@@ -70,8 +82,24 @@ resource firewall 'Microsoft.Network/azureFirewalls@2023-09-01' = {
         }
       }
     ]
+    threatIntelMode: 'Alert'
+    managementIpConfiguration: {
+      name: 'AzureFirewallManagementIpConfig'
+      properties: {
+        subnet: {
+          id: firewallSubnetId
+        }
+        publicIPAddress: {
+          id: firewallPublicIp.id
+        }
+      }
+    }
   }
-  tags: tags
+  tags: union(tags, {
+    tier: 'Premium'
+    zoneRedundant: 'true'
+    managedBy: 'bicep'
+  })
 }
 
 // Diagnostic Settings
@@ -99,6 +127,30 @@ resource firewallDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-p
       }
       {
         category: 'AzureFirewallDnsProxy'
+        enabled: true
+        retentionPolicy: {
+          enabled: true
+          days: 30
+        }
+      }
+      {
+        category: 'AzureFirewallThreatIntel'
+        enabled: true
+        retentionPolicy: {
+          enabled: true
+          days: 30
+        }
+      }
+      {
+        category: 'AzureFirewallIdpsSignature'
+        enabled: true
+        retentionPolicy: {
+          enabled: true
+          days: 30
+        }
+      }
+      {
+        category: 'AzureFirewallFqdn'
         enabled: true
         retentionPolicy: {
           enabled: true

@@ -5,6 +5,7 @@
 namespace Synaxis.Providers
 {
     using System;
+    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Synaxis.Providers.Configuration;
 
@@ -69,6 +70,42 @@ namespace Synaxis.Providers
             configureProviders?.Invoke(builder);
 
             services.AddSingleton<ProviderFactory>();
+
+            return services;
+        }
+
+        /// <summary>
+        /// Adds Synaxis provider services with configuration from appsettings.
+        /// </summary>
+        /// <param name="services">The service collection.</param>
+        /// <param name="configuration">The configuration.</param>
+        /// <returns>The service collection for chaining.</returns>
+        public static IServiceCollection AddSynaxisProviders(
+            this IServiceCollection services,
+            IConfiguration configuration)
+        {
+            services.AddProviders(builder =>
+            {
+                // Configure OpenAI adapter if settings are present
+                var openAISection = configuration.GetSection("Providers:OpenAI");
+                if (openAISection.Exists())
+                {
+                    builder.AddOpenAI(options =>
+                    {
+                        openAISection.Bind(options);
+                    });
+                }
+
+                // Configure Azure OpenAI adapter if settings are present
+                var azureOpenAISection = configuration.GetSection("Providers:AzureOpenAI");
+                if (azureOpenAISection.Exists())
+                {
+                    builder.AddAzureOpenAI(options =>
+                    {
+                        azureOpenAISection.Bind(options);
+                    });
+                }
+            });
 
             return services;
         }

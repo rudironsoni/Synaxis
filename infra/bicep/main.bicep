@@ -62,19 +62,29 @@ module ddosProtection './modules/ddos-protection.bicep' = {
 // =============================================================================
 // Deploy Virtual Network Module
 // =============================================================================
+// Deploys the foundational network with private subnets following
+// Heyko Oelrichs Zero Trust patterns
+// =============================================================================
 
 module vnet './modules/vnet.bicep' = {
   name: 'vnet-deployment'
   scope: networkResourceGroup
   params: {
+    vnetName: 'synaxis-vnet-${environment}-${location}'
     environment: environment
     location: location
+    addressSpace: '10.0.0.0/16'
     tags: tags
     enableDdosProtection: enableDdosProtection
     ddosProtectionPlanId: ddosProtection.outputs.ddosProtectionPlanId
+    aksNsgId: nsg.outputs.aksNsgId
+    peNsgId: nsg.outputs.peNsgId
+    routeTableId: routeTable.outputs.routeTableId
   }
   dependsOn: [
     ddosProtection
+    nsg
+    routeTable
   ]
 }
 
@@ -103,76 +113,14 @@ module routeTable './modules/route-table.bicep' = {
     environment: environment
     location: location
     tags: tags
+    firewallPrivateIp: ''  // Will be updated after firewall deployment
   }
 }
 
 // =============================================================================
-// Associate NSGs with Subnets (requires VNet and NSG to be deployed first)
+// Note: NSG and Route Table associations are now handled in vnet.bicep module
+// following Heyko Oelrichs Zero Trust patterns for better modularity
 // =============================================================================
-
-resource aksSubnet 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' = {
-  name: '${vnet.outputs.vnetName}/aks-subnet'
-  properties: {
-    addressPrefix: '10.0.0.0/20'
-    networkSecurityGroup: {
-      id: nsg.outputs.aksNsgId
-    }
-    serviceEndpoints: [
-      {
-        service: 'Microsoft.Sql'
-      }
-      {
-        service: 'Microsoft.Storage'
-      }
-    ]
-    delegations: [
-      {
-        name: 'aks-delegation'
-        properties: {
-          serviceName: 'Microsoft.ContainerService/managedClusters'
-        }
-      }
-    ]
-  }
-  dependsOn: [
-    vnet
-    nsg
-  ]
-}
-
-resource peSubnet 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' = {
-  name: '${vnet.outputs.vnetName}/private-endpoints'
-  properties: {
-    addressPrefix: '10.0.16.0/24'
-    networkSecurityGroup: {
-      id: nsg.outputs.peNsgId
-    }
-    privateEndpointNetworkPolicies: 'Enabled'
-    privateLinkServiceNetworkPolicies: 'Enabled'
-  }
-  dependsOn: [
-    vnet
-    nsg
-  ]
-}
-
-// =============================================================================
-// Associate Route Table with AKS Subnet
-// =============================================================================
-
-resource aksSubnetWithRouteTable 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' = {
-  name: '${vnet.outputs.vnetName}/aks-subnet'
-  properties: {
-    addressPrefix: '10.0.0.0/20'
-    routeTable: {
-      id: routeTable.outputs.routeTableId
-    }
-  }
-  dependsOn: [
-    aksSubnet
-    routeTable
-  ]
-}
 
 // =============================================================================
 // Resource Group for Security Resources
@@ -225,6 +173,7 @@ module keyVault './modules/keyvault.bicep' = {
     enableHsm: environment == 'prod'
     softDeleteRetentionInDays: 90
     enablePurgeProtection: true
+    logAnalyticsWorkspaceId: logAnalyticsWorkspace.id
   }
 }
 
@@ -239,7 +188,7 @@ module keyVaultPrivateEndpoint './modules/private-endpoint.bicep' = {
     privateEndpointName: 'synaxis-kv-pe-${environment}'
     location: location
     tags: tags
-    subnetId: peSubnet.id
+    subnetId: vnet.outputs.privateEndpointSubnetId
     privateLinkServiceId: keyVault.outputs.keyVaultId
     groupIds: ['vault']
     privateDnsZoneId: keyVaultPrivateDnsZone.id
@@ -329,6 +278,7 @@ module firewall './modules/firewall.bicep' = {
   scope: networkResourceGroup
   params: {
     firewallName: 'synaxis-firewall-${environment}-${location}'
+    environment: environment
     location: location
     tags: tags
     vnetId: vnet.outputs.vnetId
@@ -344,52 +294,19 @@ module firewall './modules/firewall.bicep' = {
 // =============================================================================
 // Update Route Table to Use Firewall
 // =============================================================================
+// Note: Route table is updated in-place with firewall routes
+// The VNet module handles the association
+// =============================================================================
 
-module routeTableWithFirewall './modules/route-table.bicep' = {
-  name: 'route-table-firewall-update'
-  scope: networkResourceGroup
-  params: {
-    routeTableName: 'synaxis-aks-rt-${environment}'
-    location: location
-    tags: tags
-    firewallPrivateIp: firewall.outputs.firewallPrivateIp
+resource routeTableUpdate 'Microsoft.Network/routeTables/routes@2023-09-01' = {
+  name: '${routeTable.outputs.routeTableName}/DefaultRoute-to-Firewall'
+  properties: {
+    addressPrefix: '0.0.0.0/0'
+    nextHopType: 'VirtualAppliance'
+    nextHopIpAddress: firewall.outputs.firewallPrivateIp
   }
   dependsOn: [
     firewall
-  ]
-}
-
-// =============================================================================
-// Re-associate Route Table with Firewall Routes
-// =============================================================================
-
-resource aksSubnetWithFirewallRouteTable 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' = {
-  name: '${vnet.outputs.vnetName}/aks-subnet'
-  properties: {
-    addressPrefix: '10.0.0.0/20'
-    routeTable: {
-      id: routeTableWithFirewall.outputs.routeTableId
-    }
-    delegations: [
-      {
-        name: 'aks-delegation'
-        properties: {
-          serviceName: 'Microsoft.ContainerService/managedClusters'
-        }
-      }
-    ]
-    serviceEndpoints: [
-      {
-        service: 'Microsoft.Sql'
-      }
-      {
-        service: 'Microsoft.Storage'
-      }
-    ]
-  }
-  dependsOn: [
-    aksSubnet
-    routeTableWithFirewall
   ]
 }
 
@@ -415,7 +332,7 @@ module postgresql './modules/postgresql.bicep' = {
     highAvailabilityMode: 'ZoneRedundant'
     availabilityZone: '1'
     standbyAvailabilityZone: '2'
-    subnetId: peSubnet.id
+    subnetId: vnet.outputs.privateEndpointSubnetId
     privateDnsZoneId: postgresPrivateDnsZone.id
   }
   dependsOn: [
@@ -435,7 +352,7 @@ module postgresqlPrivateEndpoint './modules/private-endpoint.bicep' = {
     privateEndpointName: 'synaxis-pg-pe-${environment}'
     location: location
     tags: tags
-    subnetId: peSubnet.id
+    subnetId: vnet.outputs.privateEndpointSubnetId
     privateLinkServiceId: postgresql.outputs.serverId
     groupIds: ['postgresqlServer']
     privateDnsZoneId: postgresPrivateDnsZone.id
@@ -460,7 +377,7 @@ module redis './modules/redis.bicep' = {
     capacity: 1
     enableNonSslPort: false
     minimumTlsVersion: '1.2'
-    subnetId: peSubnet.id
+    subnetId: vnet.outputs.privateEndpointSubnetId
     privateDnsZoneId: redisPrivateDnsZone.id
   }
   dependsOn: [
@@ -479,7 +396,7 @@ module redisPrivateEndpoint './modules/private-endpoint.bicep' = {
     privateEndpointName: 'synaxis-redis-pe-${environment}'
     location: location
     tags: tags
-    subnetId: peSubnet.id
+    subnetId: vnet.outputs.privateEndpointSubnetId
     privateLinkServiceId: redis.outputs.cacheId
     groupIds: ['redisCache']
     privateDnsZoneId: redisPrivateDnsZone.id
@@ -543,7 +460,7 @@ module cosmos './modules/cosmos.bicep' = {
     enableMultiRegionWrites: environment == 'prod'
     replicaRegions: environment == 'prod' ? [location, 'westeurope', 'eastus', 'southeastasia'] : [location]
     enablePrivateEndpoint: true
-    subnetId: peSubnet.id
+    subnetId: vnet.outputs.privateEndpointSubnetId
     privateDnsZoneId: cosmosPrivateDnsZone.id
     logAnalyticsWorkspaceId: logAnalyticsWorkspace.id
     tags: tags
@@ -565,7 +482,7 @@ module cosmosPrivateEndpoint './modules/private-endpoint.bicep' = {
     privateEndpointName: 'synaxis-cosmos-pe-${environment}'
     location: location
     tags: tags
-    subnetId: peSubnet.id
+    subnetId: vnet.outputs.privateEndpointSubnetId
     privateLinkServiceId: cosmos.outputs.accountId
     groupIds: ['Sql']
     privateDnsZoneId: cosmosPrivateDnsZone.id
@@ -591,7 +508,7 @@ module redisEnterprise './modules/redis-enterprise.bicep' = {
     zoneRedundant: true
     persistenceMode: 'AOF'
     enablePrivateEndpoint: true
-    subnetId: peSubnet.id
+    subnetId: vnet.outputs.privateEndpointSubnetId
     privateDnsZoneId: redisPrivateDnsZone.id
     logAnalyticsWorkspaceId: logAnalyticsWorkspace.id
     keyVaultId: keyVault.outputs.keyVaultId
@@ -615,7 +532,7 @@ module redisEnterprisePrivateEndpoint './modules/private-endpoint.bicep' = {
     privateEndpointName: 'synaxis-redis-ent-pe-${environment}'
     location: location
     tags: tags
-    subnetId: peSubnet.id
+    subnetId: vnet.outputs.privateEndpointSubnetId
     privateLinkServiceId: redisEnterprise.outputs.clusterId
     groupIds: ['redisCache']
     privateDnsZoneId: redisPrivateDnsZone.id
@@ -641,7 +558,7 @@ module serviceBus './modules/servicebus.bicep' = {
     enableGeoDR: environment == 'prod'
     geoDRPairedLocation: 'eastus'
     enablePrivateEndpoint: true
-    subnetId: peSubnet.id
+    subnetId: vnet.outputs.privateEndpointSubnetId
     privateDnsZoneId: serviceBusPrivateDnsZone.id
     logAnalyticsWorkspaceId: logAnalyticsWorkspace.id
     tags: tags
@@ -663,7 +580,7 @@ module serviceBusPrivateEndpoint './modules/private-endpoint.bicep' = {
     privateEndpointName: 'synaxis-sb-pe-${environment}'
     location: location
     tags: tags
-    subnetId: peSubnet.id
+    subnetId: vnet.outputs.privateEndpointSubnetId
     privateLinkServiceId: serviceBus.outputs.namespaceId
     groupIds: ['namespace']
     privateDnsZoneId: serviceBusPrivateDnsZone.id
@@ -744,7 +661,7 @@ module acr './modules/acr.bicep' = {
     environment: environment
     tags: tags
     enablePrivateEndpoint: true
-    subnetId: peSubnet.id
+    subnetId: vnet.outputs.privateEndpointSubnetId
     privateDnsZoneId: acrPrivateDnsZone.id
     logAnalyticsWorkspaceId: logAnalyticsWorkspace.id
   }
@@ -761,7 +678,7 @@ module acrPrivateEndpoint './modules/private-endpoint.bicep' = {
     privateEndpointName: 'synaxis-acr-pe-${environment}'
     location: location
     tags: tags
-    subnetId: peSubnet.id
+    subnetId: vnet.outputs.privateEndpointSubnetId
     privateLinkServiceId: acr.outputs.registryId
     groupIds: ['registry']
     privateDnsZoneId: acrPrivateDnsZone.id
@@ -784,7 +701,7 @@ module aks './modules/aks.bicep' = {
     environment: environment
     kubernetesVersion: '1.29'
     vnetId: vnet.outputs.vnetId
-    aksSubnetId: aksSubnet.id
+    aksSubnetId: vnet.outputs.aksSubnetId
     logAnalyticsWorkspaceId: logAnalyticsWorkspace.id
     keyVaultId: keyVault.outputs.keyVaultId
     acrId: acr.outputs.registryId
@@ -792,7 +709,7 @@ module aks './modules/aks.bicep' = {
   }
   dependsOn: [
     computeResourceGroup
-    aksSubnetWithFirewallRouteTable
+    routeTableWithFirewall
   ]
 }
 
@@ -897,17 +814,47 @@ output vnetId string = vnet.outputs.vnetId
 @description('Virtual Network Name')
 output vnetName string = vnet.outputs.vnetName
 
+@description('Virtual Network Address Space')
+output vnetAddressSpace string = vnet.outputs.vnetAddressSpace
+
 @description('AKS Subnet ID')
-output aksSubnetId string = aksSubnet.id
+output aksSubnetId string = vnet.outputs.aksSubnetId
+
+@description('AKS Subnet CIDR')
+output aksSubnetCidr string = vnet.outputs.aksSubnetCidr
 
 @description('Private Endpoint Subnet ID')
-output privateEndpointSubnetId string = peSubnet.id
+output privateEndpointSubnetId string = vnet.outputs.privateEndpointSubnetId
+
+@description('Private Endpoint Subnet CIDR')
+output privateEndpointSubnetCidr string = vnet.outputs.privateEndpointSubnetCidr
 
 @description('Bastion Subnet ID')
 output bastionSubnetId string = vnet.outputs.bastionSubnetId
 
+@description('Bastion Subnet CIDR')
+output bastionSubnetCidr string = vnet.outputs.bastionSubnetCidr
+
 @description('Firewall Subnet ID')
 output firewallSubnetId string = vnet.outputs.firewallSubnetId
+
+@description('Firewall Subnet CIDR')
+output firewallSubnetCidr string = vnet.outputs.firewallSubnetCidr
+
+@description('Database Subnet ID')
+output databaseSubnetId string = vnet.outputs.databaseSubnetId
+
+@description('Database Subnet CIDR')
+output databaseSubnetCidr string = vnet.outputs.databaseSubnetCidr
+
+@description('Services Subnet ID')
+output servicesSubnetId string = vnet.outputs.servicesSubnetId
+
+@description('Services Subnet CIDR')
+output servicesSubnetCidr string = vnet.outputs.servicesSubnetCidr
+
+@description('Subnet Configuration')
+output subnetConfiguration object = vnet.outputs.subnetConfiguration
 
 @description('AKS NSG ID')
 output aksNsgId string = nsg.outputs.aksNsgId
@@ -918,14 +865,17 @@ output peNsgId string = nsg.outputs.peNsgId
 @description('Route Table ID')
 output routeTableId string = routeTable.outputs.routeTableId
 
-@description('Resource Group Name')
-output resourceGroupName string = networkResourceGroup.name
-
-@description('Resource Group Name')
-output resourceGroupName string = networkResourceGroup.name
+@description('Network Resource Group Name')
+output networkResourceGroupName string = networkResourceGroup.name
 
 @description('Security Resource Group Name')
 output securityResourceGroupName string = securityResourceGroup.name
+
+@description('Data Resource Group Name')
+output dataResourceGroupName string = dataResourceGroup.name
+
+@description('Compute Resource Group Name')
+output computeResourceGroupName string = computeResourceGroup.name
 
 @description('Key Vault ID')
 output keyVaultId string = keyVault.outputs.keyVaultId
@@ -959,9 +909,6 @@ output firewallPolicyId string = firewallPolicy.outputs.firewallPolicyId
 
 @description('Firewall Policy Name')
 output firewallPolicyName string = firewallPolicy.outputs.firewallPolicyName
-
-@description('Compute Resource Group Name')
-output computeResourceGroupName string = computeResourceGroup.name
 
 @description('ACR ID')
 output acrId string = acr.outputs.registryId
@@ -1064,12 +1011,14 @@ output deploymentSummary object = {
   environment: environment
   location: location
   vnetName: vnet.outputs.vnetName
-  vnetAddressSpace: '10.0.0.0/16'
+  vnetAddressSpace: vnet.outputs.vnetAddressSpace
   subnets: {
-    aks: '10.0.0.0/20'
-    privateEndpoints: '10.0.16.0/24'
-    bastion: '10.0.17.0/24'
-    firewall: '10.0.18.0/24'
+    aks: vnet.outputs.aksSubnetCidr
+    privateEndpoints: vnet.outputs.privateEndpointSubnetCidr
+    bastion: vnet.outputs.bastionSubnetCidr
+    firewall: vnet.outputs.firewallSubnetCidr
+    database: vnet.outputs.databaseSubnetCidr
+    services: vnet.outputs.servicesSubnetCidr
   }
   security: {
     ddosProtection: enableDdosProtection
@@ -1087,5 +1036,6 @@ output deploymentSummary object = {
     keyVaultDeployed: true
     hsmEnabled: environment == 'prod'
     privateEndpointsEnabled: true
+    zeroTrustEnabled: true
   }
 }

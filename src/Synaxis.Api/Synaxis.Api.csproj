@@ -23,5 +23,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Synaxis.Core\Synaxis.Core.csproj" />
     <ProjectReference Include="..\Synaxis.Infrastructure\Synaxis.Infrastructure.csproj" />
+    <ProjectReference Include="..\Synaxis.Providers\Synaxis.Providers.csproj" />
+    <ProjectReference Include="..\Synaxis.Contracts\Synaxis.Contracts.csproj" />
   </ItemGroup>
 </Project>
