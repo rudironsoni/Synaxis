@@ -40,6 +40,9 @@ param enableWaf bool = environment == 'prod'
 @allowed(['Prevention', 'Detection'])
 param wafMode string = 'Prevention'
 
+@description('WAF Policy ID (if using external WAF policy)')
+param wafPolicyId string = ''
+
 @description('Log Analytics Workspace ID for diagnostics')
 param logAnalyticsWorkspaceId string = ''
 
@@ -76,7 +79,7 @@ resource frontDoorProfile 'Microsoft.Cdn/profiles@2023-05-01' = {
 // WAF Policy (Premium SKU only)
 // =============================================================================
 
-resource wafPolicy 'Microsoft.Network/FrontDoorWebApplicationFirewallPolicies@2022-05-01' = if (enableWaf) {
+resource wafPolicy 'Microsoft.Network/FrontDoorWebApplicationFirewallPolicies@2022-05-01' = if (enableWaf && empty(wafPolicyId)) {
   name: wafPolicyName
   location: location
   tags: defaultTags
@@ -333,7 +336,7 @@ resource securityPolicy 'Microsoft.Cdn/profiles/securityPolicies@2023-05-01' = i
     parameters: {
       type: 'WebApplicationFirewall'
       wafPolicy: {
-        id: wafPolicy.id
+        id: !empty(wafPolicyId) ? wafPolicyId : wafPolicy.id
       }
       associations: [
         {
@@ -419,7 +422,7 @@ output frontDoorEndpoint string = defaultEndpoint.properties.hostName
 output originGroupId string = stampOriginGroup.id
 
 @description('WAF Policy ID (if enabled)')
-output wafPolicyId string = enableWaf ? wafPolicy.id : ''
+output wafPolicyId string = enableWaf ? (!empty(wafPolicyId) ? wafPolicyId : wafPolicy.id) : ''
 
 @description('Front Door FQDN')
 output frontDoorFqdn string = '${defaultEndpoint.name}.azurefd.net'

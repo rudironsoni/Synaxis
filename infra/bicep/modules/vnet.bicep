@@ -14,6 +14,12 @@ param addressSpace string = '10.0.0.0/16'
 @allowed(['dev', 'staging', 'prod'])
 param environment string
 
+@description('Enable DDoS Protection')
+param enableDdosProtection bool = false
+
+@description('DDoS Protection Plan ID')
+param ddosProtectionPlanId string = ''
+
 @description('Tags for the virtual network')
 param tags object = {
   project: 'synaxis'
@@ -101,7 +107,10 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-09-01' = {
         }]
       }
     }]
-    enableDdosProtection: false // DDoS protection applied at public IP level
+    enableDdosProtection: enableDdosProtection
+    ddosProtectionPlan: enableDdosProtection && !empty(ddosProtectionPlanId) ? {
+      id: ddosProtectionPlanId
+    } : null
   }
 }
 

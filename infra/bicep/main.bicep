@@ -44,6 +44,22 @@ resource networkResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = 
 }
 
 // =============================================================================
+// Deploy DDoS Protection Plan Module
+// =============================================================================
+
+module ddosProtection './modules/ddos-protection.bicep' = {
+  name: 'ddos-protection-deployment'
+  scope: networkResourceGroup
+  params: {
+    environment: environment
+    location: location
+    enableDdosProtection: enableDdosProtection
+    logAnalyticsWorkspaceId: logAnalyticsWorkspace.id
+    tags: tags
+  }
+}
+
+// =============================================================================
 // Deploy Virtual Network Module
 // =============================================================================
 
@@ -55,7 +71,11 @@ module vnet './modules/vnet.bicep' = {
     location: location
     tags: tags
     enableDdosProtection: enableDdosProtection
+    ddosProtectionPlanId: ddosProtection.outputs.ddosProtectionPlanId
   }
+  dependsOn: [
+    ddosProtection
+  ]
 }
 
 // =============================================================================
@@ -798,6 +818,27 @@ module policyAssignments './modules/policy-assignment.bicep' = {
 }
 
 // =============================================================================
+// Deploy WAF Policy Module
+// =============================================================================
+
+module wafPolicy './modules/waf-policy.bicep' = {
+  name: 'waf-policy-deployment'
+  params: {
+    environment: environment
+    location: location
+    frontDoorSku: environment == 'prod' ? 'Premium_AzureFrontDoor' : 'Standard_AzureFrontDoor'
+    wafMode: 'Prevention'
+    enableOwaspRules: true
+    enableBotProtection: true
+    enableRateLimiting: true
+    rateLimitThreshold: 1000
+    enableGeoFiltering: false
+    logAnalyticsWorkspaceId: logAnalyticsWorkspace.id
+    tags: tags
+  }
+}
+
+// =============================================================================
 // Deploy Azure Front Door
 // =============================================================================
 
@@ -834,13 +875,15 @@ module frontDoor './modules/frontdoor.bicep' = {
         weight: 1000
       }
     ]
-    enableWaf: environment == 'prod'
+    enableWaf: true
     wafMode: 'Prevention'
+    wafPolicyId: wafPolicy.outputs.wafPolicyId
     logAnalyticsWorkspaceId: logAnalyticsWorkspace.id
   }
   dependsOn: [
     aks
     logAnalyticsWorkspace
+    wafPolicy
   ]
 }
 
@@ -989,6 +1032,33 @@ output frontDoorFqdn string = frontDoor.outputs.frontDoorFqdn
 @description('WAF Policy ID')
 output wafPolicyId string = frontDoor.outputs.wafPolicyId
 
+@description('DDoS Protection Plan ID')
+output ddosProtectionPlanId string = ddosProtection.outputs.ddosProtectionPlanId
+
+@description('DDoS Protection Plan Name')
+output ddosProtectionPlanName string = ddosProtection.outputs.ddosProtectionPlanName
+
+@description('DDoS Protection Policy ID')
+output ddosProtectionPolicyId string = ddosProtection.outputs.ddosProtectionPolicyId
+
+@description('DDoS Protection Enabled')
+output ddosProtectionEnabled bool = ddosProtection.outputs.ddosProtectionEnabled
+
+@description('WAF Policy Mode')
+output wafPolicyMode string = wafPolicy.outputs.wafMode
+
+@description('OWASP Rules Enabled')
+output owaspRulesEnabled bool = wafPolicy.outputs.owaspRulesEnabled
+
+@description('Bot Protection Enabled')
+output botProtectionEnabled bool = wafPolicy.outputs.botProtectionEnabled
+
+@description('Rate Limiting Enabled')
+output rateLimitingEnabled bool = wafPolicy.outputs.rateLimitingEnabled
+
+@description('Geo-filtering Enabled')
+output geoFilteringEnabled bool = wafPolicy.outputs.geoFilteringEnabled
+
 @description('Deployment Summary')
 output deploymentSummary object = {
   environment: environment
@@ -1003,6 +1073,15 @@ output deploymentSummary object = {
   }
   security: {
     ddosProtection: enableDdosProtection
+    ddosProtectionPlanId: ddosProtection.outputs.ddosProtectionPlanId
+    ddosProtectionEnabled: ddosProtection.outputs.ddosProtectionEnabled
+    wafEnabled: true
+    wafPolicyId: wafPolicy.outputs.wafPolicyId
+    wafMode: wafPolicy.outputs.wafMode
+    owaspRulesEnabled: wafPolicy.outputs.owaspRulesEnabled
+    botProtectionEnabled: wafPolicy.outputs.botProtectionEnabled
+    rateLimitingEnabled: wafPolicy.outputs.rateLimitingEnabled
+    geoFilteringEnabled: wafPolicy.outputs.geoFilteringEnabled
     nsgAttached: true
     routeTableAttached: true
     keyVaultDeployed: true

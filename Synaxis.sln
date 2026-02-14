@@ -61,6 +61,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Synaxis.Providers.Anthropic
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Synaxis.BatchProcessing", "src\Synaxis.BatchProcessing\Synaxis.BatchProcessing.csproj", "{73AE65D0-F900-4250-BA90-5149D4CEB79B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Synaxis.Providers", "src\Synaxis.Providers\Synaxis.Providers.csproj", "{D85C1000-1105-4C4C-9A3A-82846B5AC68C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -347,6 +349,18 @@ Global
 		{73AE65D0-F900-4250-BA90-5149D4CEB79B}.Release|x64.Build.0 = Release|Any CPU
 		{73AE65D0-F900-4250-BA90-5149D4CEB79B}.Release|x86.ActiveCfg = Release|Any CPU
 		{73AE65D0-F900-4250-BA90-5149D4CEB79B}.Release|x86.Build.0 = Release|Any CPU
+		{D85C1000-1105-4C4C-9A3A-82846B5AC68C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D85C1000-1105-4C4C-9A3A-82846B5AC68C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D85C1000-1105-4C4C-9A3A-82846B5AC68C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D85C1000-1105-4C4C-9A3A-82846B5AC68C}.Debug|x64.Build.0 = Debug|Any CPU
+		{D85C1000-1105-4C4C-9A3A-82846B5AC68C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D85C1000-1105-4C4C-9A3A-82846B5AC68C}.Debug|x86.Build.0 = Debug|Any CPU
+		{D85C1000-1105-4C4C-9A3A-82846B5AC68C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D85C1000-1105-4C4C-9A3A-82846B5AC68C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D85C1000-1105-4C4C-9A3A-82846B5AC68C}.Release|x64.ActiveCfg = Release|Any CPU
+		{D85C1000-1105-4C4C-9A3A-82846B5AC68C}.Release|x64.Build.0 = Release|Any CPU
+		{D85C1000-1105-4C4C-9A3A-82846B5AC68C}.Release|x86.ActiveCfg = Release|Any CPU
+		{D85C1000-1105-4C4C-9A3A-82846B5AC68C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -379,5 +393,6 @@ Global
 		{AE95BAE5-CE84-4B3E-A120-62A5A4220A63} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{2B06EC68-0DF5-4357-B2A5-0A61AEB32285} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{73AE65D0-F900-4250-BA90-5149D4CEB79B} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{D85C1000-1105-4C4C-9A3A-82846B5AC68C} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 EndGlobal
