@@ -283,6 +283,24 @@ resource redisPrivateDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetwo
 }
 
 // =============================================================================
+// Deploy Firewall Policy
+// =============================================================================
+
+module firewallPolicy './modules/firewall-policy.bicep' = {
+  name: 'firewall-policy-deployment'
+  scope: networkResourceGroup
+  params: {
+    environment: environment
+    location: location
+    aksSubnetCidr: '10.0.0.0/20'
+    privateEndpointSubnetCidr: '10.0.16.0/24'
+    vnetCidr: '10.0.0.0/16'
+    logAnalyticsWorkspaceId: logAnalyticsWorkspace.id
+    tags: tags
+  }
+}
+
+// =============================================================================
 // Deploy Azure Firewall
 // =============================================================================
 
@@ -295,7 +313,12 @@ module firewall './modules/firewall.bicep' = {
     tags: tags
     vnetId: vnet.outputs.vnetId
     firewallSubnetId: vnet.outputs.firewallSubnetId
+    firewallPolicyId: firewallPolicy.outputs.firewallPolicyId
+    logAnalyticsWorkspaceId: logAnalyticsWorkspace.id
   }
+  dependsOn: [
+    firewallPolicy
+  ]
 }
 
 // =============================================================================
@@ -512,6 +535,27 @@ module cosmos './modules/cosmos.bicep' = {
 }
 
 // =============================================================================
+// Deploy Private Endpoint for Cosmos DB
+// =============================================================================
+
+module cosmosPrivateEndpoint './modules/private-endpoint.bicep' = {
+  name: 'cosmos-pe-deployment'
+  scope: dataResourceGroup
+  params: {
+    privateEndpointName: 'synaxis-cosmos-pe-${environment}'
+    location: location
+    tags: tags
+    subnetId: peSubnet.id
+    privateLinkServiceId: cosmos.outputs.accountId
+    groupIds: ['Sql']
+    privateDnsZoneId: cosmosPrivateDnsZone.id
+  }
+  dependsOn: [
+    cosmos
+  ]
+}
+
+// =============================================================================
 // Deploy Redis Enterprise Cluster
 // =============================================================================
 
@@ -541,6 +585,27 @@ module redisEnterprise './modules/redis-enterprise.bicep' = {
 }
 
 // =============================================================================
+// Deploy Private Endpoint for Redis Enterprise
+// =============================================================================
+
+module redisEnterprisePrivateEndpoint './modules/private-endpoint.bicep' = {
+  name: 'redis-enterprise-pe-deployment'
+  scope: dataResourceGroup
+  params: {
+    privateEndpointName: 'synaxis-redis-ent-pe-${environment}'
+    location: location
+    tags: tags
+    subnetId: peSubnet.id
+    privateLinkServiceId: redisEnterprise.outputs.clusterId
+    groupIds: ['redisCache']
+    privateDnsZoneId: redisPrivateDnsZone.id
+  }
+  dependsOn: [
+    redisEnterprise
+  ]
+}
+
+// =============================================================================
 // Deploy Service Bus Premium
 // =============================================================================
 
@@ -564,6 +629,27 @@ module serviceBus './modules/servicebus.bicep' = {
   dependsOn: [
     dataResourceGroup
     logAnalyticsWorkspace
+  ]
+}
+
+// =============================================================================
+// Deploy Private Endpoint for Service Bus
+// =============================================================================
+
+module serviceBusPrivateEndpoint './modules/private-endpoint.bicep' = {
+  name: 'servicebus-pe-deployment'
+  scope: dataResourceGroup
+  params: {
+    privateEndpointName: 'synaxis-sb-pe-${environment}'
+    location: location
+    tags: tags
+    subnetId: peSubnet.id
+    privateLinkServiceId: serviceBus.outputs.namespaceId
+    groupIds: ['namespace']
+    privateDnsZoneId: serviceBusPrivateDnsZone.id
+  }
+  dependsOn: [
+    serviceBus
   ]
 }
 
@@ -645,6 +731,27 @@ module acr './modules/acr.bicep' = {
 }
 
 // =============================================================================
+// Deploy Private Endpoint for Azure Container Registry
+// =============================================================================
+
+module acrPrivateEndpoint './modules/private-endpoint.bicep' = {
+  name: 'acr-pe-deployment'
+  scope: computeResourceGroup
+  params: {
+    privateEndpointName: 'synaxis-acr-pe-${environment}'
+    location: location
+    tags: tags
+    subnetId: peSubnet.id
+    privateLinkServiceId: acr.outputs.registryId
+    groupIds: ['registry']
+    privateDnsZoneId: acrPrivateDnsZone.id
+  }
+  dependsOn: [
+    acr
+  ]
+}
+
+// =============================================================================
 // Deploy Azure Kubernetes Service (AKS)
 // =============================================================================
 
@@ -673,12 +780,14 @@ module aks './modules/aks.bicep' = {
 // Deploy Azure Policy Assignments (Governance)
 // =============================================================================
 
-module policyAssignments './modules/policy-assignments.bicep' = {
-  name: 'policy-assignments-deployment'
+module policyAssignments './modules/policy-assignment.bicep' = {
+  name: 'policy-assignment-deployment'
   params: {
     location: location
     environment: environment
     tags: tags
+    enforcePolicies: true
+    enableRemediation: environment == 'prod'
   }
   dependsOn: [
     networkResourceGroup
@@ -803,7 +912,10 @@ output firewallPrivateIp string = firewall.outputs.firewallPrivateIp
 output firewallPublicIp string = firewall.outputs.firewallPublicIp
 
 @description('Firewall Policy ID')
-output firewallPolicyId string = firewall.outputs.firewallPolicyId
+output firewallPolicyId string = firewallPolicy.outputs.firewallPolicyId
+
+@description('Firewall Policy Name')
+output firewallPolicyName string = firewallPolicy.outputs.firewallPolicyName
 
 @description('Compute Resource Group Name')
 output computeResourceGroupName string = computeResourceGroup.name
