@@ -1,0 +1,19 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata:
+  name: pod-failure-experiment
+  namespace: synaxis
+  labels:
+    experiment: pod-failure
+    app: synaxis-api
+spec:
+  action: pod-failure
+  mode: one
+  selector:
+    namespaces:
+      - synaxis
+    labelSelectors:
+      app: synaxis-api
+  scheduler:
+    cron: "@every 10m"
+  duration: "30s"

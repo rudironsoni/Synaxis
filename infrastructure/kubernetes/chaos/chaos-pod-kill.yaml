@@ -1,0 +1,19 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata:
+  name: pod-kill-experiment
+  namespace: synaxis
+  labels:
+    experiment: pod-kill
+    app: synaxis-api
+spec:
+  action: pod-kill
+  mode: fixed-percent
+  value: "20"
+  selector:
+    namespaces:
+      - synaxis
+    labelSelectors:
+      app: synaxis-api
+  scheduler:
+    cron: "@every 15m"

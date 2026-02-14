@@ -1,0 +1,23 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: StressChaos
+metadata:
+  name: memory-stress-experiment
+  namespace: synaxis
+  labels:
+    experiment: memory-stress
+    app: synaxis-api
+spec:
+  mode: one
+  selector:
+    namespaces:
+      - synaxis
+    labelSelectors:
+      app: synaxis-api
+  stressors:
+    memory:
+      workers: 4
+      size: "512MB"
+      oomKillWorker: false
+  scheduler:
+    cron: "@every 45m"
+  duration: "60s"

@@ -1,0 +1,19 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: DNSChaos
+metadata:
+  name: dns-failure-experiment
+  namespace: synaxis
+  labels:
+    experiment: dns-failure
+    app: synaxis-api
+spec:
+  action: random
+  mode: all
+  selector:
+    namespaces:
+      - synaxis
+    labelSelectors:
+      app: synaxis-api
+  scheduler:
+    cron: "@every 50m"
+  duration: "30s"

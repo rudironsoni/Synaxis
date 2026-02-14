@@ -1,0 +1,27 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: IOChaos
+metadata:
+  name: io-delay-experiment
+  namespace: synaxis
+  labels:
+    experiment: io-delay
+    app: synaxis-api
+spec:
+  action: latency
+  mode: one
+  selector:
+    namespaces:
+      - synaxis
+    labelSelectors:
+      app: synaxis-api
+  latency:
+    latency: "500ms"
+    correlation: "25"
+  pathSelector:
+    paths:
+      - /var/log
+      - /tmp
+  volumePath: /var/lib/docker
+  scheduler:
+    cron: "@every 25m"
+  duration: "60s"

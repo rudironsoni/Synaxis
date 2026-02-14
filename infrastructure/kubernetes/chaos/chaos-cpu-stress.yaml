@@ -1,0 +1,22 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: StressChaos
+metadata:
+  name: cpu-stress-experiment
+  namespace: synaxis
+  labels:
+    experiment: cpu-stress
+    app: synaxis-api
+spec:
+  mode: one
+  selector:
+    namespaces:
+      - synaxis
+    labelSelectors:
+      app: synaxis-api
+  stressors:
+    cpu:
+      workers: 4
+      load: 80
+  scheduler:
+    cron: "@every 40m"
+  duration: "90s"

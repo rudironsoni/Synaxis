@@ -1,0 +1,61 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: ChaosMesh
+metadata:
+  name: chaos-mesh
+  namespace: chaos-mesh
+spec:
+  # ChaosMesh configuration
+  controllerManager:
+    replicas: 3
+    image: ghcr.io/chaos-mesh/chaos-mesh:v2.6.2
+    imagePullPolicy: IfNotPresent
+
+  chaosDaemon:
+    replicas: 2
+    image: ghcr.io/chaos-mesh/chaos-daemon:v2.6.2
+    imagePullPolicy: IfNotPresent
+    runtime: docker
+    socketPath: /var/run/docker.sock
+
+  dashboard:
+    replicas: 1
+    image: ghcr.io/chaos-mesh/chaos-dashboard:v2.6.2
+    imagePullPolicy: IfNotPresent
+    securityMode: false
+    nodeSelector: {}
+    tolerations: []
+
+  dnsServer:
+    replicas: 2
+    image: ghcr.io/chaos-mesh/chaos-dns:v2.6.2
+    imagePullPolicy: IfNotPresent
+
+  # Enable BPFK for network chaos
+  bpfki:
+    enabled: true
+    image: ghcr.io/chaos-mesh/chaos-kernel:v2.6.2
+    imagePullPolicy: IfNotPresent
+    grpcPort: 50051
+
+  # Security settings
+  security:
+    mode: false
+    podSecurityPolicy: false
+    podSecurityContext:
+      runAsNonRoot: true
+      runAsUser: 1234
+      fsGroup: 1234
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+
+  # RBAC settings
+  rbac:
+    create: true
+
+  # Service account settings
+  serviceAccount:
+    create: true
+    name: chaos-controller-manager
