@@ -66,6 +66,10 @@ namespace Synaxis.Infrastructure.Data
 
         public DbSet<OrganizationApiKey> OrganizationApiKeys { get; set; }
 
+        public DbSet<Conversation> Conversations { get; set; }
+
+        public DbSet<ConversationTurn> ConversationTurns { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -971,6 +975,61 @@ namespace Synaxis.Infrastructure.Data
                 entity.HasIndex(e => e.KeyHash).IsUnique();
                 entity.HasIndex(e => new { e.OrganizationId, e.Name });
                 entity.HasIndex(e => new { e.OrganizationId, e.IsActive });
+            });
+
+            // Configure Conversations
+            modelBuilder.Entity<Conversation>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id)
+                    .HasColumnName("id")
+                    .ValueGeneratedOnAdd();
+
+                entity.Property(e => e.UserId).HasColumnName("user_id");
+                entity.Property(e => e.OrganizationId).HasColumnName("organization_id");
+                entity.Property(e => e.Title).HasColumnName("title");
+                entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+                entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+                entity.Property(e => e.IsActive).HasColumnName("is_active");
+
+                entity.HasOne(e => e.User)
+                    .WithMany()
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Organization)
+                    .WithMany()
+                    .HasForeignKey(e => e.OrganizationId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(e => e.UserId);
+                entity.HasIndex(e => e.OrganizationId);
+                entity.HasIndex(e => new { e.UserId, e.OrganizationId });
+                entity.HasIndex(e => e.UpdatedAt);
+            });
+
+            // Configure ConversationTurns
+            modelBuilder.Entity<ConversationTurn>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id)
+                    .HasColumnName("id")
+                    .ValueGeneratedOnAdd();
+
+                entity.Property(e => e.ConversationId).HasColumnName("conversation_id");
+                entity.Property(e => e.TurnNumber).HasColumnName("turn_number");
+                entity.Property(e => e.Role).HasColumnName("role");
+                entity.Property(e => e.Content).HasColumnName("content");
+                entity.Property(e => e.Metadata).HasColumnName("metadata").HasColumnType("jsonb");
+                entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+
+                entity.HasOne(e => e.Conversation)
+                    .WithMany(c => c.Turns)
+                    .HasForeignKey(e => e.ConversationId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(e => e.ConversationId);
+                entity.HasIndex(e => new { e.ConversationId, e.TurnNumber });
             });
         }
     }

@@ -209,6 +209,11 @@ namespace Synaxis.Core.Models
         public virtual ICollection<PasswordHistory> PasswordHistory { get; set; }
 
         /// <summary>
+        /// Gets or sets the conversations navigation property.
+        /// </summary>
+        public virtual ICollection<Conversation> Conversations { get; set; }
+
+        /// <summary>
         /// Gets the full name of the user.
         /// </summary>
         public string FullName => $"{this.FirstName} {this.LastName}".Trim();

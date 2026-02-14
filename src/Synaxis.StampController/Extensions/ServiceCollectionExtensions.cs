@@ -4,6 +4,7 @@
 // =============================================================================
 
 using k8s;
+using Microsoft.Extensions.Configuration;
 using Prometheus;
 using Synaxis.StampController.Controllers;
 using Synaxis.StampController.Services;
