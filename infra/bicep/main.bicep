@@ -447,6 +447,127 @@ module redisPrivateEndpoint './modules/private-endpoint.bicep' = {
 }
 
 // =============================================================================
+// Create Private DNS Zones for Cosmos DB and Service Bus
+// =============================================================================
+
+resource cosmosPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+  name: 'privatelink.documents.azure.com'
+  location: 'global'
+  tags: tags
+}
+
+resource cosmosPrivateDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
+  parent: cosmosPrivateDnsZone
+  name: '${cosmosPrivateDnsZone.name}-link'
+  location: 'global'
+  properties: {
+    registrationEnabled: false
+    virtualNetwork: {
+      id: vnet.outputs.vnetId
+    }
+  }
+}
+
+resource serviceBusPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+  name: 'privatelink.servicebus.windows.net'
+  location: 'global'
+  tags: tags
+}
+
+resource serviceBusPrivateDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
+  parent: serviceBusPrivateDnsZone
+  name: '${serviceBusPrivateDnsZone.name}-link'
+  location: 'global'
+  properties: {
+    registrationEnabled: false
+    virtualNetwork: {
+      id: vnet.outputs.vnetId
+    }
+  }
+}
+
+// =============================================================================
+// Deploy Cosmos DB (Multi-Region)
+// =============================================================================
+
+module cosmos './modules/cosmos.bicep' = {
+  name: 'cosmos-deployment'
+  scope: dataResourceGroup
+  params: {
+    accountName: 'synaxis-cosmos-${environment}-${location}'
+    location: location
+    environment: environment
+    enableMultiRegionWrites: environment == 'prod'
+    replicaRegions: environment == 'prod' ? [location, 'westeurope', 'eastus', 'southeastasia'] : [location]
+    enablePrivateEndpoint: true
+    subnetId: peSubnet.id
+    privateDnsZoneId: cosmosPrivateDnsZone.id
+    logAnalyticsWorkspaceId: logAnalyticsWorkspace.id
+    tags: tags
+  }
+  dependsOn: [
+    dataResourceGroup
+    logAnalyticsWorkspace
+  ]
+}
+
+// =============================================================================
+// Deploy Redis Enterprise Cluster
+// =============================================================================
+
+module redisEnterprise './modules/redis-enterprise.bicep' = {
+  name: 'redis-enterprise-deployment'
+  scope: dataResourceGroup
+  params: {
+    clusterName: 'synaxis-redis-ent-${environment}-${location}'
+    location: location
+    environment: environment
+    sku: environment == 'prod' ? 'Enterprise_E10' : 'Enterprise_E10'
+    shardCount: 6
+    zoneRedundant: true
+    persistenceMode: 'AOF'
+    enablePrivateEndpoint: true
+    subnetId: peSubnet.id
+    privateDnsZoneId: redisPrivateDnsZone.id
+    logAnalyticsWorkspaceId: logAnalyticsWorkspace.id
+    keyVaultId: keyVault.outputs.keyVaultId
+    tags: tags
+  }
+  dependsOn: [
+    dataResourceGroup
+    keyVault
+    logAnalyticsWorkspace
+  ]
+}
+
+// =============================================================================
+// Deploy Service Bus Premium
+// =============================================================================
+
+module serviceBus './modules/servicebus.bicep' = {
+  name: 'servicebus-deployment'
+  scope: dataResourceGroup
+  params: {
+    namespaceName: 'synaxis-sb-${environment}-${location}'
+    location: location
+    environment: environment
+    messagingUnits: environment == 'prod' ? 4 : 1
+    zoneRedundant: true
+    enableGeoDR: environment == 'prod'
+    geoDRPairedLocation: 'eastus'
+    enablePrivateEndpoint: true
+    subnetId: peSubnet.id
+    privateDnsZoneId: serviceBusPrivateDnsZone.id
+    logAnalyticsWorkspaceId: logAnalyticsWorkspace.id
+    tags: tags
+  }
+  dependsOn: [
+    dataResourceGroup
+    logAnalyticsWorkspace
+  ]
+}
+
+// =============================================================================
 // Create Compute Resource Group (for AKS)
 // =============================================================================
 
@@ -666,6 +787,33 @@ output aksManagedIdentityClientId string = aks.outputs.managedIdentityClientId
 
 @description('AKS OIDC Issuer URL')
 output aksOidcIssuerUrl string = aks.outputs.oidcIssuerUrl
+
+@description('Cosmos DB Account ID')
+output cosmosAccountId string = cosmos.outputs.accountId
+
+@description('Cosmos DB Account Name')
+output cosmosAccountName string = cosmos.outputs.accountName
+
+@description('Cosmos DB Endpoint')
+output cosmosEndpoint string = cosmos.outputs.endpoint
+
+@description('Redis Enterprise Cluster ID')
+output redisEnterpriseId string = redisEnterprise.outputs.clusterId
+
+@description('Redis Enterprise Cluster Name')
+output redisEnterpriseName string = redisEnterprise.outputs.clusterName
+
+@description('Redis Enterprise Hostname')
+output redisEnterpriseHostname string = redisEnterprise.outputs.hostname
+
+@description('Service Bus Namespace ID')
+output serviceBusNamespaceId string = serviceBus.outputs.namespaceId
+
+@description('Service Bus Namespace Name')
+output serviceBusNamespaceName string = serviceBus.outputs.namespaceName
+
+@description('Service Bus Endpoint')
+output serviceBusEndpoint string = serviceBus.outputs.endpoint
 
 @description('Deployment Summary')
 output deploymentSummary object = {
