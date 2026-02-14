@@ -50,7 +50,7 @@ param sshPublicKey string
 var systemNodePool = {
   name: 'system'
   count: 3
-  vmSize: 'Standard_D4s_v3'
+  vmSize: 'Standard_D4s_v5'
   osDiskSizeGB: 128
   maxPods: 110
   minCount: 3
@@ -66,20 +66,42 @@ var systemNodePool = {
   mode: 'System'
 }
 
-// User Node Pool Configuration (Inference Workloads)
-var inferenceNodePool = {
-  name: 'inference'
+// General Workload Node Pool
+var generalWorkloadNodePool = {
+  name: 'general'
   count: 3
-  vmSize: 'Standard_D8s_v3'
+  vmSize: 'Standard_D8s_v5'
   osDiskSizeGB: 256
   maxPods: 110
   minCount: 3
-  maxCount: 20
+  maxCount: 50
   enableAutoScaling: true
   taints: []
   labels: {
-    'node-type': 'inference'
-    'workload': 'agents'
+    'node-type': 'general'
+    'workload': 'general'
+    'environment': environment
+  }
+  mode: 'User'
+}
+
+// GPU Node Pool (NVIDIA GPU workloads)
+var gpuNodePool = {
+  name: 'gpu'
+  count: 0
+  vmSize: 'Standard_NC24s_v3'
+  osDiskSizeGB: 1024
+  maxPods: 110
+  minCount: 0
+  maxCount: 20
+  enableAutoScaling: true
+  taints: [
+    'nvidia.com/gpu=true:NoSchedule'
+  ]
+  labels: {
+    'node-type': 'gpu'
+    'nvidia.com/gpu': 'true'
+    'workload': 'gpu-inference'
     'environment': environment
   }
   mode: 'User'
@@ -318,27 +340,57 @@ resource aksCluster 'Microsoft.ContainerService/managedClusters@2024-01-02-previ
   ]
 }
 
-// Inference Node Pool (User Pool)
-resource inferenceNodePoolResource 'Microsoft.ContainerService/managedClusters/agentPools@2024-01-02-preview' = {
+// General Workload Node Pool
+resource generalWorkloadNodePoolResource 'Microsoft.ContainerService/managedClusters/agentPools@2024-01-02-preview' = {
   parent: aksCluster
-  name: inferenceNodePool.name
+  name: generalWorkloadNodePool.name
   properties: {
-    count: inferenceNodePool.count
-    vmSize: inferenceNodePool.vmSize
-    osDiskSizeGB: inferenceNodePool.osDiskSizeGB
+    count: generalWorkloadNodePool.count
+    vmSize: generalWorkloadNodePool.vmSize
+    osDiskSizeGB: generalWorkloadNodePool.osDiskSizeGB
     osDiskType: 'Managed'
-    maxPods: inferenceNodePool.maxPods
-    minCount: inferenceNodePool.minCount
-    maxCount: inferenceNodePool.maxCount
-    enableAutoScaling: inferenceNodePool.enableAutoScaling
-    nodeTaints: inferenceNodePool.taints
-    nodeLabels: inferenceNodePool.labels
-    mode: inferenceNodePool.mode
+    maxPods: generalWorkloadNodePool.maxPods
+    minCount: generalWorkloadNodePool.minCount
+    maxCount: generalWorkloadNodePool.maxCount
+    enableAutoScaling: generalWorkloadNodePool.enableAutoScaling
+    nodeTaints: generalWorkloadNodePool.taints
+    nodeLabels: generalWorkloadNodePool.labels
+    mode: generalWorkloadNodePool.mode
     type: 'VirtualMachineScaleSets'
     availabilityZones: availabilityZones
     vnetSubnetID: aksSubnetId
     osType: 'Linux'
     osSKU: 'AzureLinux'
+    upgradeSettings: {
+      maxSurge: '33%'
+    }
+    securityProfile: {
+      sshAccess: 'Disabled'
+    }
+  }
+}
+
+// GPU Node Pool (NVIDIA GPU)
+resource gpuNodePoolResource 'Microsoft.ContainerService/managedClusters/agentPools@2024-01-02-preview' = {
+  parent: aksCluster
+  name: gpuNodePool.name
+  properties: {
+    count: gpuNodePool.count
+    vmSize: gpuNodePool.vmSize
+    osDiskSizeGB: gpuNodePool.osDiskSizeGB
+    osDiskType: 'Managed'
+    maxPods: gpuNodePool.maxPods
+    minCount: gpuNodePool.minCount
+    maxCount: gpuNodePool.maxCount
+    enableAutoScaling: gpuNodePool.enableAutoScaling
+    nodeTaints: gpuNodePool.taints
+    nodeLabels: gpuNodePool.labels
+    mode: gpuNodePool.mode
+    type: 'VirtualMachineScaleSets'
+    availabilityZones: availabilityZones
+    vnetSubnetID: aksSubnetId
+    osType: 'Linux'
+    osSKU: 'Ubuntu'
     upgradeSettings: {
       maxSurge: '33%'
     }

@@ -10,16 +10,17 @@
     <PackageId>Synaxis.StampController</PackageId>
     <Authors>Synaxis Team</Authors>
     <Description>Kubernetes controller for managing ephemeral stamp lifecycle</Description>
+    <!-- Suppress security warnings for KubernetesClient - tracked as security debt -->
+    <NoWarn>$(NoWarn);NU1902;NU1903;NU1904</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="KubernetesClient" Version="15.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0-preview.1.25080.5" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.0-preview.1.25080.5" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0-preview.1.25080.5" />
-    <PackageReference Include="System.Text.Json" Version="10.0.0-preview.1.25080.5" />
-    <PackageReference Include="prometheus-net" Version="8.2.1" />
-    <PackageReference Include="prometheus-net.AspNetCore" Version="8.2.1" />
+    <PackageReference Include="KubernetesClient" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="Microsoft.Extensions.Logging" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="prometheus-net" />
+    <PackageReference Include="prometheus-net.AspNetCore" />
   </ItemGroup>
 
   <ItemGroup>

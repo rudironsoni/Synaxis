@@ -12,9 +12,14 @@ namespace Synaxis.StampController.CRDs;
 /// <summary>
 /// Stamp Custom Resource Definition
 /// Represents an ephemeral scale unit in the Synaxis architecture
+/// Uses ConfigMap as the underlying Kubernetes resource for simplicity
 /// </summary>
-public class StampResource : CustomResource<StampSpec, StampStatus>
+public class StampResource
 {
+    public V1ObjectMeta Metadata { get; set; } = new();
+    public StampSpec Spec { get; set; } = new();
+    public StampStatus? Status { get; set; }
+
     public override string ToString() => $"Stamp {Metadata.Name} (Region: {Spec.Region}, Status: {Status?.Phase ?? "Unknown"})";
 }
 
