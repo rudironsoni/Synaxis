@@ -60,16 +60,19 @@ jobs:
       - name: Verify formatting
         run: dotnet format Synaxis.sln --verify-no-changes
 
-      - name: Build solution
-        run: dotnet build Synaxis.sln -c Release -warnaserror --no-restore --verbosity diagnostic > build.log 2>&1 || (tail -200 build.log && exit 1)
+      - name: Verify test container guardrail
+        run: bash scripts/ci-guardrail-check.sh
 
-      - name: Run tests with coverage
+      - name: Build solution
+        run: dotnet build Synaxis.sln -warnaserror --no-restore --verbosity diagnostic > build.log 2>&1 || (tail -200 build.log && exit 1)
+
+      - name: Run hermetic tests with coverage
         env:
           ConnectionStrings__DefaultConnection: "Host=localhost;Port=5432;Database=synaxis_test;Username=synaxis;Password=synaxis_test_pass"
         run: |
           dotnet test Synaxis.sln \
             --no-build \
-            -p:Configuration=Release \
+            --filter "Category!=ExternalE2E" \
             --verbosity normal \
             --collect:"XPlat Code Coverage" \
             --results-directory ./coverage

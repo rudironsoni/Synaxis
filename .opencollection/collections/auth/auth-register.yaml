@@ -1,0 +1,315 @@
+openapi: 3.0.3
+info:
+  title: Register User
+  description: Creates a new user account with optional organization creation. Returns authentication tokens upon successful registration.
+  version: 1.0.0
+  contact:
+    name: Synaxis Team
+    email: support@synaxis.dev
+
+servers:
+  - url: http://localhost:5000
+    description: Local development server
+  - url: https://api.synaxis.dev
+    description: Production server
+
+tags:
+  - name: Registration
+    description: User registration and onboarding
+
+paths:
+  /api/v1/auth/register:
+    post:
+      summary: Register new user
+      description: Creates a new user account with optional organization creation. Returns authentication tokens upon successful registration.
+      operationId: registerUser
+      tags:
+        - Registration
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            examples:
+              success:
+                summary: Successful registration with organization
+                value:
+                  email: "john.doe@example.com"
+                  password: "SecurePassword123!"
+                  firstName: "John"
+                  lastName: "Doe"
+                  organizationName: "Acme Corp"
+                  dataResidencyRegion: "us-east-1"
+              minimal:
+                summary: Minimal registration without organization
+                value:
+                  email: "jane.smith@example.com"
+                  password: "AnotherSecure456!"
+                  firstName: "Jane"
+                  lastName: "Smith"
+              error_weak_password:
+                summary: Registration with weak password (will fail)
+                value:
+                  email: "weak@example.com"
+                  password: "weak"
+                  firstName: "Weak"
+                  lastName: "Password"
+              error_invalid_email:
+                summary: Registration with invalid email (will fail)
+                value:
+                  email: "invalid-email"
+                  password: "SecurePassword123!"
+                  firstName: "Invalid"
+                  lastName: "Email"
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+              examples:
+                success:
+                  summary: Successful registration response
+                  value:
+                    accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDAiLCJlbWFpbCI6ImpvaG4uZG9lQGV4YW1wbGUuY29tIiwiaWF0IjoxNzA1MzIwNjAwLCJleHAiOjE3MDUzMjQyMDB9.signature"
+                    refreshToken: "dGhpcy1pcy1hLXJlZnJlc2gtdG9rZW4tZm9yLW5ldy11c2VyLXJlZ2lzdGVyZWQ"
+                    tokenType: "Bearer"
+                    expiresIn: 3600
+                    user:
+                      id: "550e8400-e29b-41d4-a716-446655440000"
+                      email: "john.doe@example.com"
+                      firstName: "John"
+                      lastName: "Doe"
+                      role: "user"
+                      mfaEnabled: false
+                      emailVerified: false
+                      isActive: true
+                      createdAt: "2024-01-15T10:30:00Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+        - firstName
+        - lastName
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "john.doe@example.com"
+        password:
+          type: string
+          format: password
+          minLength: 8
+          description: User's password (min 8 characters, must include uppercase, lowercase, number, and special character)
+          example: "SecurePassword123!"
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: User's first name
+          example: "John"
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: User's last name
+          example: "Doe"
+        organizationName:
+          type: string
+          maxLength: 200
+          description: Optional organization name to create during registration
+          example: "Acme Corp"
+        dataResidencyRegion:
+          type: string
+          description: Data residency region for the user/organization
+          enum:
+            - us-east-1
+            - us-west-2
+            - eu-west-1
+            - eu-central-1
+            - ap-southeast-1
+            - ap-northeast-1
+          example: "us-east-1"
+
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: JWT access token
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refreshToken:
+          type: string
+          description: Refresh token for obtaining new access tokens
+          example: "dGhpcy1pcy1hLXJlZnJlc2gtdG9rZW4..."
+        tokenType:
+          type: string
+          description: Token type
+          example: "Bearer"
+        expiresIn:
+          type: integer
+          description: Access token expiration time in seconds
+          example: 3600
+        user:
+          $ref: '#/components/schemas/User'
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique user identifier
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "john.doe@example.com"
+        firstName:
+          type: string
+          description: User's first name
+          example: "John"
+        lastName:
+          type: string
+          description: User's last name
+          example: "Doe"
+        role:
+          type: string
+          description: User's role
+          enum:
+            - user
+            - admin
+            - superadmin
+          example: "user"
+        mfaEnabled:
+          type: boolean
+          description: Whether MFA is enabled for the user
+          example: false
+        emailVerified:
+          type: boolean
+          description: Whether the user's email is verified
+          example: false
+        isActive:
+          type: boolean
+          description: Whether the user account is active
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          description: Account creation timestamp
+          example: "2024-01-15T10:30:00Z"
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error code
+          example: "ValidationError"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "The request contains invalid data."
+        details:
+          type: object
+          description: Additional error details
+          nullable: true
+          example:
+            field: "email"
+            issue: "Invalid email format"
+        retryAfter:
+          type: integer
+          description: Seconds to wait before retrying (for rate limits)
+          nullable: true
+          example: 300
+
+  responses:
+    BadRequest:
+      description: Bad request - Invalid input data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            invalid_email:
+              summary: Invalid email format
+              value:
+                error: "BadRequest"
+                message: "The request contains invalid data."
+                details:
+                  field: "email"
+                  issue: "Invalid email format"
+            missing_field:
+              summary: Missing required field
+              value:
+                error: "BadRequest"
+                message: "The request contains invalid data."
+                details:
+                  field: "firstName"
+                  issue: "Field is required"
+
+    Conflict:
+      description: Conflict - Resource already exists
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            user_exists:
+              summary: User already exists
+              value:
+                error: "UserAlreadyExists"
+                message: "A user with this email address already exists."
+
+    ValidationError:
+      description: Validation error - Request data failed validation
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            weak_password:
+              summary: Password does not meet requirements
+              value:
+                error: "ValidationError"
+                message: "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character."
+                details:
+                  field: "password"
+                  constraints:
+                    minLength: 8
+                    pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]"
+            invalid_region:
+              summary: Invalid data residency region
+              value:
+                error: "ValidationError"
+                message: "Invalid data residency region."
+                details:
+                  field: "dataResidencyRegion"
+                  allowedValues:
+                    - us-east-1
+                    - us-west-2
+                    - eu-west-1
+                    - eu-central-1
+                    - ap-southeast-1
+                    - ap-northeast-1

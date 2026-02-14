@@ -8,6 +8,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Synaxis.Samples.SaaSClient;
 
 // Create HTTP client with API key authentication
 using var httpClient = new HttpClient
@@ -73,7 +74,7 @@ static async Task SimpleChatExample(HttpClient client)
         response.EnsureSuccessStatusCode();
 
         var chatResponse = await response.Content.ReadFromJsonAsync<ChatResponse>();
-        
+
         if (chatResponse?.Choices?.Length > 0)
         {
             Console.WriteLine($"Response: {chatResponse.Choices[0].Message?.Content}");
@@ -116,20 +117,20 @@ static async Task StreamingChatExample(HttpClient client)
         response.EnsureSuccessStatusCode();
 
         Console.Write("Streaming response: ");
-        
+
         await using var stream = await response.Content.ReadAsStreamAsync();
         using var reader = new System.IO.StreamReader(stream);
 
-        while (!reader.EndOfStream)
+        string? line;
+        while ((line = await reader.ReadLineAsync()) != null)
         {
-            var line = await reader.ReadLineAsync();
             if (string.IsNullOrWhiteSpace(line) || !line.StartsWith("data: "))
             {
                 continue;
             }
 
             var data = line.Substring(6); // Remove "data: " prefix
-            
+
             if (data == "[DONE]")
             {
                 break;
@@ -177,7 +178,7 @@ static async Task ErrorHandlingExample(HttpClient client)
         {
             var errorContent = await response.Content.ReadAsStringAsync();
             Console.WriteLine($"API Error ({(int)response.StatusCode}): {errorContent}");
-            
+
             // Try to parse error response
             try
             {
@@ -256,79 +257,4 @@ static async Task RetryLogicExample(HttpClient client)
             }
         }
     }
-}
-
-// Data models for API requests and responses
-
-public record ChatRequest
-{
-    public ChatMessage[] Messages { get; init; } = Array.Empty<ChatMessage>();
-    public string Model { get; init; } = "gpt-3.5-turbo";
-    public double? Temperature { get; init; }
-    public int? MaxTokens { get; init; }
-    public bool Stream { get; init; }
-}
-
-public record ChatMessage
-{
-    public string Role { get; init; } = string.Empty;
-    public string Content { get; init; } = string.Empty;
-}
-
-public record ChatResponse
-{
-    public string Id { get; init; } = string.Empty;
-    public string Object { get; init; } = string.Empty;
-    public long Created { get; init; }
-    public string Model { get; init; } = string.Empty;
-    public ChatChoice[] Choices { get; init; } = Array.Empty<ChatChoice>();
-    public ChatUsage? Usage { get; init; }
-}
-
-public record ChatChoice
-{
-    public int Index { get; init; }
-    public ChatMessage? Message { get; init; }
-    public string? FinishReason { get; init; }
-}
-
-public record ChatUsage
-{
-    public int PromptTokens { get; init; }
-    public int CompletionTokens { get; init; }
-    public int TotalTokens { get; init; }
-}
-
-public record ChatStreamChunk
-{
-    public string Id { get; init; } = string.Empty;
-    public string Object { get; init; } = string.Empty;
-    public long Created { get; init; }
-    public string Model { get; init; } = string.Empty;
-    public ChatStreamChoice[] Choices { get; init; } = Array.Empty<ChatStreamChoice>();
-}
-
-public record ChatStreamChoice
-{
-    public int Index { get; init; }
-    public ChatDelta? Delta { get; init; }
-    public string? FinishReason { get; init; }
-}
-
-public record ChatDelta
-{
-    public string? Role { get; init; }
-    public string? Content { get; init; }
-}
-
-public record ErrorResponse
-{
-    public ErrorDetail? Error { get; init; }
-}
-
-public record ErrorDetail
-{
-    public string Code { get; init; } = string.Empty;
-    public string Message { get; init; } = string.Empty;
-    public string? Type { get; init; }
 }

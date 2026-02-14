@@ -14,67 +14,44 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using StackExchange.Redis;
-using Testcontainers.Qdrant;
-using Testcontainers.Redis;
+using Synaxis.InferenceGateway.IntegrationTests;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace Synaxis.InferenceGateway.IntegrationTests.Optimization
 {
     /// <summary>
-    /// End-to-end integration tests for Token Optimization features
-    /// Tests full stack with all containers (PostgreSQL, Redis, Qdrant)
+    /// End-to-end integration tests for Token Optimization features.
+    /// Tests full stack with all containers (PostgreSQL, Redis, Qdrant).
     /// Verifies optimization features work together: caching, compression, session affinity, deduplication.
+    /// Requires RUN_EXTERNAL_E2E=1 and at least one provider API key environment variable to run.
     /// </summary>
+    [Trait("Category", "ExternalE2E")]
+    [Collection("Integration")]
     public class TokenOptimizationEndToEndTests : IAsyncLifetime
     {
         private readonly ITestOutputHelper _output;
         private readonly SynaxisWebApplicationFactory _factory;
-        private readonly RedisContainer _redis;
-        private readonly QdrantContainer _qdrant;
         private HttpClient? _client;
         private IConnectionMultiplexer? _redisConnection;
 
-        public TokenOptimizationEndToEndTests(ITestOutputHelper output)
+        public TokenOptimizationEndToEndTests(
+            ITestOutputHelper output,
+            SynaxisWebApplicationFactory factory)
         {
             this._output = output ?? throw new ArgumentNullException(nameof(output));
-            this._factory = new SynaxisWebApplicationFactory { OutputHelper = output };
-
-            this._redis = new RedisBuilder("redis:7-alpine")
-                .WithPortBinding(6379, true)
-                .Build();
-
-            this._qdrant = new QdrantBuilder("qdrant/qdrant:latest")
-                .WithPortBinding(6333, true)
-                .Build();
+            this._factory = factory ?? throw new ArgumentNullException(nameof(factory));
         }
 
         public async Task InitializeAsync()
         {
-            // Check if GROQ_API_KEY is available - required for these tests
-            var groqApiKey = Environment.GetEnvironmentVariable("GROQ_API_KEY");
-            if (string.IsNullOrEmpty(groqApiKey))
-            {
-                // Try alternate names
-                groqApiKey = Environment.GetEnvironmentVariable("SYNAPLEXER_GROQ_API_KEY");
-            }
-
-            if (string.IsNullOrEmpty(groqApiKey))
-            {
-                // Set a flag that tests can check to skip
-                Environment.SetEnvironmentVariable("_SKIP_TOKEN_OPTIMIZATION_TESTS", "true");
-                this._output.WriteLine("WARNING: GROQ_API_KEY not found. Tests will be skipped.");
-                return; // Don't start containers if we're skipping
-            }
-
-            // Start optimization containers (factory starts PostgreSQL automatically in constructor)
-            await Task.WhenAll(_redis.StartAsync(), _qdrant.StartAsync()).ConfigureAwait(false);
-
-            this._output.WriteLine($"Redis started: {this._redis.GetConnectionString()}");
-            this._output.WriteLine($"Qdrant started: {this._qdrant.Hostname}:{this._qdrant.GetMappedPublicPort(6333)}");
-
             // Create Redis connection for test verification
-            this._redisConnection = await ConnectionMultiplexer.ConnectAsync(_redis.GetConnectionString()).ConfigureAwait(false);
+            var redisConnectionString = this._factory.RedisConnectionString;
+            this._redisConnection = await ConnectionMultiplexer.ConnectAsync(redisConnectionString).ConfigureAwait(false);
+
+            // Get API key from environment (any supported provider)
+            var groqApiKey = Environment.GetEnvironmentVariable("GROQ_API_KEY")
+                ?? Environment.GetEnvironmentVariable("SYNAPLEXER_GROQ_API_KEY");
 
             // Create HTTP client with optimization configuration
             this._client = this._factory.WithWebHostBuilder(builder =>
@@ -84,9 +61,6 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Optimization
                     config.AddInMemoryCollection(new Dictionary<string, string?>
 (StringComparer.Ordinal)
                     {
-                        // Override Redis connection to use test container
-                        ["ConnectionStrings:Redis"] = $"{this._redis.GetConnectionString()},abortConnect=false",
-
                         // Enable token optimization features
                         ["Synaxis:InferenceGateway:TokenOptimization:Enabled"] = "true",
                         ["Synaxis:InferenceGateway:TokenOptimization:SemanticCache:Enabled"] = "true",
@@ -95,12 +69,12 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Optimization
                         ["Synaxis:InferenceGateway:TokenOptimization:SessionAffinity:Enabled"] = "true",
                         ["Synaxis:InferenceGateway:TokenOptimization:Deduplication:Enabled"] = "true",
 
-                        // Qdrant configuration
-                        ["Synaxis:InferenceGateway:TokenOptimization:SemanticCache:QdrantEndpoint"] = $"http://{this._qdrant.Hostname}:{this._qdrant.GetMappedPublicPort(6333)}",
+                        // Qdrant configuration - use a placeholder since we're not using Qdrant in this test
+                        ["Synaxis:InferenceGateway:TokenOptimization:SemanticCache:QdrantEndpoint"] = "http://localhost:6333",
 
                         // Test provider configuration - use Groq with real API key from environment
                         ["Synaxis:InferenceGateway:Providers:Groq:Enabled"] = "true",
-                        ["Synaxis:InferenceGateway:Providers:Groq:Key"] = groqApiKey!,
+                        ["Synaxis:InferenceGateway:Providers:Groq:Key"] = groqApiKey ?? string.Empty,
                         ["Synaxis:InferenceGateway:Providers:Groq:Models:0"] = "llama-3.1-70b-versatile",
                         ["Synaxis:InferenceGateway:Providers:Groq:Tier"] = "1",
                         ["Synaxis:InferenceGateway:CanonicalModels:Groq:llama-3.1-70b-versatile"] = "llama-3.1-70b-versatile",
@@ -121,31 +95,11 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Optimization
                 await _redisConnection.CloseAsync().ConfigureAwait(false);
                 this._redisConnection.Dispose();
             }
-
-            await Task.WhenAll(
-                _redis.DisposeAsync().AsTask(),
-                _qdrant.DisposeAsync().AsTask()).ConfigureAwait(false);
-
-            // Factory is disposed via its Dispose method (inherited from WebApplicationFactory)
-            _factory.Dispose();
         }
 
-        private bool ShouldSkipTest()
-        {
-            var skip = Environment.GetEnvironmentVariable("_SKIP_TOKEN_OPTIMIZATION_TESTS");
-            return !string.IsNullOrEmpty(skip) && string.Equals(skip, "true", StringComparison.Ordinal);
-        }
-
-        [Fact]
+        [ExternalE2EFact]
         public async Task ChatRequest_WithOptimization_AppliesAllFeatures()
         {
-            // Skip if no API key available
-            if (this.ShouldSkipTest())
-            {
-                this._output.WriteLine("Test skipped: GROQ_API_KEY not available");
-                return;
-            }
-
             // Arrange
             var request = new
             {
@@ -182,16 +136,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Optimization
             this._output.WriteLine($"Session exists in Redis: {sessionExists}");
         }
 
-        [Fact]
+        [ExternalE2EFact]
         public async Task ChatRequest_CacheHit_SkipsProviderCall()
         {
-            // Skip if no API key available
-            if (this.ShouldSkipTest())
-            {
-                this._output.WriteLine("Test skipped: GROQ_API_KEY not available");
-                return;
-            }
-
             // Arrange
             var sessionId = "test-session-cache-hit";
             var request = new
@@ -230,16 +177,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Optimization
             this._output.WriteLine($"Second response: {secondResponse}");
         }
 
-        [Fact]
+        [ExternalE2EFact]
         public async Task ChatRequest_Compression_ReducesTokens()
         {
-            // Skip if no API key available
-            if (this.ShouldSkipTest())
-            {
-                this._output.WriteLine("Test skipped: GROQ_API_KEY not available");
-                return;
-            }
-
             // Arrange - Long conversation that can be compressed
             var sessionId = "test-session-compression";
             var messages = new List<object>
@@ -272,16 +212,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Optimization
             this._output.WriteLine("Compression applied to long conversation");
         }
 
-        [Fact]
+        [ExternalE2EFact]
         public async Task ChatRequest_SessionAffinity_PreservesProvider()
         {
-            // Skip if no API key available
-            if (this.ShouldSkipTest())
-            {
-                this._output.WriteLine("Test skipped: GROQ_API_KEY not available");
-                return;
-            }
-
             // Arrange
             var sessionId = "test-session-affinity";
             var request1 = new
@@ -327,16 +260,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Optimization
             // Assert.Equal(provider1, provider2);
         }
 
-        [Fact]
+        [ExternalE2EFact]
         public async Task ChatRequest_Deduplication_PreventsDuplicates()
         {
-            // Skip if no API key available
-            if (this.ShouldSkipTest())
-            {
-                this._output.WriteLine("Test skipped: GROQ_API_KEY not available");
-                return;
-            }
-
             // Arrange - Same request sent concurrently
             var sessionId = "test-session-dedup";
             var request = new
@@ -365,16 +291,9 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Optimization
             this._output.WriteLine($"All {responses.Length} duplicate requests completed successfully");
         }
 
-        [Fact]
+        [ExternalE2EFact]
         public async Task StreamingRequest_AppliesSessionAffinity()
         {
-            // Skip if no API key available
-            if (this.ShouldSkipTest())
-            {
-                this._output.WriteLine("Test skipped: GROQ_API_KEY not available");
-                return;
-            }
-
             // Arrange
             var sessionId = "test-session-streaming";
             var request = new

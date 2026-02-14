@@ -1,0 +1,166 @@
+openapi: 3.0.3
+info:
+  title: Verify Email Address
+  description: Verifies user's email address using a verification token sent during registration.
+  version: 1.0.0
+  contact:
+    name: Synaxis Team
+    email: support@synaxis.dev
+
+servers:
+  - url: http://localhost:5000
+    description: Local development server
+  - url: https://api.synaxis.dev
+    description: Production server
+
+tags:
+  - name: Email Verification
+    description: Email verification and confirmation
+
+paths:
+  /api/v1/auth/verify-email:
+    post:
+      summary: Verify email address
+      description: Verifies user's email address using a verification token sent during registration.
+      operationId: verifyEmail
+      tags:
+        - Email Verification
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyEmailRequest'
+            examples:
+              success:
+                summary: Successful email verification
+                value:
+                  token: "ZW1haWwtdmVyaWZpY2F0aW9uLXRva2VuLWZyb20tcmVnaXN0cmF0aW9u"
+              error_expired_token:
+                summary: Verification with expired token (will fail)
+                value:
+                  token: "expired-verification-token"
+              error_invalid_token:
+                summary: Verification with invalid token (will fail)
+                value:
+                  token: "invalid-token"
+              error_missing_token:
+                summary: Verification with missing token (will fail)
+                value: {}
+      responses:
+        '200':
+          description: Email verified successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              examples:
+                success:
+                  summary: Successful email verification response
+                  value:
+                    message: "Email verified successfully. You can now login to your account."
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Invalid or expired verification token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                expired_token:
+                  summary: Expired verification token
+                  value:
+                    error: "InvalidVerificationToken"
+                    message: "The email verification token is invalid or has expired. Please request a new verification email."
+                invalid_token:
+                  summary: Invalid verification token
+                  value:
+                    error: "InvalidVerificationToken"
+                    message: "The email verification token is invalid or has expired. Please request a new verification email."
+                already_verified:
+                  summary: Email already verified
+                  value:
+                    error: "EmailAlreadyVerified"
+                    message: "Your email address has already been verified. You can login to your account."
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    VerifyEmailRequest:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+          description: Email verification token
+          example: "ZW1haWwtdmVyaWZpY2F0aW9uLXRva2Vu..."
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Response message
+          example: "Operation completed successfully"
+        expiresAt:
+          type: string
+          format: date-time
+          description: Expiration timestamp for time-sensitive operations
+          example: "2024-01-15T11:30:00Z"
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error code
+          example: "ValidationError"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "The request contains invalid data."
+        details:
+          type: object
+          description: Additional error details
+          nullable: true
+          example:
+            field: "email"
+            issue: "Invalid email format"
+        retryAfter:
+          type: integer
+          description: Seconds to wait before retrying (for rate limits)
+          nullable: true
+          example: 300
+
+  responses:
+    BadRequest:
+      description: Bad request - Invalid input data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            missing_token:
+              summary: Missing verification token
+              value:
+                error: "BadRequest"
+                message: "The request contains invalid data."
+                details:
+                  field: "token"
+                  issue: "Field is required"
+            invalid_token_format:
+              summary: Invalid token format
+              value:
+                error: "BadRequest"
+                message: "The request contains invalid data."
+                details:
+                  field: "token"
+                  issue: "Invalid token format"

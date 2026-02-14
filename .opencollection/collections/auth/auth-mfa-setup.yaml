@@ -1,0 +1,155 @@
+openapi: 3.0.3
+info:
+  title: Setup MFA
+  description: Initiates MFA setup by generating a secret key and QR code for authenticator app registration. Requires authentication.
+  version: 1.0.0
+  contact:
+    name: Synaxis Team
+    email: support@synaxis.dev
+
+servers:
+  - url: http://localhost:5000
+    description: Local development server
+  - url: https://api.synaxis.dev
+    description: Production server
+
+tags:
+  - name: MFA
+    description: Multi-factor authentication management
+
+paths:
+  /api/v1/auth/mfa/setup:
+    post:
+      summary: Setup MFA
+      description: Initiates MFA setup by generating a secret key and QR code for authenticator app registration. Requires authentication.
+      operationId: setupMfa
+      tags:
+        - MFA
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: MFA setup initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MfaSetupResponse'
+              examples:
+                success:
+                  summary: Successful MFA setup initiation
+                  value:
+                    secret: "JBSWY3DPEHPK3PXP"
+                    qrCodeUrl: "otpauth://totp/Synaxis:john.doe@example.com?secret=JBSWY3DPEHPK3PXP&issuer=Synaxis"
+                    backupCodes:
+                      - "12345678"
+                      - "87654321"
+                      - "11112222"
+                      - "22223333"
+                      - "33334444"
+                      - "44445555"
+                      - "55556666"
+                      - "66667777"
+                      - "77778888"
+                      - "88889999"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: MFA already enabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                mfa_already_enabled:
+                  summary: MFA already enabled for account
+                  value:
+                    error: "MfaAlreadyEnabled"
+                    message: "MFA is already enabled for this account."
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    MfaSetupResponse:
+      type: object
+      properties:
+        secret:
+          type: string
+          description: MFA secret key for authenticator app
+          example: "JBSWY3DPEHPK3PXP"
+        qrCodeUrl:
+          type: string
+          format: uri
+          description: QR code URL for authenticator app scanning
+          example: "otpauth://totp/Synaxis:john.doe@example.com?secret=JBSWY3DPEHPK3PXP&issuer=Synaxis"
+        backupCodes:
+          type: array
+          description: Backup codes for account recovery
+          items:
+            type: string
+            pattern: '^\d{8}$'
+          example:
+            - "12345678"
+            - "87654321"
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error code
+          example: "ValidationError"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "The request contains invalid data."
+        details:
+          type: object
+          description: Additional error details
+          nullable: true
+          example:
+            field: "email"
+            issue: "Invalid email format"
+        retryAfter:
+          type: integer
+          description: Seconds to wait before retrying (for rate limits)
+          nullable: true
+          example: 300
+
+  responses:
+    BadRequest:
+      description: Bad request - Invalid input data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            invalid_request:
+              summary: Invalid request
+              value:
+                error: "BadRequest"
+                message: "The request contains invalid data."
+
+    Unauthorized:
+      description: Unauthorized - Invalid or missing authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            missing_auth:
+              summary: Missing authentication header
+              value:
+                error: "Unauthorized"
+                message: "Authentication is required to access this resource."
+            invalid_token:
+              summary: Invalid access token
+              value:
+                error: "Unauthorized"
+                message: "Invalid or expired access token."

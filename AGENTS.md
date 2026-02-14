@@ -50,7 +50,7 @@ Run from repository root:
 
 ```bash
 dotnet format --verify-no-changes
-dotnet build <Solution.sln> -c Release -warnaserror
+dotnet build <Solution.sln> -warnaserror
 dotnet test <Solution.sln> --no-build
 ```
 
@@ -92,8 +92,6 @@ Verification is valid only when:
 1. `dotnet test` is the only compliant test runner.
 2. Agents MUST NOT use alternate runners to satisfy required verification.
 3. The following flags are strictly forbidden in test commands, scripts, and CI snippets:
-   - `--configuration Release`
-   - `-c Release`
    - `--maxcpucount:1`
    - `-maxcpucount:1`
    - `-nodeReuse:false`
