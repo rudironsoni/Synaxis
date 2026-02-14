@@ -97,7 +97,7 @@ namespace Synaxis.Infrastructure.Services
         /// <param name="take">The number of records to take.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A list of conversations.</returns>
-        public async Task<List<Conversation>> GetUserConversationsAsync(
+        public async Task<IReadOnlyList<Conversation>> GetUserConversationsAsync(
             Guid userId,
             Guid organizationId,
             int skip = 0,
@@ -126,7 +126,7 @@ namespace Synaxis.Infrastructure.Services
             Guid conversationId,
             string role,
             string content,
-            Dictionary<string, string> metadata = null,
+            IDictionary<string, string> metadata = null,
             CancellationToken cancellationToken = default)
         {
             var conversation = await this._dbContext.Conversations
@@ -173,7 +173,7 @@ namespace Synaxis.Infrastructure.Services
         /// <param name="conversationId">The conversation ID.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A list of conversation turns.</returns>
-        public async Task<List<ConversationTurn>> GetConversationHistoryAsync(
+        public async Task<IReadOnlyList<ConversationTurn>> GetConversationHistoryAsync(
             Guid conversationId,
             CancellationToken cancellationToken = default)
         {
