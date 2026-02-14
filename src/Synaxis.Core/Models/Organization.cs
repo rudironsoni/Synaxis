@@ -207,5 +207,10 @@ namespace Synaxis.Core.Models
         /// Gets or sets the organization API keys navigation property.
         /// </summary>
         public virtual ICollection<OrganizationApiKey> OrganizationApiKeys { get; set; }
+
+        /// <summary>
+        /// Gets or sets the conversations navigation property.
+        /// </summary>
+        public virtual ICollection<Conversation> Conversations { get; set; }
     }
 }

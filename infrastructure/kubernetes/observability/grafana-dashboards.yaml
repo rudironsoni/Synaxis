@@ -1,0 +1,588 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: synaxis
+  labels:
+    app: grafana
+    component: observability
+data:
+  synaxis-infrastructure-dashboard.json: |
+    {
+      "dashboard": {
+        "title": "Synaxis Infrastructure Metrics",
+        "uid": "synaxis-infrastructure",
+        "tags": ["synaxis", "infrastructure", "kubernetes"],
+        "timezone": "browser",
+        "refresh": "30s",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Cluster CPU Usage",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+            "targets": [
+              {
+                "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"synaxis\"}[5m])) by (pod)",
+                "legendFormat": "{{pod}}"
+              }
+            ],
+            "yaxes": [
+              {"format": "percentunit", "label": "CPU Usage"},
+              {"format": "short"}
+            ]
+          },
+          {
+            "id": 2,
+            "title": "Cluster Memory Usage",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+            "targets": [
+              {
+                "expr": "sum(container_memory_working_set_bytes{namespace=\"synaxis\"}) by (pod) / 1024 / 1024 / 1024",
+                "legendFormat": "{{pod}}"
+              }
+            ],
+            "yaxes": [
+              {"format": "decmbytes", "label": "Memory (GB)"},
+              {"format": "short"}
+            ]
+          },
+          {
+            "id": 3,
+            "title": "Pod Status",
+            "type": "stat",
+            "gridPos": {"h": 4, "w": 6, "x": 0, "y": 8},
+            "targets": [
+              {
+                "expr": "sum(kube_pod_status_phase{namespace=\"synaxis\", phase=\"Running\"})",
+                "legendFormat": "Running"
+              }
+            ],
+            "options": {
+              "colorMode": "value",
+              "graphMode": "none"
+            }
+          },
+          {
+            "id": 4,
+            "title": "Network Traffic",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 6, "y": 8},
+            "targets": [
+              {
+                "expr": "sum(rate(container_network_receive_bytes_total{namespace=\"synaxis\"}[5m])) by (pod)",
+                "legendFormat": "{{pod}} - RX"
+              },
+              {
+                "expr": "sum(rate(container_network_transmit_bytes_total{namespace=\"synaxis\"}[5m])) by (pod)",
+                "legendFormat": "{{pod}} - TX"
+              }
+            ],
+            "yaxes": [
+              {"format": "Bps", "label": "Network"},
+              {"format": "short"}
+            ]
+          },
+          {
+            "id": 5,
+            "title": "Disk Usage",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+            "targets": [
+              {
+                "expr": "sum(container_fs_usage_bytes{namespace=\"synaxis\"}) by (pod) / 1024 / 1024 / 1024",
+                "legendFormat": "{{pod}}"
+              }
+            ],
+            "yaxes": [
+              {"format": "decmbytes", "label": "Disk (GB)"},
+              {"format": "short"}
+            ]
+          },
+          {
+            "id": 6,
+            "title": "Node Health",
+            "type": "table",
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+            "targets": [
+              {
+                "expr": "kube_node_status_condition{condition=\"Ready\", status=\"true\"}",
+                "format": "table",
+                "instant": true
+              }
+            ],
+            "transformations": [
+              {
+                "id": "organize",
+                "options": {
+                  "excludeByName": {"Time": true, "__name__": true, "condition": true, "status": true},
+                  "indexByName": {},
+                  "renameByName": {}
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  synaxis-application-dashboard.json: |
+    {
+      "dashboard": {
+        "title": "Synaxis Application Metrics",
+        "uid": "synaxis-application",
+        "tags": ["synaxis", "application", "performance"],
+        "timezone": "browser",
+        "refresh": "15s",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Request Rate",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+            "targets": [
+              {
+                "expr": "sum(rate(http_server_requests_seconds_count{namespace=\"synaxis\"}[5m]))",
+                "legendFormat": "Requests/sec"
+              }
+            ],
+            "yaxes": [
+              {"format": "reqps", "label": "Rate"},
+              {"format": "short"}
+            ]
+          },
+          {
+            "id": 2,
+            "title": "Response Time (P95)",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{namespace=\"synaxis\"}[5m])) by (le))",
+                "legendFormat": "P95"
+              }
+            ],
+            "yaxes": [
+              {"format": "s", "label": "Response Time"},
+              {"format": "short"}
+            ]
+          },
+          {
+            "id": 3,
+            "title": "Error Rate",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+            "targets": [
+              {
+                "expr": "sum(rate(http_server_requests_seconds_count{namespace=\"synaxis\",status=~\"5..\"}[5m])) / sum(rate(http_server_requests_seconds_count{namespace=\"synaxis\"}[5m])) * 100",
+                "legendFormat": "Error Rate %"
+              }
+            ],
+            "yaxes": [
+              {"format": "percent", "label": "Error Rate"},
+              {"format": "short"}
+            ]
+          },
+          {
+            "id": 4,
+            "title": "Success Rate",
+            "type": "stat",
+            "gridPos": {"h": 4, "w": 6, "x": 12, "y": 8},
+            "targets": [
+              {
+                "expr": "sum(rate(http_server_requests_seconds_count{namespace=\"synaxis\",status=~\"2..\"}[5m])) / sum(rate(http_server_requests_seconds_count{namespace=\"synaxis\"}[5m])) * 100",
+                "legendFormat": "Success Rate"
+              }
+            ],
+            "options": {
+              "colorMode": "value",
+              "graphMode": "area",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "red", "value": null},
+                  {"color": "yellow", "value": 95},
+                  {"color": "green", "value": 99}
+                ]
+              }
+            }
+          },
+          {
+            "id": 5,
+            "title": "Active Connections",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+            "targets": [
+              {
+                "expr": "sum(grpc_server_started_total{namespace=\"synaxis\"}) - sum(grpc_server_handled_total{namespace=\"synaxis\"})",
+                "legendFormat": "Active Connections"
+              }
+            ],
+            "yaxes": [
+              {"format": "short", "label": "Connections"},
+              {"format": "short"}
+            ]
+          },
+          {
+            "id": 6,
+            "title": "Request Duration Distribution",
+            "type": "heatmap",
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+            "targets": [
+              {
+                "expr": "sum(rate(http_server_requests_seconds_bucket{namespace=\"synaxis\"}[5m])) by (le)",
+                "format": "heatmap",
+                "legendFormat": "{{le}}"
+              }
+            ],
+            "options": {
+              "calculate": false,
+              "cellGap": 2,
+              "cellRadius": 0,
+              "cellValues": {},
+              "color": {
+                "exponent": 0.5,
+                "fill": "dark-orange",
+                "mode": "spectrum",
+                "reverse": false,
+                "scale": "exponential",
+                "scheme": "Oranges",
+                "steps": 128
+              },
+              "exemplars": {
+                "color": "rgba(255,0,255,0.7)"
+              },
+              "filterValues": {
+                "le": 1e-9
+              },
+              "legend": {
+                "show": true
+              },
+              "rowsFrame": {
+                "layout": "auto"
+              },
+              "tooltip": {
+                "show": true,
+                "yHistogram": false
+              },
+              "yAxis": {
+                "axisPlacement": "left",
+                "reverse": false,
+                "unit": "s"
+              }
+            }
+          }
+        ]
+      }
+    }
+  synaxis-health-dashboard.json: |
+    {
+      "dashboard": {
+        "title": "Synaxis Health & SLO Dashboard",
+        "uid": "synaxis-health",
+        "tags": ["synaxis", "health", "slo"],
+        "timezone": "browser",
+        "refresh": "30s",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Overall Health Status",
+            "type": "stat",
+            "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+            "targets": [
+              {
+                "expr": "up{namespace=\"synaxis\"}",
+                "legendFormat": "{{job}}"
+              }
+            ],
+            "options": {
+              "colorMode": "background",
+              "graphMode": "none",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "red", "value": null},
+                  {"color": "green", "value": 1}
+                ]
+              }
+            }
+          },
+          {
+            "id": 2,
+            "title": "SLO Compliance - Success Rate",
+            "type": "gauge",
+            "gridPos": {"h": 8, "w": 6, "x": 6, "y": 0},
+            "targets": [
+              {
+                "expr": "sum(rate(http_server_requests_seconds_count{namespace=\"synaxis\",status=~\"2..\"}[5m])) / sum(rate(http_server_requests_seconds_count{namespace=\"synaxis\"}[5m])) * 100",
+                "legendFormat": "Success Rate"
+              }
+            ],
+            "options": {
+              "orientation": "auto",
+              "reduceOptions": {
+                "values": false,
+                "calcs": ["lastNotNull"],
+                "fields": ""
+              },
+              "showThresholdLabels": false,
+              "showThresholdMarkers": true,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "red", "value": null},
+                  {"color": "yellow", "value": 95},
+                  {"color": "green", "value": 99}
+                ]
+              }
+            }
+          },
+          {
+            "id": 3,
+            "title": "SLO Compliance - Response Time",
+            "type": "gauge",
+            "gridPos": {"h": 8, "w": 6, "x": 12, "y": 0},
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{namespace=\"synaxis\"}[5m])) by (le)) * 1000",
+                "legendFormat": "P95 (ms)"
+              }
+            ],
+            "options": {
+              "orientation": "auto",
+              "reduceOptions": {
+                "values": false,
+                "calcs": ["lastNotNull"],
+                "fields": ""
+              },
+              "showThresholdLabels": false,
+              "showThresholdMarkers": true,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 500},
+                  {"color": "red", "value": 1000}
+                ]
+              },
+              "max": 2000,
+              "min": 0,
+              "unit": "ms"
+            }
+          },
+          {
+            "id": 4,
+            "title": "SLO Compliance - Availability",
+            "type": "gauge",
+            "gridPos": {"h": 8, "w": 6, "x": 18, "y": 0},
+            "targets": [
+              {
+                "expr": "avg(up{namespace=\"synaxis\"}) * 100",
+                "legendFormat": "Availability"
+              }
+            ],
+            "options": {
+              "orientation": "auto",
+              "reduceOptions": {
+                "values": false,
+                "calcs": ["lastNotNull"],
+                "fields": ""
+              },
+              "showThresholdLabels": false,
+              "showThresholdMarkers": true,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "red", "value": null},
+                  {"color": "yellow", "value": 95},
+                  {"color": "green", "value": 99.9}
+                ]
+              },
+              "max": 100,
+              "min": 0,
+              "unit": "percent"
+            }
+          },
+          {
+            "id": 5,
+            "title": "Health Check Status - Layer 1 (Infrastructure)",
+            "type": "table",
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+            "targets": [
+              {
+                "expr": "health_check_status{layer=\"layer1\",namespace=\"synaxis\"}",
+                "format": "table",
+                "instant": true
+              }
+            ]
+          },
+          {
+            "id": 6,
+            "title": "Health Check Status - Layer 2 (Dependencies)",
+            "type": "table",
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+            "targets": [
+              {
+                "expr": "health_check_status{layer=\"layer2\",namespace=\"synaxis\"}",
+                "format": "table",
+                "instant": true
+              }
+            ]
+          },
+          {
+            "id": 7,
+            "title": "Health Check Status - Layer 3 (Application)",
+            "type": "table",
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+            "targets": [
+              {
+                "expr": "health_check_status{layer=\"layer3\",namespace=\"synaxis\"}",
+                "format": "table",
+                "instant": true
+              }
+            ]
+          },
+          {
+            "id": 8,
+            "title": "Health Check Status - Layer 4 (Business)",
+            "type": "table",
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+            "targets": [
+              {
+                "expr": "health_check_status{layer=\"layer4\",namespace=\"synaxis\"}",
+                "format": "table",
+                "instant": true
+              }
+            ]
+          }
+        ]
+      }
+    }
+  synaxis-otel-dashboard.json: |
+    {
+      "dashboard": {
+        "title": "Synaxis OpenTelemetry Metrics",
+        "uid": "synaxis-otel",
+        "tags": ["synaxis", "otel", "telemetry"],
+        "timezone": "browser",
+        "refresh": "15s",
+        "panels": [
+          {
+            "id": 1,
+            "title": "OTLP Ingest Rate",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+            "targets": [
+              {
+                "expr": "sum(rate(otelcol_receiver_accepted_spans[5m]))",
+                "legendFormat": "Spans/sec"
+              },
+              {
+                "expr": "sum(rate(otelcol_receiver_accepted_metric_points[5m]))",
+                "legendFormat": "Metric Points/sec"
+              },
+              {
+                "expr": "sum(rate(otelcol_receiver_accepted_log_records[5m]))",
+                "legendFormat": "Log Records/sec"
+              }
+            ],
+            "yaxes": [
+              {"format": "ops", "label": "Rate"},
+              {"format": "short"}
+            ]
+          },
+          {
+            "id": 2,
+            "title": "OTLP Export Rate",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+            "targets": [
+              {
+                "expr": "sum(rate(otelcol_exporter_sent_spans[5m]))",
+                "legendFormat": "Spans/sec"
+              },
+              {
+                "expr": "sum(rate(otelcol_exporter_sent_metric_points[5m]))",
+                "legendFormat": "Metric Points/sec"
+              }
+            ],
+            "yaxes": [
+              {"format": "ops", "label": "Rate"},
+              {"format": "short"}
+            ]
+          },
+          {
+            "id": 3,
+            "title": "Collector Memory Usage",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+            "targets": [
+              {
+                "expr": "process_resident_memory_bytes{job=\"otel-collector\"} / 1024 / 1024",
+                "legendFormat": "{{pod}}"
+              }
+            ],
+            "yaxes": [
+              {"format": "decmbytes", "label": "Memory (MB)"},
+              {"format": "short"}
+            ]
+          },
+          {
+            "id": 4,
+            "title": "Collector CPU Usage",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+            "targets": [
+              {
+                "expr": "rate(process_cpu_seconds_total{job=\"otel-collector\"}[5m]) * 100",
+                "legendFormat": "{{pod}}"
+              }
+            ],
+            "yaxes": [
+              {"format": "percent", "label": "CPU"},
+              {"format": "short"}
+            ]
+          },
+          {
+            "id": 5,
+            "title": "Receiver Errors",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+            "targets": [
+              {
+                "expr": "sum(rate(otelcol_receiver_refused_spans[5m]))",
+                "legendFormat": "Refused Spans"
+              },
+              {
+                "expr": "sum(rate(otelcol_receiver_refused_metric_points[5m]))",
+                "legendFormat": "Refused Metric Points"
+              }
+            ],
+            "yaxes": [
+              {"format": "ops", "label": "Errors/sec"},
+              {"format": "short"}
+            ]
+          },
+          {
+            "id": 6,
+            "title": "Exporter Errors",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+            "targets": [
+              {
+                "expr": "sum(rate(otelcol_exporter_send_failed_spans[5m]))",
+                "legendFormat": "Failed Spans"
+              },
+              {
+                "expr": "sum(rate(otelcol_exporter_send_failed_metric_points[5m]))",
+                "legendFormat": "Failed Metric Points"
+              }
+            ],
+            "yaxes": [
+              {"format": "ops", "label": "Errors/sec"},
+              {"format": "short"}
+            ]
+          }
+        ]
+      }
+    }
