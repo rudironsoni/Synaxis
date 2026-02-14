@@ -77,7 +77,7 @@ namespace Synaxis.BatchProcessing.Models
         public int FailedItems { get; set; }
 
         /// <summary>
-        /// Gets or sets the progress percentage (0-100).
+        /// Gets the progress percentage (0-100).
         /// </summary>
         public int ProgressPercentage => this.TotalItems > 0 ? (int)((double)this.ProcessedItems / this.TotalItems * 100) : 0;
 
