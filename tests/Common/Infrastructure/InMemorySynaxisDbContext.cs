@@ -1,8 +1,12 @@
-using Microsoft.EntityFrameworkCore;
-using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
+// <copyright file="InMemorySynaxisDbContext.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
 namespace Synaxis.Common.Tests.Infrastructure
 {
+    using Microsoft.EntityFrameworkCore;
+    using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
+
     /// <summary>
     /// Helper for creating in-memory SynaxisDbContext for testing.
     /// </summary>
