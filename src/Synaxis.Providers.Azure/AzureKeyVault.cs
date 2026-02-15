@@ -2,6 +2,8 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
+namespace Synaxis.Providers.Azure;
+
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,8 +15,6 @@ using global::Azure.Security.KeyVault.Secrets;
 using global::Polly;
 using Microsoft.Extensions.Logging;
 using Synaxis.Abstractions.Cloud;
-
-namespace Synaxis.Providers.Azure;
 
 /// <summary>
 /// Azure Key Vault implementation of IKeyVault.
@@ -42,10 +42,10 @@ public class AzureKeyVault : IKeyVault
             throw new ArgumentException("Key Vault URL cannot be null or empty.", nameof(keyVaultUrl));
         }
 
-        _secretClient = new SecretClient(new Uri(keyVaultUrl), credential);
-        _keyClient = new KeyClient(new Uri(keyVaultUrl), credential);
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _retryPolicy = Policy
+        this._secretClient = new SecretClient(new Uri(keyVaultUrl), credential);
+        this._keyClient = new KeyClient(new Uri(keyVaultUrl), credential);
+        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this._retryPolicy = Policy
             .Handle<global::Azure.RequestFailedException>()
             .Or<TimeoutException>()
             .WaitAndRetryAsync(
@@ -53,7 +53,7 @@ public class AzureKeyVault : IKeyVault
                 sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
                 onRetry: (outcome, timespan, retryCount, context) =>
                 {
-                    _logger.LogWarning(
+                    this._logger.LogWarning(
                         "Retry {RetryCount} after {Delay}s",
                         retryCount,
                         timespan.TotalSeconds);
@@ -61,89 +61,89 @@ public class AzureKeyVault : IKeyVault
     }
 
     /// <inheritdoc />
-    public async Task SetSecretAsync(
+    public Task SetSecretAsync(
         string secretName,
         string secretValue,
         CancellationToken cancellationToken = default)
     {
-        await _retryPolicy.ExecuteAsync(async () =>
+        return this._retryPolicy.ExecuteAsync(async () =>
         {
-            await _secretClient.SetSecretAsync(secretName, secretValue, cancellationToken);
-            _logger.LogInformation("Secret {SecretName} stored successfully", secretName);
+            await this._secretClient.SetSecretAsync(secretName, secretValue, cancellationToken).ConfigureAwait(false);
+            this._logger.LogInformation("Secret {SecretName} stored successfully", secretName);
         });
     }
 
     /// <inheritdoc />
-    public async Task<string?> GetSecretAsync(
+    public Task<string?> GetSecretAsync(
         string secretName,
         CancellationToken cancellationToken = default)
     {
-        return await _retryPolicy.ExecuteAsync(async () =>
+        return this._retryPolicy.ExecuteAsync(async () =>
         {
             try
             {
-                var response = await _secretClient.GetSecretAsync(secretName, cancellationToken: cancellationToken);
-                _logger.LogInformation("Secret {SecretName} retrieved successfully", secretName);
+                var response = await this._secretClient.GetSecretAsync(secretName, cancellationToken: cancellationToken).ConfigureAwait(false);
+                this._logger.LogInformation("Secret {SecretName} retrieved successfully", secretName);
                 return response.Value.Value;
             }
             catch (global::Azure.RequestFailedException ex) when (ex.Status == 404)
             {
-                _logger.LogWarning("Secret {SecretName} not found", secretName);
+                this._logger.LogWarning(ex, "Secret {SecretName} not found", secretName);
                 return null;
             }
         });
     }
 
     /// <inheritdoc />
-    public async Task DeleteSecretAsync(
+    public Task DeleteSecretAsync(
         string secretName,
         CancellationToken cancellationToken = default)
     {
-        await _retryPolicy.ExecuteAsync(async () =>
+        return this._retryPolicy.ExecuteAsync(async () =>
         {
-            await _secretClient.StartDeleteSecretAsync(secretName, cancellationToken);
-            _logger.LogInformation("Secret {SecretName} deletion started", secretName);
+            await this._secretClient.StartDeleteSecretAsync(secretName, cancellationToken).ConfigureAwait(false);
+            this._logger.LogInformation("Secret {SecretName} deletion started", secretName);
         });
     }
 
     /// <inheritdoc />
-    public async Task<byte[]> EncryptAsync(
+    public Task<byte[]> EncryptAsync(
         string keyName,
         byte[] plaintext,
         CancellationToken cancellationToken = default)
     {
-        return await _retryPolicy.ExecuteAsync(async () =>
+        return this._retryPolicy.ExecuteAsync(async () =>
         {
-            var keyResponse = await _keyClient.GetKeyAsync(keyName, cancellationToken: cancellationToken);
+            var keyResponse = await this._keyClient.GetKeyAsync(keyName, cancellationToken: cancellationToken).ConfigureAwait(false);
             var cryptoClient = new CryptographyClient(keyResponse.Value.Id, new DefaultAzureCredential());
 
             var encryptResult = await cryptoClient.EncryptAsync(
                 EncryptionAlgorithm.RsaOaep256,
                 plaintext,
-                cancellationToken);
+                cancellationToken).ConfigureAwait(false);
 
-            _logger.LogInformation("Data encrypted successfully using key {KeyName}", keyName);
+            this._logger.LogInformation("Data encrypted successfully using key {KeyName}", keyName);
             return encryptResult.Ciphertext;
         });
     }
 
     /// <inheritdoc />
-    public async Task<byte[]> DecryptAsync(
+    public Task<byte[]> DecryptAsync(
         string keyName,
         byte[] ciphertext,
         CancellationToken cancellationToken = default)
     {
-        return await _retryPolicy.ExecuteAsync(async () =>
+        return this._retryPolicy.ExecuteAsync(async () =>
         {
-            var keyResponse = await _keyClient.GetKeyAsync(keyName, cancellationToken: cancellationToken);
+            var keyResponse = await this._keyClient.GetKeyAsync(keyName, cancellationToken: cancellationToken).ConfigureAwait(false);
             var cryptoClient = new CryptographyClient(keyResponse.Value.Id, new DefaultAzureCredential());
 
             var decryptResult = await cryptoClient.DecryptAsync(
                 EncryptionAlgorithm.RsaOaep256,
                 ciphertext,
-                cancellationToken);
+                cancellationToken).ConfigureAwait(false);
 
-            _logger.LogInformation("Data decrypted successfully using key {KeyName}", keyName);
+            this._logger.LogInformation("Data decrypted successfully using key {KeyName}", keyName);
             return decryptResult.Plaintext;
         });
     }

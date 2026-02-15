@@ -2,6 +2,8 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
+namespace Synaxis.Providers.Azure.EventStores;
+
 using System;
 using System.Text.Json;
 using System.Threading;
@@ -9,8 +11,6 @@ using System.Threading.Tasks;
 using global::Polly;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
-
-namespace Synaxis.Providers.Azure.EventStores;
 
 /// <summary>
 /// Snapshot store for periodic state snapshots using Azure Cosmos DB.
@@ -28,9 +28,9 @@ public class SnapshotStore
     /// <param name="logger">The logger instance.</param>
     public SnapshotStore(Container container, ILogger<SnapshotStore> logger)
     {
-        _container = container ?? throw new ArgumentNullException(nameof(container));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _retryPolicy = Policy
+        this._container = container ?? throw new ArgumentNullException(nameof(container));
+        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this._retryPolicy = Policy
             .Handle<CosmosException>()
             .Or<TimeoutException>()
             .WaitAndRetryAsync(
@@ -38,7 +38,7 @@ public class SnapshotStore
                 sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
                 onRetry: (outcome, timespan, retryCount, context) =>
                 {
-                    _logger.LogWarning(
+                    this._logger.LogWarning(
                         "Retry {RetryCount} after {Delay}s",
                         retryCount,
                         timespan.TotalSeconds);
@@ -54,13 +54,13 @@ public class SnapshotStore
     /// <param name="state">The state to snapshot.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public async Task SaveSnapshotAsync<TState>(
+    public Task SaveSnapshotAsync<TState>(
         string streamId,
         int version,
         TState state,
         CancellationToken cancellationToken = default)
     {
-        await _retryPolicy.ExecuteAsync(async () =>
+        return this._retryPolicy.ExecuteAsync(async () =>
         {
             var snapshot = new SnapshotDocument
             {
@@ -69,11 +69,11 @@ public class SnapshotStore
                 Version = version,
                 StateType = typeof(TState).Name,
                 State = JsonSerializer.Serialize(state),
-                Timestamp = DateTime.UtcNow
+                Timestamp = DateTime.UtcNow,
             };
 
-            await _container.UpsertItemAsync(snapshot, new PartitionKey(streamId), cancellationToken: cancellationToken);
-            _logger.LogInformation(
+            await this._container.UpsertItemAsync(snapshot, new PartitionKey(streamId), cancellationToken: cancellationToken).ConfigureAwait(false);
+            this._logger.LogInformation(
                 "Saved snapshot for stream {StreamId} at version {Version}",
                 streamId,
                 version);
@@ -87,23 +87,23 @@ public class SnapshotStore
     /// <param name="streamId">The stream identifier.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>The snapshot state, or null if no snapshot exists.</returns>
-    public async Task<TState?> GetSnapshotAsync<TState>(
+    public Task<TState?> GetSnapshotAsync<TState>(
         string streamId,
         CancellationToken cancellationToken = default)
     {
-        return await _retryPolicy.ExecuteAsync(async () =>
+        return this._retryPolicy.ExecuteAsync(async () =>
         {
             try
             {
-                var response = await _container.ReadItemAsync<SnapshotDocument>(
+                var response = await this._container.ReadItemAsync<SnapshotDocument>(
                     streamId,
                     new PartitionKey(streamId),
-                    cancellationToken: cancellationToken);
+                    cancellationToken: cancellationToken).ConfigureAwait(false);
 
                 var snapshot = response.Resource;
-                if (snapshot.StateType != typeof(TState).Name)
+                if (!string.Equals(snapshot.StateType, typeof(TState).Name, StringComparison.Ordinal))
                 {
-                    _logger.LogWarning(
+                    this._logger.LogWarning(
                         "Snapshot type mismatch for stream {StreamId}: expected {ExpectedType}, found {ActualType}",
                         streamId,
                         typeof(TState).Name,
@@ -112,7 +112,7 @@ public class SnapshotStore
                 }
 
                 var state = JsonSerializer.Deserialize<TState>(snapshot.State);
-                _logger.LogInformation(
+                this._logger.LogInformation(
                     "Retrieved snapshot for stream {StreamId} at version {Version}",
                     streamId,
                     snapshot.Version);
@@ -121,7 +121,7 @@ public class SnapshotStore
             }
             catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                _logger.LogInformation("No snapshot found for stream {StreamId}", streamId);
+                this._logger.LogInformation(ex, "No snapshot found for stream {StreamId}", streamId);
                 return default;
             }
         });
@@ -133,24 +133,24 @@ public class SnapshotStore
     /// <param name="streamId">The stream identifier.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public async Task DeleteSnapshotAsync(
+    public Task DeleteSnapshotAsync(
         string streamId,
         CancellationToken cancellationToken = default)
     {
-        await _retryPolicy.ExecuteAsync(async () =>
+        return this._retryPolicy.ExecuteAsync(async () =>
         {
             try
             {
-                await _container.DeleteItemAsync<SnapshotDocument>(
+                await this._container.DeleteItemAsync<SnapshotDocument>(
                     streamId,
                     new PartitionKey(streamId),
-                    cancellationToken: cancellationToken);
+                    cancellationToken: cancellationToken).ConfigureAwait(false);
 
-                _logger.LogInformation("Deleted snapshot for stream {StreamId}", streamId);
+                this._logger.LogInformation("Deleted snapshot for stream {StreamId}", streamId);
             }
             catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                _logger.LogInformation("No snapshot found to delete for stream {StreamId}", streamId);
+                this._logger.LogInformation(ex, "No snapshot found to delete for stream {StreamId}", streamId);
             }
         });
     }
@@ -167,10 +167,10 @@ public class SnapshotStore
     {
         try
         {
-            var response = await _container.ReadItemAsync<SnapshotDocument>(
+            var response = await this._container.ReadItemAsync<SnapshotDocument>(
                 streamId,
                 new PartitionKey(streamId),
-                cancellationToken: cancellationToken);
+                cancellationToken: cancellationToken).ConfigureAwait(false);
 
             return response.Resource.Version;
         }
@@ -186,10 +186,15 @@ public class SnapshotStore
     private sealed class SnapshotDocument
     {
         public string Id { get; set; } = string.Empty;
+
         public string StreamId { get; set; } = string.Empty;
+
         public int Version { get; set; }
+
         public string StateType { get; set; } = string.Empty;
+
         public string State { get; set; } = string.Empty;
+
         public DateTime Timestamp { get; set; }
     }
 }

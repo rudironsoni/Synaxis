@@ -2,6 +2,8 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
+namespace Synaxis.Providers.Azure.EventStores;
+
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -13,8 +15,6 @@ using global::Polly;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using Synaxis.Abstractions.Cloud;
-
-namespace Synaxis.Providers.Azure.EventStores;
 
 /// <summary>
 /// Azure SQL implementation of IEventStore.
@@ -32,9 +32,9 @@ public class AzureSqlEventStore : IEventStore
     /// <param name="logger">The logger instance.</param>
     public AzureSqlEventStore(string connectionString, ILogger<AzureSqlEventStore> logger)
     {
-        _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _retryPolicy = Policy
+        this._connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
+        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this._retryPolicy = Policy
             .Handle<SqlException>()
             .Or<TimeoutException>()
             .WaitAndRetryAsync(
@@ -42,7 +42,7 @@ public class AzureSqlEventStore : IEventStore
                 sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
                 onRetry: (outcome, timespan, retryCount, context) =>
                 {
-                    _logger.LogWarning(
+                    this._logger.LogWarning(
                         "Retry {RetryCount} after {Delay}s",
                         retryCount,
                         timespan.TotalSeconds);
@@ -50,22 +50,26 @@ public class AzureSqlEventStore : IEventStore
     }
 
     /// <inheritdoc />
-    public async Task AppendAsync(
+    public Task AppendAsync(
         string streamId,
         IEnumerable<IDomainEvent> events,
         int expectedVersion,
         CancellationToken cancellationToken = default)
     {
-        await _retryPolicy.ExecuteAsync(async () =>
+        return this._retryPolicy.ExecuteAsync(async () =>
         {
-            await using var connection = new SqlConnection(_connectionString);
-            await connection.OpenAsync(cancellationToken);
+#pragma warning disable MA0004 // await using doesn't support ConfigureAwait(false)
+            await using var connection = new SqlConnection(this._connectionString);
+#pragma warning restore MA0004
+            await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
-            await using var transaction = (SqlTransaction)await connection.BeginTransactionAsync(cancellationToken);
+#pragma warning disable MA0004 // await using doesn't support ConfigureAwait(false)
+            await using var transaction = (SqlTransaction)await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+#pragma warning restore MA0004
 
             try
             {
-                var currentVersion = await GetCurrentVersionAsync(connection, transaction, streamId, cancellationToken);
+                var currentVersion = await GetCurrentVersionAsync(connection, transaction, streamId, cancellationToken).ConfigureAwait(false);
                 if (currentVersion != expectedVersion)
                 {
                     throw new InvalidOperationException(
@@ -75,7 +79,7 @@ public class AzureSqlEventStore : IEventStore
                 var version = expectedVersion + 1;
                 foreach (var domainEvent in events)
                 {
-                    var command = new SqlCommand(
+                    using var command = new SqlCommand(
                         @"INSERT INTO Events (Id, StreamId, Version, EventType, Payload, Metadata, Timestamp)
                           VALUES (@Id, @StreamId, @Version, @EventType, @Payload, @Metadata, @Timestamp)",
                         connection,
@@ -89,12 +93,12 @@ public class AzureSqlEventStore : IEventStore
                     command.Parameters.AddWithValue("@Metadata", JsonSerializer.Serialize(new { }));
                     command.Parameters.AddWithValue("@Timestamp", domainEvent.OccurredOn);
 
-                    await command.ExecuteNonQueryAsync(cancellationToken);
+                    await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
                     version++;
                 }
 
-                await transaction.CommitAsync(cancellationToken);
-                _logger.LogInformation(
+                await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+                this._logger.LogInformation(
                     "Appended {Count} events to stream {StreamId} starting at version {Version}",
                     events.Count(),
                     streamId,
@@ -102,7 +106,7 @@ public class AzureSqlEventStore : IEventStore
             }
             catch
             {
-                await transaction.RollbackAsync(cancellationToken);
+                await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
                 throw;
             }
         });
@@ -115,12 +119,14 @@ public class AzureSqlEventStore : IEventStore
         int toVersion,
         CancellationToken cancellationToken = default)
     {
-        return await _retryPolicy.ExecuteAsync(async () =>
+        return await this._retryPolicy.ExecuteAsync(async () =>
         {
-            await using var connection = new SqlConnection(_connectionString);
-            await connection.OpenAsync(cancellationToken);
+#pragma warning disable MA0004 // await using doesn't support ConfigureAwait(false)
+            await using var connection = new SqlConnection(this._connectionString);
+#pragma warning restore MA0004
+            await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
-            var command = new SqlCommand(
+            using var command = new SqlCommand(
                 @"SELECT Payload, EventType, Timestamp
                   FROM Events
                   WHERE StreamId = @StreamId AND Version >= @FromVersion AND Version <= @ToVersion
@@ -132,9 +138,11 @@ public class AzureSqlEventStore : IEventStore
             command.Parameters.AddWithValue("@ToVersion", toVersion);
 
             var events = new List<IDomainEvent>();
-            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+#pragma warning disable MA0004 // await using doesn't support ConfigureAwait(false)
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+#pragma warning restore MA0004
 
-            while (await reader.ReadAsync(cancellationToken))
+            while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
             {
                 var payload = reader.GetString(0);
                 var eventType = reader.GetString(1);
@@ -145,13 +153,13 @@ public class AzureSqlEventStore : IEventStore
                     EventId = Guid.NewGuid().ToString(),
                     EventType = eventType,
                     OccurredOn = timestamp,
-                    Payload = payload
+                    Payload = payload,
                 };
 
                 events.Add(eventWrapper);
             }
 
-            _logger.LogInformation(
+            this._logger.LogInformation(
                 "Read {Count} events from stream {StreamId} (version {FromVersion} to {ToVersion})",
                 events.Count,
                 streamId,
@@ -159,26 +167,28 @@ public class AzureSqlEventStore : IEventStore
                 toVersion);
 
             return events.AsReadOnly();
-        });
+        }).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<IDomainEvent>> ReadStreamAsync(
+    public Task<IReadOnlyList<IDomainEvent>> ReadStreamAsync(
         string streamId,
         CancellationToken cancellationToken = default)
     {
-        return await _retryPolicy.ExecuteAsync(async () =>
+        return this._retryPolicy.ExecuteAsync(async () =>
         {
-            await using var connection = new SqlConnection(_connectionString);
-            await connection.OpenAsync(cancellationToken);
+#pragma warning disable MA0004 // await using doesn't support ConfigureAwait(false)
+            await using var connection = new SqlConnection(this._connectionString);
+#pragma warning restore MA0004
+            await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
-            var command = new SqlCommand(
+            using var command = new SqlCommand(
                 @"SELECT MAX(Version) FROM Events WHERE StreamId = @StreamId",
                 connection);
 
             command.Parameters.AddWithValue("@StreamId", streamId);
 
-            var result = await command.ExecuteScalarAsync(cancellationToken);
+            var result = await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
             var maxVersion = result as int? ?? 0;
 
             if (maxVersion == 0)
@@ -186,45 +196,47 @@ public class AzureSqlEventStore : IEventStore
                 return Array.Empty<IDomainEvent>();
             }
 
-            return await ReadAsync(streamId, 1, maxVersion, cancellationToken);
+            return await this.ReadAsync(streamId, 1, maxVersion, cancellationToken).ConfigureAwait(false);
         });
     }
 
     /// <inheritdoc />
-    public async Task DeleteAsync(
+    public Task DeleteAsync(
         string streamId,
         CancellationToken cancellationToken = default)
     {
-        await _retryPolicy.ExecuteAsync(async () =>
+        return this._retryPolicy.ExecuteAsync(async () =>
         {
-            await using var connection = new SqlConnection(_connectionString);
-            await connection.OpenAsync(cancellationToken);
+#pragma warning disable MA0004 // await using doesn't support ConfigureAwait(false)
+            await using var connection = new SqlConnection(this._connectionString);
+#pragma warning restore MA0004
+            await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
-            var command = new SqlCommand(
+            using var command = new SqlCommand(
                 @"DELETE FROM Events WHERE StreamId = @StreamId",
                 connection);
 
             command.Parameters.AddWithValue("@StreamId", streamId);
 
-            var rowsAffected = await command.ExecuteNonQueryAsync(cancellationToken);
-            _logger.LogInformation("Deleted stream {StreamId} ({Count} events)", streamId, rowsAffected);
+            var rowsAffected = await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            this._logger.LogInformation("Deleted stream {StreamId} ({Count} events)", streamId, rowsAffected);
         });
     }
 
-    private async Task<int> GetCurrentVersionAsync(
+    private static async Task<int> GetCurrentVersionAsync(
         SqlConnection connection,
         SqlTransaction transaction,
         string streamId,
         CancellationToken cancellationToken)
     {
-        var command = new SqlCommand(
+        using var command = new SqlCommand(
             @"SELECT COALESCE(MAX(Version), 0) FROM Events WHERE StreamId = @StreamId",
             connection,
             transaction);
 
         command.Parameters.AddWithValue("@StreamId", streamId);
 
-        var result = await command.ExecuteScalarAsync(cancellationToken);
+        var result = await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
         return result as int? ?? 0;
     }
 
@@ -234,8 +246,11 @@ public class AzureSqlEventStore : IEventStore
     private sealed class DomainEventWrapper : IDomainEvent
     {
         public string EventId { get; set; } = string.Empty;
+
         public DateTime OccurredOn { get; set; }
+
         public string EventType { get; set; } = string.Empty;
+
         public string Payload { get; set; } = string.Empty;
     }
 }
