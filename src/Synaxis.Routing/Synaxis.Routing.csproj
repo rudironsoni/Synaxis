@@ -6,7 +6,6 @@
     <Nullable>disable</Nullable>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <NoWarn>$(NoWarn);CS8632;CS0121;CS0266;CS1591;SA1200;SA1633;SA1513;SA1402;SA1413;SA1516;SA1407;SA1623;SA1615;SA1101;SA0001;MA0048;MA0049;MA0002;MA0004;MA0016;MA0158;S4487;S2953;S6608;S2325;S3011;S1481;IDISP009</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

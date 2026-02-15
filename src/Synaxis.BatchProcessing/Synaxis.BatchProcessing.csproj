@@ -5,7 +5,6 @@
     <Nullable>disable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <NoWarn>$(NoWarn);SA0001;S6932;SA1402;SA1210;MA0047;MA0048;S3903;MA0016;MA0002;SA1413;SA1101;S1481;IDISP026;SA1515;MA0004;AsyncFixer01;S6667;S2139;S4487;IDISP001;MA0051;S6966</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

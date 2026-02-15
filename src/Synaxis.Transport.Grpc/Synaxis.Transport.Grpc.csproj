@@ -7,8 +7,6 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>disable</ImplicitUsings>
-    <!-- Suppress SA1516 and SA1518 for generated protobuf code -->
-    <NoWarn>$(NoWarn);SA1516;SA1518</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
