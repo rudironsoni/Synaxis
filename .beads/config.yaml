@@ -67,3 +67,5 @@ sync-branch: "beads-sync"
 # - github.repo
 
 dolt.mode: "embedded"
+dolt:
+  server_mode: false
