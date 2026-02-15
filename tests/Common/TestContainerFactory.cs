@@ -1,3 +1,7 @@
+// <copyright file="TestContainerFactory.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.Common.Tests;
 
 /// <summary>
@@ -5,7 +9,7 @@ namespace Synaxis.Common.Tests;
 /// Provides standardized container configurations for common services.
 /// NOTE: This requires the Testcontainers NuGet packages to be installed:
 /// - Testcontainers.Qdrant
-/// - Testcontainers.Redis  
+/// - Testcontainers.Redis
 /// - Testcontainers.PostgreSql.
 /// </summary>
 public static class TestContainerFactory
@@ -23,12 +27,6 @@ public static class TestContainerFactory
     /// <returns></returns>
     public static ITestContainer CreateQdrant()
     {
-        // Requires: Testcontainers.Qdrant package
-        // return new QdrantBuilder()
-        //     .WithImage("qdrant/qdrant:latest")
-        //     .WithPortBinding(6333, true)
-        //     .Build();
-
         throw new NotSupportedException(
             "Testcontainers.Qdrant package is required. " +
             "Install via: dotnet add package Testcontainers.Qdrant");
@@ -47,12 +45,6 @@ public static class TestContainerFactory
     /// <returns></returns>
     public static ITestContainer CreateRedis()
     {
-        // Requires: Testcontainers.Redis package
-        // return new RedisBuilder()
-        //     .WithImage("redis:7-alpine")
-        //     .WithPortBinding(6379, true)
-        //     .Build();
-
         throw new NotSupportedException(
             "Testcontainers.Redis package is required. " +
             "Install via: dotnet add package Testcontainers.Redis");
@@ -71,17 +63,8 @@ public static class TestContainerFactory
     /// <returns></returns>
     public static ITestContainer CreatePostgreSql()
     {
-        // Requires: Testcontainers.PostgreSql package
-        // return new PostgreSqlBuilder()
-        //     .WithImage("postgres:15-alpine")
-        //     .WithDatabase("synaxis_test")
-        //     .WithUsername("test")
-        //     .WithPassword("test")
-        //     .Build();
-
         throw new NotSupportedException(
             "Testcontainers.PostgreSql package is required. " +
             "Install via: dotnet add package Testcontainers.PostgreSql");
     }
 }
-

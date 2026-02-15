@@ -1,6 +1,10 @@
-using Microsoft.Extensions.AI;
+// <copyright file="TestDataFactory.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
 namespace Synaxis.Common.Tests;
+
+using Microsoft.Extensions.AI;
 
 /// <summary>
 /// Static helper for generating test data for Token Optimization testing.
@@ -86,4 +90,3 @@ public static class TestDataFactory
         return values;
     }
 }
-

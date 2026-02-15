@@ -1,12 +1,16 @@
-using Moq;
+// <copyright file="TestBase.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
+namespace Synaxis.Common.Tests;
+
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
+using Moq;
 using Synaxis.InferenceGateway.Application;
 using Synaxis.InferenceGateway.Application.Configuration;
 using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
 using Synaxis.InferenceGateway.Application.Routing;
-
-namespace Synaxis.Common.Tests;
 
 /// <summary>
 /// Base class for all Synaxis tests providing common mocking infrastructure and setup.

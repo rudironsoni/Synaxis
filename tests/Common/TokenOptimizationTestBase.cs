@@ -1,7 +1,11 @@
-using Moq;
-using Microsoft.Extensions.AI;
+// <copyright file="TokenOptimizationTestBase.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
 namespace Synaxis.Common.Tests;
+
+using Microsoft.Extensions.AI;
+using Moq;
 
 /// <summary>
 /// Base class for token optimization tests.
@@ -32,8 +36,6 @@ public abstract class TokenOptimizationTestBase : TestBase
         this.FingerprinterMock = new Mock<IRequestFingerprinter>();
         this.ConfigResolverMock = new Mock<ITokenOptimizationConfigurationResolver>();
         this.ContextProviderMock = new Mock<IRequestContextProvider>();
-
-        this.SetupDefaultMockBehaviors();
     }
 
     /// <summary>
@@ -87,4 +89,3 @@ public abstract class TokenOptimizationTestBase : TestBase
             .Returns("test-session");
     }
 }
-

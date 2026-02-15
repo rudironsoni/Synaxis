@@ -1,3 +1,7 @@
+// <copyright file="TokenOptimizationOptions.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.Common.Tests;
 
 /// <summary>
