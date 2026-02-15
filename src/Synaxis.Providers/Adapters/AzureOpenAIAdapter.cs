@@ -473,92 +473,124 @@ namespace Synaxis.Providers.Adapters
         private sealed class OpenAIChatRequest
         {
             public string Model { get; init; } = string.Empty;
+
             public List<OpenAIMessage> Messages { get; init; } = new List<OpenAIMessage>();
+
             public double? Temperature { get; init; }
+
             public int? MaxTokens { get; init; }
+
             public double? TopP { get; init; }
+
             public double? FrequencyPenalty { get; init; }
+
             public double? PresencePenalty { get; init; }
+
             public string[]? Stop { get; init; }
+
             public bool Stream { get; set; }
         }
 
         private sealed class OpenAIMessage
         {
             public string Role { get; init; } = string.Empty;
+
             public string Content { get; init; } = string.Empty;
+
             public string? Name { get; init; }
         }
 
         private sealed class OpenAIChatResponse
         {
             public string Id { get; init; } = string.Empty;
+
             public string Object { get; init; } = string.Empty;
+
             public long Created { get; init; }
+
             public string Model { get; init; } = string.Empty;
+
             public List<OpenAIChoice> Choices { get; init; } = new List<OpenAIChoice>();
+
             public OpenAIUsage? Usage { get; init; }
         }
 
         private sealed class OpenAIChatStreamChunk
         {
             public string Id { get; init; } = string.Empty;
+
             public string Object { get; init; } = string.Empty;
+
             public long Created { get; init; }
+
             public string Model { get; init; } = string.Empty;
+
             public List<OpenAIStreamChoice> Choices { get; init; } = new List<OpenAIStreamChoice>();
         }
 
         private sealed class OpenAIChoice
         {
             public int Index { get; init; }
+
             public OpenAIMessage? Message { get; init; }
+
             public string? FinishReason { get; init; }
         }
 
         private sealed class OpenAIStreamChoice
         {
             public int Index { get; init; }
+
             public OpenAIStreamDelta? Delta { get; init; }
+
             public string? FinishReason { get; init; }
         }
 
         private sealed class OpenAIStreamDelta
         {
             public string? Role { get; init; }
+
             public string? Content { get; init; }
         }
 
         private sealed class OpenAIUsage
         {
             public int PromptTokens { get; init; }
+
             public int CompletionTokens { get; init; }
+
             public int TotalTokens { get; init; }
         }
 
         private sealed class OpenAIEmbeddingRequest
         {
             public string Model { get; init; } = string.Empty;
+
             public List<string> Input { get; init; } = new List<string>();
         }
 
         private sealed class OpenAIEmbeddingResponse
         {
             public string Object { get; init; } = string.Empty;
+
             public List<OpenAIEmbeddingData> Data { get; init; } = new List<OpenAIEmbeddingData>();
+
             public OpenAIEmbeddingUsage? Usage { get; init; }
         }
 
         private sealed class OpenAIEmbeddingData
         {
             public int Index { get; init; }
+
             public IReadOnlyList<float> Embedding { get; init; } = System.Array.Empty<float>();
+
             public string Object { get; init; } = string.Empty;
         }
 
         private sealed class OpenAIEmbeddingUsage
         {
             public int PromptTokens { get; init; }
+
             public int TotalTokens { get; init; }
         }
 
@@ -570,7 +602,9 @@ namespace Synaxis.Providers.Adapters
         private sealed class OpenAIErrorDetail
         {
             public string Message { get; init; } = string.Empty;
+
             public string Type { get; init; } = string.Empty;
+
             public string Code { get; init; } = string.Empty;
         }
 

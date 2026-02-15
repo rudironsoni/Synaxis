@@ -47,6 +47,7 @@ using Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI;
 using Synaxis.InferenceGateway.WebApi.Health;
 using Synaxis.InferenceGateway.WebApi.Hubs;
 using Synaxis.InferenceGateway.WebApi.Middleware;
+
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .CreateLogger();
