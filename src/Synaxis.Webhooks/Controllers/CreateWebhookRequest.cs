@@ -1,22 +1,27 @@
-using System.ComponentModel.DataAnnotations;
+// <copyright file="CreateWebhookRequest.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
-namespace Synaxis.Webhooks.Controllers;
-
-/// <summary>
-/// DTO for creating a webhook.
-/// </summary>
-public class CreateWebhookRequest
+namespace Synaxis.Webhooks.Controllers
 {
-    /// <summary>
-    /// Gets or sets the URL where webhook events will be sent.
-    /// </summary>
-    [Required]
-    [Url]
-    public string Url { get; set; } = string.Empty;
+    using System.ComponentModel.DataAnnotations;
 
     /// <summary>
-    /// Gets or sets the list of events this webhook subscribes to.
+    /// DTO for creating a webhook.
     /// </summary>
-    [Required]
-    public List<string> Events { get; set; } = new List<string>();
+    public class CreateWebhookRequest
+    {
+        /// <summary>
+        /// Gets or sets the URL where webhook events will be sent.
+        /// </summary>
+        [Required]
+        [Url]
+        public string Url { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the list of events this webhook subscribes to.
+        /// </summary>
+        [Required]
+        public IList<string> Events { get; set; } = new List<string>();
+    }
 }

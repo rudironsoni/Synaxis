@@ -2,17 +2,17 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-using FluentAssertions;
-using Microsoft.EntityFrameworkCore;
-using Synaxis.Common.Tests.Fixtures;
-using Synaxis.Core.Contracts;
-using Synaxis.Core.Models;
-using Synaxis.Infrastructure.Data;
-using Synaxis.Infrastructure.Services;
-using Xunit;
-
 namespace Synaxis.Infrastructure.Tests.Services
 {
+    using FluentAssertions;
+    using Microsoft.EntityFrameworkCore;
+    using Synaxis.Common.Tests.Fixtures;
+    using Synaxis.Core.Contracts;
+    using Synaxis.Core.Models;
+    using Synaxis.Infrastructure.Data;
+    using Synaxis.Infrastructure.Services;
+    using Xunit;
+
     [Trait("Category", "Integration")]
     [Collection("PostgresIntegration")]
 #pragma warning disable IDISP003 // False positive: _context is only assigned once in InitializeAsync

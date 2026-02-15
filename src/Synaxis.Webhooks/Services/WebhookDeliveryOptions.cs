@@ -1,3 +1,7 @@
+// <copyright file="WebhookDeliveryOptions.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.Webhooks.Services;
 
 /// <summary>

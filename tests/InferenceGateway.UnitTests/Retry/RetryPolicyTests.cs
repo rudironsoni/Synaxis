@@ -1,10 +1,14 @@
-using System;
-using System.Threading.Tasks;
-using Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure;
-using Xunit;
+// <copyright file="RetryPolicyTests.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
 namespace Synaxis.InferenceGateway.UnitTests.Retry
 {
+    using System;
+    using System.Threading.Tasks;
+    using Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure;
+    using Xunit;
+
     public class RetryPolicyTests
     {
         [Fact]

@@ -1,3 +1,9 @@
+// <copyright file="WebhookDeliveryLogDto.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
+#nullable enable
+
 namespace Synaxis.Webhooks.Controllers;
 
 /// <summary>
@@ -29,6 +35,21 @@ public class WebhookDeliveryLogDto
     /// Gets or sets the HTTP status code of the delivery attempt.
     /// </summary>
     public int StatusCode { get; set; }
+
+    /// <summary>
+    /// Gets or sets the response body from the delivery attempt.
+    /// </summary>
+    public string ResponseBody { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets whether the delivery was successful.
+    /// </summary>
+    public bool IsSuccess { get; set; }
+
+    /// <summary>
+    /// Gets or sets the timestamp when the delivery was delivered.
+    /// </summary>
+    public DateTime DeliveredAt { get; set; }
 
     /// <summary>
     /// Gets or sets whether the delivery was successful.

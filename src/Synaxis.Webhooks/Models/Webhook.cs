@@ -36,15 +36,17 @@ namespace Synaxis.Webhooks.Models
         [MaxLength(256)]
         public string Secret { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Gets or sets the list of events this webhook subscribes to.
-        /// </summary>
-        [Required]
-        public List<string> Events { get; set; } = new List<string>();
+    /// <summary>
+    /// Gets or sets the list of events this webhook subscribes to.
+    /// </summary>
+#pragma warning disable SA1137 // Elements should have the same indentation
+    [Required]
+    public IList<string> Events { get; set; } = new List<string>();
+#pragma warning restore SA1137 // Elements should have the same indentation
 
-        /// <summary>
-        /// Gets or sets a value indicating whether the webhook is active.
-        /// </summary>
+    /// <summary>
+    /// Gets or sets a value indicating whether the webhook is active.
+    /// </summary>
         public bool IsActive { get; set; } = true;
 
         /// <summary>
@@ -73,9 +75,11 @@ namespace Synaxis.Webhooks.Models
         /// </summary>
         public int FailedDeliveryAttempts { get; set; }
 
-        /// <summary>
-        /// Gets or sets the delivery logs for this webhook.
-        /// </summary>
-        public List<WebhookDeliveryLog> DeliveryLogs { get; set; } = new List<WebhookDeliveryLog>();
+    /// <summary>
+    /// Gets or sets the delivery logs for this webhook.
+    /// </summary>
+#pragma warning disable SA1137 // Elements should have the same indentation
+    public IList<WebhookDeliveryLog> DeliveryLogs { get; set; } = new List<WebhookDeliveryLog>();
+#pragma warning restore SA1137 // Elements should have the same indentation
     }
 }

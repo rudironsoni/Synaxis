@@ -38,7 +38,7 @@ public sealed class StampController : BackgroundService
     /// Executes the background service to process stamps.
     /// </summary>
     /// <param name="stoppingToken">The stopping token.</param>
-    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         this._logger.LogInformation("Stamp Controller starting");
@@ -56,14 +56,14 @@ public sealed class StampController : BackgroundService
                 await Task.Delay(this._options.ProcessingIntervalMs, stoppingToken).ConfigureAwait(false);
             }
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException ex)
         {
-            this._logger.LogInformation("Stamp Controller stopping");
+            this._logger.LogInformation(ex, "Stamp Controller stopping");
         }
         catch (Exception ex)
         {
             this._logger.LogError(ex, "Stamp Controller encountered an error");
-            throw;
+            throw new InvalidOperationException("Stamp Controller encountered an error", ex);
         }
         finally
         {
@@ -74,7 +74,7 @@ public sealed class StampController : BackgroundService
     /// <summary>
     /// Called when the service is starting.
     /// </summary>
-    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public override Task StartAsync(CancellationToken cancellationToken)
     {
         this._logger.LogInformation("Stamp Controller is starting");
@@ -84,7 +84,7 @@ public sealed class StampController : BackgroundService
     /// <summary>
     /// Called when the service is stopping.
     /// </summary>
-    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public override Task StopAsync(CancellationToken cancellationToken)
     {
         this._logger.LogInformation("Stamp Controller is stopping");
