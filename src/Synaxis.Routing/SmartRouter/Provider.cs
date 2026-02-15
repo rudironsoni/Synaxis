@@ -35,7 +35,7 @@ public class Provider
     public int Priority { get; set; } = 100;
 
     /// <summary>
-    /// Gets or sets whether this provider is enabled.
+    /// Gets or sets a value indicating whether this provider is enabled.
     /// </summary>
     public bool IsEnabled { get; set; } = true;
 
@@ -62,5 +62,5 @@ public class Provider
     /// <summary>
     /// Gets or sets the capabilities supported by this provider.
     /// </summary>
-    public List<string> Capabilities { get; set; } = new();
+    public IList<string> Capabilities { get; set; } = new List<string>();
 }

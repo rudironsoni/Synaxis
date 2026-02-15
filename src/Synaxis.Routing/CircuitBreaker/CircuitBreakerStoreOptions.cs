@@ -1,3 +1,7 @@
+// <copyright file="CircuitBreakerStoreOptions.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.Routing.CircuitBreaker;
 
 /// <summary>
@@ -24,7 +28,7 @@ public class CircuitBreakerStoreOptions
     public int RedisExpirationSeconds { get; set; } = 3600;
 
     /// <summary>
-    /// Gets or sets whether to enable Redis backup.
+    /// Gets or sets a value indicating whether to enable Redis backup.
     /// Default is true.
     /// </summary>
     public bool EnableRedisBackup { get; set; } = true;

@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <!-- Test projects don't need XML documentation -->
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+</Project>

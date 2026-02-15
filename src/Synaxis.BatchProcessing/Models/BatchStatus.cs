@@ -1,3 +1,7 @@
+// <copyright file="BatchStatus.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.BatchProcessing.Models;
 
 /// <summary>
@@ -38,5 +42,5 @@ public enum BatchStatus
     /// <summary>
     /// The batch is retrying.
     /// </summary>
-    Retrying
+    Retrying,
 }

@@ -30,6 +30,14 @@ namespace Synaxis.Api.Controllers
         private readonly ILogger<AuthController> _logger;
         private readonly Synaxis.Infrastructure.Data.SynaxisDbContext _dbContext;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AuthController"/> class.
+        /// </summary>
+        /// <param name="authenticationService">The authentication service.</param>
+        /// <param name="userService">The user service.</param>
+        /// <param name="emailService">The email service.</param>
+        /// <param name="logger">The logger.</param>
+        /// <param name="dbContext">The database context.</param>
         public AuthController(
             IAuthenticationService authenticationService,
             IUserService userService,

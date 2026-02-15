@@ -1,3 +1,7 @@
+// <copyright file="CircuitBreakerMetrics.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.Routing.CircuitBreaker;
 
 /// <summary>

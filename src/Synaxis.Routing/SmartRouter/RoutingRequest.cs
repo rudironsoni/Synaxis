@@ -1,3 +1,9 @@
+// <copyright file="RoutingRequest.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
+#nullable enable
+
 namespace Synaxis.Routing.SmartRouter;
 
 /// <summary>
@@ -53,5 +59,5 @@ public class RoutingRequest
     /// <summary>
     /// Gets or sets the request metadata.
     /// </summary>
-    public Dictionary<string, string> Metadata { get; set; } = new();
+    public IDictionary<string, string> Metadata { get; set; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 }

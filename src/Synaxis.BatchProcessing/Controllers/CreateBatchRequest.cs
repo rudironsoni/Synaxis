@@ -1,6 +1,11 @@
-using System.ComponentModel.DataAnnotations;
+// <copyright file="CreateBatchRequest.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
 namespace Synaxis.BatchProcessing.Controllers;
+
+using System.ComponentModel.DataAnnotations;
+using Synaxis.BatchProcessing.Models;
 
 /// <summary>
 /// Request model for creating a batch.
@@ -31,7 +36,7 @@ public class CreateBatchRequest
     /// Gets or sets the items to process in the batch.
     /// </summary>
     [Required]
-    public List<BatchItem> Items { get; set; } = new List<BatchItem>();
+    public IList<BatchItem> Items { get; set; } = new List<BatchItem>();
 
     /// <summary>
     /// Gets or sets the webhook URL for completion notifications.

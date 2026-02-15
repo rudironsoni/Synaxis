@@ -54,7 +54,7 @@ namespace Synaxis.BatchProcessing.Models
         /// Gets or sets the items to process in the batch.
         /// </summary>
         [Required]
-        public List<BatchItem> Items { get; set; } = new List<BatchItem>();
+        public IList<BatchItem> Items { get; set; } = new List<BatchItem>();
 
         /// <summary>
         /// Gets or sets the batch status.
@@ -130,136 +130,6 @@ namespace Synaxis.BatchProcessing.Models
         /// <summary>
         /// Gets or sets the metadata associated with the batch.
         /// </summary>
-        public Dictionary<string, string> Metadata { get; set; } = new Dictionary<string, string>();
-    }
-
-    /// <summary>
-    /// Represents an individual item in a batch.
-    /// </summary>
-    public class BatchItem
-    {
-        /// <summary>
-        /// Gets or sets the unique identifier for the item.
-        /// </summary>
-        public Guid Id { get; set; }
-
-        /// <summary>
-        /// Gets or sets the item data.
-        /// </summary>
-        [Required]
-        public string Data { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Gets or sets the item status.
-        /// </summary>
-        public BatchItemStatus Status { get; set; } = BatchItemStatus.Pending;
-
-        /// <summary>
-        /// Gets or sets the item result.
-        /// </summary>
-        public string Result { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Gets or sets the error message if the item failed.
-        /// </summary>
-        public string ErrorMessage { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Gets or sets the processing timestamp.
-        /// </summary>
-        public DateTime ProcessedAt { get; set; }
-    }
-
-    /// <summary>
-    /// Represents the status of a batch.
-    /// </summary>
-    public enum BatchStatus
-    {
-        /// <summary>
-        /// The batch is pending processing.
-        /// </summary>
-        Pending,
-
-        /// <summary>
-        /// The batch is queued for processing.
-        /// </summary>
-        Queued,
-
-        /// <summary>
-        /// The batch is currently processing.
-        /// </summary>
-        Processing,
-
-        /// <summary>
-        /// The batch has completed successfully.
-        /// </summary>
-        Completed,
-
-        /// <summary>
-        /// The batch has failed.
-        /// </summary>
-        Failed,
-
-        /// <summary>
-        /// The batch has been cancelled.
-        /// </summary>
-        Cancelled,
-
-        /// <summary>
-        /// The batch is retrying.
-        /// </summary>
-        Retrying
-    }
-
-    /// <summary>
-    /// Represents the status of a batch item.
-    /// </summary>
-    public enum BatchItemStatus
-    {
-        /// <summary>
-        /// The item is pending processing.
-        /// </summary>
-        Pending,
-
-        /// <summary>
-        /// The item is currently processing.
-        /// </summary>
-        Processing,
-
-        /// <summary>
-        /// The item has completed successfully.
-        /// </summary>
-        Completed,
-
-        /// <summary>
-        /// The item has failed.
-        /// </summary>
-        Failed
-    }
-
-    /// <summary>
-    /// Represents the priority of a batch.
-    /// </summary>
-    public enum BatchPriority
-    {
-        /// <summary>
-        /// Low priority batch.
-        /// </summary>
-        Low,
-
-        /// <summary>
-        /// Normal priority batch.
-        /// </summary>
-        Normal,
-
-        /// <summary>
-        /// High priority batch.
-        /// </summary>
-        High,
-
-        /// <summary>
-        /// Critical priority batch.
-        /// </summary>
-        Critical
+        public IDictionary<string, string> Metadata { get; set; } = new Dictionary<string, string>(StringComparer.Ordinal);
     }
 }

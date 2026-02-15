@@ -1,6 +1,11 @@
-using System.Threading.Tasks;
+// <copyright file="IProviderHealthChecker.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
 namespace Synaxis.Routing.Health;
+
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 /// <summary>
 /// Interface for checking the health of AI providers.
@@ -21,7 +26,7 @@ public interface IProviderHealthChecker
     /// <param name="providerIds">The provider IDs to check.</param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A dictionary of provider IDs to their health check results.</returns>
-    Task<Dictionary<string, ProviderHealthCheckResult>> CheckHealthAsync(
+    Task<IReadOnlyDictionary<string, ProviderHealthCheckResult>> CheckHealthAsync(
         IEnumerable<string> providerIds,
         CancellationToken cancellationToken = default);
 
@@ -40,7 +45,7 @@ public interface IProviderHealthChecker
     /// <param name="limit">The maximum number of results to return.</param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A list of health check results.</returns>
-    Task<List<ProviderHealthCheckResult>> GetHealthHistoryAsync(
+    Task<IReadOnlyList<ProviderHealthCheckResult>> GetHealthHistoryAsync(
         string providerId,
         int limit = 100,
         CancellationToken cancellationToken = default);

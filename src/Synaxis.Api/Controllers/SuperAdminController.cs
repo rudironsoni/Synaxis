@@ -25,6 +25,11 @@ namespace Synaxis.Api.Controllers
         private readonly ISuperAdminService _superAdminService;
         private readonly ILogger<SuperAdminController> _logger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SuperAdminController"/> class.
+        /// </summary>
+        /// <param name="superAdminService">The super admin service.</param>
+        /// <param name="logger">The logger.</param>
         public SuperAdminController(
             ISuperAdminService superAdminService,
             ILogger<SuperAdminController> logger)

@@ -1,3 +1,7 @@
+// <copyright file="RoutingMetrics.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.Routing.SmartRouter;
 
 /// <summary>
@@ -38,7 +42,7 @@ public class RoutingMetrics
     /// <summary>
     /// Gets or sets the provider selection counts.
     /// </summary>
-    public Dictionary<string, int> ProviderSelectionCounts { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    public IDictionary<string, int> ProviderSelectionCounts { get; set; } = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// Gets or sets the timestamp of the last update.

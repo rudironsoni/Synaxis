@@ -1,38 +1,16 @@
-using System.Collections.Concurrent;
-using Microsoft.Extensions.Logging;
-using Synaxis.Routing.CircuitBreaker;
-using Synaxis.Routing.SmartRouter;
-using CircuitBreakerImpl = Synaxis.Routing.CircuitBreaker.CircuitBreaker;
+// <copyright file="ProviderHealthMonitor.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
 #nullable enable
 
 namespace Synaxis.Routing.Health;
 
-/// <summary>
-/// Event arguments for health status changes.
-/// </summary>
-public class HealthStatusChangedEventArgs : EventArgs
-{
-    /// <summary>
-    /// Gets or sets the provider ID.
-    /// </summary>
-    public string ProviderId { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Gets or sets the previous health status.
-    /// </summary>
-    public ProviderHealthStatus PreviousStatus { get; set; }
-
-    /// <summary>
-    /// Gets or sets the new health status.
-    /// </summary>
-    public ProviderHealthStatus NewStatus { get; set; }
-
-    /// <summary>
-    /// Gets or sets the health check result.
-    /// </summary>
-    public ProviderHealthCheckResult? CheckResult { get; set; }
-}
+using System.Collections.Concurrent;
+using Microsoft.Extensions.Logging;
+using Synaxis.Routing.CircuitBreaker;
+using Synaxis.Routing.SmartRouter;
+using CircuitBreakerImpl = Synaxis.Routing.CircuitBreaker.CircuitBreaker;
 
 /// <summary>
 /// Health check service for monitoring AI provider health.
@@ -46,7 +24,7 @@ public class ProviderHealthMonitor : IProviderHealthChecker
     private readonly ConcurrentDictionary<string, ProviderHealthStatus> _currentStatus;
     private readonly ConcurrentDictionary<string, int> _consecutiveFailures;
     private readonly ILogger<ProviderHealthMonitor>? _logger;
-    private readonly object _lock = new();
+    private readonly Lock _lock = new();
 
     /// <summary>
     /// Event raised when a provider's health status changes.
@@ -64,13 +42,13 @@ public class ProviderHealthMonitor : IProviderHealthChecker
         ProviderPerformanceTracker? performanceTracker = null,
         ILogger<ProviderHealthMonitor>? logger = null)
     {
-        _options = options ?? new HealthCheckOptions();
-        _performanceTracker = performanceTracker ?? new ProviderPerformanceTracker();
-        _circuitBreakers = new ConcurrentDictionary<string, CircuitBreakerImpl?>();
-        _healthHistory = new ConcurrentDictionary<string, List<ProviderHealthCheckResult>>();
-        _currentStatus = new ConcurrentDictionary<string, ProviderHealthStatus>();
-        _consecutiveFailures = new ConcurrentDictionary<string, int>();
-        _logger = logger;
+        this._options = options ?? new HealthCheckOptions();
+        this._performanceTracker = performanceTracker ?? new ProviderPerformanceTracker();
+        this._circuitBreakers = new ConcurrentDictionary<string, CircuitBreakerImpl?>(StringComparer.OrdinalIgnoreCase);
+        this._healthHistory = new ConcurrentDictionary<string, List<ProviderHealthCheckResult>>(StringComparer.OrdinalIgnoreCase);
+        this._currentStatus = new ConcurrentDictionary<string, ProviderHealthStatus>(StringComparer.OrdinalIgnoreCase);
+        this._consecutiveFailures = new ConcurrentDictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        this._logger = logger;
     }
 
     /// <summary>
@@ -85,8 +63,8 @@ public class ProviderHealthMonitor : IProviderHealthChecker
             throw new ArgumentException("Provider ID cannot be null or empty.", nameof(providerId));
         }
 
-        _circuitBreakers.AddOrUpdate(providerId, circuitBreaker, (_, _) => circuitBreaker);
-        _logger?.LogInformation("Registered circuit breaker for provider {ProviderId}", providerId);
+        this._circuitBreakers.AddOrUpdate(providerId, circuitBreaker, (_, _) => circuitBreaker);
+        this._logger?.LogInformation("Registered circuit breaker for provider {ProviderId}", providerId);
     }
 
     /// <summary>
@@ -106,20 +84,20 @@ public class ProviderHealthMonitor : IProviderHealthChecker
         var result = new ProviderHealthCheckResult
         {
             ProviderId = providerId,
-            CheckTime = DateTime.UtcNow
+            CheckTime = DateTime.UtcNow,
         };
 
         try
         {
-            await PerformHealthCheckAsync(providerId, result, cancellationToken);
+            await this.PerformHealthCheckAsync(providerId, result, cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException ex)
         {
-            HandleTimeout(result, stopwatch, ex);
+            this.HandleTimeout(result, stopwatch, ex);
         }
         catch (Exception ex)
         {
-            HandleException(result, stopwatch, ex, providerId);
+            this.HandleException(result, stopwatch, ex, providerId);
         }
 
         return result;
@@ -131,24 +109,38 @@ public class ProviderHealthMonitor : IProviderHealthChecker
     /// <param name="providerIds">The provider IDs to check.</param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A dictionary of provider IDs to their health check results.</returns>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Meziantou.Analyzer", "MA0016", Justification = "Public API returns concrete type for backward compatibility")]
     public async Task<Dictionary<string, ProviderHealthCheckResult>> CheckHealthAsync(
         IEnumerable<string> providerIds,
         CancellationToken cancellationToken = default)
     {
-        var results = new Dictionary<string, ProviderHealthCheckResult>();
+        var results = new Dictionary<string, ProviderHealthCheckResult>(StringComparer.OrdinalIgnoreCase);
         var tasks = providerIds.Select(async providerId =>
         {
-            var result = await CheckHealthAsync(providerId, cancellationToken);
+            var result = await this.CheckHealthAsync(providerId, cancellationToken).ConfigureAwait(false);
             return (providerId, result);
         });
 
-        var completedTasks = await Task.WhenAll(tasks);
+        var completedTasks = await Task.WhenAll(tasks).ConfigureAwait(false);
         foreach (var (providerId, result) in completedTasks)
         {
             results[providerId] = result;
         }
 
         return results;
+    }
+
+    /// <summary>
+    /// Performs health checks on multiple providers concurrently.
+    /// </summary>
+    /// <param name="providerIds">The provider IDs to check.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+    /// <returns>A dictionary of provider IDs to their health check results.</returns>
+    async Task<IReadOnlyDictionary<string, ProviderHealthCheckResult>> IProviderHealthChecker.CheckHealthAsync(
+        IEnumerable<string> providerIds,
+        CancellationToken cancellationToken)
+    {
+        return await this.CheckHealthAsync(providerIds, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task PerformHealthCheckAsync(
@@ -159,11 +151,11 @@ public class ProviderHealthMonitor : IProviderHealthChecker
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
         // Use a timeout for the health check
-        using var timeoutCts = new CancellationTokenSource(_options.TimeoutMs);
+        using var timeoutCts = new CancellationTokenSource(this._options.TimeoutMs);
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
 
         // Get performance metrics
-        var metrics = _performanceTracker.GetMetrics(providerId);
+        var metrics = this._performanceTracker.GetMetrics(providerId);
 
         if (metrics == null)
         {
@@ -174,19 +166,19 @@ public class ProviderHealthMonitor : IProviderHealthChecker
         }
         else
         {
-            PopulateResultFromMetrics(result, metrics, providerId);
+            this.PopulateResultFromMetrics(result, metrics, providerId);
         }
 
         stopwatch.Stop();
         result.LatencyMs = (int)stopwatch.ElapsedMilliseconds;
 
         // Update health history
-        UpdateHealthHistory(providerId, result);
+        this.UpdateHealthHistory(providerId, result);
 
         // Update current status and check for changes
-        UpdateHealthStatus(providerId, result);
+        this.UpdateHealthStatus(providerId, result);
 
-        _logger?.LogInformation(
+        this._logger?.LogInformation(
             "Health check for provider {ProviderId}: Status={Status}, Latency={Latency}ms, SuccessRate={SuccessRate:F2}%",
             providerId,
             result.Status,
@@ -205,15 +197,15 @@ public class ProviderHealthMonitor : IProviderHealthChecker
         result.ConsecutiveFailures = metrics.ConsecutiveFailures;
 
         // Check circuit breaker state
-        if (_options.EnableCircuitBreakerIntegration &&
-            _circuitBreakers.TryGetValue(providerId, out var circuitBreaker) &&
+        if (this._options.EnableCircuitBreakerIntegration &&
+            this._circuitBreakers.TryGetValue(providerId, out var circuitBreaker) &&
             circuitBreaker != null)
         {
             result.IsCircuitBreakerOpen = !circuitBreaker.AllowRequest();
         }
 
         // Determine health status
-        result.Status = DetermineHealthStatus(metrics, result.IsCircuitBreakerOpen);
+        result.Status = this.DetermineHealthStatus(metrics, result.IsCircuitBreakerOpen);
 
         // Add details
         result.Details["total_requests"] = metrics.TotalRequests;
@@ -238,7 +230,7 @@ public class ProviderHealthMonitor : IProviderHealthChecker
         result.SuccessRate = 0;
         result.AverageLatencyMs = 0;
 
-        _logger?.LogWarning(ex, "Health check for provider {ProviderId} timed out", result.ProviderId);
+        this._logger?.LogWarning(ex, "Health check for provider {ProviderId} timed out", result.ProviderId);
     }
 
     private void HandleException(
@@ -254,7 +246,7 @@ public class ProviderHealthMonitor : IProviderHealthChecker
         result.SuccessRate = 0;
         result.AverageLatencyMs = 0;
 
-        _logger?.LogError(ex, "Health check for provider {ProviderId} failed", providerId);
+        this._logger?.LogError(ex, "Health check for provider {ProviderId} failed", providerId);
     }
 
     /// <summary>
@@ -270,7 +262,7 @@ public class ProviderHealthMonitor : IProviderHealthChecker
             throw new ArgumentException("Provider ID cannot be null or empty.", nameof(providerId));
         }
 
-        var status = _currentStatus.TryGetValue(providerId, out var s) ? s : ProviderHealthStatus.Unknown;
+        var status = this._currentStatus.TryGetValue(providerId, out var s) ? s : ProviderHealthStatus.Unknown;
         return Task.FromResult(status);
     }
 
@@ -281,6 +273,7 @@ public class ProviderHealthMonitor : IProviderHealthChecker
     /// <param name="limit">The maximum number of results to return.</param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A list of health check results.</returns>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Meziantou.Analyzer", "MA0016", Justification = "Public API returns concrete type for backward compatibility")]
     public Task<List<ProviderHealthCheckResult>> GetHealthHistoryAsync(
         string providerId,
         int limit = 100,
@@ -291,7 +284,7 @@ public class ProviderHealthMonitor : IProviderHealthChecker
             throw new ArgumentException("Provider ID cannot be null or empty.", nameof(providerId));
         }
 
-        var history = _healthHistory.TryGetValue(providerId, out var h)
+        var history = this._healthHistory.TryGetValue(providerId, out var h)
             ? h.TakeLast(limit).ToList()
             : new List<ProviderHealthCheckResult>();
 
@@ -299,12 +292,28 @@ public class ProviderHealthMonitor : IProviderHealthChecker
     }
 
     /// <summary>
+    /// Gets the health history for a provider.
+    /// </summary>
+    /// <param name="providerId">The provider ID.</param>
+    /// <param name="limit">The maximum number of results to return.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+    /// <returns>A list of health check results.</returns>
+    async Task<IReadOnlyList<ProviderHealthCheckResult>> IProviderHealthChecker.GetHealthHistoryAsync(
+        string providerId,
+        int limit,
+        CancellationToken cancellationToken)
+    {
+        return await this.GetHealthHistoryAsync(providerId, limit, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
     /// Gets all current health statuses.
     /// </summary>
     /// <returns>A dictionary of provider IDs to their health statuses.</returns>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Meziantou.Analyzer", "MA0016", Justification = "Public API returns concrete type for backward compatibility")]
     public Dictionary<string, ProviderHealthStatus> GetAllHealthStatuses()
     {
-        return _currentStatus.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        return this._currentStatus.ToDictionary(kvp => kvp.Key, kvp => kvp.Value, StringComparer.OrdinalIgnoreCase);
     }
 
     /// <summary>
@@ -318,11 +327,11 @@ public class ProviderHealthMonitor : IProviderHealthChecker
             return;
         }
 
-        _healthHistory.TryRemove(providerId, out _);
-        _currentStatus.TryRemove(providerId, out _);
-        _consecutiveFailures.TryRemove(providerId, out _);
+        this._healthHistory.TryRemove(providerId, out _);
+        this._currentStatus.TryRemove(providerId, out _);
+        this._consecutiveFailures.TryRemove(providerId, out _);
 
-        _logger?.LogInformation("Reset health history for provider {ProviderId}", providerId);
+        this._logger?.LogInformation("Reset health history for provider {ProviderId}", providerId);
     }
 
     /// <summary>
@@ -330,11 +339,11 @@ public class ProviderHealthMonitor : IProviderHealthChecker
     /// </summary>
     public void ResetAll()
     {
-        _healthHistory.Clear();
-        _currentStatus.Clear();
-        _consecutiveFailures.Clear();
+        this._healthHistory.Clear();
+        this._currentStatus.Clear();
+        this._consecutiveFailures.Clear();
 
-        _logger?.LogInformation("Reset all health history");
+        this._logger?.LogInformation("Reset all health history");
     }
 
     private ProviderHealthStatus DetermineHealthStatus(
@@ -354,7 +363,7 @@ public class ProviderHealthMonitor : IProviderHealthChecker
         }
 
         // Check consecutive failures
-        if (metrics.ConsecutiveFailures >= _options.MaxConsecutiveFailures)
+        if (metrics.ConsecutiveFailures >= this._options.MaxConsecutiveFailures)
         {
             return ProviderHealthStatus.Unhealthy;
         }
@@ -365,18 +374,18 @@ public class ProviderHealthMonitor : IProviderHealthChecker
             return ProviderHealthStatus.Degraded;
         }
 
-        if (metrics.SuccessRate < _options.MinSuccessRate)
+        if (metrics.SuccessRate < this._options.MinSuccessRate)
         {
             return ProviderHealthStatus.Warning;
         }
 
         // Check latency
-        if (metrics.AverageLatencyMs > _options.MaxAverageLatencyMs * 2)
+        if (metrics.AverageLatencyMs > this._options.MaxAverageLatencyMs * 2)
         {
             return ProviderHealthStatus.Degraded;
         }
 
-        if (metrics.AverageLatencyMs > _options.MaxAverageLatencyMs)
+        if (metrics.AverageLatencyMs > this._options.MaxAverageLatencyMs)
         {
             return ProviderHealthStatus.Warning;
         }
@@ -386,12 +395,12 @@ public class ProviderHealthMonitor : IProviderHealthChecker
 
     private void UpdateHealthHistory(string providerId, ProviderHealthCheckResult result)
     {
-        var history = _healthHistory.GetOrAdd(providerId, _ => new List<ProviderHealthCheckResult>());
+        var history = this._healthHistory.GetOrAdd(providerId, _ => new List<ProviderHealthCheckResult>());
 
-        lock (_lock)
+        lock (this._lock)
         {
             history.Add(result);
-            if (history.Count > _options.HistorySize)
+            if (history.Count > this._options.HistorySize)
             {
                 history.RemoveAt(0);
             }
@@ -400,21 +409,21 @@ public class ProviderHealthMonitor : IProviderHealthChecker
 
     private void UpdateHealthStatus(string providerId, ProviderHealthCheckResult result)
     {
-        var previousStatus = _currentStatus.TryGetValue(providerId, out var status) ? status : ProviderHealthStatus.Unknown;
+        var previousStatus = this._currentStatus.TryGetValue(providerId, out var status) ? status : ProviderHealthStatus.Unknown;
         var newStatus = result.Status;
 
         // Update consecutive failures
         if (result.Status == ProviderHealthStatus.Unhealthy)
         {
-            _consecutiveFailures.AddOrUpdate(providerId, 1, (_, current) => current + 1);
+            this._consecutiveFailures.AddOrUpdate(providerId, 1, (_, current) => current + 1);
         }
         else
         {
-            _consecutiveFailures.AddOrUpdate(providerId, 0, (_, _) => 0);
+            this._consecutiveFailures.AddOrUpdate(providerId, 0, (_, _) => 0);
         }
 
         // Update current status
-        _currentStatus.AddOrUpdate(providerId, newStatus, (_, _) => newStatus);
+        this._currentStatus.AddOrUpdate(providerId, newStatus, (_, _) => newStatus);
 
         // Raise event if status changed
         if (previousStatus != newStatus)
@@ -424,12 +433,12 @@ public class ProviderHealthMonitor : IProviderHealthChecker
                 ProviderId = providerId,
                 PreviousStatus = previousStatus,
                 NewStatus = newStatus,
-                CheckResult = result
+                CheckResult = result,
             };
 
-            HealthStatusChanged?.Invoke(this, eventArgs);
+            this.HealthStatusChanged?.Invoke(this, eventArgs);
 
-            _logger?.LogWarning(
+            this._logger?.LogWarning(
                 "Provider {ProviderId} health status changed from {PreviousStatus} to {NewStatus}",
                 providerId,
                 previousStatus,

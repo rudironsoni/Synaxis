@@ -1,3 +1,7 @@
+// <copyright file="BatchItemStatus.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.BatchProcessing.Models;
 
 /// <summary>
@@ -23,5 +27,5 @@ public enum BatchItemStatus
     /// <summary>
     /// The item has failed.
     /// </summary>
-    Failed
+    Failed,
 }

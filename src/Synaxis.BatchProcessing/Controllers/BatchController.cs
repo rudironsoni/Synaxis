@@ -90,7 +90,7 @@ namespace Synaxis.BatchProcessing.Controllers
                 TotalItems = request.Items.Count,
                 WebhookUrl = request.WebhookUrl,
                 Priority = request.Priority,
-                Status = BatchStatus.Pending
+                Status = BatchStatus.Pending,
             };
 
             this._logger.LogInformation("Creating batch {BatchId} for user {UserId} in organization {OrganizationId}", batch.Id, userId, organizationId);
@@ -104,7 +104,7 @@ namespace Synaxis.BatchProcessing.Controllers
             this._logger.LogInformation("Batch {BatchId} created and enqueued successfully", batch.Id);
 
             return this.CreatedAtAction(
-                nameof(GetBatch),
+                nameof(this.GetBatch),
                 new { id = batch.Id },
                 batch);
         }
@@ -131,7 +131,6 @@ namespace Synaxis.BatchProcessing.Controllers
 
             // Verify user has access to this batch
             var userIdClaim = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var organizationIdClaim = this.User.FindFirst("organization_id")?.Value;
 
             if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
             {
@@ -184,7 +183,7 @@ namespace Synaxis.BatchProcessing.Controllers
                 return this.BadRequest(new
                 {
                     error = "Batch is not completed",
-                    status = batch.Status.ToString()
+                    status = batch.Status.ToString(),
                 });
             }
 
@@ -198,48 +197,5 @@ namespace Synaxis.BatchProcessing.Controllers
 
             return this.Ok(results);
         }
-    }
-
-    /// <summary>
-    /// Request model for creating a batch.
-    /// </summary>
-    public class CreateBatchRequest
-    {
-        /// <summary>
-        /// Gets or sets the batch name.
-        /// </summary>
-        [Required]
-        [StringLength(200)]
-        public string Name { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Gets or sets the batch description.
-        /// </summary>
-        [StringLength(1000)]
-        public string Description { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Gets or sets the type of batch operation.
-        /// </summary>
-        [Required]
-        [StringLength(50)]
-        public string OperationType { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Gets or sets the items to process in the batch.
-        /// </summary>
-        [Required]
-        public List<BatchItem> Items { get; set; } = new List<BatchItem>();
-
-        /// <summary>
-        /// Gets or sets the webhook URL for completion notifications.
-        /// </summary>
-        [Url]
-        public string WebhookUrl { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Gets or sets the priority of the batch.
-        /// </summary>
-        public BatchPriority Priority { get; set; } = BatchPriority.Normal;
     }
 }

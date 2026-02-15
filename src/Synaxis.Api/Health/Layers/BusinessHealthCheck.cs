@@ -23,6 +23,11 @@ namespace Synaxis.Api.Health.Layers
         private readonly ILogger<BusinessHealthCheck> _logger;
         private readonly BusinessMetrics _metrics;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BusinessHealthCheck"/> class.
+        /// </summary>
+        /// <param name="logger">The logger.</param>
+        /// <param name="metrics">The business metrics collector.</param>
         public BusinessHealthCheck(
             ILogger<BusinessHealthCheck> logger,
             BusinessMetrics metrics)
@@ -31,6 +36,12 @@ namespace Synaxis.Api.Health.Layers
             this._metrics = metrics;
         }
 
+        /// <summary>
+        /// Performs a health check on business metrics and SLO compliance.
+        /// </summary>
+        /// <param name="context">The health check context.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A task representing the health check result.</returns>
         public Task<HealthCheckResult> CheckHealthAsync(
             HealthCheckContext context,
             CancellationToken cancellationToken = default)

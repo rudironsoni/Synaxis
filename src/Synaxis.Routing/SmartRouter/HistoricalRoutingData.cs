@@ -1,3 +1,7 @@
+// <copyright file="HistoricalRoutingData.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.Routing.SmartRouter;
 
 /// <summary>

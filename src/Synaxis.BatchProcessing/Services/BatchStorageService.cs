@@ -60,10 +60,10 @@ namespace Synaxis.BatchProcessing.Services
         /// </summary>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        public async Task InitializeAsync(CancellationToken cancellationToken = default)
+        public Task InitializeAsync(CancellationToken cancellationToken = default)
         {
             this._logger.LogInformation("Initializing batch storage service for container {ContainerName}", this._options.ContainerName);
-            await this._containerClient.CreateIfNotExistsAsync(cancellationToken: cancellationToken);
+            return this._containerClient.CreateIfNotExistsAsync(cancellationToken: cancellationToken);
         }
 
         /// <summary>
@@ -89,7 +89,7 @@ namespace Synaxis.BatchProcessing.Services
             var blobClient = this._containerClient.GetBlobClient(blobName);
             var batchJson = JsonSerializer.Serialize(batch);
             using var stream = new MemoryStream(Encoding.UTF8.GetBytes(batchJson));
-            await blobClient.UploadAsync(stream, cancellationToken: cancellationToken);
+            await blobClient.UploadAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
 
             this._logger.LogInformation("Batch {BatchId} created successfully", batch.Id);
         }
@@ -116,7 +116,7 @@ namespace Synaxis.BatchProcessing.Services
 
             try
             {
-                var response = await blobClient.DownloadContentAsync(cancellationToken);
+                var response = await blobClient.DownloadContentAsync(cancellationToken).ConfigureAwait(false);
                 var batchJson = response.Value.Content.ToString();
                 batch = JsonSerializer.Deserialize<BatchRequest>(batchJson);
 
@@ -129,7 +129,7 @@ namespace Synaxis.BatchProcessing.Services
             }
             catch (RequestFailedException ex) when (ex.Status == 404)
             {
-                this._logger.LogWarning("Batch {BatchId} not found", batchId);
+                this._logger.LogWarning(ex, "Batch {BatchId} not found", batchId);
                 return null;
             }
         }
@@ -157,7 +157,7 @@ namespace Synaxis.BatchProcessing.Services
             var blobClient = this._containerClient.GetBlobClient(blobName);
             var batchJson = JsonSerializer.Serialize(batch);
             using var stream = new MemoryStream(Encoding.UTF8.GetBytes(batchJson));
-            await blobClient.UploadAsync(stream, overwrite: true, cancellationToken: cancellationToken);
+            await blobClient.UploadAsync(stream, overwrite: true, cancellationToken: cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -175,7 +175,7 @@ namespace Synaxis.BatchProcessing.Services
             var blobClient = this._containerClient.GetBlobClient(blobName);
             var resultsJson = JsonSerializer.Serialize(results, new JsonSerializerOptions { WriteIndented = true });
             using var stream = new MemoryStream(Encoding.UTF8.GetBytes(resultsJson));
-            await blobClient.UploadAsync(stream, cancellationToken: cancellationToken);
+            await blobClient.UploadAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
 
             this._logger.LogInformation("Results stored for batch {BatchId} at {BlobName}", batchId, blobName);
             return blobName;
@@ -196,31 +196,15 @@ namespace Synaxis.BatchProcessing.Services
 
             try
             {
-                var response = await blobClient.DownloadContentAsync(cancellationToken);
+                var response = await blobClient.DownloadContentAsync(cancellationToken).ConfigureAwait(false);
                 var resultsJson = response.Value.Content.ToString();
                 return JsonSerializer.Deserialize<object>(resultsJson);
             }
             catch (RequestFailedException ex) when (ex.Status == 404)
             {
-                this._logger.LogWarning("Results not found for batch {BatchId}", batchId);
+                this._logger.LogWarning(ex, "Results not found for batch {BatchId}", batchId);
                 return null;
             }
         }
-    }
-
-    /// <summary>
-    /// Configuration options for batch storage.
-    /// </summary>
-    public class BatchStorageOptions
-    {
-        /// <summary>
-        /// Gets or sets the Azure Blob Storage connection string.
-        /// </summary>
-        public string ConnectionString { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Gets or sets the container name.
-        /// </summary>
-        public string ContainerName { get; set; } = "batch-processing";
     }
 }

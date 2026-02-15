@@ -1,3 +1,7 @@
+// <copyright file="BatchPriority.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.BatchProcessing.Models;
 
 /// <summary>
@@ -23,5 +27,5 @@ public enum BatchPriority
     /// <summary>
     /// Critical priority batch.
     /// </summary>
-    Critical
+    Critical,
 }

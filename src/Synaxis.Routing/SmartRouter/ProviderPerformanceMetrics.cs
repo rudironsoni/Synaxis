@@ -1,3 +1,7 @@
+// <copyright file="ProviderPerformanceMetrics.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.Routing.SmartRouter;
 
 /// <summary>
@@ -26,9 +30,9 @@ public class ProviderPerformanceMetrics
     public int FailedRequests { get; set; }
 
     /// <summary>
-    /// Gets or sets the success rate as a percentage (0.0 to 100.0).
+    /// Gets the success rate as a percentage (0.0 to 100.0).
     /// </summary>
-    public double SuccessRate => TotalRequests == 0 ? 0.0 : (double)SuccessfulRequests / TotalRequests * 100.0;
+    public double SuccessRate => this.TotalRequests == 0 ? 0.0 : (double)this.SuccessfulRequests / this.TotalRequests * 100.0;
 
     /// <summary>
     /// Gets or sets the average response time in milliseconds.
@@ -66,9 +70,9 @@ public class ProviderPerformanceMetrics
     public decimal TotalCost { get; set; }
 
     /// <summary>
-    /// Gets or sets the average cost per request.
+    /// Gets the average cost per request.
     /// </summary>
-    public decimal AverageCostPerRequest => TotalRequests == 0 ? 0 : TotalCost / TotalRequests;
+    public decimal AverageCostPerRequest => this.TotalRequests == 0 ? 0 : this.TotalCost / this.TotalRequests;
 
     /// <summary>
     /// Gets or sets the timestamp of the last request.
