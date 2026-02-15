@@ -1,3 +1,7 @@
+// <copyright file="20260208232422_AddPerformanceIndexes.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable

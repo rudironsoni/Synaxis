@@ -28,15 +28,21 @@ namespace Synaxis.Infrastructure.Services
             "password", "123456", "12345678", "qwerty", "abc123", "monkey", "master",
             "dragon", "111111", "baseball", "iloveyou", "trustno1", "sunshine", "princess",
             "admin", "welcome", "shadow", "ashley", "football", "jesus", "michael", "ninja",
-            "mustang", "password1", "password123", "letmein", "login", "starwars"
+            "mustang", "password1", "password123", "letmein", "login", "starwars",
         };
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PasswordService"/> class.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="userService"></param>
         public PasswordService(SynaxisDbContext context, IUserService userService)
         {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
-            _userService = userService ?? throw new ArgumentNullException(nameof(userService));
+            this._context = context ?? throw new ArgumentNullException(nameof(context));
+            this._userService = userService ?? throw new ArgumentNullException(nameof(userService));
         }
 
+        /// <inheritdoc/>
         public async Task<PasswordValidationResult> ValidatePasswordAsync(Guid userId, string password)
         {
             if (string.IsNullOrWhiteSpace(password))
@@ -46,14 +52,14 @@ namespace Synaxis.Infrastructure.Services
                     IsValid = false,
                     StrengthScore = 0,
                     StrengthLevel = "Invalid",
-                    Errors = new List<string> { "Password is required" }
+                    Errors = new List<string> { "Password is required" },
                 };
             }
 
-            var user = await _context.Users
+            var user = await this._context.Users
                 .Include(u => u.Organization)
                 .ThenInclude(o => o.PasswordPolicy)
-                .FirstOrDefaultAsync(u => u.Id == userId);
+                .FirstOrDefaultAsync(u => u.Id == userId).ConfigureAwait(false);
 
             if (user == null)
             {
@@ -62,16 +68,16 @@ namespace Synaxis.Infrastructure.Services
                     IsValid = false,
                     StrengthScore = 0,
                     StrengthLevel = "Invalid",
-                    Errors = new List<string> { "User not found" }
+                    Errors = new List<string> { "User not found" },
                 };
             }
 
-            var policy = user.Organization?.PasswordPolicy ?? GetDefaultPolicy();
+            var policy = user.Organization?.PasswordPolicy ?? this.GetDefaultPolicy();
             var result = new PasswordValidationResult
             {
                 IsValid = true,
                 Errors = new List<string>(),
-                Warnings = new List<string>()
+                Warnings = new List<string>(),
             };
 
             // Check minimum length
@@ -146,15 +152,15 @@ namespace Synaxis.Infrastructure.Services
             // Check password history
             if (policy.PasswordHistoryCount > 0)
             {
-                var recentPasswords = await _context.PasswordHistories
+                var recentPasswords = await this._context.PasswordHistories
                     .Where(ph => ph.UserId == userId)
                     .OrderByDescending(ph => ph.SetAt)
                     .Take(policy.PasswordHistoryCount)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 foreach (var historyEntry in recentPasswords)
                 {
-                    if (_userService.VerifyPassword(password, historyEntry.PasswordHash))
+                    if (this._userService.VerifyPassword(password, historyEntry.PasswordHash))
                     {
                         result.IsValid = false;
                         result.Errors.Add($"You cannot reuse your last {policy.PasswordHistoryCount} passwords");
@@ -164,8 +170,8 @@ namespace Synaxis.Infrastructure.Services
             }
 
             // Calculate strength
-            result.StrengthScore = GetPasswordStrength(password);
-            result.StrengthLevel = GetStrengthLevel(result.StrengthScore);
+            result.StrengthScore = this.GetPasswordStrength(password);
+            result.StrengthLevel = this.GetStrengthLevel(result.StrengthScore);
 
             // Add warnings for weak passwords
             if (result.StrengthScore < 50)
@@ -180,23 +186,24 @@ namespace Synaxis.Infrastructure.Services
             return result;
         }
 
+        /// <inheritdoc/>
         public async Task<ChangePasswordResult> ChangePasswordAsync(Guid userId, string currentPassword, string newPassword)
         {
-            var user = await _context.Users
+            var user = await this._context.Users
                 .Include(u => u.Organization)
                 .ThenInclude(o => o.PasswordPolicy)
-                .FirstOrDefaultAsync(u => u.Id == userId);
+                .FirstOrDefaultAsync(u => u.Id == userId).ConfigureAwait(false);
 
             if (user == null)
             {
                 return new ChangePasswordResult
                 {
                     Success = false,
-                    ErrorMessage = "User not found"
+                    ErrorMessage = "User not found",
                 };
             }
 
-            var policy = user.Organization?.PasswordPolicy ?? GetDefaultPolicy();
+            var policy = user.Organization?.PasswordPolicy ?? this.GetDefaultPolicy();
 
             // Check if password change is locked
             if (user.PasswordChangeLockedUntil.HasValue && user.PasswordChangeLockedUntil.Value > DateTime.UtcNow)
@@ -204,52 +211,52 @@ namespace Synaxis.Infrastructure.Services
                 return new ChangePasswordResult
                 {
                     Success = false,
-                    ErrorMessage = $"Password change is locked until {user.PasswordChangeLockedUntil.Value}"
+                    ErrorMessage = $"Password change is locked until {user.PasswordChangeLockedUntil.Value}",
                 };
             }
 
             // Verify current password
-            if (!_userService.VerifyPassword(currentPassword, user.PasswordHash))
+            if (!this._userService.VerifyPassword(currentPassword, user.PasswordHash))
             {
                 user.FailedPasswordChangeAttempts++;
 
                 if (user.FailedPasswordChangeAttempts >= policy.MaxFailedChangeAttempts)
                 {
                     user.PasswordChangeLockedUntil = DateTime.UtcNow.AddMinutes(policy.LockoutDurationMinutes);
-                    await _context.SaveChangesAsync();
+                    await this._context.SaveChangesAsync().ConfigureAwait(false);
                     return new ChangePasswordResult
                     {
                         Success = false,
-                        ErrorMessage = $"Too many failed attempts. Password change locked for {policy.LockoutDurationMinutes} minutes"
+                        ErrorMessage = $"Too many failed attempts. Password change locked for {policy.LockoutDurationMinutes} minutes",
                     };
                 }
 
-                await _context.SaveChangesAsync();
+                await this._context.SaveChangesAsync().ConfigureAwait(false);
                 return new ChangePasswordResult
                 {
                     Success = false,
-                    ErrorMessage = "Current password is incorrect"
+                    ErrorMessage = "Current password is incorrect",
                 };
             }
 
             // Validate new password
-            var validationResult = await ValidatePasswordAsync(userId, newPassword);
+            var validationResult = await this.ValidatePasswordAsync(userId, newPassword).ConfigureAwait(false);
             if (!validationResult.IsValid)
             {
                 return new ChangePasswordResult
                 {
                     Success = false,
-                    ErrorMessage = string.Join("; ", validationResult.Errors)
+                    ErrorMessage = string.Join("; ", validationResult.Errors),
                 };
             }
 
             // Check if new password is same as current
-            if (_userService.VerifyPassword(newPassword, user.PasswordHash))
+            if (this._userService.VerifyPassword(newPassword, user.PasswordHash))
             {
                 return new ChangePasswordResult
                 {
                     Success = false,
-                    ErrorMessage = "New password must be different from current password"
+                    ErrorMessage = "New password must be different from current password",
                 };
             }
 
@@ -259,20 +266,20 @@ namespace Synaxis.Infrastructure.Services
                 Id = Guid.NewGuid(),
                 UserId = userId,
                 PasswordHash = user.PasswordHash,
-                SetAt = DateTime.UtcNow
+                SetAt = DateTime.UtcNow,
             };
-            _context.PasswordHistories.Add(historyEntry);
+            this._context.PasswordHistories.Add(historyEntry);
 
             // Clean up old password history entries
-            var oldHistoryEntries = await _context.PasswordHistories
+            var oldHistoryEntries = await this._context.PasswordHistories
                 .Where(ph => ph.UserId == userId)
                 .OrderByDescending(ph => ph.SetAt)
                 .Skip(policy.PasswordHistoryCount + 5) // Keep a buffer
-                .ToListAsync();
-            _context.PasswordHistories.RemoveRange(oldHistoryEntries);
+                .ToListAsync().ConfigureAwait(false);
+            this._context.PasswordHistories.RemoveRange(oldHistoryEntries);
 
             // Update password
-            user.PasswordHash = _userService.HashPassword(newPassword);
+            user.PasswordHash = this._userService.HashPassword(newPassword);
             user.PasswordChangedAt = DateTime.UtcNow;
             user.FailedPasswordChangeAttempts = 0;
             user.PasswordChangeLockedUntil = null;
@@ -289,41 +296,42 @@ namespace Synaxis.Infrastructure.Services
             }
 
             user.UpdatedAt = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
+            await this._context.SaveChangesAsync().ConfigureAwait(false);
 
             return new ChangePasswordResult
             {
                 Success = true,
-                PasswordExpiresAt = user.PasswordExpiresAt
+                PasswordExpiresAt = user.PasswordExpiresAt,
             };
         }
 
+        /// <inheritdoc/>
         public async Task<ResetPasswordResult> ResetPasswordAsync(Guid userId, string newPassword)
         {
-            var user = await _context.Users
+            var user = await this._context.Users
                 .Include(u => u.Organization)
                 .ThenInclude(o => o.PasswordPolicy)
-                .FirstOrDefaultAsync(u => u.Id == userId);
+                .FirstOrDefaultAsync(u => u.Id == userId).ConfigureAwait(false);
 
             if (user == null)
             {
                 return new ResetPasswordResult
                 {
                     Success = false,
-                    ErrorMessage = "User not found"
+                    ErrorMessage = "User not found",
                 };
             }
 
-            var policy = user.Organization?.PasswordPolicy ?? GetDefaultPolicy();
+            var policy = user.Organization?.PasswordPolicy ?? this.GetDefaultPolicy();
 
             // Validate new password
-            var validationResult = await ValidatePasswordAsync(userId, newPassword);
+            var validationResult = await this.ValidatePasswordAsync(userId, newPassword).ConfigureAwait(false);
             if (!validationResult.IsValid)
             {
                 return new ResetPasswordResult
                 {
                     Success = false,
-                    ErrorMessage = string.Join("; ", validationResult.Errors)
+                    ErrorMessage = string.Join("; ", validationResult.Errors),
                 };
             }
 
@@ -333,12 +341,12 @@ namespace Synaxis.Infrastructure.Services
                 Id = Guid.NewGuid(),
                 UserId = userId,
                 PasswordHash = user.PasswordHash,
-                SetAt = DateTime.UtcNow
+                SetAt = DateTime.UtcNow,
             };
-            _context.PasswordHistories.Add(historyEntry);
+            this._context.PasswordHistories.Add(historyEntry);
 
             // Update password
-            user.PasswordHash = _userService.HashPassword(newPassword);
+            user.PasswordHash = this._userService.HashPassword(newPassword);
             user.PasswordChangedAt = DateTime.UtcNow;
             user.FailedPasswordChangeAttempts = 0;
             user.PasswordChangeLockedUntil = null;
@@ -355,36 +363,38 @@ namespace Synaxis.Infrastructure.Services
             }
 
             user.UpdatedAt = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
+            await this._context.SaveChangesAsync().ConfigureAwait(false);
 
             return new ResetPasswordResult
             {
                 Success = true,
-                PasswordExpiresAt = user.PasswordExpiresAt
+                PasswordExpiresAt = user.PasswordExpiresAt,
             };
         }
 
+        /// <inheritdoc/>
         public async Task<PasswordPolicy> GetPasswordPolicyAsync(Guid organizationId)
         {
-            var policy = await _context.PasswordPolicies
-                .FirstOrDefaultAsync(p => p.OrganizationId == organizationId);
+            var policy = await this._context.PasswordPolicies
+                .FirstOrDefaultAsync(p => p.OrganizationId == organizationId).ConfigureAwait(false);
 
             if (policy == null)
             {
                 // Create default policy for organization
-                policy = GetDefaultPolicy();
+                policy = this.GetDefaultPolicy();
                 policy.OrganizationId = organizationId;
-                _context.PasswordPolicies.Add(policy);
-                await _context.SaveChangesAsync();
+                this._context.PasswordPolicies.Add(policy);
+                await this._context.SaveChangesAsync().ConfigureAwait(false);
             }
 
             return policy;
         }
 
+        /// <inheritdoc/>
         public async Task<PasswordPolicy> UpdatePasswordPolicyAsync(Guid organizationId, PasswordPolicy policy)
         {
-            var existingPolicy = await _context.PasswordPolicies
-                .FirstOrDefaultAsync(p => p.OrganizationId == organizationId);
+            var existingPolicy = await this._context.PasswordPolicies
+                .FirstOrDefaultAsync(p => p.OrganizationId == organizationId).ConfigureAwait(false);
 
             if (existingPolicy == null)
             {
@@ -392,7 +402,7 @@ namespace Synaxis.Infrastructure.Services
                 policy.OrganizationId = organizationId;
                 policy.CreatedAt = DateTime.UtcNow;
                 policy.UpdatedAt = DateTime.UtcNow;
-                _context.PasswordPolicies.Add(policy);
+                this._context.PasswordPolicies.Add(policy);
             }
             else
             {
@@ -412,16 +422,17 @@ namespace Synaxis.Infrastructure.Services
                 policy = existingPolicy;
             }
 
-            await _context.SaveChangesAsync();
+            await this._context.SaveChangesAsync().ConfigureAwait(false);
             return policy;
         }
 
+        /// <inheritdoc/>
         public async Task<PasswordExpirationStatus> CheckPasswordExpirationAsync(Guid userId)
         {
-            var user = await _context.Users
+            var user = await this._context.Users
                 .Include(u => u.Organization)
                 .ThenInclude(o => o.PasswordPolicy)
-                .FirstOrDefaultAsync(u => u.Id == userId);
+                .FirstOrDefaultAsync(u => u.Id == userId).ConfigureAwait(false);
 
             if (user == null)
             {
@@ -429,14 +440,14 @@ namespace Synaxis.Infrastructure.Services
                 {
                     IsExpired = false,
                     IsExpiringSoon = false,
-                    DaysUntilExpiration = -1
+                    DaysUntilExpiration = -1,
                 };
             }
 
-            var policy = user.Organization?.PasswordPolicy ?? GetDefaultPolicy();
+            var policy = user.Organization?.PasswordPolicy ?? this.GetDefaultPolicy();
             var status = new PasswordExpirationStatus
             {
-                ExpiresAt = user.PasswordExpiresAt
+                ExpiresAt = user.PasswordExpiresAt,
             };
 
             if (user.PasswordExpiresAt.HasValue)
@@ -458,6 +469,7 @@ namespace Synaxis.Infrastructure.Services
             return status;
         }
 
+        /// <inheritdoc/>
         public int GetPasswordStrength(string password)
         {
             if (string.IsNullOrWhiteSpace(password))
@@ -520,7 +532,7 @@ namespace Synaxis.Infrastructure.Services
                 < 40 => "Weak",
                 < 60 => "Fair",
                 < 80 => "Good",
-                _ => "Strong"
+                _ => "Strong",
             };
         }
 
@@ -540,7 +552,7 @@ namespace Synaxis.Infrastructure.Services
                 MaxFailedChangeAttempts = 5,
                 LockoutDurationMinutes = 15,
                 BlockCommonPasswords = true,
-                BlockUserInfoInPassword = true
+                BlockUserInfoInPassword = true,
             };
         }
     }

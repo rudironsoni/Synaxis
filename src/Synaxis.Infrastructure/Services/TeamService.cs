@@ -30,8 +30,8 @@ namespace Synaxis.Infrastructure.Services
         /// <param name="invitationService">The invitation service.</param>
         public TeamService(SynaxisDbContext dbContext, IInvitationService invitationService)
         {
-            _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-            _invitationService = invitationService ?? throw new ArgumentNullException(nameof(invitationService));
+            this._dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+            this._invitationService = invitationService ?? throw new ArgumentNullException(nameof(invitationService));
         }
 
         /// <inheritdoc />
@@ -60,8 +60,8 @@ namespace Synaxis.Infrastructure.Services
             var normalizedSlug = request.Slug.ToLowerInvariant().Trim();
 
             // Check slug uniqueness within organization
-            var slugExists = await _dbContext.Teams
-                .AnyAsync(t => t.OrganizationId == organizationId && t.Slug == normalizedSlug, cancellationToken);
+            var slugExists = await this._dbContext.Teams
+                .AnyAsync(t => t.OrganizationId == organizationId && t.Slug == normalizedSlug, cancellationToken).ConfigureAwait(false);
 
             if (slugExists)
             {
@@ -69,8 +69,8 @@ namespace Synaxis.Infrastructure.Services
             }
 
             // Check organization team limits
-            var organization = await _dbContext.Organizations
-                .FirstOrDefaultAsync(o => o.Id == organizationId, cancellationToken);
+            var organization = await this._dbContext.Organizations
+                .FirstOrDefaultAsync(o => o.Id == organizationId, cancellationToken).ConfigureAwait(false);
 
             if (organization == null)
             {
@@ -79,8 +79,8 @@ namespace Synaxis.Infrastructure.Services
 
             if (organization.MaxTeams.HasValue)
             {
-                var currentTeamCount = await _dbContext.Teams
-                    .CountAsync(t => t.OrganizationId == organizationId && t.IsActive, cancellationToken);
+                var currentTeamCount = await this._dbContext.Teams
+                    .CountAsync(t => t.OrganizationId == organizationId && t.IsActive, cancellationToken).ConfigureAwait(false);
 
                 if (currentTeamCount >= organization.MaxTeams.Value)
                 {
@@ -103,8 +103,8 @@ namespace Synaxis.Infrastructure.Services
                 UpdatedAt = DateTime.UtcNow,
             };
 
-            _dbContext.Teams.Add(team);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            this._dbContext.Teams.Add(team);
+            await this._dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
             return MapToResponse(team, 0);
         }
@@ -115,19 +115,19 @@ namespace Synaxis.Infrastructure.Services
             Guid organizationId,
             CancellationToken cancellationToken = default)
         {
-            var team = await _dbContext.Teams
+            var team = await this._dbContext.Teams
                 .AsNoTracking()
                 .FirstOrDefaultAsync(
                     t => t.Id == teamId && t.OrganizationId == organizationId && t.IsActive,
-                    cancellationToken);
+                    cancellationToken).ConfigureAwait(false);
 
             if (team == null)
             {
                 return null;
             }
 
-            var memberCount = await _dbContext.TeamMemberships
-                .CountAsync(tm => tm.TeamId == teamId, cancellationToken);
+            var memberCount = await this._dbContext.TeamMemberships
+                .CountAsync(tm => tm.TeamId == teamId, cancellationToken).ConfigureAwait(false);
 
             return MapToResponse(team, memberCount);
         }
@@ -143,8 +143,8 @@ namespace Synaxis.Infrastructure.Services
                 throw new ArgumentNullException(nameof(request));
             }
 
-            var team = await _dbContext.Teams
-                .FirstOrDefaultAsync(t => t.Id == teamId, cancellationToken);
+            var team = await this._dbContext.Teams
+                .FirstOrDefaultAsync(t => t.Id == teamId, cancellationToken).ConfigureAwait(false);
 
             if (team == null)
             {
@@ -184,10 +184,10 @@ namespace Synaxis.Infrastructure.Services
 
             team.UpdatedAt = DateTime.UtcNow;
 
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await this._dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-            var memberCount = await _dbContext.TeamMemberships
-                .CountAsync(tm => tm.TeamId == teamId, cancellationToken);
+            var memberCount = await this._dbContext.TeamMemberships
+                .CountAsync(tm => tm.TeamId == teamId, cancellationToken).ConfigureAwait(false);
 
             return MapToResponse(team, memberCount);
         }
@@ -198,10 +198,10 @@ namespace Synaxis.Infrastructure.Services
             Guid organizationId,
             CancellationToken cancellationToken = default)
         {
-            var team = await _dbContext.Teams
+            var team = await this._dbContext.Teams
                 .FirstOrDefaultAsync(
                     t => t.Id == teamId && t.OrganizationId == organizationId,
-                    cancellationToken);
+                    cancellationToken).ConfigureAwait(false);
 
             if (team == null)
             {
@@ -212,7 +212,7 @@ namespace Synaxis.Infrastructure.Services
             team.IsActive = false;
             team.UpdatedAt = DateTime.UtcNow;
 
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await this._dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
@@ -237,24 +237,24 @@ namespace Synaxis.Infrastructure.Services
                 pageSize = 100;
             }
 
-            var query = _dbContext.Teams
+            var query = this._dbContext.Teams
                 .AsNoTracking()
                 .Where(t => t.OrganizationId == organizationId && t.IsActive);
 
-            var totalCount = await query.CountAsync(cancellationToken);
+            var totalCount = await query.CountAsync(cancellationToken).ConfigureAwait(false);
 
             var teams = await query
                 .OrderBy(t => t.Name)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .ToListAsync(cancellationToken);
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
 
             var teamIds = teams.Select(t => t.Id).ToList();
-            var memberCounts = await _dbContext.TeamMemberships
+            var memberCounts = await this._dbContext.TeamMemberships
                 .Where(tm => teamIds.Contains(tm.TeamId))
                 .GroupBy(tm => tm.TeamId)
                 .Select(g => new { TeamId = g.Key, Count = g.Count() })
-                .ToListAsync(cancellationToken);
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
 
             var memberCountDict = memberCounts.ToDictionary(mc => mc.TeamId, mc => mc.Count);
 
@@ -286,8 +286,8 @@ namespace Synaxis.Infrastructure.Services
             }
 
             // Validate team exists
-            var team = await _dbContext.Teams
-                .FirstOrDefaultAsync(t => t.Id == teamId, cancellationToken);
+            var team = await this._dbContext.Teams
+                .FirstOrDefaultAsync(t => t.Id == teamId, cancellationToken).ConfigureAwait(false);
 
             if (team == null)
             {
@@ -295,7 +295,7 @@ namespace Synaxis.Infrastructure.Services
             }
 
             // Delegate to invitation service
-            await _invitationService.CreateInvitationAsync(teamId, email, role, invitedByUserId, cancellationToken);
+            await this._invitationService.CreateInvitationAsync(teamId, email, role, invitedByUserId, cancellationToken).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
@@ -304,7 +304,7 @@ namespace Synaxis.Infrastructure.Services
             Guid organizationId,
             CancellationToken cancellationToken = default)
         {
-            var team = await _dbContext.Teams
+            var team = await this._dbContext.Teams
                 .FirstOrDefaultAsync(
                     t => t.Id == teamId && t.OrganizationId == organizationId,
                     cancellationToken)
@@ -318,7 +318,7 @@ namespace Synaxis.Infrastructure.Services
             team.IsActive = false;
             team.UpdatedAt = DateTime.UtcNow;
 
-            await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            await this._dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
@@ -327,7 +327,7 @@ namespace Synaxis.Infrastructure.Services
             Guid organizationId,
             CancellationToken cancellationToken = default)
         {
-            var team = await _dbContext.Teams
+            var team = await this._dbContext.Teams
                 .FirstOrDefaultAsync(
                     t => t.Id == teamId && t.OrganizationId == organizationId,
                     cancellationToken)
@@ -341,7 +341,7 @@ namespace Synaxis.Infrastructure.Services
             team.IsActive = true;
             team.UpdatedAt = DateTime.UtcNow;
 
-            await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            await this._dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
@@ -353,7 +353,7 @@ namespace Synaxis.Infrastructure.Services
         {
             var normalizedSlug = slug.ToLowerInvariant().Trim();
 
-            var query = _dbContext.Teams
+            var query = this._dbContext.Teams
                 .Where(t => t.OrganizationId == organizationId && t.Slug == normalizedSlug);
 
             if (excludeTeamId.HasValue)
@@ -372,7 +372,7 @@ namespace Synaxis.Infrastructure.Services
             Guid organizationId,
             CancellationToken cancellationToken = default)
         {
-            var team = await _dbContext.Teams
+            var team = await this._dbContext.Teams
                 .AsNoTracking()
                 .FirstOrDefaultAsync(
                     t => t.Id == teamId && t.OrganizationId == organizationId,
@@ -384,11 +384,11 @@ namespace Synaxis.Infrastructure.Services
                 throw new InvalidOperationException("Team not found.");
             }
 
-            var memberCount = await _dbContext.TeamMemberships
+            var memberCount = await this._dbContext.TeamMemberships
                 .CountAsync(tm => tm.TeamId == teamId, cancellationToken)
                 .ConfigureAwait(false);
 
-            var activeKeyCount = await _dbContext.VirtualKeys
+            var activeKeyCount = await this._dbContext.VirtualKeys
                 .CountAsync(vk => vk.TeamId == teamId && vk.IsActive && !vk.IsRevoked, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -396,13 +396,13 @@ namespace Synaxis.Infrastructure.Services
             var now = DateTime.UtcNow;
             var monthStart = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
 
-            var monthlyStats = await _dbContext.Requests
+            var monthlyStats = await this._dbContext.Requests
                 .Where(r => r.TeamId == teamId && r.CreatedAt >= monthStart)
                 .GroupBy(r => 1)
                 .Select(g => new
                 {
                     RequestCount = g.Count(),
-                    TotalCost = g.Sum(r => r.Cost)
+                    TotalCost = g.Sum(r => r.Cost),
                 })
                 .FirstOrDefaultAsync(cancellationToken)
                 .ConfigureAwait(false);
@@ -424,7 +424,7 @@ namespace Synaxis.Infrastructure.Services
                 MonthlyRequestCount = monthlyRequestCount,
                 MonthlyCost = monthlyCost,
                 MonthlyBudget = team.MonthlyBudget,
-                BudgetUtilization = budgetUtilization
+                BudgetUtilization = budgetUtilization,
             };
         }
 

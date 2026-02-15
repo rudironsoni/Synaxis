@@ -57,7 +57,7 @@ namespace Synaxis.Infrastructure.Services
                 Title = title ?? "New Conversation",
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
-                IsActive = true
+                IsActive = true,
             };
 
             this._dbContext.Conversations.Add(conversation);
@@ -78,14 +78,14 @@ namespace Synaxis.Infrastructure.Services
         /// <param name="conversationId">The conversation ID.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The conversation, or null if not found.</returns>
-        public async Task<Conversation> GetConversationAsync(
+        public Task<Conversation> GetConversationAsync(
             Guid conversationId,
             CancellationToken cancellationToken = default)
         {
-            return await this._dbContext.Conversations
+            return this._dbContext.Conversations
                 .Include(c => c.Turns.OrderBy(t => t.TurnNumber))
                 .FirstOrDefaultAsync(c => c.Id == conversationId, cancellationToken)
-                .ConfigureAwait(false);
+;
         }
 
         /// <summary>
@@ -148,7 +148,7 @@ namespace Synaxis.Infrastructure.Services
                 Role = role,
                 Content = content,
                 Metadata = metadata,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
             };
 
             this._dbContext.ConversationTurns.Add(turn);
@@ -279,13 +279,13 @@ namespace Synaxis.Infrastructure.Services
         /// <param name="conversationId">The conversation ID.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The number of turns in the conversation.</returns>
-        public async Task<int> GetTurnCountAsync(
+        public Task<int> GetTurnCountAsync(
             Guid conversationId,
             CancellationToken cancellationToken = default)
         {
-            return await this._dbContext.ConversationTurns
+            return this._dbContext.ConversationTurns
                 .CountAsync(t => t.ConversationId == conversationId, cancellationToken)
-                .ConfigureAwait(false);
+;
         }
     }
 }
