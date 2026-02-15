@@ -20,11 +20,6 @@ namespace Synaxis.Infrastructure.Services
     /// </summary>
     public class QuotaService : IQuotaService
     {
-        private readonly SynaxisDbContext _context;
-        private readonly IConnectionMultiplexer _redis;
-        private readonly ITenantService _tenantService;
-        private readonly ILogger<QuotaService> _logger;
-
         // Lua script for atomic quota check with both fixed and sliding window support
         private const string LuaCheckQuotaFixed = @"
             local key = KEYS[1]
@@ -51,57 +46,21 @@ namespace Synaxis.Infrastructure.Services
             return {new_count, ttl, 'allowed'}
         ";
 
-        // Lua script for sliding window using sorted sets
-        private const string LuaCheckQuotaSliding = @"
-            local key = KEYS[1]
-            local limit = tonumber(ARGV[1])
-            local window_seconds = tonumber(ARGV[2])
-            local now = tonumber(ARGV[3])
-            local increment = tonumber(ARGV[4])
-            
-            -- Remove expired entries
-            local cutoff = now - window_seconds
-            redis.call('ZREMRANGEBYSCORE', key, '-inf', cutoff)
-            
-            -- Count current usage
-            local current = redis.call('ZCARD', key)
-            
-            if current + increment > limit then
-                -- Find time until oldest entry expires
-                local oldest = redis.call('ZRANGE', key, 0, 0, 'WITHSCORES')
-                local retry_after = window_seconds
-                if #oldest > 0 then
-                    retry_after = math.ceil(tonumber(oldest[2]) + window_seconds - now)
-                end
-                return {current, retry_after, 'exceeded'}
-            end
-            
-            -- Add new entries with current timestamp
-            for i = 1, increment do
-                redis.call('ZADD', key, now, now .. ':' .. i)
-            end
-            
-            -- Set expiry on the entire key
-            redis.call('EXPIRE', key, window_seconds)
-            
-            local new_count = redis.call('ZCARD', key)
-            return {new_count, window_seconds, 'allowed'}
-        ";
+        private readonly IConnectionMultiplexer _redis;
+        private readonly ITenantService _tenantService;
+        private readonly ILogger<QuotaService> _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="QuotaService"/> class.
         /// </summary>
-        /// <param name="context"></param>
         /// <param name="redis"></param>
         /// <param name="tenantService"></param>
         /// <param name="logger"></param>
         public QuotaService(
-            SynaxisDbContext context,
             IConnectionMultiplexer redis,
             ITenantService tenantService,
             ILogger<QuotaService> logger)
         {
-            this._context = context ?? throw new ArgumentNullException(nameof(context));
             this._redis = redis ?? throw new ArgumentNullException(nameof(redis));
             this._tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -167,9 +126,7 @@ namespace Synaxis.Infrastructure.Services
 
                 if (string.Equals(status, "exceeded", StringComparison.Ordinal))
                 {
-                    this._logger.LogWarning(
-                        "Quota exceeded for org {OrgId}, metric {Metric}: {Current}/{Limit}",
-                        organizationId, request.MetricType, current, limit);
+                    this._logger.LogWarning("Quota exceeded for org {OrgId}, metric {Metric}: {Current}/{Limit}", organizationId, request.MetricType, current, limit);
 
                     var details = new QuotaDetails
                     {
@@ -185,9 +142,7 @@ namespace Synaxis.Infrastructure.Services
                     return QuotaResult.Throttled(details);
                 }
 
-                this._logger.LogDebug(
-                    "Quota check passed for org {OrgId}, metric {Metric}: {Current}/{Limit}",
-                    organizationId, request.MetricType, current, limit);
+                this._logger.LogDebug("Quota check passed for org {OrgId}, metric {Metric}: {Current}/{Limit}", organizationId, request.MetricType, current, limit);
 
                 return QuotaResult.Allowed();
             }
@@ -291,9 +246,7 @@ namespace Synaxis.Infrastructure.Services
                 await db.StringIncrementAsync(dayKey, metrics.Value).ConfigureAwait(false);
                 await db.KeyExpireAsync(dayKey, TimeSpan.FromDays(2)).ConfigureAwait(false);
 
-                this._logger.LogDebug(
-                    "Incremented usage for org {OrgId}, metric {Metric}: +{Value}",
-                    organizationId, metrics.MetricType, metrics.Value);
+                this._logger.LogDebug("Incremented usage for org {OrgId}, metric {Metric}: +{Value}", organizationId, metrics.MetricType, metrics.Value);
             }
             catch (Exception ex)
             {
@@ -367,7 +320,7 @@ namespace Synaxis.Infrastructure.Services
 
                 // Note: In production, use Redis SCAN instead of KEYS for better performance
                 var endpoints = this._redis.GetEndPoints();
-                var server = this._redis.GetServer(endpoints.First());
+                var server = this._redis.GetServer(endpoints[0]);
 
                 await foreach (var key in server.KeysAsync(pattern: pattern).ConfigureAwait(false))
                 {
@@ -425,9 +378,7 @@ namespace Synaxis.Infrastructure.Services
 
                 if (currentCount >= limits.MaxConcurrentRequests)
                 {
-                    this._logger.LogWarning(
-                        "Concurrent request limit exceeded for org {OrgId}: {Current}/{Limit}",
-                        organizationId, currentCount, limits.MaxConcurrentRequests);
+                    this._logger.LogWarning("Concurrent request limit exceeded for org {OrgId}: {Current}/{Limit}", organizationId, currentCount, limits.MaxConcurrentRequests);
 
                     return QuotaResult.Blocked($"Concurrent request limit exceeded: {currentCount}/{limits.MaxConcurrentRequests}");
                 }

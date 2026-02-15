@@ -199,9 +199,7 @@ namespace Synaxis.Infrastructure.Services
                 WriteIndented = true,
             });
 
-            this._logger.LogInformation(
-                "Exported {Count} audit logs for organization {OrganizationId}",
-                logs.Count, organizationId);
+            this._logger.LogInformation("Exported {Count} audit logs for organization {OrganizationId}", logs.Count, organizationId);
 
             return Encoding.UTF8.GetBytes(json);
         }

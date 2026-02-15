@@ -115,9 +115,7 @@ namespace Synaxis.Infrastructure.Services
                 // Cache the result
                 this._healthCache[region] = health;
 
-                this._logger.LogInformation(
-                    "Region {Region} health check: {Status} (score: {Score})",
-                    region, health.Status, health.HealthScore);
+                this._logger.LogInformation("Region {Region} health check: {Status} (score: {Score})", region, health.Status, health.HealthScore);
 
                 return health;
             }
@@ -164,9 +162,7 @@ namespace Synaxis.Infrastructure.Services
 
                 var healthy = stopwatch.ElapsedMilliseconds < 1000; // Less than 1 second
 
-                this._logger.LogDebug(
-                    "Database health check for {Region}: {Healthy} ({Ms}ms)",
-                    region, healthy, stopwatch.ElapsedMilliseconds);
+                this._logger.LogDebug("Database health check for {Region}: {Healthy} ({Ms}ms)", region, healthy, stopwatch.ElapsedMilliseconds);
 
                 return healthy;
             }
@@ -187,16 +183,14 @@ namespace Synaxis.Infrastructure.Services
 
                 // Ping Redis
                 var key = $"health:{region}:ping";
-                await db.StringSetAsync(key, DateTime.UtcNow.Ticks.ToString(), TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+                await db.StringSetAsync(key, DateTime.UtcNow.Ticks.ToString(System.Globalization.CultureInfo.InvariantCulture), TimeSpan.FromSeconds(5)).ConfigureAwait(false);
                 var value = await db.StringGetAsync(key).ConfigureAwait(false);
 
                 stopwatch.Stop();
 
                 var healthy = value.HasValue && stopwatch.ElapsedMilliseconds < 500;
 
-                this._logger.LogDebug(
-                    "Redis health check for {Region}: {Healthy} ({Ms}ms)",
-                    region, healthy, stopwatch.ElapsedMilliseconds);
+                this._logger.LogDebug("Redis health check for {Region}: {Healthy} ({Ms}ms)", region, healthy, stopwatch.ElapsedMilliseconds);
 
                 return healthy;
             }
@@ -241,9 +235,7 @@ namespace Synaxis.Infrastructure.Services
                 health.IsAvailable = response.IsSuccessStatusCode;
                 health.Status = response.IsSuccessStatusCode ? "operational" : "degraded";
 
-                this._logger.LogDebug(
-                    "Provider {Provider} health check: {Status} ({Ms}ms)",
-                    provider, health.Status, health.ResponseTimeMs);
+                this._logger.LogDebug("Provider {Provider} health check: {Status} ({Ms}ms)", provider, health.Status, health.ResponseTimeMs);
             }
             catch (Exception ex)
             {
@@ -306,7 +298,7 @@ namespace Synaxis.Infrastructure.Services
             if (!RegionCoordinates.ContainsKey(fromRegion))
             {
                 this._logger.LogWarning("Unknown region {Region}, returning first healthy region", fromRegion);
-                return healthyRegions.First().Region;
+                return healthyRegions[0].Region;
             }
 
             var fromCoords = RegionCoordinates[fromRegion];
@@ -314,9 +306,7 @@ namespace Synaxis.Infrastructure.Services
                 .OrderBy(h => this.CalculateDistance(fromCoords, RegionCoordinates[h.Region]))
                 .First();
 
-            this._logger.LogInformation(
-                "Nearest healthy region to {FromRegion}: {ToRegion}",
-                fromRegion, nearestRegion.Region);
+            this._logger.LogInformation("Nearest healthy region to {FromRegion}: {ToRegion}", fromRegion, nearestRegion.Region);
 
             return nearestRegion.Region;
         }

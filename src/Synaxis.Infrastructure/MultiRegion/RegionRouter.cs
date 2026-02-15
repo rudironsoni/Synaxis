@@ -90,9 +90,7 @@ StringComparer.Ordinal)
             // If user's region matches current region, process locally
             if (string.Equals(userRegion, this._currentRegion, StringComparison.Ordinal))
             {
-                this._logger.LogInformation(
-                    "Processing request locally in region {Region} for user {UserId}",
-                    this._currentRegion, userId);
+                this._logger.LogInformation("Processing request locally in region {Region} for user {UserId}", this._currentRegion, userId);
                 return await this.ProcessLocallyAsync<TRequest, TResponse>(request).ConfigureAwait(false);
             }
 
@@ -109,9 +107,7 @@ StringComparer.Ordinal)
             }
 
             // Route to user's region
-            this._logger.LogInformation(
-                "Routing request from {CurrentRegion} to {TargetRegion} for user {UserId}",
-                this._currentRegion, userRegion, userId);
+            this._logger.LogInformation("Routing request from {CurrentRegion} to {TargetRegion} for user {UserId}", this._currentRegion, userRegion, userId);
 
             var response = await this.ForwardRequestToRegionAsync<TRequest, TResponse>(
                 userRegion, endpoint, request).ConfigureAwait(false);
@@ -157,7 +153,7 @@ StringComparer.Ordinal)
             this._logger.LogInformation("Processing request locally in region {Region}", this._currentRegion);
 
             // In production, this would delegate to the appropriate handler
-            throw new NotImplementedException(
+            throw new NotSupportedException(
                 "Local processing must be implemented by the calling service");
         }
 
@@ -212,13 +208,13 @@ StringComparer.Ordinal)
             }
 
             // Try current region first
-            if (await IsRegionHealthyAsync(currentRegion).ConfigureAwait(false))
+            if (await this.IsRegionHealthyAsync(currentRegion).ConfigureAwait(false))
             {
                 return currentRegion;
             }
 
             // Calculate distances and find nearest healthy region
-            var regionDistances = new List<(string region, double distance)>();
+            var regionDistances = new List<(string Region, double Distance)>();
 
             foreach (var region in RegionEndpoints.Keys)
             {
@@ -227,7 +223,7 @@ StringComparer.Ordinal)
                     continue;
                 }
 
-                if (await IsRegionHealthyAsync(region).ConfigureAwait(false))
+                if (await this.IsRegionHealthyAsync(region).ConfigureAwait(false))
                 {
                     var distance = this.CalculateDistance(userLocation, this.GetRegionLocation(region));
                     regionDistances.Add((region, distance));
@@ -235,7 +231,7 @@ StringComparer.Ordinal)
             }
 
             // Sort by distance and return nearest
-            regionDistances.Sort((a, b) => a.distance.CompareTo(b.distance));
+            regionDistances.Sort((a, b) => a.Distance.CompareTo(b.Distance));
 
             if (regionDistances.Count > 0)
             {
@@ -254,10 +250,7 @@ StringComparer.Ordinal)
                 throw new ArgumentNullException(nameof(context));
             }
 
-            this._logger.LogWarning(
-                "Cross-border transfer: User {UserId}, Org {OrgId}, {FromRegion} -> {ToRegion}, Basis: {LegalBasis}",
-                context.UserId, context.OrganizationId, context.FromRegion,
-                context.ToRegion, context.LegalBasis);
+            this._logger.LogWarning("Cross-border transfer: User {UserId}, Org {OrgId}, {FromRegion} -> {ToRegion}, Basis: {LegalBasis}", context.UserId, context.OrganizationId, context.FromRegion, context.ToRegion, context.LegalBasis);
 
             // In production, write to cross_border_transfers table
             return Task.CompletedTask;
@@ -316,7 +309,7 @@ StringComparer.Ordinal)
             return "adequacy";
         }
 
-        private async Task<bool> IsRegionHealthyAsync(string region)
+        private async Task<bool> IsRegionHealthyAsync()
         {
             // In production, call health check endpoint
             // For now, assume all regions are healthy

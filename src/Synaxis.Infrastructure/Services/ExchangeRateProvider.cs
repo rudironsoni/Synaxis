@@ -16,14 +16,14 @@ namespace Synaxis.Infrastructure.Services
     /// </summary>
     public class ExchangeRateProvider : IExchangeRateProvider
     {
+        // Cache key for exchange rates
+        private const string RatesCacheKey = "exchange_rates:all";
+
         private readonly ICacheService _cacheService;
         private readonly ILogger<ExchangeRateProvider> _logger;
 
         // Supported currencies
         private static readonly string[] SupportedCurrencies = { "USD", "EUR", "BRL", "GBP" };
-
-        // Cache key for exchange rates
-        private const string RatesCacheKey = "exchange_rates:all";
 
         // Cache duration: 1 hour
         private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(1);

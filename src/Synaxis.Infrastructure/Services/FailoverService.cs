@@ -62,9 +62,7 @@ namespace Synaxis.Infrastructure.Services
 
                 if (primaryHealthy)
                 {
-                    this._logger.LogDebug(
-                        "Primary region {Region} is healthy for org {OrgId}",
-                        primaryRegion, organizationId);
+                    this._logger.LogDebug("Primary region {Region} is healthy for org {OrgId}", primaryRegion, organizationId);
 
                     return new FailoverDecision
                     {
@@ -77,9 +75,7 @@ namespace Synaxis.Infrastructure.Services
                 }
 
                 // Primary is unhealthy, need to failover
-                this._logger.LogWarning(
-                    "Primary region {Region} is unhealthy for org {OrgId}, initiating failover",
-                    primaryRegion, organizationId);
+                this._logger.LogWarning("Primary region {Region} is unhealthy for org {OrgId}, initiating failover", primaryRegion, organizationId);
 
                 // Get organization's available regions
                 var org = await this._context.Organizations
@@ -129,9 +125,7 @@ namespace Synaxis.Infrastructure.Services
                     .Select(h => h.Key)
                     .ToList();
 
-                this._logger.LogInformation(
-                    "Failover decision for org {OrgId}: {PrimaryRegion} -> {TargetRegion}, consent needed: {NeedsConsent}",
-                    organizationId, primaryRegion, targetRegion, needsConsent);
+                this._logger.LogInformation("Failover decision for org {OrgId}: {PrimaryRegion} -> {TargetRegion}, consent needed: {NeedsConsent}", organizationId, primaryRegion, targetRegion, needsConsent);
 
                 return new FailoverDecision
                 {
@@ -178,9 +172,7 @@ namespace Synaxis.Infrastructure.Services
 
                 if (!targetHealthy)
                 {
-                    this._logger.LogWarning(
-                        "Failover target region {ToRegion} is unhealthy for org {OrgId}",
-                        toRegion, organizationId);
+                    this._logger.LogWarning("Failover target region {ToRegion} is unhealthy for org {OrgId}", toRegion, organizationId);
 
                     return FailoverResult.Failed($"Target region {toRegion} is unhealthy");
                 }
@@ -191,27 +183,18 @@ namespace Synaxis.Infrastructure.Services
 
                 if (user != null && !hasConsent && !string.Equals(user.DataResidencyRegion, toRegion, StringComparison.Ordinal))
                 {
-                    this._logger.LogWarning(
-                        "User {UserId} needs cross-border consent for failover to {ToRegion}",
-                        userId, toRegion);
+                    this._logger.LogWarning("User {UserId} needs cross-border consent for failover to {ToRegion}", userId, toRegion);
 
                     var consentUrl = $"/consent/cross-border?from={fromRegion}&to={toRegion}";
                     return FailoverResult.NeedsConsent(toRegion, consentUrl);
                 }
 
                 // Record cross-border transfer for compliance
-                await this.RecordCrossBorderTransferAsync(
-                    organizationId,
-                    userId,
-                    fromRegion,
-                    toRegion,
-                    hasConsent ? "consent" : "necessity").ConfigureAwait(false);
+                await this.RecordCrossBorderTransferAsync(organizationId, userId, fromRegion, toRegion, hasConsent ? "consent" : "necessity").ConfigureAwait(false);
 
                 var message = this.GetFailoverNotificationMessage(fromRegion, toRegion, !hasConsent);
 
-                this._logger.LogInformation(
-                    "Failover successful for org {OrgId}, user {UserId}: {FromRegion} -> {ToRegion}",
-                    organizationId, userId, fromRegion, toRegion);
+                this._logger.LogInformation("Failover successful for org {OrgId}, user {UserId}: {FromRegion} -> {ToRegion}", organizationId, userId, fromRegion, toRegion);
 
                 return FailoverResult.Succeeded(toRegion, message);
             }
@@ -252,9 +235,7 @@ namespace Synaxis.Infrastructure.Services
             {
                 // In a real implementation, this would insert into the cross_border_transfers table
                 // For now, we'll log it
-                this._logger.LogInformation(
-                    "Cross-border transfer recorded: Org {OrgId}, User {UserId}, {FromRegion} -> {ToRegion}, Basis: {LegalBasis}",
-                    organizationId, userId, fromRegion, toRegion, legalBasis);
+                this._logger.LogInformation("Cross-border transfer recorded: Org {OrgId}, User {UserId}, {FromRegion} -> {ToRegion}, Basis: {LegalBasis}", organizationId, userId, fromRegion, toRegion, legalBasis);
 
                 // This would typically execute SQL like:
                 // INSERT INTO cross_border_transfers (organization_id, user_id, from_region, to_region, legal_basis, ...)
@@ -280,9 +261,7 @@ namespace Synaxis.Infrastructure.Services
 
                 if (canRecover)
                 {
-                    this._logger.LogInformation(
-                        "Region {Region} has recovered and can accept traffic (score: {Score})",
-                        region, health.HealthScore);
+                    this._logger.LogInformation("Region {Region} has recovered and can accept traffic (score: {Score})", region, health.HealthScore);
                 }
 
                 return canRecover;
@@ -297,8 +276,7 @@ namespace Synaxis.Infrastructure.Services
         /// <inheritdoc/>
         public string GetFailoverNotificationMessage(string fromRegion, string toRegion, bool needsConsent)
         {
-            var regionNames = new Dictionary<string, string>(
-StringComparer.Ordinal)
+            var regionNames = new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 { "eu-west-1", "Europe (Ireland)" },
                 { "us-east-1", "US East (Virginia)" },

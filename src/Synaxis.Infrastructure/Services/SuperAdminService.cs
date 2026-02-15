@@ -89,9 +89,7 @@ namespace Synaxis.Infrastructure.Services
             // Combine all results
             var allOrgs = localOrgs.Concat(remoteResults.SelectMany(r => r)).ToList();
 
-            this._logger.LogInformation(
-                "Retrieved {Count} organizations across {Regions} regions",
-                allOrgs.Count, this._regionEndpoints.Count);
+            this._logger.LogInformation("Retrieved {Count} organizations across {Regions} regions", allOrgs.Count, this._regionEndpoints.Count);
 
             return allOrgs;
         }
@@ -114,9 +112,7 @@ namespace Synaxis.Infrastructure.Services
                 throw new ArgumentException("Approval is required for impersonation");
             }
 
-            this._logger.LogWarning(
-                "Generating impersonation token for user {UserId} in org {OrgId}. Justification: {Justification}",
-                request.UserId, request.OrganizationId, request.Justification);
+            this._logger.LogWarning("Generating impersonation token for user {UserId} in org {OrgId}. Justification: {Justification}", request.UserId, request.OrganizationId, request.Justification);
 
             // Verify user exists
             var user = await this._context.Users
@@ -386,9 +382,7 @@ StringComparer.Ordinal)
                 throw new ArgumentException("Approval is required for limit modification");
             }
 
-            this._logger.LogWarning(
-                "Modifying limits for organization {OrgId}. Type: {Type}, New Value: {Value}. Justification: {Justification}",
-                request.OrganizationId, request.LimitType, request.NewValue, request.Justification);
+            this._logger.LogWarning("Modifying limits for organization {OrgId}. Type: {Type}, New Value: {Value}. Justification: {Justification}", request.OrganizationId, request.LimitType, request.NewValue, request.Justification);
 
             var org = await this._context.Organizations.FindAsync(request.OrganizationId).ConfigureAwait(false);
             if (org == null)
