@@ -58,7 +58,7 @@ public sealed class KubernetesClientWrapper : IDisposable
         catch (Exception ex)
         {
             this._logger.LogError(ex, "Failed to list ConfigMaps in namespace: {Namespace}", this._namespace);
-            throw;
+            throw new InvalidOperationException($"Failed to list ConfigMaps in namespace: {this._namespace}", ex);
         }
     }
 
@@ -81,7 +81,7 @@ public sealed class KubernetesClientWrapper : IDisposable
         catch (Exception ex)
         {
             this._logger.LogError(ex, "Failed to get ConfigMap: {Name} in namespace: {Namespace}", name, this._namespace);
-            throw;
+            throw new InvalidOperationException($"Failed to get ConfigMap: {name} in namespace: {this._namespace}", ex);
         }
     }
 
@@ -102,7 +102,7 @@ public sealed class KubernetesClientWrapper : IDisposable
         catch (Exception ex)
         {
             this._logger.LogError(ex, "Failed to create ConfigMap: {Name} in namespace: {Namespace}", configMap.Metadata.Name, this._namespace);
-            throw;
+            throw new InvalidOperationException($"Failed to create ConfigMap: {configMap.Metadata.Name} in namespace: {this._namespace}", ex);
         }
     }
 
@@ -128,7 +128,7 @@ public sealed class KubernetesClientWrapper : IDisposable
         catch (Exception ex)
         {
             this._logger.LogError(ex, "Failed to update ConfigMap: {Name} in namespace: {Namespace}", configMap.Metadata.Name, this._namespace);
-            throw;
+            throw new InvalidOperationException($"Failed to update ConfigMap: {configMap.Metadata.Name} in namespace: {this._namespace}", ex);
         }
     }
 
@@ -137,7 +137,7 @@ public sealed class KubernetesClientWrapper : IDisposable
     /// </summary>
     /// <param name="name">The name of the ConfigMap to delete.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public async Task DeleteConfigMapAsync(string name, CancellationToken cancellationToken = default)
     {
         try
@@ -152,7 +152,7 @@ public sealed class KubernetesClientWrapper : IDisposable
         catch (Exception ex)
         {
             this._logger.LogError(ex, "Failed to delete ConfigMap: {Name} in namespace: {Namespace}", name, this._namespace);
-            throw;
+            throw new InvalidOperationException($"Failed to delete ConfigMap: {name} in namespace: {this._namespace}", ex);
         }
     }
 
@@ -166,7 +166,5 @@ public sealed class KubernetesClientWrapper : IDisposable
             this._client.Dispose();
             this._disposed = true;
         }
-
-        GC.SuppressFinalize(this);
     }
 }

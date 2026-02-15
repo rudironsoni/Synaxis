@@ -1,4 +1,10 @@
+// <copyright file="WebhookDto.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.Webhooks.Controllers;
+
+using System.Collections.Generic;
 
 /// <summary>
 /// DTO for a webhook.
@@ -23,7 +29,7 @@ public class WebhookDto
     /// <summary>
     /// Gets or sets the list of events this webhook subscribes to.
     /// </summary>
-    public List<string> Events { get; set; } = new List<string>();
+    public IList<string> Events { get; set; } = new List<string>();
 
     /// <summary>
     /// Gets or sets a value indicating whether the webhook is active.

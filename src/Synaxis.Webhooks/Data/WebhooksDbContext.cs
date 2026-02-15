@@ -25,7 +25,9 @@ namespace Synaxis.Webhooks.Data
 
         public DbSet<WebhookDeliveryLog> WebhookDeliveryLogs { get; set; }
 
+#pragma warning disable MA0051 // Method is too long
         protected override void OnModelCreating(ModelBuilder modelBuilder)
+#pragma warning restore MA0051 // Method is too long
         {
             base.OnModelCreating(modelBuilder);
 

@@ -41,7 +41,7 @@ try
 catch (Exception ex)
 {
     logger.LogError(ex, "Stamp Controller terminated unexpectedly");
-    throw;
+    throw new InvalidOperationException("Stamp Controller terminated unexpectedly", ex);
 }
 finally
 {

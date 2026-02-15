@@ -52,7 +52,7 @@ public sealed class StampLifecycleService
     /// Processes all stamps in their current phase.
     /// </summary>
     /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public async Task ProcessStampsAsync(CancellationToken cancellationToken = default)
     {
         try
@@ -152,7 +152,9 @@ public sealed class StampLifecycleService
     /// <summary>
     /// Handles the Active phase.
     /// </summary>
-    private async Task<StampPhase> HandleActivePhaseAsync(StampConfigMap stamp, CancellationToken cancellationToken)
+#pragma warning disable S1172 // Remove this unused method parameter '_'.
+    private Task<StampPhase> HandleActivePhaseAsync(StampConfigMap stamp, CancellationToken _)
+#pragma warning restore S1172 // Remove this unused method parameter '_'.
     {
         this._logger.LogInformation("Stamp {Id} is active", stamp.Id);
 
@@ -164,12 +166,12 @@ public sealed class StampLifecycleService
             {
                 this._logger.LogInformation("Stamp {Id} TTL expired, transitioning to Drain", stamp.Id);
                 stamp.Status = "TTL expired";
-                return StampPhase.Drain;
+                return Task.FromResult(StampPhase.Drain);
             }
         }
 
         stamp.Status = "Active and serving traffic";
-        return StampPhase.Active;
+        return Task.FromResult(StampPhase.Active);
     }
 
     /// <summary>

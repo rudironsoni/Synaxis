@@ -22,32 +22,6 @@ namespace Synaxis.Webhooks.Services
     using Synaxis.Webhooks.Models;
 
     /// <summary>
-    /// Configuration options for webhook delivery.
-    /// </summary>
-    public class WebhookDeliveryOptions
-    {
-        /// <summary>
-        /// Gets or sets the maximum number of retry attempts.
-        /// </summary>
-        public int MaxRetryAttempts { get; set; } = 3;
-
-        /// <summary>
-        /// Gets or sets the initial delay between retries in seconds.
-        /// </summary>
-        public int InitialRetryDelaySeconds { get; set; } = 1;
-
-        /// <summary>
-        /// Gets or sets the maximum delay between retries in seconds.
-        /// </summary>
-        public int MaxRetryDelaySeconds { get; set; } = 60;
-
-        /// <summary>
-        /// Gets or sets the timeout for webhook delivery in seconds.
-        /// </summary>
-        public int DeliveryTimeoutSeconds { get; set; } = 30;
-    }
-
-    /// <summary>
     /// Service for delivering webhook events with retry logic.
     /// </summary>
     public class WebhookService
@@ -71,13 +45,13 @@ namespace Synaxis.Webhooks.Services
             ILogger<WebhookService> logger,
             IOptions<WebhookDeliveryOptions> options)
         {
-            _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-            _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _options = options.Value ?? new WebhookDeliveryOptions();
+            this._dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+            this._httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._options = options.Value ?? new WebhookDeliveryOptions();
 
             // Configure exponential backoff retry policy
-            _retryPolicy = Policy
+            this._retryPolicy = Policy
                 .HandleResult<HttpResponseMessage>(r =>
                     !r.IsSuccessStatusCode &&
                     r.StatusCode != HttpStatusCode.BadRequest &&
@@ -87,13 +61,13 @@ namespace Synaxis.Webhooks.Services
                 .Or<HttpRequestException>()
                 .Or<TimeoutException>()
                 .WaitAndRetryAsync(
-                    _options.MaxRetryAttempts,
+                    this._options.MaxRetryAttempts,
                     retryAttempt => TimeSpan.FromSeconds(Math.Min(
-                        _options.InitialRetryDelaySeconds * Math.Pow(2, retryAttempt - 1),
-                        _options.MaxRetryDelaySeconds)),
+                        this._options.InitialRetryDelaySeconds * Math.Pow(2, retryAttempt - 1),
+                        this._options.MaxRetryDelaySeconds)),
                     onRetry: (outcome, timeSpan, retryCount, context) =>
                     {
-                        _logger.LogWarning(
+                        this._logger.LogWarning(
                             "Webhook delivery attempt {RetryCount} failed after {Delay}s. Retrying...",
                             retryCount,
                             timeSpan.TotalSeconds);
@@ -110,14 +84,14 @@ namespace Synaxis.Webhooks.Services
         public async Task DeliverEventAsync(string eventType, object payload, CancellationToken cancellationToken = default)
         {
             var payloadJson = JsonSerializer.Serialize(payload);
-            var webhooks = await GetActiveWebhooksForEventAsync(eventType, cancellationToken);
+            var webhooks = await this.GetActiveWebhooksForEventAsync(eventType, cancellationToken).ConfigureAwait(false);
 
-            _logger.LogInformation("Delivering event {EventType} to {Count} webhooks", eventType, webhooks.Count);
+            this._logger.LogInformation("Delivering event {EventType} to {Count} webhooks", eventType, webhooks.Count);
 
             var deliveryTasks = webhooks.Select(webhook =>
-                DeliverToWebhookAsync(webhook, eventType, payloadJson, cancellationToken));
+                this.DeliverToWebhookAsync(webhook, eventType, payloadJson, cancellationToken));
 
-            await Task.WhenAll(deliveryTasks);
+            await Task.WhenAll(deliveryTasks).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -128,7 +102,9 @@ namespace Synaxis.Webhooks.Services
         /// <param name="payload">The event payload.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
+#pragma warning disable MA0051 // Method is too long
         public async Task DeliverToWebhookAsync(Webhook webhook, string eventType, string payload, CancellationToken cancellationToken = default)
+#pragma warning restore MA0051 // Method is too long
         {
             var startTime = DateTime.UtcNow;
             var deliveryLog = new WebhookDeliveryLog
@@ -145,28 +121,30 @@ namespace Synaxis.Webhooks.Services
             {
                 var signature = WebhookSignature.GenerateSignature(payload, webhook.Secret);
 
-                var request = new HttpRequestMessage(HttpMethod.Post, webhook.Url)
+                using var request = new HttpRequestMessage(HttpMethod.Post, webhook.Url)
                 {
-                    Content = new StringContent(payload, Encoding.UTF8, "application/json")
+                    Content = new StringContent(payload, Encoding.UTF8, "application/json"),
                 };
 
                 request.Headers.Add(WebhookSignature.GetSignatureHeader(), signature);
                 request.Headers.Add("X-Webhook-Event-Type", eventType);
                 request.Headers.Add("X-Webhook-Delivery-Id", deliveryLog.Id.ToString());
 
-                _logger.LogInformation(
+                this._logger.LogInformation(
                     "Delivering webhook {WebhookId} to {Url} for event {EventType}",
                     webhook.Id,
                     webhook.Url,
                     eventType);
 
-                var response = await _retryPolicy.ExecuteAsync(async () =>
+#pragma warning disable IDISP001 // Dispose created
+                var response = await this._retryPolicy.ExecuteAsync(async () =>
                 {
                     using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                    cts.CancelAfter(TimeSpan.FromSeconds(_options.DeliveryTimeoutSeconds));
+                    cts.CancelAfter(TimeSpan.FromSeconds(this._options.DeliveryTimeoutSeconds));
 
-                    return await _httpClient.SendAsync(request, cts.Token);
-                });
+                    return await this._httpClient.SendAsync(request, cts.Token).ConfigureAwait(false);
+                }).ConfigureAwait(false);
+#pragma warning restore IDISP001 // Dispose created
 
                 var duration = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
                 deliveryLog.DurationMs = duration;
@@ -175,38 +153,37 @@ namespace Synaxis.Webhooks.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+                    var responseBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
                     deliveryLog.ResponseBody = responseBody;
 
                     webhook.LastSuccessfulDeliveryAt = DateTime.UtcNow;
                     webhook.FailedDeliveryAttempts = 0;
                     webhook.UpdatedAt = DateTime.UtcNow;
 
-                    _logger.LogInformation(
+                    this._logger.LogInformation(
                         "Webhook {WebhookId} delivered successfully in {Duration}ms",
                         webhook.Id,
                         duration);
                 }
                 else
                 {
-                    var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+                    var responseBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
                     deliveryLog.ResponseBody = responseBody;
                     deliveryLog.ErrorMessage = $"HTTP {(int)response.StatusCode}: {response.ReasonPhrase}";
 
                     webhook.FailedDeliveryAttempts++;
                     webhook.UpdatedAt = DateTime.UtcNow;
 
-                    _logger.LogWarning(
+                    this._logger.LogWarning(
                         "Webhook {WebhookId} delivery failed with status {StatusCode}: {Reason}",
                         webhook.Id,
                         (int)response.StatusCode,
                         response.ReasonPhrase);
 
                     // Move to dead letter queue after max retries
-                    if (webhook.FailedDeliveryAttempts >= _options.MaxRetryAttempts)
+                    if (webhook.FailedDeliveryAttempts >= this._options.MaxRetryAttempts)
                     {
-                        await MoveToDeadLetterQueueAsync(webhook, deliveryLog);
-                        return;
+                        await this.MoveToDeadLetterQueueAsync(webhook).ConfigureAwait(false);
                     }
                 }
             }
@@ -220,12 +197,11 @@ namespace Synaxis.Webhooks.Services
                 webhook.FailedDeliveryAttempts++;
                 webhook.UpdatedAt = DateTime.UtcNow;
 
-                _logger.LogError(ex, "Webhook {WebhookId} delivery timed out", webhook.Id);
+                this._logger.LogError(ex, "Webhook {WebhookId} delivery timed out", webhook.Id);
 
-                if (webhook.FailedDeliveryAttempts >= _options.MaxRetryAttempts)
+                if (webhook.FailedDeliveryAttempts >= this._options.MaxRetryAttempts)
                 {
-                    await MoveToDeadLetterQueueAsync(webhook, deliveryLog);
-                    return;
+                    await this.MoveToDeadLetterQueueAsync(webhook).ConfigureAwait(false);
                 }
             }
             catch (Exception ex)
@@ -238,18 +214,17 @@ namespace Synaxis.Webhooks.Services
                 webhook.FailedDeliveryAttempts++;
                 webhook.UpdatedAt = DateTime.UtcNow;
 
-                _logger.LogError(ex, "Webhook {WebhookId} delivery failed", webhook.Id);
+                this._logger.LogError(ex, "Webhook {WebhookId} delivery failed", webhook.Id);
 
-                if (webhook.FailedDeliveryAttempts >= _options.MaxRetryAttempts)
+                if (webhook.FailedDeliveryAttempts >= this._options.MaxRetryAttempts)
                 {
-                    await MoveToDeadLetterQueueAsync(webhook, deliveryLog);
-                    return;
+                    await this.MoveToDeadLetterQueueAsync(webhook).ConfigureAwait(false);
                 }
             }
             finally
             {
-                _dbContext.WebhookDeliveryLogs.Add(deliveryLog);
-                await _dbContext.SaveChangesAsync(cancellationToken);
+                this._dbContext.WebhookDeliveryLogs.Add(deliveryLog);
+                await this._dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -259,9 +234,9 @@ namespace Synaxis.Webhooks.Services
         /// <param name="eventType">The event type.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A list of active webhooks.</returns>
-        private async Task<List<Webhook>> GetActiveWebhooksForEventAsync(string eventType, CancellationToken cancellationToken)
+        private Task<List<Webhook>> GetActiveWebhooksForEventAsync(string eventType, CancellationToken cancellationToken)
         {
-            return await _dbContext.Webhooks
+            return this._dbContext.Webhooks
                 .Where(w => w.IsActive && w.Events.Contains(eventType))
                 .ToListAsync(cancellationToken);
         }
@@ -270,14 +245,13 @@ namespace Synaxis.Webhooks.Services
         /// Moves a failed webhook delivery to the dead letter queue.
         /// </summary>
         /// <param name="webhook">The webhook that failed.</param>
-        /// <param name="deliveryLog">The delivery log.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        private async Task MoveToDeadLetterQueueAsync(Webhook webhook, WebhookDeliveryLog deliveryLog)
+        private Task MoveToDeadLetterQueueAsync(Webhook webhook)
         {
             webhook.IsActive = false;
             webhook.UpdatedAt = DateTime.UtcNow;
 
-            _logger.LogWarning(
+            this._logger.LogWarning(
                 "Webhook {WebhookId} moved to dead letter queue after {Attempts} failed attempts",
                 webhook.Id,
                 webhook.FailedDeliveryAttempts);
@@ -286,7 +260,7 @@ namespace Synaxis.Webhooks.Services
             // 1. Send a notification to the webhook owner
             // 2. Store the failed delivery in a separate dead letter table
             // 3. Provide a mechanism to retry failed deliveries manually
-            await _dbContext.SaveChangesAsync();
+            return this._dbContext.SaveChangesAsync();
         }
 
         /// <summary>
@@ -297,7 +271,7 @@ namespace Synaxis.Webhooks.Services
         /// <returns>A task representing the asynchronous operation.</returns>
         public async Task ReactivateWebhookAsync(Guid webhookId, CancellationToken cancellationToken = default)
         {
-            var webhook = await _dbContext.Webhooks.FindAsync(new object[] { webhookId }, cancellationToken);
+            var webhook = await this._dbContext.Webhooks.FindAsync(new object[] { webhookId }, cancellationToken).ConfigureAwait(false);
 
             if (webhook == null)
             {
@@ -308,9 +282,9 @@ namespace Synaxis.Webhooks.Services
             webhook.FailedDeliveryAttempts = 0;
             webhook.UpdatedAt = DateTime.UtcNow;
 
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await this._dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-            _logger.LogInformation("Webhook {WebhookId} reactivated", webhookId);
+            this._logger.LogInformation("Webhook {WebhookId} reactivated", webhookId);
         }
     }
 }

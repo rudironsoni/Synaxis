@@ -2,16 +2,16 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-using FluentAssertions;
-using Microsoft.EntityFrameworkCore;
-using Synaxis.Core.Contracts;
-using Synaxis.Core.Models;
-using Synaxis.Infrastructure.Data;
-using Synaxis.Infrastructure.Services;
-using Xunit;
-
 namespace Synaxis.Infrastructure.Tests.Services
 {
+    using FluentAssertions;
+    using Microsoft.EntityFrameworkCore;
+    using Synaxis.Core.Contracts;
+    using Synaxis.Core.Models;
+    using Synaxis.Infrastructure.Data;
+    using Synaxis.Infrastructure.Services;
+    using Xunit;
+
     [Trait("Category", "Unit")]
     public sealed class TeamMembershipServiceTests : IAsyncLifetime, IDisposable
     {
