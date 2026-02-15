@@ -1,18 +1,22 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using Synaxis.Core.Contracts;
-using Synaxis.Core.Models;
-using Synaxis.Infrastructure.Data;
+// <copyright file="AuditService.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
 namespace Synaxis.Infrastructure.Services
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Security.Cryptography;
+    using System.Text;
+    using System.Text.Json;
+    using System.Threading.Tasks;
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.Logging;
+    using Synaxis.Core.Contracts;
+    using Synaxis.Core.Models;
+    using Synaxis.Infrastructure.Data;
+
     /// <summary>
     /// Service for immutable audit logging with tamper detection.
     /// </summary>
@@ -21,12 +25,18 @@ namespace Synaxis.Infrastructure.Services
         private readonly SynaxisDbContext _context;
         private readonly ILogger<AuditService> _logger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AuditService"/> class.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="logger"></param>
         public AuditService(SynaxisDbContext context, ILogger<AuditService> logger)
         {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._context = context ?? throw new ArgumentNullException(nameof(context));
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
+        /// <inheritdoc/>
         public async Task<AuditLog> LogEventAsync(AuditEvent auditEvent)
         {
             if (auditEvent == null)
@@ -45,10 +55,10 @@ namespace Synaxis.Infrastructure.Services
             }
 
             // Get previous log hash for chain verification
-            var previousLog = await _context.Set<AuditLog>()
+            var previousLog = await this._context.Set<AuditLog>()
                 .Where(al => al.OrganizationId == auditEvent.OrganizationId)
                 .OrderByDescending(al => al.Timestamp)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync().ConfigureAwait(false);
 
             var auditLog = new AuditLog
             {
@@ -60,22 +70,22 @@ namespace Synaxis.Infrastructure.Services
                 Action = auditEvent.Action ?? auditEvent.EventType,
                 ResourceType = auditEvent.ResourceType,
                 ResourceId = auditEvent.ResourceId,
-                Metadata = auditEvent.Metadata ?? new Dictionary<string, object>(),
+                Metadata = auditEvent.Metadata ?? new Dictionary<string, object>(StringComparer.Ordinal),
                 IpAddress = auditEvent.IpAddress,
                 UserAgent = auditEvent.UserAgent,
                 Region = auditEvent.Region ?? "unknown",
                 PreviousHash = previousLog?.IntegrityHash,
-                Timestamp = DateTime.UtcNow
+                Timestamp = DateTime.UtcNow,
             };
 
             // Compute integrity hash
-            auditLog.IntegrityHash = ComputeIntegrityHash(auditLog);
+            auditLog.IntegrityHash = this.ComputeIntegrityHash(auditLog);
 
             // Add to database (immutable - no updates allowed)
-            _context.Set<AuditLog>().Add(auditLog);
-            await _context.SaveChangesAsync();
+            this._context.Set<AuditLog>().Add(auditLog);
+            await this._context.SaveChangesAsync().ConfigureAwait(false);
 
-            _logger.LogInformation(
+            this._logger.LogInformation(
                 "Audit log created: Action={Action}, UserId={UserId}, ResourceType={ResourceType}, ResourceId={ResourceId}, OrganizationId={OrganizationId}, Timestamp={Timestamp}, Success={Success}",
                 auditLog.Action,
                 auditLog.UserId,
@@ -88,6 +98,7 @@ namespace Synaxis.Infrastructure.Services
             return auditLog;
         }
 
+        /// <inheritdoc/>
         public async Task<IList<AuditLog>> QueryAuditLogsAsync(AuditQuery query)
         {
             if (query == null)
@@ -100,7 +111,7 @@ namespace Synaxis.Infrastructure.Services
                 throw new ArgumentException("OrganizationId is required", nameof(query));
             }
 
-            _logger.LogDebug(
+            this._logger.LogDebug(
                 "Querying audit logs: OrganizationId={OrganizationId}, UserId={UserId}, EventType={EventType}, PageNumber={PageNumber}, PageSize={PageSize}",
                 query.OrganizationId,
                 query.UserId,
@@ -108,7 +119,7 @@ namespace Synaxis.Infrastructure.Services
                 query.PageNumber,
                 query.PageSize);
 
-            var logsQuery = _context.Set<AuditLog>()
+            var logsQuery = this._context.Set<AuditLog>()
                 .Where(al => al.OrganizationId == query.OrganizationId);
 
             if (query.UserId.HasValue)
@@ -141,9 +152,9 @@ namespace Synaxis.Infrastructure.Services
                 .OrderByDescending(al => al.Timestamp)
                 .Skip((query.PageNumber - 1) * query.PageSize)
                 .Take(query.PageSize)
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
 
-            _logger.LogInformation(
+            this._logger.LogInformation(
                 "Query completed: Found {Count} audit logs for OrganizationId={OrganizationId}",
                 logs.Count,
                 query.OrganizationId);
@@ -151,21 +162,23 @@ namespace Synaxis.Infrastructure.Services
             return logs;
         }
 
+        /// <inheritdoc/>
         public async Task<AuditLog> GetAuditLogAsync(Guid logId)
         {
-            _logger.LogDebug("Retrieving audit log: LogId={LogId}", logId);
+            this._logger.LogDebug("Retrieving audit log: LogId={LogId}", logId);
 
-            var log = await _context.Set<AuditLog>().FindAsync(logId);
+            var log = await this._context.Set<AuditLog>().FindAsync(logId).ConfigureAwait(false);
 
             if (log == null)
             {
-                _logger.LogWarning("Audit log not found: LogId={LogId}", logId);
+                this._logger.LogWarning("Audit log not found: LogId={LogId}", logId);
                 throw new InvalidOperationException($"Audit log {logId} not found");
             }
 
             return log;
         }
 
+        /// <inheritdoc/>
         public async Task<byte[]> ExportAuditLogsAsync(Guid organizationId, DateTime startDate, DateTime endDate)
         {
             if (organizationId == Guid.Empty)
@@ -173,38 +186,40 @@ namespace Synaxis.Infrastructure.Services
                 throw new ArgumentException("OrganizationId is required", nameof(organizationId));
             }
 
-            var logs = await _context.Set<AuditLog>()
+            var logs = await this._context.Set<AuditLog>()
                 .Where(al => al.OrganizationId == organizationId
                     && al.Timestamp >= startDate
                     && al.Timestamp <= endDate)
                 .OrderBy(al => al.Timestamp)
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
 
             // Export as JSON
             var json = JsonSerializer.Serialize(logs, new JsonSerializerOptions
             {
-                WriteIndented = true
+                WriteIndented = true,
             });
 
-            _logger.LogInformation("Exported {Count} audit logs for organization {OrganizationId}",
+            this._logger.LogInformation(
+                "Exported {Count} audit logs for organization {OrganizationId}",
                 logs.Count, organizationId);
 
             return Encoding.UTF8.GetBytes(json);
         }
 
+        /// <inheritdoc/>
         public async Task<bool> VerifyIntegrityAsync(Guid logId)
         {
-            _logger.LogDebug("Verifying audit log integrity: LogId={LogId}", logId);
+            this._logger.LogDebug("Verifying audit log integrity: LogId={LogId}", logId);
 
-            var log = await GetAuditLogAsync(logId);
+            var log = await this.GetAuditLogAsync(logId).ConfigureAwait(false);
 
             // Recompute hash and compare (must include previous hash that was used during creation)
-            var computedHash = ComputeIntegrityHash(log, useStoredHash: true);
-            var isValid = computedHash == log.IntegrityHash;
+            var computedHash = this.ComputeIntegrityHash(log, useStoredHash: true);
+            var isValid = string.Equals(computedHash, log.IntegrityHash, StringComparison.Ordinal);
 
             if (!isValid)
             {
-                _logger.LogWarning(
+                this._logger.LogWarning(
                     "Integrity check failed for audit log: LogId={LogId}, ExpectedHash={ExpectedHash}, ComputedHash={ComputedHash}",
                     logId,
                     log.IntegrityHash,
@@ -214,15 +229,15 @@ namespace Synaxis.Infrastructure.Services
             // Verify chain if previous hash exists
             if (!string.IsNullOrWhiteSpace(log.PreviousHash))
             {
-                var previousLog = await _context.Set<AuditLog>()
+                var previousLog = await this._context.Set<AuditLog>()
                     .Where(al => al.OrganizationId == log.OrganizationId
                         && al.Timestamp < log.Timestamp)
                     .OrderByDescending(al => al.Timestamp)
-                    .FirstOrDefaultAsync();
+                    .FirstOrDefaultAsync().ConfigureAwait(false);
 
-                if (previousLog != null && previousLog.IntegrityHash != log.PreviousHash)
+                if (previousLog != null && !string.Equals(previousLog.IntegrityHash, log.PreviousHash, StringComparison.Ordinal))
                 {
-                    _logger.LogWarning(
+                    this._logger.LogWarning(
                         "Chain verification failed for audit log: LogId={LogId}, PreviousLogId={PreviousLogId}",
                         logId,
                         previousLog.Id);
@@ -230,7 +245,7 @@ namespace Synaxis.Infrastructure.Services
                 }
             }
 
-            _logger.LogInformation(
+            this._logger.LogInformation(
                 "Integrity verification completed: LogId={LogId}, IsValid={IsValid}",
                 logId,
                 isValid);
@@ -238,33 +253,34 @@ namespace Synaxis.Infrastructure.Services
             return isValid;
         }
 
+        /// <inheritdoc/>
         public async Task<AuditAggregationResult> AggregateAnonymizedLogsAsync(DateTime startDate, DateTime endDate)
         {
             // Cross-region aggregation with anonymized data
-            var logs = await _context.Set<AuditLog>()
+            var logs = await this._context.Set<AuditLog>()
                 .Where(al => al.Timestamp >= startDate && al.Timestamp <= endDate)
                 .Select(al => new
                 {
                     al.EventType,
                     al.EventCategory,
-                    al.Region
+                    al.Region,
                 })
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
 
             var result = new AuditAggregationResult
             {
                 TotalEvents = logs.Count,
-                EventsByType = logs.GroupBy(l => l.EventType)
-                    .ToDictionary(g => g.Key, g => g.Count()),
-                EventsByCategory = logs.GroupBy(l => l.EventCategory)
-                    .ToDictionary(g => g.Key, g => g.Count()),
-                EventsByRegion = logs.GroupBy(l => l.Region)
-                    .ToDictionary(g => g.Key, g => g.Count()),
+                EventsByType = logs.GroupBy(l => l.EventType, StringComparer.Ordinal)
+                    .ToDictionary(g => g.Key, g => g.Count(), StringComparer.Ordinal),
+                EventsByCategory = logs.GroupBy(l => l.EventCategory, StringComparer.Ordinal)
+                    .ToDictionary(g => g.Key, g => g.Count(), StringComparer.Ordinal),
+                EventsByRegion = logs.GroupBy(l => l.Region, StringComparer.Ordinal)
+                    .ToDictionary(g => g.Key, g => g.Count(), StringComparer.Ordinal),
                 StartDate = startDate,
-                EndDate = endDate
+                EndDate = endDate,
             };
 
-            _logger.LogInformation("Aggregated {Count} anonymized audit events", result.TotalEvents);
+            this._logger.LogInformation("Aggregated {Count} anonymized audit events", result.TotalEvents);
 
             return result;
         }

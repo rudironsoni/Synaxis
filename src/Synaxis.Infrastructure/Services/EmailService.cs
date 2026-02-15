@@ -21,48 +21,55 @@ namespace Synaxis.Infrastructure.Services
         private readonly EmailOptions _options;
         private readonly ILogger<EmailService> _logger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EmailService"/> class.
+        /// </summary>
+        /// <param name="options"></param>
+        /// <param name="logger"></param>
         public EmailService(
             IOptions<EmailOptions> options,
             ILogger<EmailService> logger)
         {
-            _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
+        /// <inheritdoc/>
         public async Task SendEmailAsync(string to, string subject, string body)
         {
             try
             {
-                _logger.LogInformation("Sending email to: {To}", to);
+                this._logger.LogInformation("Sending email to: {To}", to);
 
-                var message = new MimeMessage();
-                message.From.Add(new MailboxAddress(_options.FromName, _options.FromEmail));
+                using var message = new MimeMessage();
+                message.From.Add(new MailboxAddress(this._options.FromName, this._options.FromEmail));
                 message.To.Add(new MailboxAddress(string.Empty, to));
                 message.Subject = subject;
 
                 message.Body = new TextPart("html")
                 {
-                    Text = body
+                    Text = body,
                 };
 
                 using (var client = new SmtpClient())
                 {
-                    await client.ConnectAsync(_options.SmtpHost, _options.SmtpPort, SecureSocketOptions.StartTls);
-                    await client.AuthenticateAsync(_options.SmtpUser, _options.SmtpPassword);
-                    await client.SendAsync(message);
-                    await client.DisconnectAsync(true);
+                    await client.ConnectAsync(this._options.SmtpHost, this._options.SmtpPort, SecureSocketOptions.StartTls).ConfigureAwait(false);
+                    await client.AuthenticateAsync(this._options.SmtpUser, this._options.SmtpPassword).ConfigureAwait(false);
+                    await client.SendAsync(message).ConfigureAwait(false);
+                    await client.DisconnectAsync(true).ConfigureAwait(false);
                 }
 
-                _logger.LogInformation("Email sent successfully to: {To}", to);
+                this._logger.LogInformation("Email sent successfully to: {To}", to);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error sending email to: {To}", to);
+                this._logger.LogError(ex, "Error sending email to: {To}", to);
                 throw new InvalidOperationException($"Failed to send email to {to}", ex);
             }
         }
 
-        public async Task SendVerificationEmailAsync(string to, string verificationUrl)
+        /// <inheritdoc/>
+        public Task SendVerificationEmailAsync(string to, string verificationUrl)
         {
             var subject = "Verify your email address";
             var body = $@"
@@ -76,10 +83,11 @@ namespace Synaxis.Infrastructure.Services
                 </body>
                 </html>";
 
-            await SendEmailAsync(to, subject, body);
+            return this.SendEmailAsync(to, subject, body);
         }
 
-        public async Task SendPasswordResetEmailAsync(string to, string resetUrl)
+        /// <inheritdoc/>
+        public Task SendPasswordResetEmailAsync(string to, string resetUrl)
         {
             var subject = "Reset your password";
             var body = $@"
@@ -94,10 +102,11 @@ namespace Synaxis.Infrastructure.Services
                 </body>
                 </html>";
 
-            await SendEmailAsync(to, subject, body);
+            return this.SendEmailAsync(to, subject, body);
         }
 
-        public async Task SendMfaSetupEmailAsync(string to, string secret)
+        /// <inheritdoc/>
+        public Task SendMfaSetupEmailAsync(string to, string secret)
         {
             var subject = "MFA Setup Confirmation";
             var body = $@"
@@ -111,7 +120,7 @@ namespace Synaxis.Infrastructure.Services
                 </body>
                 </html>";
 
-            await SendEmailAsync(to, subject, body);
+            return this.SendEmailAsync(to, subject, body);
         }
     }
 }

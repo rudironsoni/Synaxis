@@ -1,3 +1,7 @@
+// <copyright file="20260208232036_InitialMultiTenant.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
 using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 

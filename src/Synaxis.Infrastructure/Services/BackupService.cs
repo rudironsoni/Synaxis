@@ -1,17 +1,21 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using Synaxis.Core.Contracts;
-using Synaxis.Core.Models;
-using Synaxis.Infrastructure.Data;
+// <copyright file="BackupService.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
 namespace Synaxis.Infrastructure.Services
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Security.Cryptography;
+    using System.Text;
+    using System.Threading.Tasks;
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.Logging;
+    using Synaxis.Core.Contracts;
+    using Synaxis.Core.Models;
+    using Synaxis.Infrastructure.Data;
+
     /// <summary>
     /// Service for managing encrypted backups with configurable strategies.
     /// </summary>
@@ -20,25 +24,32 @@ namespace Synaxis.Infrastructure.Services
         private readonly SynaxisDbContext _context;
         private readonly ILogger<BackupService> _logger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BackupService"/> class.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="logger"></param>
         public BackupService(SynaxisDbContext context, ILogger<BackupService> logger)
         {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._context = context ?? throw new ArgumentNullException(nameof(context));
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
+        /// <inheritdoc/>
         public async Task<BackupResult> ExecuteBackupAsync(Guid organizationId, BackupType backupType)
         {
-            _logger.LogInformation("Starting backup for organization {OrganizationId}, type: {BackupType}",
+            this._logger.LogInformation(
+                "Starting backup for organization {OrganizationId}, type: {BackupType}",
                 organizationId, backupType);
 
-            var organization = await _context.Organizations.FindAsync(organizationId);
+            var organization = await this._context.Organizations.FindAsync(organizationId).ConfigureAwait(false);
             if (organization == null)
             {
                 throw new InvalidOperationException($"Organization {organizationId} not found");
             }
 
-            var config = await _context.Set<BackupConfig>()
-                .FirstOrDefaultAsync(bc => bc.OrganizationId == organizationId && bc.IsActive);
+            var config = await this._context.Set<BackupConfig>()
+                .FirstOrDefaultAsync(bc => bc.OrganizationId == organizationId && bc.IsActive).ConfigureAwait(false);
 
             if (config == null)
             {
@@ -82,19 +93,19 @@ namespace Synaxis.Infrastructure.Services
                 switch (backupType)
                 {
                     case BackupType.PostgreSQL:
-                        backupData = await ExecutePostgreSQLBackupAsync(organizationId);
+                        backupData = await this.ExecutePostgreSQLBackupAsync(organizationId).ConfigureAwait(false);
                         break;
 
                     case BackupType.Redis:
-                        backupData = await ExecuteRedisBackupAsync(organizationId);
+                        backupData = await this.ExecuteRedisBackupAsync(organizationId).ConfigureAwait(false);
                         break;
 
                     case BackupType.Qdrant:
-                        backupData = await ExecuteQdrantBackupAsync(organizationId);
+                        backupData = await this.ExecuteQdrantBackupAsync(organizationId).ConfigureAwait(false);
                         break;
 
                     case BackupType.Full:
-                        backupData = await ExecuteFullBackupAsync(organizationId, config);
+                        backupData = await this.ExecuteFullBackupAsync(organizationId, config).ConfigureAwait(false);
                         break;
 
                     default:
@@ -104,26 +115,26 @@ namespace Synaxis.Infrastructure.Services
                 // Encrypt if enabled
                 if (config.EnableEncryption)
                 {
-                    backupData = await EncryptBackupAsync(backupData, organizationId);
+                    backupData = await this.EncryptBackupAsync(backupData, organizationId).ConfigureAwait(false);
                 }
 
                 // Store backup (simulated - in production would save to object storage)
-                var storagePath = await StoreBackupAsync(backupId, backupData, organization.PrimaryRegion);
+                var storagePath = await StoreBackupAsync(backupId, backupData, organization.PrimaryRegion).ConfigureAwait(false);
 
                 // Replicate to target regions if cross-region strategy
                 var replicatedRegions = new List<string>();
-                if (config.Strategy == "cross-region")
+                if (string.Equals(config.Strategy, "cross-region", StringComparison.Ordinal))
                 {
-                    replicatedRegions = await ReplicateBackupAsync(backupId, backupData, config.TargetRegions);
+                    replicatedRegions = await this.ReplicateBackupAsync(backupId, backupData, config.TargetRegions).ConfigureAwait(false);
                 }
 
                 // Update config
                 config.LastBackupAt = DateTime.UtcNow;
                 config.LastBackupStatus = "success";
                 config.UpdatedAt = DateTime.UtcNow;
-                await _context.SaveChangesAsync();
+                await this._context.SaveChangesAsync().ConfigureAwait(false);
 
-                _logger.LogInformation("Backup completed successfully: {BackupId}", backupId);
+                this._logger.LogInformation("Backup completed successfully: {BackupId}", backupId);
 
                 return new BackupResult
                 {
@@ -132,12 +143,12 @@ namespace Synaxis.Infrastructure.Services
                     OrganizationId = organizationId,
                     SizeBytes = backupData.Length,
                     Success = true,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
                 };
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Backup failed for organization {OrganizationId}", organizationId);
+                this._logger.LogError(ex, "Backup failed for organization {OrganizationId}", organizationId);
 
                 // Update config
                 if (config != null)
@@ -145,7 +156,7 @@ namespace Synaxis.Infrastructure.Services
                     config.LastBackupAt = DateTime.UtcNow;
                     config.LastBackupStatus = $"failed: {ex.Message}";
                     config.UpdatedAt = DateTime.UtcNow;
-                    await _context.SaveChangesAsync();
+                    await this._context.SaveChangesAsync().ConfigureAwait(false);
                 }
 
                 return new BackupResult
@@ -155,17 +166,19 @@ namespace Synaxis.Infrastructure.Services
                     OrganizationId = organizationId,
                     Success = false,
                     ErrorMessage = ex.Message,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
                 };
             }
         }
 
+        /// <inheritdoc/>
         public async Task<bool> RestoreBackupAsync(Guid organizationId, string backupId)
         {
-            _logger.LogInformation("Starting restore for organization {OrganizationId}, backup: {BackupId}",
+            this._logger.LogInformation(
+                "Starting restore for organization {OrganizationId}, backup: {BackupId}",
                 organizationId, backupId);
 
-            var metadata = await GetBackupMetadataAsync(backupId);
+            var metadata = await this.GetBackupMetadataAsync(backupId).ConfigureAwait(false);
             if (metadata == null)
             {
                 throw new InvalidOperationException($"Backup {backupId} not found");
@@ -177,37 +190,40 @@ namespace Synaxis.Infrastructure.Services
             }
 
             // Retrieve backup data (simulated)
-            var backupData = await RetrieveBackupAsync(backupId, metadata.PrimaryRegion);
+            var backupData = await this.RetrieveBackupAsync(backupId, metadata.PrimaryRegion).ConfigureAwait(false);
 
             // Decrypt if encrypted
             if (metadata.IsEncrypted)
             {
-                backupData = await DecryptBackupAsync(backupData, organizationId);
+                backupData = await this.DecryptBackupAsync(backupData, organizationId).ConfigureAwait(false);
             }
 
             // Restore based on type
             bool success = metadata.BackupType switch
             {
-                BackupType.PostgreSQL => await RestorePostgreSQLBackupAsync(organizationId, backupData),
-                BackupType.Redis => await RestoreRedisBackupAsync(organizationId, backupData),
-                BackupType.Qdrant => await RestoreQdrantBackupAsync(organizationId, backupData),
-                BackupType.Full => await RestoreFullBackupAsync(organizationId, backupData),
-                _ => throw new ArgumentException($"Unsupported backup type: {metadata.BackupType}")
+                BackupType.PostgreSQL => await RestorePostgreSQLBackupAsync(organizationId, backupData).ConfigureAwait(false),
+                BackupType.Redis => await RestoreRedisBackupAsync(organizationId, backupData).ConfigureAwait(false),
+                BackupType.Qdrant => await RestoreQdrantBackupAsync(organizationId, backupData).ConfigureAwait(false),
+                BackupType.Full => await RestoreFullBackupAsync(organizationId, backupData).ConfigureAwait(false),
+                _ => throw new ArgumentException($"Unsupported backup type: {metadata.BackupType}"),
             };
 
-            _logger.LogInformation("Restore completed for organization {OrganizationId}: {Success}",
+            this._logger.LogInformation(
+                "Restore completed for organization {OrganizationId}: {Success}",
                 organizationId, success);
 
             return success;
         }
 
+        /// <inheritdoc/>
         public async Task<IList<BackupMetadata>> ListBackupsAsync(Guid organizationId)
         {
             // Simulated - in production would query from metadata store
-            await Task.CompletedTask;
+            await Task.CompletedTask.ConfigureAwait(false);
             return new List<BackupMetadata>();
         }
 
+        /// <inheritdoc/>
         public async Task<BackupMetadata> GetBackupMetadataAsync(string backupId)
         {
             // Simulated - in production would query from metadata store
@@ -222,8 +238,8 @@ namespace Synaxis.Infrastructure.Services
             var orgId = Guid.Parse(parts[1]);
 
             // Check if org has encryption enabled in config
-            var config = await _context.Set<BackupConfig>()
-                .FirstOrDefaultAsync(c => c.OrganizationId == orgId);
+            var config = await this._context.Set<BackupConfig>()
+                .FirstOrDefaultAsync(c => c.OrganizationId == orgId).ConfigureAwait(false);
 
             var isEncrypted = config?.EnableEncryption ?? false;
 
@@ -237,62 +253,65 @@ namespace Synaxis.Infrastructure.Services
                 IsEncrypted = isEncrypted, // Check config for encryption setting
                 StoragePath = $"/backups/{backupId}",
                 CreatedAt = DateTime.UtcNow,
-                ExpiresAt = DateTime.UtcNow.AddDays(7)
+                ExpiresAt = DateTime.UtcNow.AddDays(7),
             };
         }
 
+        /// <inheritdoc/>
         public async Task<bool> DeleteBackupAsync(string backupId)
         {
-            _logger.LogInformation("Deleting backup: {BackupId}", backupId);
+            this._logger.LogInformation("Deleting backup: {BackupId}", backupId);
 
-            var metadata = await GetBackupMetadataAsync(backupId);
+            var metadata = await this.GetBackupMetadataAsync(backupId).ConfigureAwait(false);
             if (metadata == null)
             {
                 return false;
             }
 
             // Delete from primary region
-            await DeleteBackupFromStorageAsync(backupId, metadata.PrimaryRegion);
+            await DeleteBackupFromStorageAsync(backupId, metadata.PrimaryRegion).ConfigureAwait(false);
 
             // Delete from replicated regions
             foreach (var region in metadata.ReplicatedRegions)
             {
-                await DeleteBackupFromStorageAsync(backupId, region);
+                await DeleteBackupFromStorageAsync(backupId, region).ConfigureAwait(false);
             }
 
             return true;
         }
 
+        /// <inheritdoc/>
         public async Task<int> EnforceRetentionPoliciesAsync()
         {
-            _logger.LogInformation("Enforcing retention policies");
+            this._logger.LogInformation("Enforcing retention policies");
 
-            var configs = await _context.Set<BackupConfig>()
+            var configs = await this._context.Set<BackupConfig>()
                 .Where(bc => bc.IsActive)
                 .Include(bc => bc.Organization)
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
 
             int deletedCount = 0;
 
             foreach (var config in configs)
             {
-                var backups = await ListBackupsAsync(config.OrganizationId);
+                var backups = await this.ListBackupsAsync(config.OrganizationId).ConfigureAwait(false);
                 var cutoffDate = DateTime.UtcNow.AddDays(-config.RetentionDays);
 
                 foreach (var backup in backups.Where(b => b.CreatedAt < cutoffDate))
                 {
-                    if (await DeleteBackupAsync(backup.BackupId))
+                    if (await this.DeleteBackupAsync(backup.BackupId).ConfigureAwait(false))
                     {
                         deletedCount++;
-                        _logger.LogInformation("Deleted expired backup: {BackupId}", backup.BackupId);
+                        this._logger.LogInformation("Deleted expired backup: {BackupId}", backup.BackupId);
                     }
                 }
             }
 
-            _logger.LogInformation("Retention policy enforcement complete. Deleted {Count} backups", deletedCount);
+            this._logger.LogInformation("Retention policy enforcement complete. Deleted {Count} backups", deletedCount);
             return deletedCount;
         }
 
+        /// <inheritdoc/>
         public async Task<byte[]> EncryptBackupAsync(byte[] data, Guid organizationId)
         {
             if (data == null || data.Length == 0)
@@ -301,7 +320,7 @@ namespace Synaxis.Infrastructure.Services
             }
 
             // Get or create organization encryption key
-            var key = await GetOrCreateEncryptionKeyAsync(organizationId);
+            var key = await this.GetOrCreateEncryptionKeyAsync(organizationId).ConfigureAwait(false);
 
             using (var aes = Aes.Create())
             {
@@ -322,6 +341,7 @@ namespace Synaxis.Infrastructure.Services
             }
         }
 
+        /// <inheritdoc/>
         public async Task<byte[]> DecryptBackupAsync(byte[] encryptedData, Guid organizationId)
         {
             if (encryptedData == null || encryptedData.Length == 0)
@@ -330,7 +350,7 @@ namespace Synaxis.Infrastructure.Services
             }
 
             // Get organization encryption key
-            var key = await GetOrCreateEncryptionKeyAsync(organizationId);
+            var key = await this.GetOrCreateEncryptionKeyAsync(organizationId).ConfigureAwait(false);
 
             using (var aes = Aes.Create())
             {
@@ -353,7 +373,7 @@ namespace Synaxis.Infrastructure.Services
         private async Task<byte[]> ExecutePostgreSQLBackupAsync(Guid organizationId)
         {
             // Simulated - in production would execute pg_dump
-            await Task.CompletedTask;
+            await Task.CompletedTask.ConfigureAwait(false);
             var data = $"PostgreSQL backup for org {organizationId} at {DateTime.UtcNow}";
             return Encoding.UTF8.GetBytes(data);
         }
@@ -361,7 +381,7 @@ namespace Synaxis.Infrastructure.Services
         private async Task<byte[]> ExecuteRedisBackupAsync(Guid organizationId)
         {
             // Simulated - in production would trigger Redis RDB save
-            await Task.CompletedTask;
+            await Task.CompletedTask.ConfigureAwait(false);
             var data = $"Redis backup for org {organizationId} at {DateTime.UtcNow}";
             return Encoding.UTF8.GetBytes(data);
         }
@@ -369,7 +389,7 @@ namespace Synaxis.Infrastructure.Services
         private async Task<byte[]> ExecuteQdrantBackupAsync(Guid organizationId)
         {
             // Simulated - in production would call Qdrant snapshot API
-            await Task.CompletedTask;
+            await Task.CompletedTask.ConfigureAwait(false);
             var data = $"Qdrant backup for org {organizationId} at {DateTime.UtcNow}";
             return Encoding.UTF8.GetBytes(data);
         }
@@ -380,17 +400,17 @@ namespace Synaxis.Infrastructure.Services
 
             if (config.EnablePostgresBackup)
             {
-                backups.Add(await ExecutePostgreSQLBackupAsync(organizationId));
+                backups.Add(await this.ExecutePostgreSQLBackupAsync(organizationId));
             }
 
             if (config.EnableRedisBackup)
             {
-                backups.Add(await ExecuteRedisBackupAsync(organizationId));
+                backups.Add(await this.ExecuteRedisBackupAsync(organizationId));
             }
 
             if (config.EnableQdrantBackup)
             {
-                backups.Add(await ExecuteQdrantBackupAsync(organizationId));
+                backups.Add(await this.ExecuteQdrantBackupAsync(organizationId));
             }
 
             // Combine all backups
@@ -410,7 +430,7 @@ namespace Synaxis.Infrastructure.Services
         private async Task<string> StoreBackupAsync(string backupId, byte[] data, string region)
         {
             // Simulated - in production would upload to S3/GCS/Azure Blob
-            await Task.CompletedTask;
+            await Task.CompletedTask.ConfigureAwait(false);
             return $"s3://{region}/backups/{backupId}";
         }
 
@@ -422,12 +442,12 @@ namespace Synaxis.Infrastructure.Services
             {
                 try
                 {
-                    await StoreBackupAsync(backupId, data, region);
+                    await StoreBackupAsync(backupId, data, region).ConfigureAwait(false);
                     replicatedRegions.Add(region);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Failed to replicate backup to region {Region}", region);
+                    this._logger.LogWarning(ex, "Failed to replicate backup to region {Region}", region);
                 }
             }
 
@@ -437,7 +457,7 @@ namespace Synaxis.Infrastructure.Services
         private async Task<byte[]> RetrieveBackupAsync(string backupId, string region)
         {
             // Simulated - in production would download from object storage
-            await Task.CompletedTask;
+            await Task.CompletedTask.ConfigureAwait(false);
             var data = $"Retrieved backup {backupId} from {region}";
             return Encoding.UTF8.GetBytes(data);
         }
@@ -445,42 +465,42 @@ namespace Synaxis.Infrastructure.Services
         private async Task<bool> RestorePostgreSQLBackupAsync(Guid organizationId, byte[] backupData)
         {
             // Simulated - in production would execute pg_restore
-            await Task.CompletedTask;
+            await Task.CompletedTask.ConfigureAwait(false);
             return true;
         }
 
         private async Task<bool> RestoreRedisBackupAsync(Guid organizationId, byte[] backupData)
         {
             // Simulated - in production would restore Redis RDB
-            await Task.CompletedTask;
+            await Task.CompletedTask.ConfigureAwait(false);
             return true;
         }
 
         private async Task<bool> RestoreQdrantBackupAsync(Guid organizationId, byte[] backupData)
         {
             // Simulated - in production would restore Qdrant snapshot
-            await Task.CompletedTask;
+            await Task.CompletedTask.ConfigureAwait(false);
             return true;
         }
 
         private async Task<bool> RestoreFullBackupAsync(Guid organizationId, byte[] backupData)
         {
             // Simulated - in production would restore all components
-            await Task.CompletedTask;
+            await Task.CompletedTask.ConfigureAwait(false);
             return true;
         }
 
-        private async Task DeleteBackupFromStorageAsync(string backupId, string region)
+        private Task DeleteBackupFromStorageAsync(string backupId, string region)
         {
             // Simulated - in production would delete from object storage
-            await Task.CompletedTask;
+            return Task.CompletedTask;
         }
 
         private async Task<byte[]> GetOrCreateEncryptionKeyAsync(Guid organizationId)
         {
             // Simulated - in production would use KMS (AWS KMS, Azure Key Vault, etc.)
             // For now, generate deterministic key from organization ID
-            await Task.CompletedTask;
+            await Task.CompletedTask.ConfigureAwait(false);
 
             using (var sha256 = SHA256.Create())
             {

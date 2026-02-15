@@ -1,3 +1,7 @@
+// <copyright file="20260210223935_MfaBackupCodesAndJwtBlacklist.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
 using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 

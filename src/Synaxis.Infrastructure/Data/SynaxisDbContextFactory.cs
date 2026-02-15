@@ -2,11 +2,11 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Design;
-
 namespace Synaxis.Infrastructure.Data
 {
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.EntityFrameworkCore.Design;
+
     /// <summary>
     /// Factory for creating SynaxisDbContext instances at design time (for migrations).
     /// </summary>

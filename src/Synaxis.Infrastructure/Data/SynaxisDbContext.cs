@@ -2,21 +2,25 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Synaxis.Core.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.Json;
-
 namespace Synaxis.Infrastructure.Data
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text.Json;
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.EntityFrameworkCore.ChangeTracking;
+    using Synaxis.Core.Models;
+
     /// <summary>
     /// Database context for Synaxis multi-tenant platform.
     /// </summary>
     public class SynaxisDbContext : DbContext
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SynaxisDbContext"/> class.
+        /// </summary>
+        /// <param name="options"></param>
         public SynaxisDbContext(DbContextOptions<SynaxisDbContext> options)
             : base(options)
         {
@@ -70,6 +74,7 @@ namespace Synaxis.Infrastructure.Data
 
         public DbSet<ConversationTurn> ConversationTurns { get; set; }
 
+        /// <inheritdoc/>
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -117,7 +122,7 @@ namespace Synaxis.Infrastructure.Data
                     .HasColumnName("privacy_consent")
                     .HasConversion(
                         v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null!),
-                        v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(),
+                        v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(StringComparer.Ordinal),
                         new ValueComparer<IDictionary<string, object>>(
                             (c1, c2) => c1.Count == c2.Count && !c1.Except(c2).Any(),
                             c => c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
@@ -210,7 +215,7 @@ namespace Synaxis.Infrastructure.Data
                     .HasColumnName("privacy_consent")
                     .HasConversion(
                         v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null!),
-                        v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(),
+                        v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(StringComparer.Ordinal),
                         new ValueComparer<IDictionary<string, object>>(
                             (c1, c2) => c1.Count == c2.Count && !c1.Except(c2).Any(),
                             c => c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
@@ -294,7 +299,7 @@ namespace Synaxis.Infrastructure.Data
                     .HasColumnName("metadata")
                     .HasConversion(
                         v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null!),
-                        v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(),
+                        v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(StringComparer.Ordinal),
                         new ValueComparer<IDictionary<string, object>>(
                             (c1, c2) => c1.Count == c2.Count && !c1.Except(c2).Any(),
                             c => c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
@@ -368,7 +373,7 @@ namespace Synaxis.Infrastructure.Data
                     .HasColumnName("request_headers")
                     .HasConversion(
                         v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null!),
-                        v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, string>(),
+                        v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, string>(StringComparer.Ordinal),
                         new ValueComparer<IDictionary<string, string>>(
                             (c1, c2) => c1.Count == c2.Count && !c1.Except(c2).Any(),
                             c => c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), StringComparer.Ordinal.GetHashCode(v.Value))),
@@ -463,7 +468,7 @@ namespace Synaxis.Infrastructure.Data
                     .HasColumnName("metadata")
                     .HasConversion(
                         v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null!),
-                        v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(),
+                        v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(StringComparer.Ordinal),
                         new ValueComparer<IDictionary<string, object>>(
                             (c1, c2) => c1.Count == c2.Count && !c1.Except(c2).Any(),
                             c => c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
@@ -605,7 +610,7 @@ namespace Synaxis.Infrastructure.Data
                     .HasColumnName("limits_config")
                     .HasConversion(
                         v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null!),
-                        v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(),
+                        v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(StringComparer.Ordinal),
                         new ValueComparer<IDictionary<string, object>>(
                             (c1, c2) => c1.Count == c2.Count && !c1.Except(c2).Any(),
                             c => c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
@@ -617,7 +622,7 @@ namespace Synaxis.Infrastructure.Data
                     .HasColumnName("features")
                     .HasConversion(
                         v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null!),
-                        v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(),
+                        v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(StringComparer.Ordinal),
                         new ValueComparer<IDictionary<string, object>>(
                             (c1, c2) => c1.Count == c2.Count && !c1.Except(c2).Any(),
                             c => c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
@@ -847,7 +852,7 @@ namespace Synaxis.Infrastructure.Data
                     .HasColumnName("metadata")
                     .HasConversion(
                         v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null!),
-                        v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(),
+                        v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(StringComparer.Ordinal),
                         new ValueComparer<IDictionary<string, object>>(
                             (c1, c2) => c1.Count == c2.Count && !c1.Except(c2).Any(),
                             c => c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
@@ -955,7 +960,7 @@ namespace Synaxis.Infrastructure.Data
                     .HasColumnName("permissions")
                     .HasConversion(
                         v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions)null!),
-                        v => System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(v, (System.Text.Json.JsonSerializerOptions)null!) ?? new Dictionary<string, object>(),
+                        v => System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(v, (System.Text.Json.JsonSerializerOptions)null!) ?? new Dictionary<string, object>(StringComparer.Ordinal),
                         new Microsoft.EntityFrameworkCore.ChangeTracking.ValueComparer<IDictionary<string, object>>(
                             (c1, c2) => c1.Count == c2.Count && !c1.Except(c2).Any(),
                             c => c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
@@ -1025,7 +1030,7 @@ namespace Synaxis.Infrastructure.Data
                     .HasColumnType("jsonb")
                     .HasConversion(
                         v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null!),
-                        v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, string>());
+                        v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, string>(StringComparer.Ordinal));
                 entity.Property(e => e.CreatedAt).HasColumnName("created_at");
 
                 entity.HasOne(e => e.Conversation)

@@ -2,21 +2,21 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-#nullable enable
-
-using System;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using Synaxis.Core.Contracts;
-using Synaxis.Core.Models;
-using Synaxis.Infrastructure.Data;
-
 namespace Synaxis.Infrastructure.Services
 {
+#nullable enable
+
+    using System;
+    using System.ComponentModel.DataAnnotations;
+    using System.Linq;
+    using System.Security.Cryptography;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Microsoft.EntityFrameworkCore;
+    using Synaxis.Core.Contracts;
+    using Synaxis.Core.Models;
+    using Synaxis.Infrastructure.Data;
+
     /// <summary>
     /// Service for managing team invitations.
     /// </summary>
@@ -55,7 +55,7 @@ namespace Synaxis.Infrastructure.Services
             // Load team with organization
             var team = await this._context.Set<Team>()
                 .Include(t => t.Organization)
-                .FirstOrDefaultAsync(t => t.Id == teamId, cancellationToken);
+                .FirstOrDefaultAsync(t => t.Id == teamId, cancellationToken).ConfigureAwait(false);
 
             if (team == null)
             {
@@ -64,12 +64,12 @@ namespace Synaxis.Infrastructure.Services
 
             // Check if user is already a member
             var user = await this._context.Set<User>()
-                .FirstOrDefaultAsync(u => string.Equals(u.Email, email, StringComparison.OrdinalIgnoreCase), cancellationToken);
+                .FirstOrDefaultAsync(u => string.Equals(u.Email, email, StringComparison.OrdinalIgnoreCase), cancellationToken).ConfigureAwait(false);
 
             if (user != null)
             {
                 var existingMembership = await this._context.Set<TeamMembership>()
-                    .AnyAsync(tm => tm.UserId == user.Id && tm.TeamId == teamId, cancellationToken);
+                    .AnyAsync(tm => tm.UserId == user.Id && tm.TeamId == teamId, cancellationToken).ConfigureAwait(false);
 
                 if (existingMembership)
                 {
@@ -84,7 +84,7 @@ namespace Synaxis.Infrastructure.Services
                          && i.TeamId == teamId
                          && i.Status == "pending"
                          && i.ExpiresAt > DateTime.UtcNow,
-                    cancellationToken);
+                    cancellationToken).ConfigureAwait(false);
 
             if (existingPendingInvitation)
             {
@@ -110,7 +110,7 @@ namespace Synaxis.Infrastructure.Services
             };
 
             this._context.Set<Invitation>().Add(invitation);
-            await this._context.SaveChangesAsync(cancellationToken);
+            await this._context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
             // Reload with navigation properties for response
             invitation.Team = team;
@@ -130,7 +130,7 @@ namespace Synaxis.Infrastructure.Services
             var invitation = await this._context.Set<Invitation>()
                 .Include(i => i.Team)
                     .ThenInclude(t => t.Organization)
-                .FirstOrDefaultAsync(i => i.Token == token, cancellationToken);
+                .FirstOrDefaultAsync(i => i.Token == token, cancellationToken).ConfigureAwait(false);
 
             return invitation != null ? MapToResponse(invitation) : null;
         }
@@ -140,7 +140,7 @@ namespace Synaxis.Infrastructure.Services
         {
             var invitation = await this._context.Set<Invitation>()
                 .Include(i => i.Team)
-                .FirstOrDefaultAsync(i => i.Token == token, cancellationToken);
+                .FirstOrDefaultAsync(i => i.Token == token, cancellationToken).ConfigureAwait(false);
 
             if (invitation == null)
             {
@@ -152,14 +152,14 @@ namespace Synaxis.Infrastructure.Services
                 throw new InvalidOperationException("This invitation has expired.");
             }
 
-            if (invitation.Status != "pending")
+            if (!string.Equals(invitation.Status, "pending", StringComparison.Ordinal))
             {
                 throw new InvalidOperationException("This invitation has already been processed.");
             }
 
             // Verify user email matches invitation
             var user = await this._context.Set<User>()
-                .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+                .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken).ConfigureAwait(false);
 
             if (user == null)
             {
@@ -182,9 +182,9 @@ namespace Synaxis.Infrastructure.Services
                 userId,
                 invitation.Role,
                 invitation.InvitedBy,
-                cancellationToken);
+                cancellationToken).ConfigureAwait(false);
 
-            await this._context.SaveChangesAsync(cancellationToken);
+            await this._context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <inheritdoc/>
@@ -192,7 +192,7 @@ namespace Synaxis.Infrastructure.Services
         {
             var invitation = await this._context.Set<Invitation>()
                 .Include(i => i.Team)
-                .FirstOrDefaultAsync(i => i.Token == token, cancellationToken);
+                .FirstOrDefaultAsync(i => i.Token == token, cancellationToken).ConfigureAwait(false);
 
             if (invitation == null)
             {
@@ -204,14 +204,14 @@ namespace Synaxis.Infrastructure.Services
                 throw new InvalidOperationException("This invitation has expired.");
             }
 
-            if (invitation.Status != "pending")
+            if (!string.Equals(invitation.Status, "pending", StringComparison.Ordinal))
             {
                 throw new InvalidOperationException("This invitation has already been processed.");
             }
 
             // Verify user email matches invitation
             var user = await this._context.Set<User>()
-                .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+                .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken).ConfigureAwait(false);
 
             if (user == null)
             {
@@ -228,7 +228,7 @@ namespace Synaxis.Infrastructure.Services
             invitation.DeclinedAt = DateTime.UtcNow;
             invitation.DeclinedBy = userId;
 
-            await this._context.SaveChangesAsync(cancellationToken);
+            await this._context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <inheritdoc/>
@@ -244,11 +244,11 @@ namespace Synaxis.Infrastructure.Services
                 .Where(i => i.OrganizationId == organizationId && i.Status == "pending")
                 .OrderByDescending(i => i.CreatedAt);
 
-            var totalCount = await query.CountAsync(cancellationToken);
+            var totalCount = await query.CountAsync(cancellationToken).ConfigureAwait(false);
             var invitations = await query
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .ToListAsync(cancellationToken);
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
 
             return new InvitationListResponse
             {
@@ -264,14 +264,14 @@ namespace Synaxis.Infrastructure.Services
         {
             var invitation = await this._context.Set<Invitation>()
                 .Include(i => i.Team)
-                .FirstOrDefaultAsync(i => i.Id == invitationId, cancellationToken);
+                .FirstOrDefaultAsync(i => i.Id == invitationId, cancellationToken).ConfigureAwait(false);
 
             if (invitation == null)
             {
                 throw new InvalidOperationException("Invitation not found.");
             }
 
-            if (invitation.Status != "pending")
+            if (!string.Equals(invitation.Status, "pending", StringComparison.Ordinal))
             {
                 throw new InvalidOperationException("This invitation has already been processed.");
             }
@@ -281,7 +281,7 @@ namespace Synaxis.Infrastructure.Services
             invitation.CancelledAt = DateTime.UtcNow;
             invitation.CancelledBy = cancelledByUserId;
 
-            await this._context.SaveChangesAsync(cancellationToken);
+            await this._context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 
         private static string GenerateSecureToken()

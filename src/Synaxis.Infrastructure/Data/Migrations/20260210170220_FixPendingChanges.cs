@@ -1,3 +1,7 @@
+// <copyright file="20260210170220_FixPendingChanges.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable

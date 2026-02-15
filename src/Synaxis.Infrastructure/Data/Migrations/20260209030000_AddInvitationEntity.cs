@@ -1,3 +1,7 @@
+// <copyright file="20260209030000_AddInvitationEntity.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
