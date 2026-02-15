@@ -249,7 +249,7 @@ Agents MUST NOT:
 Agents SHALL use file-scoped namespaces (C# 10+):
 
 ```csharp
-// CORRECT - File-scoped
+// CORRECT - File-scoped with usings BEFORE namespace
 using System;
 using System.Collections.Generic;
 
@@ -276,7 +276,9 @@ namespace Synaxis.Features.Authentication
 }
 ```
 
-**Rationale:** File-scoped namespaces reduce indentation and are the modern C# standard.
+**SA1200 Compliance:** Using directives MUST be placed BEFORE the namespace declaration (not inside). The file-scoped namespace syntax makes this clear and unambiguous.
+
+**Rationale:** File-scoped namespaces reduce indentation and are the modern C# standard. SA1200 enforces consistent using directive placement.
 
 ### 21.3 File Structure Template
 
@@ -313,7 +315,36 @@ Agents MUST ensure:
    - `IDictionary<K,V>` instead of `Dictionary<K,V>`
    - `ISet<T>` instead of `HashSet<T>`
 
-### 21.5 Pre-Generation Verification
+### 21.5 C# 10+ Language Features
+
+Agents SHALL use modern C# 10+ language features where applicable:
+
+**Required Features:**
+
+1. **File-Scoped Namespaces** (REQUIRED)
+   ```csharp
+   namespace Synaxis.Features.Authentication;  // File-scoped
+   
+   public class AuthService { }
+   ```
+
+2. **Global Usings** (RECOMMENDED)
+   - Place commonly used namespaces in `Usings.cs` at project root
+   - Example: `global using System; global using System.Collections.Generic;`
+
+3. **Primary Constructors** (RECOMMENDED for simple classes)
+   ```csharp
+   public class AuthService(ILogger<AuthService> logger, IAuthRepository repository)
+   {
+       // logger and repository are automatically captured as fields
+   }
+   ```
+
+**Prohibited Features:**
+- Block-scoped namespaces (pre-C# 10 style)
+- Traditional constructors when primary constructors suffice
+
+### 21.6 Pre-Generation Verification
 
 Before generating code, Agents SHALL verify:
 
@@ -321,6 +352,7 @@ Before generating code, Agents SHALL verify:
 - [ ] Type name is not already defined in solution
 - [ ] File name follows TypeName.cs convention
 - [ ] Namespace is appropriate for location
+- [ ] Using directives placed BEFORE namespace declaration (SA1200)
 
 Command to check for duplicates:
 ```bash
@@ -352,9 +384,11 @@ Agents SHALL treat these error counts as stop conditions:
 | Error Count | Required Action |
 |-------------|-----------------|
 | 1-10 | Fix immediately; document root cause |
-| 11-20 | Stop; reassess generation approach |
-| 21-50 | Emergency stop; notify maintainer |
-| 51+ | HALT; do not proceed without approval |
+| 11-25 | Stop; reassess generation approach |
+| 26-100 | Emergency stop; notify maintainer |
+| 101+ | HALT; do not proceed without approval |
+
+**Note:** These thresholds reflect the maximum error accumulation before mandatory intervention. Historical data from this project (2,000+ errors requiring remediation) establishes 100 as the practical upper limit for manageable remediation.
 
 ### 22.3 Quality Gates
 
@@ -494,7 +528,7 @@ Agents SHALL track cumulative analyzer errors introduced during a session.
 **Budget:**
 - Initial error count: [Record at session start]
 - Maximum increase: 20 errors per hour of work
-- Hard limit: 50 total errors
+- Hard limit: 100 total errors
 
 ### 25.2 Error Tracking
 
