@@ -46,6 +46,32 @@ namespace Synaxis.Infrastructure.Services
             return {new_count, ttl, 'allowed'}
         ";
 
+        // Lua script for sliding window using sorted sets
+        private const string LuaCheckQuotaSliding = @"
+            local key = KEYS[1]
+            local limit = tonumber(ARGV[1])
+            local window_seconds = tonumber(ARGV[2])
+            local now = tonumber(ARGV[3])
+            local increment = tonumber(ARGV[4])
+            
+            -- Remove expired entries
+            local cutoff = now - window_seconds
+            redis.call('ZREMRANGEBYSCORE', key, '-inf', cutoff)
+            
+            -- Count current usage
+            local current = redis.call('ZCARD', key)
+            
+            if current + increment > limit then
+                return {current, 0, 'exceeded'}
+            end
+            
+            -- Add new entry
+            redis.call('ZADD', key, now, now)
+            redis.call('EXPIRE', key, window_seconds)
+            
+            return {current + increment, window_seconds, 'allowed'}
+        ";
+
         private readonly IConnectionMultiplexer _redis;
         private readonly ITenantService _tenantService;
         private readonly ILogger<QuotaService> _logger;

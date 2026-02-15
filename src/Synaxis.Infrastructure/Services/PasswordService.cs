@@ -162,8 +162,6 @@ namespace Synaxis.Infrastructure.Services
                 {
                     result.IsValid = false;
                     result.Errors.Add($"You cannot reuse your last {policy.PasswordHistoryCount} passwords");
-                        break;
-                    }
                 }
             }
 
