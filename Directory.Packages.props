@@ -7,6 +7,7 @@
     <PackageVersion Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageVersion Include="AspNetCore.HealthChecks.Redis" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.Npgsql" Version="9.0.0" />
+    <PackageVersion Include="AutoFixture" Version="4.18.1" />
     <PackageVersion Include="AspNetCore.HealthChecks.AzureServiceBus" Version="9.0.0" />
     <PackageVersion Include="AsyncFixer" Version="2.1.0" />
     <PackageVersion Include="Azure.AI.OpenAI" Version="2.1.0" />
@@ -72,6 +73,7 @@
     <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="10.0.2" />
     <PackageVersion Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.2" />
     <PackageVersion Include="Microsoft.Extensions.Configuration" Version="10.0.2" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.2" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.2" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="10.0.2" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.2" />
@@ -131,5 +133,7 @@
     <PackageVersion Include="KubernetesClient" Version="18.0.4" />
     <PackageVersion Include="prometheus-net" Version="8.2.1" />
     <PackageVersion Include="prometheus-net.AspNetCore" Version="8.2.1" />
+    <PackageVersion Include="Npgsql" Version="9.0.3" />
+    <PackageVersion Include="Docker.DotNet" Version="3.125.15" />
   </ItemGroup>
 </Project>
