@@ -2,9 +2,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Synaxis.InferenceGateway.Application.Tests.Optimization.Configuration;
 
-public class TokenOptimizationConfigurationResolver : ITokenOptimizationConfigurationResolver
+public class TokenOptimizationConfigurationResolver(
+    IDbContextFactory<TestTokenOptimizationDbContext> dbContextFactory) : ITokenOptimizationConfigurationResolver
 {
-    private readonly IDbContextFactory<TestTokenOptimizationDbContext> _dbContextFactory;
+    private readonly IDbContextFactory<TestTokenOptimizationDbContext> _dbContextFactory = dbContextFactory;
 
     private readonly TokenOptimizationConfig _systemDefaults = new()
     {
@@ -16,12 +17,6 @@ public class TokenOptimizationConfigurationResolver : ITokenOptimizationConfigur
         MaxConcurrentRequests = 100,
         MaxTokensPerRequest = 4096,
     };
-
-    public TokenOptimizationConfigurationResolver(
-        IDbContextFactory<TestTokenOptimizationDbContext> dbContextFactory)
-    {
-        this._dbContextFactory = dbContextFactory;
-    }
 
     public async Task<TokenOptimizationConfig> ResolveAsync(Guid tenantId, Guid userId)
     {

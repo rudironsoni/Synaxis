@@ -49,16 +49,10 @@ public class TranslationPipelineTests
         Assert.Equal("first", result.Text);
     }
 
-    private sealed class TestRequestTranslator : IRequestTranslator
+    private sealed class TestRequestTranslator(string model, bool canHandle) : IRequestTranslator
     {
-        private readonly string _model;
-        private readonly bool _canHandle;
-
-        public TestRequestTranslator(string model, bool canHandle)
-        {
-            this._model = model;
-            this._canHandle = canHandle;
-        }
+        private readonly string _model = model;
+        private readonly bool _canHandle = canHandle;
 
         public bool CanHandle(CanonicalRequest request) => this._canHandle;
 
@@ -68,16 +62,10 @@ public class TranslationPipelineTests
 #pragma warning restore SA1101
     }
 
-    private sealed class TestResponseTranslator : IResponseTranslator
+    private sealed class TestResponseTranslator(string content, bool canHandle) : IResponseTranslator
     {
-        private readonly string _content;
-        private readonly bool _canHandle;
-
-        public TestResponseTranslator(string content, bool canHandle)
-        {
-            this._content = content;
-            this._canHandle = canHandle;
-        }
+        private readonly string _content = content;
+        private readonly bool _canHandle = canHandle;
 
         public bool CanHandle(CanonicalResponse response) => this._canHandle;
 
@@ -87,14 +75,9 @@ public class TranslationPipelineTests
 #pragma warning restore SA1101
     }
 
-    private sealed class TestStreamingTranslator : IStreamingTranslator
+    private sealed class TestStreamingTranslator(string text) : IStreamingTranslator
     {
-        private readonly string _text;
-
-        public TestStreamingTranslator(string text)
-        {
-            this._text = text;
-        }
+        private readonly string _text = text;
 
         public bool CanHandle(ChatResponseUpdate update) => true;
 

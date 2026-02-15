@@ -12,39 +12,26 @@ namespace Synaxis.InferenceGateway.Application.Tests.ChatClients;
 /// <summary>
 /// Mock implementation of TokenOptimizingChatClient for testing
 /// </summary>
-public sealed class TokenOptimizingChatClient : IChatClient
+public sealed class TokenOptimizingChatClient(
+    IChatClient innerClient,
+    ISemanticCacheService cacheService,
+    IConversationStore conversationStore,
+    ISessionStore sessionStore,
+    IInFlightDeduplicationService deduplicationService,
+    IRequestFingerprinter fingerprinter,
+    ITokenOptimizationConfigurationResolver configResolver,
+    IRequestContextProvider contextProvider,
+    ILogger<TokenOptimizingChatClient> logger) : IChatClient
 {
-    private readonly IChatClient _innerClient;
-    private readonly ISemanticCacheService _cacheService;
-    private readonly IConversationStore _conversationStore;
-    private readonly ISessionStore _sessionStore;
-    private readonly IInFlightDeduplicationService _deduplicationService;
-    private readonly IRequestFingerprinter _fingerprinter;
-    private readonly ITokenOptimizationConfigurationResolver _configResolver;
-    private readonly IRequestContextProvider _contextProvider;
-    private readonly ILogger<TokenOptimizingChatClient> _logger;
-
-    public TokenOptimizingChatClient(
-        IChatClient innerClient,
-        ISemanticCacheService cacheService,
-        IConversationStore conversationStore,
-        ISessionStore sessionStore,
-        IInFlightDeduplicationService deduplicationService,
-        IRequestFingerprinter fingerprinter,
-        ITokenOptimizationConfigurationResolver configResolver,
-        IRequestContextProvider contextProvider,
-        ILogger<TokenOptimizingChatClient> logger)
-    {
-        this._innerClient = innerClient ?? throw new ArgumentNullException(nameof(innerClient));
-        this._cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
-        this._conversationStore = conversationStore ?? throw new ArgumentNullException(nameof(conversationStore));
-        this._sessionStore = sessionStore ?? throw new ArgumentNullException(nameof(sessionStore));
-        this._deduplicationService = deduplicationService ?? throw new ArgumentNullException(nameof(deduplicationService));
-        this._fingerprinter = fingerprinter ?? throw new ArgumentNullException(nameof(fingerprinter));
-        this._configResolver = configResolver ?? throw new ArgumentNullException(nameof(configResolver));
-        this._contextProvider = contextProvider ?? throw new ArgumentNullException(nameof(contextProvider));
-        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
+    private readonly IChatClient _innerClient = innerClient ?? throw new ArgumentNullException(nameof(innerClient));
+    private readonly ISemanticCacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
+    private readonly IConversationStore _conversationStore = conversationStore ?? throw new ArgumentNullException(nameof(conversationStore));
+    private readonly ISessionStore _sessionStore = sessionStore ?? throw new ArgumentNullException(nameof(sessionStore));
+    private readonly IInFlightDeduplicationService _deduplicationService = deduplicationService ?? throw new ArgumentNullException(nameof(deduplicationService));
+    private readonly IRequestFingerprinter _fingerprinter = fingerprinter ?? throw new ArgumentNullException(nameof(fingerprinter));
+    private readonly ITokenOptimizationConfigurationResolver _configResolver = configResolver ?? throw new ArgumentNullException(nameof(configResolver));
+    private readonly IRequestContextProvider _contextProvider = contextProvider ?? throw new ArgumentNullException(nameof(contextProvider));
+    private readonly ILogger<TokenOptimizingChatClient> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public async Task<ChatResponse> GetResponseAsync(
         IEnumerable<ChatMessage> messages,

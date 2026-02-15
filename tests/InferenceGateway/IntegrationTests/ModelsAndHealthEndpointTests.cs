@@ -12,143 +12,142 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Xunit;
 
-namespace Synaxis.InferenceGateway.IntegrationTests
+namespace Synaxis.InferenceGateway.IntegrationTests;
+
+public class ModelsAndHealthEndpointTests
 {
-    public class ModelsAndHealthEndpointTests
+    private static WebApplicationFactory<Program> CreateFactory(Dictionary<string, string?> settings, bool suppressHealthLogs = false)
     {
-        private static WebApplicationFactory<Program> CreateFactory(Dictionary<string, string?> settings, bool suppressHealthLogs = false)
+        // Set JWT secret BEFORE factory creation so it's available when Program.cs validates
+        System.Environment.SetEnvironmentVariable(
+            "Synaxis__InferenceGateway__JwtSecret",
+            "TestJwtSecretKeyThatIsAtLeast32BytesLongForHmacSha256Algorithm");
+
+        return new WebApplicationFactory<Program>()
+        .WithWebHostBuilder(builder =>
         {
-            // Set JWT secret BEFORE factory creation so it's available when Program.cs validates
-            System.Environment.SetEnvironmentVariable(
-                "Synaxis__InferenceGateway__JwtSecret",
-                "TestJwtSecretKeyThatIsAtLeast32BytesLongForHmacSha256Algorithm");
+            builder.UseEnvironment("Development");
 
-            return new WebApplicationFactory<Program>()
-            .WithWebHostBuilder(builder =>
+            if (suppressHealthLogs)
             {
-                builder.UseEnvironment("Development");
-
-                if (suppressHealthLogs)
+                builder.ConfigureLogging(logging =>
                 {
-                    builder.ConfigureLogging(logging =>
+                    logging.AddFilter("Microsoft.Extensions.Diagnostics.HealthChecks", LogLevel.None);
+                });
+            }
+
+            builder.ConfigureAppConfiguration((_, config) =>
+            {
+                var defaults = new Dictionary<string, string?>
+(StringComparer.Ordinal)
+                {
+                    ["Synaxis:ControlPlane:UseInMemory"] = "true",
+                    ["Synaxis:ControlPlane:ConnectionString"] = string.Empty,
+                    ["Synaxis:InferenceGateway:JwtSecret"] = "TestJwtSecretKeyThatIsAtLeast32BytesLongForHmacSha256Algorithm",
+                };
+
+                foreach (var kvp in defaults)
+                {
+                    if (!settings.ContainsKey(kvp.Key))
                     {
-                        logging.AddFilter("Microsoft.Extensions.Diagnostics.HealthChecks", LogLevel.None);
-                    });
+                        settings[kvp.Key] = kvp.Value;
+                    }
                 }
 
-                builder.ConfigureAppConfiguration((_, config) =>
-                {
-                    var defaults = new Dictionary<string, string?>
-(StringComparer.Ordinal)
-                    {
-                        ["Synaxis:ControlPlane:UseInMemory"] = "true",
-                        ["Synaxis:ControlPlane:ConnectionString"] = string.Empty,
-                        ["Synaxis:InferenceGateway:JwtSecret"] = "TestJwtSecretKeyThatIsAtLeast32BytesLongForHmacSha256Algorithm",
-                    };
-
-                    foreach (var kvp in defaults)
-                    {
-                        if (!settings.ContainsKey(kvp.Key))
-                        {
-                            settings[kvp.Key] = kvp.Value;
-                        }
-                    }
-
-                    config.AddInMemoryCollection(settings);
-                });
+                config.AddInMemoryCollection(settings);
             });
-        }
+        });
+    }
 
-        [Fact]
-        public async Task Models_ReturnsDefaultCanonicalAndAliases()
-        {
-            var settings = new Dictionary<string, string?>
+    [Fact]
+    public async Task Models_ReturnsDefaultCanonicalAndAliases()
+    {
+        var settings = new Dictionary<string, string?>
 (StringComparer.Ordinal)
-            {
-                ["Synaxis:ControlPlane:UseInMemory"] = "true",
-                ["Synaxis:InferenceGateway:Providers:TestProvider:Type"] = "openai",
-                ["Synaxis:InferenceGateway:Providers:TestProvider:Enabled"] = "true",
-                ["Synaxis:InferenceGateway:Providers:TestProvider:Models:0"] = "test-model",
-                ["Synaxis:InferenceGateway:CanonicalModels:0:Id"] = "test-model",
-                ["Synaxis:InferenceGateway:CanonicalModels:0:Provider"] = "TestProvider",
-                ["Synaxis:InferenceGateway:CanonicalModels:0:ModelPath"] = "test-model",
-                ["Synaxis:InferenceGateway:Aliases:fast:Candidates:0"] = "test-model",
-                ["Synaxis:InferenceGateway:Aliases:default:Candidates:0"] = "test-model",
-                ["Synaxis:InferenceGateway:JwtSecret"] = "TestJwtSecretKeyThatIsAtLeast32BytesLongForHmacSha256Algorithm",
-            };
-
-            await using var factory = CreateFactory(settings);
-            using var client = factory.CreateClient();
-
-            var response = await client.GetAsync("/openai/v1/models");
-
-            response.EnsureSuccessStatusCode();
-            var payload = await response.Content.ReadFromJsonAsync<ModelListResponse>();
-
-            Assert.NotNull(payload);
-            var ids = payload!.Data.Select(m => m.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
-            Assert.Contains("default", ids);
-            Assert.Contains("test-model", ids);
-            Assert.Contains("fast", ids);
-        }
-
-        [Fact]
-        public async Task Liveness_ReturnsOk()
         {
-            var settings = new Dictionary<string, string?>(StringComparer.Ordinal)
-            {
-                ["Synaxis:InferenceGateway:JwtSecret"] = "TestJwtSecretKeyThatIsAtLeast32BytesLongForHmacSha256Algorithm",
-            };
-            await using var factory = CreateFactory(settings);
-            using var client = factory.CreateClient();
+            ["Synaxis:ControlPlane:UseInMemory"] = "true",
+            ["Synaxis:InferenceGateway:Providers:TestProvider:Type"] = "openai",
+            ["Synaxis:InferenceGateway:Providers:TestProvider:Enabled"] = "true",
+            ["Synaxis:InferenceGateway:Providers:TestProvider:Models:0"] = "test-model",
+            ["Synaxis:InferenceGateway:CanonicalModels:0:Id"] = "test-model",
+            ["Synaxis:InferenceGateway:CanonicalModels:0:Provider"] = "TestProvider",
+            ["Synaxis:InferenceGateway:CanonicalModels:0:ModelPath"] = "test-model",
+            ["Synaxis:InferenceGateway:Aliases:fast:Candidates:0"] = "test-model",
+            ["Synaxis:InferenceGateway:Aliases:default:Candidates:0"] = "test-model",
+            ["Synaxis:InferenceGateway:JwtSecret"] = "TestJwtSecretKeyThatIsAtLeast32BytesLongForHmacSha256Algorithm",
+        };
 
-            var response = await client.GetAsync("/health/liveness");
+        await using var factory = CreateFactory(settings);
+        using var client = factory.CreateClient();
 
-            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        }
+        var response = await client.GetAsync("/openai/v1/models");
 
-        [Fact]
-        public async Task Readiness_ReturnsUnhealthyWhenRedisUnavailable()
+        response.EnsureSuccessStatusCode();
+        var payload = await response.Content.ReadFromJsonAsync<ModelListResponse>();
+
+        Assert.NotNull(payload);
+        var ids = payload!.Data.Select(m => m.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        Assert.Contains("default", ids);
+        Assert.Contains("test-model", ids);
+        Assert.Contains("fast", ids);
+    }
+
+    [Fact]
+    public async Task Liveness_ReturnsOk()
+    {
+        var settings = new Dictionary<string, string?>(StringComparer.Ordinal)
         {
-            var settings = new Dictionary<string, string?>(StringComparer.Ordinal)
-            {
-                ["Synaxis:ControlPlane:UseInMemory"] = "true",
-                ["Synaxis:InferenceGateway:Providers:TestProvider:Enabled"] = "false",
-                ["Synaxis:InferenceGateway:Providers:TestProvider:Type"] = "openai",
-                ["Synaxis:InferenceGateway:Providers:TestProvider:Models:0"] = "test-model",
-                ["Synaxis:InferenceGateway:CanonicalModels:0:Id"] = "test-model",
-                ["Synaxis:InferenceGateway:CanonicalModels:0:Provider"] = "TestProvider",
-                ["Synaxis:InferenceGateway:CanonicalModels:0:ModelPath"] = "test-model",
-                ["Synaxis:InferenceGateway:Aliases:default:Candidates:0"] = "test-model",
-                ["Synaxis:ControlPlane:ConnectionString"] = string.Empty,
-                ["ConnectionStrings:Redis"] = "localhost:6379,abortConnect=false,connectTimeout=100,asyncTimeout=100",
-                ["Synaxis:InferenceGateway:JwtSecret"] = "TestJwtSecretKeyThatIsAtLeast32BytesLongForHmacSha256Algorithm",
-            };
+            ["Synaxis:InferenceGateway:JwtSecret"] = "TestJwtSecretKeyThatIsAtLeast32BytesLongForHmacSha256Algorithm",
+        };
+        await using var factory = CreateFactory(settings);
+        using var client = factory.CreateClient();
 
-            await using var factory = CreateFactory(settings, suppressHealthLogs: true);
-            using var client = factory.CreateClient();
+        var response = await client.GetAsync("/health/liveness");
 
-            var response = await client.GetAsync("/health/readiness");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
 
-            Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
-        }
-
-        private sealed class ModelListResponse
+    [Fact]
+    public async Task Readiness_ReturnsUnhealthyWhenRedisUnavailable()
+    {
+        var settings = new Dictionary<string, string?>(StringComparer.Ordinal)
         {
-            public string Object { get; set; } = string.Empty;
+            ["Synaxis:ControlPlane:UseInMemory"] = "true",
+            ["Synaxis:InferenceGateway:Providers:TestProvider:Enabled"] = "false",
+            ["Synaxis:InferenceGateway:Providers:TestProvider:Type"] = "openai",
+            ["Synaxis:InferenceGateway:Providers:TestProvider:Models:0"] = "test-model",
+            ["Synaxis:InferenceGateway:CanonicalModels:0:Id"] = "test-model",
+            ["Synaxis:InferenceGateway:CanonicalModels:0:Provider"] = "TestProvider",
+            ["Synaxis:InferenceGateway:CanonicalModels:0:ModelPath"] = "test-model",
+            ["Synaxis:InferenceGateway:Aliases:default:Candidates:0"] = "test-model",
+            ["Synaxis:ControlPlane:ConnectionString"] = string.Empty,
+            ["ConnectionStrings:Redis"] = "localhost:6379,abortConnect=false,connectTimeout=100,asyncTimeout=100",
+            ["Synaxis:InferenceGateway:JwtSecret"] = "TestJwtSecretKeyThatIsAtLeast32BytesLongForHmacSha256Algorithm",
+        };
 
-            public List<ModelItem> Data { get; set; } = new();
-        }
+        await using var factory = CreateFactory(settings, suppressHealthLogs: true);
+        using var client = factory.CreateClient();
 
-        private sealed class ModelItem
-        {
-            public string Id { get; set; } = string.Empty;
+        var response = await client.GetAsync("/health/readiness");
 
-            public string Object { get; set; } = string.Empty;
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+    }
 
-            public long Created { get; set; }
+    private sealed class ModelListResponse
+    {
+        public string Object { get; set; } = string.Empty;
 
-            public string Owned_By { get; set; } = string.Empty;
-        }
+        public List<ModelItem> Data { get; set; } = new();
+    }
+
+    private sealed class ModelItem
+    {
+        public string Id { get; set; } = string.Empty;
+
+        public string Object { get; set; } = string.Empty;
+
+        public long Created { get; set; }
+
+        public string Owned_By { get; set; } = string.Empty;
     }
 }

@@ -2,343 +2,336 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.InferenceGateway.IntegrationTests.Transport
+namespace Synaxis.InferenceGateway.IntegrationTests.Transport;
+
+using System;
+using System.Net.WebSockets;
+using System.Text;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
+using Synaxis.InferenceGateway.IntegrationTests.Helpers;
+using Synaxis.Transport.WebSocket.Protocol;
+using Xunit;
+using Xunit.Abstractions;
+
+/// <summary>
+/// Integration tests for the WebSocket transport layer.
+/// Tests use WebApplicationFactory with TestServer.CreateWebSocketClient() for self-contained testing.
+/// </summary>
+/// <remarks>
+/// Initializes a new instance of the <see cref="WebSocketTransportTests"/> class.
+/// </remarks>
+/// <param name="factory">The web application factory.</param>
+/// <param name="output">The test output helper.</param>
+public class WebSocketTransportTests(SynaxisWebApplicationFactory factory, ITestOutputHelper output) : IClassFixture<SynaxisWebApplicationFactory>
 {
-    using System;
-    using System.Net.WebSockets;
-    using System.Text;
-    using System.Text.Json;
-    using System.Threading;
-    using System.Threading.Tasks;
-    using Synaxis.InferenceGateway.IntegrationTests.Helpers;
-    using Synaxis.Transport.WebSocket.Protocol;
-    using Xunit;
-    using Xunit.Abstractions;
+    private readonly SynaxisWebApplicationFactory _factory = factory;
+    private readonly ITestOutputHelper _output = output;
 
     /// <summary>
-    /// Integration tests for the WebSocket transport layer.
-    /// Tests use WebApplicationFactory with TestServer.CreateWebSocketClient() for self-contained testing.
+    /// Tests that a Command message returns a Response message.
     /// </summary>
-    public class WebSocketTransportTests : IClassFixture<SynaxisWebApplicationFactory>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact(Skip = "Mediator source generator infrastructure issue")]
+    public async Task CommandMessage_ReturnsResponseMessage()
     {
-        private readonly SynaxisWebApplicationFactory _factory;
-        private readonly ITestOutputHelper _output;
+        // Arrange
+        var wsUrl = new Uri("ws://localhost/ws");
+        var webSocketClient = this._factory.Server.CreateWebSocketClient();
+        var correlationId = Guid.NewGuid().ToString();
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="WebSocketTransportTests"/> class.
-        /// </summary>
-        /// <param name="factory">The web application factory.</param>
-        /// <param name="output">The test output helper.</param>
-        public WebSocketTransportTests(SynaxisWebApplicationFactory factory, ITestOutputHelper output)
+        using var client = await webSocketClient.ConnectAsync(wsUrl, CancellationToken.None);
+
+        var commandMessage = new WebSocketMessage
         {
-            this._factory = factory;
-            this._output = output;
-        }
+            Type = "command",
+            CommandType = "ChatCommand",
+            CorrelationId = correlationId,
+            Payload = JsonSerializer.SerializeToElement(new
+            {
+                messages = new[]
+                {
+                    new { role = "user", content = "Hello" }
+                },
+                model = "test-model",
+                maxTokens = 100,
+                temperature = 0.7
+            })
+        };
 
-        /// <summary>
-        /// Tests that a Command message returns a Response message.
-        /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-        [Fact(Skip = "Mediator source generator infrastructure issue")]
-        public async Task CommandMessage_ReturnsResponseMessage()
+        var messageData = MessageSerializer.Serialize(commandMessage);
+
+        this._output.WriteLine($"[Observability] Sending command message - CorrelationId: {correlationId}, CommandType: {commandMessage.CommandType}, Timestamp: {DateTime.UtcNow:O}");
+
+        // Act
+        await client.SendAsync(
+            new ArraySegment<byte>(messageData),
+            WebSocketMessageType.Text,
+            endOfMessage: true,
+            CancellationToken.None);
+
+        var responseBuffer = new byte[4096];
+        var receiveResult = await client.ReceiveAsync(
+            new ArraySegment<byte>(responseBuffer),
+            CancellationToken.None);
+
+        var responseData = new byte[receiveResult.Count];
+        Array.Copy(responseBuffer, responseData, receiveResult.Count);
+        var responseMessage = MessageSerializer.Deserialize(responseData);
+
+        // Assert
+        Assert.Equal(WebSocketMessageType.Text, receiveResult.MessageType);
+        Assert.Equal("response", responseMessage.Type);
+        Assert.Equal(correlationId, responseMessage.CorrelationId);
+        this._output.WriteLine($"[Observability] Received response - Type: {responseMessage.Type}, CorrelationId: {responseMessage.CorrelationId}, Timestamp: {DateTime.UtcNow:O}");
+
+        // Cleanup
+        await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "Test complete", CancellationToken.None);
+    }
+
+    [Fact(Skip = "Mediator source generator infrastructure issue")]
+    public async Task Streaming_SendsMultipleMessages()
+    {
+        // Arrange
+        var wsUrl = new Uri("ws://localhost/ws");
+        var webSocketClient = this._factory.Server.CreateWebSocketClient();
+        var correlationId = Guid.NewGuid().ToString();
+
+        using var client = await webSocketClient.ConnectAsync(wsUrl, CancellationToken.None);
+
+        var streamCommandMessage = new WebSocketMessage
         {
-            // Arrange
-            var wsUrl = new Uri("ws://localhost/ws");
-            var webSocketClient = this._factory.Server.CreateWebSocketClient();
-            var correlationId = Guid.NewGuid().ToString();
-
-            using var client = await webSocketClient.ConnectAsync(wsUrl, CancellationToken.None);
-
-            var commandMessage = new WebSocketMessage
+            Type = "command",
+            CommandType = "ChatStreamCommand",
+            CorrelationId = correlationId,
+            Payload = JsonSerializer.SerializeToElement(new
             {
-                Type = "command",
-                CommandType = "ChatCommand",
-                CorrelationId = correlationId,
-                Payload = JsonSerializer.SerializeToElement(new
+                messages = new[]
                 {
-                    messages = new[]
-                    {
-                        new { role = "user", content = "Hello" }
-                    },
-                    model = "test-model",
-                    maxTokens = 100,
-                    temperature = 0.7
-                })
-            };
+                    new { role = "user", content = "Tell me a short story" }
+                },
+                model = "test-model",
+                maxTokens = 100,
+                temperature = 0.7
+            })
+        };
 
-            var messageData = MessageSerializer.Serialize(commandMessage);
+        var messageData = MessageSerializer.Serialize(streamCommandMessage);
 
-            this._output.WriteLine($"[Observability] Sending command message - CorrelationId: {correlationId}, CommandType: {commandMessage.CommandType}, Timestamp: {DateTime.UtcNow:O}");
+        this._output.WriteLine($"[Observability] Sending stream command - CorrelationId: {correlationId}, CommandType: {streamCommandMessage.CommandType}, Timestamp: {DateTime.UtcNow:O}");
 
-            // Act
-            await client.SendAsync(
-                new ArraySegment<byte>(messageData),
-                WebSocketMessageType.Text,
-                endOfMessage: true,
-                CancellationToken.None);
+        // Act
+        await client.SendAsync(
+            new ArraySegment<byte>(messageData),
+            WebSocketMessageType.Text,
+            endOfMessage: true,
+            CancellationToken.None);
 
-            var responseBuffer = new byte[4096];
-            var receiveResult = await client.ReceiveAsync(
-                new ArraySegment<byte>(responseBuffer),
-                CancellationToken.None);
+        var messageCount = 0;
+        var responseBuffer = new byte[4096];
+        var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
 
-            var responseData = new byte[receiveResult.Count];
-            Array.Copy(responseBuffer, responseData, receiveResult.Count);
-            var responseMessage = MessageSerializer.Deserialize(responseData);
-
-            // Assert
-            Assert.Equal(WebSocketMessageType.Text, receiveResult.MessageType);
-            Assert.Equal("response", responseMessage.Type);
-            Assert.Equal(correlationId, responseMessage.CorrelationId);
-            this._output.WriteLine($"[Observability] Received response - Type: {responseMessage.Type}, CorrelationId: {responseMessage.CorrelationId}, Timestamp: {DateTime.UtcNow:O}");
-
-            // Cleanup
-            await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "Test complete", CancellationToken.None);
-        }
-
-        [Fact(Skip = "Mediator source generator infrastructure issue")]
-        public async Task Streaming_SendsMultipleMessages()
+        // Receive multiple messages (streaming)
+        while (messageCount < 3 && !timeoutCts.Token.IsCancellationRequested)
         {
-            // Arrange
-            var wsUrl = new Uri("ws://localhost/ws");
-            var webSocketClient = this._factory.Server.CreateWebSocketClient();
-            var correlationId = Guid.NewGuid().ToString();
-
-            using var client = await webSocketClient.ConnectAsync(wsUrl, CancellationToken.None);
-
-            var streamCommandMessage = new WebSocketMessage
+            try
             {
-                Type = "command",
-                CommandType = "ChatStreamCommand",
-                CorrelationId = correlationId,
-                Payload = JsonSerializer.SerializeToElement(new
-                {
-                    messages = new[]
-                    {
-                        new { role = "user", content = "Tell me a short story" }
-                    },
-                    model = "test-model",
-                    maxTokens = 100,
-                    temperature = 0.7
-                })
-            };
+                var receiveResult = await client.ReceiveAsync(
+                    new ArraySegment<byte>(responseBuffer),
+                    timeoutCts.Token);
 
-            var messageData = MessageSerializer.Serialize(streamCommandMessage);
-
-            this._output.WriteLine($"[Observability] Sending stream command - CorrelationId: {correlationId}, CommandType: {streamCommandMessage.CommandType}, Timestamp: {DateTime.UtcNow:O}");
-
-            // Act
-            await client.SendAsync(
-                new ArraySegment<byte>(messageData),
-                WebSocketMessageType.Text,
-                endOfMessage: true,
-                CancellationToken.None);
-
-            var messageCount = 0;
-            var responseBuffer = new byte[4096];
-            var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-
-            // Receive multiple messages (streaming)
-            while (messageCount < 3 && !timeoutCts.Token.IsCancellationRequested)
-            {
-                try
-                {
-                    var receiveResult = await client.ReceiveAsync(
-                        new ArraySegment<byte>(responseBuffer),
-                        timeoutCts.Token);
-
-                    if (receiveResult.MessageType == WebSocketMessageType.Close)
-                    {
-                        break;
-                    }
-
-                    var responseData = new byte[receiveResult.Count];
-                    Array.Copy(responseBuffer, responseData, receiveResult.Count);
-                    var responseMessage = MessageSerializer.Deserialize(responseData);
-
-                    this._output.WriteLine($"[Observability] Received stream message #{messageCount + 1} - Type: {responseMessage.Type}, CorrelationId: {responseMessage.CorrelationId}, Timestamp: {DateTime.UtcNow:O}");
-
-                    // Accept both response and error - we're testing transport, not LLM integration
-                    Assert.True(
-                        responseMessage.Type == "response" || responseMessage.Type == "error",
-                        $"Expected message type 'response' or 'error', but got '{responseMessage.Type}'");
-                    Assert.Equal(correlationId, responseMessage.CorrelationId);
-                    messageCount++;
-                }
-                catch (OperationCanceledException)
+                if (receiveResult.MessageType == WebSocketMessageType.Close)
                 {
                     break;
                 }
+
+                var responseData = new byte[receiveResult.Count];
+                Array.Copy(responseBuffer, responseData, receiveResult.Count);
+                var responseMessage = MessageSerializer.Deserialize(responseData);
+
+                this._output.WriteLine($"[Observability] Received stream message #{messageCount + 1} - Type: {responseMessage.Type}, CorrelationId: {responseMessage.CorrelationId}, Timestamp: {DateTime.UtcNow:O}");
+
+                // Accept both response and error - we're testing transport, not LLM integration
+                Assert.True(
+                    responseMessage.Type == "response" || responseMessage.Type == "error",
+                    $"Expected message type 'response' or 'error', but got '{responseMessage.Type}'");
+                Assert.Equal(correlationId, responseMessage.CorrelationId);
+                messageCount++;
             }
-
-            // Assert
-            Assert.True(messageCount >= 1, "Should receive at least one message in stream");
-            this._output.WriteLine($"[Observability] Streaming test completed - Messages received: {messageCount}, Timestamp: {DateTime.UtcNow:O}");
-
-            // Cleanup
-            await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "Test complete", CancellationToken.None);
-        }
-
-        [Fact(Skip = "Mediator source generator infrastructure issue")]
-        public async Task ErrorHandling_ReturnsProperErrorMessages()
-        {
-            // Arrange
-            var wsUrl = new Uri("ws://localhost/ws");
-            var webSocketClient = this._factory.Server.CreateWebSocketClient();
-            var correlationId = Guid.NewGuid().ToString();
-
-            using var client = await webSocketClient.ConnectAsync(wsUrl, CancellationToken.None);
-
-            // Send an invalid command type
-            var invalidCommandMessage = new WebSocketMessage
+            catch (OperationCanceledException)
             {
-                Type = "command",
-                CommandType = "InvalidCommandType",
-                CorrelationId = correlationId,
-                Payload = JsonSerializer.SerializeToElement(new { })
-            };
-
-            var messageData = MessageSerializer.Serialize(invalidCommandMessage);
-
-            this._output.WriteLine($"[Observability] Sending invalid command - CorrelationId: {correlationId}, CommandType: {invalidCommandMessage.CommandType}, Timestamp: {DateTime.UtcNow:O}");
-
-            // Act
-            await client.SendAsync(
-                new ArraySegment<byte>(messageData),
-                WebSocketMessageType.Text,
-                endOfMessage: true,
-                CancellationToken.None);
-
-            var responseBuffer = new byte[4096];
-            var receiveResult = await client.ReceiveAsync(
-                new ArraySegment<byte>(responseBuffer),
-                CancellationToken.None);
-
-            var responseData = new byte[receiveResult.Count];
-            Array.Copy(responseBuffer, responseData, receiveResult.Count);
-            var responseMessage = MessageSerializer.Deserialize(responseData);
-
-            // Assert
-            Assert.Equal(WebSocketMessageType.Text, receiveResult.MessageType);
-            Assert.Equal("error", responseMessage.Type);
-            Assert.Equal(correlationId, responseMessage.CorrelationId);
-            Assert.True(responseMessage.Payload.TryGetProperty("error", out var errorProperty));
-            Assert.Contains("Unknown command type", errorProperty.GetString(), StringComparison.Ordinal);
-            this._output.WriteLine($"[Observability] Received error message - Type: {responseMessage.Type}, Error: {errorProperty.GetString()}, Timestamp: {DateTime.UtcNow:O}");
-
-            // Cleanup
-            await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "Test complete", CancellationToken.None);
+                break;
+            }
         }
 
-        [Fact(Skip = "Mediator source generator infrastructure issue")]
-        public async Task ConnectionClose_IsHandledProperly()
+        // Assert
+        Assert.True(messageCount >= 1, "Should receive at least one message in stream");
+        this._output.WriteLine($"[Observability] Streaming test completed - Messages received: {messageCount}, Timestamp: {DateTime.UtcNow:O}");
+
+        // Cleanup
+        await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "Test complete", CancellationToken.None);
+    }
+
+    [Fact(Skip = "Mediator source generator infrastructure issue")]
+    public async Task ErrorHandling_ReturnsProperErrorMessages()
+    {
+        // Arrange
+        var wsUrl = new Uri("ws://localhost/ws");
+        var webSocketClient = this._factory.Server.CreateWebSocketClient();
+        var correlationId = Guid.NewGuid().ToString();
+
+        using var client = await webSocketClient.ConnectAsync(wsUrl, CancellationToken.None);
+
+        // Send an invalid command type
+        var invalidCommandMessage = new WebSocketMessage
         {
-            // Arrange
-            var wsUrl = new Uri("ws://localhost/ws");
-            var webSocketClient = this._factory.Server.CreateWebSocketClient();
+            Type = "command",
+            CommandType = "InvalidCommandType",
+            CorrelationId = correlationId,
+            Payload = JsonSerializer.SerializeToElement(new { })
+        };
 
-            using var client = await webSocketClient.ConnectAsync(wsUrl, CancellationToken.None);
-            Assert.Equal(WebSocketState.Open, client.State);
+        var messageData = MessageSerializer.Serialize(invalidCommandMessage);
 
-            this._output.WriteLine($"[Observability] Connection established - State: {client.State}, Timestamp: {DateTime.UtcNow:O}");
+        this._output.WriteLine($"[Observability] Sending invalid command - CorrelationId: {correlationId}, CommandType: {invalidCommandMessage.CommandType}, Timestamp: {DateTime.UtcNow:O}");
 
-            // Act
-            await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "Client closing", CancellationToken.None);
+        // Act
+        await client.SendAsync(
+            new ArraySegment<byte>(messageData),
+            WebSocketMessageType.Text,
+            endOfMessage: true,
+            CancellationToken.None);
 
-            // Assert
-            Assert.Equal(WebSocketState.Closed, client.State);
-            this._output.WriteLine($"[Observability] Connection closed properly - State: {client.State}, Timestamp: {DateTime.UtcNow:O}");
-        }
+        var responseBuffer = new byte[4096];
+        var receiveResult = await client.ReceiveAsync(
+            new ArraySegment<byte>(responseBuffer),
+            CancellationToken.None);
 
-        [Fact(Skip = "Mediator source generator infrastructure issue")]
-        public async Task InvalidMessageFormat_ReturnsError()
+        var responseData = new byte[receiveResult.Count];
+        Array.Copy(responseBuffer, responseData, receiveResult.Count);
+        var responseMessage = MessageSerializer.Deserialize(responseData);
+
+        // Assert
+        Assert.Equal(WebSocketMessageType.Text, receiveResult.MessageType);
+        Assert.Equal("error", responseMessage.Type);
+        Assert.Equal(correlationId, responseMessage.CorrelationId);
+        Assert.True(responseMessage.Payload.TryGetProperty("error", out var errorProperty));
+        Assert.Contains("Unknown command type", errorProperty.GetString(), StringComparison.Ordinal);
+        this._output.WriteLine($"[Observability] Received error message - Type: {responseMessage.Type}, Error: {errorProperty.GetString()}, Timestamp: {DateTime.UtcNow:O}");
+
+        // Cleanup
+        await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "Test complete", CancellationToken.None);
+    }
+
+    [Fact(Skip = "Mediator source generator infrastructure issue")]
+    public async Task ConnectionClose_IsHandledProperly()
+    {
+        // Arrange
+        var wsUrl = new Uri("ws://localhost/ws");
+        var webSocketClient = this._factory.Server.CreateWebSocketClient();
+
+        using var client = await webSocketClient.ConnectAsync(wsUrl, CancellationToken.None);
+        Assert.Equal(WebSocketState.Open, client.State);
+
+        this._output.WriteLine($"[Observability] Connection established - State: {client.State}, Timestamp: {DateTime.UtcNow:O}");
+
+        // Act
+        await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "Client closing", CancellationToken.None);
+
+        // Assert
+        Assert.Equal(WebSocketState.Closed, client.State);
+        this._output.WriteLine($"[Observability] Connection closed properly - State: {client.State}, Timestamp: {DateTime.UtcNow:O}");
+    }
+
+    [Fact(Skip = "Mediator source generator infrastructure issue")]
+    public async Task InvalidMessageFormat_ReturnsError()
+    {
+        // Arrange
+        var wsUrl = new Uri("ws://localhost/ws");
+        var webSocketClient = this._factory.Server.CreateWebSocketClient();
+
+        using var client = await webSocketClient.ConnectAsync(wsUrl, CancellationToken.None);
+
+        // Send invalid JSON
+        var invalidJson = Encoding.UTF8.GetBytes("{ invalid json }");
+
+        this._output.WriteLine($"[Observability] Sending invalid JSON - Timestamp: {DateTime.UtcNow:O}");
+
+        // Act
+        await client.SendAsync(
+            new ArraySegment<byte>(invalidJson),
+            WebSocketMessageType.Text,
+            endOfMessage: true,
+            CancellationToken.None);
+
+        var responseBuffer = new byte[4096];
+        var receiveResult = await client.ReceiveAsync(
+            new ArraySegment<byte>(responseBuffer),
+            CancellationToken.None);
+
+        var responseData = new byte[receiveResult.Count];
+        Array.Copy(responseBuffer, responseData, receiveResult.Count);
+        var responseMessage = MessageSerializer.Deserialize(responseData);
+
+        // Assert
+        Assert.Equal(WebSocketMessageType.Text, receiveResult.MessageType);
+        Assert.Equal("error", responseMessage.Type);
+        Assert.True(responseMessage.Payload.TryGetProperty("error", out var errorProperty));
+        Assert.Contains("Invalid message format", errorProperty.GetString(), StringComparison.Ordinal);
+        this._output.WriteLine($"[Observability] Received error for invalid format - Type: {responseMessage.Type}, Error: {errorProperty.GetString()}, Timestamp: {DateTime.UtcNow:O}");
+
+        // Cleanup
+        await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "Test complete", CancellationToken.None);
+    }
+
+    [Fact(Skip = "Mediator source generator infrastructure issue")]
+    public async Task UnknownMessageType_ReturnsError()
+    {
+        // Arrange
+        var wsUrl = new Uri("ws://localhost/ws");
+        var webSocketClient = this._factory.Server.CreateWebSocketClient();
+        var correlationId = Guid.NewGuid().ToString();
+
+        using var client = await webSocketClient.ConnectAsync(wsUrl, CancellationToken.None);
+
+        var unknownTypeMessage = new WebSocketMessage
         {
-            // Arrange
-            var wsUrl = new Uri("ws://localhost/ws");
-            var webSocketClient = this._factory.Server.CreateWebSocketClient();
+            Type = "unknown-type",
+            CommandType = "ChatCommand",
+            CorrelationId = correlationId,
+            Payload = JsonSerializer.SerializeToElement(new { })
+        };
 
-            using var client = await webSocketClient.ConnectAsync(wsUrl, CancellationToken.None);
+        var messageData = MessageSerializer.Serialize(unknownTypeMessage);
 
-            // Send invalid JSON
-            var invalidJson = Encoding.UTF8.GetBytes("{ invalid json }");
+        this._output.WriteLine($"[Observability] Sending unknown message type - Type: {unknownTypeMessage.Type}, CorrelationId: {correlationId}, Timestamp: {DateTime.UtcNow:O}");
 
-            this._output.WriteLine($"[Observability] Sending invalid JSON - Timestamp: {DateTime.UtcNow:O}");
+        // Act
+        await client.SendAsync(
+            new ArraySegment<byte>(messageData),
+            WebSocketMessageType.Text,
+            endOfMessage: true,
+            CancellationToken.None);
 
-            // Act
-            await client.SendAsync(
-                new ArraySegment<byte>(invalidJson),
-                WebSocketMessageType.Text,
-                endOfMessage: true,
-                CancellationToken.None);
+        var responseBuffer = new byte[4096];
+        var receiveResult = await client.ReceiveAsync(
+            new ArraySegment<byte>(responseBuffer),
+            CancellationToken.None);
 
-            var responseBuffer = new byte[4096];
-            var receiveResult = await client.ReceiveAsync(
-                new ArraySegment<byte>(responseBuffer),
-                CancellationToken.None);
+        var responseData = new byte[receiveResult.Count];
+        Array.Copy(responseBuffer, responseData, receiveResult.Count);
+        var responseMessage = MessageSerializer.Deserialize(responseData);
 
-            var responseData = new byte[receiveResult.Count];
-            Array.Copy(responseBuffer, responseData, receiveResult.Count);
-            var responseMessage = MessageSerializer.Deserialize(responseData);
+        // Assert
+        Assert.Equal(WebSocketMessageType.Text, receiveResult.MessageType);
+        Assert.Equal("error", responseMessage.Type);
+        Assert.Equal(correlationId, responseMessage.CorrelationId);
+        Assert.True(responseMessage.Payload.TryGetProperty("error", out var errorProperty));
+        Assert.Contains("Unknown message type", errorProperty.GetString(), StringComparison.Ordinal);
+        this._output.WriteLine($"[Observability] Received error for unknown type - Type: {responseMessage.Type}, Error: {errorProperty.GetString()}, Timestamp: {DateTime.UtcNow:O}");
 
-            // Assert
-            Assert.Equal(WebSocketMessageType.Text, receiveResult.MessageType);
-            Assert.Equal("error", responseMessage.Type);
-            Assert.True(responseMessage.Payload.TryGetProperty("error", out var errorProperty));
-            Assert.Contains("Invalid message format", errorProperty.GetString(), StringComparison.Ordinal);
-            this._output.WriteLine($"[Observability] Received error for invalid format - Type: {responseMessage.Type}, Error: {errorProperty.GetString()}, Timestamp: {DateTime.UtcNow:O}");
-
-            // Cleanup
-            await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "Test complete", CancellationToken.None);
-        }
-
-        [Fact(Skip = "Mediator source generator infrastructure issue")]
-        public async Task UnknownMessageType_ReturnsError()
-        {
-            // Arrange
-            var wsUrl = new Uri("ws://localhost/ws");
-            var webSocketClient = this._factory.Server.CreateWebSocketClient();
-            var correlationId = Guid.NewGuid().ToString();
-
-            using var client = await webSocketClient.ConnectAsync(wsUrl, CancellationToken.None);
-
-            var unknownTypeMessage = new WebSocketMessage
-            {
-                Type = "unknown-type",
-                CommandType = "ChatCommand",
-                CorrelationId = correlationId,
-                Payload = JsonSerializer.SerializeToElement(new { })
-            };
-
-            var messageData = MessageSerializer.Serialize(unknownTypeMessage);
-
-            this._output.WriteLine($"[Observability] Sending unknown message type - Type: {unknownTypeMessage.Type}, CorrelationId: {correlationId}, Timestamp: {DateTime.UtcNow:O}");
-
-            // Act
-            await client.SendAsync(
-                new ArraySegment<byte>(messageData),
-                WebSocketMessageType.Text,
-                endOfMessage: true,
-                CancellationToken.None);
-
-            var responseBuffer = new byte[4096];
-            var receiveResult = await client.ReceiveAsync(
-                new ArraySegment<byte>(responseBuffer),
-                CancellationToken.None);
-
-            var responseData = new byte[receiveResult.Count];
-            Array.Copy(responseBuffer, responseData, receiveResult.Count);
-            var responseMessage = MessageSerializer.Deserialize(responseData);
-
-            // Assert
-            Assert.Equal(WebSocketMessageType.Text, receiveResult.MessageType);
-            Assert.Equal("error", responseMessage.Type);
-            Assert.Equal(correlationId, responseMessage.CorrelationId);
-            Assert.True(responseMessage.Payload.TryGetProperty("error", out var errorProperty));
-            Assert.Contains("Unknown message type", errorProperty.GetString(), StringComparison.Ordinal);
-            this._output.WriteLine($"[Observability] Received error for unknown type - Type: {responseMessage.Type}, Error: {errorProperty.GetString()}, Timestamp: {DateTime.UtcNow:O}");
-
-            // Cleanup
-            await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "Test complete", CancellationToken.None);
-        }
+        // Cleanup
+        await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "Test complete", CancellationToken.None);
     }
 }
