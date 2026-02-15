@@ -118,7 +118,7 @@
     <PackageVersion Include="Yarp.ReverseProxy" Version="2.3.0" />
     <PackageVersion Include="RabbitMQ.Client" Version="7.1.2" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.2" />
-    <!-- REMOVED: KubernetesClient has security vulnerabilities (NU1902/NU1903/NU1904) -->
+    <PackageVersion Include="KubernetesClient" Version="18.0.4" />
     <PackageVersion Include="prometheus-net" Version="8.2.1" />
     <PackageVersion Include="prometheus-net.AspNetCore" Version="8.2.1" />
   </ItemGroup>

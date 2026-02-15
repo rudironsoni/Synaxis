@@ -6,7 +6,6 @@
     <IsPackable>false</IsPackable>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <NoWarn>SA0001</NoWarn>
   </PropertyGroup>
     <ItemGroup>
     <PackageReference Include="coverlet.collector">
