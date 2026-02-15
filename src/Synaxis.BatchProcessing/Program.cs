@@ -3,9 +3,10 @@
 // </copyright>
 
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Configuration;
+using Synaxis.BatchProcessing;
 using Synaxis.BatchProcessing.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -58,7 +59,7 @@ using (var scope = app.Services.CreateScope())
     var storageService = scope.ServiceProvider.GetRequiredService<IBatchStorageService>();
     if (storageService is BatchStorageService batchStorageService)
     {
-        await batchStorageService.InitializeAsync();
+        await batchStorageService.InitializeAsync().ConfigureAwait(false);
     }
 }
 
@@ -76,60 +77,4 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run();
-
-/// <summary>
-/// Hosted service for managing the batch queue processor.
-/// </summary>
-public class BatchQueueHostedService : BackgroundService
-{
-    private readonly IBatchQueueService _queueService;
-    private readonly ILogger<BatchQueueHostedService> _logger;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="BatchQueueHostedService"/> class.
-    /// </summary>
-    /// <param name="queueService">The batch queue service.</param>
-    /// <param name="logger">The logger.</param>
-    public BatchQueueHostedService(
-        IBatchQueueService queueService,
-        ILogger<BatchQueueHostedService> logger)
-    {
-        this._queueService = queueService ?? throw new ArgumentNullException(nameof(queueService));
-        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
-
-    /// <summary>
-    /// Executes the background service.
-    /// </summary>
-    /// <param name="stoppingToken">The stopping token.</param>
-    /// <returns>A task representing the asynchronous operation.</returns>
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        this._logger.LogInformation("Batch Queue Hosted Service starting");
-
-        try
-        {
-            await this._queueService.StartProcessingAsync(stoppingToken);
-
-            // Keep the service running until stopped
-            while (!stoppingToken.IsCancellationRequested)
-            {
-                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            // Expected when service is stopping
-        }
-        catch (Exception ex)
-        {
-            this._logger.LogError(ex, "Batch Queue Hosted Service encountered an error");
-        }
-        finally
-        {
-            await this._queueService.StopProcessingAsync(stoppingToken);
-            this._logger.LogInformation("Batch Queue Hosted Service stopped");
-        }
-    }
-}
+await app.RunAsync().ConfigureAwait(false);

@@ -1,6 +1,10 @@
-using System;
+// <copyright file="CircuitState.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
 namespace Synaxis.Routing.CircuitBreaker;
+
+using System;
 
 /// <summary>
 /// Represents the state of a circuit breaker.
@@ -20,5 +24,5 @@ public enum CircuitState
     /// <summary>
     /// The circuit is half-open and a limited number of requests are allowed through to test if the service has recovered.
     /// </summary>
-    HalfOpen
+    HalfOpen,
 }

@@ -1,6 +1,10 @@
-using System;
+// <copyright file="CircuitBreakerOpenException.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
 namespace Synaxis.Routing.CircuitBreaker;
+
+using System;
 
 /// <summary>
 /// Exception thrown when a request is rejected by the circuit breaker.
@@ -19,7 +23,7 @@ public class CircuitBreakerOpenException : Exception
     public CircuitBreakerOpenException(string circuitBreakerName)
         : base($"Circuit breaker '{circuitBreakerName}' is open and rejecting requests.")
     {
-        CircuitBreakerName = circuitBreakerName;
+        this.CircuitBreakerName = circuitBreakerName;
     }
 
     /// <summary>
@@ -30,6 +34,6 @@ public class CircuitBreakerOpenException : Exception
     public CircuitBreakerOpenException(string circuitBreakerName, string message)
         : base(message)
     {
-        CircuitBreakerName = circuitBreakerName;
+        this.CircuitBreakerName = circuitBreakerName;
     }
 }

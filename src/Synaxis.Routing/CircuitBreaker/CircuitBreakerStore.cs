@@ -1,3 +1,11 @@
+// <copyright file="CircuitBreakerStore.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
+#nullable enable
+
+namespace Synaxis.Routing.CircuitBreaker;
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -6,56 +14,10 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using StackExchange.Redis;
 
-namespace Synaxis.Routing.CircuitBreaker;
-
-/// <summary>
-/// Configuration options for the circuit breaker store.
-/// </summary>
-public class CircuitBreakerStoreOptions
-{
-    /// <summary>
-    /// Gets or sets the Redis connection string.
-    /// If null or empty, only in-memory storage will be used.
-    /// </summary>
-    public string RedisConnectionString { get; set; }
-
-    /// <summary>
-    /// Gets or sets the Redis key prefix for circuit breaker data.
-    /// Default is "circuitbreaker:".
-    /// </summary>
-    public string RedisKeyPrefix { get; set; } = "circuitbreaker:";
-
-    /// <summary>
-    /// Gets or sets the expiration time (in seconds) for Redis entries.
-    /// Default is 3600 (1 hour).
-    /// </summary>
-    public int RedisExpirationSeconds { get; set; } = 3600;
-
-    /// <summary>
-    /// Gets or sets whether to enable Redis backup.
-    /// Default is true.
-    /// </summary>
-    public bool EnableRedisBackup { get; set; } = true;
-}
-
-/// <summary>
-/// Represents the state of a circuit breaker for serialization.
-/// </summary>
-public class CircuitBreakerState
-{
-    public CircuitState State { get; set; }
-    public int FailureCount { get; set; }
-    public int SuccessCount { get; set; }
-    public int TotalRequests { get; set; }
-    public DateTime? LastFailureTime { get; set; }
-    public DateTime? OpenedAt { get; set; }
-    public int ConsecutiveSuccessesInHalfOpen { get; set; }
-}
-
 /// <summary>
 /// Stores circuit breaker instances with in-memory storage and optional Redis backup.
 /// </summary>
-public class CircuitBreakerStore
+public sealed class CircuitBreakerStore : IDisposable
 {
     private readonly ConcurrentDictionary<string, CircuitBreaker> _inMemoryStore;
     private readonly CircuitBreakerStoreOptions _options;
@@ -67,22 +29,22 @@ public class CircuitBreakerStore
     /// Initializes a new instance of the <see cref="CircuitBreakerStore"/> class.
     /// </summary>
     /// <param name="options">The configuration options.</param>
-    public CircuitBreakerStore(CircuitBreakerStoreOptions options = null)
+    public CircuitBreakerStore(CircuitBreakerStoreOptions? options = null)
     {
-        _options = options ?? new CircuitBreakerStoreOptions();
-        _inMemoryStore = new ConcurrentDictionary<string, CircuitBreaker>();
-        _jsonSerializerOptions = new JsonSerializerOptions
+        this._options = options ?? new CircuitBreakerStoreOptions();
+        this._inMemoryStore = new ConcurrentDictionary<string, CircuitBreaker>(StringComparer.Ordinal);
+        this._jsonSerializerOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = false
+            WriteIndented = false,
         };
 
-        if (_options.EnableRedisBackup && !string.IsNullOrEmpty(_options.RedisConnectionString))
+        if (this._options.EnableRedisBackup && !string.IsNullOrEmpty(this._options.RedisConnectionString))
         {
             try
             {
-                _redisConnection = ConnectionMultiplexer.Connect(_options.RedisConnectionString);
-                _redisDatabase = _redisConnection.GetDatabase();
+                this._redisConnection = ConnectionMultiplexer.Connect(this._options.RedisConnectionString);
+                this._redisDatabase = this._redisConnection.GetDatabase();
             }
             catch (Exception ex)
             {
@@ -106,27 +68,27 @@ public class CircuitBreakerStore
         }
 
         // Try to get from in-memory store first
-        if (_inMemoryStore.TryGetValue(providerName, out var existingBreaker))
+        if (this._inMemoryStore.TryGetValue(providerName, out var existingBreaker))
         {
             return existingBreaker;
         }
 
         // Try to load from Redis if available
-        if (_redisDatabase != null)
+        if (this._redisDatabase != null)
         {
             try
             {
-                var redisKey = GetRedisKey(providerName);
-                var redisValue = await _redisDatabase.StringGetAsync(redisKey);
+                var redisKey = this.GetRedisKey(providerName);
+                var redisValue = await this._redisDatabase.StringGetAsync(redisKey).ConfigureAwait(false);
 
                 if (!redisValue.IsNullOrEmpty)
                 {
-                    var state = JsonSerializer.Deserialize<CircuitBreakerState>(redisValue.ToString(), _jsonSerializerOptions);
+                    var state = JsonSerializer.Deserialize<CircuitBreakerState>(redisValue.ToString(), this._jsonSerializerOptions);
                     if (state != null)
                     {
-                        var breaker = CreateCircuitBreaker(providerName, options ?? new CircuitBreakerOptions());
-                        RestoreCircuitBreakerState(breaker, state);
-                        _inMemoryStore.TryAdd(providerName, breaker);
+                        var breaker = CircuitBreakerStore.CreateCircuitBreaker(providerName, options ?? new CircuitBreakerOptions());
+                        CircuitBreakerStore.RestoreCircuitBreakerState(breaker, state);
+                        this._inMemoryStore.TryAdd(providerName, breaker);
                         return breaker;
                     }
                 }
@@ -139,8 +101,8 @@ public class CircuitBreakerStore
         }
 
         // Create a new circuit breaker
-        var newBreaker = CreateCircuitBreaker(providerName, options ?? new CircuitBreakerOptions());
-        _inMemoryStore.TryAdd(providerName, newBreaker);
+        var newBreaker = CircuitBreakerStore.CreateCircuitBreaker(providerName, options ?? new CircuitBreakerOptions());
+        this._inMemoryStore.TryAdd(providerName, newBreaker);
         return newBreaker;
     }
 
@@ -156,7 +118,7 @@ public class CircuitBreakerStore
             throw new ArgumentException("Provider name cannot be null or empty.", nameof(providerName));
         }
 
-        _inMemoryStore.TryGetValue(providerName, out var breaker);
+        this._inMemoryStore.TryGetValue(providerName, out var breaker);
         return breaker;
     }
 
@@ -166,7 +128,7 @@ public class CircuitBreakerStore
     /// <returns>A dictionary of provider names to circuit breakers.</returns>
     public IReadOnlyDictionary<string, CircuitBreaker> GetAll()
     {
-        return _inMemoryStore.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        return this._inMemoryStore.ToDictionary(kvp => kvp.Key, kvp => kvp.Value, StringComparer.Ordinal);
     }
 
     /// <summary>
@@ -174,6 +136,7 @@ public class CircuitBreakerStore
     /// </summary>
     /// <param name="providerName">The name of the provider.</param>
     /// <param name="breaker">The circuit breaker to save.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     public async Task SaveAsync(string providerName, CircuitBreaker breaker)
     {
         if (string.IsNullOrEmpty(providerName))
@@ -186,21 +149,21 @@ public class CircuitBreakerStore
             throw new ArgumentNullException(nameof(breaker));
         }
 
-        if (_redisDatabase == null)
+        if (this._redisDatabase == null)
         {
             return;
         }
 
         try
         {
-            var state = ExtractCircuitBreakerState(breaker);
-            var redisKey = GetRedisKey(providerName);
-            var redisValue = JsonSerializer.Serialize(state, _jsonSerializerOptions);
+            var state = this.ExtractCircuitBreakerState(breaker);
+            var redisKey = this.GetRedisKey(providerName);
+            var redisValue = JsonSerializer.Serialize(state, this._jsonSerializerOptions);
 
-            await _redisDatabase.StringSetAsync(
+            await this._redisDatabase.StringSetAsync(
                 redisKey,
                 redisValue,
-                TimeSpan.FromSeconds(_options.RedisExpirationSeconds));
+                TimeSpan.FromSeconds(this._options.RedisExpirationSeconds)).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -213,6 +176,7 @@ public class CircuitBreakerStore
     /// Removes a circuit breaker from the store.
     /// </summary>
     /// <param name="providerName">The name of the provider.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     public async Task RemoveAsync(string providerName)
     {
         if (string.IsNullOrEmpty(providerName))
@@ -220,14 +184,14 @@ public class CircuitBreakerStore
             throw new ArgumentException("Provider name cannot be null or empty.", nameof(providerName));
         }
 
-        _inMemoryStore.TryRemove(providerName, out _);
+        this._inMemoryStore.TryRemove(providerName, out _);
 
-        if (_redisDatabase != null)
+        if (this._redisDatabase != null)
         {
             try
             {
-                var redisKey = GetRedisKey(providerName);
-                await _redisDatabase.KeyDeleteAsync(redisKey);
+                var redisKey = this.GetRedisKey(providerName);
+                await this._redisDatabase.KeyDeleteAsync(redisKey).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -240,21 +204,22 @@ public class CircuitBreakerStore
     /// <summary>
     /// Clears all circuit breakers from the store.
     /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     public async Task ClearAsync()
     {
-        _inMemoryStore.Clear();
+        this._inMemoryStore.Clear();
 
-        if (_redisDatabase != null)
+        if (this._redisDatabase != null)
         {
             try
             {
-                var server = _redisConnection?.GetServer(_redisConnection.GetEndPoints().First());
+                var server = this._redisConnection?.GetServer(this._redisConnection.GetEndPoints()[0]);
                 if (server != null)
                 {
-                    var keys = server.Keys(pattern: $"{_options.RedisKeyPrefix}*").ToArray();
+                    var keys = server.Keys(pattern: $"{this._options.RedisKeyPrefix}*").ToArray();
                     if (keys.Length > 0)
                     {
-                        await _redisDatabase.KeyDeleteAsync(keys);
+                        await this._redisDatabase.KeyDeleteAsync(keys).ConfigureAwait(false);
                     }
                 }
             }
@@ -270,30 +235,30 @@ public class CircuitBreakerStore
     /// Gets the health status of all circuit breakers.
     /// </summary>
     /// <returns>A dictionary of provider names to their circuit breaker states.</returns>
-    public Dictionary<string, CircuitBreakerState> GetHealthStatus()
+    public IReadOnlyDictionary<string, CircuitBreakerState> GetHealthStatus()
     {
-        return _inMemoryStore.ToDictionary(
+        return this._inMemoryStore.ToDictionary(
             kvp => kvp.Key,
-            kvp => ExtractCircuitBreakerState(kvp.Value));
+            kvp => this.ExtractCircuitBreakerState(kvp.Value),
+            StringComparer.Ordinal);
     }
 
     private string GetRedisKey(string providerName)
     {
-        return $"{_options.RedisKeyPrefix}{providerName}";
+        return $"{this._options.RedisKeyPrefix}{providerName}";
     }
 
-    private CircuitBreaker CreateCircuitBreaker(string name, CircuitBreakerOptions options)
+    private static CircuitBreaker CreateCircuitBreaker(string name, CircuitBreakerOptions options)
     {
         return new CircuitBreaker(name, options);
     }
 
     private CircuitBreakerState ExtractCircuitBreakerState(CircuitBreaker breaker)
     {
+#pragma warning disable S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
         // Use reflection to access private fields
-        var stateField = breaker.GetType().GetField("_state", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        var failureCountField = breaker.GetType().GetField("_failureCount", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        var successCountField = breaker.GetType().GetField("_successCount", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        var totalRequestsField = breaker.GetType().GetField("_totalRequests", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        // Justification: Required to serialize circuit breaker state for Redis persistence
+        // The CircuitBreaker class is in the same assembly and this is a controlled access pattern
         var lastFailureTimeField = breaker.GetType().GetField("_lastFailureTime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         var openedAtField = breaker.GetType().GetField("_openedAt", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         var consecutiveSuccessesField = breaker.GetType().GetField("_consecutiveSuccessesInHalfOpen", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -306,13 +271,17 @@ public class CircuitBreakerStore
             TotalRequests = breaker.TotalRequests,
             LastFailureTime = lastFailureTimeField?.GetValue(breaker) as DateTime?,
             OpenedAt = openedAtField?.GetValue(breaker) as DateTime?,
-            ConsecutiveSuccessesInHalfOpen = consecutiveSuccessesField?.GetValue(breaker) as int? ?? 0
+            ConsecutiveSuccessesInHalfOpen = consecutiveSuccessesField?.GetValue(breaker) as int? ?? 0,
         };
+#pragma warning restore S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
     }
 
-    private void RestoreCircuitBreakerState(CircuitBreaker breaker, CircuitBreakerState state)
+    private static void RestoreCircuitBreakerState(CircuitBreaker breaker, CircuitBreakerState state)
     {
+#pragma warning disable S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
         // Use reflection to set private fields
+        // Justification: Required to deserialize circuit breaker state from Redis persistence
+        // The CircuitBreaker class is in the same assembly and this is a controlled access pattern
         var failureCountField = breaker.GetType().GetField("_failureCount", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         var successCountField = breaker.GetType().GetField("_successCount", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         var totalRequestsField = breaker.GetType().GetField("_totalRequests", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -326,6 +295,7 @@ public class CircuitBreakerStore
         lastFailureTimeField?.SetValue(breaker, state.LastFailureTime ?? default(DateTime));
         openedAtField?.SetValue(breaker, state.OpenedAt ?? default(DateTime));
         consecutiveSuccessesField?.SetValue(breaker, state.ConsecutiveSuccessesInHalfOpen);
+#pragma warning restore S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
     }
 
     /// <summary>
@@ -333,6 +303,6 @@ public class CircuitBreakerStore
     /// </summary>
     public void Dispose()
     {
-        _redisConnection?.Dispose();
+        this._redisConnection?.Dispose();
     }
 }

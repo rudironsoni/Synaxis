@@ -1,3 +1,7 @@
+// <copyright file="RoutingPredictorOptions.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.Routing.SmartRouter;
 
 /// <summary>
@@ -42,7 +46,7 @@ public class RoutingPredictorOptions
     public double ConfidenceThreshold { get; set; } = 0.6;
 
     /// <summary>
-    /// Gets or sets whether to use ML predictions or fall back to heuristics.
+    /// Gets or sets a value indicating whether to use ML predictions or fall back to heuristics.
     /// Default is true.
     /// </summary>
     public bool UseMlPredictions { get; set; } = true;

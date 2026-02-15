@@ -20,6 +20,11 @@ namespace Synaxis.Api.Health.Layers
         private long _failedRequests;
         private DateTime _windowStart = DateTime.UtcNow;
 
+        /// <summary>
+        /// Records a request with its success status and response time.
+        /// </summary>
+        /// <param name="success">A value indicating whether the request was successful.</param>
+        /// <param name="responseTimeMs">The response time in milliseconds.</param>
         public void RecordRequest(bool success, double responseTimeMs)
         {
             lock (this._lock)
@@ -44,6 +49,10 @@ namespace Synaxis.Api.Health.Layers
             }
         }
 
+        /// <summary>
+        /// Gets the current business metrics snapshot.
+        /// </summary>
+        /// <returns>A snapshot of the current business metrics.</returns>
         public BusinessMetricsSnapshot GetCurrentMetrics()
         {
             lock (this._lock)

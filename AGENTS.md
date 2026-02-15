@@ -225,3 +225,309 @@ If any condition is false, status MUST be `NOT VERIFIED` and completion MUST NOT
 ## 20. Maintainer-Owned Repository Conventions
 
 Architecture and repository-specific conventions MAY be maintained in dedicated maintainer sections or separate docs and SHOULD remain consistent with this policy.
+
+## 21. Code Generation Standards
+
+### 21.1 Solution-Wide Configuration
+
+The solution SHALL use centralized configuration in `Directory.Build.props`:
+
+| Setting | Value | Location |
+|---------|-------|----------|
+| Nullable | enable | Directory.Build.props |
+| TreatWarningsAsErrors | true | Directory.Build.props |
+| ImplicitUsings | enable | Directory.Build.props |
+| GenerateDocumentationFile | true | Directory.Build.props |
+
+Agents MUST NOT:
+- Add `#nullable enable` directives to individual files
+- Add `<Nullable>` properties to individual .csproj files
+- Override solution-wide settings in project files
+
+### 21.2 Namespace Declaration
+
+Agents SHALL use file-scoped namespaces (C# 10+):
+
+```csharp
+// CORRECT - File-scoped
+using System;
+using System.Collections.Generic;
+
+namespace Synaxis.Features.Authentication;
+
+public class AuthService
+{
+    // Implementation
+}
+```
+
+Agents MUST NOT use block-scoped namespaces:
+
+```csharp
+// INCORRECT - Block-scoped
+namespace Synaxis.Features.Authentication
+{
+    using System;
+    
+    public class AuthService
+    {
+        // Implementation
+    }
+}
+```
+
+**Rationale:** File-scoped namespaces reduce indentation and are the modern C# standard.
+
+### 21.3 File Structure Template
+
+All generated C# files MUST follow this structure:
+
+```csharp
+// <copyright file="[TypeName].cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
+using System;
+// Additional usings at top
+
+namespace [Namespace];  // File-scoped
+
+/// <summary>
+/// [Type description]
+/// </summary>
+public class [TypeName]
+{
+    // Implementation
+}
+```
+
+### 21.4 Type Definition Constraints
+
+Agents MUST ensure:
+
+1. **Unique Type Definitions** - Each type SHALL exist in exactly one file
+2. **File Naming** - File name MUST match primary type name (e.g., `AuthService.cs` for `class AuthService`)
+3. **No Nested Types in Public APIs** - Public types SHOULD NOT be nested; use separate files
+4. **Collection Interfaces** - Public APIs MUST return interface types:
+   - `IList<T>` instead of `List<T>`
+   - `IDictionary<K,V>` instead of `Dictionary<K,V>`
+   - `ISet<T>` instead of `HashSet<T>`
+
+### 21.5 Pre-Generation Verification
+
+Before generating code, Agents SHALL verify:
+
+- [ ] Target file does not already exist
+- [ ] Type name is not already defined in solution
+- [ ] File name follows TypeName.cs convention
+- [ ] Namespace is appropriate for location
+
+Command to check for duplicates:
+```bash
+find src -name "*.cs" -exec grep -l "class $TYPENAME\|interface $TYPENAME" {} \;
+```
+
+## 22. Progressive Validation Protocol
+
+### 22.1 Batch Size Limits
+
+Agents SHALL generate code in batches not exceeding:
+
+| Metric | Maximum |
+|--------|---------|
+| Files per batch | 10 |
+| Lines per batch | 500 |
+| Types per batch | 5 |
+
+Between batches, Agents MUST run:
+
+```bash
+dotnet build <project> 2>&1 | grep -E "error (CS|SA|MA)" | wc -l
+```
+
+### 22.2 Error Thresholds
+
+Agents SHALL treat these error counts as stop conditions:
+
+| Error Count | Required Action |
+|-------------|-----------------|
+| 1-10 | Fix immediately; document root cause |
+| 11-20 | Stop; reassess generation approach |
+| 21-50 | Emergency stop; notify maintainer |
+| 51+ | HALT; do not proceed without approval |
+
+### 22.3 Quality Gates
+
+For each batch, Agents MUST verify:
+
+**Gate 1: Compilation**
+```bash
+dotnet build <project> 2>&1 | grep -c "error CS"
+# MUST equal 0
+```
+
+**Gate 2: Style**
+```bash
+dotnet format style <project> --verify-no-changes
+# MUST succeed
+```
+
+**Gate 3: No Duplicates**
+```bash
+# Check no types were duplicated
+dotnet build <Solution.sln> 2>&1 | grep -c "error CS0101"
+# MUST equal 0
+```
+
+### 22.4 Checkpoint Documentation
+
+When stopping at a checkpoint, Agents SHALL report:
+
+```
+Checkpoint: [Number]
+Files Generated: [Count]
+Errors: [Count] (Breakdown by rule)
+Status: [Proceed / Stop / Escalate]
+Action: [Fix / Regenerate / Escalate]
+```
+
+## 23. NoWarn Absolute Prohibition
+
+### 23.1 Prohibition Statement
+
+Agents are **ABSOLUTELY FORBIDDEN** from adding, modifying, or using `<NoWarn>` elements in any form.
+
+This prohibition includes:
+- `<NoWarn>` properties in .csproj files
+- `<WarningsNotAsErrors>` properties  
+- `<TreatWarningsAsErrors>false</TreatWarningsAsErrors>`
+- `#pragma warning disable` directives (except as noted in 23.2)
+- Any mechanism that suppresses analyzer warnings
+
+### 23.2 Exception for Pragma Directives
+
+The ONLY permitted suppression mechanism is `#pragma` directives in source code, and ONLY when:
+
+1. A beads issue documents the specific warning, justification, and expiry date
+2. The pragma is localized to the specific line requiring suppression
+3. The pragma includes a comment explaining why suppression is necessary
+
+**Permitted Format:**
+```csharp
+#pragma warning disable SA1101 // Instance call doesn't need 'this.' for fluent API consistency
+_logger.LogInformation("Message");
+#pragma warning restore SA1101
+```
+
+### 23.3 Enforcement
+
+Any Agent adding NoWarn SHALL:
+1. Immediately revert the change
+2. Fix the underlying analyzer violation
+3. Create incident report documenting the violation
+4. Not claim completion until violation is remediated
+
+## 24. Subagent Quality Contracts
+
+### 24.1 Delegation Requirements
+
+When delegating code generation to subagents, Agents SHALL provide:
+
+1. **Explicit Template** with file-scoped namespace structure
+2. **Quality Threshold** - Maximum 0 errors per file
+3. **Verification Command** - Exact build command to run
+4. **Rejection Criteria** - Specific conditions for rejecting output
+
+### 24.2 Subagent Template
+
+```csharp
+// TEMPLATE - Subagent MUST use this structure:
+// <copyright file="{{TYPE_NAME}}.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
+using System;
+{{ADDITIONAL_USINGS}}
+
+namespace {{NAMESPACE}};  // File-scoped - REQUIRED
+
+/// <summary>
+/// {{TYPE_DESCRIPTION}}
+/// </summary>
+public {{TYPE_KIND}} {{TYPE_NAME}}
+{
+    // Implementation following style rules:
+    // - Prefix local calls with this. (SA1101)
+    // - Return interface types (MA0016)
+    // - Methods under 60 lines (MA0051)
+    // - Trailing commas in initializers (SA1413)
+}
+```
+
+### 24.3 Acceptance Criteria
+
+Subagent output SHALL be rejected if:
+
+- [ ] Contains NoWarn suppressions
+- [ ] Has >0 analyzer errors
+- [ ] Uses block-scoped namespaces
+- [ ] Missing file headers
+- [ ] Missing usings
+- [ ] Duplicate type definitions
+- [ ] Methods >60 lines without explicit justification
+
+### 24.4 Verification Command
+
+Subagents MUST run and report results:
+
+```bash
+dotnet build {{PROJECT}} 2>&1 | tee build.log | grep -E "error [A-Z]+[0-9]+:" | wc -l
+# MUST report: 0
+```
+
+## 25. Code Accumulation Prevention
+
+### 25.1 Error Budget
+
+Agents SHALL track cumulative analyzer errors introduced during a session.
+
+**Budget:**
+- Initial error count: [Record at session start]
+- Maximum increase: 20 errors per hour of work
+- Hard limit: 50 total errors
+
+### 25.2 Error Tracking
+
+Agents SHALL report error delta with each significant change:
+
+```
+Session: [ID]
+Start Errors: [N]
+Current Errors: [N]
+Delta: [+/-N]
+Files Changed: [N]
+Status: [Within budget / Exceeded budget]
+```
+
+### 25.3 Exceeding Budget
+
+When error count exceeds 50, Agents SHALL:
+
+1. HALT all code generation
+2. Not proceed with new features
+3. Create beads issue: "Analyzer Error Remediation Required"
+4. Document:
+   - Error count by rule
+   - Files most affected
+   - Root cause (e.g., missing templates, unchecked duplicates)
+5. Request maintainer direction
+
+### 25.4 Prevention Checklist
+
+Before each generation task, Agents SHALL verify:
+
+- [ ] Solution has Directory.Build.props with Nullable=enable
+- [ ] Template enforces file-scoped namespaces
+- [ ] Template includes file header
+- [ ] Duplicate detection command ready
+- [ ] Error budget tracking active

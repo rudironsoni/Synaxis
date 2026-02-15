@@ -1,4 +1,4 @@
-// <copyright file="SmartRouter.cs" company="Synaxis">
+// <copyright file="SmartRoutingEngine.cs" company="Synaxis">
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
@@ -13,9 +13,9 @@ namespace Synaxis.Routing.SmartRouter
     using CircuitBreakerImpl = Synaxis.Routing.CircuitBreaker.CircuitBreaker;
 
     /// <summary>
-    /// SmartRouter with ML-based predictive routing for AI providers.
+    /// SmartRoutingEngine with ML-based predictive routing for AI providers.
     /// </summary>
-    public class SmartRouter : IRouter
+    public class SmartRoutingEngine : IRouter
     {
         private readonly SmartRouterOptions _options;
         private readonly RoutingPredictor _predictor;
@@ -23,15 +23,15 @@ namespace Synaxis.Routing.SmartRouter
         private readonly ConcurrentDictionary<string, Provider> _providers;
         private readonly ConcurrentDictionary<string, CircuitBreakerImpl> _circuitBreakers;
         private readonly RoutingMetrics _metrics;
-        private readonly ILogger<SmartRouter>? _logger;
+        private readonly ILogger<SmartRoutingEngine>? _logger;
         private readonly Lock _lock = new();
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SmartRouter"/> class.
+        /// Initializes a new instance of the <see cref="SmartRoutingEngine"/> class.
         /// </summary>
         /// <param name="options">The router options.</param>
         /// <param name="logger">The logger.</param>
-        public SmartRouter(SmartRouterOptions? options = null, ILogger<SmartRouter>? logger = null)
+        public SmartRoutingEngine(SmartRouterOptions? options = null, ILogger<SmartRoutingEngine>? logger = null)
         {
             this._options = options ?? new SmartRouterOptions();
             this._logger = logger;
@@ -56,7 +56,7 @@ namespace Synaxis.Routing.SmartRouter
                 throw new ArgumentNullException(nameof(request));
             }
 
-            var availableProviders = this.GetAvailableProviders(request);
+            var availableProviders = this.GetAvailableProviders();
             if (availableProviders.Count == 0)
             {
                 throw new InvalidOperationException("No available providers for routing.");
@@ -66,10 +66,10 @@ namespace Synaxis.Routing.SmartRouter
             var predictions = await this._predictor.PredictAsync(request, availableProviders, cancellationToken).ConfigureAwait(false);
 
             // Select the best provider
-            var selectedPrediction = this.SelectBestProvider(predictions, request);
+            var selectedPrediction = SelectBestProvider(predictions.ToList());
 
             // Create routing decision
-            var decision = this.CreateRoutingDecision(selectedPrediction, predictions);
+            var decision = this.CreateRoutingDecision(selectedPrediction, predictions.ToList());
 
             // Update metrics
             lock (this._lock)
@@ -102,6 +102,7 @@ namespace Synaxis.Routing.SmartRouter
         /// <param name="inputTokens">The actual number of input tokens used.</param>
         /// <param name="outputTokens">The actual number of output tokens used.</param>
         /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
         public Task RecordRoutingResultAsync(
             RoutingDecision decision,
             bool success,
@@ -169,7 +170,7 @@ namespace Synaxis.Routing.SmartRouter
                 {
                     TotalDecisions = this._metrics.TotalDecisions,
                     LastUpdated = this._metrics.LastUpdated,
-                    ProviderSelectionCounts = new Dictionary<string, int>(this._metrics.ProviderSelectionCounts),
+                    ProviderSelectionCounts = this._metrics.ProviderSelectionCounts.ToDictionary(kvp => kvp.Key, kvp => kvp.Value, StringComparer.OrdinalIgnoreCase),
                 };
 
                 return Task.FromResult(metricsCopy);
@@ -179,41 +180,14 @@ namespace Synaxis.Routing.SmartRouter
         /// <summary>
         /// Gets available providers for a routing request.
         /// </summary>
-        /// <param name="request">The routing request.</param>
         /// <returns>List of available providers.</returns>
-        private List<Provider> GetAvailableProviders(RoutingRequest request)
+        private List<Provider> GetAvailableProviders()
         {
-            var providers = new List<Provider>();
-
-            foreach (var kvp in this._providers)
-            {
-                var provider = kvp.Value;
-
-                // Check if provider supports required capabilities
-                if (!this.HasRequiredCapabilities(provider, new List<string>()))
-                {
-                    continue;
-                }
-
-                // Check if circuit breaker allows requests
-                if (this._circuitBreakers.TryGetValue(provider.Id, out var circuitBreaker))
-                {
-                    if (!circuitBreaker.AllowRequest())
-                    {
-                        continue;
-                    }
-                }
-
-                // Check if provider is healthy
-                if (!this.IsProviderHealthy(provider))
-                {
-                    continue;
-                }
-
-                providers.Add(provider);
-            }
-
-            return providers;
+            return this._providers.Values
+                .Where(provider => HasRequiredCapabilities(provider, new List<string>()))
+                .Where(provider => !this._circuitBreakers.TryGetValue(provider.Id, out var circuitBreaker) || circuitBreaker.AllowRequest())
+                .Where(this.IsProviderHealthy)
+                .ToList();
         }
 
         /// <summary>
@@ -222,22 +196,14 @@ namespace Synaxis.Routing.SmartRouter
         /// <param name="provider">The provider to check.</param>
         /// <param name="requiredCapabilities">The required capabilities.</param>
         /// <returns>True if provider has all required capabilities.</returns>
-        private bool HasRequiredCapabilities(Provider provider, List<string> requiredCapabilities)
+        private static bool HasRequiredCapabilities(Provider provider, List<string> requiredCapabilities)
         {
             if (requiredCapabilities == null || requiredCapabilities.Count == 0)
             {
                 return true;
             }
 
-            foreach (var capability in requiredCapabilities)
-            {
-                if (!provider.Capabilities.Contains(capability, StringComparer.OrdinalIgnoreCase))
-                {
-                    return false;
-                }
-            }
-
-            return true;
+            return requiredCapabilities.All(capability => provider.Capabilities.Contains(capability, StringComparer.OrdinalIgnoreCase));
         }
 
         /// <summary>
@@ -255,9 +221,8 @@ namespace Synaxis.Routing.SmartRouter
         /// Selects the best provider based on predictions and heuristics.
         /// </summary>
         /// <param name="predictions">The predictions for all providers.</param>
-        /// <param name="_">The routing request (unused).</param>
         /// <returns>The best prediction.</returns>
-        private ProviderPrediction SelectBestProvider(List<ProviderPrediction> predictions, RoutingRequest _)
+        private static ProviderPrediction SelectBestProvider(List<ProviderPrediction> predictions)
         {
             if (predictions.Count == 0)
             {

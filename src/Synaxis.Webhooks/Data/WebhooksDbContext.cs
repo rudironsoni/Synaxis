@@ -16,16 +16,31 @@ namespace Synaxis.Webhooks.Data
     /// </summary>
     public class WebhooksDbContext : DbContext
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="WebhooksDbContext"/> class.
+        /// </summary>
+        /// <param name="options">The options for this context.</param>
         public WebhooksDbContext(DbContextOptions<WebhooksDbContext> options)
             : base(options)
         {
         }
 
+        /// <summary>
+        /// Gets or sets the webhooks.
+        /// </summary>
         public DbSet<Webhook> Webhooks { get; set; }
 
+        /// <summary>
+        /// Gets or sets the webhook delivery logs.
+        /// </summary>
         public DbSet<WebhookDeliveryLog> WebhookDeliveryLogs { get; set; }
 
 #pragma warning disable MA0051 // Method is too long
+        /// <summary>
+        /// Configures the model that was discovered by convention from the entity types
+        /// exposed in <see cref="DbSet{TEntity}"/> properties on your derived context.
+        /// </summary>
+        /// <param name="modelBuilder">The builder being used to construct the model for this context.</param>
         protected override void OnModelCreating(ModelBuilder modelBuilder)
 #pragma warning restore MA0051 // Method is too long
         {

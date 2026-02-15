@@ -1,3 +1,7 @@
+// <copyright file="HealthStatus.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.Routing.Health;
 
 /// <summary>
@@ -18,5 +22,5 @@ public enum HealthStatus
     /// <summary>
     /// The provider is unhealthy and should not be used.
     /// </summary>
-    Unhealthy
+    Unhealthy,
 }

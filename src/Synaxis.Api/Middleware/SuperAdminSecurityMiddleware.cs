@@ -23,6 +23,11 @@ namespace Synaxis.Api.Middleware
         private readonly RequestDelegate _next;
         private readonly ILogger<SuperAdminSecurityMiddleware> _logger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SuperAdminSecurityMiddleware"/> class.
+        /// </summary>
+        /// <param name="next">The next middleware in the pipeline.</param>
+        /// <param name="logger">The logger.</param>
         public SuperAdminSecurityMiddleware(
             RequestDelegate next,
             ILogger<SuperAdminSecurityMiddleware> logger)
@@ -31,6 +36,11 @@ namespace Synaxis.Api.Middleware
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
+        /// <summary>
+        /// Invokes the middleware to enforce super admin security requirements.
+        /// </summary>
+        /// <param name="context">The HTTP context.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
         public async Task InvokeAsync(HttpContext context)
         {
             var path = context.Request.Path.Value?.ToLowerInvariant();

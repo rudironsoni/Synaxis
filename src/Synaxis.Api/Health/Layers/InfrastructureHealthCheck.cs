@@ -22,6 +22,11 @@ namespace Synaxis.Api.Health.Layers
         private readonly ILogger<InfrastructureHealthCheck> _logger;
         private readonly IWebHostEnvironment _environment;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="InfrastructureHealthCheck"/> class.
+        /// </summary>
+        /// <param name="logger">The logger.</param>
+        /// <param name="environment">The web host environment.</param>
         public InfrastructureHealthCheck(
             ILogger<InfrastructureHealthCheck> logger,
             IWebHostEnvironment environment)
@@ -30,6 +35,12 @@ namespace Synaxis.Api.Health.Layers
             this._environment = environment;
         }
 
+        /// <summary>
+        /// Performs a health check on the infrastructure layer.
+        /// </summary>
+        /// <param name="context">The health check context.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A task representing the health check result.</returns>
         public async Task<HealthCheckResult> CheckHealthAsync(
             HealthCheckContext context,
             CancellationToken cancellationToken = default)

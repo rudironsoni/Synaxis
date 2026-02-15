@@ -1,3 +1,7 @@
+// <copyright file="HealthCheckOptions.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.Routing.Health;
 
 /// <summary>
@@ -42,13 +46,13 @@ public class HealthCheckOptions
     public int HistorySize { get; set; } = 100;
 
     /// <summary>
-    /// Gets or sets whether to enable automatic failover on health check failure.
+    /// Gets or sets a value indicating whether to enable automatic failover on health check failure.
     /// Default is true.
     /// </summary>
     public bool EnableAutoFailover { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets whether to enable circuit breaker integration.
+    /// Gets or sets a value indicating whether to enable circuit breaker integration.
     /// Default is true.
     /// </summary>
     public bool EnableCircuitBreakerIntegration { get; set; } = true;

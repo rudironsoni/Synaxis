@@ -17,7 +17,7 @@ namespace Synaxis.BatchProcessing.Services
     /// <summary>
     /// Service for managing batch processing queues using Azure Service Bus.
     /// </summary>
-    public class BatchQueueService : IBatchQueueService, IAsyncDisposable
+    public sealed class BatchQueueService : IBatchQueueService, IAsyncDisposable
     {
         private readonly ServiceBusClient _client;
         private readonly ServiceBusSender _sender;
@@ -60,7 +60,7 @@ namespace Synaxis.BatchProcessing.Services
             this._processor = this._client.CreateProcessor(this._options.QueueName, new ServiceBusProcessorOptions
             {
                 MaxConcurrentCalls = this._options.MaxConcurrentCalls,
-                AutoCompleteMessages = false
+                AutoCompleteMessages = false,
             });
 
             this._processor.ProcessMessageAsync += this.ProcessMessageAsync;
@@ -72,10 +72,10 @@ namespace Synaxis.BatchProcessing.Services
         /// </summary>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        public async Task StartProcessingAsync(CancellationToken cancellationToken = default)
+        public Task StartProcessingAsync(CancellationToken cancellationToken = default)
         {
             this._logger.LogInformation("Starting batch queue processor for queue {QueueName}", this._options.QueueName);
-            await this._processor.StartProcessingAsync(cancellationToken);
+            return this._processor.StartProcessingAsync(cancellationToken);
         }
 
         /// <summary>
@@ -83,10 +83,10 @@ namespace Synaxis.BatchProcessing.Services
         /// </summary>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        public async Task StopProcessingAsync(CancellationToken cancellationToken = default)
+        public Task StopProcessingAsync(CancellationToken cancellationToken = default)
         {
             this._logger.LogInformation("Stopping batch queue processor for queue {QueueName}", this._options.QueueName);
-            await this._processor.StopProcessingAsync(cancellationToken);
+            return this._processor.StopProcessingAsync(cancellationToken);
         }
 
         /// <summary>
@@ -106,7 +106,7 @@ namespace Synaxis.BatchProcessing.Services
 
             // Update batch status to Queued
             batch.Status = BatchStatus.Queued;
-            await this._storageService.UpdateBatchAsync(batch, cancellationToken);
+            await this._storageService.UpdateBatchAsync(batch, cancellationToken).ConfigureAwait(false);
 
             // Create message with priority
             var messageBody = JsonSerializer.Serialize(batch);
@@ -114,7 +114,7 @@ namespace Synaxis.BatchProcessing.Services
             {
                 MessageId = batch.Id.ToString(),
                 Subject = batch.OperationType,
-                CorrelationId = batch.OrganizationId.ToString()
+                CorrelationId = batch.OrganizationId.ToString(),
             };
 
             // Add priority as application property (Service Bus doesn't have built-in priority)
@@ -123,7 +123,7 @@ namespace Synaxis.BatchProcessing.Services
             // Add retry count as application property
             message.ApplicationProperties.Add("RetryCount", batch.RetryCount);
 
-            await this._sender.SendMessageAsync(message, cancellationToken);
+            await this._sender.SendMessageAsync(message, cancellationToken).ConfigureAwait(false);
 
             this._logger.LogInformation("Batch {BatchId} enqueued successfully", batch.Id);
         }
@@ -147,15 +147,15 @@ namespace Synaxis.BatchProcessing.Services
                 if (batch == null)
                 {
                     this._logger.LogError("Failed to deserialize batch {BatchId}", batchId);
-                    await args.DeadLetterMessageAsync(message, "Deserialization failed");
+                    await args.DeadLetterMessageAsync(message, "Deserialization failed").ConfigureAwait(false);
                     return;
                 }
 
                 // Process the batch
-                await this._batchProcessor.ProcessBatchAsync(batch, args.CancellationToken);
+                await this._batchProcessor.ProcessBatchAsync(batch, args.CancellationToken).ConfigureAwait(false);
 
                 // Complete the message
-                await args.CompleteMessageAsync(message);
+                await args.CompleteMessageAsync(message).ConfigureAwait(false);
 
                 this._logger.LogInformation("Successfully processed batch {BatchId}", batchId);
             }
@@ -175,19 +175,19 @@ namespace Synaxis.BatchProcessing.Services
                     {
                         ApplicationProperties =
                         {
-                            ["RetryCount"] = retryCount + 1
-                        }
+                            ["RetryCount"] = retryCount + 1,
+                        },
                     };
 
-                    await this._sender.SendMessageAsync(clonedMessage);
-                    await args.CompleteMessageAsync(message);
+                    await this._sender.SendMessageAsync(clonedMessage).ConfigureAwait(false);
+                    await args.CompleteMessageAsync(message).ConfigureAwait(false);
 
                     this._logger.LogWarning("Retrying batch {BatchId} (attempt {RetryCount})", batchId, retryCount + 1);
                 }
                 else
                 {
                     // Dead-letter the message
-                    await args.DeadLetterMessageAsync(message, $"Max retries exceeded: {ex.Message}");
+                    await args.DeadLetterMessageAsync(message, $"Max retries exceeded: {ex.Message}").ConfigureAwait(false);
 
                     this._logger.LogError("Batch {BatchId} exceeded max retries and was dead-lettered", batchId);
                 }
@@ -217,30 +217,9 @@ namespace Synaxis.BatchProcessing.Services
         /// <returns>A task representing the asynchronous operation.</returns>
         public async ValueTask DisposeAsync()
         {
-            await this._processor.DisposeAsync();
-            await this._sender.DisposeAsync();
-            await this._client.DisposeAsync();
+            await this._processor.DisposeAsync().ConfigureAwait(false);
+            await this._sender.DisposeAsync().ConfigureAwait(false);
+            await this._client.DisposeAsync().ConfigureAwait(false);
         }
-    }
-
-    /// <summary>
-    /// Configuration options for batch queue.
-    /// </summary>
-    public class BatchQueueOptions
-    {
-        /// <summary>
-        /// Gets or sets the Azure Service Bus connection string.
-        /// </summary>
-        public string ConnectionString { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Gets or sets the queue name.
-        /// </summary>
-        public string QueueName { get; set; } = "batch-processing";
-
-        /// <summary>
-        /// Gets or sets the maximum concurrent calls.
-        /// </summary>
-        public int MaxConcurrentCalls { get; set; } = 5;
     }
 }

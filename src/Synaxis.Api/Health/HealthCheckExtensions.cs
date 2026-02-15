@@ -17,6 +17,13 @@ namespace Synaxis.Api.Health
     /// </summary>
     public static class HealthCheckExtensions
     {
+        /// <summary>
+        /// Adds Synaxis health checks to the application.
+        /// </summary>
+        /// <param name="builder">The health checks builder.</param>
+        /// <param name="configuration">The application configuration.</param>
+        /// <param name="environment">The web host environment.</param>
+        /// <returns>The health checks builder for chaining.</returns>
         public static IHealthChecksBuilder AddSynaxisHealthChecks(
             this IHealthChecksBuilder builder,
             IConfiguration configuration,

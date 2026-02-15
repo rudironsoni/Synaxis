@@ -1,4 +1,12 @@
+// <copyright file="BatchQueueHostedService.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.BatchProcessing;
+
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Synaxis.BatchProcessing.Services;
 
 /// <summary>
 /// Hosted service for managing the batch queue processor.
@@ -30,31 +38,28 @@ public class BatchQueueHostedService : BackgroundService
     {
         this._logger.LogInformation("Batch Queue Hosted Service starting");
 
-        while (!stoppingToken.IsCancellationRequested)
+        try
         {
-            try
+            await this._queueService.StartProcessingAsync(stoppingToken).ConfigureAwait(false);
+
+            // Keep the service running until stopped
+            while (!stoppingToken.IsCancellationRequested)
             {
-                var batch = await this._queueService.DequeueAsync(stoppingToken);
-                if (batch != null)
-                {
-                    this._logger.LogInformation("Processing batch {BatchId}", batch.Id);
-                    // Process the batch
-                }
-                else
-                {
-                    await Task.Delay(1000, stoppingToken);
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                break;
-            }
-            catch (Exception ex)
-            {
-                this._logger.LogError(ex, "Error processing batch");
+                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken).ConfigureAwait(false);
             }
         }
-
-        this._logger.LogInformation("Batch Queue Hosted Service stopping");
+        catch (OperationCanceledException)
+        {
+            // Expected when service is stopping
+        }
+        catch (Exception ex)
+        {
+            this._logger.LogError(ex, "Batch Queue Hosted Service encountered an error");
+        }
+        finally
+        {
+            await this._queueService.StopProcessingAsync(stoppingToken).ConfigureAwait(false);
+            this._logger.LogInformation("Batch Queue Hosted Service stopped");
+        }
     }
 }

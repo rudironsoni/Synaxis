@@ -26,6 +26,10 @@ namespace Synaxis.Api.Controllers
     {
         private readonly ILogger<MultiModalController> _logger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MultiModalController"/> class.
+        /// </summary>
+        /// <param name="logger">The logger.</param>
         public MultiModalController(ILogger<MultiModalController> logger)
         {
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));

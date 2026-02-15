@@ -1,4 +1,6 @@
-using Synaxis.Routing.Health;
+// <copyright file="HealthCheckCompletedEventArgs.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
 namespace Synaxis.Routing.Health;
 

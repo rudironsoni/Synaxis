@@ -4,8 +4,6 @@
 
 namespace Synaxis.Routing.SmartRouter;
 
-using Synaxis.Domain.Common;
-
 /// <summary>
 /// Interface for routing requests to AI providers.
 /// </summary>
@@ -15,13 +13,14 @@ public interface IRouter
     /// Routes a request to the optimal provider based on ML predictions and heuristics.
     /// </summary>
     /// <param name="request">The routing request.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A routing decision containing the selected provider and alternatives.</returns>
-    Task<RoutingDecision> RouteRequestAsync(RoutingRequest request);
+    Task<RoutingDecision> RouteRequestAsync(RoutingRequest request, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets routing metrics for monitoring and analysis.
     /// </summary>
-    /// <param name="timeWindow">The time window for metrics (default: last hour).</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>Routing metrics including latency, success rate, and provider utilization.</returns>
-    Task<RoutingMetrics> GetRoutingMetricsAsync(TimeSpan? timeWindow = null);
+    Task<RoutingMetrics> GetRoutingMetricsAsync(CancellationToken cancellationToken = default);
 }

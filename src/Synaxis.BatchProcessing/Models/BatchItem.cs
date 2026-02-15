@@ -1,6 +1,10 @@
-using System.ComponentModel.DataAnnotations;
+// <copyright file="BatchItem.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
 namespace Synaxis.BatchProcessing.Models;
+
+using System.ComponentModel.DataAnnotations;
 
 /// <summary>
 /// Represents an individual item in a batch.

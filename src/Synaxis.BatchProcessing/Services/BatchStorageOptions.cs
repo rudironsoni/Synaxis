@@ -1,3 +1,7 @@
+// <copyright file="BatchStorageOptions.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.BatchProcessing.Services;
 
 /// <summary>

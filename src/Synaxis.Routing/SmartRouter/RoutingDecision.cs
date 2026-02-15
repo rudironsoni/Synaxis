@@ -32,7 +32,7 @@ public class RoutingDecision
     /// <summary>
     /// Gets or sets the alternative providers that could be used as fallbacks.
     /// </summary>
-    public List<ProviderAlternative> AlternativeProviders { get; set; } = new();
+    public IList<ProviderAlternative> AlternativeProviders { get; set; } = new List<ProviderAlternative>();
 
     /// <summary>
     /// Gets or sets the predicted latency in milliseconds.
@@ -67,5 +67,5 @@ public class RoutingDecision
     /// <summary>
     /// Gets or sets the feature values used for the prediction.
     /// </summary>
-    public Dictionary<string, double> Features { get; set; } = new();
+    public IDictionary<string, double> Features { get; set; } = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
 }

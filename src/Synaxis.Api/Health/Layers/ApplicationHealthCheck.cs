@@ -22,6 +22,11 @@ namespace Synaxis.Api.Health.Layers
     {
         private readonly ILogger<ApplicationHealthCheck> _logger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ApplicationHealthCheck"/> class.
+        /// </summary>
+        /// <param name="logger">The logger.</param>
+        /// <param name="serviceProvider">The service provider.</param>
         public ApplicationHealthCheck(
             ILogger<ApplicationHealthCheck> logger,
             IServiceProvider serviceProvider)
@@ -29,6 +34,12 @@ namespace Synaxis.Api.Health.Layers
             this._logger = logger;
         }
 
+        /// <summary>
+        /// Performs a health check on the application layer.
+        /// </summary>
+        /// <param name="context">The health check context.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A task representing the health check result.</returns>
         public Task<HealthCheckResult> CheckHealthAsync(
             HealthCheckContext context,
             CancellationToken cancellationToken = default)

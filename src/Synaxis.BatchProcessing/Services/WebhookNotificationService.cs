@@ -67,10 +67,10 @@ namespace Synaxis.BatchProcessing.Services
                 failedItems = batch.FailedItems,
                 progressPercentage = batch.ProgressPercentage,
                 completedAt = batch.CompletedAt,
-                resultBlobPath = batch.ResultBlobPath
+                resultBlobPath = batch.ResultBlobPath,
             };
 
-            await this.SendWebhookAsync(batch.WebhookUrl, payload, cancellationToken);
+            await this.SendWebhookAsync(batch.WebhookUrl, payload, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -106,10 +106,10 @@ namespace Synaxis.BatchProcessing.Services
                 processedItems = batch.ProcessedItems,
                 failedItems = batch.FailedItems,
                 errorMessage = errorMessage,
-                completedAt = batch.CompletedAt
+                completedAt = batch.CompletedAt,
             };
 
-            await this.SendWebhookAsync(batch.WebhookUrl, payload, cancellationToken);
+            await this.SendWebhookAsync(batch.WebhookUrl, payload, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -124,9 +124,9 @@ namespace Synaxis.BatchProcessing.Services
             try
             {
                 var json = JsonSerializer.Serialize(payload);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                using var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await this._httpClient.PostAsync(url, content, cancellationToken);
+                using var response = await this._httpClient.PostAsync(url, content, cancellationToken).ConfigureAwait(false);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -143,6 +143,7 @@ namespace Synaxis.BatchProcessing.Services
             catch (Exception ex)
             {
                 this._logger.LogError(ex, "Error sending webhook notification to {Url}", url);
+
                 // Don't throw - webhook failures should not break the batch processing
             }
         }

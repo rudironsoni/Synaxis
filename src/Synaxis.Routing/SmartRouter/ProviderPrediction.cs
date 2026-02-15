@@ -1,3 +1,7 @@
+// <copyright file="ProviderPrediction.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.Routing.SmartRouter;
 
 /// <summary>
@@ -38,5 +42,5 @@ public class ProviderPrediction
     /// <summary>
     /// Gets or sets the features used for this prediction.
     /// </summary>
-    public Dictionary<string, double> Features { get; set; } = new();
+    public IDictionary<string, double> Features { get; set; } = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
 }

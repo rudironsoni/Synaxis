@@ -42,7 +42,7 @@ public class WebhookDeliveryLogDto
     public string ResponseBody { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets whether the delivery was successful.
+    /// Gets or sets a value indicating whether the delivery was successful.
     /// </summary>
     public bool IsSuccess { get; set; }
 
@@ -52,7 +52,7 @@ public class WebhookDeliveryLogDto
     public DateTime DeliveredAt { get; set; }
 
     /// <summary>
-    /// Gets or sets whether the delivery was successful.
+    /// Gets or sets a value indicating whether the delivery was successful.
     /// </summary>
     public bool Success { get; set; }
 

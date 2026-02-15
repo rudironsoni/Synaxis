@@ -88,6 +88,7 @@ namespace Synaxis.Providers.Adapters
         }
 
         /// <inheritdoc/>
+#pragma warning disable S4456, MA0051
         public async IAsyncEnumerable<StreamingResponse> StreamChatAsync(ChatRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(request);
@@ -100,10 +101,12 @@ namespace Synaxis.Providers.Adapters
             openAIRequest.Stream = true;
 
             var endpoint = $"openai/deployments/{deploymentName}/chat/completions";
+#pragma warning disable IDISP001
             var requestMessage = new HttpRequestMessage(HttpMethod.Post, endpoint)
             {
-                Content = new StringContent(JsonSerializer.Serialize(openAIRequest), Encoding.UTF8, "application/json")
+                Content = new StringContent(JsonSerializer.Serialize(openAIRequest), Encoding.UTF8, "application/json"),
             };
+#pragma warning restore IDISP001
 
             await this.SetAuthenticationHeaderAsync(requestMessage, cancellationToken).ConfigureAwait(false);
 
@@ -166,6 +169,7 @@ namespace Synaxis.Providers.Adapters
                 yield return streamingResponse;
             }
         }
+#pragma warning restore S4456, MA0051
 
         /// <inheritdoc/>
         public async Task<EmbeddingResponse> EmbedAsync(EmbedRequest request, CancellationToken cancellationToken = default)
@@ -468,8 +472,6 @@ namespace Synaxis.Providers.Adapters
             }
         }
 
-        #region OpenAI Models
-
         private sealed class OpenAIChatRequest
         {
             public string Model { get; init; } = string.Empty;
@@ -607,7 +609,5 @@ namespace Synaxis.Providers.Adapters
 
             public string Code { get; init; } = string.Empty;
         }
-
-        #endregion
     }
 }

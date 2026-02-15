@@ -1,3 +1,9 @@
+// <copyright file="ProviderHealthCheckResult.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
+#nullable enable
+
 namespace Synaxis.Routing.Health;
 
 /// <summary>
@@ -16,9 +22,9 @@ public class ProviderHealthCheckResult
     public ProviderHealthStatus Status { get; set; }
 
     /// <summary>
-    /// Gets or sets whether the health check passed.
+    /// Gets a value indicating whether the health check passed.
     /// </summary>
-    public bool IsHealthy => Status == ProviderHealthStatus.Healthy;
+    public bool IsHealthy => this.Status == ProviderHealthStatus.Healthy;
 
     /// <summary>
     /// Gets or sets the latency of the health check in milliseconds.
@@ -33,7 +39,8 @@ public class ProviderHealthCheckResult
     /// <summary>
     /// Gets or sets additional details about the health check.
     /// </summary>
-    public Dictionary<string, object> Details { get; set; } = new();
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Meziantou.Analyzer", "MA0016", Justification = "Public API uses concrete type for backward compatibility")]
+    public Dictionary<string, object> Details { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// Gets or sets the timestamp when the health check was performed.
@@ -56,7 +63,7 @@ public class ProviderHealthCheckResult
     public int ConsecutiveFailures { get; set; }
 
     /// <summary>
-    /// Gets or sets whether the provider is currently in circuit breaker state.
+    /// Gets or sets a value indicating whether the provider is currently in circuit breaker state.
     /// </summary>
     public bool IsCircuitBreakerOpen { get; set; }
 }
