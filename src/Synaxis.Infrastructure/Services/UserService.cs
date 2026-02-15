@@ -317,7 +317,7 @@ namespace Synaxis.Infrastructure.Services
             // Verify the TOTP code using Otp.NET
             var key = OtpNet.Base32Encoding.ToBytes(user.MfaSecret);
             var totp = new OtpNet.Totp(key);
-            if (!totp.VerifyTotp(totpCode, out var timeWindowUsed))
+            if (!totp.VerifyTotp(totpCode, out _))
             {
                 throw new InvalidOperationException("Invalid TOTP code");
             }
@@ -385,7 +385,7 @@ namespace Synaxis.Infrastructure.Services
             {
                 var key = OtpNet.Base32Encoding.ToBytes(user.MfaSecret);
                 var totp = new OtpNet.Totp(key);
-                if (totp.VerifyTotp(code, out var timeWindowUsed))
+                if (totp.VerifyTotp(code, out _))
                 {
                     user.MfaEnabled = false;
                     user.MfaSecret = null;
@@ -402,12 +402,11 @@ namespace Synaxis.Infrastructure.Services
             if (!string.IsNullOrWhiteSpace(user.MfaBackupCodes))
             {
                 var hashedBackupCodes = user.MfaBackupCodes.Split(',');
-                foreach (var hashedCode in hashedBackupCodes)
+                var matchedCode = hashedBackupCodes.FirstOrDefault(hashedCode => BCrypt.Net.BCrypt.Verify(code, hashedCode));
+                if (matchedCode != null)
                 {
-                    if (BCrypt.Net.BCrypt.Verify(code, hashedCode))
-                    {
-                        // Remove the used backup code
-                        var remainingCodes = hashedBackupCodes.Where(c => !string.Equals(c, hashedCode, StringComparison.Ordinal)).ToArray();
+                    // Remove the used backup code
+                    var remainingCodes = hashedBackupCodes.Where(c => !string.Equals(c, matchedCode, StringComparison.Ordinal)).ToArray();
                         user.MfaBackupCodes = remainingCodes.Length > 0 ? string.Join(",", remainingCodes) : null;
 
                         // Disable MFA
@@ -443,7 +442,7 @@ namespace Synaxis.Infrastructure.Services
             // Verify TOTP code using Otp.NET
             var key = OtpNet.Base32Encoding.ToBytes(user.MfaSecret);
             var totp = new OtpNet.Totp(key);
-            return totp.VerifyTotp(code, out var timeWindowUsed);
+            return totp.VerifyTotp(code, out _);
         }
 
         /// <inheritdoc/>

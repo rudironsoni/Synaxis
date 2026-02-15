@@ -68,9 +68,7 @@ namespace Synaxis.Infrastructure.Services
             // Check if sufficient balance
             if (organization.CreditBalance < amountUsd)
             {
-                this._logger.LogWarning(
-                    "Insufficient credits for organization {OrgId}. Balance: {Balance}, Required: {Required}",
-                    organizationId, organization.CreditBalance, amountUsd);
+                this._logger.LogWarning("Insufficient credits for organization {OrgId}. Balance: {Balance}, Required: {Required}", organizationId, organization.CreditBalance, amountUsd);
                 throw new InvalidOperationException($"Insufficient credit balance. Current: ${organization.CreditBalance:F2}, Required: ${amountUsd:F2}");
             }
 
@@ -94,9 +92,7 @@ namespace Synaxis.Infrastructure.Services
             this._context.Add(transaction);
             await this._context.SaveChangesAsync().ConfigureAwait(false);
 
-            this._logger.LogInformation(
-                "Charged ${Amount} to organization {OrgId}. New balance: ${Balance}",
-                amountUsd, organizationId, organization.CreditBalance);
+            this._logger.LogInformation("Charged ${Amount} to organization {OrgId}. New balance: ${Balance}", amountUsd, organizationId, organization.CreditBalance);
 
             return transaction;
         }
@@ -146,9 +142,7 @@ namespace Synaxis.Infrastructure.Services
             this._context.Add(transaction);
             await this._context.SaveChangesAsync().ConfigureAwait(false);
 
-            this._logger.LogInformation(
-                "Added ${Amount} credits to organization {OrgId}. New balance: ${Balance}",
-                amountUsd, organizationId, organization.CreditBalance);
+            this._logger.LogInformation("Added ${Amount} credits to organization {OrgId}. New balance: ${Balance}", amountUsd, organizationId, organization.CreditBalance);
 
             return transaction;
         }
@@ -262,12 +256,10 @@ namespace Synaxis.Infrastructure.Services
             // Generate line items by model
             var lineItems = spendLogs
                 .GroupBy(s => s.Model, StringComparer.Ordinal)
-                .ToDictionary(
-                    g => g.Key,
-                    g => g.Sum(s => s.AmountUsd), StringComparer.Ordinal);
+                .ToDictionary(g => g.Key, g => g.Sum(s => s.AmountUsd), StringComparer.Ordinal);
 
             // Generate invoice number
-            var invoiceNumber = $"INV-{periodStart:yyyy-MM}-{Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper()}";
+            var invoiceNumber = $"INV-{periodStart:yyyy-MM}-{Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper(System.Globalization.CultureInfo.InvariantCulture)}";
 
             var invoice = new Invoice
             {
@@ -290,9 +282,7 @@ namespace Synaxis.Infrastructure.Services
             this._context.Add(invoice);
             await this._context.SaveChangesAsync().ConfigureAwait(false);
 
-            this._logger.LogInformation(
-                "Generated invoice {InvoiceNumber} for organization {OrgId}. Total: ${Total} USD (${TotalBilling} {Currency})",
-                invoiceNumber, organizationId, totalAmountUsd, totalAmountBillingCurrency, organization.BillingCurrency);
+            this._logger.LogInformation("Generated invoice {InvoiceNumber} for organization {OrgId}. Total: ${Total} USD (${TotalBilling} {Currency})", invoiceNumber, organizationId, totalAmountUsd, totalAmountBillingCurrency, organization.BillingCurrency);
 
             return invoice;
         }
@@ -365,9 +355,7 @@ namespace Synaxis.Infrastructure.Services
             this._context.Add(spendLog);
             await this._context.SaveChangesAsync().ConfigureAwait(false);
 
-            this._logger.LogTrace(
-                "Logged spend of ${Amount} for organization {OrgId}, model {Model}",
-                amountUsd, organizationId, model);
+            this._logger.LogTrace("Logged spend of ${Amount} for organization {OrgId}, model {Model}", amountUsd, organizationId, model);
 
             return spendLog;
         }

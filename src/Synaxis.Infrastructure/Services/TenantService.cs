@@ -267,7 +267,7 @@ namespace Synaxis.Infrastructure.Services
         {
             // This would typically check against a cache/counter of active requests
             // Implementation requires Redis/distributed counter for active request tracking
-            var limits = await this.GetOrganizationLimitsAsync(organizationId).ConfigureAwait(false);
+            await this.GetOrganizationLimitsAsync(organizationId).ConfigureAwait(false);
             return true;
         }
 
@@ -292,7 +292,7 @@ namespace Synaxis.Infrastructure.Services
                     return typedValue;
                 }
 
-                return (T)Convert.ChangeType(value, typeof(T));
+                return (T)Convert.ChangeType(value, typeof(T), System.Globalization.CultureInfo.InvariantCulture);
             }
             catch
             {

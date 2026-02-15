@@ -158,12 +158,10 @@ namespace Synaxis.Infrastructure.Services
                     .Take(policy.PasswordHistoryCount)
                     .ToListAsync().ConfigureAwait(false);
 
-                foreach (var historyEntry in recentPasswords)
+                if (recentPasswords.Any(historyEntry => this._userService.VerifyPassword(password, historyEntry.PasswordHash)))
                 {
-                    if (this._userService.VerifyPassword(password, historyEntry.PasswordHash))
-                    {
-                        result.IsValid = false;
-                        result.Errors.Add($"You cannot reuse your last {policy.PasswordHistoryCount} passwords");
+                    result.IsValid = false;
+                    result.Errors.Add($"You cannot reuse your last {policy.PasswordHistoryCount} passwords");
                         break;
                     }
                 }

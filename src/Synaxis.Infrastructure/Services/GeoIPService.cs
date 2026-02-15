@@ -150,7 +150,7 @@ string.Equals(countryCode, "EC", StringComparison.Ordinal) || string.Equals(coun
 
             // Simple heuristic based on first octet for mock data
             var parts = ipAddress.Split('.');
-            if (parts.Length >= 1 && int.TryParse(parts[0], out var firstOctet))
+            if (parts.Length >= 1 && int.TryParse(parts[0], System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var firstOctet))
             {
                 if (firstOctet >= 0 && firstOctet < 85)
                 {
@@ -252,8 +252,7 @@ StringComparer.Ordinal)
 
         private void SetMockCoordinates(GeoLocation location, string countryCode)
         {
-            var coordinates = new Dictionary<string, (double lat, double lon)>(
-StringComparer.Ordinal)
+            var coordinates = new Dictionary<string, (double Lat, double Lon)>(StringComparer.Ordinal)
             {
                 { "US", (40.7128, -74.0060) },      // New York
                 { "GB", (51.5074, -0.1278) },        // London
@@ -268,8 +267,8 @@ StringComparer.Ordinal)
 
             if (coordinates.TryGetValue(countryCode, out var coords))
             {
-                location.Latitude = coords.lat;
-                location.Longitude = coords.lon;
+                location.Latitude = coords.Lat;
+                location.Longitude = coords.Lon;
             }
         }
     }
