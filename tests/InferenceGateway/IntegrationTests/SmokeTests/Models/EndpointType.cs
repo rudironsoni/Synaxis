@@ -4,11 +4,10 @@
 
 using System;
 
-namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Models
+namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Models;
+
+public enum EndpointType
 {
-    public enum EndpointType
-    {
-        ChatCompletions,
-        LegacyCompletions,
-    }
+    ChatCompletions,
+    LegacyCompletions,
 }

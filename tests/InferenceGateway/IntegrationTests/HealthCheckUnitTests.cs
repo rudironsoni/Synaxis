@@ -12,215 +12,214 @@ using Synaxis.InferenceGateway.Application.Configuration;
 using Synaxis.InferenceGateway.WebApi.Health;
 using Xunit;
 
-namespace Synaxis.InferenceGateway.IntegrationTests
+namespace Synaxis.InferenceGateway.IntegrationTests;
+
+public class HealthCheckUnitTests
 {
-    public class HealthCheckUnitTests
+    [Fact]
+    public async Task ConfigHealthCheck_ReturnsUnhealthy_WhenNoProviders()
     {
-        [Fact]
-        public async Task ConfigHealthCheck_ReturnsUnhealthy_WhenNoProviders()
+        var config = new SynaxisConfiguration();
+        var check = new ConfigHealthCheck(Options.Create(config));
+
+        var result = await check.CheckHealthAsync(new HealthCheckContext());
+
+        Assert.Equal(HealthStatus.Unhealthy, result.Status);
+    }
+
+    [Fact]
+    public async Task ConfigHealthCheck_ReturnsUnhealthy_WhenCanonicalModelProviderMissing()
+    {
+        var config = new SynaxisConfiguration
         {
-            var config = new SynaxisConfiguration();
-            var check = new ConfigHealthCheck(Options.Create(config));
-
-            var result = await check.CheckHealthAsync(new HealthCheckContext());
-
-            Assert.Equal(HealthStatus.Unhealthy, result.Status);
-        }
-
-        [Fact]
-        public async Task ConfigHealthCheck_ReturnsUnhealthy_WhenCanonicalModelProviderMissing()
-        {
-            var config = new SynaxisConfiguration
-            {
-                Providers = new Dictionary<string, ProviderConfig>
+            Providers = new Dictionary<string, ProviderConfig>
 (StringComparer.Ordinal)
-                {
-                    ["ProviderA"] = new ProviderConfig { Type = "openai", Models = new List<string> { "model-a" } },
-                },
-                CanonicalModels = new List<CanonicalModelConfig>
             {
-                new() { Id = "model-x", Provider = "MissingProvider", ModelPath = "model-x" },
+                ["ProviderA"] = new ProviderConfig { Type = "openai", Models = new List<string> { "model-a" } },
             },
-            };
-
-            var check = new ConfigHealthCheck(Options.Create(config));
-            var result = await check.CheckHealthAsync(new HealthCheckContext());
-
-            Assert.Equal(HealthStatus.Unhealthy, result.Status);
-        }
-
-        [Fact]
-        public async Task ConfigHealthCheck_ReturnsUnhealthy_WhenAliasCandidateMissing()
+            CanonicalModels = new List<CanonicalModelConfig>
         {
-            var config = new SynaxisConfiguration
-            {
-                Providers = new Dictionary<string, ProviderConfig>
+            new() { Id = "model-x", Provider = "MissingProvider", ModelPath = "model-x" },
+        },
+        };
+
+        var check = new ConfigHealthCheck(Options.Create(config));
+        var result = await check.CheckHealthAsync(new HealthCheckContext());
+
+        Assert.Equal(HealthStatus.Unhealthy, result.Status);
+    }
+
+    [Fact]
+    public async Task ConfigHealthCheck_ReturnsUnhealthy_WhenAliasCandidateMissing()
+    {
+        var config = new SynaxisConfiguration
+        {
+            Providers = new Dictionary<string, ProviderConfig>
 (StringComparer.Ordinal)
-                {
-                    ["ProviderA"] = new ProviderConfig { Type = "openai", Models = new List<string> { "model-a" } },
-                },
-                CanonicalModels = new List<CanonicalModelConfig>
             {
-                new() { Id = "model-a", Provider = "ProviderA", ModelPath = "model-a" },
+                ["ProviderA"] = new ProviderConfig { Type = "openai", Models = new List<string> { "model-a" } },
             },
-                Aliases = new Dictionary<string, AliasConfig>
-(StringComparer.Ordinal)
-                {
-                    ["fast"] = new AliasConfig { Candidates = new List<string> { "missing-model" } },
-                },
-            };
-
-            var check = new ConfigHealthCheck(Options.Create(config));
-            var result = await check.CheckHealthAsync(new HealthCheckContext());
-
-            Assert.Equal(HealthStatus.Unhealthy, result.Status);
-        }
-
-        [Fact]
-        public async Task ConfigHealthCheck_ReturnsHealthy_WhenConfigIsValid()
+            CanonicalModels = new List<CanonicalModelConfig>
         {
-            var config = new SynaxisConfiguration
-            {
-                Providers = new Dictionary<string, ProviderConfig>
+            new() { Id = "model-a", Provider = "ProviderA", ModelPath = "model-a" },
+        },
+            Aliases = new Dictionary<string, AliasConfig>
 (StringComparer.Ordinal)
-                {
-                    ["ProviderA"] = new ProviderConfig { Type = "openai", Models = new List<string> { "model-a" } },
-                },
-                CanonicalModels = new List<CanonicalModelConfig>
             {
-                new() { Id = "model-a", Provider = "ProviderA", ModelPath = "model-a" },
+                ["fast"] = new AliasConfig { Candidates = new List<string> { "missing-model" } },
             },
-                Aliases = new Dictionary<string, AliasConfig>
+        };
+
+        var check = new ConfigHealthCheck(Options.Create(config));
+        var result = await check.CheckHealthAsync(new HealthCheckContext());
+
+        Assert.Equal(HealthStatus.Unhealthy, result.Status);
+    }
+
+    [Fact]
+    public async Task ConfigHealthCheck_ReturnsHealthy_WhenConfigIsValid()
+    {
+        var config = new SynaxisConfiguration
+        {
+            Providers = new Dictionary<string, ProviderConfig>
 (StringComparer.Ordinal)
+            {
+                ["ProviderA"] = new ProviderConfig { Type = "openai", Models = new List<string> { "model-a" } },
+            },
+            CanonicalModels = new List<CanonicalModelConfig>
+        {
+            new() { Id = "model-a", Provider = "ProviderA", ModelPath = "model-a" },
+        },
+            Aliases = new Dictionary<string, AliasConfig>
+(StringComparer.Ordinal)
+            {
+                ["fast"] = new AliasConfig { Candidates = new List<string> { "model-a" } },
+            },
+        };
+
+        var check = new ConfigHealthCheck(Options.Create(config));
+        var result = await check.CheckHealthAsync(new HealthCheckContext());
+
+        Assert.Equal(HealthStatus.Healthy, result.Status);
+    }
+
+    [Fact]
+    public async Task ProviderConnectivityHealthCheck_ReturnsHealthy_WhenAllProvidersDisabled()
+    {
+        var config = new SynaxisConfiguration
+        {
+            Providers = new Dictionary<string, ProviderConfig>
+(StringComparer.Ordinal)
+            {
+                ["ProviderA"] = new ProviderConfig { Enabled = false, Type = "openai" },
+            },
+        };
+
+        var check = new ProviderConnectivityHealthCheck(Options.Create(config), NullLogger<ProviderConnectivityHealthCheck>.Instance);
+        var result = await check.CheckHealthAsync(new HealthCheckContext());
+
+        Assert.Equal(HealthStatus.Healthy, result.Status);
+    }
+
+    [Fact]
+    public async Task ProviderConnectivityHealthCheck_ReturnsUnhealthy_WhenEndpointMissing()
+    {
+        var config = new SynaxisConfiguration
+        {
+            Providers = new Dictionary<string, ProviderConfig>
+(StringComparer.Ordinal)
+            {
+                ["ProviderA"] = new ProviderConfig { Enabled = true, Type = "custom" },
+            },
+        };
+
+        var check = new ProviderConnectivityHealthCheck(Options.Create(config), NullLogger<ProviderConnectivityHealthCheck>.Instance);
+        var result = await check.CheckHealthAsync(new HealthCheckContext());
+
+        Assert.Equal(HealthStatus.Unhealthy, result.Status);
+    }
+
+    [Fact]
+    public async Task ProviderConnectivityHealthCheck_ReturnsHealthy_WhenHttpEndpointReachable()
+    {
+        await using var server = await LocalHttpServer.StartAsync();
+
+        var config = new SynaxisConfiguration
+        {
+            Providers = new Dictionary<string, ProviderConfig>
+(StringComparer.Ordinal)
+            {
+                ["ProviderA"] = new ProviderConfig
                 {
-                    ["fast"] = new AliasConfig { Candidates = new List<string> { "model-a" } },
+                    Enabled = true,
+                    Type = "custom",
+                    Endpoint = $"http://127.0.0.1:{server.Port}"
                 },
-            };
+            },
+        };
 
-            var check = new ConfigHealthCheck(Options.Create(config));
-            var result = await check.CheckHealthAsync(new HealthCheckContext());
+        var check = new ProviderConnectivityHealthCheck(Options.Create(config), NullLogger<ProviderConnectivityHealthCheck>.Instance);
+        var result = await check.CheckHealthAsync(new HealthCheckContext());
 
-            Assert.Equal(HealthStatus.Healthy, result.Status);
+        Assert.Equal(HealthStatus.Healthy, result.Status);
+    }
+
+    private sealed class LocalHttpServer : IAsyncDisposable
+    {
+        private readonly TcpListener _listener;
+        private readonly CancellationTokenSource _cts = new();
+        private readonly Task _acceptTask;
+
+        private LocalHttpServer(TcpListener listener)
+        {
+            this._listener = listener;
+            this._acceptTask = this.AcceptOnceAsync();
         }
 
-        [Fact]
-        public async Task ProviderConnectivityHealthCheck_ReturnsHealthy_WhenAllProvidersDisabled()
+        public int Port => ((IPEndPoint)this._listener.LocalEndpoint).Port;
+
+        public static Task<LocalHttpServer> StartAsync()
         {
-            var config = new SynaxisConfiguration
-            {
-                Providers = new Dictionary<string, ProviderConfig>
-(StringComparer.Ordinal)
-                {
-                    ["ProviderA"] = new ProviderConfig { Enabled = false, Type = "openai" },
-                },
-            };
+            var listener = new TcpListener(IPAddress.Loopback, 0);
+            listener.Start();
 
-            var check = new ProviderConnectivityHealthCheck(Options.Create(config), NullLogger<ProviderConnectivityHealthCheck>.Instance);
-            var result = await check.CheckHealthAsync(new HealthCheckContext());
-
-            Assert.Equal(HealthStatus.Healthy, result.Status);
+            var server = new LocalHttpServer(listener);
+            return Task.FromResult(server);
         }
 
-        [Fact]
-        public async Task ProviderConnectivityHealthCheck_ReturnsUnhealthy_WhenEndpointMissing()
+        private async Task AcceptOnceAsync()
         {
-            var config = new SynaxisConfiguration
+            try
             {
-                Providers = new Dictionary<string, ProviderConfig>
-(StringComparer.Ordinal)
+                using var tcpProbe = await _listener.AcceptTcpClientAsync(_cts.Token).ConfigureAwait(false);
+                tcpProbe.Close();
+
+                using var httpClient = await _listener.AcceptTcpClientAsync(_cts.Token).ConfigureAwait(false);
+                using var stream = httpClient.GetStream();
+                using var reader = new StreamReader(stream, Encoding.ASCII, leaveOpen: true);
+
+                string? line;
+                do
                 {
-                    ["ProviderA"] = new ProviderConfig { Enabled = true, Type = "custom" },
-                },
-            };
-
-            var check = new ProviderConnectivityHealthCheck(Options.Create(config), NullLogger<ProviderConnectivityHealthCheck>.Instance);
-            var result = await check.CheckHealthAsync(new HealthCheckContext());
-
-            Assert.Equal(HealthStatus.Unhealthy, result.Status);
-        }
-
-        [Fact]
-        public async Task ProviderConnectivityHealthCheck_ReturnsHealthy_WhenHttpEndpointReachable()
-        {
-            await using var server = await LocalHttpServer.StartAsync();
-
-            var config = new SynaxisConfiguration
-            {
-                Providers = new Dictionary<string, ProviderConfig>
-(StringComparer.Ordinal)
-                {
-                    ["ProviderA"] = new ProviderConfig
-                    {
-                        Enabled = true,
-                        Type = "custom",
-                        Endpoint = $"http://127.0.0.1:{server.Port}"
-                    },
-                },
-            };
-
-            var check = new ProviderConnectivityHealthCheck(Options.Create(config), NullLogger<ProviderConnectivityHealthCheck>.Instance);
-            var result = await check.CheckHealthAsync(new HealthCheckContext());
-
-            Assert.Equal(HealthStatus.Healthy, result.Status);
-        }
-
-        private sealed class LocalHttpServer : IAsyncDisposable
-        {
-            private readonly TcpListener _listener;
-            private readonly CancellationTokenSource _cts = new();
-            private readonly Task _acceptTask;
-
-            private LocalHttpServer(TcpListener listener)
-            {
-                this._listener = listener;
-                this._acceptTask = this.AcceptOnceAsync();
-            }
-
-            public int Port => ((IPEndPoint)this._listener.LocalEndpoint).Port;
-
-            public static Task<LocalHttpServer> StartAsync()
-            {
-                var listener = new TcpListener(IPAddress.Loopback, 0);
-                listener.Start();
-
-                var server = new LocalHttpServer(listener);
-                return Task.FromResult(server);
-            }
-
-            private async Task AcceptOnceAsync()
-            {
-                try
-                {
-                    using var tcpProbe = await _listener.AcceptTcpClientAsync(_cts.Token).ConfigureAwait(false);
-                    tcpProbe.Close();
-
-                    using var httpClient = await _listener.AcceptTcpClientAsync(_cts.Token).ConfigureAwait(false);
-                    using var stream = httpClient.GetStream();
-                    using var reader = new StreamReader(stream, Encoding.ASCII, leaveOpen: true);
-
-                    string? line;
-                    do
-                    {
-                        line = await reader.ReadLineAsync().ConfigureAwait(false);
-                    }
-                    while (line != null && line.Length > 0);
-
-                    var response = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n";
-                    var bytes = Encoding.ASCII.GetBytes(response);
-                    await stream.WriteAsync(bytes, 0, bytes.Length, _cts.Token).ConfigureAwait(false);
+                    line = await reader.ReadLineAsync().ConfigureAwait(false);
                 }
-                catch (OperationCanceledException)
-                {
-                }
-            }
+                while (line != null && line.Length > 0);
 
-            public async ValueTask DisposeAsync()
-            {
-                this._cts.Cancel();
-                this._listener.Stop();
-                await _acceptTask.ConfigureAwait(false);
-                this._cts.Dispose();
+                var response = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n";
+                var bytes = Encoding.ASCII.GetBytes(response);
+                await stream.WriteAsync(bytes, 0, bytes.Length, _cts.Token).ConfigureAwait(false);
             }
+            catch (OperationCanceledException)
+            {
+            }
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            this._cts.Cancel();
+            this._listener.Stop();
+            await _acceptTask.ConfigureAwait(false);
+            this._cts.Dispose();
         }
     }
 }

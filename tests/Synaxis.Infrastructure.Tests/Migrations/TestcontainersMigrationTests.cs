@@ -2,120 +2,115 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Infrastructure.Tests.Migrations
-{
-    using System;
-    using System.Threading.Tasks;
-    using FluentAssertions;
-    using Microsoft.EntityFrameworkCore;
-    using Synaxis.Common.Tests.Fixtures;
-    using Synaxis.Core.Models;
-    using Synaxis.Infrastructure.Data;
-    using Xunit;
+namespace Synaxis.Infrastructure.Tests.Migrations;
 
-    /// <summary>
-    /// Integration tests for database migrations using Testcontainers PostgreSQL.
-    /// Uses shared PostgresFixture to avoid per-test container churn.
-    /// </summary>
-    [Trait("Category", "Integration")]
-    [Collection("PostgresIntegration")]
+using System;
+using System.Threading.Tasks;
+using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
+using Synaxis.Common.Tests.Fixtures;
+using Synaxis.Core.Models;
+using Synaxis.Infrastructure.Data;
+using Xunit;
+
+/// <summary>
+/// Integration tests for database migrations using Testcontainers PostgreSQL.
+/// Uses shared PostgresFixture to avoid per-test container churn.
+/// </summary>
+[Trait("Category", "Integration")]
+[Collection("PostgresIntegration")]
 #pragma warning disable IDISP003 // False positive: _context is only assigned once in InitializeAsync
 #pragma warning disable IDISP006 // IAsyncLifetime provides async cleanup, IDisposable not needed
-    public sealed class TestcontainersMigrationTests : IAsyncLifetime
+public sealed class TestcontainersMigrationTests(Synaxis.Common.Tests.Fixtures.PostgresFixture postgresFixture) : IAsyncLifetime
+{
+    private readonly Synaxis.Common.Tests.Fixtures.PostgresFixture _postgresFixture = postgresFixture ?? throw new ArgumentNullException(nameof(postgresFixture));
+    private SynaxisDbContext? _context;
+    private string _connectionString = string.Empty;
+
+    /// <summary>
+    /// Initializes the test by creating a fresh database context.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    public async Task InitializeAsync()
     {
-        private readonly Synaxis.Common.Tests.Fixtures.PostgresFixture _postgresFixture;
-        private SynaxisDbContext? _context;
-        private string _connectionString = string.Empty;
+        _connectionString = await _postgresFixture.CreateIsolatedDatabaseAsync("migrationtests");
+        var context = _postgresFixture.CreateContext(_connectionString);
+        await context.Database.MigrateAsync();
+        _context = context;
+    }
 
-        public TestcontainersMigrationTests(Synaxis.Common.Tests.Fixtures.PostgresFixture postgresFixture)
+    /// <summary>
+    /// Disposes the database context after tests complete.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    public async Task DisposeAsync()
+    {
+        if (_context != null)
         {
-            _postgresFixture = postgresFixture ?? throw new ArgumentNullException(nameof(postgresFixture));
+            await _context.DisposeAsync();
         }
 
-        /// <summary>
-        /// Initializes the test by creating a fresh database context.
-        /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-        public async Task InitializeAsync()
+        if (!string.IsNullOrEmpty(_connectionString))
         {
-            _connectionString = await _postgresFixture.CreateIsolatedDatabaseAsync("migrationtests");
-            var context = _postgresFixture.CreateContext(_connectionString);
-            await context.Database.MigrateAsync();
-            _context = context;
+            await _postgresFixture.DropDatabaseAsync(_connectionString);
         }
+    }
 
-        /// <summary>
-        /// Disposes the database context after tests complete.
-        /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-        public async Task DisposeAsync()
+    private SynaxisDbContext CreateContext()
+    {
+        return _postgresFixture.CreateContext(_connectionString);
+    }
+
+    /// <summary>
+    /// Verifies that all migrations can be applied successfully to a fresh database.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task Migrations_CanBeApplied_ToFreshDatabase()
+    {
+        // Arrange
+        using var context = CreateContext();
+
+        // Act
+        await context.Database.MigrateAsync();
+
+        // Assert
+        var canConnect = await context.Database.CanConnectAsync();
+        canConnect.Should().BeTrue();
+
+        // Verify all tables exist
+        var tableNames = new[]
         {
-            if (_context != null)
-            {
-                await _context.DisposeAsync();
-            }
+            "organizations", "teams", "users", "team_memberships",
+            "virtual_keys", "requests", "subscription_plans",
+            "audit_logs", "spend_logs", "credit_transactions", "invoices",
+            "organization_backup_config"
+        };
 
-            if (!string.IsNullOrEmpty(_connectionString))
-            {
-                await _postgresFixture.DropDatabaseAsync(_connectionString);
-            }
+        foreach (var tableName in tableNames)
+        {
+            var tableExists = await TableExistsAsync(context, tableName);
+            tableExists.Should().BeTrue($"Table {tableName} should exist");
         }
+    }
 
-        private SynaxisDbContext CreateContext()
-        {
-            return _postgresFixture.CreateContext(_connectionString);
-        }
+    /// <summary>
+    /// Verifies that migrations can be rolled back.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task Migrations_CanBeRolledBack()
+    {
+        // Arrange
+        using var context = CreateContext();
+        await context.Database.MigrateAsync();
 
-        /// <summary>
-        /// Verifies that all migrations can be applied successfully to a fresh database.
-        /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-        [Fact]
-        public async Task Migrations_CanBeApplied_ToFreshDatabase()
-        {
-            // Arrange
-            using var context = CreateContext();
+        // Verify migrations were applied
+        var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
+        pendingMigrations.Should().BeEmpty();
 
-            // Act
-            await context.Database.MigrateAsync();
-
-            // Assert
-            var canConnect = await context.Database.CanConnectAsync();
-            canConnect.Should().BeTrue();
-
-            // Verify all tables exist
-            var tableNames = new[]
-            {
-                "organizations", "teams", "users", "team_memberships",
-                "virtual_keys", "requests", "subscription_plans",
-                "audit_logs", "spend_logs", "credit_transactions", "invoices",
-                "organization_backup_config"
-            };
-
-            foreach (var tableName in tableNames)
-            {
-                var tableExists = await TableExistsAsync(context, tableName);
-                tableExists.Should().BeTrue($"Table {tableName} should exist");
-            }
-        }
-
-        /// <summary>
-        /// Verifies that migrations can be rolled back.
-        /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-        [Fact]
-        public async Task Migrations_CanBeRolledBack()
-        {
-            // Arrange
-            using var context = CreateContext();
-            await context.Database.MigrateAsync();
-
-            // Verify migrations were applied
-            var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
-            pendingMigrations.Should().BeEmpty();
-
-            // Act - Rollback to initial state
-            await context.Database.ExecuteSqlRawAsync(@"
+        // Act - Rollback to initial state
+        await context.Database.ExecuteSqlRawAsync(@"
                 DO $$
                 DECLARE
                     r RECORD;
@@ -126,355 +121,354 @@ namespace Synaxis.Infrastructure.Tests.Migrations
                     END LOOP;
                 END $$;");
 
-            // Assert - Database is empty
-            var tableExists = await TableExistsAsync(context, "organizations");
-            tableExists.Should().BeFalse();
-        }
+        // Assert - Database is empty
+        var tableExists = await TableExistsAsync(context, "organizations");
+        tableExists.Should().BeFalse();
+    }
 
-        /// <summary>
-        /// Verifies that data can be inserted after migrations are applied.
-        /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-        [Fact]
-        public async Task Data_CanBeInserted_AfterMigrations()
+    /// <summary>
+    /// Verifies that data can be inserted after migrations are applied.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task Data_CanBeInserted_AfterMigrations()
+    {
+        // Arrange
+        using var context = CreateContext();
+        await context.Database.MigrateAsync();
+
+        var organization = new Organization
         {
-            // Arrange
-            using var context = CreateContext();
-            await context.Database.MigrateAsync();
+            Id = Guid.NewGuid(),
+            Slug = "test-org",
+            Name = "Test Organization",
+            PrimaryRegion = "eu-west-1",
+        };
 
-            var organization = new Organization
-            {
-                Id = Guid.NewGuid(),
-                Slug = "test-org",
-                Name = "Test Organization",
-                PrimaryRegion = "eu-west-1",
-            };
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            OrganizationId = organization.Id,
+            Email = "test@example.com",
+            PasswordHash = "hash123",
+            DataResidencyRegion = "eu-west-1",
+            CreatedInRegion = "eu-west-1",
+        };
 
-            var user = new User
-            {
-                Id = Guid.NewGuid(),
-                OrganizationId = organization.Id,
-                Email = "test@example.com",
-                PasswordHash = "hash123",
-                DataResidencyRegion = "eu-west-1",
-                CreatedInRegion = "eu-west-1",
-            };
+        var team = new Team
+        {
+            Id = Guid.NewGuid(),
+            OrganizationId = organization.Id,
+            Slug = "test-team",
+            Name = "Test Team",
+        };
 
-            var team = new Team
-            {
-                Id = Guid.NewGuid(),
-                OrganizationId = organization.Id,
-                Slug = "test-team",
-                Name = "Test Team",
-            };
+        // Act
+        context.Organizations.Add(organization);
+        context.Users.Add(user);
+        context.Teams.Add(team);
+        await context.SaveChangesAsync();
 
-            // Act
-            context.Organizations.Add(organization);
-            context.Users.Add(user);
-            context.Teams.Add(team);
+        // Assert
+        var savedOrg = await context.Organizations.FindAsync(organization.Id);
+        savedOrg.Should().NotBeNull();
+        savedOrg?.Slug.Should().Be("test-org");
+
+        var savedUser = await context.Users.FindAsync(user.Id);
+        savedUser.Should().NotBeNull();
+        savedUser?.Email.Should().Be("test@example.com");
+
+        var savedTeam = await context.Teams.FindAsync(team.Id);
+        savedTeam.Should().NotBeNull();
+        savedTeam?.Name.Should().Be("Test Team");
+    }
+
+    /// <summary>
+    /// Verifies that foreign key constraints work correctly.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ForeignKeyConstraints_Enforced()
+    {
+        // Arrange
+        using var context = CreateContext();
+        await context.Database.MigrateAsync();
+
+        // Create organization first
+        var organization = new Organization
+        {
+            Id = Guid.NewGuid(),
+            Slug = "fk-test-org",
+            Name = "FK Test Organization",
+            PrimaryRegion = "eu-west-1",
+        };
+        context.Organizations.Add(organization);
+        await context.SaveChangesAsync();
+
+        // Try to create user with non-existent organization
+        var userWithInvalidOrg = new User
+        {
+            Id = Guid.NewGuid(),
+            OrganizationId = Guid.NewGuid(), // Non-existent
+            Email = "invalid@example.com",
+            PasswordHash = "hash123",
+            DataResidencyRegion = "eu-west-1",
+            CreatedInRegion = "eu-west-1",
+        };
+
+        context.Users.Add(userWithInvalidOrg);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<DbUpdateException>(async () =>
+        {
             await context.SaveChangesAsync();
+        });
+    }
 
-            // Assert
-            var savedOrg = await context.Organizations.FindAsync(organization.Id);
-            savedOrg.Should().NotBeNull();
-            savedOrg?.Slug.Should().Be("test-org");
+    /// <summary>
+    /// Verifies that unique constraints are enforced.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task UniqueConstraints_Enforced()
+    {
+        // Arrange
+        using var context = CreateContext();
+        await context.Database.MigrateAsync();
 
-            var savedUser = await context.Users.FindAsync(user.Id);
-            savedUser.Should().NotBeNull();
-            savedUser?.Email.Should().Be("test@example.com");
-
-            var savedTeam = await context.Teams.FindAsync(team.Id);
-            savedTeam.Should().NotBeNull();
-            savedTeam?.Name.Should().Be("Test Team");
-        }
-
-        /// <summary>
-        /// Verifies that foreign key constraints work correctly.
-        /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-        [Fact]
-        public async Task ForeignKeyConstraints_Enforced()
+        var org1 = new Organization
         {
-            // Arrange
-            using var context = CreateContext();
-            await context.Database.MigrateAsync();
+            Id = Guid.NewGuid(),
+            Slug = "unique-test-org",
+            Name = "Unique Test Organization 1",
+            PrimaryRegion = "eu-west-1",
+        };
 
-            // Create organization first
-            var organization = new Organization
-            {
-                Id = Guid.NewGuid(),
-                Slug = "fk-test-org",
-                Name = "FK Test Organization",
-                PrimaryRegion = "eu-west-1",
-            };
-            context.Organizations.Add(organization);
+        var org2 = new Organization
+        {
+            Id = Guid.NewGuid(),
+            Slug = "unique-test-org", // Same slug
+            Name = "Unique Test Organization 2",
+            PrimaryRegion = "us-east-1",
+        };
+
+        context.Organizations.Add(org1);
+        context.Organizations.Add(org2);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<DbUpdateException>(async () =>
+        {
             await context.SaveChangesAsync();
+        });
+    }
 
-            // Try to create user with non-existent organization
-            var userWithInvalidOrg = new User
-            {
-                Id = Guid.NewGuid(),
-                OrganizationId = Guid.NewGuid(), // Non-existent
-                Email = "invalid@example.com",
-                PasswordHash = "hash123",
-                DataResidencyRegion = "eu-west-1",
-                CreatedInRegion = "eu-west-1",
-            };
+    /// <summary>
+    /// Verifies that cascading deletes work correctly.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task CascadeDeletes_WorkCorrectly()
+    {
+        // Arrange
+        using var context = CreateContext();
+        await context.Database.MigrateAsync();
 
-            context.Users.Add(userWithInvalidOrg);
+        var organization = new Organization
+        {
+            Id = Guid.NewGuid(),
+            Slug = "cascade-test-org",
+            Name = "Cascade Test Organization",
+            PrimaryRegion = "eu-west-1",
+        };
 
-            // Act & Assert
-            await Assert.ThrowsAsync<DbUpdateException>(async () =>
-            {
-                await context.SaveChangesAsync();
-            });
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            OrganizationId = organization.Id,
+            Email = "cascade@example.com",
+            PasswordHash = "hash123",
+            DataResidencyRegion = "eu-west-1",
+            CreatedInRegion = "eu-west-1",
+        };
+
+        context.Organizations.Add(organization);
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        // Verify user exists
+        var savedUser = await context.Users.FindAsync(user.Id);
+        savedUser.Should().NotBeNull();
+
+        // Act - Delete organization (should cascade to users)
+        context.Organizations.Remove(organization);
+        await context.SaveChangesAsync();
+
+        // Assert - User should also be deleted
+        var deletedUser = await context.Users.FindAsync(user.Id);
+        deletedUser.Should().BeNull();
+    }
+
+    /// <summary>
+    /// Verifies that concurrent migration attempts fail gracefully.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ConcurrentMigrations_FailGracefully()
+    {
+        // Arrange
+        using var context1 = CreateContext();
+        using var context2 = CreateContext();
+
+        // Start first migration
+        var migration1 = context1.Database.MigrateAsync();
+
+        // Try to start second migration concurrently
+        var migration2 = context2.Database.MigrateAsync();
+
+        // Act - Wait for both to complete (one may fail)
+        try
+        {
+            await Task.WhenAll(migration1, migration2);
+        }
+        catch
+        {
+            // Expected that one may fail due to locking
         }
 
-        /// <summary>
-        /// Verifies that unique constraints are enforced.
-        /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-        [Fact]
-        public async Task UniqueConstraints_Enforced()
+        // Assert - At least one should succeed and database should be migrated
+        using var verifyContext = CreateContext();
+        var canConnect = await verifyContext.Database.CanConnectAsync();
+        canConnect.Should().BeTrue();
+
+        var pendingMigrations = await verifyContext.Database.GetPendingMigrationsAsync();
+        pendingMigrations.Should().BeEmpty();
+    }
+
+    /// <summary>
+    /// Verifies that check constraints are enforced.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task CheckConstraints_Enforced()
+    {
+        // Arrange
+        using var context = CreateContext();
+        await context.Database.MigrateAsync();
+
+        var organization = new Organization
         {
-            // Arrange
-            using var context = CreateContext();
-            await context.Database.MigrateAsync();
+            Id = Guid.NewGuid(),
+            Slug = "check-test-org",
+            Name = "Check Test Organization",
+            PrimaryRegion = "eu-west-1",
+        };
 
-            var org1 = new Organization
-            {
-                Id = Guid.NewGuid(),
-                Slug = "unique-test-org",
-                Name = "Unique Test Organization 1",
-                PrimaryRegion = "eu-west-1",
-            };
-
-            var org2 = new Organization
-            {
-                Id = Guid.NewGuid(),
-                Slug = "unique-test-org", // Same slug
-                Name = "Unique Test Organization 2",
-                PrimaryRegion = "us-east-1",
-            };
-
-            context.Organizations.Add(org1);
-            context.Organizations.Add(org2);
-
-            // Act & Assert
-            await Assert.ThrowsAsync<DbUpdateException>(async () =>
-            {
-                await context.SaveChangesAsync();
-            });
-        }
-
-        /// <summary>
-        /// Verifies that cascading deletes work correctly.
-        /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-        [Fact]
-        public async Task CascadeDeletes_WorkCorrectly()
+        var team = new Team
         {
-            // Arrange
-            using var context = CreateContext();
-            await context.Database.MigrateAsync();
+            Id = Guid.NewGuid(),
+            OrganizationId = organization.Id,
+            Slug = "check-test-team",
+            Name = "Check Test Team",
+            MonthlyBudget = -100m, // Invalid: negative budget
+        };
 
-            var organization = new Organization
-            {
-                Id = Guid.NewGuid(),
-                Slug = "cascade-test-org",
-                Name = "Cascade Test Organization",
-                PrimaryRegion = "eu-west-1",
-            };
+        context.Organizations.Add(organization);
+        context.Teams.Add(team);
 
-            var user = new User
-            {
-                Id = Guid.NewGuid(),
-                OrganizationId = organization.Id,
-                Email = "cascade@example.com",
-                PasswordHash = "hash123",
-                DataResidencyRegion = "eu-west-1",
-                CreatedInRegion = "eu-west-1",
-            };
-
-            context.Organizations.Add(organization);
-            context.Users.Add(user);
+        // Act & Assert
+        await Assert.ThrowsAsync<DbUpdateException>(async () =>
+        {
             await context.SaveChangesAsync();
+        });
+    }
 
-            // Verify user exists
-            var savedUser = await context.Users.FindAsync(user.Id);
-            savedUser.Should().NotBeNull();
+    /// <summary>
+    /// Verifies that JSON columns work correctly.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task JsonColumns_WorkCorrectly()
+    {
+        // Arrange
+        using var context = CreateContext();
+        await context.Database.MigrateAsync();
 
-            // Act - Delete organization (should cascade to users)
-            context.Organizations.Remove(organization);
-            await context.SaveChangesAsync();
-
-            // Assert - User should also be deleted
-            var deletedUser = await context.Users.FindAsync(user.Id);
-            deletedUser.Should().BeNull();
-        }
-
-        /// <summary>
-        /// Verifies that concurrent migration attempts fail gracefully.
-        /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-        [Fact]
-        public async Task ConcurrentMigrations_FailGracefully()
+        var organization = new Organization
         {
-            // Arrange
-            using var context1 = CreateContext();
-            using var context2 = CreateContext();
-
-            // Start first migration
-            var migration1 = context1.Database.MigrateAsync();
-
-            // Try to start second migration concurrently
-            var migration2 = context2.Database.MigrateAsync();
-
-            // Act - Wait for both to complete (one may fail)
-            try
+            Id = Guid.NewGuid(),
+            Slug = "json-test-org",
+            Name = "JSON Test Organization",
+            PrimaryRegion = "eu-west-1",
+            PrivacyConsent = new System.Collections.Generic.Dictionary<string, object>(System.StringComparer.Ordinal)
             {
-                await Task.WhenAll(migration1, migration2);
-            }
-            catch
-            {
-                // Expected that one may fail due to locking
-            }
+                { "gdpr_accepted", true },
+                { "consent_date", DateTime.UtcNow.ToString("O", System.Globalization.CultureInfo.InvariantCulture) },
+                { "version", "1.0" },
+            },
+        };
 
-            // Assert - At least one should succeed and database should be migrated
-            using var verifyContext = CreateContext();
-            var canConnect = await verifyContext.Database.CanConnectAsync();
-            canConnect.Should().BeTrue();
+        // Act
+        context.Organizations.Add(organization);
+        await context.SaveChangesAsync();
 
-            var pendingMigrations = await verifyContext.Database.GetPendingMigrationsAsync();
-            pendingMigrations.Should().BeEmpty();
-        }
+        // Clear context to force reload from database
+        context.ChangeTracker.Clear();
 
-        /// <summary>
-        /// Verifies that check constraints are enforced.
-        /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-        [Fact]
-        public async Task CheckConstraints_Enforced()
+        // Assert
+        var savedOrg = await context.Organizations.FindAsync(organization.Id);
+        savedOrg.Should().NotBeNull();
+        savedOrg?.PrivacyConsent.Should().NotBeNull();
+        savedOrg?.PrivacyConsent.Should().ContainKey("gdpr_accepted");
+
+        // JSON deserialization returns JsonElement, so we need to extract the boolean value
+        var gdprAccepted = savedOrg?.PrivacyConsent["gdpr_accepted"];
+        if (gdprAccepted is System.Text.Json.JsonElement jsonElement)
         {
-            // Arrange
-            using var context = CreateContext();
-            await context.Database.MigrateAsync();
-
-            var organization = new Organization
-            {
-                Id = Guid.NewGuid(),
-                Slug = "check-test-org",
-                Name = "Check Test Organization",
-                PrimaryRegion = "eu-west-1",
-            };
-
-            var team = new Team
-            {
-                Id = Guid.NewGuid(),
-                OrganizationId = organization.Id,
-                Slug = "check-test-team",
-                Name = "Check Test Team",
-                MonthlyBudget = -100m, // Invalid: negative budget
-            };
-
-            context.Organizations.Add(organization);
-            context.Teams.Add(team);
-
-            // Act & Assert
-            await Assert.ThrowsAsync<DbUpdateException>(async () =>
-            {
-                await context.SaveChangesAsync();
-            });
+            jsonElement.GetBoolean().Should().BeTrue();
         }
-
-        /// <summary>
-        /// Verifies that JSON columns work correctly.
-        /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-        [Fact]
-        public async Task JsonColumns_WorkCorrectly()
+        else
         {
-            // Arrange
-            using var context = CreateContext();
-            await context.Database.MigrateAsync();
-
-            var organization = new Organization
-            {
-                Id = Guid.NewGuid(),
-                Slug = "json-test-org",
-                Name = "JSON Test Organization",
-                PrimaryRegion = "eu-west-1",
-                PrivacyConsent = new System.Collections.Generic.Dictionary<string, object>(System.StringComparer.Ordinal)
-                {
-                    { "gdpr_accepted", true },
-                    { "consent_date", DateTime.UtcNow.ToString("O", System.Globalization.CultureInfo.InvariantCulture) },
-                    { "version", "1.0" },
-                },
-            };
-
-            // Act
-            context.Organizations.Add(organization);
-            await context.SaveChangesAsync();
-
-            // Clear context to force reload from database
-            context.ChangeTracker.Clear();
-
-            // Assert
-            var savedOrg = await context.Organizations.FindAsync(organization.Id);
-            savedOrg.Should().NotBeNull();
-            savedOrg?.PrivacyConsent.Should().NotBeNull();
-            savedOrg?.PrivacyConsent.Should().ContainKey("gdpr_accepted");
-
-            // JSON deserialization returns JsonElement, so we need to extract the boolean value
-            var gdprAccepted = savedOrg?.PrivacyConsent["gdpr_accepted"];
-            if (gdprAccepted is System.Text.Json.JsonElement jsonElement)
-            {
-                jsonElement.GetBoolean().Should().BeTrue();
-            }
-            else
-            {
-                gdprAccepted.Should().Be(true);
-            }
+            gdprAccepted.Should().Be(true);
         }
+    }
 
-        private static async Task<bool> TableExistsAsync(SynaxisDbContext context, string tableName)
-        {
+    private static async Task<bool> TableExistsAsync(SynaxisDbContext context, string tableName)
+    {
 #pragma warning disable IDISP001 // Dispose created - connection is managed by EF Core
-            var connection = context.Database.GetDbConnection();
+        var connection = context.Database.GetDbConnection();
 #pragma warning restore IDISP001
 
-            // Only open connection if it's not already open
-            var shouldClose = false;
-            if (connection.State != System.Data.ConnectionState.Open)
-            {
-                await connection.OpenAsync().ConfigureAwait(false);
-                shouldClose = true;
-            }
+        // Only open connection if it's not already open
+        var shouldClose = false;
+        if (connection.State != System.Data.ConnectionState.Open)
+        {
+            await connection.OpenAsync().ConfigureAwait(false);
+            shouldClose = true;
+        }
 
-            try
-            {
-                using var command = connection.CreateCommand();
-                command.CommandText = @"
+        try
+        {
+            using var command = connection.CreateCommand();
+            command.CommandText = @"
                     SELECT EXISTS (
                         SELECT 1 FROM information_schema.tables
                         WHERE table_schema = 'public'
                         AND table_name = @tableName
                     );";
 
-                var parameter = command.CreateParameter();
-                parameter.ParameterName = "@tableName";
-                parameter.Value = tableName;
-                command.Parameters.Add(parameter);
+            var parameter = command.CreateParameter();
+            parameter.ParameterName = "@tableName";
+            parameter.Value = tableName;
+            command.Parameters.Add(parameter);
 
-                var result = await command.ExecuteScalarAsync().ConfigureAwait(false);
-                return result is bool exists && exists;
-            }
-            finally
+            var result = await command.ExecuteScalarAsync().ConfigureAwait(false);
+            return result is bool exists && exists;
+        }
+        finally
+        {
+            if (shouldClose)
             {
-                if (shouldClose)
-                {
-                    await connection.CloseAsync().ConfigureAwait(false);
-                }
+                await connection.CloseAsync().ConfigureAwait(false);
             }
         }
     }

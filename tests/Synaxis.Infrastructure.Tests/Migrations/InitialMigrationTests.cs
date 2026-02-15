@@ -2,246 +2,245 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Infrastructure.Tests.Migrations
+namespace Synaxis.Infrastructure.Tests.Migrations;
+
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
+using Synaxis.Core.Models;
+using Synaxis.Infrastructure.Data;
+using Xunit;
+
+/// <summary>
+/// Tests for the initial multi-tenant migration using TDD approach.
+/// </summary>
+public class InitialMigrationTests
 {
-    using System;
-    using System.Linq;
-    using System.Threading.Tasks;
-    using FluentAssertions;
-    using Microsoft.EntityFrameworkCore;
-    using Synaxis.Core.Models;
-    using Synaxis.Infrastructure.Data;
-    using Xunit;
+    /// <summary>
+    /// Verifies that the migration can be applied to an empty database.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task Migration_CanBeApplied_ToEmptyDatabase()
+    {
+        // Arrange
+        var options = new DbContextOptionsBuilder<SynaxisDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        using var context = new SynaxisDbContext(options);
+
+        // Act
+        await context.Database.EnsureCreatedAsync();
+
+        // Assert
+        (await context.Database.CanConnectAsync()).Should().BeTrue();
+    }
 
     /// <summary>
-    /// Tests for the initial multi-tenant migration using TDD approach.
+    /// Verifies that all required tables are created by the migration.
     /// </summary>
-    public class InitialMigrationTests
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task Migration_CreatesAllRequiredTables()
     {
-        /// <summary>
-        /// Verifies that the migration can be applied to an empty database.
-        /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-        [Fact]
-        public async Task Migration_CanBeApplied_ToEmptyDatabase()
+        // Arrange
+        var options = new DbContextOptionsBuilder<SynaxisDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        using var context = new SynaxisDbContext(options);
+
+        // Act
+        await context.Database.EnsureCreatedAsync();
+
+        // Assert
+        // Check that all DbSet properties can be accessed (tables exist conceptually)
+        var organizations = await context.Organizations.ToListAsync();
+        var teams = await context.Teams.ToListAsync();
+        var users = await context.Users.ToListAsync();
+        var memberships = await context.TeamMemberships.ToListAsync();
+        var virtualKeys = await context.VirtualKeys.ToListAsync();
+        var requests = await context.Requests.ToListAsync();
+        var subscriptionPlans = await context.SubscriptionPlans.ToListAsync();
+        var auditLogs = await context.AuditLogs.ToListAsync();
+        var spendLogs = await context.SpendLogs.ToListAsync();
+        var creditTransactions = await context.CreditTransactions.ToListAsync();
+        var invoices = await context.Invoices.ToListAsync();
+        var backupConfigs = await context.BackupConfigs.ToListAsync();
+
+        // All should be empty but accessible (no exception means tables exist)
+        organizations.Should().BeEmpty();
+        teams.Should().BeEmpty();
+        users.Should().BeEmpty();
+        memberships.Should().BeEmpty();
+        virtualKeys.Should().BeEmpty();
+        requests.Should().BeEmpty();
+        subscriptionPlans.Should().BeEmpty();
+        auditLogs.Should().BeEmpty();
+        spendLogs.Should().BeEmpty();
+        creditTransactions.Should().BeEmpty();
+        invoices.Should().BeEmpty();
+        backupConfigs.Should().BeEmpty();
+    }
+
+    /// <summary>
+    /// Verifies that organization slug has a unique index.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task Organization_Slug_HasUniqueIndex()
+    {
+        // Arrange
+        var options = new DbContextOptionsBuilder<SynaxisDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        using var context = new SynaxisDbContext(options);
+        await context.Database.EnsureCreatedAsync();
+
+        var org1 = new Organization
         {
-            // Arrange
-            var options = new DbContextOptionsBuilder<SynaxisDbContext>()
-                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-                .Options;
+            Id = Guid.NewGuid(),
+            Slug = "test-org",
+            Name = "Test Organization 1",
+            PrimaryRegion = "eu-west-1",
+        };
 
-            using var context = new SynaxisDbContext(options);
-
-            // Act
-            await context.Database.EnsureCreatedAsync();
-
-            // Assert
-            (await context.Database.CanConnectAsync()).Should().BeTrue();
-        }
-
-        /// <summary>
-        /// Verifies that all required tables are created by the migration.
-        /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-        [Fact]
-        public async Task Migration_CreatesAllRequiredTables()
+        var org2 = new Organization
         {
-            // Arrange
-            var options = new DbContextOptionsBuilder<SynaxisDbContext>()
-                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-                .Options;
+            Id = Guid.NewGuid(),
+            Slug = "test-org",
+            Name = "Test Organization 2",
+            PrimaryRegion = "us-east-1",
+        };
 
-            using var context = new SynaxisDbContext(options);
+        context.Organizations.Add(org1);
+        await context.SaveChangesAsync();
 
-            // Act
-            await context.Database.EnsureCreatedAsync();
+        context.Organizations.Add(org2);
 
-            // Assert
-            // Check that all DbSet properties can be accessed (tables exist conceptually)
-            var organizations = await context.Organizations.ToListAsync();
-            var teams = await context.Teams.ToListAsync();
-            var users = await context.Users.ToListAsync();
-            var memberships = await context.TeamMemberships.ToListAsync();
-            var virtualKeys = await context.VirtualKeys.ToListAsync();
-            var requests = await context.Requests.ToListAsync();
-            var subscriptionPlans = await context.SubscriptionPlans.ToListAsync();
-            var auditLogs = await context.AuditLogs.ToListAsync();
-            var spendLogs = await context.SpendLogs.ToListAsync();
-            var creditTransactions = await context.CreditTransactions.ToListAsync();
-            var invoices = await context.Invoices.ToListAsync();
-            var backupConfigs = await context.BackupConfigs.ToListAsync();
+        // Act & Assert - In InMemory, this won't throw unique constraint exception
+        // But with real PostgreSQL migration, this should fail
+        // This test validates the model is configured for uniqueness
+        var slugProperty = context.Model.FindEntityType(typeof(Organization))?
+            .FindProperty("Slug");
+        slugProperty.Should().NotBeNull();
+    }
 
-            // All should be empty but accessible (no exception means tables exist)
-            organizations.Should().BeEmpty();
-            teams.Should().BeEmpty();
-            users.Should().BeEmpty();
-            memberships.Should().BeEmpty();
-            virtualKeys.Should().BeEmpty();
-            requests.Should().BeEmpty();
-            subscriptionPlans.Should().BeEmpty();
-            auditLogs.Should().BeEmpty();
-            spendLogs.Should().BeEmpty();
-            creditTransactions.Should().BeEmpty();
-            invoices.Should().BeEmpty();
-            backupConfigs.Should().BeEmpty();
-        }
+    /// <summary>
+    /// Verifies that foreign keys are properly configured between entities.
+    /// </summary>
+    [Fact]
+    public void Migration_HasProperForeignKeyRelationships()
+    {
+        // Arrange
+        var options = new DbContextOptionsBuilder<SynaxisDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
 
-        /// <summary>
-        /// Verifies that organization slug has a unique index.
-        /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-        [Fact]
-        public async Task Organization_Slug_HasUniqueIndex()
-        {
-            // Arrange
-            var options = new DbContextOptionsBuilder<SynaxisDbContext>()
-                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-                .Options;
+        using var context = new SynaxisDbContext(options);
 
-            using var context = new SynaxisDbContext(options);
-            await context.Database.EnsureCreatedAsync();
+        // Act & Assert
+        var model = context.Model;
 
-            var org1 = new Organization
-            {
-                Id = Guid.NewGuid(),
-                Slug = "test-org",
-                Name = "Test Organization 1",
-                PrimaryRegion = "eu-west-1",
-            };
+        // User -> Organization relationship
+        var userEntity = model.FindEntityType(typeof(User));
+        var userOrgFk = userEntity?.GetForeignKeys()
+            .FirstOrDefault(fk => fk.PrincipalEntityType.ClrType == typeof(Organization));
+        userOrgFk.Should().NotBeNull();
 
-            var org2 = new Organization
-            {
-                Id = Guid.NewGuid(),
-                Slug = "test-org",
-                Name = "Test Organization 2",
-                PrimaryRegion = "us-east-1",
-            };
+        // Team -> Organization relationship
+        var teamEntity = model.FindEntityType(typeof(Team));
+        var teamOrgFk = teamEntity?.GetForeignKeys()
+            .FirstOrDefault(fk => fk.PrincipalEntityType.ClrType == typeof(Organization));
+        teamOrgFk.Should().NotBeNull();
 
-            context.Organizations.Add(org1);
-            await context.SaveChangesAsync();
+        // TeamMembership -> User relationship
+        var membershipEntity = model.FindEntityType(typeof(TeamMembership));
+        var membershipUserFk = membershipEntity?.GetForeignKeys()
+            .FirstOrDefault(fk => fk.PrincipalEntityType.ClrType == typeof(User));
+        membershipUserFk.Should().NotBeNull();
 
-            context.Organizations.Add(org2);
+        // TeamMembership -> Team relationship
+        var membershipTeamFk = membershipEntity?.GetForeignKeys()
+            .FirstOrDefault(fk => fk.PrincipalEntityType.ClrType == typeof(Team));
+        membershipTeamFk.Should().NotBeNull();
 
-            // Act & Assert - In InMemory, this won't throw unique constraint exception
-            // But with real PostgreSQL migration, this should fail
-            // This test validates the model is configured for uniqueness
-            var slugProperty = context.Model.FindEntityType(typeof(Organization))?
-                .FindProperty("Slug");
-            slugProperty.Should().NotBeNull();
-        }
+        // VirtualKey -> Organization relationship
+        var virtualKeyEntity = model.FindEntityType(typeof(VirtualKey));
+        var vkOrgFk = virtualKeyEntity?.GetForeignKeys()
+            .FirstOrDefault(fk => fk.PrincipalEntityType.ClrType == typeof(Organization));
+        vkOrgFk.Should().NotBeNull();
 
-        /// <summary>
-        /// Verifies that foreign keys are properly configured between entities.
-        /// </summary>
-        [Fact]
-        public void Migration_HasProperForeignKeyRelationships()
-        {
-            // Arrange
-            var options = new DbContextOptionsBuilder<SynaxisDbContext>()
-                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-                .Options;
+        // VirtualKey -> Team relationship
+        var vkTeamFk = virtualKeyEntity?.GetForeignKeys()
+            .FirstOrDefault(fk => fk.PrincipalEntityType.ClrType == typeof(Team));
+        vkTeamFk.Should().NotBeNull();
 
-            using var context = new SynaxisDbContext(options);
+        // Request -> Organization relationship
+        var requestEntity = model.FindEntityType(typeof(Request));
+        var requestOrgFk = requestEntity?.GetForeignKeys()
+            .FirstOrDefault(fk => fk.PrincipalEntityType.ClrType == typeof(Organization));
+        requestOrgFk.Should().NotBeNull();
+    }
 
-            // Act & Assert
-            var model = context.Model;
+    /// <summary>
+    /// Verifies that cascade delete rules are configured correctly.
+    /// </summary>
+    [Fact]
+    public void Migration_HasCorrectCascadeDeleteRules()
+    {
+        // Arrange
+        var options = new DbContextOptionsBuilder<SynaxisDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
 
-            // User -> Organization relationship
-            var userEntity = model.FindEntityType(typeof(User));
-            var userOrgFk = userEntity?.GetForeignKeys()
-                .FirstOrDefault(fk => fk.PrincipalEntityType.ClrType == typeof(Organization));
-            userOrgFk.Should().NotBeNull();
+        using var context = new SynaxisDbContext(options);
 
-            // Team -> Organization relationship
-            var teamEntity = model.FindEntityType(typeof(Team));
-            var teamOrgFk = teamEntity?.GetForeignKeys()
-                .FirstOrDefault(fk => fk.PrincipalEntityType.ClrType == typeof(Organization));
-            teamOrgFk.Should().NotBeNull();
+        // Act & Assert
+        var model = context.Model;
 
-            // TeamMembership -> User relationship
-            var membershipEntity = model.FindEntityType(typeof(TeamMembership));
-            var membershipUserFk = membershipEntity?.GetForeignKeys()
-                .FirstOrDefault(fk => fk.PrincipalEntityType.ClrType == typeof(User));
-            membershipUserFk.Should().NotBeNull();
+        // When Organization is deleted, Teams should be deleted (Cascade)
+        var teamEntity = model.FindEntityType(typeof(Team));
+        var teamOrgFk = teamEntity?.GetForeignKeys()
+            .FirstOrDefault(fk => fk.PrincipalEntityType.ClrType == typeof(Organization));
+        teamOrgFk.Should().NotBeNull();
+        teamOrgFk?.DeleteBehavior.Should().Be(DeleteBehavior.Cascade);
 
-            // TeamMembership -> Team relationship
-            var membershipTeamFk = membershipEntity?.GetForeignKeys()
-                .FirstOrDefault(fk => fk.PrincipalEntityType.ClrType == typeof(Team));
-            membershipTeamFk.Should().NotBeNull();
+        // When Organization is deleted, Users should be deleted (Cascade)
+        var userEntity = model.FindEntityType(typeof(User));
+        var userOrgFk = userEntity?.GetForeignKeys()
+            .FirstOrDefault(fk => fk.PrincipalEntityType.ClrType == typeof(Organization));
+        userOrgFk.Should().NotBeNull();
+        userOrgFk?.DeleteBehavior.Should().Be(DeleteBehavior.Cascade);
 
-            // VirtualKey -> Organization relationship
-            var virtualKeyEntity = model.FindEntityType(typeof(VirtualKey));
-            var vkOrgFk = virtualKeyEntity?.GetForeignKeys()
-                .FirstOrDefault(fk => fk.PrincipalEntityType.ClrType == typeof(Organization));
-            vkOrgFk.Should().NotBeNull();
+        // When User is deleted, TeamMemberships should be deleted (Cascade)
+        var membershipEntity = model.FindEntityType(typeof(TeamMembership));
+        var membershipUserFk = membershipEntity?.GetForeignKeys()
+            .FirstOrDefault(fk => fk.PrincipalEntityType.ClrType == typeof(User) && fk.Properties.Any(p => string.Equals(p.Name, "UserId", StringComparison.Ordinal)));
+        membershipUserFk.Should().NotBeNull();
+        membershipUserFk?.DeleteBehavior.Should().Be(DeleteBehavior.Cascade);
 
-            // VirtualKey -> Team relationship
-            var vkTeamFk = virtualKeyEntity?.GetForeignKeys()
-                .FirstOrDefault(fk => fk.PrincipalEntityType.ClrType == typeof(Team));
-            vkTeamFk.Should().NotBeNull();
+        // When Team is deleted, TeamMemberships should be deleted (Cascade)
+        var membershipTeamFk = membershipEntity?.GetForeignKeys()
+            .FirstOrDefault(fk => fk.PrincipalEntityType.ClrType == typeof(Team));
+        membershipTeamFk.Should().NotBeNull();
+        membershipTeamFk?.DeleteBehavior.Should().Be(DeleteBehavior.Cascade);
 
-            // Request -> Organization relationship
-            var requestEntity = model.FindEntityType(typeof(Request));
-            var requestOrgFk = requestEntity?.GetForeignKeys()
-                .FirstOrDefault(fk => fk.PrincipalEntityType.ClrType == typeof(Organization));
-            requestOrgFk.Should().NotBeNull();
-        }
+        // When Organization is deleted, VirtualKeys should be deleted (Cascade)
+        var virtualKeyEntity = model.FindEntityType(typeof(VirtualKey));
+        var vkOrgFk = virtualKeyEntity?.GetForeignKeys()
+            .FirstOrDefault(fk => fk.PrincipalEntityType.ClrType == typeof(Organization));
+        vkOrgFk.Should().NotBeNull();
+        vkOrgFk?.DeleteBehavior.Should().Be(DeleteBehavior.Cascade);
 
-        /// <summary>
-        /// Verifies that cascade delete rules are configured correctly.
-        /// </summary>
-        [Fact]
-        public void Migration_HasCorrectCascadeDeleteRules()
-        {
-            // Arrange
-            var options = new DbContextOptionsBuilder<SynaxisDbContext>()
-                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-                .Options;
-
-            using var context = new SynaxisDbContext(options);
-
-            // Act & Assert
-            var model = context.Model;
-
-            // When Organization is deleted, Teams should be deleted (Cascade)
-            var teamEntity = model.FindEntityType(typeof(Team));
-            var teamOrgFk = teamEntity?.GetForeignKeys()
-                .FirstOrDefault(fk => fk.PrincipalEntityType.ClrType == typeof(Organization));
-            teamOrgFk.Should().NotBeNull();
-            teamOrgFk?.DeleteBehavior.Should().Be(DeleteBehavior.Cascade);
-
-            // When Organization is deleted, Users should be deleted (Cascade)
-            var userEntity = model.FindEntityType(typeof(User));
-            var userOrgFk = userEntity?.GetForeignKeys()
-                .FirstOrDefault(fk => fk.PrincipalEntityType.ClrType == typeof(Organization));
-            userOrgFk.Should().NotBeNull();
-            userOrgFk?.DeleteBehavior.Should().Be(DeleteBehavior.Cascade);
-
-            // When User is deleted, TeamMemberships should be deleted (Cascade)
-            var membershipEntity = model.FindEntityType(typeof(TeamMembership));
-            var membershipUserFk = membershipEntity?.GetForeignKeys()
-                .FirstOrDefault(fk => fk.PrincipalEntityType.ClrType == typeof(User) && fk.Properties.Any(p => string.Equals(p.Name, "UserId", StringComparison.Ordinal)));
-            membershipUserFk.Should().NotBeNull();
-            membershipUserFk?.DeleteBehavior.Should().Be(DeleteBehavior.Cascade);
-
-            // When Team is deleted, TeamMemberships should be deleted (Cascade)
-            var membershipTeamFk = membershipEntity?.GetForeignKeys()
-                .FirstOrDefault(fk => fk.PrincipalEntityType.ClrType == typeof(Team));
-            membershipTeamFk.Should().NotBeNull();
-            membershipTeamFk?.DeleteBehavior.Should().Be(DeleteBehavior.Cascade);
-
-            // When Organization is deleted, VirtualKeys should be deleted (Cascade)
-            var virtualKeyEntity = model.FindEntityType(typeof(VirtualKey));
-            var vkOrgFk = virtualKeyEntity?.GetForeignKeys()
-                .FirstOrDefault(fk => fk.PrincipalEntityType.ClrType == typeof(Organization));
-            vkOrgFk.Should().NotBeNull();
-            vkOrgFk?.DeleteBehavior.Should().Be(DeleteBehavior.Cascade);
-
-            // When Team is deleted, VirtualKeys should be deleted (Cascade)
-            var vkTeamFk = virtualKeyEntity?.GetForeignKeys()
-                .FirstOrDefault(fk => fk.PrincipalEntityType.ClrType == typeof(Team));
-            vkTeamFk.Should().NotBeNull();
-            vkTeamFk?.DeleteBehavior.Should().Be(DeleteBehavior.Cascade);
-        }
+        // When Team is deleted, VirtualKeys should be deleted (Cascade)
+        var vkTeamFk = virtualKeyEntity?.GetForeignKeys()
+            .FirstOrDefault(fk => fk.PrincipalEntityType.ClrType == typeof(Team));
+        vkTeamFk.Should().NotBeNull();
+        vkTeamFk?.DeleteBehavior.Should().Be(DeleteBehavior.Cascade);
     }
 }

@@ -5,43 +5,35 @@
 using System;
 using System.Threading.Tasks;
 
-namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure
+namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests.Infrastructure;
+
+public class RetryPolicy(int maxRetries, int initialDelayMs, double backoffMultiplier)
 {
-    public class RetryPolicy
+    private readonly int _maxRetries = maxRetries;
+    private readonly int _initialDelayMs = initialDelayMs;
+    private readonly double _backoffMultiplier = backoffMultiplier;
+    private readonly Random _rng = new Random();
+
+    public async Task<T> ExecuteAsync<T>(Func<Task<T>> action, Func<Exception, bool> shouldRetry)
     {
-        private readonly int _maxRetries;
-        private readonly int _initialDelayMs;
-        private readonly double _backoffMultiplier;
-        private readonly Random _rng = new Random();
+        int attempt = 0;
+        int delay = this._initialDelayMs;
 
-        public RetryPolicy(int maxRetries, int initialDelayMs, double backoffMultiplier)
+        while (true)
         {
-            this._maxRetries = maxRetries;
-            this._initialDelayMs = initialDelayMs;
-            this._backoffMultiplier = backoffMultiplier;
-        }
-
-        public async Task<T> ExecuteAsync<T>(Func<Task<T>> action, Func<Exception, bool> shouldRetry)
-        {
-            int attempt = 0;
-            int delay = this._initialDelayMs;
-
-            while (true)
+            try
             {
-                try
-                {
-                    return await action().ConfigureAwait(false);
-                }
-                catch (Exception ex) when (shouldRetry(ex) && attempt < this._maxRetries)
-                {
-                    attempt++;
+                return await action().ConfigureAwait(false);
+            }
+            catch (Exception ex) when (shouldRetry(ex) && attempt < this._maxRetries)
+            {
+                attempt++;
 
-                    // Exponential backoff with multiplier and 10% jitter
-                    double jitter = 1.0 + ((this._rng.NextDouble() * 0.2) - 0.1); // between 0.9 and 1.1
-                    int delayWithJitter = Math.Max(0, (int)(delay * jitter));
-                    await Task.Delay(delayWithJitter).ConfigureAwait(false);
-                    delay = (int)(delay * this._backoffMultiplier);
-                }
+                // Exponential backoff with multiplier and 10% jitter
+                double jitter = 1.0 + ((this._rng.NextDouble() * 0.2) - 0.1); // between 0.9 and 1.1
+                int delayWithJitter = Math.Max(0, (int)(delay * jitter));
+                await Task.Delay(delayWithJitter).ConfigureAwait(false);
+                delay = (int)(delay * this._backoffMultiplier);
             }
         }
     }
