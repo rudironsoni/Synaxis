@@ -235,7 +235,7 @@ StringComparer.Ordinal)
 
             if (regionDistances.Count > 0)
             {
-                return regionDistances[0].region;
+                return regionDistances[0].Region;
             }
 
             // Fallback to us-east-1 if all else fails
@@ -309,7 +309,7 @@ StringComparer.Ordinal)
             return "adequacy";
         }
 
-        private async Task<bool> IsRegionHealthyAsync()
+        private async Task<bool> IsRegionHealthyAsync(string region)
         {
             // In production, call health check endpoint
             // For now, assume all regions are healthy

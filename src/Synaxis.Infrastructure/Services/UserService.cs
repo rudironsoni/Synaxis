@@ -407,17 +407,16 @@ namespace Synaxis.Infrastructure.Services
                 {
                     // Remove the used backup code
                     var remainingCodes = hashedBackupCodes.Where(c => !string.Equals(c, matchedCode, StringComparison.Ordinal)).ToArray();
-                        user.MfaBackupCodes = remainingCodes.Length > 0 ? string.Join(",", remainingCodes) : null;
+                    user.MfaBackupCodes = remainingCodes.Length > 0 ? string.Join(",", remainingCodes) : null;
 
-                        // Disable MFA
-                        user.MfaEnabled = false;
-                        user.MfaSecret = null;
-                        user.UpdatedAt = DateTime.UtcNow;
+                    // Disable MFA
+                    user.MfaEnabled = false;
+                    user.MfaSecret = null;
+                    user.UpdatedAt = DateTime.UtcNow;
 
-                        await this._context.SaveChangesAsync().ConfigureAwait(false);
+                    await this._context.SaveChangesAsync().ConfigureAwait(false);
 
-                        return true;
-                    }
+                    return true;
                 }
             }
 

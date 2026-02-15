@@ -420,7 +420,7 @@ namespace Synaxis.Infrastructure.Services
             return combined;
         }
 
-        private async Task<string> StoreBackupAsync(string backupId, string region)
+        private async Task<string> StoreBackupAsync(string backupId, byte[] data, string region)
         {
             // Simulated - in production would upload to S3/GCS/Azure Blob
             await Task.CompletedTask.ConfigureAwait(false);
@@ -455,11 +455,28 @@ namespace Synaxis.Infrastructure.Services
             return Encoding.UTF8.GetBytes(data);
         }
 
-        private async Task<bool> RestorePostgreSQLBackupAsync()
+        private async Task<bool> RestorePostgreSQLBackupAsync(Guid organizationId, byte[] backupData)
         {
-            // Simulated - in production would execute pg_restore
-            await Task.CompletedTask.ConfigureAwait(false);
-            return true;
+            // Simulated - in production would restore PostgreSQL from backup
+            return await Task.FromResult(true).ConfigureAwait(false);
+        }
+
+        private async Task<bool> RestoreRedisBackupAsync(Guid organizationId, byte[] backupData)
+        {
+            // Simulated - in production would restore Redis from backup
+            return await Task.FromResult(true).ConfigureAwait(false);
+        }
+
+        private async Task<bool> RestoreQdrantBackupAsync(Guid organizationId, byte[] backupData)
+        {
+            // Simulated - in production would restore Qdrant from backup
+            return await Task.FromResult(true).ConfigureAwait(false);
+        }
+
+        private async Task<bool> RestoreFullBackupAsync(Guid organizationId, byte[] backupData)
+        {
+            // Simulated - in production would restore full backup
+            return await Task.FromResult(true).ConfigureAwait(false);
         }
 
         private async Task<bool> RestoreRedisBackupAsync()
@@ -483,7 +500,7 @@ namespace Synaxis.Infrastructure.Services
             return true;
         }
 
-        private Task DeleteBackupFromStorageAsync()
+        private Task DeleteBackupFromStorageAsync(string backupId, string region)
         {
             // Simulated - in production would delete from object storage
             return Task.CompletedTask;
