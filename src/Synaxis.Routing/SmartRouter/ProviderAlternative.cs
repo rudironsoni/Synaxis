@@ -11,9 +11,24 @@ public class ProviderAlternative
     public Provider Provider { get; set; } = new();
 
     /// <summary>
+    /// Gets or sets the provider ID.
+    /// </summary>
+    public string ProviderId { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the provider name.
+    /// </summary>
+    public string ProviderName { get; set; } = string.Empty;
+
+    /// <summary>
     /// Gets or sets the score for this alternative (lower is better).
     /// </summary>
     public double Score { get; set; }
+
+    /// <summary>
+    /// Gets or sets the confidence score for this alternative.
+    /// </summary>
+    public double ConfidenceScore { get; set; }
 
     /// <summary>
     /// Gets or sets the reason this provider is an alternative.

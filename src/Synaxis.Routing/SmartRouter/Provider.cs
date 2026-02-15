@@ -1,3 +1,7 @@
+// <copyright file="Provider.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.Routing.SmartRouter;
 
 /// <summary>
@@ -54,4 +58,9 @@ public class Provider
     /// Gets or sets the rate limit in requests per minute.
     /// </summary>
     public int RateLimitRpm { get; set; } = 60;
+
+    /// <summary>
+    /// Gets or sets the capabilities supported by this provider.
+    /// </summary>
+    public List<string> Capabilities { get; set; } = new();
 }

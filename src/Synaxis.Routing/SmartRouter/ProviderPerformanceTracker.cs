@@ -1,102 +1,13 @@
-using System.Collections.Concurrent;
+// <copyright file="ProviderPerformanceTracker.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
-namespace Synaxis.Routing.SmartRouter;
+#nullable enable
 
-/// <summary>
-/// Represents performance metrics for a specific provider.
-/// </summary>
-public class ProviderPerformanceMetrics
+namespace Synaxis.Routing.SmartRouter
 {
-    /// <summary>
-    /// Gets or sets the provider ID.
-    /// </summary>
-    public string ProviderId { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Gets or sets the total number of requests made to this provider.
-    /// </summary>
-    public int TotalRequests { get; set; }
-
-    /// <summary>
-    /// Gets or sets the number of successful requests.
-    /// </summary>
-    public int SuccessfulRequests { get; set; }
-
-    /// <summary>
-    /// Gets or sets the number of failed requests.
-    /// </summary>
-    public int FailedRequests { get; set; }
-
-    /// <summary>
-    /// Gets or sets the success rate as a percentage (0.0 to 100.0).
-    /// </summary>
-    public double SuccessRate => TotalRequests == 0 ? 0.0 : (double)SuccessfulRequests / TotalRequests * 100.0;
-
-    /// <summary>
-    /// Gets or sets the average response time in milliseconds.
-    /// </summary>
-    public double AverageLatencyMs { get; set; }
-
-    /// <summary>
-    /// Gets or sets the P50 latency (median) in milliseconds.
-    /// </summary>
-    public double P50LatencyMs { get; set; }
-
-    /// <summary>
-    /// Gets or sets the P95 latency in milliseconds.
-    /// </summary>
-    public double P95LatencyMs { get; set; }
-
-    /// <summary>
-    /// Gets or sets the P99 latency in milliseconds.
-    /// </summary>
-    public double P99LatencyMs { get; set; }
-
-    /// <summary>
-    /// Gets or sets the total input tokens processed.
-    /// </summary>
-    public long TotalInputTokens { get; set; }
-
-    /// <summary>
-    /// Gets or sets the total output tokens processed.
-    /// </summary>
-    public long TotalOutputTokens { get; set; }
-
-    /// <summary>
-    /// Gets or sets the total cost incurred.
-    /// </summary>
-    public decimal TotalCost { get; set; }
-
-    /// <summary>
-    /// Gets or sets the average cost per request.
-    /// </summary>
-    public decimal AverageCostPerRequest => TotalRequests == 0 ? 0 : TotalCost / TotalRequests;
-
-    /// <summary>
-    /// Gets or sets the timestamp of the last request.
-    /// </summary>
-    public DateTime? LastRequestTime { get; set; }
-
-    /// <summary>
-    /// Gets or sets the timestamp of the last successful request.
-    /// </summary>
-    public DateTime? LastSuccessTime { get; set; }
-
-    /// <summary>
-    /// Gets or sets the timestamp of the last failure.
-    /// </summary>
-    public DateTime? LastFailureTime { get; set; }
-
-    /// <summary>
-    /// Gets or sets the number of consecutive failures.
-    /// </summary>
-    public int ConsecutiveFailures { get; set; }
-
-    /// <summary>
-    /// Gets or sets the timestamp when metrics were last updated.
-    /// </summary>
-    public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
-}
+    using System.Collections.Concurrent;
+    using Synaxis.Routing.Health;
 
 /// <summary>
 /// Tracks performance metrics for AI providers.
@@ -293,6 +204,37 @@ public class ProviderPerformanceTracker
         return ProviderHealthStatus.Healthy;
     }
 
+    /// <summary>
+    /// Gets the health status of a provider.
+    /// </summary>
+    /// <param name="providerId">The provider ID.</param>
+    /// <returns>The health status.</returns>
+    public HealthStatus GetHealth(string providerId)
+    {
+        var metrics = GetMetrics(providerId);
+        if (metrics == null)
+        {
+            return HealthStatus.Healthy;
+        }
+
+        if (metrics.TotalRequests == 0)
+        {
+            return HealthStatus.Healthy;
+        }
+
+        if (metrics.ConsecutiveFailures >= 5)
+        {
+            return HealthStatus.Unhealthy;
+        }
+
+        if (metrics.SuccessRate < 50.0)
+        {
+            return HealthStatus.Degraded;
+        }
+
+        return HealthStatus.Healthy;
+    }
+
     private void UpdateLatencyStatistics(ProviderPerformanceMetrics metrics, List<int> latencyList)
     {
         if (latencyList.Count == 0)
@@ -307,34 +249,4 @@ public class ProviderPerformanceTracker
         metrics.P99LatencyMs = sorted[(int)(sorted.Count * 0.99)];
     }
 }
-
-/// <summary>
-/// Represents the health status of a provider.
-/// </summary>
-public enum ProviderHealthStatus
-{
-    /// <summary>
-    /// The provider health is unknown (no data).
-    /// </summary>
-    Unknown,
-
-    /// <summary>
-    /// The provider is healthy.
-    /// </summary>
-    Healthy,
-
-    /// <summary>
-    /// The provider has some issues but is still functional.
-    /// </summary>
-    Warning,
-
-    /// <summary>
-    /// The provider is degraded.
-    /// </summary>
-    Degraded,
-
-    /// <summary>
-    /// The provider is unhealthy and should not be used.
-    /// </summary>
-    Unhealthy
 }

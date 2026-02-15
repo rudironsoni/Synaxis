@@ -38,7 +38,7 @@ public class RoutingMetrics
     /// <summary>
     /// Gets or sets the provider selection counts.
     /// </summary>
-    public Dictionary<string, int> ProviderSelectionCounts { get; set; } = new();
+    public Dictionary<string, int> ProviderSelectionCounts { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// Gets or sets the timestamp of the last update.
