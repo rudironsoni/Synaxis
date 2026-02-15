@@ -26,6 +26,4 @@
 
   <ItemGroup>
     <Protobuf Include="Protos\synaxis\v1\*.proto" GrpcServices="Server" ProtoRoot="Protos" />
-  </ItemGroup>
-
-</Project>
+  </ItemGroup></Project>
