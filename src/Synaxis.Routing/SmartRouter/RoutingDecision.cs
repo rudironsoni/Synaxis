@@ -1,3 +1,7 @@
+// <copyright file="RoutingDecision.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.Routing.SmartRouter;
 
 /// <summary>
@@ -21,6 +25,11 @@ public class RoutingDecision
     public string Reasoning { get; set; } = string.Empty;
 
     /// <summary>
+    /// Gets or sets the reason for this routing decision.
+    /// </summary>
+    public string Reason { get; set; } = string.Empty;
+
+    /// <summary>
     /// Gets or sets the alternative providers that could be used as fallbacks.
     /// </summary>
     public List<ProviderAlternative> AlternativeProviders { get; set; } = new();
@@ -41,6 +50,11 @@ public class RoutingDecision
     public DateTime DecisionTime { get; set; } = DateTime.UtcNow;
 
     /// <summary>
+    /// Gets or sets the timestamp when this decision was made.
+    /// </summary>
+    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+
+    /// <summary>
     /// Gets or sets the decision ID for tracking.
     /// </summary>
     public string DecisionId { get; set; } = Guid.NewGuid().ToString();
@@ -54,35 +68,4 @@ public class RoutingDecision
     /// Gets or sets the feature values used for the prediction.
     /// </summary>
     public Dictionary<string, double> Features { get; set; } = new();
-}
-
-/// <summary>
-/// Represents an alternative provider option for fallback.
-/// </summary>
-public class ProviderAlternative
-{
-    /// <summary>
-    /// Gets or sets the alternative provider.
-    /// </summary>
-    public Provider Provider { get; set; } = new();
-
-    /// <summary>
-    /// Gets or sets the score for this alternative (lower is better).
-    /// </summary>
-    public double Score { get; set; }
-
-    /// <summary>
-    /// Gets or sets the reason this provider is an alternative.
-    /// </summary>
-    public string Reason { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Gets or sets the predicted latency for this alternative.
-    /// </summary>
-    public int PredictedLatencyMs { get; set; }
-
-    /// <summary>
-    /// Gets or sets the predicted cost for this alternative.
-    /// </summary>
-    public decimal PredictedCost { get; set; }
 }

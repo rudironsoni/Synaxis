@@ -4,6 +4,8 @@ using Synaxis.Routing.CircuitBreaker;
 using Synaxis.Routing.SmartRouter;
 using CircuitBreakerImpl = Synaxis.Routing.CircuitBreaker.CircuitBreaker;
 
+#nullable enable
+
 namespace Synaxis.Routing.Health;
 
 /// <summary>
@@ -220,8 +222,8 @@ public class ProviderHealthMonitor : IProviderHealthChecker
         result.Details["p50_latency_ms"] = metrics.P50LatencyMs;
         result.Details["p95_latency_ms"] = metrics.P95LatencyMs;
         result.Details["p99_latency_ms"] = metrics.P99LatencyMs;
-        result.Details["last_success_time"] = metrics.LastSuccessTime;
-        result.Details["last_failure_time"] = metrics.LastFailureTime;
+        result.Details["last_success_time"] = metrics.LastSuccessTime?.ToString("o") ?? string.Empty;
+        result.Details["last_failure_time"] = metrics.LastFailureTime?.ToString("o") ?? string.Empty;
     }
 
     private void HandleTimeout(
