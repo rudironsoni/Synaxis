@@ -7,7 +7,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>disable</ImplicitUsings>
-    <NoWarn>$(NoWarn);SA1200;SA1101;SA1413;SA1516;MA0004;MA0006;AsyncFixer01;IDISP001;S2325;S6667;S1481</NoWarn>
+
   </PropertyGroup>
 
   <ItemGroup>

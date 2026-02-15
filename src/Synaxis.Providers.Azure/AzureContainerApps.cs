@@ -2,6 +2,8 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
+namespace Synaxis.Providers.Azure;
+
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -9,8 +11,6 @@ using System.Threading.Tasks;
 using global::Polly;
 using Microsoft.Extensions.Logging;
 using Synaxis.Abstractions.Cloud;
-
-namespace Synaxis.Providers.Azure;
 
 /// <summary>
 /// Azure Container Apps implementation of IContainerPlatform.
@@ -49,9 +49,9 @@ public class AzureContainerApps : IContainerPlatform
             throw new ArgumentException("Container app name cannot be null or empty.", nameof(containerAppName));
         }
 
-        _containerAppName = containerAppName;
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _retryPolicy = Policy
+        this._containerAppName = containerAppName;
+        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this._retryPolicy = Policy
             .Handle<Exception>()
             .Or<TimeoutException>()
             .WaitAndRetryAsync(
@@ -59,7 +59,7 @@ public class AzureContainerApps : IContainerPlatform
                 sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
                 onRetry: (outcome, timespan, retryCount, context) =>
                 {
-                    _logger.LogWarning(
+                    this._logger.LogWarning(
                         "Retry {RetryCount} after {Delay}s",
                         retryCount,
                         timespan.TotalSeconds);
@@ -67,48 +67,48 @@ public class AzureContainerApps : IContainerPlatform
     }
 
     /// <inheritdoc />
-    public async Task DeployAsync(
+    public Task DeployAsync(
         string deploymentName,
         string image,
         ContainerConfiguration configuration,
         CancellationToken cancellationToken = default)
     {
-        await _retryPolicy.ExecuteAsync(async () =>
+        return this._retryPolicy.ExecuteAsync(async () =>
         {
-            _logger.LogInformation(
+            this._logger.LogInformation(
                 "Deploying {DeploymentName} with image {Image}",
                 deploymentName,
                 image);
 
-            await Task.CompletedTask;
+            await Task.CompletedTask.ConfigureAwait(false);
         });
     }
 
     /// <inheritdoc />
-    public async Task ScaleAsync(
+    public Task ScaleAsync(
         string deploymentName,
         int replicaCount,
         CancellationToken cancellationToken = default)
     {
-        await _retryPolicy.ExecuteAsync(async () =>
+        return this._retryPolicy.ExecuteAsync(async () =>
         {
-            _logger.LogInformation(
+            this._logger.LogInformation(
                 "Scaling {DeploymentName} to {ReplicaCount} replicas",
                 deploymentName,
                 replicaCount);
 
-            await Task.CompletedTask;
+            await Task.CompletedTask.ConfigureAwait(false);
         });
     }
 
     /// <inheritdoc />
-    public async Task<DeploymentStatus> GetStatusAsync(
+    public Task<DeploymentStatus> GetStatusAsync(
         string deploymentName,
         CancellationToken cancellationToken = default)
     {
-        return await _retryPolicy.ExecuteAsync(async () =>
+        return this._retryPolicy.ExecuteAsync(async () =>
         {
-            _logger.LogInformation("Getting status for {DeploymentName}", deploymentName);
+            this._logger.LogInformation("Getting status for {DeploymentName}", deploymentName);
 
             return new DeploymentStatus
             {
@@ -116,7 +116,7 @@ public class AzureContainerApps : IContainerPlatform
                 State = DeploymentState.Running,
                 RunningReplicas = 1,
                 DesiredReplicas = 1,
-                LastUpdated = DateTime.UtcNow
+                LastUpdated = DateTime.UtcNow,
             };
         });
     }
@@ -125,50 +125,50 @@ public class AzureContainerApps : IContainerPlatform
     public async Task<IReadOnlyList<DeploymentInfo>> ListDeploymentsAsync(
         CancellationToken cancellationToken = default)
     {
-        return await _retryPolicy.ExecuteAsync(async () =>
+        return await this._retryPolicy.ExecuteAsync(async () =>
         {
-            _logger.LogInformation("Listing all deployments");
+            this._logger.LogInformation("Listing all deployments");
 
             return new List<DeploymentInfo>
             {
                 new DeploymentInfo
                 {
-                    Name = _containerAppName,
+                    Name = this._containerAppName,
                     Image = "synaxis/app:latest",
                     State = DeploymentState.Running,
-                    CreatedAt = DateTime.UtcNow
-                }
+                    CreatedAt = DateTime.UtcNow,
+                },
             }.AsReadOnly();
-        });
+        }).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
-    public async Task DeleteAsync(
+    public Task DeleteAsync(
         string deploymentName,
         CancellationToken cancellationToken = default)
     {
-        await _retryPolicy.ExecuteAsync(async () =>
+        return this._retryPolicy.ExecuteAsync(async () =>
         {
-            _logger.LogInformation("Deleting deployment {DeploymentName}", deploymentName);
+            this._logger.LogInformation("Deleting deployment {DeploymentName}", deploymentName);
 
-            await Task.CompletedTask;
+            await Task.CompletedTask.ConfigureAwait(false);
         });
     }
 
     /// <inheritdoc />
-    public async Task<string> GetLogsAsync(
+    public Task<string> GetLogsAsync(
         string deploymentName,
         int? tailLines = null,
         CancellationToken cancellationToken = default)
     {
-        return await _retryPolicy.ExecuteAsync(async () =>
+        return this._retryPolicy.ExecuteAsync(() =>
         {
-            _logger.LogInformation(
+            this._logger.LogInformation(
                 "Getting logs for {DeploymentName} (tail: {TailLines})",
                 deploymentName,
                 tailLines);
 
-            return $"Logs for {deploymentName}\n[System] Container running\n[System] Ready to accept connections";
+            return Task.FromResult($"Logs for {deploymentName}\n[System] Container running\n[System] Ready to accept connections");
         });
     }
 }

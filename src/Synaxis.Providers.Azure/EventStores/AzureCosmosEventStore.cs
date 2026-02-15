@@ -2,6 +2,8 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
+namespace Synaxis.Providers.Azure.EventStores;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,8 +14,6 @@ using global::Polly;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
 using Synaxis.Abstractions.Cloud;
-
-namespace Synaxis.Providers.Azure.EventStores;
 
 /// <summary>
 /// Azure Cosmos DB implementation of IEventStore.
@@ -31,9 +31,9 @@ public class AzureCosmosEventStore : IEventStore
     /// <param name="logger">The logger instance.</param>
     public AzureCosmosEventStore(Container container, ILogger<AzureCosmosEventStore> logger)
     {
-        _container = container ?? throw new ArgumentNullException(nameof(container));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _retryPolicy = Policy
+        this._container = container ?? throw new ArgumentNullException(nameof(container));
+        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this._retryPolicy = Policy
             .Handle<CosmosException>()
             .Or<TimeoutException>()
             .WaitAndRetryAsync(
@@ -41,7 +41,7 @@ public class AzureCosmosEventStore : IEventStore
                 sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
                 onRetry: (outcome, timespan, retryCount, context) =>
                 {
-                    _logger.LogWarning(
+                    this._logger.LogWarning(
                         "Retry {RetryCount} after {Delay}s",
                         retryCount,
                         timespan.TotalSeconds);
@@ -49,15 +49,15 @@ public class AzureCosmosEventStore : IEventStore
     }
 
     /// <inheritdoc />
-    public async Task AppendAsync(
+    public Task AppendAsync(
         string streamId,
         IEnumerable<IDomainEvent> events,
         int expectedVersion,
         CancellationToken cancellationToken = default)
     {
-        await _retryPolicy.ExecuteAsync(async () =>
+        return this._retryPolicy.ExecuteAsync(async () =>
         {
-            var currentVersion = await GetCurrentVersionAsync(streamId, cancellationToken);
+            var currentVersion = await this.GetCurrentVersionAsync(streamId, cancellationToken).ConfigureAwait(false);
             if (currentVersion != expectedVersion)
             {
                 throw new InvalidOperationException(
@@ -77,15 +77,15 @@ public class AzureCosmosEventStore : IEventStore
                     EventType = domainEvent.EventType,
                     Payload = JsonSerializer.Serialize(domainEvent),
                     Metadata = JsonSerializer.Serialize(new { }),
-                    Timestamp = domainEvent.OccurredOn
+                    Timestamp = domainEvent.OccurredOn,
                 };
 
-                tasks.Add(_container.CreateItemAsync(eventDocument, new PartitionKey(streamId), cancellationToken: cancellationToken));
+                tasks.Add(this._container.CreateItemAsync(eventDocument, new PartitionKey(streamId), cancellationToken: cancellationToken));
                 version++;
             }
 
-            await Task.WhenAll(tasks);
-            _logger.LogInformation(
+            await Task.WhenAll(tasks).ConfigureAwait(false);
+            this._logger.LogInformation(
                 "Appended {Count} events to stream {StreamId} starting at version {Version}",
                 events.Count(),
                 streamId,
@@ -100,7 +100,7 @@ public class AzureCosmosEventStore : IEventStore
         int toVersion,
         CancellationToken cancellationToken = default)
     {
-        return await _retryPolicy.ExecuteAsync(async () =>
+        return await this._retryPolicy.ExecuteAsync(async () =>
         {
             var query = new QueryDefinition(
                 "SELECT * FROM e WHERE e.StreamId = @StreamId AND e.Version >= @FromVersion AND e.Version <= @ToVersion ORDER BY e.Version ASC")
@@ -109,11 +109,11 @@ public class AzureCosmosEventStore : IEventStore
                 .WithParameter("@ToVersion", toVersion);
 
             var events = new List<IDomainEvent>();
-            var iterator = _container.GetItemQueryIterator<EventDocument>(query);
+            using var iterator = this._container.GetItemQueryIterator<EventDocument>(query);
 
             while (iterator.HasMoreResults)
             {
-                var response = await iterator.ReadNextAsync(cancellationToken);
+                var response = await iterator.ReadNextAsync(cancellationToken).ConfigureAwait(false);
                 foreach (var document in response)
                 {
                     var eventWrapper = new DomainEventWrapper
@@ -121,14 +121,14 @@ public class AzureCosmosEventStore : IEventStore
                         EventId = document.Id,
                         EventType = document.EventType,
                         OccurredOn = document.Timestamp,
-                        Payload = document.Payload
+                        Payload = document.Payload,
                     };
 
                     events.Add(eventWrapper);
                 }
             }
 
-            _logger.LogInformation(
+            this._logger.LogInformation(
                 "Read {Count} events from stream {StreamId} (version {FromVersion} to {ToVersion})",
                 events.Count,
                 streamId,
@@ -136,26 +136,26 @@ public class AzureCosmosEventStore : IEventStore
                 toVersion);
 
             return events.AsReadOnly();
-        });
+        }).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<IDomainEvent>> ReadStreamAsync(
+    public Task<IReadOnlyList<IDomainEvent>> ReadStreamAsync(
         string streamId,
         CancellationToken cancellationToken = default)
     {
-        return await _retryPolicy.ExecuteAsync(async () =>
+        return this._retryPolicy.ExecuteAsync(async () =>
         {
             var query = new QueryDefinition(
                 "SELECT VALUE MAX(e.Version) FROM e WHERE e.StreamId = @StreamId")
                 .WithParameter("@StreamId", streamId);
 
-            var iterator = _container.GetItemQueryIterator<int>(query);
+            using var iterator = this._container.GetItemQueryIterator<int>(query);
             var maxVersion = 0;
 
             if (iterator.HasMoreResults)
             {
-                var response = await iterator.ReadNextAsync(cancellationToken);
+                var response = await iterator.ReadNextAsync(cancellationToken).ConfigureAwait(false);
                 maxVersion = response.FirstOrDefault();
             }
 
@@ -164,38 +164,38 @@ public class AzureCosmosEventStore : IEventStore
                 return Array.Empty<IDomainEvent>();
             }
 
-            return await ReadAsync(streamId, 1, maxVersion, cancellationToken);
+            return await this.ReadAsync(streamId, 1, maxVersion, cancellationToken).ConfigureAwait(false);
         });
     }
 
     /// <inheritdoc />
-    public async Task DeleteAsync(
+    public Task DeleteAsync(
         string streamId,
         CancellationToken cancellationToken = default)
     {
-        await _retryPolicy.ExecuteAsync(async () =>
+        return this._retryPolicy.ExecuteAsync(async () =>
         {
             var query = new QueryDefinition(
                 "SELECT * FROM e WHERE e.StreamId = @StreamId")
                 .WithParameter("@StreamId", streamId);
 
-            var iterator = _container.GetItemQueryIterator<EventDocument>(query);
+            using var iterator = this._container.GetItemQueryIterator<EventDocument>(query);
             var deleteTasks = new List<Task>();
 
             while (iterator.HasMoreResults)
             {
-                var response = await iterator.ReadNextAsync(cancellationToken);
+                var response = await iterator.ReadNextAsync(cancellationToken).ConfigureAwait(false);
                 foreach (var document in response)
                 {
-                    deleteTasks.Add(_container.DeleteItemAsync<EventDocument>(
+                    deleteTasks.Add(this._container.DeleteItemAsync<EventDocument>(
                         document.Id,
                         new PartitionKey(streamId),
                         cancellationToken: cancellationToken));
                 }
             }
 
-            await Task.WhenAll(deleteTasks);
-            _logger.LogInformation("Deleted stream {StreamId} ({Count} events)", streamId, deleteTasks.Count);
+            await Task.WhenAll(deleteTasks).ConfigureAwait(false);
+            this._logger.LogInformation("Deleted stream {StreamId} ({Count} events)", streamId, deleteTasks.Count);
         });
     }
 
@@ -205,11 +205,11 @@ public class AzureCosmosEventStore : IEventStore
             "SELECT VALUE MAX(e.Version) FROM e WHERE e.StreamId = @StreamId")
             .WithParameter("@StreamId", streamId);
 
-        var iterator = _container.GetItemQueryIterator<int>(query);
+        using var iterator = this._container.GetItemQueryIterator<int>(query);
 
         if (iterator.HasMoreResults)
         {
-            var response = await iterator.ReadNextAsync(cancellationToken);
+            var response = await iterator.ReadNextAsync(cancellationToken).ConfigureAwait(false);
             return response.FirstOrDefault();
         }
 
@@ -222,11 +222,17 @@ public class AzureCosmosEventStore : IEventStore
     private sealed class EventDocument
     {
         public string Id { get; set; } = string.Empty;
+
         public string StreamId { get; set; } = string.Empty;
+
         public int Version { get; set; }
+
         public string EventType { get; set; } = string.Empty;
+
         public string Payload { get; set; } = string.Empty;
+
         public string Metadata { get; set; } = string.Empty;
+
         public DateTime Timestamp { get; set; }
     }
 
@@ -236,8 +242,11 @@ public class AzureCosmosEventStore : IEventStore
     private sealed class DomainEventWrapper : IDomainEvent
     {
         public string EventId { get; set; } = string.Empty;
+
         public DateTime OccurredOn { get; set; }
+
         public string EventType { get; set; } = string.Empty;
+
         public string Payload { get; set; } = string.Empty;
     }
 }
