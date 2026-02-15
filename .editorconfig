@@ -146,3 +146,16 @@ dotnet_diagnostic.SA0001.severity = none
 dotnet_diagnostic.AsyncFixer01.severity = none
 dotnet_diagnostic.MA0004.severity = none
 dotnet_diagnostic.MA0006.severity = none
+
+# C# 10+ Language Features - Enforce as errors per AGENTS.md Section 21.5
+# Global usings should be used (IDE0005 is for unnecessary usings, we want the opposite)
+csharp_style_namespace_declarations = file_scoped:error
+
+# Primary constructors are preferred (C# 12+)
+csharp_style_prefer_primary_constructors = true:error
+
+# Implicit usings are enabled in Directory.Build.props - use them
+dotnet_style_prefer_implicit_using_directives = true:error
+
+# File-scoped namespaces are REQUIRED - block-scoped is an error
+dotnet_diagnostic.IDE0161.severity = error
