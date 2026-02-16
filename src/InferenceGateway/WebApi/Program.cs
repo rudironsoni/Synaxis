@@ -29,6 +29,9 @@ using Serilog;
 using StackExchange.Redis;
 
 using Synaxis.InferenceGateway.Application.Configuration;
+using Synaxis.Transport.Grpc.DependencyInjection;
+using Synaxis.Transport.Http.DependencyInjection;
+using Synaxis.Transport.WebSocket.DependencyInjection;
 using Synaxis.InferenceGateway.Application.ControlPlane;
 using Synaxis.InferenceGateway.Application.Extensions;
 using Synaxis.InferenceGateway.Application.RealTime;
@@ -107,6 +110,11 @@ try
     builder.Services.AddSynaxisInfrastructure(builder.Configuration);
     builder.Services.AddSynaxisApplication(builder.Configuration);
     builder.Services.AddOpenApi();
+
+    // Register transport services
+    builder.Services.AddSynaxisTransportHttp();
+    builder.Services.AddSynaxisTransportGrpc();
+    builder.Services.AddSynaxisTransportWebSocket();
 
     // Register SynaxisDbContext for multi-tenant features
     builder.Services.AddDbContext<Synaxis.Infrastructure.Data.SynaxisDbContext>(options =>
@@ -432,6 +440,10 @@ try
     app.UseMiddleware<OpenAIErrorHandlerMiddleware>();
     app.UseMiddleware<OpenAIMetadataMiddleware>();
 
+    // Add transport middleware
+    app.UseSynaxisTransportHttp();
+    app.UseSynaxisTransportWebSocket();
+
     app.MapOpenAIEndpoints();
     app.MapAntigravityEndpoints();
     app.MapIdentityEndpoints();
@@ -440,6 +452,9 @@ try
     app.MapProvidersEndpoints();
     app.MapAnalyticsEndpoints();
     app.MapControllers();
+
+    // Map transport endpoints
+    app.MapSynaxisTransportGrpc();
 
     app.MapHub<ConfigurationHub>("/hubs/configuration");
     app.MapHub<SynaxisHub>("/hubs/synaxis");

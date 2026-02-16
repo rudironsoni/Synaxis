@@ -38,6 +38,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Synaxis.Core\Synaxis.Core.csproj" />
     <ProjectReference Include="..\..\Synaxis.Infrastructure\Synaxis.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Synaxis.Transport.Grpc\Synaxis.Transport.Grpc.csproj" />
+    <ProjectReference Include="..\..\Synaxis.Transport.Http\Synaxis.Transport.Http.csproj" />
+    <ProjectReference Include="..\..\Synaxis.Transport.WebSocket\Synaxis.Transport.WebSocket.csproj" />
     <ProjectReference Include="..\Application\Synaxis.InferenceGateway.Application.csproj" />
     <ProjectReference Include="..\Infrastructure\Synaxis.InferenceGateway.Infrastructure.csproj" />
   </ItemGroup>
