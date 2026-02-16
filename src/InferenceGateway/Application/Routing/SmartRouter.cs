@@ -88,7 +88,7 @@ namespace Synaxis.InferenceGateway.Application.Routing
             var scoredCandidates = new List<(EnrichedCandidate Candidate, double Score)>();
             foreach (var candidate in enriched)
             {
-                var score = this.routingScoreCalculator.CalculateScore(candidate, tenantId: null, userId: null);
+                var score = await this.routingScoreCalculator.CalculateScoreAsync(candidate, tenantId: null, userId: null, cancellationToken).ConfigureAwait(false);
                 scoredCandidates.Add((candidate, score));
                 this.logger.LogDebug("Provider '{ProviderKey}' routing score: {Score}", candidate.Key, score);
             }

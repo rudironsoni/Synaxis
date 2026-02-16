@@ -23,7 +23,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
         /// </summary>
         /// <param name="redirectUrl">The redirect URL for OAuth callback.</param>
         /// <returns>The authorization URL to navigate to.</returns>
-        string StartAuthFlow(string redirectUrl);
+        Task<string> StartAuthFlowAsync(string redirectUrl);
 
         /// <summary>
         /// Completes the OAuth authentication flow with an authorization code.

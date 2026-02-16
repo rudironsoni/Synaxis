@@ -52,13 +52,14 @@ namespace Synaxis.InferenceGateway.Application.Routing
         }
 
         /// <inheritdoc/>
-        public double CalculateScore(
+        public async Task<double> CalculateScoreAsync(
             EnrichedCandidate candidate,
             string? tenantId,
-            string? userId)
+            string? userId,
+            CancellationToken ct = default)
         {
             // Get effective configuration (cached in real implementation)
-            var config = this.GetEffectiveConfigurationAsync(tenantId, userId).GetAwaiter().GetResult();
+            var config = await this.GetEffectiveConfigurationAsync(tenantId, userId, ct).ConfigureAwait(false);
             var weights = config.Weights;
 
             // Ensure weights are not null (use defaults if null)

@@ -58,13 +58,13 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Antigravity
             })
             .WithName("ListAntigravityAccounts");
 
-            group.MapPost("/auth/start", (IAntigravityAuthManager authManager, [FromBody] StartAuthRequest request) =>
+            group.MapPost("/auth/start", async (IAntigravityAuthManager authManager, [FromBody] StartAuthRequest request) =>
             {
 #pragma warning disable S1075 // URIs should not be hardcoded
                 const string defaultRedirectUrl = "http://localhost:51121/oauth/antigravity/callback";
 #pragma warning restore S1075 // URIs should not be hardcoded
                 var redirectUrl = string.IsNullOrWhiteSpace(request.RedirectUrl) ? defaultRedirectUrl : request.RedirectUrl;
-                var url = authManager.StartAuthFlow(redirectUrl);
+                var url = await authManager.StartAuthFlowAsync(redirectUrl).ConfigureAwait(false);
                 return Results.Ok(new
                 {
                     AuthUrl = url,

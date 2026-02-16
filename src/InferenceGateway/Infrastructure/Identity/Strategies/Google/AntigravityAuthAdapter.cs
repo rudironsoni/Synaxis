@@ -34,10 +34,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
         }
 
         /// <inheritdoc/>
-        public string StartAuthFlow(string redirectUrl)
+        public async Task<string> StartAuthFlowAsync(string redirectUrl)
         {
-            // IdentityManager.StartAuth is async; call synchronously by waiting on the Task
-            var auth = this._identityManager.StartAuth("google").GetAwaiter().GetResult();
+            // IdentityManager.StartAuth is async
+            var auth = await this._identityManager.StartAuth("google").ConfigureAwait(false);
             return auth?.VerificationUri ?? string.Empty;
         }
 

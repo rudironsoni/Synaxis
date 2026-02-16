@@ -23,11 +23,13 @@ namespace Synaxis.InferenceGateway.Application.Routing
         /// <param name="candidate">The candidate to score.</param>
         /// <param name="tenantId">The tenant identifier.</param>
         /// <param name="userId">The user identifier.</param>
+        /// <param name="ct">Cancellation token.</param>
         /// <returns>The calculated score.</returns>
-        double CalculateScore(
+        Task<double> CalculateScoreAsync(
             EnrichedCandidate candidate,
             string? tenantId,
-            string? userId);
+            string? userId,
+            CancellationToken ct = default);
 
         /// <summary>
         /// Get effective routing score configuration for a specific user.
