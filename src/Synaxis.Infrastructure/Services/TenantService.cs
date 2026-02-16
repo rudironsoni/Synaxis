@@ -15,6 +15,10 @@ namespace Synaxis.Infrastructure.Services
     {
         private readonly SynaxisDbContext _context;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TenantService"/> class.
+        /// </summary>
+        /// <param name="context"></param>
         public TenantService(SynaxisDbContext context)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));

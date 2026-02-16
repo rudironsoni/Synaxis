@@ -84,6 +84,13 @@ namespace Synaxis.Infrastructure.Services
             return {new_count, window_seconds, 'allowed'}
         ";
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="QuotaService"/> class.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="redis"></param>
+        /// <param name="tenantService"></param>
+        /// <param name="logger"></param>
         public QuotaService(
             SynaxisDbContext context,
             IConnectionMultiplexer redis,

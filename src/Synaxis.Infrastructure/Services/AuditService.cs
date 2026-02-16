@@ -21,6 +21,11 @@ namespace Synaxis.Infrastructure.Services
         private readonly SynaxisDbContext _context;
         private readonly ILogger<AuditService> _logger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AuditService"/> class.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="logger"></param>
         public AuditService(SynaxisDbContext context, ILogger<AuditService> logger)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));

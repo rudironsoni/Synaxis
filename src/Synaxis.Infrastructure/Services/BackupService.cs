@@ -20,6 +20,11 @@ namespace Synaxis.Infrastructure.Services
         private readonly SynaxisDbContext _context;
         private readonly ILogger<BackupService> _logger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BackupService"/> class.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="logger"></param>
         public BackupService(SynaxisDbContext context, ILogger<BackupService> logger)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));

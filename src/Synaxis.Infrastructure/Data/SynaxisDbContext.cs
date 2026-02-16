@@ -17,6 +17,10 @@ namespace Synaxis.Infrastructure.Data
     /// </summary>
     public class SynaxisDbContext : DbContext
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SynaxisDbContext"/> class.
+        /// </summary>
+        /// <param name="options"></param>
         public SynaxisDbContext(DbContextOptions<SynaxisDbContext> options)
             : base(options)
         {

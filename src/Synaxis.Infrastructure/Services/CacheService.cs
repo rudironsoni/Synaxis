@@ -34,6 +34,12 @@ namespace Synaxis.Infrastructure.Services
         private long _hits = 0;
         private long _misses = 0;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CacheService"/> class.
+        /// </summary>
+        /// <param name="distributedCache"></param>
+        /// <param name="memoryCache"></param>
+        /// <param name="logger"></param>
         public CacheService(
             IDistributedCache distributedCache,
             IMemoryCache memoryCache,

@@ -1,8 +1,12 @@
+// <copyright file="CircuitBreakerPolicy.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
+namespace Synaxis.Routing.CircuitBreaker;
+
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-
-namespace Synaxis.Routing.CircuitBreaker;
 
 /// <summary>
 /// A generic policy wrapper for executing operations through a circuit breaker.
@@ -18,12 +22,12 @@ public class CircuitBreakerPolicy<TResult>
     /// <summary>
     /// Gets the circuit breaker associated with this policy.
     /// </summary>
-    public CircuitBreaker CircuitBreaker => _circuitBreaker;
+    public CircuitBreaker CircuitBreaker => this._circuitBreaker;
 
     /// <summary>
     /// Gets the metrics for this policy.
     /// </summary>
-    public CircuitBreakerMetrics Metrics => _metrics;
+    public CircuitBreakerMetrics Metrics => this._metrics;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CircuitBreakerPolicy{TResult}"/> class.
@@ -36,10 +40,10 @@ public class CircuitBreakerPolicy<TResult>
         Func<Exception, bool>? exceptionPredicate = null,
         Func<CancellationToken, Task<TResult>>? fallback = null)
     {
-        _circuitBreaker = circuitBreaker ?? throw new ArgumentNullException(nameof(circuitBreaker));
-        _exceptionPredicate = exceptionPredicate ?? (ex => true);
-        _fallback = fallback;
-        _metrics = new CircuitBreakerMetrics();
+        this._circuitBreaker = circuitBreaker ?? throw new ArgumentNullException(nameof(circuitBreaker));
+        this._exceptionPredicate = exceptionPredicate ?? (ex => true);
+        this._fallback = fallback;
+        this._metrics = new CircuitBreakerMetrics();
     }
 
     /// <summary>
@@ -58,38 +62,38 @@ public class CircuitBreakerPolicy<TResult>
             throw new ArgumentNullException(nameof(operation));
         }
 
-        _metrics.TotalRequests++;
+        this._metrics.TotalRequests++;
 
         // Check if the circuit allows the request
-        if (!_circuitBreaker.AllowRequest())
+        if (!this._circuitBreaker.AllowRequest())
         {
-            _metrics.RejectedRequests++;
+            this._metrics.RejectedRequests++;
 
-            if (_fallback != null)
+            if (this._fallback != null)
             {
-                _metrics.FallbackExecutions++;
-                return await _fallback(cancellationToken).ConfigureAwait(false);
+                this._metrics.FallbackExecutions++;
+                return await this._fallback(cancellationToken).ConfigureAwait(false);
             }
 
-            throw new CircuitBreakerOpenException(_circuitBreaker.GetType().Name);
+            throw new CircuitBreakerOpenException(this._circuitBreaker.GetType().Name);
         }
 
         try
         {
             var result = await operation(cancellationToken).ConfigureAwait(false);
-            _circuitBreaker.RecordSuccess();
-            _metrics.SuccessfulRequests++;
+            this._circuitBreaker.RecordSuccess();
+            this._metrics.SuccessfulRequests++;
             return result;
         }
-        catch (Exception ex) when (_exceptionPredicate(ex))
+        catch (Exception ex) when (this._exceptionPredicate(ex))
         {
-            _circuitBreaker.RecordFailure();
-            _metrics.FailedRequests++;
+            this._circuitBreaker.RecordFailure();
+            this._metrics.FailedRequests++;
 
-            if (_fallback != null)
+            if (this._fallback != null)
             {
-                _metrics.FallbackExecutions++;
-                return await _fallback(cancellationToken).ConfigureAwait(false);
+                this._metrics.FallbackExecutions++;
+                return await this._fallback(cancellationToken).ConfigureAwait(false);
             }
 
             throw;
@@ -119,29 +123,29 @@ public class CircuitBreakerPolicy<TResult>
         {
             try
             {
-                return await ExecuteAsync(operation, cancellationToken).ConfigureAwait(false);
+                return await this.ExecuteAsync(operation, cancellationToken).ConfigureAwait(false);
             }
             catch (CircuitBreakerOpenException)
             {
                 // Don't retry on circuit open exceptions
                 throw;
             }
-            catch (Exception ex) when (_exceptionPredicate(ex))
+            catch (Exception ex) when (this._exceptionPredicate(ex))
             {
                 lastException = ex;
 
                 if (attempt < maxRetries)
                 {
-                    int delay = _circuitBreaker.CalculateBackoffDelay(attempt);
+                    int delay = this._circuitBreaker.CalculateBackoffDelay(attempt);
                     await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
                 }
             }
         }
 
-        if (_fallback != null)
+        if (this._fallback != null)
         {
-            _metrics.FallbackExecutions++;
-            return await _fallback(cancellationToken).ConfigureAwait(false);
+            this._metrics.FallbackExecutions++;
+            return await this._fallback(cancellationToken).ConfigureAwait(false);
         }
 
         throw lastException ?? new InvalidOperationException("Operation failed after retries.");
@@ -152,14 +156,14 @@ public class CircuitBreakerPolicy<TResult>
     /// </summary>
     public void Reset()
     {
-        _circuitBreaker.Reset();
-        _metrics.TotalRequests = 0;
-        _metrics.SuccessfulRequests = 0;
-        _metrics.FailedRequests = 0;
-        _metrics.RejectedRequests = 0;
-        _metrics.FallbackExecutions = 0;
-        _metrics.CircuitOpenedCount = 0;
-        _metrics.CircuitClosedCount = 0;
+        this._circuitBreaker.Reset();
+        this._metrics.TotalRequests = 0;
+        this._metrics.SuccessfulRequests = 0;
+        this._metrics.FailedRequests = 0;
+        this._metrics.RejectedRequests = 0;
+        this._metrics.FallbackExecutions = 0;
+        this._metrics.CircuitOpenedCount = 0;
+        this._metrics.CircuitClosedCount = 0;
     }
 }
 
@@ -176,12 +180,12 @@ public class CircuitBreakerPolicy
     /// <summary>
     /// Gets the circuit breaker associated with this policy.
     /// </summary>
-    public CircuitBreaker CircuitBreaker => _circuitBreaker;
+    public CircuitBreaker CircuitBreaker => this._circuitBreaker;
 
     /// <summary>
     /// Gets the metrics for this policy.
     /// </summary>
-    public CircuitBreakerMetrics Metrics => _metrics;
+    public CircuitBreakerMetrics Metrics => this._metrics;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CircuitBreakerPolicy"/> class.
@@ -194,10 +198,10 @@ public class CircuitBreakerPolicy
         Func<Exception, bool>? exceptionPredicate = null,
         Func<CancellationToken, Task>? fallback = null)
     {
-        _circuitBreaker = circuitBreaker ?? throw new ArgumentNullException(nameof(circuitBreaker));
-        _exceptionPredicate = exceptionPredicate ?? (ex => true);
-        _fallback = fallback;
-        _metrics = new CircuitBreakerMetrics();
+        this._circuitBreaker = circuitBreaker ?? throw new ArgumentNullException(nameof(circuitBreaker));
+        this._exceptionPredicate = exceptionPredicate ?? (ex => true);
+        this._fallback = fallback;
+        this._metrics = new CircuitBreakerMetrics();
     }
 
     /// <summary>
@@ -206,6 +210,7 @@ public class CircuitBreakerPolicy
     /// <param name="operation">The operation to execute.</param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <exception cref="CircuitBreakerOpenException">Thrown when the circuit breaker is open and no fallback is provided.</exception>
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
     public async Task ExecuteAsync(
         Func<CancellationToken, Task> operation,
         CancellationToken cancellationToken = default)
@@ -215,38 +220,38 @@ public class CircuitBreakerPolicy
             throw new ArgumentNullException(nameof(operation));
         }
 
-        _metrics.TotalRequests++;
+        this._metrics.TotalRequests++;
 
         // Check if the circuit allows the request
-        if (!_circuitBreaker.AllowRequest())
+        if (!this._circuitBreaker.AllowRequest())
         {
-            _metrics.RejectedRequests++;
+            this._metrics.RejectedRequests++;
 
-            if (_fallback != null)
+            if (this._fallback != null)
             {
-                _metrics.FallbackExecutions++;
-                await _fallback(cancellationToken).ConfigureAwait(false);
+                this._metrics.FallbackExecutions++;
+                await this._fallback(cancellationToken).ConfigureAwait(false);
                 return;
             }
 
-            throw new CircuitBreakerOpenException(_circuitBreaker.GetType().Name);
+            throw new CircuitBreakerOpenException(this._circuitBreaker.GetType().Name);
         }
 
         try
         {
             await operation(cancellationToken).ConfigureAwait(false);
-            _circuitBreaker.RecordSuccess();
-            _metrics.SuccessfulRequests++;
+            this._circuitBreaker.RecordSuccess();
+            this._metrics.SuccessfulRequests++;
         }
-        catch (Exception ex) when (_exceptionPredicate(ex))
+        catch (Exception ex) when (this._exceptionPredicate(ex))
         {
-            _circuitBreaker.RecordFailure();
-            _metrics.FailedRequests++;
+            this._circuitBreaker.RecordFailure();
+            this._metrics.FailedRequests++;
 
-            if (_fallback != null)
+            if (this._fallback != null)
             {
-                _metrics.FallbackExecutions++;
-                await _fallback(cancellationToken).ConfigureAwait(false);
+                this._metrics.FallbackExecutions++;
+                await this._fallback(cancellationToken).ConfigureAwait(false);
                 return;
             }
 
@@ -260,6 +265,7 @@ public class CircuitBreakerPolicy
     /// <param name="operation">The operation to execute.</param>
     /// <param name="maxRetries">The maximum number of retry attempts.</param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
     public async Task ExecuteWithRetryAsync(
         Func<CancellationToken, Task> operation,
         int maxRetries = 3,
@@ -276,7 +282,7 @@ public class CircuitBreakerPolicy
         {
             try
             {
-                await ExecuteAsync(operation, cancellationToken).ConfigureAwait(false);
+                await this.ExecuteAsync(operation, cancellationToken).ConfigureAwait(false);
                 return;
             }
             catch (CircuitBreakerOpenException)
@@ -284,22 +290,22 @@ public class CircuitBreakerPolicy
                 // Don't retry on circuit open exceptions
                 throw;
             }
-            catch (Exception ex) when (_exceptionPredicate(ex))
+            catch (Exception ex) when (this._exceptionPredicate(ex))
             {
                 lastException = ex;
 
                 if (attempt < maxRetries)
                 {
-                    int delay = _circuitBreaker.CalculateBackoffDelay(attempt);
+                    int delay = this._circuitBreaker.CalculateBackoffDelay(attempt);
                     await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
                 }
             }
         }
 
-        if (_fallback != null)
+        if (this._fallback != null)
         {
-            _metrics.FallbackExecutions++;
-            await _fallback(cancellationToken).ConfigureAwait(false);
+            this._metrics.FallbackExecutions++;
+            await this._fallback(cancellationToken).ConfigureAwait(false);
             return;
         }
 
@@ -314,7 +320,7 @@ public class CircuitBreakerPolicy
     /// <returns>A new generic circuit breaker policy.</returns>
     public CircuitBreakerPolicy<TResult> AsGenericPolicy<TResult>(Func<CancellationToken, Task<TResult>>? fallback = null)
     {
-        return new CircuitBreakerPolicy<TResult>(_circuitBreaker, _exceptionPredicate, fallback);
+        return new CircuitBreakerPolicy<TResult>(this._circuitBreaker, this._exceptionPredicate, fallback);
     }
 
     /// <summary>
@@ -322,13 +328,13 @@ public class CircuitBreakerPolicy
     /// </summary>
     public void Reset()
     {
-        _circuitBreaker.Reset();
-        _metrics.TotalRequests = 0;
-        _metrics.SuccessfulRequests = 0;
-        _metrics.FailedRequests = 0;
-        _metrics.RejectedRequests = 0;
-        _metrics.FallbackExecutions = 0;
-        _metrics.CircuitOpenedCount = 0;
-        _metrics.CircuitClosedCount = 0;
+        this._circuitBreaker.Reset();
+        this._metrics.TotalRequests = 0;
+        this._metrics.SuccessfulRequests = 0;
+        this._metrics.FailedRequests = 0;
+        this._metrics.RejectedRequests = 0;
+        this._metrics.FallbackExecutions = 0;
+        this._metrics.CircuitOpenedCount = 0;
+        this._metrics.CircuitClosedCount = 0;
     }
 }
