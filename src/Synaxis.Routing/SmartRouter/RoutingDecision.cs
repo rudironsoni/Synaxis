@@ -1,7 +1,3 @@
-// <copyright file="RoutingDecision.cs" company="Synaxis">
-// Copyright (c) Synaxis. All rights reserved.
-// </copyright>
-
 namespace Synaxis.Routing.SmartRouter;
 
 /// <summary>
@@ -25,14 +21,9 @@ public class RoutingDecision
     public string Reasoning { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the reason for this routing decision.
-    /// </summary>
-    public string Reason { get; set; } = string.Empty;
-
-    /// <summary>
     /// Gets or sets the alternative providers that could be used as fallbacks.
     /// </summary>
-    public IList<ProviderAlternative> AlternativeProviders { get; set; } = new List<ProviderAlternative>();
+    public List<ProviderAlternative> AlternativeProviders { get; set; } = new();
 
     /// <summary>
     /// Gets or sets the predicted latency in milliseconds.
@@ -50,11 +41,6 @@ public class RoutingDecision
     public DateTime DecisionTime { get; set; } = DateTime.UtcNow;
 
     /// <summary>
-    /// Gets or sets the timestamp when this decision was made.
-    /// </summary>
-    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
-
-    /// <summary>
     /// Gets or sets the decision ID for tracking.
     /// </summary>
     public string DecisionId { get; set; } = Guid.NewGuid().ToString();
@@ -67,5 +53,5 @@ public class RoutingDecision
     /// <summary>
     /// Gets or sets the feature values used for the prediction.
     /// </summary>
-    public IDictionary<string, double> Features { get; set; } = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+    public Dictionary<string, double> Features { get; set; } = new();
 }

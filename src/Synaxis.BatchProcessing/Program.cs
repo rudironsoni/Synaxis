@@ -3,10 +3,9 @@
 // </copyright>
 
 using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Synaxis.BatchProcessing;
+using Microsoft.Extensions.Configuration;
 using Synaxis.BatchProcessing.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -59,7 +58,7 @@ using (var scope = app.Services.CreateScope())
     var storageService = scope.ServiceProvider.GetRequiredService<IBatchStorageService>();
     if (storageService is BatchStorageService batchStorageService)
     {
-        await batchStorageService.InitializeAsync().ConfigureAwait(false);
+        await batchStorageService.InitializeAsync();
     }
 }
 
@@ -77,4 +76,31 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-await app.RunAsync().ConfigureAwait(false);
+app.Run();
+
+
+        try
+        {
+            await this._queueService.StartProcessingAsync(stoppingToken);
+
+            // Keep the service running until stopped
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected when service is stopping
+        }
+        catch (Exception ex)
+        {
+            this._logger.LogError(ex, "Batch Queue Hosted Service encountered an error");
+        }
+        finally
+        {
+            await this._queueService.StopProcessingAsync(stoppingToken);
+            this._logger.LogInformation("Batch Queue Hosted Service stopped");
+        }
+    }
+}
