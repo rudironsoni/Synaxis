@@ -92,7 +92,7 @@ namespace Synaxis.Core.Streaming
         /// </summary>
         /// <param name="providerName">The name of the provider.</param>
         /// <returns>The streaming adapter, or null if not found.</returns>
-        public IStreamingAdapter GetAdapter(string providerName)
+        public IStreamingAdapter? GetAdapter(string providerName)
         {
             if (string.IsNullOrEmpty(providerName))
             {
@@ -283,7 +283,7 @@ namespace Synaxis.Core.Streaming
         /// <param name="providerName">The provider name.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>An error response if an error occurred; otherwise, null.</returns>
-        private async Task<StreamingResponse> StreamWithAdapterAsync<TRequest>(
+        private async Task<StreamingResponse?> StreamWithAdapterAsync<TRequest>(
             IStreamingAdapter adapter,
             TRequest request,
             string providerName,
@@ -321,7 +321,7 @@ namespace Synaxis.Core.Streaming
         /// <param name="providerName">The provider name.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>An error response if an error occurred; otherwise, null.</returns>
-        private async Task<StreamingResponse> StreamChatWithAdapterAsync<TRequest>(
+        private async Task<StreamingResponse?> StreamChatWithAdapterAsync<TRequest>(
             IStreamingAdapter adapter,
             TRequest request,
             string providerName,

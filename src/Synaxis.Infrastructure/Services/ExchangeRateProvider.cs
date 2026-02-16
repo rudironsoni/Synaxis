@@ -40,8 +40,8 @@ namespace Synaxis.Infrastructure.Services
         /// <summary>
         /// Initializes a new instance of the <see cref="ExchangeRateProvider"/> class.
         /// </summary>
-        /// <param name="cacheService"></param>
-        /// <param name="logger"></param>
+        /// <param name="cacheService">The cache service.</param>
+        /// <param name="logger">The logger.</param>
         public ExchangeRateProvider(ICacheService cacheService, ILogger<ExchangeRateProvider> logger)
         {
             this._cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));

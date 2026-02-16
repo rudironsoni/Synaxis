@@ -192,5 +192,10 @@ namespace Synaxis.Core.Models
         /// Gets or sets the requests navigation property.
         /// </summary>
         public virtual ICollection<Request> Requests { get; set; } = new List<Request>();
+
+        /// <summary>
+        /// Gets or sets the password policy navigation property.
+        /// </summary>
+        public virtual PasswordPolicy? PasswordPolicy { get; set; }
     }
 }

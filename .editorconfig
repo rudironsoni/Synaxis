@@ -88,6 +88,8 @@ dotnet_diagnostic.MA0026.severity = none
 [**/obj/**/*.cs]
 dotnet_analyzer_diagnostic.category-StyleCop.severity = none
 dotnet_diagnostic.SA1516.severity = none
+dotnet_diagnostic.SA1518.severity = none
+dotnet_diagnostic.SA1633.severity = none
 
 # Specific generated file that causes SA1516
 [**/GlobalUsings.g.cs]

@@ -175,7 +175,7 @@ namespace Synaxis.Core.Services
         /// </summary>
         /// <param name="agentId">The agent ID.</param>
         /// <returns>The agent, or null if not found.</returns>
-        public Agents.SynaxisInferenceAgent GetAgent(Guid agentId)
+        public Agents.SynaxisInferenceAgent? GetAgent(Guid agentId)
         {
             lock (this._lock)
             {

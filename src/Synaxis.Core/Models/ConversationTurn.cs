@@ -50,7 +50,7 @@ namespace Synaxis.Core.Models
         /// Gets or sets optional metadata for the turn.
         /// </summary>
         [Column(TypeName = "jsonb")]
-        public IDictionary<string, string> Metadata { get; set; }
+        public IDictionary<string, string>? Metadata { get; set; }
 
         /// <summary>
         /// Gets or sets the date and time when the turn was created.
@@ -61,6 +61,6 @@ namespace Synaxis.Core.Models
         /// Gets or sets the conversation this turn belongs to.
         /// </summary>
         [ForeignKey(nameof(ConversationId))]
-        public virtual Conversation Conversation { get; set; }
+        public virtual Conversation? Conversation { get; set; }
     }
 }

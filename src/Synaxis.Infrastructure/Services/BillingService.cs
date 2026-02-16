@@ -1,15 +1,19 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using Synaxis.Core.Contracts;
-using Synaxis.Core.Models;
-using Synaxis.Infrastructure.Data;
+// <copyright file="BillingService.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
 namespace Synaxis.Infrastructure.Services
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading.Tasks;
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.Logging;
+    using Synaxis.Core.Contracts;
+    using Synaxis.Core.Models;
+    using Synaxis.Infrastructure.Data;
+
     /// <summary>
     /// Billing service with multi-currency support and credit management
     /// All internal tracking is in USD, conversion happens at billing time.
@@ -23,40 +27,48 @@ namespace Synaxis.Infrastructure.Services
         /// <summary>
         /// Initializes a new instance of the <see cref="BillingService"/> class.
         /// </summary>
-        /// <param name="context"></param>
-        /// <param name="exchangeRateProvider"></param>
-        /// <param name="logger"></param>
+        /// <param name="context">The database context.</param>
+        /// <param name="exchangeRateProvider">The exchange rate provider.</param>
+        /// <param name="logger">The logger.</param>
         public BillingService(
             SynaxisDbContext context,
             IExchangeRateProvider exchangeRateProvider,
             ILogger<BillingService> logger)
         {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
-            _exchangeRateProvider = exchangeRateProvider ?? throw new ArgumentNullException(nameof(exchangeRateProvider));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._context = context ?? throw new ArgumentNullException(nameof(context));
+            this._exchangeRateProvider = exchangeRateProvider ?? throw new ArgumentNullException(nameof(exchangeRateProvider));
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
+        /// <inheritdoc/>
         public async Task<CreditTransaction> ChargeUsageAsync(Guid organizationId, decimal amountUsd, string description, Guid? referenceId = null)
         {
             if (organizationId == Guid.Empty)
+            {
                 throw new ArgumentException("Organization ID is required", nameof(organizationId));
+            }
 
             if (amountUsd <= 0)
+            {
                 throw new ArgumentException("Amount must be positive", nameof(amountUsd));
+            }
 
             if (string.IsNullOrWhiteSpace(description))
+            {
                 throw new ArgumentException("Description is required", nameof(description));
+            }
 
-            var organization = await _context.Organizations.FindAsync(organizationId);
+            var organization = await this._context.Organizations.FindAsync(organizationId).ConfigureAwait(false);
 
             if (organization == null)
+            {
                 throw new InvalidOperationException($"Organization with ID '{organizationId}' not found");
+            }
 
             // Check if sufficient balance
             if (organization.CreditBalance < amountUsd)
             {
-                _logger.LogWarning("Insufficient credits for organization {OrgId}. Balance: {Balance}, Required: {Required}",
-                    organizationId, organization.CreditBalance, amountUsd);
+                this._logger.LogWarning("Insufficient credits for organization {OrgId}. Balance: {Balance}, Required: {Required}", organizationId, organization.CreditBalance, amountUsd);
                 throw new InvalidOperationException($"Insufficient credit balance. Current: ${organization.CreditBalance:F2}, Required: ${amountUsd:F2}");
             }
 
@@ -74,33 +86,45 @@ namespace Synaxis.Infrastructure.Services
                 BalanceAfterUsd = organization.CreditBalance,
                 Description = description,
                 ReferenceId = referenceId,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
             };
 
-            _context.Add(transaction);
-            await _context.SaveChangesAsync();
+            this._context.Add(transaction);
+            await this._context.SaveChangesAsync().ConfigureAwait(false);
 
-            _logger.LogInformation("Charged ${Amount} to organization {OrgId}. New balance: ${Balance}",
-                amountUsd, organizationId, organization.CreditBalance);
+            this._logger.LogInformation(
+                "Charged ${Amount} to organization {OrgId}. New balance: ${Balance}",
+                amountUsd,
+                organizationId,
+                organization.CreditBalance);
 
             return transaction;
         }
 
+        /// <inheritdoc/>
         public async Task<CreditTransaction> TopUpCreditsAsync(Guid organizationId, decimal amountUsd, Guid initiatedBy, string? description = null)
         {
             if (organizationId == Guid.Empty)
+            {
                 throw new ArgumentException("Organization ID is required", nameof(organizationId));
+            }
 
             if (amountUsd <= 0)
+            {
                 throw new ArgumentException("Amount must be positive", nameof(amountUsd));
+            }
 
             if (initiatedBy == Guid.Empty)
+            {
                 throw new ArgumentException("Initiated by user ID is required", nameof(initiatedBy));
+            }
 
-            var organization = await _context.Organizations.FindAsync(organizationId);
+            var organization = await this._context.Organizations.FindAsync(organizationId).ConfigureAwait(false);
 
             if (organization == null)
+            {
                 throw new InvalidOperationException($"Organization with ID '{organizationId}' not found");
+            }
 
             var balanceBefore = organization.CreditBalance;
             organization.CreditBalance += amountUsd;
@@ -116,108 +140,167 @@ namespace Synaxis.Infrastructure.Services
                 BalanceAfterUsd = organization.CreditBalance,
                 Description = description ?? $"Credit top-up: ${amountUsd:F2}",
                 InitiatedBy = initiatedBy,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
             };
 
-            _context.Add(transaction);
-            await _context.SaveChangesAsync();
+            this._context.Add(transaction);
+            await this._context.SaveChangesAsync().ConfigureAwait(false);
 
-            _logger.LogInformation("Added ${Amount} credits to organization {OrgId}. New balance: ${Balance}",
-                amountUsd, organizationId, organization.CreditBalance);
+            this._logger.LogInformation(
+                "Added ${Amount} credits to organization {OrgId}. New balance: ${Balance}",
+                amountUsd,
+                organizationId,
+                organization.CreditBalance);
 
             return transaction;
         }
 
+        /// <inheritdoc/>
         public async Task<decimal> GetCreditBalanceAsync(Guid organizationId)
         {
             if (organizationId == Guid.Empty)
+            {
                 throw new ArgumentException("Organization ID is required", nameof(organizationId));
+            }
 
-            var organization = await _context.Organizations.FindAsync(organizationId);
+            var organization = await this._context.Organizations.FindAsync(organizationId).ConfigureAwait(false);
 
             if (organization == null)
+            {
                 throw new InvalidOperationException($"Organization with ID '{organizationId}' not found");
+            }
 
             return organization.CreditBalance;
         }
 
+        /// <inheritdoc/>
         public async Task<decimal> GetCreditBalanceInBillingCurrencyAsync(Guid organizationId)
         {
             if (organizationId == Guid.Empty)
+            {
                 throw new ArgumentException("Organization ID is required", nameof(organizationId));
+            }
 
-            var organization = await _context.Organizations.FindAsync(organizationId);
+            var organization = await this._context.Organizations.FindAsync(organizationId).ConfigureAwait(false);
 
             if (organization == null)
+            {
                 throw new InvalidOperationException($"Organization with ID '{organizationId}' not found");
+            }
 
             var balanceUsd = organization.CreditBalance;
 
-            if (organization.BillingCurrency == "USD")
+            if (string.Equals(organization.BillingCurrency, "USD", StringComparison.Ordinal))
+            {
                 return balanceUsd;
+            }
 
-            return await ConvertCurrencyAsync(balanceUsd, organization.BillingCurrency);
+            return await this.ConvertCurrencyAsync(balanceUsd, organization.BillingCurrency).ConfigureAwait(false);
         }
 
+        /// <inheritdoc/>
         public async Task<decimal> ConvertCurrencyAsync(decimal amountUsd, string targetCurrency)
         {
             if (string.IsNullOrWhiteSpace(targetCurrency))
+            {
                 throw new ArgumentException("Target currency is required", nameof(targetCurrency));
+            }
 
             targetCurrency = targetCurrency.ToUpperInvariant();
 
-            if (targetCurrency == "USD")
+            if (string.Equals(targetCurrency, "USD", StringComparison.Ordinal))
+            {
                 return amountUsd;
+            }
 
-            var rate = await _exchangeRateProvider.GetRateAsync(targetCurrency);
+            var rate = await this._exchangeRateProvider.GetRateAsync(targetCurrency).ConfigureAwait(false);
             return Math.Round(amountUsd * rate, 2);
         }
 
-        public async Task<decimal> GetExchangeRateAsync(string targetCurrency)
+        /// <inheritdoc/>
+        public Task<decimal> GetExchangeRateAsync(string targetCurrency)
         {
             if (string.IsNullOrWhiteSpace(targetCurrency))
+            {
                 throw new ArgumentException("Target currency is required", nameof(targetCurrency));
+            }
 
-            return await _exchangeRateProvider.GetRateAsync(targetCurrency);
+            return this._exchangeRateProvider.GetRateAsync(targetCurrency);
         }
 
+        /// <inheritdoc/>
         public async Task<Invoice> GenerateInvoiceAsync(Guid organizationId, DateTime periodStart, DateTime periodEnd)
         {
+            ValidateInvoiceRequest(organizationId, periodStart, periodEnd);
+            var organization = await this.GetOrganizationAsync(organizationId).ConfigureAwait(false);
+            var spendLogs = await this.GetSpendLogsAsync(organizationId, periodStart, periodEnd).ConfigureAwait(false);
+
+            var (totalAmountUsd, totalAmountBillingCurrency, exchangeRate, lineItems) = await this.CalculateInvoiceTotalsAsync(spendLogs, organization).ConfigureAwait(false);
+            var invoice = this.CreateInvoice(organizationId, periodStart, periodEnd, totalAmountUsd, totalAmountBillingCurrency, exchangeRate, lineItems, organization);
+
+            this._context.Add(invoice);
+            await this._context.SaveChangesAsync().ConfigureAwait(false);
+
+            this.LogInvoiceGeneration(invoice.InvoiceNumber, organizationId, totalAmountUsd, totalAmountBillingCurrency, organization.BillingCurrency);
+
+            return invoice;
+        }
+
+        private static void ValidateInvoiceRequest(Guid organizationId, DateTime periodStart, DateTime periodEnd)
+        {
             if (organizationId == Guid.Empty)
+            {
                 throw new ArgumentException("Organization ID is required", nameof(organizationId));
+            }
 
             if (periodEnd <= periodStart)
-                throw new ArgumentException("Period end must be after period start");
+            {
+                throw new ArgumentException("Period end must be after period start", nameof(periodEnd));
+            }
+        }
 
-            var organization = await _context.Organizations.FindAsync(organizationId);
+        private async Task<Organization> GetOrganizationAsync(Guid organizationId)
+        {
+            var organization = await this._context.Organizations.FindAsync(organizationId).ConfigureAwait(false);
 
             if (organization == null)
+            {
                 throw new InvalidOperationException($"Organization with ID '{organizationId}' not found");
+            }
 
-            // Get all spend logs for the period
-            var spendLogs = await _context.Set<SpendLog>()
+            return organization;
+        }
+
+        private Task<List<SpendLog>> GetSpendLogsAsync(Guid organizationId, DateTime periodStart, DateTime periodEnd)
+        {
+            return this._context.Set<SpendLog>()
                 .Where(s => s.OrganizationId == organizationId
                     && s.CreatedAt >= periodStart
                     && s.CreatedAt < periodEnd)
                 .ToListAsync();
+        }
 
+        private async Task<(decimal TotalAmountUsd, decimal TotalAmountBillingCurrency, decimal ExchangeRate, Dictionary<string, decimal> LineItems)> CalculateInvoiceTotalsAsync(List<SpendLog> spendLogs, Organization organization)
+        {
             var totalAmountUsd = spendLogs.Sum(s => s.AmountUsd);
+            var exchangeRate = await this.GetExchangeRateAsync(organization.BillingCurrency).ConfigureAwait(false);
+            var totalAmountBillingCurrency = await this.ConvertCurrencyAsync(totalAmountUsd, organization.BillingCurrency).ConfigureAwait(false);
 
-            // Get exchange rate for billing currency
-            var exchangeRate = await GetExchangeRateAsync(organization.BillingCurrency);
-            var totalAmountBillingCurrency = await ConvertCurrencyAsync(totalAmountUsd, organization.BillingCurrency);
-
-            // Generate line items by model
             var lineItems = spendLogs
-                .GroupBy(s => s.Model)
+                .GroupBy(s => s.Model, StringComparer.Ordinal)
                 .ToDictionary(
                     g => g.Key,
-                    g => g.Sum(s => s.AmountUsd));
+                    g => g.Sum(s => s.AmountUsd),
+                    StringComparer.Ordinal);
 
-            // Generate invoice number
-            var invoiceNumber = $"INV-{periodStart:yyyy-MM}-{Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper()}";
+            return (TotalAmountUsd: totalAmountUsd, TotalAmountBillingCurrency: totalAmountBillingCurrency, ExchangeRate: exchangeRate, LineItems: lineItems);
+        }
 
-            var invoice = new Invoice
+        private Invoice CreateInvoice(Guid organizationId, DateTime periodStart, DateTime periodEnd, decimal totalAmountUsd, decimal totalAmountBillingCurrency, decimal exchangeRate, Dictionary<string, decimal> lineItems, Organization organization)
+        {
+            var invoiceNumber = $"INV-{periodStart:yyyy-MM}-{Guid.NewGuid().ToString("N").Substring(0, 8).ToUpperInvariant()}";
+
+            return new Invoice
             {
                 Id = Guid.NewGuid(),
                 OrganizationId = organizationId,
@@ -232,51 +315,71 @@ namespace Synaxis.Infrastructure.Services
                 LineItems = lineItems,
                 DueDate = DateTime.UtcNow.AddDays(30),
                 CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                UpdatedAt = DateTime.UtcNow,
             };
-
-            _context.Add(invoice);
-            await _context.SaveChangesAsync();
-
-            _logger.LogInformation("Generated invoice {InvoiceNumber} for organization {OrgId}. Total: ${Total} USD (${TotalBilling} {Currency})",
-                invoiceNumber, organizationId, totalAmountUsd, totalAmountBillingCurrency, organization.BillingCurrency);
-
-            return invoice;
         }
 
+        private void LogInvoiceGeneration(string invoiceNumber, Guid organizationId, decimal totalAmountUsd, decimal totalAmountBillingCurrency, string currency)
+        {
+            this._logger.LogInformation(
+                "Generated invoice {InvoiceNumber} for organization {OrgId}. Total: ${Total} USD (${TotalBilling} {Currency})",
+                invoiceNumber,
+                organizationId,
+                totalAmountUsd,
+                totalAmountBillingCurrency,
+                currency);
+        }
+
+        /// <inheritdoc/>
         public async Task<IList<CreditTransaction>> GetTransactionHistoryAsync(Guid organizationId, DateTime? startDate = null, DateTime? endDate = null, int limit = 100)
         {
             if (organizationId == Guid.Empty)
+            {
                 throw new ArgumentException("Organization ID is required", nameof(organizationId));
+            }
 
             if (limit <= 0 || limit > 1000)
+            {
                 throw new ArgumentException("Limit must be between 1 and 1000", nameof(limit));
+            }
 
-            var query = _context.Set<CreditTransaction>()
+            var query = this._context.Set<CreditTransaction>()
                 .Where(t => t.OrganizationId == organizationId);
 
             if (startDate.HasValue)
+            {
                 query = query.Where(t => t.CreatedAt >= startDate.Value);
+            }
 
             if (endDate.HasValue)
+            {
                 query = query.Where(t => t.CreatedAt < endDate.Value);
+            }
 
             return await query
                 .OrderByDescending(t => t.CreatedAt)
                 .Take(limit)
-                .ToListAsync();
+                .ToListAsync()
+                .ConfigureAwait(false);
         }
 
+        /// <inheritdoc/>
         public async Task<SpendLog> LogSpendAsync(Guid organizationId, decimal amountUsd, string model, string provider, int tokens, Guid? teamId = null, Guid? virtualKeyId = null, Guid? requestId = null, string? region = null)
         {
             if (organizationId == Guid.Empty)
+            {
                 throw new ArgumentException("Organization ID is required", nameof(organizationId));
+            }
 
             if (amountUsd < 0)
+            {
                 throw new ArgumentException("Amount cannot be negative", nameof(amountUsd));
+            }
 
             if (string.IsNullOrWhiteSpace(model))
+            {
                 throw new ArgumentException("Model is required", nameof(model));
+            }
 
             var spendLog = new SpendLog
             {
@@ -290,41 +393,46 @@ namespace Synaxis.Infrastructure.Services
                 Provider = provider ?? string.Empty,
                 Tokens = tokens,
                 Region = region ?? string.Empty,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
             };
 
-            _context.Add(spendLog);
-            await _context.SaveChangesAsync();
+            this._context.Add(spendLog);
+            await this._context.SaveChangesAsync().ConfigureAwait(false);
 
-            _logger.LogTrace("Logged spend of ${Amount} for organization {OrgId}, model {Model}",
-                amountUsd, organizationId, model);
+            this._logger.LogTrace("Logged spend of ${Amount} for organization {OrgId}, model {Model}", amountUsd, organizationId, model);
 
             return spendLog;
         }
 
+        /// <inheritdoc/>
         public async Task<IDictionary<string, decimal>> GetSpendingSummaryAsync(Guid organizationId, DateTime periodStart, DateTime periodEnd)
         {
             if (organizationId == Guid.Empty)
+            {
                 throw new ArgumentException("Organization ID is required", nameof(organizationId));
+            }
 
             if (periodEnd <= periodStart)
-                throw new ArgumentException("Period end must be after period start");
+            {
+                throw new ArgumentException("Period end must be after period start", nameof(periodEnd));
+            }
 
-            var spendLogs = await _context.Set<SpendLog>()
+            var spendLogs = await this._context.Set<SpendLog>()
                 .Where(s => s.OrganizationId == organizationId
                     && s.CreatedAt >= periodStart
                     && s.CreatedAt <= periodEnd)
-                .ToListAsync();
+                .ToListAsync()
+                .ConfigureAwait(false);
 
-            var summary = new Dictionary<string, decimal>
+            var summary = new Dictionary<string, decimal>(StringComparer.Ordinal)
             {
-                { "total", spendLogs.Sum(s => s.AmountUsd) }
+                { "total", spendLogs.Sum(s => s.AmountUsd) },
             };
 
             // Add breakdown by model
             var byModel = spendLogs
-                .GroupBy(s => s.Model)
-                .ToDictionary(g => $"model_{g.Key}", g => g.Sum(s => s.AmountUsd));
+                .GroupBy(s => s.Model, StringComparer.Ordinal)
+                .ToDictionary(g => $"model_{g.Key}", g => g.Sum(s => s.AmountUsd), StringComparer.Ordinal);
 
             foreach (var kvp in byModel)
             {
@@ -335,7 +443,7 @@ namespace Synaxis.Infrastructure.Services
             var byTeam = spendLogs
                 .Where(s => s.TeamId.HasValue)
                 .GroupBy(s => s.TeamId!.Value)
-                .ToDictionary(g => $"team_{g.Key}", g => g.Sum(s => s.AmountUsd));
+                .ToDictionary(g => $"team_{g.Key}", g => g.Sum(s => s.AmountUsd), StringComparer.Ordinal);
 
             foreach (var kvp in byTeam)
             {

@@ -2,6 +2,8 @@
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
+#pragma warning disable MA0051 // Auto-generated EF Core migrations
+
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable

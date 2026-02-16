@@ -24,8 +24,8 @@ namespace Synaxis.Infrastructure.Services
         /// <summary>
         /// Initializes a new instance of the <see cref="EmailService"/> class.
         /// </summary>
-        /// <param name="options"></param>
-        /// <param name="logger"></param>
+        /// <param name="options">The email options.</param>
+        /// <param name="logger">The logger.</param>
         public EmailService(
             IOptions<EmailOptions> options,
             ILogger<EmailService> logger)

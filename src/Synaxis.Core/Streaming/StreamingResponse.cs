@@ -39,7 +39,7 @@ namespace Synaxis.Core.Streaming
         /// <summary>
         /// Gets or sets the error message if an error occurred.
         /// </summary>
-        public string Error { get; set; }
+        public string? Error { get; set; }
 
         /// <summary>
         /// Gets or sets the timestamp of the response.
@@ -49,7 +49,7 @@ namespace Synaxis.Core.Streaming
         /// <summary>
         /// Gets or sets the metadata associated with the streaming response.
         /// </summary>
-        public StreamingMetadata Metadata { get; set; }
+        public StreamingMetadata? Metadata { get; set; }
 
         /// <summary>
         /// Creates a new streaming response with the specified data.

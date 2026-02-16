@@ -43,10 +43,10 @@ StringComparer.Ordinal)
         /// <summary>
         /// Initializes a new instance of the <see cref="RegionRouter"/> class.
         /// </summary>
-        /// <param name="context"></param>
-        /// <param name="httpClientFactory"></param>
-        /// <param name="logger"></param>
-        /// <param name="currentRegion"></param>
+        /// <param name="context">The database context.</param>
+        /// <param name="httpClientFactory">The HTTP client factory.</param>
+        /// <param name="logger">The logger.</param>
+        /// <param name="currentRegion">The current region.</param>
         public RegionRouter(
             SynaxisDbContext context,
             IHttpClientFactory httpClientFactory,
@@ -208,7 +208,7 @@ StringComparer.Ordinal)
             }
 
             // Try current region first
-            if (await this.IsRegionHealthyAsync(currentRegion).ConfigureAwait(false))
+            if (await IsRegionHealthyAsync().ConfigureAwait(false))
             {
                 return currentRegion;
             }
@@ -223,9 +223,9 @@ StringComparer.Ordinal)
                     continue;
                 }
 
-                if (await this.IsRegionHealthyAsync(region).ConfigureAwait(false))
+                if (await IsRegionHealthyAsync().ConfigureAwait(false))
                 {
-                    var distance = this.CalculateDistance(userLocation, this.GetRegionLocation(region));
+                    var distance = RegionRouter.CalculateDistance(userLocation, this.GetRegionLocation(region));
                     regionDistances.Add((region, distance));
                 }
             }
@@ -280,7 +280,13 @@ StringComparer.Ordinal)
                 response.EnsureSuccessStatusCode();
 
                 var responseJson = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                return JsonSerializer.Deserialize<TResponse>(responseJson);
+                var result = JsonSerializer.Deserialize<TResponse>(responseJson);
+                if (EqualityComparer<TResponse>.Default.Equals(result, default))
+                {
+                    throw new InvalidOperationException("Failed to deserialize response from remote region");
+                }
+
+                return result!;
             }
             catch (HttpRequestException ex)
             {
@@ -309,7 +315,7 @@ StringComparer.Ordinal)
             return "adequacy";
         }
 
-        private async Task<bool> IsRegionHealthyAsync(string region)
+        private static async Task<bool> IsRegionHealthyAsync()
         {
             // In production, call health check endpoint
             // For now, assume all regions are healthy
@@ -322,14 +328,54 @@ StringComparer.Ordinal)
             // Approximate datacenter locations
             return region switch
             {
-                "eu-west-1" => new GeoLocation { Latitude = 53.3498, Longitude = -6.2603 }, // Dublin
-                "us-east-1" => new GeoLocation { Latitude = 39.0438, Longitude = -77.4874 }, // Virginia
-                "sa-east-1" => new GeoLocation { Latitude = -23.5505, Longitude = -46.6333 }, // São Paulo
-                _ => new GeoLocation { Latitude = 0, Longitude = 0 },
+                "eu-west-1" => new GeoLocation
+                {
+                    IpAddress = string.Empty,
+                    CountryCode = "IE",
+                    CountryName = "Ireland",
+                    City = "Dublin",
+                    ContinentCode = "EU",
+                    TimeZone = "Europe/Dublin",
+                    Latitude = 53.3498,
+                    Longitude = -6.2603,
+                }, // Dublin
+                "us-east-1" => new GeoLocation
+                {
+                    IpAddress = string.Empty,
+                    CountryCode = "US",
+                    CountryName = "United States",
+                    City = "Virginia",
+                    ContinentCode = "NA",
+                    TimeZone = "America/New_York",
+                    Latitude = 39.0438,
+                    Longitude = -77.4874,
+                }, // Virginia
+                "sa-east-1" => new GeoLocation
+                {
+                    IpAddress = string.Empty,
+                    CountryCode = "BR",
+                    CountryName = "Brazil",
+                    City = "São Paulo",
+                    ContinentCode = "SA",
+                    TimeZone = "America/Sao_Paulo",
+                    Latitude = -23.5505,
+                    Longitude = -46.6333,
+                }, // São Paulo
+                _ => new GeoLocation
+                {
+                    IpAddress = string.Empty,
+                    CountryCode = "Unknown",
+                    CountryName = "Unknown",
+                    City = "Unknown",
+                    ContinentCode = "Unknown",
+                    TimeZone = "UTC",
+                    Latitude = 0,
+                    Longitude = 0,
+                },
             };
         }
 
-        private double CalculateDistance(GeoLocation loc1, GeoLocation loc2)
+        private static double CalculateDistance(GeoLocation loc1, GeoLocation loc2)
         {
             if (loc1.Latitude == null || loc1.Longitude == null ||
                 loc2.Latitude == null || loc2.Longitude == null)
@@ -340,10 +386,10 @@ StringComparer.Ordinal)
             // Haversine formula for distance calculation
             const double earthRadiusKm = 6371;
 
-            var lat1Rad = this.ToRadians(loc1.Latitude.Value);
-            var lat2Rad = this.ToRadians(loc2.Latitude.Value);
-            var deltaLat = this.ToRadians(loc2.Latitude.Value - loc1.Latitude.Value);
-            var deltaLon = this.ToRadians(loc2.Longitude.Value - loc1.Longitude.Value);
+            var lat1Rad = ToRadians(loc1.Latitude.Value);
+            var lat2Rad = ToRadians(loc2.Latitude.Value);
+            var deltaLat = ToRadians(loc2.Latitude.Value - loc1.Latitude.Value);
+            var deltaLon = ToRadians(loc2.Longitude.Value - loc1.Longitude.Value);
 
             var a = (Math.Sin(deltaLat / 2) * Math.Sin(deltaLat / 2)) +
                     (Math.Cos(lat1Rad) * Math.Cos(lat2Rad) *
@@ -354,7 +400,7 @@ StringComparer.Ordinal)
             return earthRadiusKm * c;
         }
 
-        private double ToRadians(double degrees)
+        private static double ToRadians(double degrees)
         {
             return degrees * Math.PI / 180;
         }

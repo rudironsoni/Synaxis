@@ -74,6 +74,7 @@ public sealed class StampController : BackgroundService
     /// <summary>
     /// Called when the service is starting.
     /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public override Task StartAsync(CancellationToken cancellationToken)
     {
@@ -84,6 +85,7 @@ public sealed class StampController : BackgroundService
     /// <summary>
     /// Called when the service is stopping.
     /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public override Task StopAsync(CancellationToken cancellationToken)
     {

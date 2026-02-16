@@ -35,8 +35,7 @@ namespace Synaxis.Infrastructure.Services
             CancellationToken cancellationToken = default)
         {
             var organization = await this.context.Organizations
-                .FindAsync(new object[] { organizationId }, cancellationToken)
-                .ConfigureAwait(false);
+                .FindAsync(new object[] { organizationId }, cancellationToken).ConfigureAwait(false);
 
             if (organization == null)
             {
@@ -66,11 +65,10 @@ namespace Synaxis.Infrastructure.Services
                 throw new ArgumentNullException(nameof(request));
             }
 
-            this.ValidateLimitsRequest(request);
+            OrganizationSettingsService.ValidateLimitsRequest(request);
 
             var organization = await this.context.Organizations
-                .FindAsync(new object[] { organizationId }, cancellationToken)
-                .ConfigureAwait(false);
+                .FindAsync(new object[] { organizationId }, cancellationToken).ConfigureAwait(false);
 
             if (organization == null)
             {
@@ -129,8 +127,7 @@ namespace Synaxis.Infrastructure.Services
             CancellationToken cancellationToken = default)
         {
             var organization = await this.context.Organizations
-                .FindAsync(new object[] { organizationId }, cancellationToken)
-                .ConfigureAwait(false);
+                .FindAsync(new object[] { organizationId }, cancellationToken).ConfigureAwait(false);
 
             if (organization == null)
             {
@@ -160,11 +157,10 @@ namespace Synaxis.Infrastructure.Services
                 throw new ArgumentNullException(nameof(request));
             }
 
-            this.ValidateSettingsRequest(request);
+            OrganizationSettingsService.ValidateSettingsRequest(request);
 
             var organization = await this.context.Organizations
-                .FindAsync(new object[] { organizationId }, cancellationToken)
-                .ConfigureAwait(false);
+                .FindAsync(new object[] { organizationId }, cancellationToken).ConfigureAwait(false);
 
             if (organization == null)
             {
@@ -202,7 +198,7 @@ namespace Synaxis.Infrastructure.Services
             };
         }
 
-        private void ValidateLimitsRequest(UpdateOrganizationLimitsRequest request)
+        private static void ValidateLimitsRequest(UpdateOrganizationLimitsRequest request)
         {
             if (request.MaxTeams.HasValue && request.MaxTeams.Value < 0)
             {
@@ -235,7 +231,7 @@ namespace Synaxis.Infrastructure.Services
             }
         }
 
-        private void ValidateSettingsRequest(UpdateOrganizationSettingsRequest request)
+        private static void ValidateSettingsRequest(UpdateOrganizationSettingsRequest request)
         {
             if (request.DataRetentionDays.HasValue)
             {

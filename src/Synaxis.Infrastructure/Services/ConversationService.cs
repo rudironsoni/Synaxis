@@ -46,7 +46,7 @@ namespace Synaxis.Infrastructure.Services
         public async Task<Conversation> CreateConversationAsync(
             Guid userId,
             Guid organizationId,
-            string title = null,
+            string? title = null,
             CancellationToken cancellationToken = default)
         {
             var conversation = new Conversation
@@ -78,14 +78,13 @@ namespace Synaxis.Infrastructure.Services
         /// <param name="conversationId">The conversation ID.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The conversation, or null if not found.</returns>
-        public Task<Conversation> GetConversationAsync(
+        public Task<Conversation?> GetConversationAsync(
             Guid conversationId,
             CancellationToken cancellationToken = default)
         {
             return this._dbContext.Conversations
                 .Include(c => c.Turns.OrderBy(t => t.TurnNumber))
-                .FirstOrDefaultAsync(c => c.Id == conversationId, cancellationToken)
-;
+                .FirstOrDefaultAsync(c => c.Id == conversationId, cancellationToken);
         }
 
         /// <summary>
@@ -126,7 +125,7 @@ namespace Synaxis.Infrastructure.Services
             Guid conversationId,
             string role,
             string content,
-            IDictionary<string, string> metadata = null,
+            IDictionary<string, string>? metadata = null,
             CancellationToken cancellationToken = default)
         {
             var conversation = await this._dbContext.Conversations

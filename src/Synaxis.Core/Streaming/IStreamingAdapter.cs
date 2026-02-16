@@ -66,7 +66,7 @@ namespace Synaxis.Core.Streaming
         /// <returns>The converted streaming response.</returns>
         StreamingResponse ConvertToStreamingResponse<TProviderResponse>(
             TProviderResponse providerResponse,
-            StreamingMetadata metadata = null)
+            StreamingMetadata? metadata = null)
             where TProviderResponse : class;
 
         /// <summary>

@@ -43,6 +43,7 @@ public sealed class KubernetesClientWrapper : IDisposable
     /// <summary>
     /// Lists all ConfigMaps with the managed-by label.
     /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A list of ConfigMaps.</returns>
     public async Task<IList<V1ConfigMap>> ListConfigMapsAsync(CancellationToken cancellationToken = default)
     {

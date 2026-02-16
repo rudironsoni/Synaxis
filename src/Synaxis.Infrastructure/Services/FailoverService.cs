@@ -34,9 +34,9 @@ namespace Synaxis.Infrastructure.Services
         /// <summary>
         /// Initializes a new instance of the <see cref="FailoverService"/> class.
         /// </summary>
-        /// <param name="context"></param>
-        /// <param name="healthMonitor"></param>
-        /// <param name="logger"></param>
+        /// <param name="context">The database context.</param>
+        /// <param name="healthMonitor">The health monitor.</param>
+        /// <param name="logger">The logger.</param>
         public FailoverService(
             SynaxisDbContext context,
             IHealthMonitor healthMonitor,
@@ -62,79 +62,13 @@ namespace Synaxis.Infrastructure.Services
 
                 if (primaryHealthy)
                 {
-                    this._logger.LogDebug("Primary region {Region} is healthy for org {OrgId}", primaryRegion, organizationId);
-
-                    return new FailoverDecision
-                    {
-                        SelectedRegion = primaryRegion,
-                        IsFailover = false,
-                        NeedsCrossBorderConsent = false,
-                        Reason = "Primary region healthy",
-                        HealthyRegions = new List<string> { primaryRegion },
-                    };
+                    return this.CreateHealthyRegionDecision(primaryRegion);
                 }
 
                 // Primary is unhealthy, need to failover
                 this._logger.LogWarning("Primary region {Region} is unhealthy for org {OrgId}, initiating failover", primaryRegion, organizationId);
 
-                // Get organization's available regions
-                var org = await this._context.Organizations
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(o => o.Id == organizationId).ConfigureAwait(false);
-
-                if (org == null)
-                {
-                    throw new InvalidOperationException($"Organization {organizationId} not found");
-                }
-
-                var availableRegions = org.AvailableRegions ?? new List<string> { "eu-west-1", "us-east-1", "sa-east-1" };
-
-                // Remove primary region from candidates
-                var candidateRegions = availableRegions.Where(r => !string.Equals(r, primaryRegion, StringComparison.Ordinal)).ToList();
-
-                if (!candidateRegions.Any())
-                {
-                    this._logger.LogError("No failover regions available for org {OrgId}", organizationId);
-
-                    return new FailoverDecision
-                    {
-                        SelectedRegion = primaryRegion,
-                        IsFailover = false,
-                        NeedsCrossBorderConsent = false,
-                        Reason = "No failover regions available",
-                        HealthyRegions = new List<string>(),
-                    };
-                }
-
-                // Find nearest healthy region
-                var targetRegion = await this._healthMonitor.GetNearestHealthyRegionAsync(primaryRegion, candidateRegions).ConfigureAwait(false);
-
-                // Check if user has cross-border consent
-                var user = await this._context.Users
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(u => u.Id == userId).ConfigureAwait(false);
-
-                var needsConsent = user != null &&
-                                   !user.CrossBorderConsentGiven &&
-!string.Equals(user.DataResidencyRegion, targetRegion, StringComparison.Ordinal);
-
-                // Get all healthy regions for the decision
-                var allHealth = await this._healthMonitor.GetAllRegionHealthAsync().ConfigureAwait(false);
-                var healthyRegions = allHealth
-                    .Where(h => h.Value.IsHealthy)
-                    .Select(h => h.Key)
-                    .ToList();
-
-                this._logger.LogInformation("Failover decision for org {OrgId}: {PrimaryRegion} -> {TargetRegion}, consent needed: {NeedsConsent}", organizationId, primaryRegion, targetRegion, needsConsent);
-
-                return new FailoverDecision
-                {
-                    SelectedRegion = targetRegion,
-                    IsFailover = true,
-                    NeedsCrossBorderConsent = needsConsent,
-                    Reason = $"Primary region {primaryRegion} unhealthy",
-                    HealthyRegions = healthyRegions,
-                };
+                return await this.SelectFailoverTargetAsync(organizationId, userId, primaryRegion).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -150,6 +84,82 @@ namespace Synaxis.Infrastructure.Services
                     HealthyRegions = new List<string>(),
                 };
             }
+        }
+
+        private FailoverDecision CreateHealthyRegionDecision(string region)
+        {
+            this._logger.LogDebug("Primary region {Region} is healthy", region);
+
+            return new FailoverDecision
+            {
+                SelectedRegion = region,
+                IsFailover = false,
+                NeedsCrossBorderConsent = false,
+                Reason = "Primary region healthy",
+                HealthyRegions = new List<string> { region },
+            };
+        }
+
+        private async Task<FailoverDecision> SelectFailoverTargetAsync(Guid organizationId, Guid userId, string primaryRegion)
+        {
+            // Get organization's available regions
+            var org = await this._context.Organizations
+                .AsNoTracking()
+                .FirstOrDefaultAsync(o => o.Id == organizationId).ConfigureAwait(false);
+
+            if (org == null)
+            {
+                throw new InvalidOperationException($"Organization {organizationId} not found");
+            }
+
+            var availableRegions = org.AvailableRegions ?? new List<string> { "eu-west-1", "us-east-1", "sa-east-1" };
+
+            // Remove primary region from candidates
+            var candidateRegions = availableRegions.Where(r => !string.Equals(r, primaryRegion, StringComparison.Ordinal)).ToList();
+
+            if (!candidateRegions.Any())
+            {
+                this._logger.LogError("No failover regions available for org {OrgId}", organizationId);
+
+                return new FailoverDecision
+                {
+                    SelectedRegion = primaryRegion,
+                    IsFailover = false,
+                    NeedsCrossBorderConsent = false,
+                    Reason = "No failover regions available",
+                    HealthyRegions = new List<string>(),
+                };
+            }
+
+            // Find nearest healthy region
+            var targetRegion = await this._healthMonitor.GetNearestHealthyRegionAsync(primaryRegion, candidateRegions).ConfigureAwait(false);
+
+            // Check if user has cross-border consent
+            var user = await this._context.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Id == userId).ConfigureAwait(false);
+
+            var needsConsent = user != null &&
+                               !user.CrossBorderConsentGiven &&
+!string.Equals(user.DataResidencyRegion, targetRegion, StringComparison.Ordinal);
+
+            // Get all healthy regions for the decision
+            var allHealth = await this._healthMonitor.GetAllRegionHealthAsync().ConfigureAwait(false);
+            var healthyRegions = allHealth
+                .Where(h => h.Value.IsHealthy)
+                .Select(h => h.Key)
+                .ToList();
+
+            this._logger.LogInformation("Failover decision for org {OrgId}: {PrimaryRegion} -> {TargetRegion}, consent needed: {NeedsConsent}", organizationId, primaryRegion, targetRegion, needsConsent);
+
+            return new FailoverDecision
+            {
+                SelectedRegion = targetRegion,
+                IsFailover = true,
+                NeedsCrossBorderConsent = needsConsent,
+                Reason = $"Primary region {primaryRegion} unhealthy",
+                HealthyRegions = healthyRegions,
+            };
         }
 
         /// <inheritdoc/>

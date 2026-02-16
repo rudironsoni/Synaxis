@@ -134,29 +134,31 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
             var total = await query.CountAsync(cancellationToken).ConfigureAwait(false);
 
             var collections = await query
-                .OrderByDescending(c => c.CreatedAt)
-                .Skip(page * pageSize)
+                .OrderBy(c => c.Name)
+                .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(c => new
-                {
-                    id = c.Id,
-                    name = c.Name,
-                    description = c.Description,
-                    slug = c.Slug,
-                    type = c.Type,
-                    visibility = c.Visibility,
-                    teamId = c.TeamId,
-                    isActive = c.IsActive,
-                    memberCount = c.CollectionMemberships.Count,
-                    createdAt = c.CreatedAt,
-                    updatedAt = c.UpdatedAt,
-                })
+                .Include(c => c.CollectionMemberships)
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
 
+            var result = collections.Select(c => new
+            {
+                id = c.Id,
+                name = c.Name,
+                description = c.Description,
+                slug = c.Slug,
+                type = c.Type,
+                visibility = c.Visibility,
+                teamId = c.TeamId,
+                isActive = c.IsActive,
+                memberCount = c.CollectionMemberships?.Count ?? 0,
+                createdAt = c.CreatedAt,
+                updatedAt = c.UpdatedAt,
+            }).ToList();
+
             return this.Ok(new
             {
-                items = collections,
+                items = result,
                 page,
                 pageSize,
                 total,
@@ -211,27 +213,33 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
                 return this.Forbid();
             }
 
-            var collection = await this._dbContext.Collections
-                .Where(c => c.Id == id && c.OrganizationId == orgId)
-                .Select(c => new
-                {
-                    id = c.Id,
-                    name = c.Name,
-                    description = c.Description,
-                    slug = c.Slug,
-                    type = c.Type,
-                    visibility = c.Visibility,
-                    teamId = c.TeamId,
-                    isActive = c.IsActive,
-                    tags = c.Tags,
-                    metadata = c.Metadata,
-                    memberCount = c.CollectionMemberships.Count,
-                    createdAt = c.CreatedAt,
-                    updatedAt = c.UpdatedAt,
-                    createdBy = c.CreatedBy,
-                })
-                .FirstOrDefaultAsync(cancellationToken)
+            var collectionEntity = await this._dbContext.Collections
+                .Include(c => c.CollectionMemberships)
+                .FirstOrDefaultAsync(c => c.Id == id && c.OrganizationId == orgId, cancellationToken)
                 .ConfigureAwait(false);
+
+            if (collectionEntity == null)
+            {
+                return this.NotFound();
+            }
+
+            var collection = new
+            {
+                id = collectionEntity.Id,
+                name = collectionEntity.Name,
+                description = collectionEntity.Description,
+                slug = collectionEntity.Slug,
+                type = collectionEntity.Type,
+                visibility = collectionEntity.Visibility,
+                teamId = collectionEntity.TeamId,
+                isActive = collectionEntity.IsActive,
+                tags = collectionEntity.Tags,
+                metadata = collectionEntity.Metadata,
+                memberCount = collectionEntity.CollectionMemberships?.Count ?? 0,
+                createdAt = collectionEntity.CreatedAt,
+                updatedAt = collectionEntity.UpdatedAt,
+                createdBy = collectionEntity.CreatedBy,
+            };
 
             if (collection == null)
             {

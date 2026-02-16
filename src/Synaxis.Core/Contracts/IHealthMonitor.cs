@@ -78,7 +78,7 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the region identifier.
         /// </summary>
-        public string Region { get; set; }
+        public required string Region { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether the region is healthy.
@@ -113,7 +113,7 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the status (healthy, degraded, unhealthy).
         /// </summary>
-        public string Status { get; set; }
+        public required string Status { get; set; }
 
         /// <summary>
         /// Gets or sets the list of health issues.
@@ -138,7 +138,7 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the version.
         /// </summary>
-        public string Version { get; set; }
+        public required string Version { get; set; }
     }
 
     /// <summary>
@@ -149,7 +149,7 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the provider identifier.
         /// </summary>
-        public string Provider { get; set; }
+        public required string Provider { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether provider is available.
@@ -164,7 +164,7 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the provider status.
         /// </summary>
-        public string Status { get; set; }
+        public required string Status { get; set; }
 
         /// <summary>
         /// Gets or sets the timestamp of last check.

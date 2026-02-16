@@ -26,7 +26,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the organization navigation property.
         /// </summary>
-        public virtual Organization Organization { get; set; }
+        public virtual Organization? Organization { get; set; }
 
         /// <summary>
         /// Gets or sets the user who created the API key.
@@ -36,7 +36,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the creator navigation property.
         /// </summary>
-        public virtual User Creator { get; set; }
+        public virtual User? Creator { get; set; }
 
         /// <summary>
         /// Gets or sets the API key name.

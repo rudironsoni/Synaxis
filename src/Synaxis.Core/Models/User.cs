@@ -139,6 +139,31 @@ namespace Synaxis.Core.Models
         public DateTime? LockedUntil { get; set; }
 
         /// <summary>
+        /// Gets or sets the password expiration timestamp.
+        /// </summary>
+        public DateTime? PasswordExpiresAt { get; set; }
+
+        /// <summary>
+        /// Gets or sets the number of failed password change attempts.
+        /// </summary>
+        public int FailedPasswordChangeAttempts { get; set; }
+
+        /// <summary>
+        /// Gets or sets the password change lock expiration timestamp.
+        /// </summary>
+        public DateTime? PasswordChangeLockedUntil { get; set; }
+
+        /// <summary>
+        /// Gets or sets the timestamp when the password was last changed.
+        /// </summary>
+        public DateTime? PasswordChangedAt { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the user must change their password on next login.
+        /// </summary>
+        public bool MustChangePassword { get; set; }
+
+        /// <summary>
         /// Gets or sets a value indicating whether the user account is active.
         /// </summary>
         public bool IsActive { get; set; } = true;
@@ -162,6 +187,21 @@ namespace Synaxis.Core.Models
         /// Gets or sets the virtual keys navigation property.
         /// </summary>
         public virtual ICollection<VirtualKey> VirtualKeys { get; set; } = new List<VirtualKey>();
+
+        /// <summary>
+        /// Gets or sets the collection memberships navigation property.
+        /// </summary>
+        public virtual ICollection<CollectionMembership> CollectionMemberships { get; set; } = new List<CollectionMembership>();
+
+        /// <summary>
+        /// Gets or sets the timestamp when the user was soft-deleted, or null if not deleted.
+        /// </summary>
+        public DateTime? DeletedAt { get; set; }
+
+        /// <summary>
+        /// Gets or sets the MFA backup codes.
+        /// </summary>
+        public string? MfaBackupCodes { get; set; }
 
         /// <summary>
         /// Gets the full name of the user.

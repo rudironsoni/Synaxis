@@ -10,7 +10,6 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Synaxis.InferenceGateway.Application.Security;
 using Synaxis.InferenceGateway.Infrastructure.Security;
 using Synaxis.Infrastructure.Data;
@@ -24,18 +23,14 @@ public class AuditServiceTests(ITestOutputHelper output)
     [Fact]
     public void Constructor_ShouldThrowArgumentNullException_ForNullDbContext()
     {
-        using var loggerFactory = LoggerFactory.Create(builder => { });
-        var logger = loggerFactory.CreateLogger<AuditService>();
-        Assert.Throws<ArgumentNullException>(() => new AuditService(null!, logger));
+        Assert.Throws<ArgumentNullException>(() => new AuditService(null!));
     }
 
     [Fact]
     public void Constructor_ShouldInitializeSuccessfully_WithValidDbContext()
     {
         using var dbContext = this.CreateInMemoryDbContext();
-        using var loggerFactory = LoggerFactory.Create(builder => { });
-        var logger = loggerFactory.CreateLogger<AuditService>();
-        var service = new AuditService(dbContext, logger);
+        var service = new AuditService(dbContext);
 
         Assert.NotNull(service);
     }
@@ -45,9 +40,7 @@ public class AuditServiceTests(ITestOutputHelper output)
     {
         // Arrange
         using var dbContext = this.CreateInMemoryDbContext();
-        using var loggerFactory = LoggerFactory.Create(builder => { });
-        var logger = loggerFactory.CreateLogger<AuditService>();
-        var service = new AuditService(dbContext, logger);
+        var service = new AuditService(dbContext);
 
         var tenantId = Guid.NewGuid();
         var userId = Guid.NewGuid();
@@ -72,9 +65,7 @@ public class AuditServiceTests(ITestOutputHelper output)
     {
         // Arrange
         using var dbContext = this.CreateInMemoryDbContext();
-        using var loggerFactory = LoggerFactory.Create(builder => { });
-        var logger = loggerFactory.CreateLogger<AuditService>();
-        var service = new AuditService(dbContext, logger);
+        var service = new AuditService(dbContext);
 
         var tenantId = Guid.NewGuid();
         var action = "system.startup";
@@ -97,9 +88,7 @@ public class AuditServiceTests(ITestOutputHelper output)
     {
         // Arrange
         using var dbContext = this.CreateInMemoryDbContext();
-        using var loggerFactory = LoggerFactory.Create(builder => { });
-        var logger = loggerFactory.CreateLogger<AuditService>();
-        var service = new AuditService(dbContext, logger);
+        var service = new AuditService(dbContext);
 
         var tenantId = Guid.NewGuid();
         var userId = Guid.NewGuid();
@@ -122,9 +111,7 @@ public class AuditServiceTests(ITestOutputHelper output)
     {
         // Arrange
         using var dbContext = this.CreateInMemoryDbContext();
-        using var loggerFactory = LoggerFactory.Create(builder => { });
-        var logger = loggerFactory.CreateLogger<AuditService>();
-        var service = new AuditService(dbContext, logger);
+        var service = new AuditService(dbContext);
 
         var tenantId = Guid.NewGuid();
         var userId = Guid.NewGuid();
@@ -147,9 +134,7 @@ public class AuditServiceTests(ITestOutputHelper output)
     {
         // Arrange
         using var dbContext = this.CreateInMemoryDbContext();
-        using var loggerFactory = LoggerFactory.Create(builder => { });
-        var logger = loggerFactory.CreateLogger<AuditService>();
-        var service = new AuditService(dbContext, logger);
+        var service = new AuditService(dbContext);
 
         var tenantId = Guid.NewGuid();
         var userId = Guid.NewGuid();
@@ -179,9 +164,7 @@ public class AuditServiceTests(ITestOutputHelper output)
     {
         // Arrange
         using var dbContext = this.CreateInMemoryDbContext();
-        using var loggerFactory = LoggerFactory.Create(builder => { });
-        var logger = loggerFactory.CreateLogger<AuditService>();
-        var service = new AuditService(dbContext, logger);
+        var service = new AuditService(dbContext);
 
         var tenantId = Guid.NewGuid();
         var action = "test.action";
@@ -201,9 +184,7 @@ public class AuditServiceTests(ITestOutputHelper output)
     {
         // Arrange
         using var dbContext = this.CreateInMemoryDbContext();
-        using var loggerFactory = LoggerFactory.Create(builder => { });
-        var logger = loggerFactory.CreateLogger<AuditService>();
-        var service = new AuditService(dbContext, logger);
+        var service = new AuditService(dbContext);
 
         var tenantId = Guid.NewGuid();
         var action = "timestamp.test";
@@ -225,9 +206,7 @@ public class AuditServiceTests(ITestOutputHelper output)
     {
         // Arrange
         using var dbContext = this.CreateInMemoryDbContext();
-        using var loggerFactory = LoggerFactory.Create(builder => { });
-        var logger = loggerFactory.CreateLogger<AuditService>();
-        var service = new AuditService(dbContext, logger);
+        var service = new AuditService(dbContext);
 
         var tenantId = Guid.NewGuid();
         var longAction = new string('a', 255);
@@ -247,9 +226,7 @@ public class AuditServiceTests(ITestOutputHelper output)
     {
         // Arrange
         using var dbContext = this.CreateInMemoryDbContext();
-        using var loggerFactory = LoggerFactory.Create(builder => { });
-        var logger = loggerFactory.CreateLogger<AuditService>();
-        var service = new AuditService(dbContext, logger);
+        var service = new AuditService(dbContext);
 
         var tenantId = Guid.NewGuid();
         var action = "cancellation.test";
@@ -265,9 +242,7 @@ public class AuditServiceTests(ITestOutputHelper output)
     {
         // Arrange
         using var dbContext = this.CreateInMemoryDbContext();
-        using var loggerFactory = LoggerFactory.Create(builder => { });
-        var logger = loggerFactory.CreateLogger<AuditService>();
-        var service = new AuditService(dbContext, logger);
+        var service = new AuditService(dbContext);
 
         var tenantId = Guid.NewGuid();
         var action = "action-with-dashes_and.underscores";
@@ -287,9 +262,7 @@ public class AuditServiceTests(ITestOutputHelper output)
     {
         // Arrange
         using var dbContext = this.CreateInMemoryDbContext();
-        using var loggerFactory = LoggerFactory.Create(builder => { });
-        var logger = loggerFactory.CreateLogger<AuditService>();
-        var service = new AuditService(dbContext, logger);
+        var service = new AuditService(dbContext);
 
         var tenant1 = Guid.NewGuid();
         var tenant2 = Guid.NewGuid();
@@ -311,9 +284,7 @@ public class AuditServiceTests(ITestOutputHelper output)
     {
         // Arrange
         using var dbContext = this.CreateInMemoryDbContext();
-        using var loggerFactory = LoggerFactory.Create(builder => { });
-        var logger = loggerFactory.CreateLogger<AuditService>();
-        var service = new AuditService(dbContext, logger);
+        var service = new AuditService(dbContext);
 
         var tenantId = Guid.NewGuid();
         var action = "null.payload";
@@ -333,9 +304,7 @@ public class AuditServiceTests(ITestOutputHelper output)
     {
         // Arrange
         using var dbContext = this.CreateInMemoryDbContext();
-        using var loggerFactory = LoggerFactory.Create(builder => { });
-        var logger = loggerFactory.CreateLogger<AuditService>();
-        var service = new AuditService(dbContext, logger);
+        var service = new AuditService(dbContext);
 
         var tenantId = Guid.NewGuid();
         var action = "large.payload";
@@ -356,9 +325,7 @@ public class AuditServiceTests(ITestOutputHelper output)
     {
         // Arrange
         using var dbContext = this.CreateInMemoryDbContext();
-        using var loggerFactory = LoggerFactory.Create(builder => { });
-        var logger = loggerFactory.CreateLogger<AuditService>();
-        var service = new AuditService(dbContext, logger);
+        var service = new AuditService(dbContext);
 
         var tenantId = Guid.NewGuid();
         var action = "utc.time";

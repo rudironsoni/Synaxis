@@ -295,6 +295,7 @@ public sealed class OrganizationSettingsServiceIntegrationTests(Synaxis.Common.T
         var invalidRequest = new UpdateOrganizationSettingsRequest
         {
             DataRetentionDays = 5000, // Exceeds 3650 day maximum
+            AllowedEmailDomains = new List<string>(),
         };
 
         // Act

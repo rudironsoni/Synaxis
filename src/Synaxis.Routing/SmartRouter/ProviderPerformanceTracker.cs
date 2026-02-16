@@ -5,6 +5,8 @@
 namespace Synaxis.Routing.SmartRouter;
 
 using System.Collections.Concurrent;
+using System.Threading;
+using Synaxis.Routing.Health;
 
 /// <summary>
 /// Tracks performance metrics for AI providers.
@@ -14,7 +16,7 @@ public class ProviderPerformanceTracker
     private readonly ConcurrentDictionary<string, ProviderPerformanceMetrics> _metrics;
     private readonly ConcurrentDictionary<string, List<int>> _latencyHistory;
     private readonly ConcurrentDictionary<string, List<DateTime>> _requestTimestamps;
-    private readonly object _lock = new();
+    private readonly Lock _lock = new();
     private readonly int _maxHistorySize = 1000;
     private readonly int _maxRecentRequests = 100;
 
@@ -91,7 +93,7 @@ public class ProviderPerformanceTracker
             }
 
             // Update latency statistics
-            this.UpdateLatencyStatistics(metrics, latencyList);
+            UpdateLatencyStatistics(metrics, latencyList);
         }
     }
 
@@ -114,7 +116,7 @@ public class ProviderPerformanceTracker
     /// Gets all provider metrics.
     /// </summary>
     /// <returns>A dictionary of provider IDs to their metrics.</returns>
-    public Dictionary<string, ProviderPerformanceMetrics> GetAllMetrics()
+    public IDictionary<string, ProviderPerformanceMetrics> GetAllMetrics()
     {
         return this._metrics.ToDictionary(kvp => kvp.Key, kvp => kvp.Value, StringComparer.Ordinal);
     }
@@ -201,7 +203,7 @@ public class ProviderPerformanceTracker
         return ProviderHealthStatus.Healthy;
     }
 
-    private void UpdateLatencyStatistics(ProviderPerformanceMetrics metrics, List<int> latencyList)
+    private static void UpdateLatencyStatistics(ProviderPerformanceMetrics metrics, List<int> latencyList)
     {
         if (latencyList.Count == 0)
         {

@@ -27,7 +27,7 @@ namespace Synaxis.Core.Models
         /// Gets or sets the password hash.
         /// </summary>
         [Required]
-        public string PasswordHash { get; set; }
+        public required string PasswordHash { get; set; }
 
         /// <summary>
         /// Gets or sets the timestamp when this password was set.
@@ -37,6 +37,6 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the user navigation property.
         /// </summary>
-        public virtual User User { get; set; }
+        public virtual User? User { get; set; }
     }
 }

@@ -87,7 +87,7 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the strength level (Weak, Fair, Good, Strong, Very Strong).
         /// </summary>
-        public string StrengthLevel { get; set; }
+        public required string StrengthLevel { get; set; }
 
         /// <summary>
         /// Gets or sets the validation errors.
@@ -113,7 +113,7 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the error message if the change failed.
         /// </summary>
-        public string ErrorMessage { get; set; }
+        public string? ErrorMessage { get; set; }
 
         /// <summary>
         /// Gets or sets the password expiration date.
@@ -134,7 +134,7 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the error message if the reset failed.
         /// </summary>
-        public string ErrorMessage { get; set; }
+        public string? ErrorMessage { get; set; }
 
         /// <summary>
         /// Gets or sets the password expiration date.

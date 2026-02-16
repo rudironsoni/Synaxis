@@ -215,7 +215,7 @@ namespace Synaxis.Core.Agents
         /// Selects the best agent for the given request based on capabilities and load balancing.
         /// </summary>
         /// <returns>The selected agent, or null if no suitable agent is found.</returns>
-        private SynaxisInferenceAgent SelectAgentForRequest()
+        private SynaxisInferenceAgent? SelectAgentForRequest()
         {
             lock (this._lock)
             {

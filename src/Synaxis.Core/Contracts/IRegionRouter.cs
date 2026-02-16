@@ -93,27 +93,27 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the source region.
         /// </summary>
-        public string FromRegion { get; set; }
+        public required string FromRegion { get; set; }
 
         /// <summary>
         /// Gets or sets the destination region.
         /// </summary>
-        public string ToRegion { get; set; }
+        public required string ToRegion { get; set; }
 
         /// <summary>
         /// Gets or sets the legal basis (SCC, consent, adequacy).
         /// </summary>
-        public string LegalBasis { get; set; }
+        public required string LegalBasis { get; set; }
 
         /// <summary>
         /// Gets or sets the purpose of transfer.
         /// </summary>
-        public string Purpose { get; set; }
+        public required string Purpose { get; set; }
 
         /// <summary>
         /// Gets or sets the data categories being transferred.
         /// </summary>
-        public string[] DataCategories { get; set; }
+        public required string[] DataCategories { get; set; }
     }
 
     /// <summary>
@@ -124,22 +124,22 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the IP address.
         /// </summary>
-        public string IpAddress { get; set; }
+        public required string IpAddress { get; set; }
 
         /// <summary>
         /// Gets or sets the country code.
         /// </summary>
-        public string CountryCode { get; set; }
+        public required string CountryCode { get; set; }
 
         /// <summary>
         /// Gets or sets the country name.
         /// </summary>
-        public string CountryName { get; set; }
+        public required string CountryName { get; set; }
 
         /// <summary>
         /// Gets or sets the city.
         /// </summary>
-        public string City { get; set; }
+        public required string City { get; set; }
 
         /// <summary>
         /// Gets or sets the latitude.
@@ -154,11 +154,11 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the continent code.
         /// </summary>
-        public string ContinentCode { get; set; }
+        public required string ContinentCode { get; set; }
 
         /// <summary>
         /// Gets or sets the time zone.
         /// </summary>
-        public string TimeZone { get; set; }
+        public required string TimeZone { get; set; }
     }
 }

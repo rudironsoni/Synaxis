@@ -24,16 +24,16 @@ namespace Synaxis.Core.Streaming
         /// <summary>
         /// Gets or sets the token usage information.
         /// </summary>
-        public TokenUsage Usage { get; set; }
+        public required TokenUsage Usage { get; set; }
 
         /// <summary>
         /// Gets or sets the finish reason (e.g., "stop", "length", "content_filter").
         /// </summary>
-        public string FinishReason { get; set; }
+        public required string FinishReason { get; set; }
 
         /// <summary>
         /// Gets or sets additional custom metadata.
         /// </summary>
-        public IDictionary<string, object> Custom { get; set; }
+        public required IDictionary<string, object> Custom { get; set; }
     }
 }
