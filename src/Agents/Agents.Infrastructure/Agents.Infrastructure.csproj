@@ -12,6 +12,7 @@
     <PackageReference Include="MassTransit" />
     <PackageReference Include="Microsoft.Azure.Cosmos" />
     <PackageReference Include="Newtonsoft.Json" />
+    <PackageReference Include="YamlDotNet" />
   </ItemGroup>
 
   <ItemGroup>
