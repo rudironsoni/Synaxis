@@ -54,11 +54,13 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("integrity_hash");
 
                     b.Property<string>("IpAddress")
+                        .IsRequired()
                         .HasMaxLength(45)
                         .HasColumnType("character varying(45)")
                         .HasColumnName("ip_address");
 
                     b.Property<string>("Metadata")
+                        .IsRequired()
                         .HasColumnType("jsonb")
                         .HasColumnName("metadata");
 
@@ -67,6 +69,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("organization_id");
 
                     b.Property<string>("PreviousHash")
+                        .IsRequired()
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)")
                         .HasColumnName("previous_hash");
@@ -78,11 +81,13 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("region");
 
                     b.Property<string>("ResourceId")
+                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)")
                         .HasColumnName("resource_id");
 
                     b.Property<string>("ResourceType")
+                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("resource_type");
@@ -92,6 +97,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("timestamp");
 
                     b.Property<string>("UserAgent")
+                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)")
                         .HasColumnName("user_agent");
@@ -145,6 +151,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("enable_redis_backup");
 
                     b.Property<string>("EncryptionKeyId")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("encryption_key_id");
 
@@ -163,6 +170,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("last_backup_at");
 
                     b.Property<string>("LastBackupStatus")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("last_backup_status");
 
@@ -185,6 +193,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("strategy");
 
                     b.PrimitiveCollection<string[]>("TargetRegions")
+                        .IsRequired()
                         .HasColumnType("text[]");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -198,146 +207,6 @@ namespace Synaxis.Infrastructure.Data.Migrations
                     b.HasIndex("OrganizationId", "IsActive");
 
                     b.ToTable("organization_backup_config", (string)null);
-                });
-
-            modelBuilder.Entity("Synaxis.Core.Models.Collection", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text")
-                        .HasColumnName("description");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_active");
-
-                    b.Property<string>("Metadata")
-                        .HasColumnType("jsonb")
-                        .HasColumnName("metadata");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("name");
-
-                    b.Property<Guid>("OrganizationId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("organization_id");
-
-                    b.Property<string>("Slug")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("slug");
-
-                    b.PrimitiveCollection<string[]>("Tags")
-                        .HasColumnType("text[]");
-
-                    b.Property<Guid?>("TeamId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("team_id");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("type");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<string>("Visibility")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("visibility");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedBy");
-
-                    b.HasIndex("IsActive");
-
-                    b.HasIndex("TeamId");
-
-                    b.HasIndex("Type");
-
-                    b.HasIndex("Visibility");
-
-                    b.HasIndex("OrganizationId", "Name");
-
-                    b.HasIndex("OrganizationId", "Slug")
-                        .IsUnique();
-
-                    b.ToTable("Collections", t =>
-                        {
-                            t.HasCheckConstraint("CK_Collection_Type_Valid", "type IN ('general', 'models', 'prompts', 'datasets', 'workflows')");
-
-                            t.HasCheckConstraint("CK_Collection_Visibility_Valid", "visibility IN ('public', 'private', 'team')");
-                        });
-                });
-
-            modelBuilder.Entity("Synaxis.Core.Models.CollectionMembership", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<Guid?>("AddedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("added_by");
-
-                    b.Property<Guid>("CollectionId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("collection_id");
-
-                    b.Property<DateTime>("JoinedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("joined_at");
-
-                    b.Property<Guid>("OrganizationId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("organization_id");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("role");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AddedBy");
-
-                    b.HasIndex("CollectionId", "UserId");
-
-                    b.HasIndex("OrganizationId", "UserId");
-
-                    b.HasIndex("UserId", "CollectionId")
-                        .IsUnique();
-
-                    b.ToTable("CollectionMemberships", t =>
-                        {
-                            t.HasCheckConstraint("CK_CollectionMembership_Role_Valid", "role IN ('Admin', 'Member', 'Viewer')");
-                        });
                 });
 
             modelBuilder.Entity("Synaxis.Core.Models.CreditTransaction", b =>
@@ -364,6 +233,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)")
                         .HasColumnName("description");
@@ -397,46 +267,6 @@ namespace Synaxis.Infrastructure.Data.Migrations
                     b.HasIndex("OrganizationId", "CreatedAt");
 
                     b.ToTable("credit_transactions", (string)null);
-                });
-
-            modelBuilder.Entity("Synaxis.Core.Models.EmailVerificationToken", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("expires_at");
-
-                    b.Property<bool>("IsUsed")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_used");
-
-                    b.Property<string>("TokenHash")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("token_hash");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ExpiresAt");
-
-                    b.HasIndex("TokenHash")
-                        .IsUnique();
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("email_verification_tokens", (string)null);
                 });
 
             modelBuilder.Entity("Synaxis.Core.Models.Invitation", b =>
@@ -534,6 +364,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("id");
 
                     b.Property<string>("BillingCurrency")
+                        .IsRequired()
                         .HasMaxLength(3)
                         .HasColumnType("character varying(3)")
                         .HasColumnName("billing_currency");
@@ -604,42 +435,6 @@ namespace Synaxis.Infrastructure.Data.Migrations
                     b.ToTable("invoices", (string)null);
                 });
 
-            modelBuilder.Entity("Synaxis.Core.Models.JwtBlacklist", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("expires_at");
-
-                    b.Property<string>("TokenId")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("token_id");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ExpiresAt");
-
-                    b.HasIndex("TokenId")
-                        .IsUnique();
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("JwtBlacklists");
-                });
-
             modelBuilder.Entity("Synaxis.Core.Models.Organization", b =>
                 {
                     b.Property<Guid>("Id")
@@ -648,12 +443,15 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("id");
 
                     b.PrimitiveCollection<string[]>("AllowedEmailDomains")
+                        .IsRequired()
                         .HasColumnType("text[]");
 
                     b.PrimitiveCollection<string[]>("AvailableRegions")
+                        .IsRequired()
                         .HasColumnType("text[]");
 
                     b.Property<string>("BillingCurrency")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("billing_currency");
 
@@ -666,12 +464,14 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("credit_balance");
 
                     b.Property<string>("CreditCurrency")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("DataRetentionDays")
                         .HasColumnType("integer");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("description");
 
@@ -716,6 +516,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("primary_region");
 
                     b.Property<string>("PrivacyConsent")
+                        .IsRequired()
                         .HasColumnType("jsonb")
                         .HasColumnName("privacy_consent");
 
@@ -735,12 +536,14 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("SubscriptionStatus")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("TermsAcceptedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Tier")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("tier");
 
@@ -769,198 +572,6 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         });
                 });
 
-            modelBuilder.Entity("Synaxis.Core.Models.PasswordHistory", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<string>("PasswordHash")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("password_hash");
-
-                    b.Property<DateTime>("SetAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("set_at");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("UserId", "SetAt");
-
-                    b.ToTable("password_histories", (string)null);
-                });
-
-            modelBuilder.Entity("Synaxis.Core.Models.PasswordPolicy", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<bool>("BlockCommonPasswords")
-                        .HasColumnType("boolean")
-                        .HasColumnName("block_common_passwords");
-
-                    b.Property<bool>("BlockUserInfoInPassword")
-                        .HasColumnType("boolean")
-                        .HasColumnName("block_user_info_in_password");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<int>("LockoutDurationMinutes")
-                        .HasColumnType("integer")
-                        .HasColumnName("lockout_duration_minutes");
-
-                    b.Property<int>("MaxFailedChangeAttempts")
-                        .HasColumnType("integer")
-                        .HasColumnName("max_failed_change_attempts");
-
-                    b.Property<int>("MinLength")
-                        .HasColumnType("integer")
-                        .HasColumnName("min_length");
-
-                    b.Property<Guid>("OrganizationId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("organization_id");
-
-                    b.Property<int>("PasswordExpirationDays")
-                        .HasColumnType("integer")
-                        .HasColumnName("password_expiration_days");
-
-                    b.Property<int>("PasswordExpirationWarningDays")
-                        .HasColumnType("integer")
-                        .HasColumnName("password_expiration_warning_days");
-
-                    b.Property<int>("PasswordHistoryCount")
-                        .HasColumnType("integer")
-                        .HasColumnName("password_history_count");
-
-                    b.Property<bool>("RequireLowercase")
-                        .HasColumnType("boolean")
-                        .HasColumnName("require_lowercase");
-
-                    b.Property<bool>("RequireNumbers")
-                        .HasColumnType("boolean")
-                        .HasColumnName("require_numbers");
-
-                    b.Property<bool>("RequireSpecialCharacters")
-                        .HasColumnType("boolean")
-                        .HasColumnName("require_special_characters");
-
-                    b.Property<bool>("RequireUppercase")
-                        .HasColumnType("boolean")
-                        .HasColumnName("require_uppercase");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OrganizationId")
-                        .IsUnique();
-
-                    b.ToTable("password_policies", (string)null);
-                });
-
-            modelBuilder.Entity("Synaxis.Core.Models.PasswordResetToken", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("expires_at");
-
-                    b.Property<bool>("IsUsed")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_used");
-
-                    b.Property<string>("TokenHash")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("token_hash");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ExpiresAt");
-
-                    b.HasIndex("TokenHash")
-                        .IsUnique();
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("password_reset_tokens", (string)null);
-                });
-
-            modelBuilder.Entity("Synaxis.Core.Models.RefreshToken", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("expires_at");
-
-                    b.Property<bool>("IsRevoked")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_revoked");
-
-                    b.Property<string>("ReplacedByTokenHash")
-                        .HasColumnType("text")
-                        .HasColumnName("replaced_by_token_hash");
-
-                    b.Property<DateTime?>("RevokedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("revoked_at");
-
-                    b.Property<string>("TokenHash")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("token_hash");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ExpiresAt");
-
-                    b.HasIndex("TokenHash")
-                        .IsUnique();
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("refresh_tokens", (string)null);
-                });
-
             modelBuilder.Entity("Synaxis.Core.Models.Request", b =>
                 {
                     b.Property<Guid>("Id")
@@ -969,6 +580,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("id");
 
                     b.Property<string>("ClientIpAddress")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("client_ip_address");
 
@@ -1011,10 +623,12 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("output_tokens");
 
                     b.Property<string>("ProcessedRegion")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("processed_region");
 
                     b.Property<string>("Provider")
+                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("provider");
@@ -1024,6 +638,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("queue_time_ms");
 
                     b.Property<string>("RequestHeaders")
+                        .IsRequired()
                         .HasColumnType("jsonb")
                         .HasColumnName("request_headers");
 
@@ -1044,6 +659,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("status_code");
 
                     b.Property<string>("StoredRegion")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("stored_region");
 
@@ -1052,10 +668,12 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("team_id");
 
                     b.Property<string>("TransferLegalBasis")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("transfer_legal_basis");
 
                     b.Property<string>("TransferPurpose")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("transfer_purpose");
 
@@ -1064,6 +682,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("transfer_timestamp");
 
                     b.Property<string>("UserAgent")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("user_agent");
 
@@ -1072,6 +691,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("user_id");
 
                     b.Property<string>("UserRegion")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("user_region");
 
@@ -1117,6 +737,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("Model")
+                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("model");
@@ -1126,11 +747,13 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("organization_id");
 
                     b.Property<string>("Provider")
+                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("provider");
 
                     b.Property<string>("Region")
+                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
                         .HasColumnName("region");
@@ -1178,10 +801,12 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("description");
 
                     b.Property<string>("Features")
+                        .IsRequired()
                         .HasColumnType("jsonb")
                         .HasColumnName("features");
 
@@ -1190,6 +815,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("is_active");
 
                     b.Property<string>("LimitsConfig")
+                        .IsRequired()
                         .HasColumnType("jsonb")
                         .HasColumnName("limits_config");
 
@@ -1235,9 +861,11 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("id");
 
                     b.PrimitiveCollection<string[]>("AllowedModels")
+                        .IsRequired()
                         .HasColumnType("text[]");
 
                     b.PrimitiveCollection<string[]>("BlockedModels")
+                        .IsRequired()
                         .HasColumnType("text[]");
 
                     b.Property<decimal>("BudgetAlertThreshold")
@@ -1249,6 +877,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("description");
 
@@ -1355,6 +984,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("id");
 
                     b.Property<string>("AvatarUrl")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("avatar_url");
 
@@ -1398,11 +1028,8 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("failed_login_attempts");
 
-                    b.Property<int>("FailedPasswordChangeAttempts")
-                        .HasColumnType("integer")
-                        .HasColumnName("failed_password_change_attempts");
-
                     b.Property<string>("FirstName")
+                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("first_name");
@@ -1416,11 +1043,13 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("last_login_at");
 
                     b.Property<string>("LastName")
+                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("last_name");
 
                     b.Property<string>("Locale")
+                        .IsRequired()
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)")
                         .HasColumnName("locale");
@@ -1428,10 +1057,6 @@ namespace Synaxis.Infrastructure.Data.Migrations
                     b.Property<DateTime?>("LockedUntil")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("locked_until");
-
-                    b.Property<string>("MfaBackupCodes")
-                        .HasColumnType("text")
-                        .HasColumnName("mfa_backup_codes");
 
                     b.Property<bool>("MfaEnabled")
                         .HasColumnType("boolean")
@@ -1441,25 +1066,9 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("mfa_secret");
 
-                    b.Property<bool>("MustChangePassword")
-                        .HasColumnType("boolean")
-                        .HasColumnName("must_change_password");
-
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("uuid")
                         .HasColumnName("organization_id");
-
-                    b.Property<DateTime?>("PasswordChangeLockedUntil")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("password_change_locked_until");
-
-                    b.Property<DateTime?>("PasswordChangedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("password_changed_at");
-
-                    b.Property<DateTime?>("PasswordExpiresAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("password_expires_at");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
@@ -1467,14 +1076,17 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("password_hash");
 
                     b.Property<string>("PrivacyConsent")
+                        .IsRequired()
                         .HasColumnType("jsonb")
                         .HasColumnName("privacy_consent");
 
                     b.Property<string>("Role")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("role");
 
                     b.Property<string>("Timezone")
+                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
                         .HasColumnName("timezone");
@@ -1503,9 +1115,11 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("id");
 
                     b.PrimitiveCollection<string[]>("AllowedModels")
+                        .IsRequired()
                         .HasColumnType("text[]");
 
                     b.PrimitiveCollection<string[]>("BlockedModels")
+                        .IsRequired()
                         .HasColumnType("text[]");
 
                     b.Property<DateTime>("CreatedAt")
@@ -1521,6 +1135,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("current_spend");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("description");
 
@@ -1547,10 +1162,12 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("max_budget");
 
                     b.Property<string>("Metadata")
+                        .IsRequired()
                         .HasColumnType("jsonb")
                         .HasColumnName("metadata");
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)")
                         .HasColumnName("name");
@@ -1564,6 +1181,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("revoked_at");
 
                     b.Property<string>("RevokedReason")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("revoked_reason");
 
@@ -1572,6 +1190,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnName("rpm_limit");
 
                     b.PrimitiveCollection<string[]>("Tags")
+                        .IsRequired()
                         .HasColumnType("text[]");
 
                     b.Property<Guid>("TeamId")
@@ -1646,66 +1265,6 @@ namespace Synaxis.Infrastructure.Data.Migrations
                     b.Navigation("Organization");
                 });
 
-            modelBuilder.Entity("Synaxis.Core.Models.Collection", b =>
-                {
-                    b.HasOne("Synaxis.Core.Models.User", "Creator")
-                        .WithMany()
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Synaxis.Core.Models.Organization", "Organization")
-                        .WithMany("Collections")
-                        .HasForeignKey("OrganizationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Synaxis.Core.Models.Team", "Team")
-                        .WithMany("Collections")
-                        .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.Navigation("Creator");
-
-                    b.Navigation("Organization");
-
-                    b.Navigation("Team");
-                });
-
-            modelBuilder.Entity("Synaxis.Core.Models.CollectionMembership", b =>
-                {
-                    b.HasOne("Synaxis.Core.Models.User", "Adder")
-                        .WithMany()
-                        .HasForeignKey("AddedBy")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("Synaxis.Core.Models.Collection", "Collection")
-                        .WithMany("CollectionMemberships")
-                        .HasForeignKey("CollectionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Synaxis.Core.Models.Organization", "Organization")
-                        .WithMany()
-                        .HasForeignKey("OrganizationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Synaxis.Core.Models.User", "User")
-                        .WithMany("CollectionMemberships")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Adder");
-
-                    b.Navigation("Collection");
-
-                    b.Navigation("Organization");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Synaxis.Core.Models.CreditTransaction", b =>
                 {
                     b.HasOne("Synaxis.Core.Models.Organization", "Organization")
@@ -1715,17 +1274,6 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Organization");
-                });
-
-            modelBuilder.Entity("Synaxis.Core.Models.EmailVerificationToken", b =>
-                {
-                    b.HasOne("Synaxis.Core.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Synaxis.Core.Models.Invitation", b =>
@@ -1764,61 +1312,6 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Organization");
-                });
-
-            modelBuilder.Entity("Synaxis.Core.Models.JwtBlacklist", b =>
-                {
-                    b.HasOne("Synaxis.Core.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Synaxis.Core.Models.PasswordHistory", b =>
-                {
-                    b.HasOne("Synaxis.Core.Models.User", "User")
-                        .WithMany("PasswordHistory")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Synaxis.Core.Models.PasswordPolicy", b =>
-                {
-                    b.HasOne("Synaxis.Core.Models.Organization", "Organization")
-                        .WithOne("PasswordPolicy")
-                        .HasForeignKey("Synaxis.Core.Models.PasswordPolicy", "OrganizationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Organization");
-                });
-
-            modelBuilder.Entity("Synaxis.Core.Models.PasswordResetToken", b =>
-                {
-                    b.HasOne("Synaxis.Core.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Synaxis.Core.Models.RefreshToken", b =>
-                {
-                    b.HasOne("Synaxis.Core.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Synaxis.Core.Models.Request", b =>
@@ -1962,17 +1455,8 @@ namespace Synaxis.Infrastructure.Data.Migrations
                     b.Navigation("Team");
                 });
 
-            modelBuilder.Entity("Synaxis.Core.Models.Collection", b =>
-                {
-                    b.Navigation("CollectionMemberships");
-                });
-
             modelBuilder.Entity("Synaxis.Core.Models.Organization", b =>
                 {
-                    b.Navigation("Collections");
-
-                    b.Navigation("PasswordPolicy");
-
                     b.Navigation("Requests");
 
                     b.Navigation("Teams");
@@ -1984,8 +1468,6 @@ namespace Synaxis.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("Synaxis.Core.Models.Team", b =>
                 {
-                    b.Navigation("Collections");
-
                     b.Navigation("TeamMemberships");
 
                     b.Navigation("VirtualKeys");
@@ -1993,10 +1475,6 @@ namespace Synaxis.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("Synaxis.Core.Models.User", b =>
                 {
-                    b.Navigation("CollectionMemberships");
-
-                    b.Navigation("PasswordHistory");
-
                     b.Navigation("TeamMemberships");
 
                     b.Navigation("VirtualKeys");

@@ -71,7 +71,7 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the invitation token.
         /// </summary>
-        public string Token { get; set; }
+        public string Token { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the invited by user ID.

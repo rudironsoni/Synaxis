@@ -1,23 +1,19 @@
-// <copyright file="SuperAdminService.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
-// </copyright>
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Synaxis.Core.Contracts;
+using Synaxis.Core.Models;
+using Synaxis.Infrastructure.Data;
 
 namespace Synaxis.Infrastructure.Services
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Net.Http;
-    using System.Security.Cryptography;
-    using System.Text;
-    using System.Text.Json;
-    using System.Threading.Tasks;
-    using Microsoft.EntityFrameworkCore;
-    using Microsoft.Extensions.Logging;
-    using Synaxis.Core.Contracts;
-    using Synaxis.Core.Models;
-    using Synaxis.Infrastructure.Data;
-
     /// <summary>
     /// Super Admin service with cross-region visibility and strict access controls.
     /// </summary>
@@ -31,32 +27,23 @@ namespace Synaxis.Infrastructure.Services
         private readonly string _currentRegion;
 
         // Configuration - should come from IConfiguration in production
-        private readonly Dictionary<string, string> _regionEndpoints = new(StringComparer.Ordinal)
+        private readonly Dictionary<string, string> _regionEndpoints = new()
         {
             { "us-east-1", "https://api-us.synaxis.io" },
             { "eu-west-1", "https://api-eu.synaxis.io" },
-            { "sa-east-1", "https://api-br.synaxis.io" },
+            { "sa-east-1", "https://api-br.synaxis.io" }
         };
 
-        private readonly HashSet<string> _allowedIpRanges = new(StringComparer.Ordinal)
+        private readonly HashSet<string> _allowedIpRanges = new()
         {
             "10.0.0.0/8",
             "172.16.0.0/12",
-            "192.168.0.0/16",
+            "192.168.0.0/16"
         };
 
         private readonly int _businessHoursStart = 8; // 8 AM
         private readonly int _businessHoursEnd = 18; // 6 PM
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SuperAdminService"/> class.
-        /// </summary>
-        /// <param name="context"></param>
-        /// <param name="httpClientFactory"></param>
-        /// <param name="auditService"></param>
-        /// <param name="userService"></param>
-        /// <param name="logger"></param>
-        /// <param name="currentRegion"></param>
         public SuperAdminService(
             SynaxisDbContext context,
             IHttpClientFactory httpClientFactory,
@@ -65,64 +52,56 @@ namespace Synaxis.Infrastructure.Services
             ILogger<SuperAdminService> logger,
             string currentRegion = "us-east-1")
         {
-            this._context = context ?? throw new ArgumentNullException(nameof(context));
-            this._httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-            this._auditService = auditService ?? throw new ArgumentNullException(nameof(auditService));
-            this._userService = userService ?? throw new ArgumentNullException(nameof(userService));
-            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            this._currentRegion = currentRegion;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
+            _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+            _auditService = auditService ?? throw new ArgumentNullException(nameof(auditService));
+            _userService = userService ?? throw new ArgumentNullException(nameof(userService));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _currentRegion = currentRegion;
         }
 
-        /// <inheritdoc/>
         public async Task<IList<OrganizationSummary>> GetCrossRegionOrganizationsAsync()
         {
-            this._logger.LogInformation("Fetching cross-region organizations");
+            _logger.LogInformation("Fetching cross-region organizations");
 
             // Get local organizations
-            var localOrgs = await this.GetLocalOrganizationsAsync().ConfigureAwait(false);
+            var localOrgs = await GetLocalOrganizationsAsync();
 
             // Fetch from all other regions in parallel
-            var otherRegions = this._regionEndpoints.Keys.Where(r => !string.Equals(r, this._currentRegion, StringComparison.Ordinal)).ToList();
-            var tasks = otherRegions.Select(region => this.FetchOrganizationsFromRegionAsync(region));
-            var remoteResults = await Task.WhenAll(tasks).ConfigureAwait(false);
+            var otherRegions = _regionEndpoints.Keys.Where(r => r != _currentRegion).ToList();
+            var tasks = otherRegions.Select(region => FetchOrganizationsFromRegionAsync(region));
+            var remoteResults = await Task.WhenAll(tasks);
 
             // Combine all results
             var allOrgs = localOrgs.Concat(remoteResults.SelectMany(r => r)).ToList();
 
-            this._logger.LogInformation("Retrieved {Count} organizations across {Regions} regions", allOrgs.Count, this._regionEndpoints.Count);
+            _logger.LogInformation("Retrieved {Count} organizations across {Regions} regions",
+                allOrgs.Count, _regionEndpoints.Count);
 
             return allOrgs;
         }
 
-        /// <inheritdoc/>
         public async Task<ImpersonationToken> GenerateImpersonationTokenAsync(ImpersonationRequest request)
         {
             if (request == null)
-            {
                 throw new ArgumentNullException(nameof(request));
-            }
 
             if (string.IsNullOrWhiteSpace(request.Justification))
-            {
                 throw new ArgumentException("Justification is required for impersonation");
-            }
 
             if (string.IsNullOrWhiteSpace(request.ApprovedBy))
-            {
                 throw new ArgumentException("Approval is required for impersonation");
-            }
 
-            this._logger.LogWarning("Generating impersonation token for user {UserId} in org {OrgId}. Justification: {Justification}", request.UserId, request.OrganizationId, request.Justification);
+            _logger.LogWarning("Generating impersonation token for user {UserId} in org {OrgId}. Justification: {Justification}",
+                request.UserId, request.OrganizationId, request.Justification);
 
             // Verify user exists
-            var user = await this._context.Users
+            var user = await _context.Users
                 .Include(u => u.Organization)
-                .FirstOrDefaultAsync(u => u.Id == request.UserId && u.OrganizationId == request.OrganizationId).ConfigureAwait(false);
+                .FirstOrDefaultAsync(u => u.Id == request.UserId && u.OrganizationId == request.OrganizationId);
 
             if (user == null)
-            {
                 throw new InvalidOperationException($"User {request.UserId} not found in organization {request.OrganizationId}");
-            }
 
             // Generate secure token
             var tokenData = new
@@ -133,13 +112,13 @@ namespace Synaxis.Infrastructure.Services
                 ExpiresAt = DateTime.UtcNow.AddMinutes(request.DurationMinutes),
                 Justification = request.Justification,
                 ApprovedBy = request.ApprovedBy,
-                Type = "Impersonation",
+                Type = "Impersonation"
             };
 
-            var token = this.GenerateSecureToken(tokenData);
+            var token = GenerateSecureToken(tokenData);
 
             // Audit log the impersonation
-            await this._auditService.LogEventAsync(new AuditEvent
+            await _auditService.LogEventAsync(new AuditEvent
             {
                 OrganizationId = request.OrganizationId,
                 UserId = request.UserId,
@@ -148,16 +127,15 @@ namespace Synaxis.Infrastructure.Services
                 Action = "generate_impersonation_token",
                 ResourceType = "User",
                 ResourceId = request.UserId.ToString(),
-                Metadata = new Dictionary<string, object>(
-StringComparer.Ordinal)
+                Metadata = new Dictionary<string, object>
                 {
                     { "justification", request.Justification },
                     { "approved_by", request.ApprovedBy },
                     { "duration_minutes", request.DurationMinutes },
-                    { "expires_at", tokenData.ExpiresAt },
+                    { "expires_at", tokenData.ExpiresAt }
                 },
-                Region = this._currentRegion,
-            }).ConfigureAwait(false);
+                Region = _currentRegion
+            });
 
             return new ImpersonationToken
             {
@@ -165,36 +143,37 @@ StringComparer.Ordinal)
                 UserId = request.UserId,
                 OrganizationId = request.OrganizationId,
                 ExpiresAt = tokenData.ExpiresAt,
-                Justification = request.Justification,
+                Justification = request.Justification
             };
         }
 
-        /// <inheritdoc/>
         public async Task<GlobalUsageAnalytics> GetGlobalUsageAnalyticsAsync(DateTime? startDate = null, DateTime? endDate = null)
         {
             var start = startDate ?? DateTime.UtcNow.AddDays(-30);
             var end = endDate ?? DateTime.UtcNow;
 
-            this._logger.LogInformation("Fetching global usage analytics from {Start} to {End}", start, end);
+            _logger.LogInformation("Fetching global usage analytics from {Start} to {End}", start, end);
 
             // Get local usage
-            var localUsage = await this.GetLocalUsageAsync(start, end).ConfigureAwait(false);
+            var localUsage = await GetLocalUsageAsync(start, end);
 
             // Fetch from all other regions in parallel
-            var otherRegions = this._regionEndpoints.Keys.Where(r => !string.Equals(r, this._currentRegion, StringComparison.Ordinal)).ToList();
-            var tasks = otherRegions.Select(region => this.FetchUsageFromRegionAsync(region, start, end));
-            var remoteResults = await Task.WhenAll(tasks).ConfigureAwait(false);
+            var otherRegions = _regionEndpoints.Keys.Where(r => r != _currentRegion).ToList();
+            var tasks = otherRegions.Select(region => FetchUsageFromRegionAsync(region, start, end));
+            var remoteResults = await Task.WhenAll(tasks);
 
             // Aggregate all usage
-            var usageByRegion = new Dictionary<string, RegionUsage>(
-StringComparer.Ordinal)
+            var usageByRegion = new Dictionary<string, RegionUsage>
             {
-                { this._currentRegion, localUsage },
+                { _currentRegion, localUsage }
             };
 
-            foreach (var result in remoteResults.Where(r => r != null && r.Region != null))
+            foreach (var result in remoteResults)
             {
-                usageByRegion[result.Region] = result;
+                if (result != null && result.Region != null)
+                {
+                    usageByRegion[result.Region] = result;
+                }
             }
 
             var totalRequests = usageByRegion.Values.Sum(u => u.Requests);
@@ -202,43 +181,42 @@ StringComparer.Ordinal)
             var totalSpend = usageByRegion.Values.Sum(u => u.Spend);
 
             // Get model and provider breakdowns from local region only (for simplicity)
-            var requestsByModel = await this._context.Requests
+            var requestsByModel = await _context.Requests
                 .Where(r => r.CreatedAt >= start && r.CreatedAt <= end)
                 .GroupBy(r => r.Model)
                 .Select(g => new { Model = g.Key, Count = g.Count() })
-                .ToDictionaryAsync(x => x.Model ?? "unknown", x => (long)x.Count).ConfigureAwait(false);
+                .ToDictionaryAsync(x => x.Model ?? "unknown", x => (long)x.Count);
 
-            var requestsByProvider = await this._context.Requests
+            var requestsByProvider = await _context.Requests
                 .Where(r => r.CreatedAt >= start && r.CreatedAt <= end)
                 .GroupBy(r => r.Provider)
                 .Select(g => new { Provider = g.Key, Count = g.Count() })
-                .ToDictionaryAsync(x => x.Provider ?? "unknown", x => (long)x.Count).ConfigureAwait(false);
+                .ToDictionaryAsync(x => x.Provider ?? "unknown", x => (long)x.Count);
 
             return new GlobalUsageAnalytics
             {
                 TotalRequests = totalRequests,
                 TotalTokens = totalTokens,
                 TotalSpend = totalSpend,
-                TotalOrganizations = await this._context.Organizations.CountAsync().ConfigureAwait(false),
-                TotalUsers = await this._context.Users.CountAsync(u => u.IsActive).ConfigureAwait(false),
-                ActiveOrganizations = await this._context.Organizations.CountAsync(o => o.IsActive).ConfigureAwait(false),
+                TotalOrganizations = await _context.Organizations.CountAsync(),
+                TotalUsers = await _context.Users.CountAsync(u => u.IsActive),
+                ActiveOrganizations = await _context.Organizations.CountAsync(o => o.IsActive),
                 UsageByRegion = usageByRegion,
                 RequestsByModel = requestsByModel,
                 RequestsByProvider = requestsByProvider,
                 StartDate = start,
-                EndDate = end,
+                EndDate = end
             };
         }
 
-        /// <inheritdoc/>
         public async Task<IList<CrossBorderTransferReport>> GetCrossBorderTransfersAsync(DateTime? startDate = null, DateTime? endDate = null)
         {
             var start = startDate ?? DateTime.UtcNow.AddDays(-30);
             var end = endDate ?? DateTime.UtcNow;
 
-            this._logger.LogInformation("Fetching cross-border transfers from {Start} to {End}", start, end);
+            _logger.LogInformation("Fetching cross-border transfers from {Start} to {End}", start, end);
 
-            var transfers = await this._context.Requests
+            var transfers = await _context.Requests
                 .Where(r => r.CrossBorderTransfer && r.CreatedAt >= start && r.CreatedAt <= end)
                 .Include(r => r.Organization)
                 .Include(r => r.User)
@@ -247,34 +225,33 @@ StringComparer.Ordinal)
                 {
                     Id = r.Id,
                     OrganizationId = r.OrganizationId,
-                    OrganizationName = r.Organization.Name,
+                    OrganizationName = r.Organization != null ? r.Organization.Name : string.Empty,
                     UserId = r.UserId,
-                    UserEmail = r.User != null ? r.User.Email : null,
-                    FromRegion = r.UserRegion,
-                    ToRegion = r.ProcessedRegion,
+                    UserEmail = r.User != null ? r.User.Email : string.Empty,
+                    FromRegion = r.UserRegion ?? string.Empty,
+                    ToRegion = r.ProcessedRegion ?? string.Empty,
                     LegalBasis = r.TransferLegalBasis,
                     Purpose = r.TransferPurpose,
                     DataCategories = new[] { "request_data", "response_data" },
-                    Timestamp = r.TransferTimestamp ?? r.CreatedAt,
+                    Timestamp = r.TransferTimestamp ?? r.CreatedAt
                 })
-                .ToListAsync().ConfigureAwait(false);
+                .ToListAsync();
 
             return transfers;
         }
 
-        /// <inheritdoc/>
         public async Task<ComplianceStatusDashboard> GetComplianceStatusAsync()
         {
-            this._logger.LogInformation("Checking compliance status across regions");
+            _logger.LogInformation("Checking compliance status across regions");
 
-            var totalOrgs = await this._context.Organizations.CountAsync().ConfigureAwait(false);
-            var orgsWithConsent = await this._context.Users
+            var totalOrgs = await _context.Organizations.CountAsync();
+            var orgsWithConsent = await _context.Users
                 .Where(u => u.CrossBorderConsentGiven)
                 .Select(u => u.OrganizationId)
                 .Distinct()
-                .CountAsync().ConfigureAwait(false);
+                .CountAsync();
 
-            var complianceByRegion = await this._context.Organizations
+            var complianceByRegion = await _context.Organizations
                 .GroupBy(o => o.PrimaryRegion)
                 .Select(g => new RegionCompliance
                 {
@@ -283,14 +260,14 @@ StringComparer.Ordinal)
                     TotalOrganizations = g.Count(),
                     OrganizationsWithConsent = g.Count(o => o.Users.Any(u => u.CrossBorderConsentGiven)),
                     CrossBorderTransfers = 0,
-                    Issues = new List<string>(),
+                    Issues = new List<string>()
                 })
-                .ToDictionaryAsync(r => r.Region).ConfigureAwait(false);
+                .ToDictionaryAsync(r => r.Region);
 
             var issues = new List<ComplianceIssue>();
 
             // Check for organizations without consent doing cross-border transfers
-            var orgsWithoutConsent = await this._context.Organizations
+            var orgsWithoutConsent = await _context.Organizations
                 .Where(o => !o.Users.Any(u => u.CrossBorderConsentGiven) &&
                            o.Users.Any(u => u.DataResidencyRegion != o.PrimaryRegion))
                 .Select(o => new ComplianceIssue
@@ -301,9 +278,9 @@ StringComparer.Ordinal)
                     OrganizationId = o.Id,
                     OrganizationName = o.Name,
                     Region = o.PrimaryRegion,
-                    DetectedAt = DateTime.UtcNow,
+                    DetectedAt = DateTime.UtcNow
                 })
-                .ToListAsync().ConfigureAwait(false);
+                .ToListAsync();
 
             issues.AddRange(orgsWithoutConsent);
 
@@ -314,26 +291,25 @@ StringComparer.Ordinal)
                 OrganizationsWithIssues = issues.Count,
                 ComplianceByRegion = complianceByRegion,
                 Issues = issues,
-                CheckedAt = DateTime.UtcNow,
+                CheckedAt = DateTime.UtcNow
             };
         }
 
-        /// <inheritdoc/>
         public async Task<SystemHealthOverview> GetSystemHealthOverviewAsync()
         {
-            this._logger.LogInformation("Checking system health across regions");
+            _logger.LogInformation("Checking system health across regions");
 
-            var healthByRegion = new Dictionary<string, RegionHealth>(StringComparer.Ordinal);
+            var healthByRegion = new Dictionary<string, RegionHealth>();
             var alerts = new List<SystemAlert>();
 
             // Check local region health
-            var localHealth = await this.CheckLocalRegionHealthAsync().ConfigureAwait(false);
-            healthByRegion[this._currentRegion] = localHealth;
+            var localHealth = await CheckLocalRegionHealthAsync();
+            healthByRegion[_currentRegion] = localHealth;
 
             // Check remote regions in parallel
-            var otherRegions = this._regionEndpoints.Keys.Where(r => !string.Equals(r, this._currentRegion, StringComparison.Ordinal)).ToList();
-            var tasks = otherRegions.Select(region => this.CheckRemoteRegionHealthAsync(region));
-            var remoteHealthResults = await Task.WhenAll(tasks).ConfigureAwait(false);
+            var otherRegions = _regionEndpoints.Keys.Where(r => r != _currentRegion).ToList();
+            var tasks = otherRegions.Select(region => CheckRemoteRegionHealthAsync(region));
+            var remoteHealthResults = await Task.WhenAll(tasks);
 
             foreach (var health in remoteHealthResults.Where(h => h != null))
             {
@@ -343,10 +319,10 @@ StringComparer.Ordinal)
                 {
                     alerts.Add(new SystemAlert
                     {
-                        Severity = string.Equals(health.Status, "Down", StringComparison.Ordinal) ? "Critical" : "Warning",
+                        Severity = health.Status == "Down" ? "Critical" : "Warning",
                         Message = $"Region {health.Region} is {health.Status}",
                         Region = health.Region,
-                        Timestamp = DateTime.UtcNow,
+                        Timestamp = DateTime.UtcNow
                     });
                 }
             }
@@ -360,35 +336,27 @@ StringComparer.Ordinal)
                 TotalRegions = healthByRegion.Count,
                 HealthyRegions = healthyRegions,
                 Alerts = alerts,
-                CheckedAt = DateTime.UtcNow,
+                CheckedAt = DateTime.UtcNow
             };
         }
 
-        /// <inheritdoc/>
         public async Task<bool> ModifyOrganizationLimitsAsync(LimitModificationRequest request)
         {
             if (request == null)
-            {
                 throw new ArgumentNullException(nameof(request));
-            }
 
             if (string.IsNullOrWhiteSpace(request.Justification))
-            {
                 throw new ArgumentException("Justification is required for limit modification");
-            }
 
             if (string.IsNullOrWhiteSpace(request.ApprovedBy))
-            {
                 throw new ArgumentException("Approval is required for limit modification");
-            }
 
-            this._logger.LogWarning("Modifying limits for organization {OrgId}. Type: {Type}, New Value: {Value}. Justification: {Justification}", request.OrganizationId, request.LimitType, request.NewValue, request.Justification);
+            _logger.LogWarning("Modifying limits for organization {OrgId}. Type: {Type}, New Value: {Value}. Justification: {Justification}",
+                request.OrganizationId, request.LimitType, request.NewValue, request.Justification);
 
-            var org = await this._context.Organizations.FindAsync(request.OrganizationId).ConfigureAwait(false);
+            var org = await _context.Organizations.FindAsync(request.OrganizationId);
             if (org == null)
-            {
                 throw new InvalidOperationException($"Organization {request.OrganizationId} not found");
-            }
 
             // Update the appropriate limit
             switch (request.LimitType)
@@ -416,10 +384,10 @@ StringComparer.Ordinal)
             }
 
             org.UpdatedAt = DateTime.UtcNow;
-            await this._context.SaveChangesAsync().ConfigureAwait(false);
+            await _context.SaveChangesAsync();
 
             // Audit log the modification
-            await this._auditService.LogEventAsync(new AuditEvent
+            await _auditService.LogEventAsync(new AuditEvent
             {
                 OrganizationId = request.OrganizationId,
                 EventType = "SUPER_ADMIN_LIMIT_MODIFICATION",
@@ -427,38 +395,34 @@ StringComparer.Ordinal)
                 Action = "modify_organization_limits",
                 ResourceType = "Organization",
                 ResourceId = request.OrganizationId.ToString(),
-                Metadata = new Dictionary<string, object>(
-StringComparer.Ordinal)
+                Metadata = new Dictionary<string, object>
                 {
                     { "limit_type", request.LimitType },
                     { "new_value", request.NewValue },
                     { "justification", request.Justification },
-                    { "approved_by", request.ApprovedBy },
+                    { "approved_by", request.ApprovedBy }
                 },
-                Region = this._currentRegion,
-            }).ConfigureAwait(false);
+                Region = _currentRegion
+            });
 
             return true;
         }
 
-        /// <inheritdoc/>
         public async Task<SuperAdminAccessValidation> ValidateAccessAsync(SuperAdminAccessContext context)
         {
             if (context == null)
-            {
                 throw new ArgumentNullException(nameof(context));
-            }
 
             var validation = new SuperAdminAccessValidation
             {
                 ValidatedAt = DateTime.UtcNow,
                 MfaRequired = true,
-                JustificationRequired = true,
+                JustificationRequired = true
             };
 
             // Check if user has SuperAdmin role
-            var user = await this._userService.GetUserAsync(context.UserId).ConfigureAwait(false);
-            if (!string.Equals(user.Role, "SuperAdmin", StringComparison.Ordinal))
+            var user = await _userService.GetUserAsync(context.UserId);
+            if (user.Role != "SuperAdmin")
             {
                 validation.IsValid = false;
                 validation.FailureReason = "User is not a Super Admin";
@@ -482,7 +446,7 @@ StringComparer.Ordinal)
                 return validation;
             }
 
-            var mfaValid = await this._userService.VerifyMfaCodeAsync(context.UserId, context.MfaCode).ConfigureAwait(false);
+            var mfaValid = await _userService.VerifyMfaCodeAsync(context.UserId, context.MfaCode);
             validation.MfaValid = mfaValid;
 
             if (!mfaValid)
@@ -491,7 +455,7 @@ StringComparer.Ordinal)
                 validation.FailureReason = "Invalid MFA code";
 
                 // Audit failed MFA attempt
-                await this._auditService.LogEventAsync(new AuditEvent
+                await _auditService.LogEventAsync(new AuditEvent
                 {
                     OrganizationId = user.OrganizationId,
                     UserId = context.UserId,
@@ -501,21 +465,21 @@ StringComparer.Ordinal)
                     ResourceType = "SuperAdmin",
                     ResourceId = context.UserId.ToString(),
                     IpAddress = context.IpAddress,
-                    Region = this._currentRegion,
-                }).ConfigureAwait(false);
+                    Region = _currentRegion
+                });
 
                 return validation;
             }
 
             // Check IP allowlist
-            validation.IpAllowed = this.IsIpAllowed(context.IpAddress);
+            validation.IpAllowed = IsIpAllowed(context.IpAddress);
             if (!validation.IpAllowed)
             {
                 validation.IsValid = false;
                 validation.FailureReason = "IP address not in allowlist";
 
                 // Audit unauthorized IP attempt
-                await this._auditService.LogEventAsync(new AuditEvent
+                await _auditService.LogEventAsync(new AuditEvent
                 {
                     OrganizationId = user.OrganizationId,
                     UserId = context.UserId,
@@ -525,8 +489,8 @@ StringComparer.Ordinal)
                     ResourceType = "SuperAdmin",
                     ResourceId = context.UserId.ToString(),
                     IpAddress = context.IpAddress,
-                    Region = this._currentRegion,
-                }).ConfigureAwait(false);
+                    Region = _currentRegion
+                });
 
                 return validation;
             }
@@ -544,7 +508,7 @@ StringComparer.Ordinal)
             // Check business hours (in UTC)
             var requestTime = context.RequestTime == default ? DateTime.UtcNow : context.RequestTime;
             var currentHour = requestTime.Hour;
-            validation.WithinBusinessHours = currentHour >= this._businessHoursStart && currentHour < this._businessHoursEnd;
+            validation.WithinBusinessHours = currentHour >= _businessHoursStart && currentHour < _businessHoursEnd;
 
             if (!validation.WithinBusinessHours)
             {
@@ -552,7 +516,7 @@ StringComparer.Ordinal)
                 validation.FailureReason = "Super Admin access is restricted to business hours (8 AM - 6 PM UTC)";
 
                 // Audit off-hours attempt
-                await this._auditService.LogEventAsync(new AuditEvent
+                await _auditService.LogEventAsync(new AuditEvent
                 {
                     OrganizationId = user.OrganizationId,
                     UserId = context.UserId,
@@ -562,14 +526,13 @@ StringComparer.Ordinal)
                     ResourceType = "SuperAdmin",
                     ResourceId = context.UserId.ToString(),
                     IpAddress = context.IpAddress,
-                    Metadata = new Dictionary<string, object>(
-StringComparer.Ordinal)
+                    Metadata = new Dictionary<string, object>
                     {
-                        { "requested_action", context.Action },
-                        { "hour_utc", currentHour },
+                        { "requested_action", context.Action ?? "unknown" },
+                        { "hour_utc", currentHour }
                     },
-                    Region = this._currentRegion,
-                }).ConfigureAwait(false);
+                    Region = _currentRegion
+                });
 
                 return validation;
             }
@@ -577,7 +540,7 @@ StringComparer.Ordinal)
             validation.IsValid = true;
 
             // Audit successful validation
-            await this._auditService.LogEventAsync(new AuditEvent
+            await _auditService.LogEventAsync(new AuditEvent
             {
                 OrganizationId = user.OrganizationId,
                 UserId = context.UserId,
@@ -587,22 +550,21 @@ StringComparer.Ordinal)
                 ResourceType = "SuperAdmin",
                 ResourceId = context.UserId.ToString(),
                 IpAddress = context.IpAddress,
-                Metadata = new Dictionary<string, object>(
-StringComparer.Ordinal)
+                Metadata = new Dictionary<string, object>
                 {
                     { "requested_action", context.Action ?? "unknown" },
-                    { "justification", context.Justification ?? "none" },
+                    { "justification", context.Justification ?? "none" }
                 },
-                Region = this._currentRegion,
-            }).ConfigureAwait(false);
+                Region = _currentRegion
+            });
 
             return validation;
         }
 
         // Private helper methods
-        private Task<List<OrganizationSummary>> GetLocalOrganizationsAsync()
+        private async Task<List<OrganizationSummary>> GetLocalOrganizationsAsync()
         {
-            return this._context.Organizations
+            return await _context.Organizations
                 .Select(o => new OrganizationSummary
                 {
                     Id = o.Id,
@@ -612,10 +574,10 @@ StringComparer.Ordinal)
                     Tier = o.Tier,
                     UserCount = o.Users.Count(u => u.IsActive),
                     TeamCount = o.Teams.Count(t => t.IsActive),
-                    MonthlyRequests = 0, // Request count calculation requires additional schema changes
-                    MonthlySpend = o.CreditBalance, // Using credit balance as placeholder
+                    MonthlyRequests = 0,
+                    MonthlySpend = o.CreditBalance,
                     IsActive = o.IsActive,
-                    CreatedAt = o.CreatedAt,
+                    CreatedAt = o.CreatedAt
                 })
                 .ToListAsync();
         }
@@ -624,64 +586,63 @@ StringComparer.Ordinal)
         {
             try
             {
-                using var client = this._httpClientFactory.CreateClient();
-                var endpoint = this._regionEndpoints[region];
-                using var response = await client.GetAsync($"{endpoint}/api/internal/organizations").ConfigureAwait(false);
+                var client = _httpClientFactory.CreateClient();
+                var endpoint = _regionEndpoints[region];
+                var response = await client.GetAsync($"{endpoint}/api/internal/organizations");
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    var json = await response.Content.ReadAsStringAsync();
                     return JsonSerializer.Deserialize<List<OrganizationSummary>>(json) ?? new List<OrganizationSummary>();
                 }
 
-                this._logger.LogWarning("Failed to fetch organizations from region {Region}: {Status}", region, response.StatusCode);
+                _logger.LogWarning("Failed to fetch organizations from region {Region}: {Status}", region, response.StatusCode);
                 return new List<OrganizationSummary>();
             }
             catch (Exception ex)
             {
-                this._logger.LogError(ex, "Error fetching organizations from region {Region}", region);
+                _logger.LogError(ex, "Error fetching organizations from region {Region}", region);
                 return new List<OrganizationSummary>();
             }
         }
 
         private async Task<RegionUsage> GetLocalUsageAsync(DateTime start, DateTime end)
         {
-            var requests = await this._context.Requests
+            var requests = await _context.Requests
                 .Where(r => r.CreatedAt >= start && r.CreatedAt <= end)
-                .ToListAsync().ConfigureAwait(false);
+                .ToListAsync();
 
             return new RegionUsage
             {
-                Region = this._currentRegion,
+                Region = _currentRegion,
                 Requests = requests.Count,
                 Tokens = requests.Sum(r => r.TotalTokens),
                 Spend = requests.Sum(r => r.Cost),
-                Organizations = await this._context.Organizations.CountAsync().ConfigureAwait(false),
-                Users = await this._context.Users.CountAsync(u => u.IsActive)
-.ConfigureAwait(false),
+                Organizations = await _context.Organizations.CountAsync(),
+                Users = await _context.Users.CountAsync(u => u.IsActive)
             };
         }
 
-        private async Task<RegionUsage> FetchUsageFromRegionAsync(string region, DateTime start, DateTime end)
+        private async Task<RegionUsage?> FetchUsageFromRegionAsync(string region, DateTime start, DateTime end)
         {
             try
             {
-                using var client = this._httpClientFactory.CreateClient();
-                var endpoint = this._regionEndpoints[region];
-                using var response = await client.GetAsync($"{endpoint}/api/internal/usage?start={start:O}&end={end:O}").ConfigureAwait(false);
+                var client = _httpClientFactory.CreateClient();
+                var endpoint = _regionEndpoints[region];
+                var response = await client.GetAsync($"{endpoint}/api/internal/usage?start={start:O}&end={end:O}");
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    return JsonSerializer.Deserialize<RegionUsage>(json);
+                    var json = await response.Content.ReadAsStringAsync();
+                    return JsonSerializer.Deserialize<RegionUsage?>(json);
                 }
 
-                this._logger.LogWarning("Failed to fetch usage from region {Region}: {Status}", region, response.StatusCode);
+                _logger.LogWarning("Failed to fetch usage from region {Region}: {Status}", region, response.StatusCode);
                 return null;
             }
             catch (Exception ex)
             {
-                this._logger.LogError(ex, "Error fetching usage from region {Region}", region);
+                _logger.LogError(ex, "Error fetching usage from region {Region}", region);
                 return null;
             }
         }
@@ -693,36 +654,36 @@ StringComparer.Ordinal)
             try
             {
                 // Simple health check - can database connection be established?
-                await this._context.Organizations.AnyAsync().ConfigureAwait(false);
+                await _context.Organizations.AnyAsync();
 
                 var responseTime = (DateTime.UtcNow - startTime).TotalMilliseconds;
 
                 return new RegionHealth
                 {
-                    Region = this._currentRegion,
+                    Region = _currentRegion,
                     IsHealthy = true,
                     Status = "Healthy",
                     ResponseTimeMs = responseTime,
                     ErrorRate = 0,
                     ActiveConnections = 0, // Would come from monitoring system
                     Version = "1.0.0", // Would come from assembly version
-                    LastChecked = DateTime.UtcNow,
+                    LastChecked = DateTime.UtcNow
                 };
             }
             catch (Exception ex)
             {
-                this._logger.LogError(ex, "Health check failed for local region {Region}", this._currentRegion);
+                _logger.LogError(ex, "Health check failed for local region {Region}", _currentRegion);
 
                 return new RegionHealth
                 {
-                    Region = this._currentRegion,
+                    Region = _currentRegion,
                     IsHealthy = false,
                     Status = "Down",
                     ResponseTimeMs = (DateTime.UtcNow - startTime).TotalMilliseconds,
                     ErrorRate = 1.0,
                     ActiveConnections = 0,
                     Version = "Unknown",
-                    LastChecked = DateTime.UtcNow,
+                    LastChecked = DateTime.UtcNow
                 };
             }
         }
@@ -733,11 +694,11 @@ StringComparer.Ordinal)
 
             try
             {
-                using var client = this._httpClientFactory.CreateClient();
+                var client = _httpClientFactory.CreateClient();
                 client.Timeout = TimeSpan.FromSeconds(5);
 
-                var endpoint = this._regionEndpoints[region];
-                using var response = await client.GetAsync($"{endpoint}/api/health").ConfigureAwait(false);
+                var endpoint = _regionEndpoints[region];
+                var response = await client.GetAsync($"{endpoint}/api/health");
 
                 var responseTime = (DateTime.UtcNow - startTime).TotalMilliseconds;
 
@@ -752,7 +713,7 @@ StringComparer.Ordinal)
                         ErrorRate = 0,
                         ActiveConnections = 0,
                         Version = "1.0.0",
-                        LastChecked = DateTime.UtcNow,
+                        LastChecked = DateTime.UtcNow
                     };
                 }
 
@@ -765,12 +726,12 @@ StringComparer.Ordinal)
                     ErrorRate = 0.5,
                     ActiveConnections = 0,
                     Version = "Unknown",
-                    LastChecked = DateTime.UtcNow,
+                    LastChecked = DateTime.UtcNow
                 };
             }
             catch (Exception ex)
             {
-                this._logger.LogError(ex, "Health check failed for region {Region}", region);
+                _logger.LogError(ex, "Health check failed for region {Region}", region);
 
                 return new RegionHealth
                 {
@@ -781,7 +742,7 @@ StringComparer.Ordinal)
                     ErrorRate = 1.0,
                     ActiveConnections = 0,
                     Version = "Unknown",
-                    LastChecked = DateTime.UtcNow,
+                    LastChecked = DateTime.UtcNow
                 };
             }
         }
@@ -801,17 +762,15 @@ StringComparer.Ordinal)
         private bool IsIpAllowed(string ipAddress)
         {
             if (string.IsNullOrWhiteSpace(ipAddress))
-            {
                 return false;
-            }
 
             // Simple check - in production would use proper CIDR matching
             // For now, allow private IP ranges
-            return ipAddress.StartsWith("10.", StringComparison.Ordinal) ||
-                   ipAddress.StartsWith("172.", StringComparison.Ordinal) ||
-                   ipAddress.StartsWith("192.168.", StringComparison.Ordinal) ||
-string.Equals(ipAddress, "127.0.0.1", StringComparison.Ordinal) ||
-string.Equals(ipAddress, "::1", StringComparison.Ordinal);
+            return ipAddress.StartsWith("10.") ||
+                   ipAddress.StartsWith("172.") ||
+                   ipAddress.StartsWith("192.168.") ||
+                   ipAddress == "127.0.0.1" ||
+                   ipAddress == "::1";
         }
     }
 }

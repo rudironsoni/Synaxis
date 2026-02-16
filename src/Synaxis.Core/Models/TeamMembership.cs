@@ -25,7 +25,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the user navigation property.
         /// </summary>
-        public virtual User User { get; set; }
+        public virtual User? User { get; set; }
 
         /// <summary>
         /// Gets or sets the team identifier.
@@ -35,7 +35,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the team navigation property.
         /// </summary>
-        public virtual Team Team { get; set; }
+        public virtual Team? Team { get; set; }
 
         /// <summary>
         /// Gets or sets the organization identifier.
@@ -45,7 +45,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the organization navigation property.
         /// </summary>
-        public virtual Organization Organization { get; set; }
+        public virtual Organization? Organization { get; set; }
 
         /// <summary>
         /// Gets or sets the role: admin, member.
@@ -66,6 +66,6 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the inviter navigation property.
         /// </summary>
-        public virtual User Inviter { get; set; }
+        public virtual User? Inviter { get; set; }
     }
 }

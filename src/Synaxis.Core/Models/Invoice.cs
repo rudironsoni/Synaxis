@@ -26,21 +26,21 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the organization navigation property.
         /// </summary>
-        public virtual Organization Organization { get; set; }
+        public virtual Organization? Organization { get; set; }
 
         /// <summary>
         /// Gets or sets the invoice number (e.g., INV-2026-02-001).
         /// </summary>
         [Required]
         [StringLength(50)]
-        public string InvoiceNumber { get; set; }
+        public string InvoiceNumber { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the invoice status: draft, issued, paid, overdue, cancelled.
         /// </summary>
         [Required]
         [StringLength(50)]
-        public string Status { get; set; }
+        public string Status { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the billing period start date.

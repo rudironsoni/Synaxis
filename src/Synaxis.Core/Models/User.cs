@@ -26,7 +26,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the organization navigation property.
         /// </summary>
-        public virtual Organization Organization { get; set; }
+        public virtual Organization? Organization { get; set; }
 
         /// <summary>
         /// Gets or sets the email address.
@@ -34,7 +34,7 @@ namespace Synaxis.Core.Models
         [Required]
         [EmailAddress]
         [StringLength(255)]
-        public string Email { get; set; }
+        public string Email { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the email verification timestamp.
@@ -45,19 +45,19 @@ namespace Synaxis.Core.Models
         /// Gets or sets the password hash.
         /// </summary>
         [Required]
-        public string PasswordHash { get; set; }
+        public string PasswordHash { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the region where user data must be stored (GDPR/LGPD compliance).
         /// </summary>
         [Required]
-        public string DataResidencyRegion { get; set; }
+        public string DataResidencyRegion { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the region where user account was created.
         /// </summary>
         [Required]
-        public string CreatedInRegion { get; set; }
+        public string CreatedInRegion { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the first name.
@@ -111,7 +111,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the cross-border consent version.
         /// </summary>
-        public string CrossBorderConsentVersion { get; set; }
+        public string? CrossBorderConsentVersion { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether MFA is enabled.
@@ -121,12 +121,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the MFA secret.
         /// </summary>
-        public string MfaSecret { get; set; }
-
-        /// <summary>
-        /// Gets or sets the MFA backup codes (hashed, comma-separated).
-        /// </summary>
-        public string MfaBackupCodes { get; set; }
+        public string? MfaSecret { get; set; }
 
         /// <summary>
         /// Gets or sets the last login timestamp.
@@ -144,39 +139,9 @@ namespace Synaxis.Core.Models
         public DateTime? LockedUntil { get; set; }
 
         /// <summary>
-        /// Gets or sets the password last changed timestamp.
-        /// </summary>
-        public DateTime? PasswordChangedAt { get; set; }
-
-        /// <summary>
-        /// Gets or sets the password expiration timestamp.
-        /// </summary>
-        public DateTime? PasswordExpiresAt { get; set; }
-
-        /// <summary>
-        /// Gets or sets a value indicating whether the user must change password on next login.
-        /// </summary>
-        public bool MustChangePassword { get; set; }
-
-        /// <summary>
-        /// Gets or sets the number of failed password change attempts.
-        /// </summary>
-        public int FailedPasswordChangeAttempts { get; set; }
-
-        /// <summary>
-        /// Gets or sets the password change lockout expiration timestamp.
-        /// </summary>
-        public DateTime? PasswordChangeLockedUntil { get; set; }
-
-        /// <summary>
         /// Gets or sets a value indicating whether the user account is active.
         /// </summary>
         public bool IsActive { get; set; } = true;
-
-        /// <summary>
-        /// Gets or sets the deletion timestamp (soft delete).
-        /// </summary>
-        public DateTime? DeletedAt { get; set; }
 
         /// <summary>
         /// Gets or sets the creation timestamp.
@@ -191,27 +156,12 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the team memberships navigation property.
         /// </summary>
-        public virtual ICollection<TeamMembership> TeamMemberships { get; set; }
+        public virtual ICollection<TeamMembership> TeamMemberships { get; set; } = new List<TeamMembership>();
 
         /// <summary>
         /// Gets or sets the virtual keys navigation property.
         /// </summary>
-        public virtual ICollection<VirtualKey> VirtualKeys { get; set; }
-
-        /// <summary>
-        /// Gets or sets the collection memberships navigation property.
-        /// </summary>
-        public virtual ICollection<CollectionMembership> CollectionMemberships { get; set; }
-
-        /// <summary>
-        /// Gets or sets the password history navigation property.
-        /// </summary>
-        public virtual ICollection<PasswordHistory> PasswordHistory { get; set; }
-
-        /// <summary>
-        /// Gets or sets the conversations navigation property.
-        /// </summary>
-        public virtual ICollection<Conversation> Conversations { get; set; }
+        public virtual ICollection<VirtualKey> VirtualKeys { get; set; } = new List<VirtualKey>();
 
         /// <summary>
         /// Gets the full name of the user.

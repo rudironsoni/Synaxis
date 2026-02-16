@@ -26,21 +26,21 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the organization navigation property.
         /// </summary>
-        public virtual Organization Organization { get; set; }
+        public virtual Organization? Organization { get; set; }
 
         /// <summary>
         /// Gets or sets the team slug.
         /// </summary>
         [Required]
         [StringLength(100)]
-        public string Slug { get; set; }
+        public string Slug { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the team name.
         /// </summary>
         [Required]
         [StringLength(255)]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the team description.
@@ -85,16 +85,11 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the team memberships navigation property.
         /// </summary>
-        public virtual ICollection<TeamMembership> TeamMemberships { get; set; }
+        public virtual ICollection<TeamMembership> TeamMemberships { get; set; } = new List<TeamMembership>();
 
         /// <summary>
         /// Gets or sets the virtual keys navigation property.
         /// </summary>
-        public virtual ICollection<VirtualKey> VirtualKeys { get; set; }
-
-        /// <summary>
-        /// Gets or sets the collections navigation property.
-        /// </summary>
-        public virtual ICollection<Collection> Collections { get; set; }
+        public virtual ICollection<VirtualKey> VirtualKeys { get; set; } = new List<VirtualKey>();
     }
 }

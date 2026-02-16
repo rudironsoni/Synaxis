@@ -19,8 +19,8 @@ public class MemberAuthorizationHandler : AuthorizationHandler<MemberRequirement
 
     /// <inheritdoc/>
     protected override Task HandleRequirementAsync(
-        AuthorizationHandlerContext context,
-        MemberRequirement requirement)
+    AuthorizationHandlerContext context,
+    MemberRequirement requirement)
     {
         if (context.User?.Identity?.IsAuthenticated != true)
         {
@@ -54,7 +54,7 @@ public class MemberAuthorizationHandler : AuthorizationHandler<MemberRequirement
     private static bool IsMemberOrHigher(ClaimsPrincipal user)
     {
         return user.IsInRole(AuthorizationPolicies.Roles.Member) ||
-               user.IsInRole(AuthorizationPolicies.Roles.TeamAdmin) ||
-               user.IsInRole(AuthorizationPolicies.Roles.OrgAdmin);
+        user.IsInRole(AuthorizationPolicies.Roles.TeamAdmin) ||
+        user.IsInRole(AuthorizationPolicies.Roles.OrgAdmin);
     }
 }

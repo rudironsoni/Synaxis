@@ -179,7 +179,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                             VirtualKeyId = tenantContext.ApiKeyId,
                             MetricType = "requests",
                             Value = 1,
-                            Model = context.Items["ModelName"] as string,
+                            Model = (context.Items["ModelName"] as string) ?? string.Empty,
                         }).ConfigureAwait(false);
                 }
             }

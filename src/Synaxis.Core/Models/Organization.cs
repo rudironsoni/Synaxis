@@ -23,14 +23,14 @@ namespace Synaxis.Core.Models
         /// </summary>
         [Required]
         [StringLength(100)]
-        public string Slug { get; set; }
+        public string Slug { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the organization name.
         /// </summary>
         [Required]
         [StringLength(255)]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the organization description.
@@ -41,7 +41,7 @@ namespace Synaxis.Core.Models
         /// Gets or sets the primary region where organization was created.
         /// </summary>
         [Required]
-        public string PrimaryRegion { get; set; }
+        public string PrimaryRegion { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the available regions for this organization.
@@ -176,41 +176,21 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the teams navigation property.
         /// </summary>
-        public virtual ICollection<Team> Teams { get; set; }
+        public virtual ICollection<Team> Teams { get; set; } = new List<Team>();
 
         /// <summary>
         /// Gets or sets the users navigation property.
         /// </summary>
-        public virtual ICollection<User> Users { get; set; }
+        public virtual ICollection<User> Users { get; set; } = new List<User>();
 
         /// <summary>
         /// Gets or sets the virtual keys navigation property.
         /// </summary>
-        public virtual ICollection<VirtualKey> VirtualKeys { get; set; }
+        public virtual ICollection<VirtualKey> VirtualKeys { get; set; } = new List<VirtualKey>();
 
         /// <summary>
         /// Gets or sets the requests navigation property.
         /// </summary>
-        public virtual ICollection<Request> Requests { get; set; }
-
-        /// <summary>
-        /// Gets or sets the collections navigation property.
-        /// </summary>
-        public virtual ICollection<Collection> Collections { get; set; }
-
-        /// <summary>
-        /// Gets or sets the password policy navigation property.
-        /// </summary>
-        public virtual PasswordPolicy PasswordPolicy { get; set; }
-
-        /// <summary>
-        /// Gets or sets the organization API keys navigation property.
-        /// </summary>
-        public virtual ICollection<OrganizationApiKey> OrganizationApiKeys { get; set; }
-
-        /// <summary>
-        /// Gets or sets the conversations navigation property.
-        /// </summary>
-        public virtual ICollection<Conversation> Conversations { get; set; }
+        public virtual ICollection<Request> Requests { get; set; } = new List<Request>();
     }
 }

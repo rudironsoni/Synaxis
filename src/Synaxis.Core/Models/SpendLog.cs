@@ -25,7 +25,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the organization navigation property.
         /// </summary>
-        public virtual Organization Organization { get; set; }
+        public virtual Organization? Organization { get; set; }
 
         /// <summary>
         /// Gets or sets the team identifier.
@@ -35,7 +35,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the team navigation property.
         /// </summary>
-        public virtual Team Team { get; set; }
+        public virtual Team? Team { get; set; }
 
         /// <summary>
         /// Gets or sets the virtual key identifier.
@@ -45,7 +45,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the virtual key navigation property.
         /// </summary>
-        public virtual VirtualKey VirtualKey { get; set; }
+        public virtual VirtualKey? VirtualKey { get; set; }
 
         /// <summary>
         /// Gets or sets the request identifier.

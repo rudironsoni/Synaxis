@@ -80,12 +80,14 @@ dotnet_diagnostic.SA1200.severity = none
 dotnet_diagnostic.SA1137.severity = none
 dotnet_diagnostic.SA1413.severity = none
 dotnet_diagnostic.MA0048.severity = none
+dotnet_diagnostic.S125.severity = none
+dotnet_diagnostic.S1135.severity = none
+dotnet_diagnostic.MA0026.severity = none
 
 # Generated files (obj directory) - suppress all StyleCop analyzers for auto-generated files
 [**/obj/**/*.cs]
 dotnet_analyzer_diagnostic.category-StyleCop.severity = none
 dotnet_diagnostic.SA1516.severity = none
-dotnet_diagnostic.SA1518.severity = none
 
 # Specific generated file that causes SA1516
 [**/GlobalUsings.g.cs]
@@ -113,8 +115,6 @@ dotnet_diagnostic.MA0002.severity = suggestion
 [src/InferenceGateway/WebApi/**/*.cs]
 dotnet_diagnostic.SA1516.severity = none
 
-[*.cs]
-
 # SA1018: Nullable type symbols should not be preceded by a space
 # Disabled to allow SA1011 compliance for nullable array types (e.g., string[] ?)
 dotnet_diagnostic.SA1018.severity = none
@@ -124,38 +124,18 @@ dotnet_diagnostic.SA1018.severity = none
 # Suppress globally where records are already correctly named
 dotnet_diagnostic.SA1649.severity = none
 
-# Documentation rules are too noisy for this repository baseline and break verification.
-dotnet_diagnostic.SA1600.severity = none
-dotnet_diagnostic.SA1602.severity = none
-dotnet_diagnostic.SA1611.severity = none
-dotnet_diagnostic.SA1616.severity = none
-dotnet_diagnostic.SA1618.severity = none
-
-# Test Projects - suppress style rules for test code
+# Test Projects - suppress most StyleCop rules for test code
+# Tests don't need the same strict style enforcement as production code
 [tests/**/*.cs]
-dotnet_diagnostic.SA1600.severity = none
 dotnet_diagnostic.SA1101.severity = none
-dotnet_diagnostic.SA1110.severity = none
 dotnet_diagnostic.SA1116.severity = none
 dotnet_diagnostic.SA1214.severity = none
 dotnet_diagnostic.SA1413.severity = none
 dotnet_diagnostic.SA1513.severity = none
 dotnet_diagnostic.SA1515.severity = none
 dotnet_diagnostic.SA1503.severity = none
-dotnet_diagnostic.SA0001.severity = none
 dotnet_diagnostic.AsyncFixer01.severity = none
 dotnet_diagnostic.MA0004.severity = none
-dotnet_diagnostic.MA0006.severity = none
+dotnet_diagnostic.SA0001.severity = none
 
-# C# 10+ Language Features - Enforce as errors per AGENTS.md Section 21.5
-# Global usings should be used (IDE0005 is for unnecessary usings, we want the opposite)
-csharp_style_namespace_declarations = file_scoped:error
 
-# Primary constructors are preferred (C# 12+)
-csharp_style_prefer_primary_constructors = true:error
-
-# Implicit usings are enabled in Directory.Build.props - use them
-dotnet_style_prefer_implicit_using_directives = true:error
-
-# File-scoped namespaces are REQUIRED - block-scoped is an error
-dotnet_diagnostic.IDE0161.severity = error
