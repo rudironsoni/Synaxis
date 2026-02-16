@@ -150,7 +150,7 @@ namespace Synaxis.Infrastructure.Services
         /// Fetch exchange rates from external API (mocked for now)
         /// In production, this would call a real exchange rate API.
         /// </summary>
-        private Task<Dictionary<string, decimal>> FetchRatesFromApiAsync()
+        private async Task<Dictionary<string, decimal>> FetchRatesFromApiAsync()
         {
             this._logger.LogDebug("Fetching exchange rates from API (mock)");
 
@@ -160,7 +160,7 @@ namespace Synaxis.Infrastructure.Services
             // - https://currencyapi.com
 
             // Simulate API delay
-            Task.Delay(50).Wait();
+            await Task.Delay(50).ConfigureAwait(false);
 
             // Return mock rates with slight randomization to simulate real data
             var random = new Random();
@@ -175,7 +175,7 @@ StringComparer.Ordinal)
                 { "GBP", 0.79m * (1 + ((decimal)((random.NextDouble() * 2) - 1) * variance)) },
             };
 
-            return Task.FromResult(rates);
+            return rates;
         }
     }
 }
