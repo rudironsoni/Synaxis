@@ -1,9 +1,13 @@
+// <copyright file="SmartRouter.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
+namespace Synaxis.Routing.SmartRouter;
+
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 using Synaxis.Routing.CircuitBreaker;
 using CircuitBreakerImpl = Synaxis.Routing.CircuitBreaker.CircuitBreaker;
-
-namespace Synaxis.Routing.SmartRouter;
 
 /// <summary>
 /// SmartRouter with ML-based predictive routing for AI providers.
@@ -26,14 +30,14 @@ public class SmartRouter : IRouter
     /// <param name="logger">The logger.</param>
     public SmartRouter(SmartRouterOptions? options = null, ILogger<SmartRouter>? logger = null)
     {
-        _options = options ?? new SmartRouterOptions();
-        _logger = logger;
+        this._options = options ?? new SmartRouterOptions();
+        this._logger = logger;
 
-        _predictor = new RoutingPredictor(_options.PredictorOptions);
-        _performanceTracker = new ProviderPerformanceTracker();
-        _providers = new ConcurrentDictionary<string, Provider>();
-        _circuitBreakers = new ConcurrentDictionary<string, CircuitBreakerImpl>();
-        _metrics = new RoutingMetrics();
+        this._predictor = new RoutingPredictor(this._options.PredictorOptions);
+        this._performanceTracker = new ProviderPerformanceTracker();
+        this._providers = new ConcurrentDictionary<string, Provider>(StringComparer.Ordinal);
+        this._circuitBreakers = new ConcurrentDictionary<string, CircuitBreakerImpl>(StringComparer.Ordinal);
+        this._metrics = new RoutingMetrics();
     }
 
     /// <summary>
@@ -49,34 +53,35 @@ public class SmartRouter : IRouter
             throw new ArgumentNullException(nameof(request));
         }
 
-        var availableProviders = GetAvailableProviders(request);
+        var availableProviders = this.GetAvailableProviders(request);
         if (availableProviders.Count == 0)
         {
             throw new InvalidOperationException("No available providers for routing.");
         }
 
         // Get predictions for all available providers
-        var predictions = await _predictor.PredictAsync(request, availableProviders, cancellationToken);
+        var predictions = await _predictor.PredictAsync(request, availableProviders, cancellationToken).ConfigureAwait(false);
 
         // Select the best provider
-        var selectedPrediction = SelectBestProvider(predictions, request);
+        var selectedPrediction = this.SelectBestProvider(predictions, request);
 
         // Create routing decision
-        var decision = CreateRoutingDecision(selectedPrediction, predictions);
+        var decision = this.CreateRoutingDecision(selectedPrediction, predictions);
 
         // Update metrics
-        lock (_lock)
+        lock (this._lock)
         {
-            _metrics.TotalDecisions++;
-            if (!_metrics.ProviderSelectionCounts.ContainsKey(decision.SelectedProvider.Id))
+            this._metrics.TotalDecisions++;
+            if (!this._metrics.ProviderSelectionCounts.ContainsKey(decision.SelectedProvider.Id))
             {
-                _metrics.ProviderSelectionCounts[decision.SelectedProvider.Id] = 0;
+                this._metrics.ProviderSelectionCounts[decision.SelectedProvider.Id] = 0;
             }
-            _metrics.ProviderSelectionCounts[decision.SelectedProvider.Id]++;
-            _metrics.LastUpdated = DateTime.UtcNow;
+
+            this._metrics.ProviderSelectionCounts[decision.SelectedProvider.Id]++;
+            this._metrics.LastUpdated = DateTime.UtcNow;
         }
 
-        _logger?.LogInformation(
+        this._logger?.LogInformation(
             "Routed request {DecisionId} to provider {ProviderId} with confidence {Confidence:F2}",
             decision.DecisionId,
             decision.SelectedProvider.Id,
@@ -94,6 +99,7 @@ public class SmartRouter : IRouter
     /// <param name="inputTokens">The actual number of input tokens used.</param>
     /// <param name="outputTokens">The actual number of output tokens used.</param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
     public Task RecordRoutingResultAsync(
         RoutingDecision decision,
         bool success,
@@ -108,13 +114,13 @@ public class SmartRouter : IRouter
         }
 
         var providerId = decision.SelectedProvider.Id;
-        var cost = CalculateActualCost(decision.SelectedProvider, inputTokens, outputTokens);
+        var cost = this.CalculateActualCost(decision.SelectedProvider, inputTokens, outputTokens);
 
         // Record performance metrics
-        _performanceTracker.RecordRequest(providerId, success, latencyMs, inputTokens, outputTokens, cost);
+        this._performanceTracker.RecordRequest(providerId, success, latencyMs, inputTokens, outputTokens, cost);
 
         // Update circuit breaker
-        if (_options.EnableCircuitBreaker && _circuitBreakers.TryGetValue(providerId, out var circuitBreaker))
+        if (this._options.EnableCircuitBreaker && this._circuitBreakers.TryGetValue(providerId, out var circuitBreaker))
         {
             if (success)
             {
@@ -127,7 +133,7 @@ public class SmartRouter : IRouter
         }
 
         // Update predictor with actual results
-        _predictor.UpdatePrediction(
+        this._predictor.UpdatePrediction(
             providerId,
             decision.PredictedLatencyMs,
             latencyMs,
@@ -135,23 +141,23 @@ public class SmartRouter : IRouter
             cost);
 
         // Update routing metrics
-        lock (_lock)
+        lock (this._lock)
         {
             if (success)
             {
-                _metrics.SuccessfulRequests++;
+                this._metrics.SuccessfulRequests++;
             }
             else
             {
-                _metrics.FailedRequests++;
+                this._metrics.FailedRequests++;
             }
 
-            _metrics.TotalCost += cost;
-            _metrics.AverageLatencyMs = CalculateAverageLatency(latencyMs);
-            _metrics.LastUpdated = DateTime.UtcNow;
+            this._metrics.TotalCost += cost;
+            this._metrics.AverageLatencyMs = this.CalculateAverageLatency(latencyMs);
+            this._metrics.LastUpdated = DateTime.UtcNow;
         }
 
-        _logger?.LogInformation(
+        this._logger?.LogInformation(
             "Recorded result for decision {DecisionId}: Success={Success}, Latency={Latency}ms, Cost={Cost}",
             decision.DecisionId,
             success,
@@ -167,7 +173,7 @@ public class SmartRouter : IRouter
     /// <returns>The routing metrics.</returns>
     public Task<RoutingMetrics> GetRoutingMetricsAsync(CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(_metrics);
+        return Task.FromResult(this._metrics);
     }
 
     /// <summary>
@@ -178,7 +184,7 @@ public class SmartRouter : IRouter
     /// <returns>The provider performance metrics.</returns>
     public Task<ProviderPerformanceMetrics?> GetProviderMetricsAsync(string providerId, CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(_performanceTracker.GetMetrics(providerId));
+        return Task.FromResult(this._performanceTracker.GetMetrics(providerId));
     }
 
     /// <summary>
@@ -187,7 +193,7 @@ public class SmartRouter : IRouter
     /// <returns>A list of all registered providers.</returns>
     public Task<IReadOnlyList<Provider>> GetProvidersAsync(CancellationToken cancellationToken = default)
     {
-        return Task.FromResult<IReadOnlyList<Provider>>(_providers.Values.ToList());
+        return Task.FromResult<IReadOnlyList<Provider>>(this._providers.Values.ToList());
     }
 
     /// <summary>
@@ -195,6 +201,7 @@ public class SmartRouter : IRouter
     /// </summary>
     /// <param name="provider">The provider to add or update.</param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
     public Task AddOrUpdateProviderAsync(Provider provider, CancellationToken cancellationToken = default)
     {
         if (provider == null)
@@ -207,17 +214,17 @@ public class SmartRouter : IRouter
             throw new ArgumentException("Provider ID cannot be null or empty.", nameof(provider));
         }
 
-        _providers.AddOrUpdate(provider.Id, provider, (_, _) => provider);
+        this._providers.AddOrUpdate(provider.Id, provider, (_, _) => provider);
 
         // Create circuit breaker for the provider if enabled
-        if (_options.EnableCircuitBreaker)
+        if (this._options.EnableCircuitBreaker)
         {
-            var circuitBreakerOptions = _options.CircuitBreakerOptions ?? new CircuitBreakerOptions();
+            var circuitBreakerOptions = this._options.CircuitBreakerOptions ?? new CircuitBreakerOptions();
             var circuitBreaker = new CircuitBreakerImpl($"provider-{provider.Id}", circuitBreakerOptions);
-            _circuitBreakers.AddOrUpdate(provider.Id, circuitBreaker, (_, _) => circuitBreaker);
+            this._circuitBreakers.AddOrUpdate(provider.Id, circuitBreaker, (_, _) => circuitBreaker);
         }
 
-        _logger?.LogInformation("Added/Updated provider {ProviderId} ({ProviderName})", provider.Id, provider.Name);
+        this._logger?.LogInformation("Added/Updated provider {ProviderId} ({ProviderName})", provider.Id, provider.Name);
 
         return Task.CompletedTask;
     }
@@ -227,6 +234,7 @@ public class SmartRouter : IRouter
     /// </summary>
     /// <param name="providerId">The provider ID to remove.</param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
     public Task RemoveProviderAsync(string providerId, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(providerId))
@@ -234,11 +242,11 @@ public class SmartRouter : IRouter
             throw new ArgumentException("Provider ID cannot be null or empty.", nameof(providerId));
         }
 
-        _providers.TryRemove(providerId, out _);
-        _circuitBreakers.TryRemove(providerId, out _);
-        _performanceTracker.ResetMetrics(providerId);
+        this._providers.TryRemove(providerId, out _);
+        this._circuitBreakers.TryRemove(providerId, out _);
+        this._performanceTracker.ResetMetrics(providerId);
 
-        _logger?.LogInformation("Removed provider {ProviderId}", providerId);
+        this._logger?.LogInformation("Removed provider {ProviderId}", providerId);
 
         return Task.CompletedTask;
     }
@@ -250,7 +258,7 @@ public class SmartRouter : IRouter
     /// <returns>The circuit breaker, or null if not found.</returns>
     public CircuitBreakerImpl? GetCircuitBreaker(string providerId)
     {
-        return _circuitBreakers.TryGetValue(providerId, out var circuitBreaker) ? circuitBreaker : null;
+        return this._circuitBreakers.TryGetValue(providerId, out var circuitBreaker) ? circuitBreaker : null;
     }
 
     /// <summary>
@@ -259,7 +267,7 @@ public class SmartRouter : IRouter
     /// <returns>The performance tracker.</returns>
     public ProviderPerformanceTracker GetPerformanceTracker()
     {
-        return _performanceTracker;
+        return this._performanceTracker;
     }
 
     /// <summary>
@@ -268,14 +276,14 @@ public class SmartRouter : IRouter
     /// <returns>The routing predictor.</returns>
     public RoutingPredictor GetPredictor()
     {
-        return _predictor;
+        return this._predictor;
     }
 
     private List<Provider> GetAvailableProviders(RoutingRequest request)
     {
         var availableProviders = new List<Provider>();
 
-        foreach (var provider in _providers.Values)
+        foreach (var provider in this._providers.Values)
         {
             if (!provider.IsEnabled)
             {
@@ -288,11 +296,11 @@ public class SmartRouter : IRouter
             }
 
             // Check circuit breaker state
-            if (_options.EnableCircuitBreaker &&
-                _circuitBreakers.TryGetValue(provider.Id, out var circuitBreaker) &&
+            if (this._options.EnableCircuitBreaker &&
+                this._circuitBreakers.TryGetValue(provider.Id, out var circuitBreaker) &&
                 !circuitBreaker.AllowRequest())
             {
-                _logger?.LogWarning("Provider {ProviderId} circuit breaker is open, skipping", provider.Id);
+                this._logger?.LogWarning("Provider {ProviderId} circuit breaker is open, skipping", provider.Id);
                 continue;
             }
 
@@ -308,7 +316,7 @@ public class SmartRouter : IRouter
         if (!string.IsNullOrEmpty(request.PreferredProviderId))
         {
             var preferred = predictions.FirstOrDefault(p => string.Equals(p.Provider.Id, request.PreferredProviderId, StringComparison.Ordinal));
-            if (preferred != null && preferred.Confidence >= _options.MinConfidenceThreshold)
+            if (preferred != null && preferred.Confidence >= this._options.MinConfidenceThreshold)
             {
                 return preferred;
             }
@@ -335,7 +343,7 @@ public class SmartRouter : IRouter
             PredictedLatencyMs = (int)selectedPrediction.PredictedLatencyMs,
             PredictedCost = selectedPrediction.PredictedCost,
             RoutingStrategy = "ml-prediction",
-            Features = selectedPrediction.Features
+            Features = selectedPrediction.Features,
         };
 
         // Build reasoning
@@ -344,20 +352,20 @@ public class SmartRouter : IRouter
             $"Selected provider: {selectedPrediction.Provider.Name} ({selectedPrediction.Provider.Model})",
             $"Predicted latency: {selectedPrediction.PredictedLatencyMs:F0}ms",
             $"Predicted cost: ${selectedPrediction.PredictedCost:F4}",
-            $"Confidence: {selectedPrediction.Confidence:P2}"
+            $"Confidence: {selectedPrediction.Confidence:P2}",
         };
 
         // Add alternative providers
         var alternatives = allPredictions
             .Where(p => !string.Equals(p.Provider.Id, selectedPrediction.Provider.Id, StringComparison.Ordinal))
-            .Take(_options.MaxFallbackAttempts)
+            .Take(this._options.MaxFallbackAttempts)
             .Select(p => new ProviderAlternative
             {
                 Provider = p.Provider,
                 Score = p.Score,
                 Reason = $"Alternative with score {p.Score:F2}",
                 PredictedLatencyMs = (int)p.PredictedLatencyMs,
-                PredictedCost = p.PredictedCost
+                PredictedCost = p.PredictedCost,
             })
             .ToList();
 
@@ -376,13 +384,13 @@ public class SmartRouter : IRouter
 
     private double CalculateAverageLatency(int newLatencyMs)
     {
-        var totalRequests = _metrics.SuccessfulRequests + _metrics.FailedRequests;
+        var totalRequests = this._metrics.SuccessfulRequests + this._metrics.FailedRequests;
         if (totalRequests == 0)
         {
             return newLatencyMs;
         }
 
-        var currentAverage = _metrics.AverageLatencyMs;
+        var currentAverage = this._metrics.AverageLatencyMs;
         return ((currentAverage * (totalRequests - 1)) + newLatencyMs) / totalRequests;
     }
 }

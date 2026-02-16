@@ -1,8 +1,12 @@
+// <copyright file="HealthCheckScheduler.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
+namespace Synaxis.Routing.Health;
+
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 using Synaxis.Routing.SmartRouter;
-
-namespace Synaxis.Routing.Health;
 
 /// <summary>
 /// Scheduled health check service for automated provider health monitoring.
@@ -29,14 +33,14 @@ public sealed class HealthCheckScheduler : IDisposable
     public event EventHandler<HealthStatusChangedEventArgs>? HealthStatusChanged;
 
     /// <summary>
-    /// Gets whether the scheduler is running.
+    /// Gets a value indicating whether gets whether the scheduler is running.
     /// </summary>
     public bool IsRunning { get; private set; }
 
     /// <summary>
     /// Gets the number of providers being monitored.
     /// </summary>
-    public int MonitoredProviderCount => _providers.Count;
+    public int MonitoredProviderCount => this._providers.Count;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="HealthCheckScheduler"/> class.
@@ -49,19 +53,19 @@ public sealed class HealthCheckScheduler : IDisposable
         HealthCheckOptions? options = null,
         ILogger<HealthCheckScheduler>? logger = null)
     {
-        _healthChecker = healthChecker ?? throw new ArgumentNullException(nameof(healthChecker));
-        _options = options ?? new HealthCheckOptions();
-        _providers = new ConcurrentDictionary<string, Provider>();
-        _lastCheckTimes = new ConcurrentDictionary<string, DateTime>();
-        _logger = logger;
-        _cancellationTokenSource = new CancellationTokenSource();
+        this._healthChecker = healthChecker ?? throw new ArgumentNullException(nameof(healthChecker));
+        this._options = options ?? new HealthCheckOptions();
+        this._providers = new ConcurrentDictionary<string, Provider>(StringComparer.Ordinal);
+        this._lastCheckTimes = new ConcurrentDictionary<string, DateTime>(StringComparer.Ordinal);
+        this._logger = logger;
+        this._cancellationTokenSource = new CancellationTokenSource();
 
         // Subscribe to health status changes
-        if (_healthChecker is ProviderHealthMonitor monitor)
+        if (this._healthChecker is ProviderHealthMonitor monitor)
         {
             monitor.HealthStatusChanged += (sender, args) =>
             {
-                HealthStatusChanged?.Invoke(this, args);
+                this.HealthStatusChanged?.Invoke(this, args);
             };
         }
     }
@@ -71,42 +75,43 @@ public sealed class HealthCheckScheduler : IDisposable
     /// </summary>
     public void Start()
     {
-        if (_disposed)
+        if (this._disposed)
         {
             throw new ObjectDisposedException(nameof(HealthCheckScheduler));
         }
 
-        if (IsRunning)
+        if (this.IsRunning)
         {
-            _logger?.LogWarning("Health check scheduler is already running");
+            this._logger?.LogWarning("Health check scheduler is already running");
             return;
         }
 
-        IsRunning = true;
-        _schedulerTask = RunSchedulerAsync(_cancellationTokenSource.Token);
+        this.IsRunning = true;
+        this._schedulerTask = this.RunSchedulerAsync(this._cancellationTokenSource.Token);
 
-        _logger?.LogInformation("Health check scheduler started with interval {Interval}", _options.CheckInterval);
+        this._logger?.LogInformation("Health check scheduler started with interval {Interval}", this._options.CheckInterval);
     }
 
     /// <summary>
     /// Stops the health check scheduler.
     /// </summary>
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
     public async Task StopAsync()
     {
-        if (!IsRunning)
+        if (!this.IsRunning)
         {
             return;
         }
 
-        IsRunning = false;
-        await _cancellationTokenSource.CancelAsync();
+        this.IsRunning = false;
+        await _cancellationTokenSource.CancelAsync().ConfigureAwait(false);
 
-        if (_schedulerTask != null)
+        if (this._schedulerTask != null)
         {
-            await _schedulerTask;
+            await _schedulerTask.ConfigureAwait(false);
         }
 
-        _logger?.LogInformation("Health check scheduler stopped");
+        this._logger?.LogInformation("Health check scheduler stopped");
     }
 
     /// <summary>
@@ -125,8 +130,8 @@ public sealed class HealthCheckScheduler : IDisposable
             throw new ArgumentException("Provider ID cannot be null or empty.", nameof(provider));
         }
 
-        _providers.AddOrUpdate(provider.Id, provider, (_, _) => provider);
-        _logger?.LogInformation("Added provider {ProviderId} to health monitoring", provider.Id);
+        this._providers.AddOrUpdate(provider.Id, provider, (_, _) => provider);
+        this._logger?.LogInformation("Added provider {ProviderId} to health monitoring", provider.Id);
     }
 
     /// <summary>
@@ -140,10 +145,10 @@ public sealed class HealthCheckScheduler : IDisposable
             throw new ArgumentException("Provider ID cannot be null or empty.", nameof(providerId));
         }
 
-        _providers.TryRemove(providerId, out _);
-        _lastCheckTimes.TryRemove(providerId, out _);
+        this._providers.TryRemove(providerId, out _);
+        this._lastCheckTimes.TryRemove(providerId, out _);
 
-        _logger?.LogInformation("Removed provider {ProviderId} from health monitoring", providerId);
+        this._logger?.LogInformation("Removed provider {ProviderId} from health monitoring", providerId);
     }
 
     /// <summary>
@@ -152,7 +157,7 @@ public sealed class HealthCheckScheduler : IDisposable
     /// <returns>A list of monitored providers.</returns>
     public List<Provider> GetMonitoredProviders()
     {
-        return _providers.Values.ToList();
+        return this._providers.Values.ToList();
     }
 
     /// <summary>
@@ -167,7 +172,7 @@ public sealed class HealthCheckScheduler : IDisposable
             return null;
         }
 
-        return _lastCheckTimes.TryGetValue(providerId, out var time) ? time : null;
+        return this._lastCheckTimes.TryGetValue(providerId, out var time) ? time : null;
     }
 
     /// <summary>
@@ -185,12 +190,12 @@ public sealed class HealthCheckScheduler : IDisposable
             throw new ArgumentException("Provider ID cannot be null or empty.", nameof(providerId));
         }
 
-        _logger?.LogInformation("Triggering immediate health check for provider {ProviderId}", providerId);
+        this._logger?.LogInformation("Triggering immediate health check for provider {ProviderId}", providerId);
 
-        var result = await _healthChecker.CheckHealthAsync(providerId, cancellationToken);
-        _lastCheckTimes.AddOrUpdate(providerId, DateTime.UtcNow, (_, _) => DateTime.UtcNow);
+        var result = await _healthChecker.CheckHealthAsync(providerId, cancellationToken).ConfigureAwait(false);
+        this._lastCheckTimes.AddOrUpdate(providerId, DateTime.UtcNow, (_, _) => DateTime.UtcNow);
 
-        HealthCheckCompleted?.Invoke(this, new HealthCheckCompletedEventArgs { Result = result });
+        this.HealthCheckCompleted?.Invoke(this, new HealthCheckCompletedEventArgs { Result = result });
 
         return result;
     }
@@ -203,14 +208,14 @@ public sealed class HealthCheckScheduler : IDisposable
     public async Task<Dictionary<string, ProviderHealthCheckResult>> TriggerAllHealthChecksAsync(
         CancellationToken cancellationToken = default)
     {
-        _logger?.LogInformation("Triggering immediate health checks for all {Count} providers", _providers.Count);
+        this._logger?.LogInformation("Triggering immediate health checks for all {Count} providers", this._providers.Count);
 
-        var results = await _healthChecker.CheckHealthAsync(_providers.Keys, cancellationToken);
+        var results = await _healthChecker.CheckHealthAsync(_providers.Keys, cancellationToken).ConfigureAwait(false);
 
         foreach (var kvp in results)
         {
-            _lastCheckTimes.AddOrUpdate(kvp.Key, DateTime.UtcNow, (_, _) => DateTime.UtcNow);
-            HealthCheckCompleted?.Invoke(this, new HealthCheckCompletedEventArgs { Result = kvp.Value });
+            this._lastCheckTimes.AddOrUpdate(kvp.Key, DateTime.UtcNow, (_, _) => DateTime.UtcNow);
+            this.HealthCheckCompleted?.Invoke(this, new HealthCheckCompletedEventArgs { Result = kvp.Value });
         }
 
         return results;
@@ -222,11 +227,11 @@ public sealed class HealthCheckScheduler : IDisposable
     /// <returns>A dictionary of provider IDs to their health statuses.</returns>
     public async Task<Dictionary<string, ProviderHealthStatus>> GetHealthStatusSummaryAsync()
     {
-        var summary = new Dictionary<string, ProviderHealthStatus>();
+        var summary = new Dictionary<string, ProviderHealthStatus>(StringComparer.Ordinal);
 
-        foreach (var providerId in _providers.Keys)
+        foreach (var providerId in this._providers.Keys)
         {
-            var status = await _healthChecker.GetHealthStatusAsync(providerId);
+            var status = await _healthChecker.GetHealthStatusAsync(providerId).ConfigureAwait(false);
             summary[providerId] = status;
         }
 
@@ -238,34 +243,34 @@ public sealed class HealthCheckScheduler : IDisposable
     /// </summary>
     public void Dispose()
     {
-        if (_disposed)
+        if (this._disposed)
         {
             return;
         }
 
-        _disposed = true;
-        StopAsync().GetAwaiter().GetResult();
-        _cancellationTokenSource.Dispose();
+        this._disposed = true;
+        this.StopAsync().GetAwaiter().GetResult();
+        this._cancellationTokenSource.Dispose();
 
-        _logger?.LogInformation("Health check scheduler disposed");
+        this._logger?.LogInformation("Health check scheduler disposed");
     }
 
     private async Task RunSchedulerAsync(CancellationToken cancellationToken)
     {
-        _logger?.LogInformation("Health check scheduler loop started");
+        this._logger?.LogInformation("Health check scheduler loop started");
 
         while (!cancellationToken.IsCancellationRequested)
         {
             try
             {
-                await Task.Delay(_options.CheckInterval, cancellationToken);
+                await Task.Delay(_options.CheckInterval, cancellationToken).ConfigureAwait(false);
 
                 if (cancellationToken.IsCancellationRequested)
                 {
                     break;
                 }
 
-                await RunHealthChecksAsync(cancellationToken);
+                await RunHealthChecksAsync(cancellationToken).ConfigureAwait(false);
             }
             catch (TaskCanceledException)
             {
@@ -274,37 +279,37 @@ public sealed class HealthCheckScheduler : IDisposable
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "Error in health check scheduler loop");
+                this._logger?.LogError(ex, "Error in health check scheduler loop");
             }
         }
 
-        _logger?.LogInformation("Health check scheduler loop stopped");
+        this._logger?.LogInformation("Health check scheduler loop stopped");
     }
 
     private async Task RunHealthChecksAsync(CancellationToken cancellationToken)
     {
-        var providersToCheck = _providers.Keys.ToList();
+        var providersToCheck = this._providers.Keys.ToList();
 
         if (providersToCheck.Count == 0)
         {
             return;
         }
 
-        _logger?.LogDebug("Running scheduled health checks for {Count} providers", providersToCheck.Count);
+        this._logger?.LogDebug("Running scheduled health checks for {Count} providers", providersToCheck.Count);
 
         try
         {
-            var results = await _healthChecker.CheckHealthAsync(providersToCheck, cancellationToken);
+            var results = await _healthChecker.CheckHealthAsync(providersToCheck, cancellationToken).ConfigureAwait(false);
 
             foreach (var kvp in results)
             {
-                _lastCheckTimes.AddOrUpdate(kvp.Key, DateTime.UtcNow, (_, _) => DateTime.UtcNow);
-                HealthCheckCompleted?.Invoke(this, new HealthCheckCompletedEventArgs { Result = kvp.Value });
+                this._lastCheckTimes.AddOrUpdate(kvp.Key, DateTime.UtcNow, (_, _) => DateTime.UtcNow);
+                this.HealthCheckCompleted?.Invoke(this, new HealthCheckCompletedEventArgs { Result = kvp.Value });
 
                 // Log unhealthy providers
                 if (kvp.Value.Status != ProviderHealthStatus.Healthy && kvp.Value.Status != ProviderHealthStatus.Unknown)
                 {
-                    _logger?.LogWarning(
+                    this._logger?.LogWarning(
                         "Provider {ProviderId} health check: Status={Status}, SuccessRate={SuccessRate:F2}%, Latency={Latency}ms",
                         kvp.Key,
                         kvp.Value.Status,
@@ -315,7 +320,7 @@ public sealed class HealthCheckScheduler : IDisposable
         }
         catch (Exception ex)
         {
-            _logger?.LogError(ex, "Error running scheduled health checks");
+            this._logger?.LogError(ex, "Error running scheduled health checks");
         }
     }
 }

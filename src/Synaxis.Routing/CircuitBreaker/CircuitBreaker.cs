@@ -1,7 +1,11 @@
-using System;
-using System.Threading;
+// <copyright file="CircuitBreaker.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
 namespace Synaxis.Routing.CircuitBreaker;
+
+using System;
+using System.Threading;
 
 /// <summary>
 /// Implements the Circuit Breaker pattern to prevent cascading failures.
@@ -28,9 +32,9 @@ public class CircuitBreaker
     {
         get
         {
-            lock (_lock)
+            lock (this._lock)
             {
-                return _state;
+                return this._state;
             }
         }
     }
@@ -42,9 +46,9 @@ public class CircuitBreaker
     {
         get
         {
-            lock (_lock)
+            lock (this._lock)
             {
-                return _failureCount;
+                return this._failureCount;
             }
         }
     }
@@ -56,9 +60,9 @@ public class CircuitBreaker
     {
         get
         {
-            lock (_lock)
+            lock (this._lock)
             {
-                return _successCount;
+                return this._successCount;
             }
         }
     }
@@ -70,9 +74,9 @@ public class CircuitBreaker
     {
         get
         {
-            lock (_lock)
+            lock (this._lock)
             {
-                return _totalRequests;
+                return this._totalRequests;
             }
         }
     }
@@ -84,9 +88,9 @@ public class CircuitBreaker
     {
         get
         {
-            lock (_lock)
+            lock (this._lock)
             {
-                return _totalRequests == 0 ? 0.0 : (double)_failureCount / _totalRequests * 100.0;
+                return this._totalRequests == 0 ? 0.0 : (double)this._failureCount / this._totalRequests * 100.0;
             }
         }
     }
@@ -98,8 +102,8 @@ public class CircuitBreaker
     /// <param name="options">The configuration options.</param>
     public CircuitBreaker(string name, CircuitBreakerOptions options)
     {
-        _name = name ?? throw new ArgumentNullException(nameof(name));
-        _options = options ?? throw new ArgumentNullException(nameof(options));
+        this._name = name ?? throw new ArgumentNullException(nameof(name));
+        this._options = options ?? throw new ArgumentNullException(nameof(options));
     }
 
     /// <summary>
@@ -107,24 +111,25 @@ public class CircuitBreaker
     /// </summary>
     public void RecordSuccess()
     {
-        lock (_lock)
+        lock (this._lock)
         {
-            _totalRequests++;
-            _successCount++;
-            _lastFailureTime = null;
+            this._totalRequests++;
+            this._successCount++;
+            this._lastFailureTime = null;
 
-            switch (_state)
+            switch (this._state)
             {
                 case CircuitState.Closed:
                     // In closed state, just track metrics
                     break;
 
                 case CircuitState.HalfOpen:
-                    _consecutiveSuccessesInHalfOpen++;
-                    if (_consecutiveSuccessesInHalfOpen >= _options.HalfOpenSuccessThreshold)
+                    this._consecutiveSuccessesInHalfOpen++;
+                    if (this._consecutiveSuccessesInHalfOpen >= this._options.HalfOpenSuccessThreshold)
                     {
-                        TransitionToClosed();
+                        this.TransitionToClosed();
                     }
+
                     break;
 
                 case CircuitState.Open:
@@ -139,28 +144,29 @@ public class CircuitBreaker
     /// </summary>
     public void RecordFailure()
     {
-        lock (_lock)
+        lock (this._lock)
         {
-            _totalRequests++;
-            _failureCount++;
-            _lastFailureTime = DateTime.UtcNow;
+            this._totalRequests++;
+            this._failureCount++;
+            this._lastFailureTime = DateTime.UtcNow;
 
-            switch (_state)
+            switch (this._state)
             {
                 case CircuitState.Closed:
-                    if (_totalRequests >= _options.MinimumRequests)
+                    if (this._totalRequests >= this._options.MinimumRequests)
                     {
-                        double failureRate = (double)_failureCount / _totalRequests * 100.0;
-                        if (failureRate >= _options.FailureRateThreshold)
+                        double failureRate = (double)this._failureCount / this._totalRequests * 100.0;
+                        if (failureRate >= this._options.FailureRateThreshold)
                         {
-                            TransitionToOpen();
+                            this.TransitionToOpen();
                         }
                     }
+
                     break;
 
                 case CircuitState.HalfOpen:
                     // Any failure in half-open state immediately opens the circuit
-                    TransitionToOpen();
+                    this.TransitionToOpen();
                     break;
 
                 case CircuitState.Open:
@@ -176,20 +182,21 @@ public class CircuitBreaker
     /// <returns><c>true</c> if the request should be allowed; otherwise, <c>false</c>.</returns>
     public bool AllowRequest()
     {
-        lock (_lock)
+        lock (this._lock)
         {
-            switch (_state)
+            switch (this._state)
             {
                 case CircuitState.Closed:
                     return true;
 
                 case CircuitState.Open:
                     // Check if we should transition to half-open
-                    if (_openedAt.HasValue && (DateTime.UtcNow - _openedAt.Value).TotalMilliseconds >= _options.OpenTimeoutMs)
+                    if (this._openedAt.HasValue && (DateTime.UtcNow - this._openedAt.Value).TotalMilliseconds >= this._options.OpenTimeoutMs)
                     {
-                        TransitionToHalfOpen();
+                        this.TransitionToHalfOpen();
                         return true;
                     }
+
                     return false;
 
                 case CircuitState.HalfOpen:
@@ -213,11 +220,11 @@ public class CircuitBreaker
             attemptNumber = 1;
         }
 
-        double delay = _options.ExponentialBackoffBaseMs * Math.Pow(_options.ExponentialBackoffMultiplier, attemptNumber - 1);
-        delay = Math.Min(delay, _options.ExponentialBackoffMaxMs);
+        double delay = this._options.ExponentialBackoffBaseMs * Math.Pow(this._options.ExponentialBackoffMultiplier, attemptNumber - 1);
+        delay = Math.Min(delay, this._options.ExponentialBackoffMaxMs);
 
         // Add jitter to prevent thundering herd
-        double jitter = delay * 0.1 * (_random.NextDouble() * 2 - 1);
+        double jitter = delay * 0.1 * ((this._random.NextDouble() * 2) - 1);
         delay += jitter;
 
         return (int)Math.Max(0, delay);
@@ -228,40 +235,40 @@ public class CircuitBreaker
     /// </summary>
     public void Reset()
     {
-        lock (_lock)
+        lock (this._lock)
         {
-            _state = CircuitState.Closed;
-            _failureCount = 0;
-            _successCount = 0;
-            _totalRequests = 0;
-            _lastFailureTime = null;
-            _openedAt = null;
-            _consecutiveSuccessesInHalfOpen = 0;
+            this._state = CircuitState.Closed;
+            this._failureCount = 0;
+            this._successCount = 0;
+            this._totalRequests = 0;
+            this._lastFailureTime = null;
+            this._openedAt = null;
+            this._consecutiveSuccessesInHalfOpen = 0;
         }
     }
 
     private void TransitionToOpen()
     {
-        _state = CircuitState.Open;
-        _openedAt = DateTime.UtcNow;
-        _consecutiveSuccessesInHalfOpen = 0;
+        this._state = CircuitState.Open;
+        this._openedAt = DateTime.UtcNow;
+        this._consecutiveSuccessesInHalfOpen = 0;
     }
 
     private void TransitionToHalfOpen()
     {
-        _state = CircuitState.HalfOpen;
-        _openedAt = null;
-        _consecutiveSuccessesInHalfOpen = 0;
+        this._state = CircuitState.HalfOpen;
+        this._openedAt = null;
+        this._consecutiveSuccessesInHalfOpen = 0;
     }
 
     private void TransitionToClosed()
     {
-        _state = CircuitState.Closed;
-        _failureCount = 0;
-        _successCount = 0;
-        _totalRequests = 0;
-        _lastFailureTime = null;
-        _openedAt = null;
-        _consecutiveSuccessesInHalfOpen = 0;
+        this._state = CircuitState.Closed;
+        this._failureCount = 0;
+        this._successCount = 0;
+        this._totalRequests = 0;
+        this._lastFailureTime = null;
+        this._openedAt = null;
+        this._consecutiveSuccessesInHalfOpen = 0;
     }
 }

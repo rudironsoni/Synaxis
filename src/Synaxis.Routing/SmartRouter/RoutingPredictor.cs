@@ -1,6 +1,10 @@
-using System.Collections.Concurrent;
+// <copyright file="RoutingPredictor.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
 namespace Synaxis.Routing.SmartRouter;
+
+using System.Collections.Concurrent;
 
 /// <summary>
 /// Provides ML-based predictions for routing decisions.
@@ -21,9 +25,9 @@ public class RoutingPredictor
         RoutingPredictorOptions? options = null,
         ProviderPerformanceTracker? performanceTracker = null)
     {
-        _options = options ?? new RoutingPredictorOptions();
-        _performanceTracker = performanceTracker ?? new ProviderPerformanceTracker();
-        _providerWeights = new ConcurrentDictionary<string, double>();
+        this._options = options ?? new RoutingPredictorOptions();
+        this._performanceTracker = performanceTracker ?? new ProviderPerformanceTracker();
+        this._providerWeights = new ConcurrentDictionary<string, double>(StringComparer.Ordinal);
     }
 
     /// <summary>
@@ -52,7 +56,7 @@ public class RoutingPredictor
                 continue;
             }
 
-            var prediction = PredictForProvider(request, provider);
+            var prediction = this.PredictForProvider(request, provider);
             predictions.Add(prediction);
         }
 
@@ -70,28 +74,28 @@ public class RoutingPredictor
     /// <returns>The provider prediction.</returns>
     public ProviderPrediction PredictForProvider(RoutingRequest request, Provider provider)
     {
-        var metrics = _performanceTracker.GetMetrics(provider.Id);
-        var features = ExtractFeatures(request, provider, metrics);
+        var metrics = this._performanceTracker.GetMetrics(provider.Id);
+        var features = this.ExtractFeatures(request, provider, metrics);
         var prediction = new ProviderPrediction
         {
             Provider = provider,
-            Features = features
+            Features = features,
         };
 
         // Predict latency
-        prediction.PredictedLatencyMs = PredictLatency(features, metrics);
+        prediction.PredictedLatencyMs = this.PredictLatency(features, metrics);
 
         // Predict cost
-        prediction.PredictedCost = PredictCost(request, provider);
+        prediction.PredictedCost = this.PredictCost(request, provider);
 
         // Predict success rate
-        prediction.PredictedSuccessRate = PredictSuccessRate(features, metrics);
+        prediction.PredictedSuccessRate = this.PredictSuccessRate(features, metrics);
 
         // Calculate confidence
-        prediction.Confidence = CalculateConfidence(metrics);
+        prediction.Confidence = this.CalculateConfidence(metrics);
 
         // Calculate overall score
-        prediction.Score = CalculateScore(prediction, request);
+        prediction.Score = this.CalculateScore(prediction, request);
 
         return prediction;
     }
@@ -118,9 +122,9 @@ public class RoutingPredictor
 
         // Adjust weight based on error (lower error = higher weight)
         var adjustment = 1.0 - totalError;
-        var currentWeight = _providerWeights.GetOrAdd(providerId, _ => 1.0);
-        var newWeight = currentWeight + _options.LearningRate * (adjustment - currentWeight);
-        _providerWeights.AddOrUpdate(providerId, newWeight, (_, _) => newWeight);
+        var currentWeight = this._providerWeights.GetOrAdd(providerId, _ => 1.0);
+        var newWeight = currentWeight + (this._options.LearningRate * (adjustment - currentWeight));
+        this._providerWeights.AddOrUpdate(providerId, newWeight, (_, _) => newWeight);
     }
 
     /// <summary>
@@ -139,7 +143,7 @@ public class RoutingPredictor
                 break;
             }
 
-            UpdatePrediction(
+            this.UpdatePrediction(
                 data.ProviderId,
                 data.PredictedLatencyMs,
                 data.ActualLatencyMs,
@@ -156,7 +160,7 @@ public class RoutingPredictor
     /// <returns>A dictionary of provider IDs to their weights.</returns>
     public Dictionary<string, double> GetProviderWeights()
     {
-        return _providerWeights.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        return this._providerWeights.ToDictionary(kvp => kvp.Key, kvp => kvp.Value, StringComparer.Ordinal);
     }
 
     /// <summary>
@@ -164,7 +168,7 @@ public class RoutingPredictor
     /// </summary>
     public void Reset()
     {
-        _providerWeights.Clear();
+        this._providerWeights.Clear();
     }
 
     private Dictionary<string, double> ExtractFeatures(
@@ -173,24 +177,25 @@ public class RoutingPredictor
         ProviderPerformanceMetrics? metrics)
     {
         var features = new Dictionary<string, double>
+(StringComparer.Ordinal)
         {
-            ["request_priority"] = NormalizePriority(request.Priority),
-            ["provider_priority"] = NormalizePriority(provider.Priority),
-            ["estimated_input_tokens"] = NormalizeTokens(request.EstimatedInputTokens),
-            ["estimated_output_tokens"] = NormalizeTokens(request.EstimatedOutputTokens),
-            ["max_latency_ms"] = NormalizeLatency(request.MaxLatencyMs),
-            ["max_cost"] = NormalizeCost(request.MaxCost),
-            ["provider_rate_limit_rpm"] = NormalizeRateLimit(provider.RateLimitRpm)
+            ["request_priority"] = this.NormalizePriority(request.Priority),
+            ["provider_priority"] = this.NormalizePriority(provider.Priority),
+            ["estimated_input_tokens"] = this.NormalizeTokens(request.EstimatedInputTokens),
+            ["estimated_output_tokens"] = this.NormalizeTokens(request.EstimatedOutputTokens),
+            ["max_latency_ms"] = this.NormalizeLatency(request.MaxLatencyMs),
+            ["max_cost"] = this.NormalizeCost(request.MaxCost),
+            ["provider_rate_limit_rpm"] = this.NormalizeRateLimit(provider.RateLimitRpm),
         };
 
         if (metrics != null)
         {
-            features["avg_latency_ms"] = NormalizeLatency((int)metrics.AverageLatencyMs);
-            features["p95_latency_ms"] = NormalizeLatency((int)metrics.P95LatencyMs);
+            features["avg_latency_ms"] = this.NormalizeLatency((int)metrics.AverageLatencyMs);
+            features["p95_latency_ms"] = this.NormalizeLatency((int)metrics.P95LatencyMs);
             features["success_rate"] = metrics.SuccessRate / 100.0;
-            features["total_requests"] = NormalizeRequestCount(metrics.TotalRequests);
-            features["consecutive_failures"] = NormalizeConsecutiveFailures(metrics.ConsecutiveFailures);
-            features["avg_cost"] = NormalizeCost(metrics.AverageCostPerRequest);
+            features["total_requests"] = this.NormalizeRequestCount(metrics.TotalRequests);
+            features["consecutive_failures"] = this.NormalizeConsecutiveFailures(metrics.ConsecutiveFailures);
+            features["avg_cost"] = this.NormalizeCost(metrics.AverageCostPerRequest);
         }
         else
         {
@@ -208,16 +213,16 @@ public class RoutingPredictor
 
     private double PredictLatency(Dictionary<string, double> features, ProviderPerformanceMetrics? metrics)
     {
-        if (metrics != null && metrics.TotalRequests >= _options.MinRequestsForPrediction)
+        if (metrics != null && metrics.TotalRequests >= this._options.MinRequestsForPrediction)
         {
             // Use historical average with some adjustment based on current load
             var baseLatency = metrics.AverageLatencyMs;
             var loadFactor = features.ContainsKey("total_requests") ? features["total_requests"] : 0.0;
-            return baseLatency * (1.0 + loadFactor * 0.1);
+            return baseLatency * (1.0 + (loadFactor * 0.1));
         }
 
         // Use heuristic prediction
-        return 1000.0 + features["estimated_input_tokens"] * 0.5 + features["estimated_output_tokens"] * 1.0;
+        return 1000.0 + (features["estimated_input_tokens"] * 0.5) + (features["estimated_output_tokens"] * 1.0);
     }
 
     private decimal PredictCost(RoutingRequest request, Provider provider)
@@ -229,7 +234,7 @@ public class RoutingPredictor
 
     private double PredictSuccessRate(Dictionary<string, double> features, ProviderPerformanceMetrics? metrics)
     {
-        if (metrics != null && metrics.TotalRequests >= _options.MinRequestsForPrediction)
+        if (metrics != null && metrics.TotalRequests >= this._options.MinRequestsForPrediction)
         {
             // Use historical success rate with penalty for consecutive failures
             var baseSuccessRate = metrics.SuccessRate / 100.0;
@@ -243,14 +248,14 @@ public class RoutingPredictor
 
     private double CalculateConfidence(ProviderPerformanceMetrics? metrics)
     {
-        if (metrics == null || metrics.TotalRequests < _options.MinRequestsForPrediction)
+        if (metrics == null || metrics.TotalRequests < this._options.MinRequestsForPrediction)
         {
             return 0.3; // Low confidence for new providers
         }
 
         // Confidence increases with more data and consistent performance
         var dataConfidence = Math.Min(1.0, metrics.TotalRequests / 100.0);
-        var consistencyConfidence = 1.0 - (metrics.P99LatencyMs - metrics.P50LatencyMs) / metrics.P50LatencyMs;
+        var consistencyConfidence = 1.0 - ((metrics.P99LatencyMs - metrics.P50LatencyMs) / metrics.P50LatencyMs);
         consistencyConfidence = Math.Max(0.0, consistencyConfidence);
 
         return (dataConfidence + consistencyConfidence) / 2.0;
@@ -258,18 +263,18 @@ public class RoutingPredictor
 
     private double CalculateScore(ProviderPrediction prediction, RoutingRequest request)
     {
-        var latencyScore = NormalizeScore(prediction.PredictedLatencyMs, 0, request.MaxLatencyMs);
-        var costScore = NormalizeScore((double)prediction.PredictedCost, 0, (double)request.MaxCost);
+        var latencyScore = this.NormalizeScore(prediction.PredictedLatencyMs, 0, request.MaxLatencyMs);
+        var costScore = this.NormalizeScore((double)prediction.PredictedCost, 0, (double)request.MaxCost);
         var successScore = 1.0 - prediction.PredictedSuccessRate; // Invert: lower is better
-        var priorityScore = NormalizePriority(prediction.Provider.Priority);
+        var priorityScore = this.NormalizePriority(prediction.Provider.Priority);
 
-        var weight = _providerWeights.TryGetValue(prediction.Provider.Id, out var w) ? w : 1.0;
+        var weight = this._providerWeights.TryGetValue(prediction.Provider.Id, out var w) ? w : 1.0;
 
         var score = (
-            _options.LatencyWeight * latencyScore +
-            _options.CostWeight * costScore +
-            _options.SuccessRateWeight * successScore +
-            _options.PriorityWeight * priorityScore) / weight;
+            (this._options.LatencyWeight * latencyScore) +
+            (this._options.CostWeight * costScore) +
+            (this._options.SuccessRateWeight * successScore) +
+            (this._options.PriorityWeight * priorityScore)) / weight;
 
         return score;
     }
@@ -315,6 +320,7 @@ public class RoutingPredictor
         {
             return 0.5;
         }
+
         return Math.Max(0.0, Math.Min(1.0, (value - min) / (max - min)));
     }
 }

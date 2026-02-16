@@ -8,7 +8,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
-
 using DotNetEnv;
 using Microsoft.Agents.AI.Hosting.OpenAI;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -27,11 +26,7 @@ using Quartz;
 using Scalar.AspNetCore;
 using Serilog;
 using StackExchange.Redis;
-
 using Synaxis.InferenceGateway.Application.Configuration;
-using Synaxis.Transport.Grpc.DependencyInjection;
-using Synaxis.Transport.Http.DependencyInjection;
-using Synaxis.Transport.WebSocket.DependencyInjection;
 using Synaxis.InferenceGateway.Application.ControlPlane;
 using Synaxis.InferenceGateway.Application.Extensions;
 using Synaxis.InferenceGateway.Application.RealTime;
@@ -50,6 +45,9 @@ using Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI;
 using Synaxis.InferenceGateway.WebApi.Health;
 using Synaxis.InferenceGateway.WebApi.Hubs;
 using Synaxis.InferenceGateway.WebApi.Middleware;
+using Synaxis.Transport.Grpc.DependencyInjection;
+using Synaxis.Transport.Http.DependencyInjection;
+using Synaxis.Transport.WebSocket.DependencyInjection;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()

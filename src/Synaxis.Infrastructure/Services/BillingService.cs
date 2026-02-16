@@ -20,6 +20,12 @@ namespace Synaxis.Infrastructure.Services
         private readonly IExchangeRateProvider _exchangeRateProvider;
         private readonly ILogger<BillingService> _logger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BillingService"/> class.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="exchangeRateProvider"></param>
+        /// <param name="logger"></param>
         public BillingService(
             SynaxisDbContext context,
             IExchangeRateProvider exchangeRateProvider,

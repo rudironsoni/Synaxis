@@ -63,7 +63,7 @@ namespace Synaxis.BatchProcessing.Services
                 // Update batch status to Processing
                 batch.Status = BatchStatus.Processing;
                 batch.StartedAt = DateTime.UtcNow;
-                await this._storageService.UpdateBatchAsync(batch, cancellationToken);
+                await _storageService.UpdateBatchAsync(batch, cancellationToken).ConfigureAwait(false);
 
                 // Process each item in the batch
                 var results = new List<BatchItemResult>();
@@ -73,17 +73,17 @@ namespace Synaxis.BatchProcessing.Services
                     {
                         this._logger.LogWarning("Batch processing cancelled for batch {BatchId}", batch.Id);
                         batch.Status = BatchStatus.Cancelled;
-                        await this._storageService.UpdateBatchAsync(batch, cancellationToken);
+                        await _storageService.UpdateBatchAsync(batch, cancellationToken).ConfigureAwait(false);
                         return;
                     }
 
                     try
                     {
                         item.Status = BatchItemStatus.Processing;
-                        await this._storageService.UpdateBatchAsync(batch, cancellationToken);
+                        await _storageService.UpdateBatchAsync(batch, cancellationToken).ConfigureAwait(false);
 
                         // Process the item (this is a placeholder - actual processing logic would go here)
-                        var result = await this.ProcessItemAsync(item, batch.OperationType, cancellationToken);
+                        var result = await ProcessItemAsync(item, batch.OperationType, cancellationToken).ConfigureAwait(false);
 
                         item.Status = BatchItemStatus.Completed;
                         item.Result = JsonSerializer.Serialize(result);
@@ -93,7 +93,7 @@ namespace Synaxis.BatchProcessing.Services
                         {
                             ItemId = item.Id,
                             Status = BatchItemStatus.Completed,
-                            Result = result
+                            Result = result,
                         });
 
                         this._logger.LogDebug("Processed item {ItemId} for batch {BatchId}", item.Id, batch.Id);
@@ -108,24 +108,24 @@ namespace Synaxis.BatchProcessing.Services
                         {
                             ItemId = item.Id,
                             Status = BatchItemStatus.Failed,
-                            ErrorMessage = ex.Message
+                            ErrorMessage = ex.Message,
                         });
 
                         this._logger.LogError(ex, "Failed to process item {ItemId} for batch {BatchId}", item.Id, batch.Id);
                     }
 
                     // Update batch progress
-                    await this._storageService.UpdateBatchAsync(batch, cancellationToken);
+                    await _storageService.UpdateBatchAsync(batch, cancellationToken).ConfigureAwait(false);
                 }
 
                 // Store results in blob storage
-                var resultBlobPath = await this._storageService.StoreResultsAsync(batch.Id, results, cancellationToken);
+                var resultBlobPath = await _storageService.StoreResultsAsync(batch.Id, results, cancellationToken).ConfigureAwait(false);
                 batch.ResultBlobPath = resultBlobPath;
 
                 // Update final batch status
                 batch.Status = batch.FailedItems > 0 ? BatchStatus.Failed : BatchStatus.Completed;
                 batch.CompletedAt = DateTime.UtcNow;
-                await this._storageService.UpdateBatchAsync(batch, cancellationToken);
+                await _storageService.UpdateBatchAsync(batch, cancellationToken).ConfigureAwait(false);
 
                 this._logger.LogInformation(
                     "Completed processing for batch {BatchId}. Processed: {Processed}, Failed: {Failed}",
@@ -136,7 +136,7 @@ namespace Synaxis.BatchProcessing.Services
                 // Send webhook notification if configured
                 if (!string.IsNullOrEmpty(batch.WebhookUrl))
                 {
-                    await this._webhookService.SendCompletionNotificationAsync(batch, cancellationToken);
+                    await _webhookService.SendCompletionNotificationAsync(batch, cancellationToken).ConfigureAwait(false);
                 }
             }
             catch (Exception ex)
@@ -145,12 +145,12 @@ namespace Synaxis.BatchProcessing.Services
                 batch.Status = BatchStatus.Failed;
                 batch.ErrorMessage = ex.Message;
                 batch.CompletedAt = DateTime.UtcNow;
-                await this._storageService.UpdateBatchAsync(batch, cancellationToken);
+                await _storageService.UpdateBatchAsync(batch, cancellationToken).ConfigureAwait(false);
 
                 // Send webhook notification for failure if configured
                 if (!string.IsNullOrEmpty(batch.WebhookUrl))
                 {
-                    await this._webhookService.SendFailureNotificationAsync(batch, ex.Message, cancellationToken);
+                    await _webhookService.SendFailureNotificationAsync(batch, ex.Message, cancellationToken).ConfigureAwait(false);
                 }
 
                 throw;
@@ -168,7 +168,7 @@ namespace Synaxis.BatchProcessing.Services
         {
             // This is a placeholder implementation
             // In a real scenario, this would contain the actual business logic for processing items
-            await Task.Delay(100, cancellationToken); // Simulate processing time
+            await Task.Delay(100, cancellationToken).ConfigureAwait(false); // Simulate processing time
 
             return new
             {
@@ -176,7 +176,7 @@ namespace Synaxis.BatchProcessing.Services
                 OperationType = operationType,
                 ProcessedAt = DateTime.UtcNow,
                 Success = true,
-                Data = $"Processed: {item.Data}"
+                Data = $"Processed: {item.Data}",
             };
         }
     }

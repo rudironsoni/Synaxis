@@ -1,6 +1,10 @@
-using System.Collections.Concurrent;
+// <copyright file="ProviderPerformanceTracker.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
 namespace Synaxis.Routing.SmartRouter;
+
+using System.Collections.Concurrent;
 
 /// <summary>
 /// Tracks performance metrics for AI providers.
@@ -19,9 +23,9 @@ public class ProviderPerformanceTracker
     /// </summary>
     public ProviderPerformanceTracker()
     {
-        _metrics = new ConcurrentDictionary<string, ProviderPerformanceMetrics>();
-        _latencyHistory = new ConcurrentDictionary<string, List<int>>();
-        _requestTimestamps = new ConcurrentDictionary<string, List<DateTime>>();
+        this._metrics = new ConcurrentDictionary<string, ProviderPerformanceMetrics>(StringComparer.Ordinal);
+        this._latencyHistory = new ConcurrentDictionary<string, List<int>>(StringComparer.Ordinal);
+        this._requestTimestamps = new ConcurrentDictionary<string, List<DateTime>>(StringComparer.Ordinal);
     }
 
     /// <summary>
@@ -46,11 +50,11 @@ public class ProviderPerformanceTracker
             throw new ArgumentException("Provider ID cannot be null or empty.", nameof(providerId));
         }
 
-        var metrics = _metrics.GetOrAdd(providerId, id => new ProviderPerformanceMetrics { ProviderId = id });
-        var latencyList = _latencyHistory.GetOrAdd(providerId, _ => new List<int>());
-        var timestampList = _requestTimestamps.GetOrAdd(providerId, _ => new List<DateTime>());
+        var metrics = this._metrics.GetOrAdd(providerId, id => new ProviderPerformanceMetrics { ProviderId = id });
+        var latencyList = this._latencyHistory.GetOrAdd(providerId, _ => new List<int>());
+        var timestampList = this._requestTimestamps.GetOrAdd(providerId, _ => new List<DateTime>());
 
-        lock (_lock)
+        lock (this._lock)
         {
             metrics.TotalRequests++;
             metrics.TotalInputTokens += inputTokens;
@@ -74,20 +78,20 @@ public class ProviderPerformanceTracker
 
             // Track latency
             latencyList.Add(latencyMs);
-            if (latencyList.Count > _maxHistorySize)
+            if (latencyList.Count > this._maxHistorySize)
             {
                 latencyList.RemoveAt(0);
             }
 
             // Track request timestamps for rate limiting
             timestampList.Add(DateTime.UtcNow);
-            if (timestampList.Count > _maxRecentRequests)
+            if (timestampList.Count > this._maxRecentRequests)
             {
                 timestampList.RemoveAt(0);
             }
 
             // Update latency statistics
-            UpdateLatencyStatistics(metrics, latencyList);
+            this.UpdateLatencyStatistics(metrics, latencyList);
         }
     }
 
@@ -103,7 +107,7 @@ public class ProviderPerformanceTracker
             return null;
         }
 
-        return _metrics.TryGetValue(providerId, out var metrics) ? metrics : null;
+        return this._metrics.TryGetValue(providerId, out var metrics) ? metrics : null;
     }
 
     /// <summary>
@@ -112,7 +116,7 @@ public class ProviderPerformanceTracker
     /// <returns>A dictionary of provider IDs to their metrics.</returns>
     public Dictionary<string, ProviderPerformanceMetrics> GetAllMetrics()
     {
-        return _metrics.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        return this._metrics.ToDictionary(kvp => kvp.Key, kvp => kvp.Value, StringComparer.Ordinal);
     }
 
     /// <summary>
@@ -122,12 +126,12 @@ public class ProviderPerformanceTracker
     /// <returns>The request rate in requests per minute.</returns>
     public double GetRequestRatePerMinute(string providerId)
     {
-        if (string.IsNullOrEmpty(providerId) || !_requestTimestamps.TryGetValue(providerId, out var timestamps))
+        if (string.IsNullOrEmpty(providerId) || !this._requestTimestamps.TryGetValue(providerId, out var timestamps))
         {
             return 0.0;
         }
 
-        lock (_lock)
+        lock (this._lock)
         {
             var oneMinuteAgo = DateTime.UtcNow.AddMinutes(-1);
             var recentRequests = timestamps.Count(t => t > oneMinuteAgo);
@@ -146,9 +150,9 @@ public class ProviderPerformanceTracker
             return;
         }
 
-        _metrics.TryRemove(providerId, out _);
-        _latencyHistory.TryRemove(providerId, out _);
-        _requestTimestamps.TryRemove(providerId, out _);
+        this._metrics.TryRemove(providerId, out _);
+        this._latencyHistory.TryRemove(providerId, out _);
+        this._requestTimestamps.TryRemove(providerId, out _);
     }
 
     /// <summary>
@@ -156,9 +160,9 @@ public class ProviderPerformanceTracker
     /// </summary>
     public void ResetAll()
     {
-        _metrics.Clear();
-        _latencyHistory.Clear();
-        _requestTimestamps.Clear();
+        this._metrics.Clear();
+        this._latencyHistory.Clear();
+        this._requestTimestamps.Clear();
     }
 
     /// <summary>
@@ -168,7 +172,7 @@ public class ProviderPerformanceTracker
     /// <returns>The health status.</returns>
     public ProviderHealthStatus GetHealthStatus(string providerId)
     {
-        var metrics = GetMetrics(providerId);
+        var metrics = this.GetMetrics(providerId);
         if (metrics == null)
         {
             return ProviderHealthStatus.Unknown;

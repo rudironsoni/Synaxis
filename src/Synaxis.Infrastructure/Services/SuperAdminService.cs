@@ -44,6 +44,15 @@ namespace Synaxis.Infrastructure.Services
         private readonly int _businessHoursStart = 8; // 8 AM
         private readonly int _businessHoursEnd = 18; // 6 PM
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SuperAdminService"/> class.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="httpClientFactory"></param>
+        /// <param name="auditService"></param>
+        /// <param name="userService"></param>
+        /// <param name="logger"></param>
+        /// <param name="currentRegion"></param>
         public SuperAdminService(
             SynaxisDbContext context,
             IHttpClientFactory httpClientFactory,

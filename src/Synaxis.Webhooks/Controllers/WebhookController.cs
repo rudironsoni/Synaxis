@@ -35,8 +35,8 @@ namespace Synaxis.Webhooks.Controllers
         /// <param name="logger">The logger.</param>
         public WebhookController(WebhooksDbContext dbContext, ILogger<WebhookController> logger)
         {
-            _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         /// <summary>
@@ -49,9 +49,9 @@ namespace Synaxis.Webhooks.Controllers
         {
             try
             {
-                var organizationId = GetCurrentOrganizationId();
+                var organizationId = this.GetCurrentOrganizationId();
 
-                _logger.LogInformation(
+                this._logger.LogInformation(
                     "Creating webhook for organization {OrganizationId} with URL {Url}",
                     organizationId,
                     request.Url);
@@ -68,20 +68,20 @@ namespace Synaxis.Webhooks.Controllers
                     UpdatedAt = DateTime.UtcNow,
                 };
 
-                _dbContext.Webhooks.Add(webhook);
-                await _dbContext.SaveChangesAsync();
+                this._dbContext.Webhooks.Add(webhook);
+                await this._dbContext.SaveChangesAsync();
 
-                _logger.LogInformation("Webhook {WebhookId} created successfully", webhook.Id);
+                this._logger.LogInformation("Webhook {WebhookId} created successfully", webhook.Id);
 
-                return CreatedAtAction(
-                    nameof(GetWebhook),
+                return this.CreatedAtAction(
+                    nameof(this.GetWebhook),
                     new { id = webhook.Id },
                     MapToDto(webhook, includeSecret: true));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating webhook");
-                return StatusCode(500, new { message = "An error occurred while creating the webhook" });
+                this._logger.LogError(ex, "Error creating webhook");
+                return this.StatusCode(500, new { message = "An error occurred while creating the webhook" });
             }
         }
 
@@ -94,19 +94,19 @@ namespace Synaxis.Webhooks.Controllers
         {
             try
             {
-                var organizationId = GetCurrentOrganizationId();
+                var organizationId = this.GetCurrentOrganizationId();
 
-                var webhooks = await _dbContext.Webhooks
+                var webhooks = await this._dbContext.Webhooks
                     .Where(w => w.OrganizationId == organizationId)
                     .OrderByDescending(w => w.CreatedAt)
                     .ToListAsync();
 
-                return Ok(webhooks.Select(w => MapToDto(w, includeSecret: false)).ToList());
+                return this.Ok(webhooks.Select(w => MapToDto(w, includeSecret: false)).ToList());
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error listing webhooks");
-                return StatusCode(500, new { message = "An error occurred while listing webhooks" });
+                this._logger.LogError(ex, "Error listing webhooks");
+                return this.StatusCode(500, new { message = "An error occurred while listing webhooks" });
             }
         }
 
@@ -120,22 +120,22 @@ namespace Synaxis.Webhooks.Controllers
         {
             try
             {
-                var organizationId = GetCurrentOrganizationId();
+                var organizationId = this.GetCurrentOrganizationId();
 
-                var webhook = await _dbContext.Webhooks
+                var webhook = await this._dbContext.Webhooks
                     .FirstOrDefaultAsync(w => w.Id == id && w.OrganizationId == organizationId);
 
                 if (webhook == null)
                 {
-                    return NotFound(new { message = "Webhook not found" });
+                    return this.NotFound(new { message = "Webhook not found" });
                 }
 
-                return Ok(MapToDto(webhook, includeSecret: false));
+                return this.Ok(MapToDto(webhook, includeSecret: false));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting webhook {WebhookId}", id);
-                return StatusCode(500, new { message = "An error occurred while getting the webhook" });
+                this._logger.LogError(ex, "Error getting webhook {WebhookId}", id);
+                return this.StatusCode(500, new { message = "An error occurred while getting the webhook" });
             }
         }
 
@@ -150,14 +150,14 @@ namespace Synaxis.Webhooks.Controllers
         {
             try
             {
-                var organizationId = GetCurrentOrganizationId();
+                var organizationId = this.GetCurrentOrganizationId();
 
-                var webhook = await _dbContext.Webhooks
+                var webhook = await this._dbContext.Webhooks
                     .FirstOrDefaultAsync(w => w.Id == id && w.OrganizationId == organizationId);
 
                 if (webhook == null)
                 {
-                    return NotFound(new { message = "Webhook not found" });
+                    return this.NotFound(new { message = "Webhook not found" });
                 }
 
                 if (!string.IsNullOrEmpty(request.Url))
@@ -174,16 +174,16 @@ namespace Synaxis.Webhooks.Controllers
 
                 webhook.UpdatedAt = DateTime.UtcNow;
 
-                await _dbContext.SaveChangesAsync();
+                await this._dbContext.SaveChangesAsync();
 
-                _logger.LogInformation("Webhook {WebhookId} updated successfully", id);
+                this._logger.LogInformation("Webhook {WebhookId} updated successfully", id);
 
-                return Ok(MapToDto(webhook, includeSecret: false));
+                return this.Ok(MapToDto(webhook, includeSecret: false));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating webhook {WebhookId}", id);
-                return StatusCode(500, new { message = "An error occurred while updating the webhook" });
+                this._logger.LogError(ex, "Error updating webhook {WebhookId}", id);
+                return this.StatusCode(500, new { message = "An error occurred while updating the webhook" });
             }
         }
 
@@ -197,27 +197,27 @@ namespace Synaxis.Webhooks.Controllers
         {
             try
             {
-                var organizationId = GetCurrentOrganizationId();
+                var organizationId = this.GetCurrentOrganizationId();
 
-                var webhook = await _dbContext.Webhooks
+                var webhook = await this._dbContext.Webhooks
                     .FirstOrDefaultAsync(w => w.Id == id && w.OrganizationId == organizationId);
 
                 if (webhook == null)
                 {
-                    return NotFound(new { message = "Webhook not found" });
+                    return this.NotFound(new { message = "Webhook not found" });
                 }
 
-                _dbContext.Webhooks.Remove(webhook);
-                await _dbContext.SaveChangesAsync();
+                this._dbContext.Webhooks.Remove(webhook);
+                await this._dbContext.SaveChangesAsync();
 
-                _logger.LogInformation("Webhook {WebhookId} deleted successfully", id);
+                this._logger.LogInformation("Webhook {WebhookId} deleted successfully", id);
 
-                return NoContent();
+                return this.NoContent();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting webhook {WebhookId}", id);
-                return StatusCode(500, new { message = "An error occurred while deleting the webhook" });
+                this._logger.LogError(ex, "Error deleting webhook {WebhookId}", id);
+                return this.StatusCode(500, new { message = "An error occurred while deleting the webhook" });
             }
         }
 
@@ -231,29 +231,29 @@ namespace Synaxis.Webhooks.Controllers
         {
             try
             {
-                var organizationId = GetCurrentOrganizationId();
+                var organizationId = this.GetCurrentOrganizationId();
 
-                var webhook = await _dbContext.Webhooks
+                var webhook = await this._dbContext.Webhooks
                     .FirstOrDefaultAsync(w => w.Id == id && w.OrganizationId == organizationId);
 
                 if (webhook == null)
                 {
-                    return NotFound(new { message = "Webhook not found" });
+                    return this.NotFound(new { message = "Webhook not found" });
                 }
 
                 webhook.Secret = GenerateSecret();
                 webhook.UpdatedAt = DateTime.UtcNow;
 
-                await _dbContext.SaveChangesAsync();
+                await this._dbContext.SaveChangesAsync();
 
-                _logger.LogInformation("Secret regenerated for webhook {WebhookId}", id);
+                this._logger.LogInformation("Secret regenerated for webhook {WebhookId}", id);
 
-                return Ok(MapToDto(webhook, includeSecret: true));
+                return this.Ok(MapToDto(webhook, includeSecret: true));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error regenerating secret for webhook {WebhookId}", id);
-                return StatusCode(500, new { message = "An error occurred while regenerating the secret" });
+                this._logger.LogError(ex, "Error regenerating secret for webhook {WebhookId}", id);
+                return this.StatusCode(500, new { message = "An error occurred while regenerating the secret" });
             }
         }
 
@@ -268,28 +268,28 @@ namespace Synaxis.Webhooks.Controllers
         {
             try
             {
-                var organizationId = GetCurrentOrganizationId();
+                var organizationId = this.GetCurrentOrganizationId();
 
-                var webhook = await _dbContext.Webhooks
+                var webhook = await this._dbContext.Webhooks
                     .FirstOrDefaultAsync(w => w.Id == id && w.OrganizationId == organizationId);
 
                 if (webhook == null)
                 {
-                    return NotFound(new { message = "Webhook not found" });
+                    return this.NotFound(new { message = "Webhook not found" });
                 }
 
-                var logs = await _dbContext.WebhookDeliveryLogs
+                var logs = await this._dbContext.WebhookDeliveryLogs
                     .Where(l => l.WebhookId == id)
                     .OrderByDescending(l => l.DeliveredAt)
                     .Take(limit)
                     .ToListAsync();
 
-                return Ok(logs.Select(MapToLogDto).ToList());
+                return this.Ok(logs.Select(MapToLogDto).ToList());
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting delivery logs for webhook {WebhookId}", id);
-                return StatusCode(500, new { message = "An error occurred while getting delivery logs" });
+                this._logger.LogError(ex, "Error getting delivery logs for webhook {WebhookId}", id);
+                return this.StatusCode(500, new { message = "An error occurred while getting delivery logs" });
             }
         }
 
@@ -303,36 +303,36 @@ namespace Synaxis.Webhooks.Controllers
         {
             try
             {
-                var organizationId = GetCurrentOrganizationId();
+                var organizationId = this.GetCurrentOrganizationId();
 
-                var webhook = await _dbContext.Webhooks
+                var webhook = await this._dbContext.Webhooks
                     .FirstOrDefaultAsync(w => w.Id == id && w.OrganizationId == organizationId);
 
                 if (webhook == null)
                 {
-                    return NotFound(new { message = "Webhook not found" });
+                    return this.NotFound(new { message = "Webhook not found" });
                 }
 
                 webhook.IsActive = true;
                 webhook.FailedDeliveryAttempts = 0;
                 webhook.UpdatedAt = DateTime.UtcNow;
 
-                await _dbContext.SaveChangesAsync();
+                await this._dbContext.SaveChangesAsync();
 
-                _logger.LogInformation("Webhook {WebhookId} reactivated", id);
+                this._logger.LogInformation("Webhook {WebhookId} reactivated", id);
 
-                return NoContent();
+                return this.NoContent();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error reactivating webhook {WebhookId}", id);
-                return StatusCode(500, new { message = "An error occurred while reactivating the webhook" });
+                this._logger.LogError(ex, "Error reactivating webhook {WebhookId}", id);
+                return this.StatusCode(500, new { message = "An error occurred while reactivating the webhook" });
             }
         }
 
         private Guid GetCurrentOrganizationId()
         {
-            var organizationIdClaim = User.FindFirst("organization_id");
+            var organizationIdClaim = this.User.FindFirst("organization_id");
             if (organizationIdClaim == null || !Guid.TryParse(organizationIdClaim.Value, out var organizationId))
             {
                 throw new UnauthorizedAccessException("Invalid organization");
@@ -384,7 +384,6 @@ namespace Synaxis.Webhooks.Controllers
             };
         }
     }
-
         /// <summary>
         /// Gets or sets the payload that was sent.
         /// </summary>

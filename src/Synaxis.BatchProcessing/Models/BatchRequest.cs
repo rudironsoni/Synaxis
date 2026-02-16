@@ -130,6 +130,6 @@ namespace Synaxis.BatchProcessing.Models
         /// <summary>
         /// Gets or sets the metadata associated with the batch.
         /// </summary>
-        public Dictionary<string, string> Metadata { get; set; } = new Dictionary<string, string>();
+        public Dictionary<string, string> Metadata { get; set; } = new Dictionary<string, string>(StringComparer.Ordinal);
     }
 }

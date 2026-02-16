@@ -1,3 +1,7 @@
+// <copyright file="RoutingDecision.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
 namespace Synaxis.Routing.SmartRouter;
 
 /// <summary>
@@ -53,5 +57,5 @@ public class RoutingDecision
     /// <summary>
     /// Gets or sets the feature values used for the prediction.
     /// </summary>
-    public Dictionary<string, double> Features { get; set; } = new();
+    public Dictionary<string, double> Features { get; set; } = new(StringComparer.Ordinal);
 }
