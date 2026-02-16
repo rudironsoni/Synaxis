@@ -8,6 +8,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
     using System.IdentityModel.Tokens.Jwt;
     using System.IO;
     using System.Linq;
+    using System.Security;
     using System.Security.Cryptography;
     using System.Text;
     using System.Threading;
@@ -534,17 +535,45 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
 
         private static async Task<string> SaveAvatarFileAsync(IFormFile file, Guid userId, CancellationToken cancellationToken)
         {
-            // Generate unique filename
+            // Extract and validate file extension
             var fileExtension = Path.GetExtension(file.FileName);
-            var uniqueFileName = $"{Guid.NewGuid()}{fileExtension}";
+
+            // Validate extension doesn't contain path traversal
+            if (fileExtension.Contains("..", StringComparison.Ordinal) ||
+                fileExtension.Contains('/', StringComparison.Ordinal) ||
+                fileExtension.Contains('\\', StringComparison.Ordinal))
+            {
+                throw new SecurityException("Invalid file extension");
+            }
+
+            // Only allow safe image extensions
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+            var normalizedExtension = fileExtension.ToLowerInvariant();
+            if (!allowedExtensions.Contains(normalizedExtension))
+            {
+                throw new SecurityException("File extension not allowed");
+            }
+
+            // Generate unique filename using GUID (prevents filename-based attacks)
+            var uniqueFileName = $"{Guid.NewGuid()}{normalizedExtension}";
 
             // Create upload directory if it doesn't exist
             var uploadPath = Path.Combine("uploads", "avatars", userId.ToString());
-            Directory.CreateDirectory(uploadPath);
+            var fullUploadPath = Path.GetFullPath(uploadPath);
+            Directory.CreateDirectory(fullUploadPath);
+
+            // Construct and validate the full file path
+            var filePath = Path.Combine(fullUploadPath, uniqueFileName);
+            var fullPath = Path.GetFullPath(filePath);
+
+            // Verify the resolved path is within the upload directory (path traversal check)
+            if (!fullPath.StartsWith(fullUploadPath, StringComparison.Ordinal))
+            {
+                throw new SecurityException("Path traversal detected");
+            }
 
             // Save file to disk
-            var filePath = Path.Combine(uploadPath, uniqueFileName);
-            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            using (var fileStream = new FileStream(fullPath, FileMode.Create))
             {
                 await file.CopyToAsync(fileStream, cancellationToken).ConfigureAwait(false);
             }
