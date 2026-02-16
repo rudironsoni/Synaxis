@@ -181,7 +181,8 @@ public sealed class AgentExecutionService
             ? System.Text.Json.JsonSerializer.Serialize(step.Arguments)
             : string.Empty;
 
-        return Task.FromResult<object?>(function(argumentsJson).Result);
+        // Task<object> is covariant with Task<object?> at runtime
+        return function(argumentsJson)!;
     }
 
     private static Task<object?> ExecuteOutputStepAsync(
