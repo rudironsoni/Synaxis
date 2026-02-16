@@ -17,11 +17,11 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the backup codes for account recovery.
         /// </summary>
-        public string[] BackupCodes { get; set; }
+        public required string[] BackupCodes { get; set; }
 
         /// <summary>
         /// Gets or sets the error message if enabling MFA failed.
         /// </summary>
-        public string ErrorMessage { get; set; }
+        public required string ErrorMessage { get; set; }
     }
 }

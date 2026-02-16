@@ -25,7 +25,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the user navigation property.
         /// </summary>
-        public virtual User User { get; set; }
+        public virtual User? User { get; set; }
 
         /// <summary>
         /// Gets or sets the collection identifier.
@@ -35,7 +35,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the collection navigation property.
         /// </summary>
-        public virtual Collection Collection { get; set; }
+        public virtual Collection? Collection { get; set; }
 
         /// <summary>
         /// Gets or sets the organization identifier.
@@ -45,7 +45,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the organization navigation property.
         /// </summary>
-        public virtual Organization Organization { get; set; }
+        public virtual Organization? Organization { get; set; }
 
         /// <summary>
         /// Gets or sets the role: admin, member, viewer.
@@ -66,6 +66,6 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the adder navigation property.
         /// </summary>
-        public virtual User Adder { get; set; }
+        public virtual User? Adder { get; set; }
     }
 }

@@ -2,6 +2,7 @@
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
+#pragma warning disable SA1402 // File contains multiple types - generic and non-generic versions are intentionally in the same file
 namespace Synaxis.Routing.CircuitBreaker;
 
 using System;
@@ -210,7 +211,7 @@ public class CircuitBreakerPolicy
     /// <param name="operation">The operation to execute.</param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <exception cref="CircuitBreakerOpenException">Thrown when the circuit breaker is open and no fallback is provided.</exception>
-    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public async Task ExecuteAsync(
         Func<CancellationToken, Task> operation,
         CancellationToken cancellationToken = default)
@@ -265,7 +266,7 @@ public class CircuitBreakerPolicy
     /// <param name="operation">The operation to execute.</param>
     /// <param name="maxRetries">The maximum number of retry attempts.</param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
-    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public async Task ExecuteWithRetryAsync(
         Func<CancellationToken, Task> operation,
         int maxRetries = 3,

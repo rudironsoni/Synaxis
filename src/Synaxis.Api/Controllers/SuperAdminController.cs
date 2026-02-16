@@ -44,6 +44,8 @@ namespace Synaxis.Api.Controllers
         /// <remarks>
         /// WARNING: This endpoint exposes cross-region data. All access is audited.
         /// </remarks>
+        /// <param name="mfaCode">MFA verification code.</param>
+        /// <param name="justification">Justification for accessing cross-region data.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         [HttpGet("organizations")]
         [ProducesResponseType(typeof(List<OrganizationSummary>), 200)]
@@ -78,6 +80,8 @@ namespace Synaxis.Api.Controllers
         /// CRITICAL: This allows impersonating any user. Requires approval and justification.
         /// All impersonation attempts are permanently logged.
         /// </remarks>
+        /// <param name="request">The impersonation request.</param>
+        /// <param name="mfaCode">MFA verification code.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         [HttpPost("impersonate")]
         [ProducesResponseType(typeof(ImpersonationToken), 200)]
@@ -128,6 +132,9 @@ namespace Synaxis.Api.Controllers
         /// <summary>
         /// Get global usage analytics across all regions.
         /// </summary>
+        /// <param name="startDate">The start date for the analytics period.</param>
+        /// <param name="endDate">The end date for the analytics period.</param>
+        /// <param name="mfaCode">MFA verification code.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         [HttpGet("analytics/usage")]
         [ProducesResponseType(typeof(GlobalUsageAnalytics), 200)]
@@ -156,6 +163,9 @@ namespace Synaxis.Api.Controllers
         /// <remarks>
         /// For GDPR/LGPD compliance auditing.
         /// </remarks>
+        /// <param name="startDate">The start date for the report period.</param>
+        /// <param name="endDate">The end date for the report period.</param>
+        /// <param name="mfaCode">MFA verification code.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         [HttpGet("compliance/cross-border-transfers")]
         [ProducesResponseType(typeof(List<CrossBorderTransferReport>), 200)]
@@ -181,6 +191,7 @@ namespace Synaxis.Api.Controllers
         /// <summary>
         /// Get compliance status dashboard.
         /// </summary>
+        /// <param name="mfaCode">MFA verification code.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         [HttpGet("compliance/status")]
         [ProducesResponseType(typeof(ComplianceStatusDashboard), 200)]
@@ -204,6 +215,7 @@ namespace Synaxis.Api.Controllers
         /// <summary>
         /// Get system health overview across regions.
         /// </summary>
+        /// <param name="mfaCode">MFA verification code.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         [HttpGet("system/health")]
         [ProducesResponseType(typeof(SystemHealthOverview), 200)]
@@ -230,6 +242,9 @@ namespace Synaxis.Api.Controllers
         /// <remarks>
         /// CRITICAL: Requires approval and justification. All modifications are audited.
         /// </remarks>
+        /// <param name="organizationId">The organization ID.</param>
+        /// <param name="request">The limit modification request.</param>
+        /// <param name="mfaCode">MFA verification code.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         [HttpPost("organizations/{organizationId:guid}/limits")]
         [ProducesResponseType(200)]
@@ -291,6 +306,8 @@ namespace Synaxis.Api.Controllers
         /// <remarks>
         /// Used by frontend to verify access before showing sensitive UI.
         /// </remarks>
+        /// <param name="context">The super admin access context.</param>
+        /// <param name="mfaCode">MFA verification code.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         [HttpPost("validate-access")]
         [ProducesResponseType(typeof(SuperAdminAccessValidation), 200)]

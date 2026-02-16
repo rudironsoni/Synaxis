@@ -32,7 +32,7 @@ namespace Synaxis.Core.Contracts
         /// <param name="initiatedBy">The user who initiated the top-up.</param>
         /// <param name="description">The optional description of the top-up.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains the credit transaction.</returns>
-        Task<CreditTransaction> TopUpCreditsAsync(Guid organizationId, decimal amountUsd, Guid initiatedBy, string description = null);
+        Task<CreditTransaction> TopUpCreditsAsync(Guid organizationId, decimal amountUsd, Guid initiatedBy, string? description = null);
 
         /// <summary>
         /// Get current credit balance in USD.
@@ -95,7 +95,7 @@ namespace Synaxis.Core.Contracts
         /// <param name="requestId">The optional request identifier.</param>
         /// <param name="region">The optional region.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains the spend log entry.</returns>
-        Task<SpendLog> LogSpendAsync(Guid organizationId, decimal amountUsd, string model, string provider, int tokens, Guid? teamId = null, Guid? virtualKeyId = null, Guid? requestId = null, string region = null);
+        Task<SpendLog> LogSpendAsync(Guid organizationId, decimal amountUsd, string model, string provider, int tokens, Guid? teamId = null, Guid? virtualKeyId = null, Guid? requestId = null, string? region = null);
 
         /// <summary>
         /// Get spending summary for period.

@@ -34,7 +34,7 @@ namespace Synaxis.Core.Contracts
         /// <param name="refreshToken">The refresh token to revoke.</param>
         /// <param name="accessToken">The JWT access token to invalidate.</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
-        Task LogoutAsync(string refreshToken, string accessToken = null);
+        Task LogoutAsync(string refreshToken, string? accessToken = null);
 
         /// <summary>
         /// Validate a JWT access token.
@@ -64,12 +64,12 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the JWT access token.
         /// </summary>
-        public string AccessToken { get; set; }
+        public string? AccessToken { get; set; }
 
         /// <summary>
         /// Gets or sets the refresh token.
         /// </summary>
-        public string RefreshToken { get; set; }
+        public string? RefreshToken { get; set; }
 
         /// <summary>
         /// Gets or sets the access token expiration time in seconds.
@@ -79,12 +79,12 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the authenticated user.
         /// </summary>
-        public User User { get; set; }
+        public User? User { get; set; }
 
         /// <summary>
         /// Gets or sets the error message if authentication failed.
         /// </summary>
-        public string ErrorMessage { get; set; }
+        public string? ErrorMessage { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether MFA is required.

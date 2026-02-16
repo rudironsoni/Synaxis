@@ -192,7 +192,7 @@ public class AuthControllerMfaDisableTests : IClassFixture<SynaxisWebApplication
         var scope = _factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<SynaxisDbContext>();
         var user = await dbContext.Users.FirstAsync(u => u.Email == email);
-        var hashedBackupCodes = user.MfaBackupCodes.Split(',');
+        var hashedBackupCodes = (user.MfaBackupCodes ?? string.Empty).Split(',');
         user.MfaBackupCodes = string.Join(",", hashedBackupCodes.Skip(1));
         await dbContext.SaveChangesAsync();
 

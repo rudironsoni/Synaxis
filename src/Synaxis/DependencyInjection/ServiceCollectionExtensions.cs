@@ -49,12 +49,6 @@ namespace Synaxis.DependencyInjection
                 services.Configure<SynaxisOptions>(_ => { });
             }
 
-            // Register Mediator
-            services.AddMediator(options =>
-            {
-                options.ServiceLifetime = ServiceLifetime.Scoped;
-            });
-
             // Register handlers
             services.TryAddScoped<ChatCommandHandler>();
             services.TryAddScoped<ChatStreamHandler>();

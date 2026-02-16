@@ -13,7 +13,7 @@ public class CircuitBreakerStoreOptions
     /// Gets or sets the Redis connection string.
     /// If null or empty, only in-memory storage will be used.
     /// </summary>
-    public string RedisConnectionString { get; set; }
+    public string? RedisConnectionString { get; set; }
 
     /// <summary>
     /// Gets or sets the Redis key prefix for circuit breaker data.

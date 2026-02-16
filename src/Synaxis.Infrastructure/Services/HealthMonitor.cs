@@ -40,10 +40,10 @@ namespace Synaxis.Infrastructure.Services
         /// <summary>
         /// Initializes a new instance of the <see cref="HealthMonitor"/> class.
         /// </summary>
-        /// <param name="context"></param>
-        /// <param name="redis"></param>
-        /// <param name="httpClientFactory"></param>
-        /// <param name="logger"></param>
+        /// <param name="context">The database context.</param>
+        /// <param name="redis">The Redis connection multiplexer.</param>
+        /// <param name="httpClientFactory">The HTTP client factory.</param>
+        /// <param name="logger">The logger.</param>
         public HealthMonitor(
             SynaxisDbContext context,
             IConnectionMultiplexer redis,
@@ -64,55 +64,14 @@ namespace Synaxis.Infrastructure.Services
                 throw new ArgumentException("Region cannot be null or empty", nameof(region));
             }
 
-            // Check cache first
-            if (this._healthCache.TryGetValue(region, out var cachedHealth) &&
-                DateTime.UtcNow - cachedHealth.LastChecked < this._cacheExpiry)
+            if (this.TryGetCachedHealth(region, out var cachedHealth) && cachedHealth != null)
             {
                 return cachedHealth;
             }
 
             try
             {
-                var health = new RegionHealth
-                {
-                    Region = region,
-                    LastChecked = DateTime.UtcNow,
-                    Issues = new List<string>(),
-                };
-
-                // Check database connectivity
-                health.DatabaseHealthy = await this.CheckDatabaseHealthAsync(region).ConfigureAwait(false);
-                if (!health.DatabaseHealthy)
-                {
-                    health.Issues.Add("Database connectivity issue");
-                }
-
-                // Check Redis connectivity
-                health.RedisHealthy = await this.CheckRedisHealthAsync(region).ConfigureAwait(false);
-                if (!health.RedisHealthy)
-                {
-                    health.Issues.Add("Redis connectivity issue");
-                }
-
-                // Check external providers
-                var providers = new[] { "openai", "anthropic", "google" };
-                foreach (var provider in providers)
-                {
-                    var providerHealth = await this.CheckProviderHealthAsync(provider).ConfigureAwait(false);
-                    health.ProviderHealth[provider] = providerHealth.IsAvailable;
-
-                    if (!providerHealth.IsAvailable)
-                    {
-                        health.Issues.Add($"{provider} unavailable");
-                    }
-                }
-
-                // Calculate health score
-                health.HealthScore = this.CalculateHealthScore(health);
-                health.IsHealthy = health.HealthScore >= 70;
-                health.Status = this.DetermineHealthStatus(health.HealthScore);
-
-                // Cache the result
+                var health = await this.PerformHealthCheckAsync(region).ConfigureAwait(false);
                 this._healthCache[region] = health;
 
                 this._logger.LogInformation("Region {Region} health check: {Status} (score: {Score})", region, health.Status, health.HealthScore);
@@ -122,17 +81,87 @@ namespace Synaxis.Infrastructure.Services
             catch (Exception ex)
             {
                 this._logger.LogError(ex, "Error checking health for region {Region}", region);
-
-                return new RegionHealth
-                {
-                    Region = region,
-                    IsHealthy = false,
-                    HealthScore = 0,
-                    Status = "unhealthy",
-                    LastChecked = DateTime.UtcNow,
-                    Issues = new List<string> { $"Health check failed: {ex.Message}" },
-                };
+                return this.CreateUnhealthyHealth(region, ex.Message);
             }
+        }
+
+        private bool TryGetCachedHealth(string region, out RegionHealth? cachedHealth)
+        {
+            if (!this._healthCache.TryGetValue(region, out cachedHealth) || cachedHealth == null)
+            {
+                return false;
+            }
+
+            return DateTime.UtcNow - cachedHealth.LastChecked < this._cacheExpiry;
+        }
+
+        private async Task<RegionHealth> PerformHealthCheckAsync(string region)
+        {
+            var health = new RegionHealth
+            {
+                Region = region,
+                Status = "unknown",
+                Version = "1.0.0",
+                LastChecked = DateTime.UtcNow,
+                Issues = new List<string>(),
+            };
+
+            await this.CheckDatabaseHealthAsync(health, region).ConfigureAwait(false);
+            await this.CheckRedisHealthAsync(health, region).ConfigureAwait(false);
+            await this.CheckProvidersHealthAsync(health).ConfigureAwait(false);
+
+            health.HealthScore = HealthMonitor.CalculateHealthScore(health);
+            health.IsHealthy = health.HealthScore >= 70;
+            health.Status = HealthMonitor.DetermineHealthStatus(health.HealthScore);
+
+            return health;
+        }
+
+        private async Task CheckDatabaseHealthAsync(RegionHealth health, string region)
+        {
+            health.DatabaseHealthy = await this.CheckDatabaseHealthAsync(region).ConfigureAwait(false);
+            if (!health.DatabaseHealthy)
+            {
+                health.Issues.Add("Database connectivity issue");
+            }
+        }
+
+        private async Task CheckRedisHealthAsync(RegionHealth health, string region)
+        {
+            health.RedisHealthy = await this.CheckRedisHealthAsync(region).ConfigureAwait(false);
+            if (!health.RedisHealthy)
+            {
+                health.Issues.Add("Redis connectivity issue");
+            }
+        }
+
+        private async Task CheckProvidersHealthAsync(RegionHealth health)
+        {
+            var providers = new[] { "openai", "anthropic", "google" };
+            foreach (var provider in providers)
+            {
+                var providerHealth = await this.CheckProviderHealthAsync(provider).ConfigureAwait(false);
+                health.ProviderHealth[provider] = providerHealth.IsAvailable;
+
+                if (!providerHealth.IsAvailable)
+                {
+                    health.Issues.Add($"{provider} unavailable");
+                }
+            }
+        }
+
+        private RegionHealth CreateUnhealthyHealth(string region, string errorMessage)
+        {
+            return new RegionHealth
+            {
+                Region = region,
+                IsHealthy = false,
+                HealthScore = 0,
+                Status = "unhealthy",
+                Version = "1.0.0",
+                LastChecked = DateTime.UtcNow,
+                Issues = new List<string> { $"Health check failed: {errorMessage}" },
+            };
         }
 
         /// <inheritdoc/>
@@ -140,7 +169,8 @@ namespace Synaxis.Infrastructure.Services
         {
             var regions = new[] { "eu-west-1", "us-east-1", "sa-east-1" };
             var healthChecks = await Task.WhenAll(
-                regions.Select(r => this.CheckRegionHealthAsync(r))).ConfigureAwait(false);
+                regions.Select(r => this.CheckRegionHealthAsync(r)))
+                .ConfigureAwait(false);
 
             return healthChecks.ToDictionary(h => h.Region, h => h, StringComparer.Ordinal);
         }
@@ -156,7 +186,8 @@ namespace Synaxis.Infrastructure.Services
                 await this._context.Organizations
                     .Where(o => o.PrimaryRegion == region)
                     .Take(1)
-                    .ToListAsync().ConfigureAwait(false);
+                    .ToListAsync()
+                    .ConfigureAwait(false);
 
                 stopwatch.Stop();
 
@@ -207,6 +238,7 @@ namespace Synaxis.Infrastructure.Services
             var health = new ProviderHealth
             {
                 Provider = provider,
+                Status = "unknown",
                 LastChecked = DateTime.UtcNow,
             };
 
@@ -217,7 +249,7 @@ namespace Synaxis.Infrastructure.Services
                 httpClient.Timeout = TimeSpan.FromSeconds(5);
 
                 // Check provider status endpoints (mock for now)
-                var statusUrl = this.GetProviderStatusUrl(provider);
+                var statusUrl = HealthMonitor.GetProviderStatusUrl(provider);
 
                 if (string.IsNullOrEmpty(statusUrl))
                 {
@@ -272,7 +304,8 @@ namespace Synaxis.Infrastructure.Services
 
             // Get health for all available regions
             var healthChecks = await Task.WhenAll(
-                availableRegions.Select(r => this.CheckRegionHealthAsync(r))).ConfigureAwait(false);
+                availableRegions.Select(r => this.CheckRegionHealthAsync(r)))
+                .ConfigureAwait(false);
 
             // Filter to healthy regions only
             var healthyRegions = healthChecks
@@ -303,7 +336,7 @@ namespace Synaxis.Infrastructure.Services
 
             var fromCoords = RegionCoordinates[fromRegion];
             var nearestRegion = healthyRegions
-                .OrderBy(h => this.CalculateDistance(fromCoords, RegionCoordinates[h.Region]))
+                .OrderBy(h => CalculateDistance(fromCoords, RegionCoordinates[h.Region]))
                 .First();
 
             this._logger.LogInformation("Nearest healthy region to {FromRegion}: {ToRegion}", fromRegion, nearestRegion.Region);
@@ -311,7 +344,7 @@ namespace Synaxis.Infrastructure.Services
             return nearestRegion.Region;
         }
 
-        private int CalculateHealthScore(RegionHealth health)
+        private static int CalculateHealthScore(RegionHealth health)
         {
             var score = 100;
 
@@ -334,7 +367,7 @@ namespace Synaxis.Infrastructure.Services
             return Math.Max(0, score);
         }
 
-        private string DetermineHealthStatus(int score)
+        private static string DetermineHealthStatus(int score)
         {
             return score switch
             {
@@ -344,7 +377,7 @@ namespace Synaxis.Infrastructure.Services
             };
         }
 
-        private string GetProviderStatusUrl(string provider)
+        private static string? GetProviderStatusUrl(string provider)
         {
             // In production, these would be actual status page URLs
             return provider switch
@@ -356,16 +389,16 @@ namespace Synaxis.Infrastructure.Services
             };
         }
 
-        private double CalculateDistance((double Lat, double Lon) from, (double Lat, double Lon) to)
+        private static double CalculateDistance((double Lat, double Lon) from, (double Lat, double Lon) to)
         {
             // Haversine formula for geographic distance
             const double earthRadius = 6371; // km
 
-            var dLat = this.ToRadians(to.Lat - from.Lat);
-            var dLon = this.ToRadians(to.Lon - from.Lon);
+            var dLat = ToRadians(to.Lat - from.Lat);
+            var dLon = ToRadians(to.Lon - from.Lon);
 
             var a = (Math.Sin(dLat / 2) * Math.Sin(dLat / 2)) +
-                    (Math.Cos(this.ToRadians(from.Lat)) * Math.Cos(this.ToRadians(to.Lat)) *
+                    (Math.Cos(ToRadians(from.Lat)) * Math.Cos(ToRadians(to.Lat)) *
                     Math.Sin(dLon / 2) * Math.Sin(dLon / 2));
 
             var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
@@ -373,7 +406,7 @@ namespace Synaxis.Infrastructure.Services
             return earthRadius * c;
         }
 
-        private double ToRadians(double degrees)
+        private static double ToRadians(double degrees)
         {
             return degrees * Math.PI / 180;
         }

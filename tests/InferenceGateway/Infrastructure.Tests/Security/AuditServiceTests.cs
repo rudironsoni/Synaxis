@@ -10,7 +10,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.EntityFrameworkCore;
-    using Microsoft.Extensions.Logging.Abstractions;
     using Synaxis.InferenceGateway.Infrastructure.Security;
     using Synaxis.Infrastructure.Data;
     using Xunit;
@@ -22,10 +21,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
         {
             // Arrange
             SynaxisDbContext nullDbContext = null!;
-            var logger = NullLogger<AuditService>.Instance;
 
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => new AuditService(nullDbContext!, logger));
+            Assert.Throws<ArgumentNullException>(() => new AuditService(nullDbContext!));
         }
 
         [Fact]
@@ -38,8 +36,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             var payload = new { Property1 = "Value1", Property2 = 123 };
 
             using var dbContext = BuildDbContext();
-            var logger = NullLogger<AuditService>.Instance;
-            var auditService = new AuditService(dbContext, logger);
+            var auditService = new AuditService(dbContext);
 
             // Act
             await auditService.LogAsync(tenantId, userId, action, payload);
@@ -64,8 +61,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             var payload = new { Property1 = "Value1", Property2 = 123 };
 
             using var dbContext = BuildDbContext();
-            var logger = NullLogger<AuditService>.Instance;
-            var auditService = new AuditService(dbContext, logger);
+            var auditService = new AuditService(dbContext);
 
             // Act
             await auditService.LogAsync(tenantId, userId, action, payload);
@@ -97,8 +93,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             object? payload = null;
 
             using var dbContext = BuildDbContext();
-            var logger = NullLogger<AuditService>.Instance;
-            var auditService = new AuditService(dbContext, logger);
+            var auditService = new AuditService(dbContext);
 
             // Act
             await auditService.LogAsync(tenantId, userId, action, payload);
@@ -121,8 +116,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security
             var payload = new { Property1 = "Value1" };
 
             using var dbContext = BuildDbContext();
-            var logger = NullLogger<AuditService>.Instance;
-            var auditService = new AuditService(dbContext, logger);
+            var auditService = new AuditService(dbContext);
 
             // Act
             await auditService.LogAsync(tenantId, userId, action, payload);

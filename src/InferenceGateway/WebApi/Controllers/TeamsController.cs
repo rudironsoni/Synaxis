@@ -450,15 +450,4 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         /// </summary>
         public required string Role { get; set; }
     }
-
-    /// <summary>
-    /// Request to update a member's role.
-    /// </summary>
-    public class UpdateMemberRoleRequest
-    {
-        /// <summary>
-        /// Gets or sets the new role for the member.
-        /// </summary>
-        public required string Role { get; set; }
-    }
 }

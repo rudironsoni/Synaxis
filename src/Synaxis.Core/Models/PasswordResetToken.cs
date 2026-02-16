@@ -25,13 +25,13 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the user navigation property.
         /// </summary>
-        public virtual User User { get; set; }
+        public virtual User? User { get; set; }
 
         /// <summary>
         /// Gets or sets the token hash.
         /// </summary>
         [Required]
-        public string TokenHash { get; set; }
+        public required string TokenHash { get; set; }
 
         /// <summary>
         /// Gets or sets the expiration timestamp.

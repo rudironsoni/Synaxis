@@ -5154,30 +5154,6 @@
         <member name="M:Synaxis.InferenceGateway.Infrastructure.Migrations.FixPendingModelChanges2.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
-        <member name="T:Synaxis.InferenceGateway.Infrastructure.Optimization.Caching.IInFlightDeduplication">
-            <summary>
-            Interface for in-flight request deduplication.
-            </summary>
-        </member>
-        <member name="M:Synaxis.InferenceGateway.Infrastructure.Optimization.Caching.IInFlightDeduplication.ExecuteWithDeduplication``1(System.String,System.Func{System.Threading.Tasks.Task{``0}},System.TimeSpan,System.Threading.CancellationToken)">
-            <summary>
-            Executes an operation with deduplication to prevent duplicate concurrent executions.
-            </summary>
-            <typeparam name="T">The return type of the operation.</typeparam>
-            <param name="requestHash">A unique hash identifying the request.</param>
-            <param name="operation">The operation to execute.</param>
-            <param name="lockTimeout">The timeout for acquiring the lock.</param>
-            <param name="cancellationToken">Cancellation token.</param>
-            <returns>The result of the operation.</returns>
-        </member>
-        <member name="M:Synaxis.InferenceGateway.Infrastructure.Optimization.Caching.IInFlightDeduplication.IsInFlightAsync(System.String,System.Threading.CancellationToken)">
-            <summary>
-            Checks if a request with the given hash is currently in flight.
-            </summary>
-            <param name="requestHash">A unique hash identifying the request.</param>
-            <param name="cancellationToken">Cancellation token.</param>
-            <returns>True if the request is in flight, false otherwise.</returns>
-        </member>
         <member name="T:Synaxis.InferenceGateway.Infrastructure.Optimization.Caching.RedisInFlightDeduplication">
             <summary>
             Redis implementation of IInFlightDeduplication.
@@ -5215,6 +5191,30 @@
             <param name="lockKey">The lock key.</param>
             <param name="ownerToken">The owner token that was stored when acquiring the lock.</param>
             <returns>True if the lock was released, false otherwise.</returns>
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Optimization.Caching.IInFlightDeduplication">
+            <summary>
+            Interface for in-flight request deduplication.
+            </summary>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Optimization.Caching.IInFlightDeduplication.ExecuteWithDeduplication``1(System.String,System.Func{System.Threading.Tasks.Task{``0}},System.TimeSpan,System.Threading.CancellationToken)">
+            <summary>
+            Executes an operation with deduplication to prevent duplicate concurrent executions.
+            </summary>
+            <typeparam name="T">The return type of the operation.</typeparam>
+            <param name="requestHash">A unique hash identifying the request.</param>
+            <param name="operation">The operation to execute.</param>
+            <param name="lockTimeout">The timeout for acquiring the lock.</param>
+            <param name="cancellationToken">Cancellation token.</param>
+            <returns>The result of the operation.</returns>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Optimization.Caching.IInFlightDeduplication.IsInFlightAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Checks if a request with the given hash is currently in flight.
+            </summary>
+            <param name="requestHash">A unique hash identifying the request.</param>
+            <param name="cancellationToken">Cancellation token.</param>
+            <returns>True if the request is in flight, false otherwise.</returns>
         </member>
         <member name="T:Synaxis.InferenceGateway.Infrastructure.PollinationsChatClient">
             <summary>
@@ -5384,12 +5384,11 @@
             AuditService class.
             </summary>
         </member>
-        <member name="M:Synaxis.InferenceGateway.Infrastructure.Security.AuditService.#ctor(Synaxis.Infrastructure.Data.SynaxisDbContext,Microsoft.Extensions.Logging.ILogger{Synaxis.InferenceGateway.Infrastructure.Security.AuditService})">
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Security.AuditService.#ctor(Synaxis.Infrastructure.Data.SynaxisDbContext)">
             <summary>
             Initializes a new instance of the <see cref="T:Synaxis.InferenceGateway.Infrastructure.Security.AuditService"/> class.
             </summary>
             <param name="dbContext">The dbContext.</param>
-            <param name="logger">The logger.</param>
         </member>
         <member name="M:Synaxis.InferenceGateway.Infrastructure.Security.AuditService.LogAsync(System.Guid,System.Nullable{System.Guid},System.String,System.Object,System.Threading.CancellationToken)">
             <inheritdoc/>

@@ -86,7 +86,7 @@ namespace Synaxis.BatchProcessing.Controllers
                 Name = request.Name,
                 Description = request.Description,
                 OperationType = request.OperationType,
-                Items = request.Items,
+                Items = request.Items.ToList(),
                 TotalItems = request.Items.Count,
                 WebhookUrl = request.WebhookUrl,
                 Priority = request.Priority,

@@ -213,8 +213,8 @@ namespace Synaxis.Routing.SmartRouter
         /// <returns>True if provider is healthy.</returns>
         private bool IsProviderHealthy(Provider provider)
         {
-            var health = this._performanceTracker.GetHealth(provider.Id);
-            return health != HealthStatus.Unhealthy;
+            var health = this._performanceTracker.GetHealthStatus(provider.Id);
+            return health != ProviderHealthStatus.Unhealthy;
         }
 
         /// <summary>
@@ -262,8 +262,8 @@ namespace Synaxis.Routing.SmartRouter
                 ConfidenceScore = selectedPrediction.Confidence,
                 PredictedLatencyMs = (int)selectedPrediction.PredictedLatencyMs,
                 AlternativeProviders = alternatives,
-                Timestamp = DateTime.UtcNow,
-                Reason = $"Selected based on score {selectedPrediction.Score:F2}",
+                DecisionTime = DateTime.UtcNow,
+                Reasoning = $"Selected based on score {selectedPrediction.Score:F2}",
             };
         }
     }

@@ -10,6 +10,7 @@ namespace Synaxis.Infrastructure.Services
     using System.Text;
     using System.Threading.Tasks;
     using Microsoft.EntityFrameworkCore;
+    using OtpNet;
     using QRCoder;
     using Synaxis.Core.Contracts;
     using Synaxis.Core.Models;
@@ -25,7 +26,7 @@ namespace Synaxis.Infrastructure.Services
         /// <summary>
         /// Initializes a new instance of the <see cref="UserService"/> class.
         /// </summary>
-        /// <param name="context"></param>
+        /// <param name="context">The database context.</param>
         public UserService(SynaxisDbContext context)
         {
             this._context = context ?? throw new ArgumentNullException(nameof(context));
@@ -33,6 +34,19 @@ namespace Synaxis.Infrastructure.Services
 
         /// <inheritdoc/>
         public async Task<User> CreateUserAsync(CreateUserRequest request)
+        {
+            ValidateCreateUserRequest(request);
+            await this.ValidateUserDoesNotExistAsync(request.Email).ConfigureAwait(false);
+            await this.ValidateOrganizationExistsAsync(request.OrganizationId).ConfigureAwait(false);
+
+            var user = this.CreateUserEntity(request);
+            this._context.Users.Add(user);
+            await this._context.SaveChangesAsync().ConfigureAwait(false);
+
+            return user;
+        }
+
+        private static void ValidateCreateUserRequest(CreateUserRequest request)
         {
             if (request == null)
             {
@@ -58,24 +72,31 @@ namespace Synaxis.Infrastructure.Services
             {
                 throw new ArgumentException("Created in region is required", nameof(request));
             }
+        }
 
-            // Check if email already exists
+        private async Task ValidateUserDoesNotExistAsync(string email)
+        {
             var existingUser = await this._context.Users
-                .FirstOrDefaultAsync(u => u.Email == request.Email).ConfigureAwait(false);
+                .FirstOrDefaultAsync(u => u.Email == email).ConfigureAwait(false);
 
             if (existingUser != null)
             {
-                throw new InvalidOperationException($"User with email '{request.Email}' already exists");
+                throw new InvalidOperationException($"User with email '{email}' already exists");
             }
+        }
 
-            // Verify organization exists
-            var organization = await this._context.Organizations.FindAsync(request.OrganizationId).ConfigureAwait(false);
+        private async Task ValidateOrganizationExistsAsync(Guid organizationId)
+        {
+            var organization = await this._context.Organizations.FindAsync(organizationId).ConfigureAwait(false);
             if (organization == null)
             {
-                throw new InvalidOperationException($"Organization with ID '{request.OrganizationId}' not found");
+                throw new InvalidOperationException($"Organization with ID '{organizationId}' not found");
             }
+        }
 
-            var user = new User
+        private User CreateUserEntity(CreateUserRequest request)
+        {
+            return new User
             {
                 Id = Guid.NewGuid(),
                 OrganizationId = request.OrganizationId,
@@ -90,11 +111,6 @@ namespace Synaxis.Infrastructure.Services
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
             };
-
-            this._context.Users.Add(user);
-            await this._context.SaveChangesAsync().ConfigureAwait(false);
-
-            return user;
         }
 
         /// <inheritdoc/>
@@ -200,174 +216,13 @@ namespace Synaxis.Infrastructure.Services
             return true;
         }
 
-        /// <inheritdoc/>
-        public async Task<User> AuthenticateAsync(string email, string password)
-        {
-            if (string.IsNullOrWhiteSpace(email))
-            {
-                throw new ArgumentException("Email is required", nameof(email));
-            }
-
-            if (string.IsNullOrWhiteSpace(password))
-            {
-                throw new ArgumentException("Password is required", nameof(password));
-            }
-
-            var user = await this._context.Users
-                .Include(u => u.Organization)
-                .FirstOrDefaultAsync(u => u.Email == email.ToLowerInvariant()).ConfigureAwait(false);
-
-            if (user == null)
-            {
-                throw new UnauthorizedAccessException("Invalid email or password");
-            }
-
-            if (!user.IsActive)
-            {
-                throw new UnauthorizedAccessException("User account is not active");
-            }
-
-            // Check if account is locked
-            if (user.LockedUntil.HasValue && user.LockedUntil.Value > DateTime.UtcNow)
-            {
-                throw new UnauthorizedAccessException($"Account is locked until {user.LockedUntil.Value}");
-            }
-
-            if (!this.VerifyPassword(password, user.PasswordHash))
-            {
-                user.FailedLoginAttempts++;
-
-                // Lock account after 5 failed attempts
-                if (user.FailedLoginAttempts >= 5)
-                {
-                    user.LockedUntil = DateTime.UtcNow.AddMinutes(30);
-                }
-
-                await this._context.SaveChangesAsync().ConfigureAwait(false);
-
-                throw new UnauthorizedAccessException("Invalid email or password");
-            }
-
-            // Reset failed attempts on successful login
-            user.FailedLoginAttempts = 0;
-            user.LockedUntil = null;
-            user.LastLoginAt = DateTime.UtcNow;
-
-            await this._context.SaveChangesAsync().ConfigureAwait(false);
-
-            return user;
-        }
-
-        /// <inheritdoc/>
-        public async Task<MfaSetupResult> SetupMfaAsync(Guid userId)
-        {
-            var user = await this._context.Users.FindAsync(userId).ConfigureAwait(false);
-
-            if (user == null)
-            {
-                throw new InvalidOperationException($"User with ID '{userId}' not found");
-            }
-
-            // Generate TOTP secret using Otp.NET
-            var key = OtpNet.KeyGeneration.GenerateRandomKey(20);
-            var secret = OtpNet.Base32Encoding.ToString(key);
-
-            user.MfaSecret = secret;
-            user.UpdatedAt = DateTime.UtcNow;
-
-            await this._context.SaveChangesAsync().ConfigureAwait(false);
-
-            // Generate QR code URL for authenticator apps
-            var issuer = "Synaxis";
-            var accountName = user.Email;
-            var qrCodeUri = $"otpauth://totp/{Uri.EscapeDataString(issuer)}:{Uri.EscapeDataString(accountName)}?secret={secret}&issuer={Uri.EscapeDataString(issuer)}";
-
-            // Generate QR code as base64 image
-            var qrCodeImage = this.GenerateQrCodeImage(qrCodeUri);
-
-            return new MfaSetupResult
-            {
-                Secret = secret,
-                QrCodeUrl = qrCodeUri,
-                QrCodeImage = qrCodeImage,
-                ManualEntryKey = this.FormatSecretForManualEntry(secret),
-            };
-        }
-
-        /// <inheritdoc/>
-        public async Task<MfaEnableResult> EnableMfaAsync(Guid userId, string totpCode)
-        {
-            if (string.IsNullOrWhiteSpace(totpCode))
-            {
-                throw new ArgumentException("TOTP code is required", nameof(totpCode));
-            }
-
-            var user = await this._context.Users.FindAsync(userId).ConfigureAwait(false);
-
-            if (user == null)
-            {
-                throw new InvalidOperationException($"User with ID '{userId}' not found");
-            }
-
-            if (string.IsNullOrWhiteSpace(user.MfaSecret))
-            {
-                throw new InvalidOperationException("MFA setup not completed. Call SetupMfaAsync first.");
-            }
-
-            // Verify the TOTP code using Otp.NET
-            var key = OtpNet.Base32Encoding.ToBytes(user.MfaSecret);
-            var totp = new OtpNet.Totp(key);
-            if (!totp.VerifyTotp(totpCode, out _))
-            {
-                throw new InvalidOperationException("Invalid TOTP code");
-            }
-
-            // Generate backup codes
-            var backupCodes = this.GenerateBackupCodes();
-
-            // Store backup codes (hashed) in the user record
-            user.MfaBackupCodes = string.Join(",", backupCodes.Select(BCrypt.Net.BCrypt.HashPassword));
-            user.MfaEnabled = true;
-            user.UpdatedAt = DateTime.UtcNow;
-
-            await this._context.SaveChangesAsync().ConfigureAwait(false);
-
-            return new MfaEnableResult
-            {
-                Success = true,
-                BackupCodes = backupCodes.ToArray(),
-                ErrorMessage = "MFA enabled successfully. Please save your backup codes in a secure location.",
-            };
-        }
-
-        /// <inheritdoc/>
+        /// <summary>
+        /// Disables multi-factor authentication for a user.
+        /// </summary>
+        /// <param name="userId">The user ID.</param>
+        /// <returns>True if MFA was disabled successfully.</returns>
         public async Task<bool> DisableMfaAsync(Guid userId)
         {
-            var user = await this._context.Users.FindAsync(userId).ConfigureAwait(false);
-
-            if (user == null)
-            {
-                throw new InvalidOperationException($"User with ID '{userId}' not found");
-            }
-
-            user.MfaEnabled = false;
-            user.MfaSecret = null;
-            user.MfaBackupCodes = null;
-            user.UpdatedAt = DateTime.UtcNow;
-
-            await this._context.SaveChangesAsync().ConfigureAwait(false);
-
-            return true;
-        }
-
-        /// <inheritdoc/>
-        public async Task<bool> DisableMfaAsync(Guid userId, string code)
-        {
-            if (string.IsNullOrWhiteSpace(code))
-            {
-                throw new ArgumentException("Code is required", nameof(code));
-            }
-
             var user = await this._context.Users.FindAsync(userId).ConfigureAwait(false);
 
             if (user == null)
@@ -380,47 +235,13 @@ namespace Synaxis.Infrastructure.Services
                 throw new InvalidOperationException("MFA is not enabled for this user");
             }
 
-            // Try TOTP code first using Otp.NET
-            if (!string.IsNullOrWhiteSpace(user.MfaSecret))
-            {
-                var key = OtpNet.Base32Encoding.ToBytes(user.MfaSecret);
-                var totp = new OtpNet.Totp(key);
-                if (totp.VerifyTotp(code, out _))
-                {
-                    user.MfaEnabled = false;
-                    user.MfaSecret = null;
-                    user.MfaBackupCodes = null;
-                    user.UpdatedAt = DateTime.UtcNow;
+            user.MfaEnabled = false;
+            user.MfaSecret = null;
+            user.UpdatedAt = DateTime.UtcNow;
 
-                    await this._context.SaveChangesAsync().ConfigureAwait(false);
+            await this._context.SaveChangesAsync().ConfigureAwait(false);
 
-                    return true;
-                }
-            }
-
-            // Try backup code
-            if (!string.IsNullOrWhiteSpace(user.MfaBackupCodes))
-            {
-                var hashedBackupCodes = user.MfaBackupCodes.Split(',');
-                var matchedCode = hashedBackupCodes.FirstOrDefault(hashedCode => BCrypt.Net.BCrypt.Verify(code, hashedCode));
-                if (matchedCode != null)
-                {
-                    // Remove the used backup code
-                    var remainingCodes = hashedBackupCodes.Where(c => !string.Equals(c, matchedCode, StringComparison.Ordinal)).ToArray();
-                    user.MfaBackupCodes = remainingCodes.Length > 0 ? string.Join(",", remainingCodes) : null;
-
-                    // Disable MFA
-                    user.MfaEnabled = false;
-                    user.MfaSecret = null;
-                    user.UpdatedAt = DateTime.UtcNow;
-
-                    await this._context.SaveChangesAsync().ConfigureAwait(false);
-
-                    return true;
-                }
-            }
-
-            return false;
+            return true;
         }
 
         /// <inheritdoc/>
@@ -439,8 +260,8 @@ namespace Synaxis.Infrastructure.Services
             }
 
             // Verify TOTP code using Otp.NET
-            var key = OtpNet.Base32Encoding.ToBytes(user.MfaSecret);
-            var totp = new OtpNet.Totp(key);
+            var key = Base32Encoding.ToBytes(user.MfaSecret);
+            var totp = new Totp(key);
             return totp.VerifyTotp(code, out _);
         }
 
@@ -478,6 +299,112 @@ namespace Synaxis.Infrastructure.Services
         }
 
         /// <inheritdoc/>
+        public async Task<User> AuthenticateAsync(string email, string password)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                throw new ArgumentException("Email is required", nameof(email));
+            }
+
+            if (string.IsNullOrWhiteSpace(password))
+            {
+                throw new ArgumentException("Password is required", nameof(password));
+            }
+
+            var user = await this._context.Users
+                .Include(u => u.Organization)
+                .FirstOrDefaultAsync(u => u.Email == email.ToLowerInvariant()).ConfigureAwait(false);
+
+            if (user == null)
+            {
+                throw new UnauthorizedAccessException("Invalid email or password");
+            }
+
+            if (!this.VerifyPassword(password, user.PasswordHash))
+            {
+                throw new UnauthorizedAccessException("Invalid email or password");
+            }
+
+            if (!user.IsActive)
+            {
+                throw new UnauthorizedAccessException("User account is not active");
+            }
+
+            return user;
+        }
+
+        /// <inheritdoc/>
+        public async Task<MfaSetupResult> SetupMfaAsync(Guid userId)
+        {
+            var user = await this._context.Users.FindAsync(userId).ConfigureAwait(false);
+
+            if (user == null)
+            {
+                throw new InvalidOperationException($"User with ID '{userId}' not found");
+            }
+
+            if (user.MfaEnabled)
+            {
+                throw new InvalidOperationException("MFA is already enabled for this user");
+            }
+
+            var key = KeyGeneration.GenerateRandomKey(20);
+            var secret = Base32Encoding.ToString(key);
+
+            user.MfaSecret = secret;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await this._context.SaveChangesAsync().ConfigureAwait(false);
+
+            var issuer = "Synaxis";
+            var account = user.Email;
+            var qrCodeUrl = $"otpauth://totp/{Uri.EscapeDataString(issuer)}:{Uri.EscapeDataString(account)}?secret={secret}&issuer={Uri.EscapeDataString(issuer)}";
+
+            return new MfaSetupResult
+            {
+                Secret = secret,
+                QrCodeUrl = qrCodeUrl,
+                ManualEntryKey = secret,
+            };
+        }
+
+        /// <inheritdoc/>
+        public async Task<bool> EnableMfaAsync(Guid userId, string totpCode)
+        {
+            if (string.IsNullOrWhiteSpace(totpCode))
+            {
+                throw new ArgumentException("TOTP code is required", nameof(totpCode));
+            }
+
+            var user = await this._context.Users.FindAsync(userId).ConfigureAwait(false);
+
+            if (user == null)
+            {
+                throw new InvalidOperationException($"User with ID '{userId}' not found");
+            }
+
+            if (string.IsNullOrWhiteSpace(user.MfaSecret))
+            {
+                throw new InvalidOperationException("MFA setup not completed. Please call SetupMfaAsync first.");
+            }
+
+            var key = Base32Encoding.ToBytes(user.MfaSecret);
+            var totp = new Totp(key);
+
+            if (!totp.VerifyTotp(totpCode, out _))
+            {
+                return false;
+            }
+
+            user.MfaEnabled = true;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await this._context.SaveChangesAsync().ConfigureAwait(false);
+
+            return true;
+        }
+
+        /// <inheritdoc/>
         public string HashPassword(string password)
         {
             if (string.IsNullOrWhiteSpace(password))
@@ -507,7 +434,7 @@ namespace Synaxis.Infrastructure.Services
             }
         }
 
-        private IList<string> GenerateBackupCodes()
+        private static IList<string> GenerateBackupCodes()
         {
             var codes = new List<string>();
             var chars = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"; // No ambiguous characters (0, O, 1, I)
@@ -526,7 +453,7 @@ namespace Synaxis.Infrastructure.Services
             return codes;
         }
 
-        private string FormatSecretForManualEntry(string secret)
+        private static string FormatSecretForManualEntry(string secret)
         {
             // Format as groups of 4 characters for easier manual entry
             var formatted = new StringBuilder();
@@ -543,7 +470,7 @@ namespace Synaxis.Infrastructure.Services
             return formatted.ToString();
         }
 
-        private string GenerateQrCodeImage(string qrCodeUri)
+        private static string GenerateQrCodeImage(string qrCodeUri)
         {
             using var qrGenerator = new QRCodeGenerator();
             using var qrCodeData = qrGenerator.CreateQrCode(qrCodeUri, QRCodeGenerator.ECCLevel.Q);

@@ -32,10 +32,10 @@ namespace Synaxis.Infrastructure.Services
         /// <summary>
         /// Initializes a new instance of the <see cref="AuthenticationService"/> class.
         /// </summary>
-        /// <param name="context"></param>
-        /// <param name="userService"></param>
-        /// <param name="jwtOptions"></param>
-        /// <param name="logger"></param>
+        /// <param name="context">The database context.</param>
+        /// <param name="userService">The user service.</param>
+        /// <param name="jwtOptions">The JWT options.</param>
+        /// <param name="logger">The logger.</param>
         public AuthenticationService(
             SynaxisDbContext context,
             IUserService userService,
@@ -55,57 +55,20 @@ namespace Synaxis.Infrastructure.Services
             {
                 this._logger.LogInformation("Authentication attempt for email: {Email}", email);
 
-                if (string.IsNullOrWhiteSpace(email))
+                var validationResult = this.ValidateAuthenticationInput(email, password);
+                if (validationResult != null)
                 {
-                    this._logger.LogWarning("Authentication failed: Email is required");
-                    return new AuthenticationResult
-                    {
-                        Success = false,
-                        ErrorMessage = "Email is required",
-                    };
+                    return validationResult;
                 }
 
-                if (string.IsNullOrWhiteSpace(password))
-                {
-                    this._logger.LogWarning("Authentication failed: Password is required");
-                    return new AuthenticationResult
-                    {
-                        Success = false,
-                        ErrorMessage = "Password is required",
-                    };
-                }
-
-                // Authenticate user
                 var user = await this._userService.AuthenticateAsync(email, password).ConfigureAwait(false);
 
-                // Check if MFA is enabled
                 if (user.MfaEnabled)
                 {
-                    this._logger.LogInformation("MFA required for user: {UserId}", user.Id);
-                    return new AuthenticationResult
-                    {
-                        Success = false,
-                        RequiresMfa = true,
-                        User = user,
-                        ErrorMessage = "MFA code required",
-                    };
+                    return this.CreateMfaRequiredResult(user);
                 }
 
-                // Generate tokens
-                var accessToken = this.GenerateAccessToken(user);
-                var refreshToken = await this.GenerateRefreshTokenAsync(user.Id).ConfigureAwait(false);
-
-                this._logger.LogInformation("Authentication successful for user: {UserId}", user.Id);
-
-                return new AuthenticationResult
-                {
-                    Success = true,
-                    AccessToken = accessToken,
-                    RefreshToken = refreshToken,
-                    ExpiresIn = this._jwtOptions.AccessTokenExpirationMinutes * 60,
-                    User = user,
-                    RequiresMfa = false,
-                };
+                return await this.CreateSuccessfulAuthenticationResultAsync(user).ConfigureAwait(false);
             }
             catch (UnauthorizedAccessException ex)
             {
@@ -127,6 +90,61 @@ namespace Synaxis.Infrastructure.Services
             }
         }
 
+        private AuthenticationResult? ValidateAuthenticationInput(string email, string password)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                this._logger.LogWarning("Authentication failed: Email is required");
+                return new AuthenticationResult
+                {
+                    Success = false,
+                    ErrorMessage = "Email is required",
+                };
+            }
+
+            if (string.IsNullOrWhiteSpace(password))
+            {
+                this._logger.LogWarning("Authentication failed: Password is required");
+                return new AuthenticationResult
+                {
+                    Success = false,
+                    ErrorMessage = "Password is required",
+                };
+            }
+
+            return null;
+        }
+
+        private AuthenticationResult CreateMfaRequiredResult(User user)
+        {
+            this._logger.LogInformation("MFA required for user: {UserId}", user.Id);
+            return new AuthenticationResult
+            {
+                Success = false,
+                RequiresMfa = true,
+                User = user,
+                ErrorMessage = "MFA code required",
+            };
+        }
+
+        private async Task<AuthenticationResult> CreateSuccessfulAuthenticationResultAsync(User user)
+        {
+            var accessToken = this.GenerateAccessToken(user);
+            var refreshToken = await this.GenerateRefreshTokenAsync(user.Id).ConfigureAwait(false);
+
+            this._logger.LogInformation("Authentication successful for user: {UserId}", user.Id);
+
+            return new AuthenticationResult
+            {
+                Success = true,
+                AccessToken = accessToken,
+                RefreshToken = refreshToken,
+                ExpiresIn = this._jwtOptions.AccessTokenExpirationMinutes * 60,
+                User = user,
+                RequiresMfa = false,
+            };
+        }
+
         /// <inheritdoc/>
         public async Task<AuthenticationResult> RefreshTokenAsync(string refreshToken)
         {
@@ -134,83 +152,20 @@ namespace Synaxis.Infrastructure.Services
             {
                 this._logger.LogInformation("Token refresh attempt");
 
-                if (string.IsNullOrWhiteSpace(refreshToken))
+                var validationResult = this.ValidateRefreshTokenInput(refreshToken);
+                if (validationResult != null)
                 {
-                    this._logger.LogWarning("Token refresh failed: Refresh token is required");
-                    return new AuthenticationResult
-                    {
-                        Success = false,
-                        ErrorMessage = "Refresh token is required",
-                    };
+                    return validationResult;
                 }
 
-                // Find the refresh token
-                var tokenHash = this.HashToken(refreshToken);
-                var refreshTokenEntity = await this._context.RefreshTokens
-                    .Include(rt => rt.User)
-                    .FirstOrDefaultAsync(rt => rt.TokenHash == tokenHash).ConfigureAwait(false);
-
-                if (refreshTokenEntity == null)
+                var refreshTokenEntity = await this.GetRefreshTokenEntityAsync(refreshToken).ConfigureAwait(false);
+                var validationError = this.ValidateRefreshTokenEntity(refreshTokenEntity);
+                if (validationError != null)
                 {
-                    this._logger.LogWarning("Token refresh failed: Refresh token not found");
-                    return new AuthenticationResult
-                    {
-                        Success = false,
-                        ErrorMessage = "Invalid refresh token",
-                    };
+                    return validationError;
                 }
 
-                if (refreshTokenEntity.IsRevoked)
-                {
-                    this._logger.LogWarning("Token refresh failed: Refresh token has been revoked");
-                    return new AuthenticationResult
-                    {
-                        Success = false,
-                        ErrorMessage = "Refresh token has been revoked",
-                    };
-                }
-
-                if (refreshTokenEntity.ExpiresAt < DateTime.UtcNow)
-                {
-                    this._logger.LogWarning("Token refresh failed: Refresh token has expired");
-                    return new AuthenticationResult
-                    {
-                        Success = false,
-                        ErrorMessage = "Refresh token has expired",
-                    };
-                }
-
-                if (!refreshTokenEntity.User.IsActive)
-                {
-                    this._logger.LogWarning("Token refresh failed: User account is not active");
-                    return new AuthenticationResult
-                    {
-                        Success = false,
-                        ErrorMessage = "User account is not active",
-                    };
-                }
-
-                // Generate new tokens first
-                var accessToken = this.GenerateAccessToken(refreshTokenEntity.User);
-                var newRefreshToken = await this.GenerateRefreshTokenAsync(refreshTokenEntity.User.Id).ConfigureAwait(false);
-
-                // Revoke old refresh token and set replacement tracking
-                refreshTokenEntity.IsRevoked = true;
-                refreshTokenEntity.RevokedAt = DateTime.UtcNow;
-                refreshTokenEntity.ReplacedByTokenHash = newRefreshToken;
-
-                await this._context.SaveChangesAsync().ConfigureAwait(false);
-
-                this._logger.LogInformation("Token refresh successful for user: {UserId}", refreshTokenEntity.User.Id);
-
-                return new AuthenticationResult
-                {
-                    Success = true,
-                    AccessToken = accessToken,
-                    RefreshToken = newRefreshToken,
-                    ExpiresIn = this._jwtOptions.AccessTokenExpirationMinutes * 60,
-                    User = refreshTokenEntity.User,
-                };
+                return await this.RefreshTokensAsync(refreshTokenEntity).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -223,8 +178,103 @@ namespace Synaxis.Infrastructure.Services
             }
         }
 
+        private AuthenticationResult? ValidateRefreshTokenInput(string refreshToken)
+        {
+            if (string.IsNullOrWhiteSpace(refreshToken))
+            {
+                this._logger.LogWarning("Token refresh failed: Refresh token is required");
+                return new AuthenticationResult
+                {
+                    Success = false,
+                    ErrorMessage = "Refresh token is required",
+                };
+            }
+
+            return null;
+        }
+
+        private async Task<RefreshToken> GetRefreshTokenEntityAsync(string refreshToken)
+        {
+            var tokenHash = HashToken(refreshToken);
+            var refreshTokenEntity = await this._context.RefreshTokens
+                .Include(rt => rt.User)
+                .FirstOrDefaultAsync(rt => rt.TokenHash == tokenHash)
+                .ConfigureAwait(false);
+
+            if (refreshTokenEntity == null)
+            {
+                this._logger.LogWarning("Token refresh failed: Refresh token not found");
+                throw new InvalidOperationException("Invalid refresh token");
+            }
+
+            return refreshTokenEntity;
+        }
+
+        private AuthenticationResult? ValidateRefreshTokenEntity(RefreshToken refreshTokenEntity)
+        {
+            if (refreshTokenEntity.IsRevoked)
+            {
+                this._logger.LogWarning("Token refresh failed: Refresh token has been revoked");
+                return new AuthenticationResult
+                {
+                    Success = false,
+                    ErrorMessage = "Refresh token has been revoked",
+                };
+            }
+
+            if (refreshTokenEntity.ExpiresAt < DateTime.UtcNow)
+            {
+                this._logger.LogWarning("Token refresh failed: Refresh token has expired");
+                return new AuthenticationResult
+                {
+                    Success = false,
+                    ErrorMessage = "Refresh token has expired",
+                };
+            }
+
+            if (refreshTokenEntity.User == null || !refreshTokenEntity.User.IsActive)
+            {
+                this._logger.LogWarning("Token refresh failed: User account is not active");
+                return new AuthenticationResult
+                {
+                    Success = false,
+                    ErrorMessage = "User account is not active",
+                };
+            }
+
+            return null;
+        }
+
+        private async Task<AuthenticationResult> RefreshTokensAsync(RefreshToken refreshTokenEntity)
+        {
+            if (refreshTokenEntity.User == null)
+            {
+                throw new InvalidOperationException("User not found for refresh token");
+            }
+
+            var accessToken = this.GenerateAccessToken(refreshTokenEntity.User);
+            var newRefreshToken = await this.GenerateRefreshTokenAsync(refreshTokenEntity.User.Id).ConfigureAwait(false);
+
+            refreshTokenEntity.IsRevoked = true;
+            refreshTokenEntity.RevokedAt = DateTime.UtcNow;
+            refreshTokenEntity.ReplacedByTokenHash = newRefreshToken;
+
+            await this._context.SaveChangesAsync().ConfigureAwait(false);
+
+            this._logger.LogInformation("Token refresh successful for user: {UserId}", refreshTokenEntity.User.Id);
+
+            return new AuthenticationResult
+            {
+                Success = true,
+                AccessToken = accessToken,
+                RefreshToken = newRefreshToken,
+                ExpiresIn = this._jwtOptions.AccessTokenExpirationMinutes * 60,
+                User = refreshTokenEntity.User,
+            };
+        }
+
         /// <inheritdoc/>
-        public async Task LogoutAsync(string refreshToken, string accessToken = null)
+        public async Task LogoutAsync(string refreshToken, string? accessToken = null)
         {
             try
             {
@@ -259,9 +309,10 @@ namespace Synaxis.Infrastructure.Services
                 // Revoke refresh token if provided
                 if (!string.IsNullOrWhiteSpace(refreshToken))
                 {
-                    var tokenHash = this.HashToken(refreshToken);
+                    var tokenHash = HashToken(refreshToken);
                     var refreshTokenEntity = await this._context.RefreshTokens
-                        .FirstOrDefaultAsync(rt => rt.TokenHash == tokenHash).ConfigureAwait(false);
+                        .FirstOrDefaultAsync(rt => rt.TokenHash == tokenHash)
+                        .ConfigureAwait(false);
 
                     if (refreshTokenEntity != null)
                     {
@@ -395,13 +446,13 @@ namespace Synaxis.Infrastructure.Services
             return tokenHandler.WriteToken(token);
         }
 
-        private async Task<string> GenerateRefreshTokenAsync(Guid userId, string replacedByTokenHash = null)
+        private async Task<string> GenerateRefreshTokenAsync(Guid userId, string? replacedByTokenHash = null)
         {
             var refreshToken = new RefreshToken
             {
                 Id = Guid.NewGuid(),
                 UserId = userId,
-                TokenHash = this.HashToken(Guid.NewGuid().ToString()),
+                TokenHash = HashToken(Guid.NewGuid().ToString()),
                 CreatedAt = DateTime.UtcNow,
                 ExpiresAt = DateTime.UtcNow.AddDays(this._jwtOptions.RefreshTokenExpirationDays),
                 IsRevoked = false,
@@ -414,7 +465,7 @@ namespace Synaxis.Infrastructure.Services
             return refreshToken.TokenHash;
         }
 
-        private string HashToken(string token)
+        private static string HashToken(string token)
         {
             using (var sha256 = SHA256.Create())
             {
@@ -432,12 +483,12 @@ namespace Synaxis.Infrastructure.Services
                 var jsonToken = tokenHandler.ReadJwtToken(token);
 
                 var jtiClaim = jsonToken.Claims.FirstOrDefault(c => string.Equals(c.Type, JwtRegisteredClaimNames.Jti, StringComparison.Ordinal));
-                return jtiClaim?.Value;
+                return jtiClaim?.Value ?? string.Empty;
             }
             catch (Exception ex)
             {
                 this._logger.LogWarning(ex, "Error extracting token ID from JWT");
-                return null;
+                return string.Empty;
             }
         }
 

@@ -209,12 +209,24 @@ public class JsonSerializationBenchmarks
         };
     }
 
+    /// <summary>
+    /// Represents a chat completion request.
+    /// </summary>
     public class ChatCompletionRequest
     {
+        /// <summary>
+        /// Gets or sets the model identifier.
+        /// </summary>
         public string Model { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Gets or sets the list of chat messages.
+        /// </summary>
         public IReadOnlyList<ChatMessage> Messages { get; set; } = new List<ChatMessage>();
 
+        /// <summary>
+        /// Gets or sets the temperature for sampling.
+        /// </summary>
         public double? Temperature { get; set; }
 
         public int? MaxTokens { get; set; }

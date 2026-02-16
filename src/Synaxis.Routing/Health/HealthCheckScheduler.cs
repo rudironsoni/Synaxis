@@ -95,7 +95,7 @@ public sealed class HealthCheckScheduler : IDisposable
     /// <summary>
     /// Stops the health check scheduler.
     /// </summary>
-    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public async Task StopAsync()
     {
         if (!this.IsRunning)
@@ -104,11 +104,11 @@ public sealed class HealthCheckScheduler : IDisposable
         }
 
         this.IsRunning = false;
-        await _cancellationTokenSource.CancelAsync().ConfigureAwait(false);
+        await this._cancellationTokenSource.CancelAsync().ConfigureAwait(false);
 
         if (this._schedulerTask != null)
         {
-            await _schedulerTask.ConfigureAwait(false);
+            await this._schedulerTask.ConfigureAwait(false);
         }
 
         this._logger?.LogInformation("Health check scheduler stopped");
@@ -155,7 +155,7 @@ public sealed class HealthCheckScheduler : IDisposable
     /// Gets all monitored providers.
     /// </summary>
     /// <returns>A list of monitored providers.</returns>
-    public List<Provider> GetMonitoredProviders()
+    public IList<Provider> GetMonitoredProviders()
     {
         return this._providers.Values.ToList();
     }
@@ -192,7 +192,7 @@ public sealed class HealthCheckScheduler : IDisposable
 
         this._logger?.LogInformation("Triggering immediate health check for provider {ProviderId}", providerId);
 
-        var result = await _healthChecker.CheckHealthAsync(providerId, cancellationToken).ConfigureAwait(false);
+        var result = await this._healthChecker.CheckHealthAsync(providerId, cancellationToken).ConfigureAwait(false);
         this._lastCheckTimes.AddOrUpdate(providerId, DateTime.UtcNow, (_, _) => DateTime.UtcNow);
 
         this.HealthCheckCompleted?.Invoke(this, new HealthCheckCompletedEventArgs { Result = result });
@@ -205,12 +205,12 @@ public sealed class HealthCheckScheduler : IDisposable
     /// </summary>
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A dictionary of provider IDs to their health check results.</returns>
-    public async Task<Dictionary<string, ProviderHealthCheckResult>> TriggerAllHealthChecksAsync(
+    public async Task<IReadOnlyDictionary<string, ProviderHealthCheckResult>> TriggerAllHealthChecksAsync(
         CancellationToken cancellationToken = default)
     {
         this._logger?.LogInformation("Triggering immediate health checks for all {Count} providers", this._providers.Count);
 
-        var results = await _healthChecker.CheckHealthAsync(_providers.Keys, cancellationToken).ConfigureAwait(false);
+        var results = await this._healthChecker.CheckHealthAsync(this._providers.Keys, cancellationToken).ConfigureAwait(false);
 
         foreach (var kvp in results)
         {
@@ -225,13 +225,13 @@ public sealed class HealthCheckScheduler : IDisposable
     /// Gets the health status summary for all monitored providers.
     /// </summary>
     /// <returns>A dictionary of provider IDs to their health statuses.</returns>
-    public async Task<Dictionary<string, ProviderHealthStatus>> GetHealthStatusSummaryAsync()
+    public async Task<IDictionary<string, ProviderHealthStatus>> GetHealthStatusSummaryAsync()
     {
         var summary = new Dictionary<string, ProviderHealthStatus>(StringComparer.Ordinal);
 
         foreach (var providerId in this._providers.Keys)
         {
-            var status = await _healthChecker.GetHealthStatusAsync(providerId).ConfigureAwait(false);
+            var status = await this._healthChecker.GetHealthStatusAsync(providerId).ConfigureAwait(false);
             summary[providerId] = status;
         }
 
@@ -263,14 +263,14 @@ public sealed class HealthCheckScheduler : IDisposable
         {
             try
             {
-                await Task.Delay(_options.CheckInterval, cancellationToken).ConfigureAwait(false);
+                await Task.Delay(this._options.CheckInterval, cancellationToken).ConfigureAwait(false);
 
                 if (cancellationToken.IsCancellationRequested)
                 {
                     break;
                 }
 
-                await RunHealthChecksAsync(cancellationToken).ConfigureAwait(false);
+                await this.RunHealthChecksAsync(cancellationToken).ConfigureAwait(false);
             }
             catch (TaskCanceledException)
             {
@@ -299,7 +299,7 @@ public sealed class HealthCheckScheduler : IDisposable
 
         try
         {
-            var results = await _healthChecker.CheckHealthAsync(providersToCheck, cancellationToken).ConfigureAwait(false);
+            var results = await this._healthChecker.CheckHealthAsync(providersToCheck, cancellationToken).ConfigureAwait(false);
 
             foreach (var kvp in results)
             {

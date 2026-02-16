@@ -37,7 +37,7 @@ public class RoutingPredictor
     /// <param name="providers">The available providers.</param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A list of provider predictions sorted by score (best first).</returns>
-    public Task<List<ProviderPrediction>> PredictAsync(
+    public Task<IList<ProviderPrediction>> PredictAsync(
         RoutingRequest request,
         IReadOnlyList<Provider> providers,
         CancellationToken cancellationToken = default)
@@ -63,7 +63,7 @@ public class RoutingPredictor
         // Sort by score (lower is better)
         predictions.Sort((a, b) => a.Score.CompareTo(b.Score));
 
-        return Task.FromResult(predictions);
+        return Task.FromResult<IList<ProviderPrediction>>(predictions);
     }
 
     /// <summary>
@@ -75,7 +75,7 @@ public class RoutingPredictor
     public ProviderPrediction PredictForProvider(RoutingRequest request, Provider provider)
     {
         var metrics = this._performanceTracker.GetMetrics(provider.Id);
-        var features = this.ExtractFeatures(request, provider, metrics);
+        var features = ExtractFeatures(request, provider, metrics);
         var prediction = new ProviderPrediction
         {
             Provider = provider,
@@ -86,7 +86,7 @@ public class RoutingPredictor
         prediction.PredictedLatencyMs = this.PredictLatency(features, metrics);
 
         // Predict cost
-        prediction.PredictedCost = this.PredictCost(request, provider);
+        prediction.PredictedCost = PredictCost(request, provider);
 
         // Predict success rate
         prediction.PredictedSuccessRate = this.PredictSuccessRate(features, metrics);
@@ -133,7 +133,7 @@ public class RoutingPredictor
     /// <param name="historicalData">The historical routing data.</param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A task representing the training operation.</returns>
-    public Task TrainAsync(List<HistoricalRoutingData> historicalData, CancellationToken cancellationToken = default)
+    public Task TrainAsync(IList<HistoricalRoutingData> historicalData, CancellationToken cancellationToken = default)
     {
         // Simple online learning: update weights based on historical accuracy
         foreach (var data in historicalData)
@@ -158,7 +158,7 @@ public class RoutingPredictor
     /// Gets the current provider weights.
     /// </summary>
     /// <returns>A dictionary of provider IDs to their weights.</returns>
-    public Dictionary<string, double> GetProviderWeights()
+    public IDictionary<string, double> GetProviderWeights()
     {
         return this._providerWeights.ToDictionary(kvp => kvp.Key, kvp => kvp.Value, StringComparer.Ordinal);
     }
@@ -171,31 +171,35 @@ public class RoutingPredictor
         this._providerWeights.Clear();
     }
 
-    private Dictionary<string, double> ExtractFeatures(
+    private static Dictionary<string, double> ExtractFeatures(
         RoutingRequest request,
         Provider provider,
         ProviderPerformanceMetrics? metrics)
     {
-        var features = new Dictionary<string, double>
-(StringComparer.Ordinal)
+        var features = new Dictionary<string, double>(StringComparer.Ordinal)
         {
-            ["request_priority"] = this.NormalizePriority(request.Priority),
-            ["provider_priority"] = this.NormalizePriority(provider.Priority),
-            ["estimated_input_tokens"] = this.NormalizeTokens(request.EstimatedInputTokens),
-            ["estimated_output_tokens"] = this.NormalizeTokens(request.EstimatedOutputTokens),
-            ["max_latency_ms"] = this.NormalizeLatency(request.MaxLatencyMs),
-            ["max_cost"] = this.NormalizeCost(request.MaxCost),
-            ["provider_rate_limit_rpm"] = this.NormalizeRateLimit(provider.RateLimitRpm),
+            ["request_priority"] = NormalizePriority(request.Priority),
+            ["provider_priority"] = NormalizePriority(provider.Priority),
+            ["estimated_input_tokens"] = NormalizeTokens(request.EstimatedInputTokens),
+            ["estimated_output_tokens"] = NormalizeTokens(request.EstimatedOutputTokens),
+            ["provider_latency_p50"] = NormalizeLatency((int)(metrics?.P50LatencyMs ?? 0)),
+            ["provider_latency_p95"] = NormalizeLatency((int)(metrics?.P95LatencyMs ?? 0)),
+            ["provider_latency_p99"] = NormalizeLatency((int)(metrics?.P99LatencyMs ?? 0)),
+            ["provider_cost_per_1k_input"] = NormalizeCost(provider.CostPer1KInputTokens),
+            ["provider_rate_limit"] = NormalizeRateLimit(provider.RateLimitRpm),
+            ["request_count"] = NormalizeRequestCount(metrics?.TotalRequests ?? 0),
+            ["consecutive_failures"] = NormalizeConsecutiveFailures(metrics?.ConsecutiveFailures ?? 0),
+            ["provider_cost_per_1k_output"] = NormalizeCost(provider.CostPer1KOutputTokens),
         };
 
         if (metrics != null)
         {
-            features["avg_latency_ms"] = this.NormalizeLatency((int)metrics.AverageLatencyMs);
-            features["p95_latency_ms"] = this.NormalizeLatency((int)metrics.P95LatencyMs);
+            features["avg_latency_ms"] = NormalizeLatency((int)metrics.AverageLatencyMs);
+            features["p95_latency_ms"] = NormalizeLatency((int)metrics.P95LatencyMs);
             features["success_rate"] = metrics.SuccessRate / 100.0;
-            features["total_requests"] = this.NormalizeRequestCount(metrics.TotalRequests);
-            features["consecutive_failures"] = this.NormalizeConsecutiveFailures(metrics.ConsecutiveFailures);
-            features["avg_cost"] = this.NormalizeCost(metrics.AverageCostPerRequest);
+            features["total_requests"] = NormalizeRequestCount(metrics.TotalRequests);
+            features["consecutive_failures"] = NormalizeConsecutiveFailures(metrics.ConsecutiveFailures);
+            features["avg_cost"] = NormalizeCost(metrics.AverageCostPerRequest);
         }
         else
         {
@@ -225,7 +229,7 @@ public class RoutingPredictor
         return 1000.0 + (features["estimated_input_tokens"] * 0.5) + (features["estimated_output_tokens"] * 1.0);
     }
 
-    private decimal PredictCost(RoutingRequest request, Provider provider)
+    private static decimal PredictCost(RoutingRequest request, Provider provider)
     {
         var inputCost = (request.EstimatedInputTokens / 1000.0m) * provider.CostPer1KInputTokens;
         var outputCost = (request.EstimatedOutputTokens / 1000.0m) * provider.CostPer1KOutputTokens;
@@ -263,10 +267,10 @@ public class RoutingPredictor
 
     private double CalculateScore(ProviderPrediction prediction, RoutingRequest request)
     {
-        var latencyScore = this.NormalizeScore(prediction.PredictedLatencyMs, 0, request.MaxLatencyMs);
-        var costScore = this.NormalizeScore((double)prediction.PredictedCost, 0, (double)request.MaxCost);
+        var latencyScore = NormalizeScore(prediction.PredictedLatencyMs, 0, request.MaxLatencyMs);
+        var costScore = NormalizeScore((double)prediction.PredictedCost, 0, (double)request.MaxCost);
         var successScore = 1.0 - prediction.PredictedSuccessRate; // Invert: lower is better
-        var priorityScore = this.NormalizePriority(prediction.Provider.Priority);
+        var priorityScore = NormalizePriority(prediction.Provider.Priority);
 
         var weight = this._providerWeights.TryGetValue(prediction.Provider.Id, out var w) ? w : 1.0;
 
@@ -279,42 +283,42 @@ public class RoutingPredictor
         return score;
     }
 
-    private double NormalizePriority(int priority)
+    private static double NormalizePriority(int priority)
     {
         return Math.Min(1.0, priority / 1000.0);
     }
 
-    private double NormalizeTokens(int tokens)
+    private static double NormalizeTokens(int tokens)
     {
         return Math.Min(1.0, tokens / 10000.0);
     }
 
-    private double NormalizeLatency(int latencyMs)
+    private static double NormalizeLatency(int latencyMs)
     {
         return Math.Min(1.0, latencyMs / 10000.0);
     }
 
-    private double NormalizeCost(decimal cost)
+    private static double NormalizeCost(decimal cost)
     {
         return Math.Min(1.0, (double)cost / 1.0);
     }
 
-    private double NormalizeRateLimit(int rpm)
+    private static double NormalizeRateLimit(int rpm)
     {
         return Math.Min(1.0, rpm / 1000.0);
     }
 
-    private double NormalizeRequestCount(int count)
+    private static double NormalizeRequestCount(int count)
     {
         return Math.Min(1.0, count / 1000.0);
     }
 
-    private double NormalizeConsecutiveFailures(int failures)
+    private static double NormalizeConsecutiveFailures(int failures)
     {
         return Math.Min(1.0, failures / 10.0);
     }
 
-    private double NormalizeScore(double value, double min, double max)
+    private static double NormalizeScore(double value, double min, double max)
     {
         if (max <= min)
         {

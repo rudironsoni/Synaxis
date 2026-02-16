@@ -53,19 +53,19 @@ StringComparer.Ordinal)
             // Mock implementation - in production, use MaxMind GeoIP2
             await Task.CompletedTask.ConfigureAwait(false);
 
-            var countryCode = this.GetMockCountryCode(ipAddress);
+            var countryCode = GetMockCountryCode(ipAddress);
             var location = new GeoLocation
             {
                 IpAddress = ipAddress,
                 CountryCode = countryCode,
-                CountryName = this.GetCountryName(countryCode),
-                City = this.GetMockCity(countryCode),
-                ContinentCode = this.GetContinentCode(countryCode),
-                TimeZone = this.GetMockTimeZone(countryCode),
+                CountryName = GetCountryName(countryCode),
+                City = GetMockCity(countryCode),
+                ContinentCode = GetContinentCode(countryCode),
+                TimeZone = GetMockTimeZone(countryCode),
             };
 
             // Set mock coordinates
-            this.SetMockCoordinates(location, countryCode);
+            SetMockCoordinates(location, countryCode);
 
             return location;
         }
@@ -134,7 +134,7 @@ string.Equals(countryCode, "EC", StringComparison.Ordinal) || string.Equals(coun
             return DataResidencyCountries.Contains(countryCode) || EuCountries.Contains(countryCode);
         }
 
-        private string GetMockCountryCode(string ipAddress)
+        private static string GetMockCountryCode(string ipAddress)
         {
             if (MockIpDatabase.TryGetValue(ipAddress, out var countryCode))
             {
@@ -169,7 +169,7 @@ string.Equals(countryCode, "EC", StringComparison.Ordinal) || string.Equals(coun
             return "US"; // Default
         }
 
-        private string GetCountryName(string countryCode)
+        private static string GetCountryName(string countryCode)
         {
             var countryNames = new Dictionary<string, string>(
 StringComparer.Ordinal)
@@ -191,7 +191,7 @@ StringComparer.Ordinal)
             return countryNames.TryGetValue(countryCode, out var name) ? name : countryCode;
         }
 
-        private string GetMockCity(string countryCode)
+        private static string GetMockCity(string countryCode)
         {
             var cities = new Dictionary<string, string>(
 StringComparer.Ordinal)
@@ -210,7 +210,7 @@ StringComparer.Ordinal)
             return cities.TryGetValue(countryCode, out var city) ? city : "Unknown";
         }
 
-        private string GetContinentCode(string countryCode)
+        private static string GetContinentCode(string countryCode)
         {
             if (EuCountries.Contains(countryCode) || string.Equals(countryCode, "GB", StringComparison.Ordinal))
             {
@@ -231,7 +231,7 @@ string.Equals(countryCode, "CO", StringComparison.Ordinal) || string.Equals(coun
             return "UN";
         }
 
-        private string GetMockTimeZone(string countryCode)
+        private static string GetMockTimeZone(string countryCode)
         {
             var timeZones = new Dictionary<string, string>(
 StringComparer.Ordinal)
@@ -250,7 +250,7 @@ StringComparer.Ordinal)
             return timeZones.TryGetValue(countryCode, out var tz) ? tz : "UTC";
         }
 
-        private void SetMockCoordinates(GeoLocation location, string countryCode)
+        private static void SetMockCoordinates(GeoLocation location, string countryCode)
         {
             var coordinates = new Dictionary<string, (double Lat, double Lon)>(StringComparer.Ordinal)
             {

@@ -139,7 +139,7 @@ public sealed class AuthenticationServiceTests : IDisposable
     public async Task AuthenticateAsync_WithNullEmail_ReturnsFailure()
     {
         // Act
-        var result = await _authenticationService.AuthenticateAsync(null, "password");
+        var result = await _authenticationService.AuthenticateAsync(null!, "password");
 
         // Assert
         result.Should().NotBeNull();
@@ -151,7 +151,7 @@ public sealed class AuthenticationServiceTests : IDisposable
     public async Task AuthenticateAsync_WithNullPassword_ReturnsFailure()
     {
         // Act
-        var result = await _authenticationService.AuthenticateAsync("test@example.com", null);
+        var result = await _authenticationService.AuthenticateAsync("test@example.com", null!);
 
         // Assert
         result.Should().NotBeNull();
@@ -179,7 +179,7 @@ public sealed class AuthenticationServiceTests : IDisposable
             .ReturnsAsync(user);
 
         var authResult = await _authenticationService.AuthenticateAsync("test@example.com", "password");
-        var token = authResult.AccessToken;
+        var token = authResult.AccessToken!;
 
         // Act
         var isValid = _authenticationService.ValidateToken(token);
@@ -219,7 +219,7 @@ public sealed class AuthenticationServiceTests : IDisposable
             .ReturnsAsync(user);
 
         var authResult = await _authenticationService.AuthenticateAsync("test@example.com", "password");
-        var token = authResult.AccessToken;
+        var token = authResult.AccessToken!;
 
         // Debug: Read the token and check all claims
         var tokenHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();

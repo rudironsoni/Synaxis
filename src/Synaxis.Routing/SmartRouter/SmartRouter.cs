@@ -2,9 +2,11 @@
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
+#pragma warning disable MA0049 // Type name matches namespace - this is intentional for the SmartRouter pattern
 namespace Synaxis.Routing.SmartRouter;
 
 using System.Collections.Concurrent;
+using System.Threading;
 using Microsoft.Extensions.Logging;
 using Synaxis.Routing.CircuitBreaker;
 using CircuitBreakerImpl = Synaxis.Routing.CircuitBreaker.CircuitBreaker;
@@ -21,7 +23,7 @@ public class SmartRouter : IRouter
     private readonly ConcurrentDictionary<string, CircuitBreakerImpl> _circuitBreakers;
     private readonly RoutingMetrics _metrics;
     private readonly ILogger<SmartRouter>? _logger;
-    private readonly object _lock = new();
+    private readonly Lock _lock = new();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SmartRouter"/> class.
@@ -60,7 +62,7 @@ public class SmartRouter : IRouter
         }
 
         // Get predictions for all available providers
-        var predictions = await _predictor.PredictAsync(request, availableProviders, cancellationToken).ConfigureAwait(false);
+        var predictions = await this._predictor.PredictAsync(request, availableProviders, cancellationToken).ConfigureAwait(false);
 
         // Select the best provider
         var selectedPrediction = this.SelectBestProvider(predictions, request);
@@ -99,7 +101,7 @@ public class SmartRouter : IRouter
     /// <param name="inputTokens">The actual number of input tokens used.</param>
     /// <param name="outputTokens">The actual number of output tokens used.</param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
-    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public Task RecordRoutingResultAsync(
         RoutingDecision decision,
         bool success,
@@ -114,7 +116,7 @@ public class SmartRouter : IRouter
         }
 
         var providerId = decision.SelectedProvider.Id;
-        var cost = this.CalculateActualCost(decision.SelectedProvider, inputTokens, outputTokens);
+        var cost = CalculateActualCost(decision.SelectedProvider, inputTokens, outputTokens);
 
         // Record performance metrics
         this._performanceTracker.RecordRequest(providerId, success, latencyMs, inputTokens, outputTokens, cost);
@@ -170,6 +172,7 @@ public class SmartRouter : IRouter
     /// <summary>
     /// Gets the current routing metrics.
     /// </summary>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>The routing metrics.</returns>
     public Task<RoutingMetrics> GetRoutingMetricsAsync(CancellationToken cancellationToken = default)
     {
@@ -190,6 +193,7 @@ public class SmartRouter : IRouter
     /// <summary>
     /// Gets all registered providers.
     /// </summary>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A list of all registered providers.</returns>
     public Task<IReadOnlyList<Provider>> GetProvidersAsync(CancellationToken cancellationToken = default)
     {
@@ -201,7 +205,7 @@ public class SmartRouter : IRouter
     /// </summary>
     /// <param name="provider">The provider to add or update.</param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
-    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public Task AddOrUpdateProviderAsync(Provider provider, CancellationToken cancellationToken = default)
     {
         if (provider == null)
@@ -234,7 +238,7 @@ public class SmartRouter : IRouter
     /// </summary>
     /// <param name="providerId">The provider ID to remove.</param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
-    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public Task RemoveProviderAsync(string providerId, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(providerId))
@@ -310,7 +314,7 @@ public class SmartRouter : IRouter
         return availableProviders;
     }
 
-    private ProviderPrediction SelectBestProvider(List<ProviderPrediction> predictions, RoutingRequest request)
+    private ProviderPrediction SelectBestProvider(IList<ProviderPrediction> predictions, RoutingRequest request)
     {
         // Check if preferred provider is available and meets requirements
         if (!string.IsNullOrEmpty(request.PreferredProviderId))
@@ -334,7 +338,7 @@ public class SmartRouter : IRouter
 
     private RoutingDecision CreateRoutingDecision(
         ProviderPrediction selectedPrediction,
-        List<ProviderPrediction> allPredictions)
+        IList<ProviderPrediction> allPredictions)
     {
         var decision = new RoutingDecision
         {
@@ -375,7 +379,7 @@ public class SmartRouter : IRouter
         return decision;
     }
 
-    private decimal CalculateActualCost(Provider provider, int inputTokens, int outputTokens)
+    private static decimal CalculateActualCost(Provider provider, int inputTokens, int outputTokens)
     {
         var inputCost = (inputTokens / 1000.0m) * provider.CostPer1KInputTokens;
         var outputCost = (outputTokens / 1000.0m) * provider.CostPer1KOutputTokens;

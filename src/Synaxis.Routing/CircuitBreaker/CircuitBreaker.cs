@@ -2,6 +2,7 @@
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
+#pragma warning disable MA0049 // Type name matches namespace - this is intentional for the CircuitBreaker pattern
 namespace Synaxis.Routing.CircuitBreaker;
 
 using System;
@@ -10,18 +11,19 @@ using System.Threading;
 /// <summary>
 /// Implements the Circuit Breaker pattern to prevent cascading failures.
 /// </summary>
-public class CircuitBreaker
+public sealed class CircuitBreaker
 {
-    private readonly string _name;
     private readonly CircuitBreakerOptions _options;
-    private readonly object _lock = new();
+    private readonly Lock _lock = new();
     private readonly Random _random = new();
 
     private CircuitState _state = CircuitState.Closed;
     private int _failureCount;
     private int _successCount;
     private int _totalRequests;
+#pragma warning disable S4487 // Field is accessed via reflection in CircuitBreakerStore for persistence
     private DateTime? _lastFailureTime;
+#pragma warning restore S4487
     private DateTime? _openedAt;
     private int _consecutiveSuccessesInHalfOpen;
 
@@ -102,7 +104,7 @@ public class CircuitBreaker
     /// <param name="options">The configuration options.</param>
     public CircuitBreaker(string name, CircuitBreakerOptions options)
     {
-        this._name = name ?? throw new ArgumentNullException(nameof(name));
+        _ = name ?? throw new ArgumentNullException(nameof(name));
         this._options = options ?? throw new ArgumentNullException(nameof(options));
     }
 

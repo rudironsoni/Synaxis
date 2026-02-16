@@ -5,7 +5,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <NoWarn>$(NoWarn);SA0001;SA1101;SA1111;SA1116;SA1117;SA1122;SA1127;SA1200;SA1203;SA1208;SA1316;SA1407;SA1413;SA1481;SA1501;SA1503;SA1600;SA1601;SA1602;SA1633;MA0002;MA0004;MA0006;MA0011;MA0015;MA0025;MA0051;MA0065;MA0074;S1172;S1481;S1854;S2325;S2955;S3218;S3267;S4144;S4487;S6608;IDISP001;AsyncFixer01</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,6 +21,12 @@
     <PackageReference Include="Microsoft.Extensions.Logging" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
     <PackageReference Include="StackExchange.Redis" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" />
+    <PackageReference Include="MailKit" />
+    <PackageReference Include="MimeKit" />
+    <PackageReference Include="Otp.NET" />
+    <PackageReference Include="QRCoder" />
   </ItemGroup>
 
   <ItemGroup>

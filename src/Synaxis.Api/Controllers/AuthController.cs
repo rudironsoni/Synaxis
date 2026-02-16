@@ -519,11 +519,18 @@ namespace Synaxis.Api.Controllers
                 userId = parsedUserId;
                 this._logger.LogInformation("MFA disable attempt for user: {UserId}", userId);
 
-                var result = await this._userService.DisableMfaAsync(userId.Value, request.Code);
-
-                if (!result)
+                // Verify MFA code before disabling
+                var isValidCode = await this._userService.VerifyMfaCodeAsync(userId.Value, request.Code);
+                if (!isValidCode)
                 {
                     return this.BadRequest(new { message = "Invalid TOTP code or backup code" });
+                }
+
+                // Disable MFA
+                var result = await this._userService.DisableMfaAsync(userId.Value);
+                if (!result)
+                {
+                    return this.BadRequest(new { message = "Failed to disable MFA" });
                 }
 
                 return this.NoContent();
