@@ -182,17 +182,17 @@ public sealed class AuthenticationServiceTests : IDisposable
         var token = authResult.AccessToken!;
 
         // Act
-        var isValid = _authenticationService.ValidateToken(token);
+        var isValid = await _authenticationService.ValidateTokenAsync(token);
 
         // Assert
         isValid.Should().BeTrue();
     }
 
     [Fact]
-    public void ValidateToken_WithInvalidToken_ReturnsFalse()
+    public async Task ValidateToken_WithInvalidToken_ReturnsFalse()
     {
         // Act
-        var isValid = _authenticationService.ValidateToken("invalid.token.here");
+        var isValid = await _authenticationService.ValidateTokenAsync("invalid.token.here");
 
         // Assert
         isValid.Should().BeFalse();
