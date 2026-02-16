@@ -474,3 +474,11 @@ public partial class Program
     {
     }
 }
+
+/// <summary>
+/// Entry point for the Synaxis Inference Gateway Web API.
+/// This partial declaration enables WebApplicationFactory access for integration tests.
+/// </summary>
+public partial class Program
+{
+}
