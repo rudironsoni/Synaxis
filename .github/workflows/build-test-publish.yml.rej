@@ -1,0 +1,10 @@
+diff a/.github/workflows/build-test-publish.yml b/.github/workflows/build-test-publish.yml	(rejected hunks)
+@@ -58,7 +58,7 @@ jobs:
+         run: dotnet restore Synaxis.sln
+ 
+       - name: Build solution
+-        run: dotnet build Synaxis.sln --configuration Release --no-restore --verbosity diagnostic > build.log 2>&1 || (tail -200 build.log && exit 1)
++        run: dotnet build Synaxis.sln --configuration Release --no-restore -warnaserror --verbosity diagnostic > build.log 2>&1 || (tail -200 build.log && exit 1)
+ 
+       - name: Run tests with coverage
+         env:

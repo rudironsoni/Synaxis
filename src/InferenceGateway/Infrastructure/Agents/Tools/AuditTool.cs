@@ -4,6 +4,8 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
 {
+    using System.Security.Cryptography;
+    using System.Text;
     using Microsoft.Extensions.Logging;
     using Synaxis.Core.Models;
     using Synaxis.Infrastructure.Data;
@@ -42,7 +44,15 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
         {
             try
             {
-                var timestamp = DateTime.UtcNow;
+                var metadata = new Dictionary<string, object>
+                {
+                    ["agent"] = agentName,
+                    ["action"] = action,
+                    ["details"] = details,
+                    ["correlationId"] = correlationId,
+                    ["timestamp"] = DateTime.UtcNow,
+                };
+
                 var auditLog = new AuditLog
                 {
                     Id = Guid.NewGuid(),
@@ -51,32 +61,16 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
                     EventType = $"{agentName}:{action}",
                     EventCategory = "agent",
                     Action = action,
-                    ResourceType = "agent",
-                    ResourceId = agentName,
-                    Metadata = new Dictionary<string, object>
-                    {
-                        { "agent", agentName },
-                        { "action", action },
-                        { "details", details },
-                        { "correlationId", correlationId },
-                        { "timestamp", timestamp },
-                    },
+                    Metadata = metadata,
                     Region = "unknown",
+                    Timestamp = DateTime.UtcNow,
                     IntegrityHash = string.Empty,
-                    Timestamp = timestamp,
                 };
+
+                auditLog.IntegrityHash = ComputeIntegrityHash(auditLog);
 
                 this._db.AuditLogs.Add(auditLog);
                 await this._db.SaveChangesAsync(ct).ConfigureAwait(false);
-
-                this._logger.LogInformation(
-                    "Agent action logged: ToolName={ToolName}, Action={Action}, OrganizationId={OrganizationId}, UserId={UserId}, Timestamp={Timestamp}, Success={Success}",
-                    agentName,
-                    action,
-                    organizationId,
-                    userId,
-                    timestamp,
-                    true);
             }
             catch (Exception ex)
             {
@@ -99,50 +93,61 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
         {
             try
             {
-                var timestamp = DateTime.UtcNow;
+                var metadata = new Dictionary<string, object>
+                {
+                    ["modelId"] = modelId,
+                    ["oldProvider"] = oldProvider,
+                    ["newProvider"] = newProvider,
+                    ["savingsPercent"] = savingsPercent,
+                    ["reason"] = reason,
+                    ["timestamp"] = DateTime.UtcNow,
+                };
+
                 var auditLog = new AuditLog
                 {
                     Id = Guid.NewGuid(),
                     OrganizationId = organizationId,
-                    UserId = null,
-                    EventType = "CostOptimization:ProviderSwitch",
-                    EventCategory = "cost_optimization",
+                    EventType = "CostOptimization",
+                    EventCategory = "optimization",
                     Action = "ProviderSwitch",
-                    ResourceType = "model",
-                    ResourceId = modelId,
-                    Metadata = new Dictionary<string, object>
-                    {
-                        { "modelId", modelId },
-                        { "oldProvider", oldProvider },
-                        { "newProvider", newProvider },
-                        { "savingsPercent", savingsPercent },
-                        { "reason", reason },
-                        { "timestamp", timestamp },
-                    },
+                    Metadata = metadata,
                     Region = "unknown",
+                    Timestamp = DateTime.UtcNow,
                     IntegrityHash = string.Empty,
-                    Timestamp = timestamp,
                 };
+
+                auditLog.IntegrityHash = ComputeIntegrityHash(auditLog);
 
                 this._db.AuditLogs.Add(auditLog);
                 await this._db.SaveChangesAsync(ct).ConfigureAwait(false);
 
                 this._logger.LogInformation(
-                    "Optimization logged: ToolName={ToolName}, Action={Action}, OrganizationId={OrganizationId}, Model={Model}, OldProvider={OldProvider}, NewProvider={NewProvider}, Savings={Savings}%, Timestamp={Timestamp}, Success={Success}",
-                    "CostOptimization",
-                    "ProviderSwitch",
+                    "Optimization logged: OrgId={OrgId}, Model={Model}, {Old}->{New}, Savings={Savings}%",
                     organizationId,
                     modelId,
                     oldProvider,
                     newProvider,
-                    savingsPercent,
-                    timestamp,
-                    true);
+                    savingsPercent);
             }
             catch (Exception ex)
             {
                 this._logger.LogError(ex, "Failed to log optimization");
             }
+        }
+
+        private static string ComputeIntegrityHash(AuditLog log)
+        {
+            var data = $"{log.Id}|{log.OrganizationId}|{log.UserId}|" +
+                       $"{log.EventType}|{log.EventCategory}|{log.Action}|" +
+                       $"{log.ResourceType}|{log.ResourceId}|" +
+                       $"{System.Text.Json.JsonSerializer.Serialize(log.Metadata)}|" +
+                       $"{log.IpAddress}|{log.UserAgent}|{log.Region}|" +
+                       $"{log.PreviousHash}|" +
+                       $"{log.Timestamp:O}";
+
+            using var sha256 = SHA256.Create();
+            var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(data));
+            return Convert.ToBase64String(hashBytes);
         }
     }
 }

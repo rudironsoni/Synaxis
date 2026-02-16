@@ -14,8 +14,8 @@ public class ViewerAuthorizationHandler : AuthorizationHandler<ViewerRequirement
 {
     /// <inheritdoc/>
     protected override Task HandleRequirementAsync(
-        AuthorizationHandlerContext context,
-        ViewerRequirement requirement)
+    AuthorizationHandlerContext context,
+    ViewerRequirement requirement)
     {
         if (context.User?.Identity?.IsAuthenticated != true)
         {

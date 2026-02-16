@@ -25,14 +25,14 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the organization navigation property.
         /// </summary>
-        public virtual Organization Organization { get; set; }
+        public virtual Organization? Organization { get; set; }
 
         /// <summary>
         /// Gets or sets the transaction type: topup, charge, refund, adjustment.
         /// </summary>
         [Required]
         [StringLength(50)]
-        public string TransactionType { get; set; }
+        public string TransactionType { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the amount in USD (base currency).

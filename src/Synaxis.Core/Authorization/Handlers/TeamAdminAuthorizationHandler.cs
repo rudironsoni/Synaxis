@@ -19,8 +19,8 @@ public class TeamAdminAuthorizationHandler : AuthorizationHandler<TeamAdminRequi
 
     /// <inheritdoc/>
     protected override Task HandleRequirementAsync(
-        AuthorizationHandlerContext context,
-        TeamAdminRequirement requirement)
+    AuthorizationHandlerContext context,
+    TeamAdminRequirement requirement)
     {
         if (context.User?.Identity?.IsAuthenticated != true)
         {
@@ -54,6 +54,6 @@ public class TeamAdminAuthorizationHandler : AuthorizationHandler<TeamAdminRequi
     private static bool IsTeamAdminOrHigher(ClaimsPrincipal user)
     {
         return user.IsInRole(AuthorizationPolicies.Roles.TeamAdmin) ||
-               user.IsInRole(AuthorizationPolicies.Roles.OrgAdmin);
+        user.IsInRole(AuthorizationPolicies.Roles.OrgAdmin);
     }
 }

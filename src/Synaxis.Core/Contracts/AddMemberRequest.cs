@@ -57,7 +57,7 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the user full name.
         /// </summary>
-        public string UserFullName { get; set; }
+        public string UserFullName { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the team ID.

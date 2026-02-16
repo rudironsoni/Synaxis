@@ -34,21 +34,21 @@ namespace Synaxis.Core.Models
         /// </summary>
         [Required]
         [StringLength(100)]
-        public string EventType { get; set; }
+        public string EventType { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the event category.
         /// </summary>
         [Required]
         [StringLength(100)]
-        public string EventCategory { get; set; }
+        public string EventCategory { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the action performed.
         /// </summary>
         [Required]
         [StringLength(255)]
-        public string Action { get; set; }
+        public string Action { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the resource type.
@@ -84,14 +84,14 @@ namespace Synaxis.Core.Models
         /// </summary>
         [Required]
         [StringLength(50)]
-        public string Region { get; set; }
+        public string Region { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the cryptographic hash for tamper detection.
         /// </summary>
         [Required]
         [StringLength(128)]
-        public string IntegrityHash { get; set; }
+        public string IntegrityHash { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the hash of previous log entry for chain verification.
@@ -108,11 +108,11 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the organization navigation property.
         /// </summary>
-        public virtual Organization Organization { get; set; }
+        public virtual Organization? Organization { get; set; }
 
         /// <summary>
         /// Gets or sets the user navigation property.
         /// </summary>
-        public virtual User User { get; set; }
+        public virtual User? User { get; set; }
     }
 }

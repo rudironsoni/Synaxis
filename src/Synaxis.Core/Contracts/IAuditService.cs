@@ -78,47 +78,47 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the event type.
         /// </summary>
-        public string EventType { get; set; }
+        public string EventType { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the event category.
         /// </summary>
-        public string EventCategory { get; set; }
+        public string EventCategory { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the action performed.
         /// </summary>
-        public string Action { get; set; }
+        public string Action { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the resource type.
         /// </summary>
-        public string ResourceType { get; set; }
+        public string ResourceType { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the resource identifier.
         /// </summary>
-        public string ResourceId { get; set; }
+        public string ResourceId { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the event metadata.
         /// </summary>
-        public IDictionary<string, object> Metadata { get; set; }
+        public IDictionary<string, object> Metadata { get; set; } = new Dictionary<string, object>(StringComparer.Ordinal);
 
         /// <summary>
         /// Gets or sets the IP address.
         /// </summary>
-        public string IpAddress { get; set; }
+        public string IpAddress { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the user agent.
         /// </summary>
-        public string UserAgent { get; set; }
+        public string UserAgent { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the region.
         /// </summary>
-        public string Region { get; set; }
+        public string Region { get; set; } = string.Empty;
     }
 
     /// <summary>
@@ -139,12 +139,12 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the event type filter.
         /// </summary>
-        public string EventType { get; set; }
+        public string EventType { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the event category filter.
         /// </summary>
-        public string EventCategory { get; set; }
+        public string EventCategory { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the start date filter.
@@ -180,17 +180,17 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets events grouped by type.
         /// </summary>
-        public IDictionary<string, int> EventsByType { get; set; }
+        public IDictionary<string, int> EventsByType { get; set; } = new Dictionary<string, int>(StringComparer.Ordinal);
 
         /// <summary>
         /// Gets or sets events grouped by category.
         /// </summary>
-        public IDictionary<string, int> EventsByCategory { get; set; }
+        public IDictionary<string, int> EventsByCategory { get; set; } = new Dictionary<string, int>(StringComparer.Ordinal);
 
         /// <summary>
         /// Gets or sets events grouped by region.
         /// </summary>
-        public IDictionary<string, int> EventsByRegion { get; set; }
+        public IDictionary<string, int> EventsByRegion { get; set; } = new Dictionary<string, int>(StringComparer.Ordinal);
 
         /// <summary>
         /// Gets or sets the start date of the aggregation.

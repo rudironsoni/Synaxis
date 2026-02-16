@@ -31,7 +31,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the organization navigation property.
         /// </summary>
-        public virtual Organization Organization { get; set; }
+        public virtual Organization? Organization { get; set; }
 
         /// <summary>
         /// Gets or sets the user identifier.
@@ -41,7 +41,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the user navigation property.
         /// </summary>
-        public virtual User User { get; set; }
+        public virtual User? User { get; set; }
 
         /// <summary>
         /// Gets or sets the virtual key identifier.
@@ -51,7 +51,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the virtual key navigation property.
         /// </summary>
-        public virtual VirtualKey VirtualKey { get; set; }
+        public virtual VirtualKey? VirtualKey { get; set; }
 
         /// <summary>
         /// Gets or sets the team identifier.
@@ -61,7 +61,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the team navigation property.
         /// </summary>
-        public virtual Team Team { get; set; }
+        public virtual Team? Team { get; set; }
 
         /// <summary>
         /// Gets or sets the region where user data is stored.
@@ -103,7 +103,7 @@ namespace Synaxis.Core.Models
         /// </summary>
         [Required]
         [StringLength(100)]
-        public string Model { get; set; }
+        public string Model { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the provider name.
@@ -167,7 +167,7 @@ namespace Synaxis.Core.Models
         public string UserAgent { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets the request headers.
+        /// Gets or sets the HTTP request headers.
         /// </summary>
         public IDictionary<string, string> RequestHeaders { get; set; } = new Dictionary<string, string>();
 

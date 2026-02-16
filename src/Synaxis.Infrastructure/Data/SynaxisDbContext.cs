@@ -2,25 +2,21 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Synaxis.Core.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
+
 namespace Synaxis.Infrastructure.Data
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Text.Json;
-    using Microsoft.EntityFrameworkCore;
-    using Microsoft.EntityFrameworkCore.ChangeTracking;
-    using Synaxis.Core.Models;
-
     /// <summary>
     /// Database context for Synaxis multi-tenant platform.
     /// </summary>
     public class SynaxisDbContext : DbContext
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SynaxisDbContext"/> class.
-        /// </summary>
-        /// <param name="options"></param>
         public SynaxisDbContext(DbContextOptions<SynaxisDbContext> options)
             : base(options)
         {
@@ -52,29 +48,6 @@ namespace Synaxis.Infrastructure.Data
 
         public DbSet<Invitation> Invitations { get; set; }
 
-        public DbSet<RefreshToken> RefreshTokens { get; set; }
-
-        public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
-
-        public DbSet<EmailVerificationToken> EmailVerificationTokens { get; set; }
-
-        public DbSet<JwtBlacklist> JwtBlacklists { get; set; }
-
-        public DbSet<Collection> Collections { get; set; }
-
-        public DbSet<CollectionMembership> CollectionMemberships { get; set; }
-
-        public DbSet<PasswordPolicy> PasswordPolicies { get; set; }
-
-        public DbSet<PasswordHistory> PasswordHistories { get; set; }
-
-        public DbSet<OrganizationApiKey> OrganizationApiKeys { get; set; }
-
-        public DbSet<Conversation> Conversations { get; set; }
-
-        public DbSet<ConversationTurn> ConversationTurns { get; set; }
-
-        /// <inheritdoc/>
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -93,9 +66,6 @@ namespace Synaxis.Infrastructure.Data
             modelBuilder.Entity<CreditTransaction>().ToTable("credit_transactions");
             modelBuilder.Entity<Invoice>().ToTable("invoices");
             modelBuilder.Entity<Invitation>().ToTable("invitations");
-            modelBuilder.Entity<RefreshToken>().ToTable("refresh_tokens");
-            modelBuilder.Entity<PasswordResetToken>().ToTable("password_reset_tokens");
-            modelBuilder.Entity<EmailVerificationToken>().ToTable("email_verification_tokens");
 
             // Configure Organizations
             modelBuilder.Entity<Organization>(entity =>
@@ -122,11 +92,11 @@ namespace Synaxis.Infrastructure.Data
                     .HasColumnName("privacy_consent")
                     .HasConversion(
                         v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null!),
-                        v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(StringComparer.Ordinal),
+                        v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(),
                         new ValueComparer<IDictionary<string, object>>(
-                            (c1, c2) => c1.Count == c2.Count && !c1.Except(c2).Any(),
-                            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
-                            c => c.ToDictionary(entry => entry.Key, entry => entry.Value)))
+                            (c1, c2) => c1 != null && c2 != null && c1.Count == c2.Count && !c1.Except(c2).Any(),
+                            c => c == null ? 0 : c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
+                            c => c == null ? new Dictionary<string, object>() : c.ToDictionary(entry => entry.Key, entry => entry.Value)))
                     .HasColumnType("jsonb");
 
                 entity.HasIndex(e => e.Slug).IsUnique();
@@ -196,17 +166,10 @@ namespace Synaxis.Infrastructure.Data
                 entity.Property(e => e.CrossBorderConsentVersion).HasColumnName("cross_border_consent_version");
                 entity.Property(e => e.MfaEnabled).HasColumnName("mfa_enabled");
                 entity.Property(e => e.MfaSecret).HasColumnName("mfa_secret");
-                entity.Property(e => e.MfaBackupCodes).HasColumnName("mfa_backup_codes");
                 entity.Property(e => e.LastLoginAt).HasColumnName("last_login_at");
                 entity.Property(e => e.FailedLoginAttempts).HasColumnName("failed_login_attempts");
                 entity.Property(e => e.LockedUntil).HasColumnName("locked_until");
-                entity.Property(e => e.PasswordChangedAt).HasColumnName("password_changed_at");
-                entity.Property(e => e.PasswordExpiresAt).HasColumnName("password_expires_at");
-                entity.Property(e => e.MustChangePassword).HasColumnName("must_change_password");
-                entity.Property(e => e.FailedPasswordChangeAttempts).HasColumnName("failed_password_change_attempts");
-                entity.Property(e => e.PasswordChangeLockedUntil).HasColumnName("password_change_locked_until");
                 entity.Property(e => e.IsActive).HasColumnName("is_active");
-                entity.Property(e => e.DeletedAt).HasColumnName("deleted_at");
                 entity.Property(e => e.CreatedAt).HasColumnName("created_at");
                 entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
 
@@ -215,11 +178,11 @@ namespace Synaxis.Infrastructure.Data
                     .HasColumnName("privacy_consent")
                     .HasConversion(
                         v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null!),
-                        v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(StringComparer.Ordinal),
+                        v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(),
                         new ValueComparer<IDictionary<string, object>>(
-                            (c1, c2) => c1.Count == c2.Count && !c1.Except(c2).Any(),
-                            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
-                            c => c.ToDictionary(entry => entry.Key, entry => entry.Value)))
+                            (c1, c2) => c1 != null && c2 != null && c1.Count == c2.Count && !c1.Except(c2).Any(),
+                            c => c == null ? 0 : c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
+                            c => c == null ? new Dictionary<string, object>() : c.ToDictionary(entry => entry.Key, entry => entry.Value)))
                     .HasColumnType("jsonb");
 
                 entity.HasOne(e => e.Organization)
@@ -299,11 +262,11 @@ namespace Synaxis.Infrastructure.Data
                     .HasColumnName("metadata")
                     .HasConversion(
                         v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null!),
-                        v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(StringComparer.Ordinal),
+                        v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(),
                         new ValueComparer<IDictionary<string, object>>(
-                            (c1, c2) => c1.Count == c2.Count && !c1.Except(c2).Any(),
-                            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
-                            c => c.ToDictionary(entry => entry.Key, entry => entry.Value)))
+                            (c1, c2) => c1 != null && c2 != null && c1.Count == c2.Count && !c1.Except(c2).Any(),
+                            c => c == null ? 0 : c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
+                            c => c == null ? new Dictionary<string, object>() : c.ToDictionary(entry => entry.Key, entry => entry.Value)))
                     .HasColumnType("jsonb");
 
                 entity.HasOne(e => e.Organization)
@@ -373,11 +336,11 @@ namespace Synaxis.Infrastructure.Data
                     .HasColumnName("request_headers")
                     .HasConversion(
                         v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null!),
-                        v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, string>(StringComparer.Ordinal),
+                        v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, string>(),
                         new ValueComparer<IDictionary<string, string>>(
-                            (c1, c2) => c1.Count == c2.Count && !c1.Except(c2).Any(),
-                            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), StringComparer.Ordinal.GetHashCode(v.Value))),
-                            c => c.ToDictionary(entry => entry.Key, entry => entry.Value)))
+                            (c1, c2) => c1 != null && c2 != null && c1.Count == c2.Count && !c1.Except(c2).Any(),
+                            c => c == null ? 0 : c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), StringComparer.Ordinal.GetHashCode(v.Value))),
+                            c => c == null ? new Dictionary<string, string>() : c.ToDictionary(entry => entry.Key, entry => entry.Value)))
                     .HasColumnType("jsonb");
 
                 entity.HasOne(e => e.Organization)
@@ -468,11 +431,11 @@ namespace Synaxis.Infrastructure.Data
                     .HasColumnName("metadata")
                     .HasConversion(
                         v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null!),
-                        v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(StringComparer.Ordinal),
+                        v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(),
                         new ValueComparer<IDictionary<string, object>>(
-                            (c1, c2) => c1.Count == c2.Count && !c1.Except(c2).Any(),
-                            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
-                            c => c.ToDictionary(entry => entry.Key, entry => entry.Value)))
+                            (c1, c2) => c1 != null && c2 != null && c1.Count == c2.Count && !c1.Except(c2).Any(),
+                            c => c == null ? 0 : c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
+                            c => c == null ? new Dictionary<string, object>() : c.ToDictionary(entry => entry.Key, entry => entry.Value)))
                     .HasColumnType("jsonb");
 
                 entity.HasOne(e => e.Organization)
@@ -610,11 +573,11 @@ namespace Synaxis.Infrastructure.Data
                     .HasColumnName("limits_config")
                     .HasConversion(
                         v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null!),
-                        v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(StringComparer.Ordinal),
+                        v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(),
                         new ValueComparer<IDictionary<string, object>>(
-                            (c1, c2) => c1.Count == c2.Count && !c1.Except(c2).Any(),
-                            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
-                            c => c.ToDictionary(entry => entry.Key, entry => entry.Value)))
+                            (c1, c2) => c1 != null && c2 != null && c1.Count == c2.Count && !c1.Except(c2).Any(),
+                            c => c == null ? 0 : c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
+                            c => c == null ? new Dictionary<string, object>() : c.ToDictionary(entry => entry.Key, entry => entry.Value)))
                     .HasColumnType("jsonb");
 
                 // Configure Features as JSON column
@@ -622,11 +585,11 @@ namespace Synaxis.Infrastructure.Data
                     .HasColumnName("features")
                     .HasConversion(
                         v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null!),
-                        v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(StringComparer.Ordinal),
+                        v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(),
                         new ValueComparer<IDictionary<string, object>>(
-                            (c1, c2) => c1.Count == c2.Count && !c1.Except(c2).Any(),
-                            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
-                            c => c.ToDictionary(entry => entry.Key, entry => entry.Value)))
+                            (c1, c2) => c1 != null && c2 != null && c1.Count == c2.Count && !c1.Except(c2).Any(),
+                            c => c == null ? 0 : c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
+                            c => c == null ? new Dictionary<string, object>() : c.ToDictionary(entry => entry.Key, entry => entry.Value)))
                     .HasColumnType("jsonb");
 
                 entity.HasIndex(e => e.Slug).IsUnique();
@@ -675,371 +638,6 @@ namespace Synaxis.Infrastructure.Data
                 entity.HasIndex(e => e.Token).IsUnique();
                 entity.HasIndex(e => new { e.OrganizationId, e.Status });
                 entity.HasIndex(e => new { e.TeamId, e.Email, e.Status });
-            });
-
-            // Configure RefreshTokens
-            modelBuilder.Entity<RefreshToken>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Id)
-                    .HasColumnName("id")
-                    .ValueGeneratedOnAdd();
-
-                entity.Property(e => e.UserId).HasColumnName("user_id");
-                entity.Property(e => e.TokenHash).HasColumnName("token_hash");
-                entity.Property(e => e.ExpiresAt).HasColumnName("expires_at");
-                entity.Property(e => e.IsRevoked).HasColumnName("is_revoked");
-                entity.Property(e => e.CreatedAt).HasColumnName("created_at");
-                entity.Property(e => e.RevokedAt).HasColumnName("revoked_at");
-                entity.Property(e => e.ReplacedByTokenHash).HasColumnName("replaced_by_token_hash");
-
-                entity.HasOne(e => e.User)
-                    .WithMany()
-                    .HasForeignKey(e => e.UserId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasIndex(e => e.TokenHash).IsUnique();
-                entity.HasIndex(e => e.UserId);
-                entity.HasIndex(e => e.ExpiresAt);
-            });
-
-            // Configure PasswordResetTokens
-            modelBuilder.Entity<PasswordResetToken>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Id)
-                    .HasColumnName("id")
-                    .ValueGeneratedOnAdd();
-
-                entity.Property(e => e.UserId).HasColumnName("user_id");
-                entity.Property(e => e.TokenHash).HasColumnName("token_hash");
-                entity.Property(e => e.ExpiresAt).HasColumnName("expires_at");
-                entity.Property(e => e.IsUsed).HasColumnName("is_used");
-                entity.Property(e => e.CreatedAt).HasColumnName("created_at");
-
-                entity.HasOne(e => e.User)
-                    .WithMany()
-                    .HasForeignKey(e => e.UserId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasIndex(e => e.TokenHash).IsUnique();
-                entity.HasIndex(e => e.UserId);
-                entity.HasIndex(e => e.ExpiresAt);
-            });
-
-            // Configure EmailVerificationTokens
-            modelBuilder.Entity<EmailVerificationToken>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Id)
-                    .HasColumnName("id")
-                    .ValueGeneratedOnAdd();
-
-                entity.Property(e => e.UserId).HasColumnName("user_id");
-                entity.Property(e => e.TokenHash).HasColumnName("token_hash");
-                entity.Property(e => e.ExpiresAt).HasColumnName("expires_at");
-                entity.Property(e => e.IsUsed).HasColumnName("is_used");
-                entity.Property(e => e.CreatedAt).HasColumnName("created_at");
-
-                entity.HasOne(e => e.User)
-                    .WithMany()
-                    .HasForeignKey(e => e.UserId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasIndex(e => e.TokenHash).IsUnique();
-                entity.HasIndex(e => e.UserId);
-                entity.HasIndex(e => e.ExpiresAt);
-            });
-
-            // Configure PasswordPolicies
-            modelBuilder.Entity<PasswordPolicy>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Id)
-                    .HasColumnName("id")
-                    .ValueGeneratedOnAdd();
-
-                entity.Property(e => e.OrganizationId).HasColumnName("organization_id");
-                entity.Property(e => e.MinLength).HasColumnName("min_length");
-                entity.Property(e => e.RequireUppercase).HasColumnName("require_uppercase");
-                entity.Property(e => e.RequireLowercase).HasColumnName("require_lowercase");
-                entity.Property(e => e.RequireNumbers).HasColumnName("require_numbers");
-                entity.Property(e => e.RequireSpecialCharacters).HasColumnName("require_special_characters");
-                entity.Property(e => e.PasswordHistoryCount).HasColumnName("password_history_count");
-                entity.Property(e => e.PasswordExpirationDays).HasColumnName("password_expiration_days");
-                entity.Property(e => e.PasswordExpirationWarningDays).HasColumnName("password_expiration_warning_days");
-                entity.Property(e => e.MaxFailedChangeAttempts).HasColumnName("max_failed_change_attempts");
-                entity.Property(e => e.LockoutDurationMinutes).HasColumnName("lockout_duration_minutes");
-                entity.Property(e => e.BlockCommonPasswords).HasColumnName("block_common_passwords");
-                entity.Property(e => e.BlockUserInfoInPassword).HasColumnName("block_user_info_in_password");
-                entity.Property(e => e.CreatedAt).HasColumnName("created_at");
-                entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
-
-                entity.HasOne(e => e.Organization)
-                    .WithOne(o => o.PasswordPolicy)
-                    .HasForeignKey<PasswordPolicy>(e => e.OrganizationId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasIndex(e => e.OrganizationId).IsUnique();
-            });
-
-            // Configure PasswordHistories
-            modelBuilder.Entity<PasswordHistory>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Id)
-                    .HasColumnName("id")
-                    .ValueGeneratedOnAdd();
-
-                entity.Property(e => e.UserId).HasColumnName("user_id");
-                entity.Property(e => e.PasswordHash).HasColumnName("password_hash");
-                entity.Property(e => e.SetAt).HasColumnName("set_at");
-
-                entity.HasOne(e => e.User)
-                    .WithMany(u => u.PasswordHistory)
-                    .HasForeignKey(e => e.UserId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasIndex(e => e.UserId);
-                entity.HasIndex(e => new { e.UserId, e.SetAt });
-            });
-
-            // Configure JwtBlacklists
-            modelBuilder.Entity<JwtBlacklist>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Id)
-                    .HasColumnName("id")
-                    .ValueGeneratedOnAdd();
-
-                entity.Property(e => e.UserId).HasColumnName("user_id");
-                entity.Property(e => e.TokenId).HasColumnName("token_id");
-                entity.Property(e => e.CreatedAt).HasColumnName("created_at");
-                entity.Property(e => e.ExpiresAt).HasColumnName("expires_at");
-
-                entity.HasOne(e => e.User)
-                    .WithMany()
-                    .HasForeignKey(e => e.UserId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasIndex(e => e.TokenId).IsUnique();
-                entity.HasIndex(e => e.UserId);
-                entity.HasIndex(e => e.ExpiresAt);
-            });
-
-            // Configure Collections
-            modelBuilder.Entity<Collection>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Id)
-                    .HasColumnName("id")
-                    .ValueGeneratedOnAdd();
-
-                entity.Property(e => e.OrganizationId).HasColumnName("organization_id");
-                entity.Property(e => e.TeamId).HasColumnName("team_id");
-                entity.Property(e => e.Slug).HasColumnName("slug");
-                entity.Property(e => e.Name).HasColumnName("name");
-                entity.Property(e => e.Description).HasColumnName("description");
-                entity.Property(e => e.IsActive).HasColumnName("is_active");
-                entity.Property(e => e.Type).HasColumnName("type");
-                entity.Property(e => e.Visibility).HasColumnName("visibility");
-                entity.Property(e => e.CreatedBy).HasColumnName("created_by");
-                entity.Property(e => e.CreatedAt).HasColumnName("created_at");
-                entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
-
-                // Configure Metadata as JSON column
-                entity.Property(e => e.Metadata)
-                    .HasColumnName("metadata")
-                    .HasConversion(
-                        v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null!),
-                        v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(StringComparer.Ordinal),
-                        new ValueComparer<IDictionary<string, object>>(
-                            (c1, c2) => c1.Count == c2.Count && !c1.Except(c2).Any(),
-                            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
-                            c => c.ToDictionary(entry => entry.Key, entry => entry.Value)))
-                    .HasColumnType("jsonb");
-
-                entity.HasOne(e => e.Organization)
-                    .WithMany(o => o.Collections)
-                    .HasForeignKey(e => e.OrganizationId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasOne(e => e.Team)
-                    .WithMany(t => t.Collections)
-                    .HasForeignKey(e => e.TeamId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasOne(e => e.Creator)
-                    .WithMany()
-                    .HasForeignKey(e => e.CreatedBy)
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                entity.HasIndex(e => new { e.OrganizationId, e.Slug }).IsUnique();
-                entity.HasIndex(e => new { e.OrganizationId, e.Name });
-                entity.HasIndex(e => e.TeamId);
-                entity.HasIndex(e => e.Type);
-                entity.HasIndex(e => e.Visibility);
-                entity.HasIndex(e => e.IsActive);
-
-                // Data integrity constraints
-                entity.ToTable(t =>
-                {
-                    t.HasCheckConstraint("CK_Collection_Type_Valid", "type IN ('general', 'models', 'prompts', 'datasets', 'workflows')");
-                    t.HasCheckConstraint("CK_Collection_Visibility_Valid", "visibility IN ('public', 'private', 'team')");
-                });
-            });
-
-            // Configure CollectionMemberships
-            modelBuilder.Entity<CollectionMembership>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Id)
-                    .HasColumnName("id")
-                    .ValueGeneratedOnAdd();
-
-                entity.Property(e => e.UserId).HasColumnName("user_id");
-                entity.Property(e => e.CollectionId).HasColumnName("collection_id");
-                entity.Property(e => e.OrganizationId).HasColumnName("organization_id");
-                entity.Property(e => e.Role).HasColumnName("role");
-                entity.Property(e => e.JoinedAt).HasColumnName("joined_at");
-                entity.Property(e => e.AddedBy).HasColumnName("added_by");
-
-                entity.HasOne(e => e.User)
-                    .WithMany(u => u.CollectionMemberships)
-                    .HasForeignKey(e => e.UserId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasOne(e => e.Collection)
-                    .WithMany(c => c.CollectionMemberships)
-                    .HasForeignKey(e => e.CollectionId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasOne(e => e.Adder)
-                    .WithMany()
-                    .HasForeignKey(e => e.AddedBy)
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                entity.HasIndex(e => new { e.UserId, e.CollectionId }).IsUnique();
-
-                // Add composite indexes for tenant queries
-                entity.HasIndex(e => new { e.OrganizationId, e.UserId });
-                entity.HasIndex(e => new { e.CollectionId, e.UserId });
-
-                // Data integrity constraints
-                entity.ToTable(t => t.HasCheckConstraint("CK_CollectionMembership_Role_Valid", "role IN ('Admin', 'Member', 'Viewer')"));
-            });
-
-            // Configure table names for new entities
-            modelBuilder.Entity<PasswordPolicy>().ToTable("password_policies");
-            modelBuilder.Entity<PasswordHistory>().ToTable("password_histories");
-            modelBuilder.Entity<OrganizationApiKey>().ToTable("organization_api_keys");
-
-            // Configure OrganizationApiKeys
-            modelBuilder.Entity<OrganizationApiKey>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Id)
-                    .HasColumnName("id")
-                    .ValueGeneratedOnAdd();
-
-                entity.Property(e => e.OrganizationId).HasColumnName("organization_id");
-                entity.Property(e => e.CreatedBy).HasColumnName("created_by");
-                entity.Property(e => e.Name).HasColumnName("name");
-                entity.Property(e => e.KeyHash).HasColumnName("key_hash");
-                entity.Property(e => e.KeyPrefix).HasColumnName("key_prefix");
-                entity.Property(e => e.ExpiresAt).HasColumnName("expires_at");
-                entity.Property(e => e.LastUsedAt).HasColumnName("last_used_at");
-                entity.Property(e => e.RevokedAt).HasColumnName("revoked_at");
-                entity.Property(e => e.RevokedReason).HasColumnName("revoked_reason");
-                entity.Property(e => e.IsActive).HasColumnName("is_active");
-                entity.Property(e => e.CreatedAt).HasColumnName("created_at");
-                entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
-
-                // Configure Permissions as JSON column
-                entity.Property(e => e.Permissions)
-                    .HasColumnName("permissions")
-                    .HasConversion(
-                        v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions)null!),
-                        v => System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(v, (System.Text.Json.JsonSerializerOptions)null!) ?? new Dictionary<string, object>(StringComparer.Ordinal),
-                        new Microsoft.EntityFrameworkCore.ChangeTracking.ValueComparer<IDictionary<string, object>>(
-                            (c1, c2) => c1.Count == c2.Count && !c1.Except(c2).Any(),
-                            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
-                            c => c.ToDictionary(entry => entry.Key, entry => entry.Value)))
-                    .HasColumnType("jsonb");
-
-                entity.HasOne(e => e.Organization)
-                    .WithMany(o => o.OrganizationApiKeys)
-                    .HasForeignKey(e => e.OrganizationId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasOne(e => e.Creator)
-                    .WithMany()
-                    .HasForeignKey(e => e.CreatedBy)
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                entity.HasIndex(e => e.KeyHash).IsUnique();
-                entity.HasIndex(e => new { e.OrganizationId, e.Name });
-                entity.HasIndex(e => new { e.OrganizationId, e.IsActive });
-            });
-
-            // Configure Conversations
-            modelBuilder.Entity<Conversation>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Id)
-                    .HasColumnName("id")
-                    .ValueGeneratedOnAdd();
-
-                entity.Property(e => e.UserId).HasColumnName("user_id");
-                entity.Property(e => e.OrganizationId).HasColumnName("organization_id");
-                entity.Property(e => e.Title).HasColumnName("title");
-                entity.Property(e => e.CreatedAt).HasColumnName("created_at");
-                entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
-                entity.Property(e => e.IsActive).HasColumnName("is_active");
-
-                entity.HasOne(e => e.User)
-                    .WithMany()
-                    .HasForeignKey(e => e.UserId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasOne(e => e.Organization)
-                    .WithMany()
-                    .HasForeignKey(e => e.OrganizationId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasIndex(e => e.UserId);
-                entity.HasIndex(e => e.OrganizationId);
-                entity.HasIndex(e => new { e.UserId, e.OrganizationId });
-                entity.HasIndex(e => e.UpdatedAt);
-            });
-
-            // Configure ConversationTurns
-            modelBuilder.Entity<ConversationTurn>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Id)
-                    .HasColumnName("id")
-                    .ValueGeneratedOnAdd();
-
-                entity.Property(e => e.ConversationId).HasColumnName("conversation_id");
-                entity.Property(e => e.TurnNumber).HasColumnName("turn_number");
-                entity.Property(e => e.Role).HasColumnName("role");
-                entity.Property(e => e.Content).HasColumnName("content");
-                entity.Property(e => e.Metadata)
-                    .HasColumnName("metadata")
-                    .HasColumnType("jsonb")
-                    .HasConversion(
-                        v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null!),
-                        v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, string>(StringComparer.Ordinal));
-                entity.Property(e => e.CreatedAt).HasColumnName("created_at");
-
-                entity.HasOne(e => e.Conversation)
-                    .WithMany(c => c.Turns)
-                    .HasForeignKey(e => e.ConversationId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasIndex(e => e.ConversationId);
-                entity.HasIndex(e => new { e.ConversationId, e.TurnNumber });
             });
         }
     }

@@ -27,7 +27,7 @@ namespace Synaxis.Infrastructure.Services
         /// <param name="context">The database context.</param>
         public TeamMembershipService(SynaxisDbContext context)
         {
-            this._context = context ?? throw new ArgumentNullException(nameof(context));
+            _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         /// <inheritdoc/>
@@ -38,7 +38,7 @@ namespace Synaxis.Infrastructure.Services
                 throw new ArgumentException($"Invalid role: {role}. Valid roles are: {string.Join(", ", ValidRoles)}", nameof(role));
             }
 
-            var user = await this._context.Users
+            var user = await _context.Users
                 .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -47,7 +47,7 @@ namespace Synaxis.Infrastructure.Services
                 throw new InvalidOperationException($"User with ID {userId} not found");
             }
 
-            var team = await this._context.Teams
+            var team = await _context.Teams
                 .FirstOrDefaultAsync(t => t.Id == teamId, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -61,7 +61,7 @@ namespace Synaxis.Infrastructure.Services
                 throw new InvalidOperationException("User is not in the same organization as the team");
             }
 
-            var existingMembership = await this._context.TeamMemberships
+            var existingMembership = await _context.TeamMemberships
                 .FirstOrDefaultAsync(m => m.UserId == userId && m.TeamId == teamId, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -78,11 +78,11 @@ namespace Synaxis.Infrastructure.Services
                 OrganizationId = team.OrganizationId,
                 Role = role,
                 JoinedAt = DateTime.UtcNow,
-                InvitedBy = addedByUserId,
+                InvitedBy = addedByUserId
             };
 
-            this._context.TeamMemberships.Add(membership);
-            await this._context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            _context.TeamMemberships.Add(membership);
+            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
             return new TeamMemberResponse
             {
@@ -93,14 +93,14 @@ namespace Synaxis.Infrastructure.Services
                 TeamId = teamId,
                 Role = role,
                 JoinedAt = membership.JoinedAt,
-                InvitedBy = addedByUserId,
+                InvitedBy = addedByUserId
             };
         }
 
         /// <inheritdoc/>
         public async Task RemoveMemberAsync(Guid teamId, Guid userId, Guid removedByUserId, CancellationToken cancellationToken = default)
         {
-            var membership = await this._context.TeamMemberships
+            var membership = await _context.TeamMemberships
                 .FirstOrDefaultAsync(m => m.UserId == userId && m.TeamId == teamId, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -109,8 +109,8 @@ namespace Synaxis.Infrastructure.Services
                 throw new InvalidOperationException($"User {userId} is not a member of team {teamId} or membership not found");
             }
 
-            this._context.TeamMemberships.Remove(membership);
-            await this._context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            _context.TeamMemberships.Remove(membership);
+            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <inheritdoc/>
@@ -121,7 +121,7 @@ namespace Synaxis.Infrastructure.Services
                 throw new ArgumentException($"Invalid role: {newRole}. Valid roles are: {string.Join(", ", ValidRoles)}", nameof(newRole));
             }
 
-            var membership = await this._context.TeamMemberships
+            var membership = await _context.TeamMemberships
                 .Include(m => m.User)
                 .FirstOrDefaultAsync(m => m.UserId == userId && m.TeamId == teamId, cancellationToken)
                 .ConfigureAwait(false);
@@ -132,25 +132,25 @@ namespace Synaxis.Infrastructure.Services
             }
 
             membership.Role = newRole;
-            await this._context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
             return new TeamMemberResponse
             {
                 Id = membership.Id,
                 UserId = userId,
-                UserEmail = membership.User.Email,
-                UserFullName = membership.User.FullName,
+                UserEmail = membership.User?.Email ?? string.Empty,
+                UserFullName = membership.User?.FullName ?? string.Empty,
                 TeamId = teamId,
                 Role = newRole,
                 JoinedAt = membership.JoinedAt,
-                InvitedBy = membership.InvitedBy,
+                InvitedBy = membership.InvitedBy
             };
         }
 
         /// <inheritdoc/>
         public async Task<TeamMemberListResponse> GetTeamMembersAsync(Guid teamId, int page, int pageSize, CancellationToken cancellationToken = default)
         {
-            var query = this._context.TeamMemberships
+            var query = _context.TeamMemberships
                 .Include(m => m.User)
                 .Where(m => m.TeamId == teamId);
 
@@ -164,12 +164,12 @@ namespace Synaxis.Infrastructure.Services
                 {
                     Id = m.Id,
                     UserId = m.UserId,
-                    UserEmail = m.User.Email,
-                    UserFullName = m.User.FullName,
+                    UserEmail = m.User != null ? m.User.Email : string.Empty,
+                    UserFullName = m.User != null ? m.User.FullName : string.Empty,
                     TeamId = m.TeamId,
                     Role = m.Role,
                     JoinedAt = m.JoinedAt,
-                    InvitedBy = m.InvitedBy,
+                    InvitedBy = m.InvitedBy
                 })
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
@@ -179,16 +179,16 @@ namespace Synaxis.Infrastructure.Services
                 Members = members,
                 TotalCount = totalCount,
                 Page = page,
-                PageSize = pageSize,
+                PageSize = pageSize
             };
         }
 
         /// <inheritdoc/>
         public async Task<TeamMemberListResponse> GetUserTeamsAsync(Guid userId, int page, int pageSize, CancellationToken cancellationToken = default)
         {
-            var query = this._context.TeamMemberships
+            var query = _context.TeamMemberships
                 .Include(m => m.Team)
-                .ThenInclude(t => t.Organization)
+                    .ThenInclude(t => t!.Organization)
                 .Where(m => m.UserId == userId);
 
             var totalCount = await query.CountAsync(cancellationToken).ConfigureAwait(false);
@@ -205,7 +205,7 @@ namespace Synaxis.Infrastructure.Services
                     TeamId = m.TeamId,
                     Role = m.Role,
                     JoinedAt = m.JoinedAt,
-                    InvitedBy = m.InvitedBy,
+                    InvitedBy = m.InvitedBy
                 })
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
@@ -215,14 +215,14 @@ namespace Synaxis.Infrastructure.Services
                 Members = teams,
                 TotalCount = totalCount,
                 Page = page,
-                PageSize = pageSize,
+                PageSize = pageSize
             };
         }
 
         /// <inheritdoc/>
         public async Task<bool> CheckPermissionAsync(Guid userId, Guid teamId, string permission, CancellationToken cancellationToken = default)
         {
-            var membership = await this._context.TeamMemberships
+            var membership = await _context.TeamMemberships
                 .FirstOrDefaultAsync(m => m.UserId == userId && m.TeamId == teamId, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -233,10 +233,10 @@ namespace Synaxis.Infrastructure.Services
 
             return permission switch
             {
-                "manage_team" => string.Equals(membership.Role, "OrgAdmin", StringComparison.Ordinal) || string.Equals(membership.Role, "TeamAdmin", StringComparison.Ordinal),
+                "manage_team" => membership.Role == "OrgAdmin" || membership.Role == "TeamAdmin",
                 "view_team" => true,
-                "create_keys" => string.Equals(membership.Role, "OrgAdmin", StringComparison.Ordinal) || string.Equals(membership.Role, "TeamAdmin", StringComparison.Ordinal) || string.Equals(membership.Role, "Member", StringComparison.Ordinal),
-                _ => false,
+                "create_keys" => membership.Role == "OrgAdmin" || membership.Role == "TeamAdmin" || membership.Role == "Member",
+                _ => false
             };
         }
     }

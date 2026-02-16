@@ -1,0 +1,11 @@
+diff a/.sisyphus/circuit-breaker-state.json b/.sisyphus/circuit-breaker-state.json	(rejected hunks)
+@@ -3,7 +3,7 @@
+     "MockProvider": {
+       "ConsecutiveFailures": 1,
+       "LastSuccess": null,
+-      "LastFailure": "2026-02-09T12:03:27.4427043Z"
++      "LastFailure": "2026-02-09T18:35:43.7658096Z"
+     }
+   }
+ }
+\ No newline at end of file

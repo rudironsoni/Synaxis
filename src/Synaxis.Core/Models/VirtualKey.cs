@@ -23,7 +23,7 @@ namespace Synaxis.Core.Models
         /// </summary>
         [Required]
         [StringLength(255)]
-        public string KeyHash { get; set; }
+        public string KeyHash { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the organization identifier.
@@ -33,7 +33,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the organization navigation property.
         /// </summary>
-        public virtual Organization Organization { get; set; }
+        public virtual Organization? Organization { get; set; }
 
         /// <summary>
         /// Gets or sets the team identifier.
@@ -43,7 +43,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the team navigation property.
         /// </summary>
-        public virtual Team Team { get; set; }
+        public virtual Team? Team { get; set; }
 
         /// <summary>
         /// Gets or sets the identifier of the user who created this key.
@@ -53,7 +53,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the creator navigation property.
         /// </summary>
-        public virtual User Creator { get; set; }
+        public virtual User? Creator { get; set; }
 
         /// <summary>
         /// Gets or sets the key name.
@@ -135,7 +135,7 @@ namespace Synaxis.Core.Models
         /// Gets or sets the region for database partitioning.
         /// </summary>
         [Required]
-        public string UserRegion { get; set; }
+        public string UserRegion { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the creation timestamp.
@@ -150,7 +150,7 @@ namespace Synaxis.Core.Models
         /// <summary>
         /// Gets or sets the requests made with this virtual key.
         /// </summary>
-        public virtual ICollection<Request> Requests { get; set; }
+        public virtual ICollection<Request> Requests { get; set; } = new List<Request>();
 
         /// <summary>
         /// Gets a value indicating whether the key is expired.

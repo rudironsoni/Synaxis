@@ -69,8 +69,8 @@ namespace Synaxis.Core.Contracts
         /// </summary>
         /// <param name="userId">The unique identifier of the user.</param>
         /// <param name="totpCode">The TOTP code to verify.</param>
-        /// <returns>A task that represents the asynchronous operation. The task result contains the MFA enable result with backup codes.</returns>
-        Task<MfaEnableResult> EnableMfaAsync(Guid userId, string totpCode);
+        /// <returns>A task that represents the asynchronous operation. The task result indicates whether MFA was enabled.</returns>
+        Task<bool> EnableMfaAsync(Guid userId, string totpCode);
 
         /// <summary>
         /// Disable MFA for user.
@@ -78,14 +78,6 @@ namespace Synaxis.Core.Contracts
         /// <param name="userId">The unique identifier of the user.</param>
         /// <returns>A task that represents the asynchronous operation. The task result indicates whether MFA was disabled.</returns>
         Task<bool> DisableMfaAsync(Guid userId);
-
-        /// <summary>
-        /// Disable MFA for user with code verification.
-        /// </summary>
-        /// <param name="userId">The unique identifier of the user.</param>
-        /// <param name="code">The TOTP code or backup code to verify.</param>
-        /// <returns>A task that represents the asynchronous operation. The task result indicates whether MFA was disabled.</returns>
-        Task<bool> DisableMfaAsync(Guid userId, string code);
 
         /// <summary>
         /// Verify MFA code.
@@ -140,22 +132,22 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the email address.
         /// </summary>
-        public string Email { get; set; }
+        public string Email { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the password.
         /// </summary>
-        public string Password { get; set; }
+        public string Password { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the first name.
         /// </summary>
-        public string FirstName { get; set; }
+        public string FirstName { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the last name.
         /// </summary>
-        public string LastName { get; set; }
+        public string LastName { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the role.
@@ -165,12 +157,12 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the data residency region.
         /// </summary>
-        public string DataResidencyRegion { get; set; }
+        public string DataResidencyRegion { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the region where user was created.
         /// </summary>
-        public string CreatedInRegion { get; set; }
+        public string CreatedInRegion { get; set; } = string.Empty;
     }
 
     /// <summary>
@@ -181,27 +173,27 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the first name.
         /// </summary>
-        public string FirstName { get; set; }
+        public string FirstName { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the last name.
         /// </summary>
-        public string LastName { get; set; }
+        public string LastName { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the timezone.
         /// </summary>
-        public string Timezone { get; set; }
+        public string Timezone { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the locale.
         /// </summary>
-        public string Locale { get; set; }
+        public string Locale { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the avatar URL.
         /// </summary>
-        public string AvatarUrl { get; set; }
+        public string AvatarUrl { get; set; } = string.Empty;
     }
 
     /// <summary>
@@ -212,21 +204,16 @@ namespace Synaxis.Core.Contracts
         /// <summary>
         /// Gets or sets the MFA secret.
         /// </summary>
-        public string Secret { get; set; }
+        public string Secret { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the QR code URL.
         /// </summary>
-        public string QrCodeUrl { get; set; }
-
-        /// <summary>
-        /// Gets or sets the QR code image as base64 string.
-        /// </summary>
-        public string QrCodeImage { get; set; }
+        public string QrCodeUrl { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the manual entry key.
         /// </summary>
-        public string ManualEntryKey { get; set; }
+        public string ManualEntryKey { get; set; } = string.Empty;
     }
 }
