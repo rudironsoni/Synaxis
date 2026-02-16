@@ -249,7 +249,7 @@ public sealed class HealthCheckScheduler : IDisposable
         }
 
         this._disposed = true;
-        this.StopAsync().GetAwaiter().GetResult();
+        _ = this.StopAsync();
         this._cancellationTokenSource.Dispose();
 
         this._logger?.LogInformation("Health check scheduler disposed");
