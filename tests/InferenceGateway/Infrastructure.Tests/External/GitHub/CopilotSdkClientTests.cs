@@ -70,6 +70,6 @@ public class CopilotSdkClientTests
         }
 
         // Verify the adapter was NOT disposed by the client
-        adapterMock.Verify(a => a.Dispose(), Times.Never);
+        adapterMock.Verify(a => a.DisposeAsync(), Times.Never);
     }
 }

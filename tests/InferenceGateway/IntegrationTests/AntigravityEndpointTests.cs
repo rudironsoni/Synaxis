@@ -39,7 +39,7 @@ public class AntigravityEndpointTests : IClassFixture<SynaxisWebApplicationFacto
                 {
                 new AccountInfo("test@example.com", true),
                 });
-                mockAuth.Setup(x => x.StartAuthFlow(It.IsAny<string>())).Returns("https://accounts.google.com/o/oauth2/auth?mock=true");
+                mockAuth.Setup(x => x.StartAuthFlowAsync(It.IsAny<string>())).ReturnsAsync("https://accounts.google.com/o/oauth2/auth?mock=true");
                 mockAuth.Setup(x => x.CompleteAuthFlowAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>())).Returns(Task.CompletedTask);
 
                 services.AddSingleton<IAntigravityAuthManager>(mockAuth.Object);

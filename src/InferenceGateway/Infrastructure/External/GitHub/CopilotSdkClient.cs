@@ -66,7 +66,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
     /// Adapter interface for GitHub Copilot SDK operations.
     /// Allows easy testing and separation of concrete GitHub.Copilot.SDK usage.
     /// </summary>
-    public interface ICopilotSdkAdapter : IDisposable
+    public interface ICopilotSdkAdapter : IAsyncDisposable
     {
         /// <summary>
         /// Gets the metadata for the chat client.

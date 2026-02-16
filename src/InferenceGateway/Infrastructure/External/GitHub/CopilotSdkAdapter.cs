@@ -219,22 +219,28 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
         }
 
         /// <inheritdoc/>
-        public void Dispose()
+        public async ValueTask DisposeAsync()
         {
             try
             {
-                // Call Dispose or DisposeAsync if available
-                var dispose = this._client.GetType().GetMethod("Dispose", BindingFlags.Public | BindingFlags.Instance);
-                if (dispose != null)
-                {
-                    dispose.Invoke(this._client, null);
-                }
-
+                // Prefer DisposeAsync if available, otherwise fall back to Dispose
                 var disposeAsync = this._client.GetType().GetMethod("DisposeAsync", BindingFlags.Public | BindingFlags.Instance);
                 if (disposeAsync != null)
                 {
-                    var task = disposeAsync.Invoke(this._client, null) as Task;
-                    task?.GetAwaiter().GetResult();
+                    var result = disposeAsync.Invoke(this._client, null);
+                    if (result is ValueTask vt)
+                    {
+                        await vt.ConfigureAwait(false);
+                    }
+                    else if (result is Task task)
+                    {
+                        await task.ConfigureAwait(false);
+                    }
+                }
+                else
+                {
+                    var dispose = this._client.GetType().GetMethod("Dispose", BindingFlags.Public | BindingFlags.Instance);
+                    dispose?.Invoke(this._client, null);
                 }
             }
             catch (Exception ex)

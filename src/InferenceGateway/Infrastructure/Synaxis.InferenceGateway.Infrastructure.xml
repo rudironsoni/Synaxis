@@ -935,7 +935,7 @@
         <member name="M:Synaxis.InferenceGateway.Infrastructure.Auth.AntigravityAuthManager.ListAccounts">
             <inheritdoc/>
         </member>
-        <member name="M:Synaxis.InferenceGateway.Infrastructure.Auth.AntigravityAuthManager.StartAuthFlow(System.String)">
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Auth.AntigravityAuthManager.StartAuthFlowAsync(System.String)">
             <inheritdoc/>
         </member>
         <member name="M:Synaxis.InferenceGateway.Infrastructure.Auth.AntigravityAuthManager.CompleteAuthFlowAsync(System.String,System.String,System.String)">
@@ -1020,7 +1020,7 @@
             </summary>
             <returns>An enumerable of account information.</returns>
         </member>
-        <member name="M:Synaxis.InferenceGateway.Infrastructure.Auth.IAntigravityAuthManager.StartAuthFlow(System.String)">
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Auth.IAntigravityAuthManager.StartAuthFlowAsync(System.String)">
             <summary>
             Starts the OAuth authentication flow.
             </summary>
@@ -3826,7 +3826,7 @@
         <member name="M:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSdkAdapter.GetService(System.Type,System.Object)">
             <inheritdoc/>
         </member>
-        <member name="M:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSdkAdapter.Dispose">
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSdkAdapter.DisposeAsync">
             <inheritdoc/>
         </member>
         <member name="T:Synaxis.InferenceGateway.Infrastructure.External.GitHub.CopilotSdkClient">
@@ -4624,7 +4624,7 @@
         <member name="M:Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google.AntigravityAuthAdapter.ListAccounts">
             <inheritdoc/>
         </member>
-        <member name="M:Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google.AntigravityAuthAdapter.StartAuthFlow(System.String)">
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google.AntigravityAuthAdapter.StartAuthFlowAsync(System.String)">
             <inheritdoc/>
         </member>
         <member name="M:Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google.AntigravityAuthAdapter.CompleteAuthFlowAsync(System.String,System.String,System.String)">

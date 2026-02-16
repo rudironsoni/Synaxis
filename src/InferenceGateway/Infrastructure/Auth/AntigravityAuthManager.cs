@@ -212,12 +212,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
         }
 
         /// <inheritdoc/>
-        public string StartAuthFlow(string redirectUrl)
+        public Task<string> StartAuthFlowAsync(string redirectUrl)
         {
             var verifier = GenerateCodeVerifier();
             var challenge = GenerateCodeChallenge(verifier);
             var state = EncodeState(new PkceState { Verifier = verifier, ProjectId = this._projectId });
-            return this.BuildAuthorizationUrl(redirectUrl, challenge, state);
+            return Task.FromResult(this.BuildAuthorizationUrl(redirectUrl, challenge, state));
         }
 
         /// <inheritdoc/>
@@ -303,7 +303,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
 #pragma warning disable S1075 // URIs should not be hardcoded - OAuth redirect URI
             var redirectUri = "http://localhost:51121/oauth/antigravity/callback";
 #pragma warning restore S1075 // URIs should not be hardcoded
-            var url = this.StartAuthFlow(redirectUri);
+            var url = await this.StartAuthFlowAsync(redirectUri).ConfigureAwait(false);
 
             Console.WriteLine("----------------------------------------------------------------");
             Console.WriteLine("ANTIGRAVITY AUTHENTICATION REQUIRED");

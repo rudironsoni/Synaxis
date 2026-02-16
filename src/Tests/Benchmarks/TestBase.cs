@@ -188,11 +188,12 @@ public abstract class TestBase
     protected static Mock<IRoutingScoreCalculator> CreateMockRoutingScoreCalculator()
     {
         var mock = new Mock<IRoutingScoreCalculator>();
-        mock.Setup(x => x.CalculateScore(
+        mock.Setup(x => x.CalculateScoreAsync(
             It.IsAny<EnrichedCandidate>(),
             It.IsAny<string?>(),
-            It.IsAny<string?>()))
-            .Returns(100.0);
+            It.IsAny<string?>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(100.0);
         mock.Setup(x => x.GetEffectiveConfigurationAsync(
             It.IsAny<string?>(),
             It.IsAny<string?>(),

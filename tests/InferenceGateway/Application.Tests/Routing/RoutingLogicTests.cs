@@ -333,16 +333,18 @@ public class RoutingLogicTests
             .ReturnsAsync(new ModelCost { CostPerToken = 0.01m });
 
         // Setup score calculator to score cheaper provider higher
-        this._routingScoreCalculatorMock.Setup(x => x.CalculateScore(
+        this._routingScoreCalculatorMock.Setup(x => x.CalculateScoreAsync(
             It.Is<EnrichedCandidate>(c => c.Key == cheapProvider),
             It.IsAny<string?>(),
-            It.IsAny<string?>()))
-            .Returns(84.0); // Cheaper = higher score
-        this._routingScoreCalculatorMock.Setup(x => x.CalculateScore(
+            It.IsAny<string?>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(84.0); // Cheaper = higher score
+        this._routingScoreCalculatorMock.Setup(x => x.CalculateScoreAsync(
             It.Is<EnrichedCandidate>(c => c.Key == expensiveProvider),
             It.IsAny<string?>(),
-            It.IsAny<string?>()))
-            .Returns(83.0); // More expensive = lower score
+            It.IsAny<string?>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(83.0); // More expensive = lower score
 
         // Act
         var result = await this._router.GetCandidatesAsync(modelId, false);

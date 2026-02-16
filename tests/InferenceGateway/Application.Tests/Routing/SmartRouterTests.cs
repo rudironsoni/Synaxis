@@ -1,3 +1,5 @@
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Synaxis.InferenceGateway.Application.Configuration;
@@ -28,11 +30,11 @@ public class SmartRouterTests
 
         // Default: return higher score for lower tier (tier 1 > tier 2), with free tier bonus
         this._routingScoreCalculatorMock
-            .Setup(x => x.CalculateScore(It.IsAny<EnrichedCandidate>(), It.IsAny<string?>(), It.IsAny<string?>()))
-            .Returns<EnrichedCandidate, string?, string?>((candidate, _, _) =>
+            .Setup(x => x.CalculateScoreAsync(It.IsAny<EnrichedCandidate>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .Returns<EnrichedCandidate, string?, string?, CancellationToken>((candidate, _, _, _) =>
             {
                 var baseScore = 100.0 - candidate.Config.Tier;
-                return candidate.IsFree ? baseScore + 50.0 : baseScore;
+                return Task.FromResult(candidate.IsFree ? baseScore + 50.0 : baseScore);
             });
 
         this._router = new SmartRouter(

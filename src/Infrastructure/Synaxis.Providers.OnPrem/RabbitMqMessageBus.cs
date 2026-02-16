@@ -21,28 +21,64 @@ using Synaxis.Abstractions.Cloud;
 /// </summary>
 #pragma warning disable SA1101 // Prefix local calls with this - Fields are prefixed with underscore, not this
 #pragma warning disable MA0002 // Use an overload that has a IEqualityComparer - Using default comparer for simplicity
-public sealed class RabbitMqMessageBus : IMessageBus, IDisposable
+public sealed class RabbitMqMessageBus : IMessageBus, IAsyncDisposable
 {
-    private readonly IConnection _connection;
-    private readonly IChannel _channel;
+    private IConnection? _connection;
+    private IChannel? _channel;
     private readonly ILogger<RabbitMqMessageBus> _logger;
     private readonly ConcurrentDictionary<string, object> _consumers;
+    private readonly string _connectionString;
     private bool _disposed;
+    private bool _initialized;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="RabbitMqMessageBus"/> class.
+    /// Use <see cref="CreateAsync"/> to create and initialize an instance.
     /// </summary>
     /// <param name="connectionString">The RabbitMQ connection string.</param>
     /// <param name="logger">The logger instance.</param>
-    public RabbitMqMessageBus(
+    private RabbitMqMessageBus(
         string connectionString,
         ILogger<RabbitMqMessageBus> logger)
     {
-        var factory = new ConnectionFactory { Uri = new Uri(connectionString) };
-        _connection = factory.CreateConnectionAsync().GetAwaiter().GetResult();
-        _channel = _connection.CreateChannelAsync().GetAwaiter().GetResult();
+        _connectionString = connectionString;
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _consumers = new ConcurrentDictionary<string, object>(StringComparer.Ordinal);
+    }
+
+    /// <summary>
+    /// Creates and initializes a new instance of the <see cref="RabbitMqMessageBus"/> class.
+    /// </summary>
+    /// <param name="connectionString">The RabbitMQ connection string.</param>
+    /// <param name="logger">The logger instance.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    public static async Task<RabbitMqMessageBus> CreateAsync(
+        string connectionString,
+        ILogger<RabbitMqMessageBus> logger,
+        CancellationToken cancellationToken = default)
+    {
+        var bus = new RabbitMqMessageBus(connectionString, logger);
+        await bus.InitializeAsync(cancellationToken).ConfigureAwait(false);
+        return bus;
+    }
+
+    /// <summary>
+    /// Initializes the RabbitMQ connection and channel.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    private async Task InitializeAsync(CancellationToken cancellationToken)
+    {
+        if (_initialized)
+        {
+            return;
+        }
+
+        var factory = new ConnectionFactory { Uri = new Uri(_connectionString) };
+        _connection = await factory.CreateConnectionAsync(cancellationToken).ConfigureAwait(false);
+        _channel = await _connection.CreateChannelAsync(cancellationToken).ConfigureAwait(false);
+        _initialized = true;
     }
 
     /// <inheritdoc />
@@ -62,6 +98,11 @@ public sealed class RabbitMqMessageBus : IMessageBus, IDisposable
         CancellationToken cancellationToken = default)
         where TMessage : class
     {
+        if (_channel == null)
+        {
+            throw new InvalidOperationException("RabbitMQ channel is not initialized.");
+        }
+
         await _channel.ExchangeDeclareAsync(topic, ExchangeType.Topic, durable: true, cancellationToken: cancellationToken).ConfigureAwait(false);
 
         var messageJson = JsonConvert.SerializeObject(message);
@@ -90,6 +131,11 @@ public sealed class RabbitMqMessageBus : IMessageBus, IDisposable
         CancellationToken cancellationToken = default)
         where TMessage : class
     {
+        if (_channel == null)
+        {
+            throw new InvalidOperationException("RabbitMQ channel is not initialized.");
+        }
+
         await _channel.ExchangeDeclareAsync(topic, ExchangeType.Topic, durable: true, cancellationToken: cancellationToken).ConfigureAwait(false);
 
         var queueName = $"{topic}.{Guid.NewGuid():N}";
@@ -125,17 +171,25 @@ public sealed class RabbitMqMessageBus : IMessageBus, IDisposable
     }
 
     /// <summary>
-    /// Disposes the RabbitMQ connection and channel.
+    /// Disposes the RabbitMQ connection and channel asynchronously.
     /// </summary>
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
         if (_disposed)
         {
             return;
         }
 
-        _channel?.Dispose();
-        _connection?.Dispose();
+        if (_channel != null)
+        {
+            await _channel.DisposeAsync().ConfigureAwait(false);
+        }
+
+        if (_connection != null)
+        {
+            await _connection.DisposeAsync().ConfigureAwait(false);
+        }
+
         _disposed = true;
     }
 }

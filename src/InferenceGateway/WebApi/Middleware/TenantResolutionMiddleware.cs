@@ -98,7 +98,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 else
                 {
                     // JWT token authentication (already validated by ASP.NET Core JWT middleware)
-                    this.HandleJwtAuthentication(context, tenantContext);
+                    await this.HandleJwtAuthenticationAsync(context, tenantContext).ConfigureAwait(false);
                 }
 
                 // Only proceed if authentication was successful (2xx status codes)
@@ -210,8 +210,9 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         /// </summary>
         /// <param name="context">The HTTP context.</param>
         /// <param name="tenantContext">The tenant context to populate.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
 #pragma warning disable MA0051 // Method is too long
-        private void HandleJwtAuthentication(HttpContext context, ITenantContext tenantContext)
+        private async Task HandleJwtAuthenticationAsync(HttpContext context, ITenantContext tenantContext)
 #pragma warning restore MA0051
         {
             // JWT validation is handled by ASP.NET Core JWT middleware
@@ -222,14 +223,14 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             {
                 this._logger.LogWarning("JWT token is not authenticated");
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                context.Response.WriteAsJsonAsync(new
+                await context.Response.WriteAsJsonAsync(new
                 {
                     error = new
                     {
                         message = "Invalid or expired JWT token",
                         type = "invalid_token",
                     },
-                }).Wait();
+                }).ConfigureAwait(false);
                 return;
             }
 
@@ -242,14 +243,14 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             {
                 this._logger.LogWarning("JWT token is missing required claims (organization_id or user_id)");
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                context.Response.WriteAsJsonAsync(new
+                await context.Response.WriteAsJsonAsync(new
                 {
                     error = new
                     {
                         message = "JWT token is missing required claims",
                         type = "invalid_token",
                     },
-                }).Wait();
+                }).ConfigureAwait(false);
                 return;
             }
 
@@ -257,14 +258,14 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             {
                 this._logger.LogWarning("Invalid organization_id claim value: {Value}", organizationIdClaim.Value);
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                context.Response.WriteAsJsonAsync(new
+                await context.Response.WriteAsJsonAsync(new
                 {
                     error = new
                     {
                         message = "Invalid organization_id in JWT token",
                         type = "invalid_token",
                     },
-                }).Wait();
+                }).ConfigureAwait(false);
                 return;
             }
 
@@ -272,14 +273,14 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             {
                 this._logger.LogWarning("Invalid user_id claim value: {Value}", userIdClaim.Value);
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                context.Response.WriteAsJsonAsync(new
+                await context.Response.WriteAsJsonAsync(new
                 {
                     error = new
                     {
                         message = "Invalid user_id in JWT token",
                         type = "invalid_token",
                     },
-                }).Wait();
+                }).ConfigureAwait(false);
                 return;
             }
 
