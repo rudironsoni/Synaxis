@@ -24,7 +24,7 @@ namespace Synaxis.Api.Controllers
     /// </summary>
     [ApiController]
     [Route("v1")]
-    [AllowAnonymous] // Will be replaced with API key authentication
+    [Authorize(AuthenticationSchemes = "ApiKey")]
     public class OpenAiController : ControllerBase
     {
         private readonly ILogger<OpenAiController> _logger;
