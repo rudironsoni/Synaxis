@@ -336,7 +336,7 @@ namespace Synaxis.Infrastructure.Services
         }
 
         /// <inheritdoc/>
-        public bool ValidateToken(string token)
+        public async Task<bool> ValidateTokenAsync(string token)
         {
             try
             {
@@ -349,10 +349,9 @@ namespace Synaxis.Infrastructure.Services
                 var tokenId = this.GetTokenIdFromJwt(token);
                 if (tokenId != null)
                 {
-                    var isBlacklisted = this._context.JwtBlacklists
+                    var isBlacklisted = await this._context.JwtBlacklists
                         .AnyAsync(jb => jb.TokenId == tokenId && jb.ExpiresAt > DateTime.UtcNow)
-                        .GetAwaiter()
-                        .GetResult();
+                        .ConfigureAwait(false);
 
                     if (isBlacklisted)
                     {

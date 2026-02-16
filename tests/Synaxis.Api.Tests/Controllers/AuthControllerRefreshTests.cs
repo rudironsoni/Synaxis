@@ -340,7 +340,7 @@ public sealed class AuthControllerRefreshTests : IDisposable
         var authResult = okResult.Value as Core.Contracts.AuthenticationResult;
 
         // Assert
-        var isValid = _authenticationService.ValidateToken(authResult.AccessToken);
+        var isValid = await _authenticationService.ValidateTokenAsync(authResult.AccessToken);
         isValid.Should().BeTrue();
 
         var userId = _authenticationService.GetUserIdFromToken(authResult.AccessToken);

@@ -40,8 +40,8 @@ namespace Synaxis.Core.Contracts
         /// Validate a JWT access token.
         /// </summary>
         /// <param name="token">The JWT token to validate.</param>
-        /// <returns>True if the token is valid; otherwise, false.</returns>
-        bool ValidateToken(string token);
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if the token is valid; otherwise, false.</returns>
+        Task<bool> ValidateTokenAsync(string token);
 
         /// <summary>
         /// Get the user ID from a JWT token.
