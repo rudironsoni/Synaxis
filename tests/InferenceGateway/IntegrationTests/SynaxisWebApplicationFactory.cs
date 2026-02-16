@@ -372,9 +372,10 @@ public class SynaxisWebApplicationFactory : WebApplicationFactory<Program>, ITes
             {
                 options.AddDefaultPolicy(policy =>
                 {
-                    policy.AllowAnyOrigin()
+                    policy.WithOrigins("http://localhost:8080", "http://localhost:5000")
                           .AllowAnyMethod()
-                          .AllowAnyHeader();
+                          .AllowAnyHeader()
+                          .AllowCredentials();
                 });
             });
 

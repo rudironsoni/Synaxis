@@ -257,29 +257,10 @@ try
     builder.AddOpenAIResponses();
     builder.AddOpenAIConversations();
 
-    // Auth
-    const string defaultJwtSecret = "SynaxisDefaultSecretKeyDoNotUseInProd1234567890";
-    var jwtSecret = builder.Configuration["Synaxis:InferenceGateway:JwtSecret"];
-
-    // Security: Fail fast in production if default JWT secret is used
-    if (string.IsNullOrWhiteSpace(jwtSecret))
-    {
-        throw new InvalidOperationException(
-            "Synaxis:InferenceGateway:JwtSecret must be configured. " +
-            "Set a strong JWT secret in configuration or environment variable.");
-    }
-
-    if (string.Equals(jwtSecret, defaultJwtSecret) && !builder.Environment.IsDevelopment())
-    {
-        throw new InvalidOperationException(
-            "Default JWT secret detected. This is insecure for production. " +
-            "Set a strong JWT secret in configuration or environment variable.");
-    }
-
-    if (string.Equals(jwtSecret, defaultJwtSecret) && builder.Environment.IsDevelopment())
-    {
-        Log.Warning("Using default JWT secret. This is insecure and should only be used in development.");
-    }
+    // Auth - JWT Secret must be explicitly configured (no hardcoded defaults)
+    var jwtSecret = builder.Configuration["Synaxis:InferenceGateway:JwtSecret"]
+        ?? throw new InvalidOperationException(
+            "JWT SecretKey must be configured. Set Synaxis:InferenceGateway:JwtSecret in appsettings or JWT_SECRET environment variable.");
 
     var key = Encoding.ASCII.GetBytes(jwtSecret);
 
