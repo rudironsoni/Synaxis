@@ -3,9 +3,11 @@
 // </copyright>
 
 using System.Text;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Synaxis.Api.Authentication;
 using Synaxis.Api.Middleware;
 using Synaxis.Core.Contracts;
 using Synaxis.Infrastructure.Data;
@@ -55,7 +57,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = jwtAudience,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
         };
-    });
+    })
+    .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>("ApiKey", _ => { });
 
 builder.Services.AddAuthorization();
 
@@ -63,8 +66,9 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<ISuperAdminService, SuperAdminService>();
 builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+builder.Services.AddScoped<Synaxis.Core.Contracts.IAuthenticationService, Synaxis.Infrastructure.Services.AuthenticationService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IApiKeyService, ApiKeyService>();
 
 // Register provider services
 builder.Services.AddSynaxisProviders(builder.Configuration);
