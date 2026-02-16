@@ -1058,7 +1058,9 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
 
         private static string GenerateSecureApiKey()
         {
-            return "sk-" + Guid.NewGuid().ToString("N").Substring(0, 32);
+            var bytes = new byte[32];
+            System.Security.Cryptography.RandomNumberGenerator.Fill(bytes);
+            return "sk-" + Convert.ToHexString(bytes).ToLowerInvariant();
         }
 
         private static string ComputeSha256Hash(string input)

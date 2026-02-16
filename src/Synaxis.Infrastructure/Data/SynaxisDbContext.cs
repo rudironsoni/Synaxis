@@ -171,6 +171,7 @@ namespace Synaxis.Infrastructure.Data
             ConfigureJwtBlacklist(modelBuilder);
             ConfigurePasswordHistory(modelBuilder);
             ConfigurePasswordPolicy(modelBuilder);
+            ConfigureCollection(modelBuilder);
         }
 
         private static void ConfigureTableNames(ModelBuilder modelBuilder)
@@ -423,7 +424,7 @@ namespace Synaxis.Infrastructure.Data
                 .HasConversion(
                     v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null!),
                     v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(StringComparer.Ordinal),
-                    new ValueComparer<Dictionary<string, object>>(
+                    new ValueComparer<IDictionary<string, object>>(
                         (c1, c2) => c1 != null && c2 != null && c1.Count == c2.Count && !c1.Except(c2).Any(),
                         c => c == null ? 0 : c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
                         c => c == null ? new Dictionary<string, object>(StringComparer.Ordinal) : c.ToDictionary(entry => entry.Key, entry => entry.Value)))
@@ -595,7 +596,7 @@ namespace Synaxis.Infrastructure.Data
                     .HasConversion(
                         v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null!),
                         v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(StringComparer.Ordinal),
-                        new ValueComparer<Dictionary<string, object>>(
+                        new ValueComparer<IDictionary<string, object>>(
                             (c1, c2) => c1 != null && c2 != null && c1.Count == c2.Count && !c1.Except(c2).Any(),
                             c => c == null ? 0 : c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
                             c => c == null ? new Dictionary<string, object>(StringComparer.Ordinal) : c.ToDictionary(entry => entry.Key, entry => entry.Value)))
@@ -859,7 +860,7 @@ namespace Synaxis.Infrastructure.Data
                     .HasConversion(
                         v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null!),
                         v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, string>(StringComparer.Ordinal),
-                        new ValueComparer<Dictionary<string, string>>(
+                        new ValueComparer<IDictionary<string, string>?>(
                             (c1, c2) => c1 != null && c2 != null && c1.Count == c2.Count && !c1.Except(c2).Any(),
                             c => c == null ? 0 : c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), StringComparer.Ordinal.GetHashCode(v.Value))),
                             c => c == null ? new Dictionary<string, string>(StringComparer.Ordinal) : c.ToDictionary(entry => entry.Key, entry => entry.Value)))
@@ -984,6 +985,67 @@ namespace Synaxis.Infrastructure.Data
 
                 entity.HasIndex(e => e.OrganizationId).IsUnique();
             });
+        }
+
+        private static void ConfigureCollection(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Collection>(entity =>
+            {
+                ConfigureCollectionProperties(entity);
+                ConfigureCollectionJsonProperties(entity);
+                ConfigureCollectionRelationships(entity);
+            });
+        }
+
+        private static void ConfigureCollectionProperties(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<Collection> entity)
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            entity.Property(e => e.OrganizationId).HasColumnName("organization_id");
+            entity.Property(e => e.TeamId).HasColumnName("team_id");
+            entity.Property(e => e.Slug).HasColumnName("slug");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Description).HasColumnName("description");
+            entity.Property(e => e.IsActive).HasColumnName("is_active");
+            entity.Property(e => e.Type).HasColumnName("type");
+            entity.Property(e => e.Visibility).HasColumnName("visibility");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+        }
+
+        private static void ConfigureCollectionJsonProperties(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<Collection> entity)
+        {
+            entity.Property(e => e.Tags)
+                .HasColumnName("tags")
+                .HasConversion(
+                    v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null!),
+                    v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions)null!) ?? new List<string>(),
+                    new ValueComparer<IList<string>>(
+                        (c1, c2) => c1 != null && c2 != null && c1.SequenceEqual(c2),
+                        c => c == null ? 0 : c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode(StringComparison.Ordinal))),
+                        c => c == null ? new List<string>() : c.ToList()))
+                .HasColumnType("jsonb");
+
+            entity.Property(e => e.Metadata)
+                .HasColumnName("metadata")
+                .HasConversion(
+                    v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null!),
+                    v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(StringComparer.Ordinal),
+                    new ValueComparer<IDictionary<string, object>>(
+                        (c1, c2) => c1 != null && c2 != null && c1.Count == c2.Count && !c1.Except(c2).Any(),
+                        c => c == null ? 0 : c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
+                        c => c == null ? new Dictionary<string, object>(StringComparer.Ordinal) : c.ToDictionary(entry => entry.Key, entry => entry.Value)))
+                .HasColumnType("jsonb");
+        }
+
+        private static void ConfigureCollectionRelationships(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<Collection> entity)
+        {
+            entity.HasOne(e => e.Organization).WithMany().HasForeignKey(e => e.OrganizationId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Team).WithMany().HasForeignKey(e => e.TeamId).OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(e => e.Creator).WithMany().HasForeignKey(e => e.CreatedBy).OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(e => new { e.OrganizationId, e.Slug }).IsUnique();
+            entity.HasIndex(e => e.TeamId);
         }
     }
 }

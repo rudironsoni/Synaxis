@@ -111,9 +111,11 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.AllowAnyOrigin()
+        var allowedOrigins = builder.Configuration["Synaxis:Cors:AllowedOrigins"]?.Split(',') ?? new[] { "http://localhost:8080" };
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
 
