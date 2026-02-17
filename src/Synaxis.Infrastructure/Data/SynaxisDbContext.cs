@@ -197,6 +197,7 @@ namespace Synaxis.Infrastructure.Data
             modelBuilder.Entity<JwtBlacklist>().ToTable("jwt_blacklists");
             modelBuilder.Entity<PasswordHistory>().ToTable("password_histories");
             modelBuilder.Entity<PasswordPolicy>().ToTable("password_policies");
+            modelBuilder.Entity<Collection>().ToTable("collections");
             modelBuilder.Entity<CollectionMembership>().ToTable("collection_memberships");
             modelBuilder.Entity<OrganizationApiKey>().ToTable("organization_api_keys");
         }
