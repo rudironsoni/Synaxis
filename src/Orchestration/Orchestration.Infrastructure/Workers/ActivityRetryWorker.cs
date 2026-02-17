@@ -47,7 +47,7 @@ public class ActivityRetryWorker : IJob
 
         try
         {
-            var failedActivities = await this.GetFailedActivitiesAsync(eventStore, context.CancellationToken).ConfigureAwait(false);
+            var failedActivities = await GetFailedActivitiesAsync(eventStore, context.CancellationToken).ConfigureAwait(false);
 
             this._logger.LogInformation(
                 "[ActivityRetry][{CorrelationId}] Found {Count} failed activities to retry",
@@ -88,13 +88,17 @@ public class ActivityRetryWorker : IJob
             this._logger.LogError(ex, "[ActivityRetry][{CorrelationId}] Job failed", correlationId);
         }
 
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 
-    private async Task<List<Guid>> GetFailedActivitiesAsync(IEventStore eventStore, CancellationToken ct)
+    private static async Task<List<Guid>> GetFailedActivitiesAsync(IEventStore eventStore, CancellationToken cancellationToken)
     {
         // Query for failed activities that haven't exceeded retry limit
-        await Task.CompletedTask;
+#pragma warning disable S1172
+        _ = eventStore;
+        _ = cancellationToken;
+#pragma warning restore S1172
+        await Task.CompletedTask.ConfigureAwait(false);
         return new List<Guid>();
     }
 
@@ -115,7 +119,7 @@ public class ActivityRetryWorker : IJob
         activity.LoadFromHistory(events);
 
         // Check if activity is eligible for retry
-        var retryCount = events.Count(e => e.EventType == "ActivityRetried");
+        var retryCount = events.Count(e => string.Equals(e.EventType, "ActivityRetried", StringComparison.Ordinal));
         if (retryCount >= maxRetries)
         {
             this._logger.LogWarning(
@@ -128,7 +132,7 @@ public class ActivityRetryWorker : IJob
 
         // Apply exponential backoff
         var backoffDelay = TimeSpan.FromSeconds(Math.Pow(2, retryCount));
-        var lastFailed = events.LastOrDefault(e => e.EventType == "ActivityFailed")?.OccurredOn;
+        var lastFailed = events.LastOrDefault(e => string.Equals(e.EventType, "ActivityFailed", StringComparison.Ordinal))?.OccurredOn;
         if (lastFailed != null && DateTime.UtcNow - lastFailed < backoffDelay)
         {
             this._logger.LogDebug(

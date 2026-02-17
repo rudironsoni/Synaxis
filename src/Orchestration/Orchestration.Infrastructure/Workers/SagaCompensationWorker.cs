@@ -49,7 +49,7 @@ public class SagaCompensationWorker : IJob
         try
         {
             // Get failed sagas that need compensation
-            var failedSagaIds = await this.GetFailedSagasAsync(eventStore, context.CancellationToken).ConfigureAwait(false);
+            var failedSagaIds = await GetFailedSagasAsync(eventStore, context.CancellationToken).ConfigureAwait(false);
 
             this._logger.LogInformation(
                 "[SagaCompensation][{CorrelationId}] Found {Count} failed sagas to compensate",
@@ -60,29 +60,29 @@ public class SagaCompensationWorker : IJob
             int failedCompensationCount = 0;
 
             foreach (var sagaId in failedSagaIds)
-        {
-            try
             {
-                var result = await this.ProcessCompensationAsync(eventStore, sagaId, correlationId, context.CancellationToken).ConfigureAwait(false);
-                if (result)
+                try
                 {
-                    compensatedCount++;
+                    var result = await this.ProcessCompensationAsync(eventStore, sagaId, correlationId, context.CancellationToken).ConfigureAwait(false);
+                    if (result)
+                    {
+                        compensatedCount++;
+                    }
+                    else
+                    {
+                        failedCompensationCount++;
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
+                    this._logger.LogError(
+                        ex,
+                        "[SagaCompensation][{CorrelationId}] Error compensating saga {SagaId}",
+                        correlationId,
+                        sagaId);
                     failedCompensationCount++;
                 }
             }
-            catch (Exception ex)
-            {
-                this._logger.LogError(
-                    ex,
-                    "[SagaCompensation][{CorrelationId}] Error compensating saga {SagaId}",
-                    correlationId,
-                    sagaId);
-                failedCompensationCount++;
-            }
-        }
 
             this._logger.LogInformation(
                 "[SagaCompensation][{CorrelationId}] Completed: Processed={Processed}, Compensated={Compensated}, Failed={Failed}",
@@ -96,14 +96,18 @@ public class SagaCompensationWorker : IJob
             this._logger.LogError(ex, "[SagaCompensation][{CorrelationId}] Job failed", correlationId);
         }
 
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 
-    private async Task<List<Guid>> GetFailedSagasAsync(IEventStore eventStore, CancellationToken ct)
+    private static async Task<List<Guid>> GetFailedSagasAsync(IEventStore eventStore, CancellationToken cancellationToken)
     {
         // Query for sagas with Failed status that haven't been compensated
         // In production, use read models/projections for efficient querying
-        await Task.CompletedTask;
+#pragma warning disable S1172
+        _ = eventStore;
+        _ = cancellationToken;
+#pragma warning restore S1172
+        await Task.CompletedTask.ConfigureAwait(false);
         return new List<Guid>();
     }
 
@@ -139,18 +143,19 @@ public class SagaCompensationWorker : IJob
             sagaId,
             activitiesToCompensate.Count);
 
-        foreach (var activity in activitiesToCompensate)
+        var activityIds = activitiesToCompensate.Select(a => a.Id).ToList();
+        foreach (var activityId in activityIds)
         {
             try
             {
                 // Execute compensation activity
                 // In a real implementation, this would dispatch to the compensation handler
-                saga.CompensateActivity(activity.Id);
+                saga.CompensateActivity(activityId);
 
                 this._logger.LogInformation(
                     "[SagaCompensation][{CorrelationId}] Compensated activity {ActivityId} in saga {SagaId}",
                     correlationId,
-                    activity.Id,
+                    activityId,
                     sagaId);
             }
             catch (Exception ex)
@@ -159,8 +164,9 @@ public class SagaCompensationWorker : IJob
                     ex,
                     "[SagaCompensation][{CorrelationId}] Failed to compensate activity {ActivityId} in saga {SagaId}",
                     correlationId,
-                    activity.Id,
+                    activityId,
                     sagaId);
+
                 // Continue with other compensations even if one fails
             }
         }

@@ -49,7 +49,7 @@ public class WorkflowTimeoutMonitor : IJob
         try
         {
             // Get all running workflows
-            var runningWorkflowIds = await this.GetRunningWorkflowIdsAsync(eventStore, context.CancellationToken).ConfigureAwait(false);
+            var runningWorkflowIds = await GetRunningWorkflowIdsAsync(eventStore, context.CancellationToken).ConfigureAwait(false);
 
             this._logger.LogInformation(
                 "[WorkflowTimeout][{CorrelationId}] Found {Count} running workflows to check",
@@ -63,13 +63,13 @@ public class WorkflowTimeoutMonitor : IJob
             {
                 try
                 {
-                    var workflow = await this.LoadWorkflowAsync(eventStore, workflowId, context.CancellationToken).ConfigureAwait(false);
+                    var workflow = await LoadWorkflowAsync(eventStore, workflowId, context.CancellationToken).ConfigureAwait(false);
                     if (workflow == null)
                     {
                         continue;
                     }
 
-                    if (this.ShouldTimeout(workflow, timeoutThreshold))
+                    if (ShouldTimeout(workflow, timeoutThreshold))
                     {
                         workflow.Fail($"Workflow timed out after {timeoutThreshold.TotalMinutes} minutes");
                         await eventStore.AppendAsync(
@@ -107,29 +107,24 @@ public class WorkflowTimeoutMonitor : IJob
             this._logger.LogError(ex, "[WorkflowTimeout][{CorrelationId}] Job failed", correlationId);
         }
 
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 
-    private async Task<List<Guid>> GetRunningWorkflowIdsAsync(IEventStore eventStore, CancellationToken ct)
+    private static async Task<List<Guid>> GetRunningWorkflowIdsAsync(IEventStore eventStore, CancellationToken cancellationToken)
     {
         // Query event store for workflows with Running status
         // This is a simplified implementation - in production, use projections/read models
-        var query = $@"
-            SELECT DISTINCT stream_id
-            FROM mt_events
-            WHERE type LIKE 'Workflow%'
-            AND NOT EXISTS (
-                SELECT 1 FROM mt_events e2
-                WHERE e2.stream_id = mt_events.stream_id
-                AND e2.type IN ('WorkflowCompleted', 'WorkflowFailed', 'WorkflowCompensated')
-            )";
+#pragma warning disable S1172
+        _ = eventStore;
+        _ = cancellationToken;
+#pragma warning restore S1172
 
         // Return empty for now - implement based on actual event store query capabilities
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
         return new List<Guid>();
     }
 
-    private async Task<OrchestrationWorkflow?> LoadWorkflowAsync(IEventStore eventStore, Guid workflowId, CancellationToken ct)
+    private static async Task<OrchestrationWorkflow?> LoadWorkflowAsync(IEventStore eventStore, Guid workflowId, CancellationToken ct)
     {
         var events = await eventStore.ReadStreamAsync(workflowId.ToString(), ct).ConfigureAwait(false);
         if (!events.Any())
@@ -142,7 +137,7 @@ public class WorkflowTimeoutMonitor : IJob
         return workflow;
     }
 
-    private bool ShouldTimeout(OrchestrationWorkflow workflow, TimeSpan threshold)
+    private static bool ShouldTimeout(OrchestrationWorkflow workflow, TimeSpan threshold)
     {
         if (workflow.StartedAt == null)
         {
