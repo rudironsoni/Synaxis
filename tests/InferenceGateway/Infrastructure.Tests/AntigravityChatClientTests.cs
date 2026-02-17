@@ -62,18 +62,18 @@ public class AntigravityChatClientTests
                 "SendAsync",
                 ItExpr.IsAny<HttpRequestMessage>(),
                 ItExpr.IsAny<CancellationToken>())
-            .ReturnsAsync((HttpRequestMessage req, CancellationToken _) =>
+            .Callback<HttpRequestMessage, CancellationToken>((req, _) =>
             {
                 capturedRequest = req;
-                requestBody = req.Content != null ? req.Content.ReadAsStringAsync().GetAwaiter().GetResult() : null;
-                return new HttpResponseMessage
-                {
-                    StatusCode = HttpStatusCode.OK,
-                    Content = new StringContent(responseJson),
-                };
+                requestBody = req.Content?.ReadAsStringAsync().Result;
+            })
+            .ReturnsAsync(new HttpResponseMessage
+            {
+                StatusCode = HttpStatusCode.OK,
+                Content = new StringContent(responseJson),
             });
 
-        using var httpClient = new HttpClient(this._handlerMock.Object)
+        var httpClient = new HttpClient(this._handlerMock.Object)
         {
             BaseAddress = new Uri("https://cloudcode-pa.googleapis.com"),
         };
@@ -134,7 +134,7 @@ data: [DONE]
                 Content = new StringContent(streamContent),
             });
 
-        using var httpClient = new HttpClient(this._handlerMock.Object)
+        var httpClient = new HttpClient(this._handlerMock.Object)
         {
             BaseAddress = new Uri("https://cloudcode-pa.googleapis.com"),
         };
