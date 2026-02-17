@@ -119,3 +119,4 @@ coverage-summary/
 # BenchmarkDotNet artifacts
 **/BenchmarkDotNet.Artifacts/
 benchmark-results/
+.worktrees/
