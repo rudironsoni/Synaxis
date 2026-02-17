@@ -9,9 +9,11 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Diagnosers;
 using Synaxis.InferenceGateway.Application.Configuration;
 
+/// <summary>
+/// Benchmarks for JSON serialization performance.
+/// </summary>
 [MemoryDiagnoser]
 [SimpleJob(warmupCount: 3, iterationCount: 10)]
-
 public class JsonSerializationBenchmarks
 {
     private JsonSerializerOptions _options = null!;
@@ -28,6 +30,9 @@ public class JsonSerializationBenchmarks
     private ChatCompletionResponse _mediumResponse = null!;
     private ChatCompletionResponse _largeResponse = null!;
 
+    /// <summary>
+    /// Sets up the benchmark data.
+    /// </summary>
     [GlobalSetup]
     public void Setup()
     {
@@ -54,78 +59,130 @@ public class JsonSerializationBenchmarks
         this._largeResponseJson = JsonSerializer.Serialize(this._largeResponse, this._options);
     }
 
+    /// <summary>
+    /// Benchmarks serialization of a small request.
+    /// </summary>
+    /// <returns>The serialized JSON string.</returns>
     [Benchmark]
     public string Serialize_SmallRequest()
     {
         return JsonSerializer.Serialize(this._smallRequest, this._options);
     }
 
+    /// <summary>
+    /// Benchmarks serialization of a medium request.
+    /// </summary>
+    /// <returns>The serialized JSON string.</returns>
     [Benchmark]
     public string Serialize_MediumRequest()
     {
         return JsonSerializer.Serialize(this._mediumRequest, this._options);
     }
 
+    /// <summary>
+    /// Benchmarks serialization of a large request.
+    /// </summary>
+    /// <returns>The serialized JSON string.</returns>
     [Benchmark]
     public string Serialize_LargeRequest()
     {
         return JsonSerializer.Serialize(this._largeRequest, this._options);
     }
 
+    /// <summary>
+    /// Benchmarks serialization of a small response.
+    /// </summary>
+    /// <returns>The serialized JSON string.</returns>
     [Benchmark]
     public string Serialize_SmallResponse()
     {
         return JsonSerializer.Serialize(this._smallResponse, this._options);
     }
 
+    /// <summary>
+    /// Benchmarks serialization of a medium response.
+    /// </summary>
+    /// <returns>The serialized JSON string.</returns>
     [Benchmark]
     public string Serialize_MediumResponse()
     {
         return JsonSerializer.Serialize(this._mediumResponse, this._options);
     }
 
+    /// <summary>
+    /// Benchmarks serialization of a large response.
+    /// </summary>
+    /// <returns>The serialized JSON string.</returns>
     [Benchmark]
     public string Serialize_LargeResponse()
     {
         return JsonSerializer.Serialize(this._largeResponse, this._options);
     }
 
+    /// <summary>
+    /// Benchmarks deserialization of a small request.
+    /// </summary>
+    /// <returns>The deserialized request.</returns>
     [Benchmark]
     public ChatCompletionRequest Deserialize_SmallRequest()
     {
         return JsonSerializer.Deserialize<ChatCompletionRequest>(this._smallRequestJson, this._options)!;
     }
 
+    /// <summary>
+    /// Benchmarks deserialization of a medium request.
+    /// </summary>
+    /// <returns>The deserialized request.</returns>
     [Benchmark]
     public ChatCompletionRequest Deserialize_MediumRequest()
     {
         return JsonSerializer.Deserialize<ChatCompletionRequest>(this._mediumRequestJson, this._options)!;
     }
 
+    /// <summary>
+    /// Benchmarks deserialization of a large request.
+    /// </summary>
+    /// <returns>The deserialized request.</returns>
     [Benchmark]
     public ChatCompletionRequest Deserialize_LargeRequest()
     {
         return JsonSerializer.Deserialize<ChatCompletionRequest>(this._largeRequestJson, this._options)!;
     }
 
+    /// <summary>
+    /// Benchmarks deserialization of a small response.
+    /// </summary>
+    /// <returns>The deserialized response.</returns>
     [Benchmark]
     public ChatCompletionResponse Deserialize_SmallResponse()
     {
         return JsonSerializer.Deserialize<ChatCompletionResponse>(this._smallResponseJson, this._options)!;
     }
 
+    /// <summary>
+    /// Benchmarks deserialization of a medium response.
+    /// </summary>
+    /// <returns>The deserialized response.</returns>
     [Benchmark]
     public ChatCompletionResponse Deserialize_MediumResponse()
     {
         return JsonSerializer.Deserialize<ChatCompletionResponse>(this._mediumResponseJson, this._options)!;
     }
 
+    /// <summary>
+    /// Benchmarks deserialization of a large response.
+    /// </summary>
+    /// <returns>The deserialized response.</returns>
     [Benchmark]
     public ChatCompletionResponse Deserialize_LargeResponse()
     {
         return JsonSerializer.Deserialize<ChatCompletionResponse>(this._largeResponseJson, this._options)!;
     }
 
+    /// <summary>
+    /// Benchmarks serialization and deserialization of a small request.
+    /// </summary>
+    /// <returns>The deserialized request.</returns>
     [Benchmark]
     public ChatCompletionRequest SerializeDeserialize_SmallRequest()
     {
@@ -133,6 +190,10 @@ public class JsonSerializationBenchmarks
         return JsonSerializer.Deserialize<ChatCompletionRequest>(json, this._options)!;
     }
 
+    /// <summary>
+    /// Benchmarks serialization and deserialization of a medium request.
+    /// </summary>
+    /// <returns>The deserialized request.</returns>
     [Benchmark]
     public ChatCompletionRequest SerializeDeserialize_MediumRequest()
     {
@@ -140,6 +201,10 @@ public class JsonSerializationBenchmarks
         return JsonSerializer.Deserialize<ChatCompletionRequest>(json, this._options)!;
     }
 
+    /// <summary>
+    /// Benchmarks serialization and deserialization of a large request.
+    /// </summary>
+    /// <returns>The deserialized request.</returns>
     [Benchmark]
     public ChatCompletionRequest SerializeDeserialize_LargeRequest()
     {
@@ -229,48 +294,108 @@ public class JsonSerializationBenchmarks
         /// </summary>
         public double? Temperature { get; set; }
 
+        /// <summary>
+        /// Gets or sets the maximum number of tokens.
+        /// </summary>
         public int? MaxTokens { get; set; }
 
+        /// <summary>
+        /// Gets or sets a value indicating whether to stream the response.
+        /// </summary>
         public bool? Stream { get; set; }
     }
 
+    /// <summary>
+    /// Represents a chat completion response.
+    /// </summary>
     public class ChatCompletionResponse
     {
+        /// <summary>
+        /// Gets or sets the response identifier.
+        /// </summary>
         public string Id { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Gets or sets the object type.
+        /// </summary>
         public string Object { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Gets or sets the creation timestamp.
+        /// </summary>
         public long Created { get; set; }
 
+        /// <summary>
+        /// Gets or sets the model identifier.
+        /// </summary>
         public string Model { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Gets or sets the response choices.
+        /// </summary>
         public IReadOnlyList<Choice> Choices { get; set; } = new List<Choice>();
 
+        /// <summary>
+        /// Gets or sets the token usage.
+        /// </summary>
         public Usage? Usage { get; set; }
     }
 
+    /// <summary>
+    /// Represents a chat message.
+    /// </summary>
     public class ChatMessage
     {
+        /// <summary>
+        /// Gets or sets the message role.
+        /// </summary>
         public string Role { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Gets or sets the message content.
+        /// </summary>
         public string Content { get; set; } = string.Empty;
     }
 
+    /// <summary>
+    /// Represents a completion choice.
+    /// </summary>
     public class Choice
     {
+        /// <summary>
+        /// Gets or sets the choice index.
+        /// </summary>
         public int Index { get; set; }
 
+        /// <summary>
+        /// Gets or sets the message.
+        /// </summary>
         public ChatMessage? Message { get; set; }
 
+        /// <summary>
+        /// Gets or sets the finish reason.
+        /// </summary>
         public string? FinishReason { get; set; }
     }
 
+    /// <summary>
+    /// Represents token usage.
+    /// </summary>
     public class Usage
     {
+        /// <summary>
+        /// Gets or sets the prompt tokens.
+        /// </summary>
         public int PromptTokens { get; set; }
 
+        /// <summary>
+        /// Gets or sets the completion tokens.
+        /// </summary>
         public int CompletionTokens { get; set; }
 
+        /// <summary>
+        /// Gets or sets the total tokens.
+        /// </summary>
         public int TotalTokens { get; set; }
     }
 }

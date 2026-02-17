@@ -21,7 +21,8 @@ public abstract class TestBase
     /// <summary>
     /// Creates a mock ILogger for any type.
     /// </summary>
-    /// <returns></returns>
+    /// <typeparam name="T">The type for which the logger is created.</typeparam>
+    /// <returns>A mock logger instance.</returns>
     protected static Mock<ILogger<T>> CreateMockLogger<T>()
         where T : class
     {
@@ -39,7 +40,8 @@ public abstract class TestBase
     /// <summary>
     /// Creates a mock IChatClient that returns a default response.
     /// </summary>
-    /// <returns></returns>
+    /// <param name="responseText">The response text to return from the mock client.</param>
+    /// <returns>A mock chat client instance.</returns>
     protected static Mock<IChatClient> CreateMockChatClient(string responseText = "Mock response")
     {
         var mock = new Mock<IChatClient>();
@@ -55,7 +57,8 @@ public abstract class TestBase
     /// <summary>
     /// Creates a mock IChatClient that returns a streaming response.
     /// </summary>
-    /// <returns></returns>
+    /// <param name="responseChunks">The response chunks to stream.</param>
+    /// <returns>A mock streaming chat client instance.</returns>
     protected static Mock<IChatClient> CreateMockStreamingChatClient(params string[] responseChunks)
     {
         var mock = new Mock<IChatClient>();
@@ -81,7 +84,8 @@ public abstract class TestBase
     /// <summary>
     /// Creates a mock IProviderRegistry with the specified provider configurations.
     /// </summary>
-    /// <returns></returns>
+    /// <param name="providers">The provider configurations to use.</param>
+    /// <returns>A mock provider registry instance.</returns>
     protected static Mock<IProviderRegistry> CreateMockProviderRegistry(IReadOnlyDictionary<string, ProviderConfig>? providers = null)
     {
         var mock = new Mock<IProviderRegistry>();
@@ -106,7 +110,9 @@ public abstract class TestBase
     /// <summary>
     /// Creates a mock IModelResolver that returns a default resolution.
     /// </summary>
-    /// <returns></returns>
+    /// <param name="modelId">The model identifier.</param>
+    /// <param name="canonicalId">The canonical identifier.</param>
+    /// <returns>A mock model resolver instance.</returns>
     protected static Mock<IModelResolver> CreateMockModelResolver(string modelId = "test-model", string canonicalId = "test-canonical")
     {
         var mock = new Mock<IModelResolver>();
@@ -132,7 +138,8 @@ public abstract class TestBase
     /// <summary>
     /// Creates a mock IHealthStore that returns healthy status for all providers.
     /// </summary>
-    /// <returns></returns>
+    /// <param name="defaultHealthy">Whether providers should default to healthy.</param>
+    /// <returns>A mock health store instance.</returns>
     protected static Mock<IHealthStore> CreateMockHealthStore(bool defaultHealthy = true)
     {
         var mock = new Mock<IHealthStore>();
@@ -148,7 +155,7 @@ public abstract class TestBase
     /// <summary>
     /// Creates a mock IQuotaTracker with unlimited quota.
     /// </summary>
-    /// <returns></returns>
+    /// <returns>A mock quota tracker instance.</returns>
     protected static Mock<IQuotaTracker> CreateMockQuotaTracker()
     {
         var mock = new Mock<IQuotaTracker>();
@@ -169,7 +176,7 @@ public abstract class TestBase
     /// <summary>
     /// Creates a mock ICostService that returns zero cost.
     /// </summary>
-    /// <returns></returns>
+    /// <returns>A mock cost service instance.</returns>
     protected static Mock<ICostService> CreateMockCostService()
     {
         var mock = new Mock<ICostService>();
@@ -184,7 +191,7 @@ public abstract class TestBase
     /// <summary>
     /// Creates a mock IRoutingScoreCalculator that returns a default score.
     /// </summary>
-    /// <returns></returns>
+    /// <returns>A mock routing score calculator instance.</returns>
     protected static Mock<IRoutingScoreCalculator> CreateMockRoutingScoreCalculator()
     {
         var mock = new Mock<IRoutingScoreCalculator>();

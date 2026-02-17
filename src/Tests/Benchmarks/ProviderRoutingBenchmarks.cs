@@ -14,9 +14,11 @@ using Synaxis.InferenceGateway.Application.Configuration;
 using Synaxis.InferenceGateway.Application.ControlPlane;
 using Synaxis.InferenceGateway.Application.Routing;
 
+/// <summary>
+/// Benchmarks for provider routing performance.
+/// </summary>
 [MemoryDiagnoser]
 [SimpleJob(warmupCount: 3, iterationCount: 10)]
-
 public class ProviderRoutingBenchmarks : TestBase
 {
     private const string SingleProviderModel = "llama-3.1-70b-versatile";
@@ -34,6 +36,9 @@ public class ProviderRoutingBenchmarks : TestBase
     private IRoutingScoreCalculator _routingScoreCalculator = null!;
     private IOptions<SynaxisConfiguration> _configOptions = null!;
 
+    /// <summary>
+    /// Sets up the benchmark data.
+    /// </summary>
     [GlobalSetup]
     public void Setup()
     {
@@ -64,6 +69,11 @@ public class ProviderRoutingBenchmarks : TestBase
             this._smartRouterLogger);
     }
 
+    /// <summary>
+    /// Benchmarks model resolution with a single canonical model.
+    /// </summary>
+    /// <param name="providerCount">The number of providers.</param>
+    /// <returns>The resolution result.</returns>
     [Benchmark]
     [Arguments(1)]
     [Arguments(5)]
@@ -87,6 +97,11 @@ public class ProviderRoutingBenchmarks : TestBase
             RequiredCapabilities.Default);
     }
 
+    /// <summary>
+    /// Benchmarks model resolution with multiple canonical models.
+    /// </summary>
+    /// <param name="canonicalModelCount">The number of canonical models.</param>
+    /// <returns>The resolution result.</returns>
     [Benchmark]
     [Arguments(1)]
     [Arguments(5)]
@@ -109,6 +124,11 @@ public class ProviderRoutingBenchmarks : TestBase
             RequiredCapabilities.Default);
     }
 
+    /// <summary>
+    /// Benchmarks getting candidates with a single provider.
+    /// </summary>
+    /// <param name="providerCount">The number of providers.</param>
+    /// <returns>The list of enriched candidates.</returns>
     [Benchmark]
     [Arguments(1)]
     [Arguments(5)]
@@ -139,6 +159,11 @@ public class ProviderRoutingBenchmarks : TestBase
             streaming: false);
     }
 
+    /// <summary>
+    /// Benchmarks getting candidates with multiple providers.
+    /// </summary>
+    /// <param name="providerCount">The number of providers.</param>
+    /// <returns>The list of enriched candidates.</returns>
     [Benchmark]
     [Arguments(1)]
     [Arguments(5)]
@@ -169,6 +194,10 @@ public class ProviderRoutingBenchmarks : TestBase
             streaming: false);
     }
 
+    /// <summary>
+    /// Benchmarks getting candidates with alias resolution.
+    /// </summary>
+    /// <returns>The list of enriched candidates.</returns>
     [Benchmark]
     public Task<IList<EnrichedCandidate>> SmartRouter_GetCandidatesAsync_AliasResolution()
     {
@@ -177,6 +206,10 @@ public class ProviderRoutingBenchmarks : TestBase
             streaming: false);
     }
 
+    /// <summary>
+    /// Benchmarks getting candidates with streaming capability.
+    /// </summary>
+    /// <returns>The list of enriched candidates.</returns>
     [Benchmark]
     public Task<IList<EnrichedCandidate>> SmartRouter_GetCandidatesAsync_WithStreamingCapability()
     {
