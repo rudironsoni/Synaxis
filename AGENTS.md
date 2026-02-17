@@ -229,6 +229,80 @@ Any missing verification evidence means the change is **NOT VERIFIED**.
 
 ---
 
+## Pre-Completion Checklist (CRITICAL)
+
+Before claiming work is complete, you MUST run this checklist:
+
+### 1. Check for Stashed Work
+
+```bash
+git stash list
+```
+
+- If stashes exist, review each one with `git stash show -p stash@{n}`
+- Apply and commit if they contain work that should be committed
+- Drop only if truly temporary/debug stashes
+- **NEVER** leave important work in stashes uncommitted
+
+### 2. Check for Unstaged Changes
+
+```bash
+git status
+```
+
+- Stage and commit all work files
+- Do NOT leave feature code in unstaged/uncommitted state
+- Only documentation/notes may remain uncommitted
+
+### 3. Verify All Changes Are Committed
+
+```bash
+git diff --name-only
+```
+
+- Should return empty for work files
+- Only non-code files (notes, docs) may remain
+
+### 4. Final Verification
+
+```bash
+dotnet format --verify-no-changes
+dotnet build <Solution.sln> -c Release -warnaserror
+dotnet test <Solution.sln> --no-build
+```
+
+All must pass. No exceptions.
+
+### 5. Review Commit History
+
+```bash
+git log --oneline -5
+```
+
+- Ensure commits are meaningful and complete
+- Each commit should represent a logical unit of work
+
+### 6. Beads Sync Check
+
+```bash
+bd sync
+```
+
+- Ensure all issue tracking is up to date
+- Close completed issues with `bd close <id>`
+
+**FAILURE TO FOLLOW THIS CHECKLIST IS A CRITICAL ERROR**
+
+### Stash Warning
+
+When using git worktrees, remember:
+- Stashes are **global** to the repository
+- Stashing in a worktree affects all worktrees
+- Before switching worktrees, check `git stash list`
+- Consider committing instead of stashing when possible
+
+---
+
 ## .NET 10 Execution Standard
 
 ### SDK and Language Baseline
