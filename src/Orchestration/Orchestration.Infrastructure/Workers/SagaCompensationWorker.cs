@@ -117,41 +117,54 @@ public class SagaCompensationWorker : IJob
         string correlationId,
         CancellationToken ct)
     {
-        var events = await eventStore.ReadStreamAsync(sagaId.ToString(), ct).ConfigureAwait(false);
-        if (!events.Any())
+        var saga = await LoadFailedSagaAsync(eventStore, sagaId, ct).ConfigureAwait(false);
+        if (saga == null)
         {
             return false;
         }
 
-        var saga = new Saga();
-        saga.LoadFromHistory(events);
-
-        if (saga.Status != SagaStatus.Failed)
-        {
-            return false;
-        }
-
-        // Get completed activities in reverse order for compensation
-        var activitiesToCompensate = saga.Activities
-            .Where(a => a.Status == ActivityStatus.Completed && a.CompensationActivityId.HasValue)
-            .OrderByDescending(a => a.Sequence)
-            .ToList();
-
+        var activitiesToCompensate = GetActivitiesToCompensate(saga);
         this._logger.LogInformation(
             "[SagaCompensation][{CorrelationId}] Compensating saga {SagaId} with {Count} activities",
             correlationId,
             sagaId,
             activitiesToCompensate.Count);
 
-        var activityIds = activitiesToCompensate.Select(a => a.Id).ToList();
-        foreach (var activityId in activityIds)
+        await this.CompensateActivitiesAsync(saga, activitiesToCompensate, correlationId, sagaId).ConfigureAwait(false);
+        await SaveCompensatedSagaAsync(eventStore, saga, ct).ConfigureAwait(false);
+
+        return true;
+    }
+
+    private static async Task<Saga?> LoadFailedSagaAsync(IEventStore eventStore, Guid sagaId, CancellationToken ct)
+    {
+        var events = await eventStore.ReadStreamAsync(sagaId.ToString(), ct).ConfigureAwait(false);
+        if (!events.Any())
+        {
+            return null;
+        }
+
+        var saga = new Saga();
+        saga.LoadFromHistory(events);
+
+        return saga.Status == SagaStatus.Failed ? saga : null;
+    }
+
+    private static List<SagaActivity> GetActivitiesToCompensate(Saga saga)
+    {
+        return saga.Activities
+            .Where(a => a.Status == ActivityStatus.Completed && a.CompensationActivityId.HasValue)
+            .OrderByDescending(a => a.Sequence)
+            .ToList();
+    }
+
+    private async Task CompensateActivitiesAsync(Saga saga, List<SagaActivity> activities, string correlationId, Guid sagaId)
+    {
+        foreach (var activityId in activities.Select(a => a.Id))
         {
             try
             {
-                // Execute compensation activity
-                // In a real implementation, this would dispatch to the compensation handler
                 saga.CompensateActivity(activityId);
-
                 this._logger.LogInformation(
                     "[SagaCompensation][{CorrelationId}] Compensated activity {ActivityId} in saga {SagaId}",
                     correlationId,
@@ -166,18 +179,17 @@ public class SagaCompensationWorker : IJob
                     correlationId,
                     activityId,
                     sagaId);
-
-                // Continue with other compensations even if one fails
             }
         }
+    }
 
+    private static async Task SaveCompensatedSagaAsync(IEventStore eventStore, Saga saga, CancellationToken ct)
+    {
         await eventStore.AppendAsync(
             saga.Id.ToString(),
             saga.GetUncommittedEvents(),
             saga.Version - saga.GetUncommittedEvents().Count,
             ct).ConfigureAwait(false);
         saga.MarkAsCommitted();
-
-        return true;
     }
 }

@@ -86,6 +86,15 @@ public class Activity : AggregateRoot
     /// <summary>
     /// Creates a new activity.
     /// </summary>
+    /// <param name="id">The unique identifier.</param>
+    /// <param name="name">The name of the activity.</param>
+    /// <param name="activityType">The type of the activity.</param>
+    /// <param name="workflowId">The parent workflow identifier if applicable.</param>
+    /// <param name="sagaId">The parent saga identifier if applicable.</param>
+    /// <param name="tenantId">The tenant identifier.</param>
+    /// <param name="inputData">The input data for the activity.</param>
+    /// <param name="executionContext">The execution context (e.g., agent ID, provider, etc.).</param>
+    /// <returns>A new activity instance.</returns>
     public static Activity Create(
         Guid id,
         string name,
@@ -136,6 +145,7 @@ public class Activity : AggregateRoot
     /// <summary>
     /// Completes the activity successfully.
     /// </summary>
+    /// <param name="outputData">The output data from the activity execution.</param>
     public void Complete(string outputData)
     {
         if (this.Status != ActivityExecutionStatus.Running)
@@ -156,6 +166,7 @@ public class Activity : AggregateRoot
     /// <summary>
     /// Fails the activity.
     /// </summary>
+    /// <param name="errorMessage">The error message describing the failure.</param>
     public void Fail(string errorMessage)
     {
         if (this.Status != ActivityExecutionStatus.Running && this.Status != ActivityExecutionStatus.Pending)
@@ -176,6 +187,7 @@ public class Activity : AggregateRoot
     /// <summary>
     /// Retries the activity after a failure.
     /// </summary>
+    /// <param name="retryCount">The number of times the activity has been retried.</param>
     public void Retry(int retryCount)
     {
         var @event = new ActivityRetried
@@ -252,40 +264,4 @@ public class Activity : AggregateRoot
         this.CompletedAt = null;
         this.ErrorMessage = null;
     }
-}
-
-/// <summary>
-/// Represents the status of an activity execution.
-/// </summary>
-public enum ActivityExecutionStatus
-{
-    /// <summary>
-    /// Activity is pending execution.
-    /// </summary>
-    Pending,
-
-    /// <summary>
-    /// Activity is currently running.
-    /// </summary>
-    Running,
-
-    /// <summary>
-    /// Activity completed successfully.
-    /// </summary>
-    Completed,
-
-    /// <summary>
-    /// Activity failed.
-    /// </summary>
-    Failed,
-
-    /// <summary>
-    /// Activity was cancelled.
-    /// </summary>
-    Cancelled,
-
-    /// <summary>
-    /// Activity is waiting for external input.
-    /// </summary>
-    Waiting,
 }

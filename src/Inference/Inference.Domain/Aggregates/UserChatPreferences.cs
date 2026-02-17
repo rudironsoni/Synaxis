@@ -4,8 +4,8 @@
 
 namespace Synaxis.Inference.Domain.Aggregates;
 
-using Synaxis.Infrastructure.EventSourcing;
 using Synaxis.Inference.Domain.Events;
+using Synaxis.Infrastructure.EventSourcing;
 
 /// <summary>
 /// Aggregate root representing user chat preferences.
@@ -53,7 +53,7 @@ public class UserChatPreferences : AggregateRoot
     public int DefaultMaxTokens { get; private set; } = 4096;
 
     /// <summary>
-    /// Gets whether to enable streaming by default.
+    /// Gets a value indicating whether to enable streaming by default.
     /// </summary>
     public bool EnableStreamingByDefault { get; private set; } = true;
 
@@ -78,7 +78,7 @@ public class UserChatPreferences : AggregateRoot
     public string LanguagePreference { get; private set; } = "en";
 
     /// <summary>
-    /// Gets whether to save chat history.
+    /// Gets a value indicating whether to save chat history.
     /// </summary>
     public bool SaveChatHistory { get; private set; } = true;
 
@@ -105,6 +105,12 @@ public class UserChatPreferences : AggregateRoot
     /// <summary>
     /// Creates new user chat preferences.
     /// </summary>
+    /// <param name="id">The unique identifier.</param>
+    /// <param name="userId">The user identifier.</param>
+    /// <param name="tenantId">The tenant identifier.</param>
+    /// <param name="preferredModelId">The preferred model identifier.</param>
+    /// <param name="preferredProviderId">The preferred provider identifier.</param>
+    /// <returns>A new user chat preferences instance.</returns>
     public static UserChatPreferences Create(
         Guid id,
         Guid userId,
@@ -130,6 +136,8 @@ public class UserChatPreferences : AggregateRoot
     /// <summary>
     /// Updates the preferred model.
     /// </summary>
+    /// <param name="modelId">The model identifier.</param>
+    /// <param name="providerId">The provider identifier.</param>
     public void UpdatePreferredModel(string? modelId, string? providerId)
     {
         var @event = new PreferredModelUpdated
@@ -146,6 +154,11 @@ public class UserChatPreferences : AggregateRoot
     /// <summary>
     /// Updates the default settings.
     /// </summary>
+    /// <param name="systemPrompt">The system prompt.</param>
+    /// <param name="temperature">The temperature value.</param>
+    /// <param name="maxTokens">The maximum number of tokens.</param>
+    /// <param name="enableStreaming">Whether to enable streaming.</param>
+    /// <param name="responseFormat">The response format.</param>
     public void UpdateDefaultSettings(
         string? systemPrompt,
         double temperature,
@@ -170,6 +183,7 @@ public class UserChatPreferences : AggregateRoot
     /// <summary>
     /// Updates the custom instructions.
     /// </summary>
+    /// <param name="instructions">The custom instructions.</param>
     public void UpdateCustomInstructions(string? instructions)
     {
         var @event = new CustomInstructionsUpdated
@@ -185,6 +199,8 @@ public class UserChatPreferences : AggregateRoot
     /// <summary>
     /// Updates the UI preferences.
     /// </summary>
+    /// <param name="theme">The theme.</param>
+    /// <param name="language">The language.</param>
     public void UpdateUiPreferences(string theme, string language)
     {
         var @event = new UiPreferencesUpdated
@@ -201,6 +217,8 @@ public class UserChatPreferences : AggregateRoot
     /// <summary>
     /// Updates the chat history settings.
     /// </summary>
+    /// <param name="saveHistory">Whether to save chat history.</param>
+    /// <param name="retentionDays">The retention days.</param>
     public void UpdateChatHistorySettings(bool saveHistory, int retentionDays)
     {
         var @event = new ChatHistorySettingsUpdated
@@ -217,6 +235,7 @@ public class UserChatPreferences : AggregateRoot
     /// <summary>
     /// Updates the notification preferences.
     /// </summary>
+    /// <param name="preferences">The notification preferences.</param>
     public void UpdateNotificationPreferences(NotificationPreferences preferences)
     {
         var @event = new NotificationPreferencesUpdated
@@ -355,66 +374,4 @@ public class UserChatPreferences : AggregateRoot
         this.Notifications = new NotificationPreferences();
         this.UpdatedAt = DateTime.UtcNow;
     }
-}
-
-/// <summary>
-/// Represents response format options.
-/// </summary>
-public enum ResponseFormat
-{
-    /// <summary>
-    /// Plain text response.
-    /// </summary>
-    Text,
-
-    /// <summary>
-    /// JSON response.
-    /// </summary>
-    Json,
-
-    /// <summary>
-    /// Markdown response.
-    /// </summary>
-    Markdown,
-
-    /// <summary>
-    /// Code response.
-    /// </summary>
-    Code,
-}
-
-/// <summary>
-/// Represents notification preferences.
-/// </summary>
-public class NotificationPreferences
-{
-    /// <summary>
-    /// Gets or sets whether to enable email notifications.
-    /// </summary>
-    public bool EnableEmailNotifications { get; set; } = true;
-
-    /// <summary>
-    /// Gets or sets whether to notify on quota threshold.
-    /// </summary>
-    public bool NotifyOnQuotaThreshold { get; set; } = true;
-
-    /// <summary>
-    /// Gets or sets the quota threshold percentage.
-    /// </summary>
-    public int QuotaThresholdPercent { get; set; } = 80;
-
-    /// <summary>
-    /// Gets or sets whether to notify on long-running requests.
-    /// </summary>
-    public bool NotifyOnLongRunningRequests { get; set; } = false;
-
-    /// <summary>
-    /// Gets or sets the long-running threshold in seconds.
-    /// </summary>
-    public int LongRunningThresholdSeconds { get; set; } = 60;
-
-    /// <summary>
-    /// Gets or sets whether to notify on errors.
-    /// </summary>
-    public bool NotifyOnErrors { get; set; } = true;
 }

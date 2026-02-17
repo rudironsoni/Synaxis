@@ -180,9 +180,9 @@ public class WorkflowService : IWorkflowService
     }
 
     /// <inheritdoc/>
-    public async Task<OrchestrationWorkflow?> GetWorkflowAsync(Guid workflowId, CancellationToken cancellationToken = default)
+    public Task<OrchestrationWorkflow?> GetWorkflowAsync(Guid workflowId, CancellationToken cancellationToken = default)
     {
-        return await this.LoadWorkflowAsync(workflowId, cancellationToken).ConfigureAwait(false);
+        return this.LoadWorkflowAsync(workflowId, cancellationToken);
     }
 
     /// <inheritdoc/>

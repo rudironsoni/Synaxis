@@ -91,6 +91,15 @@ public class OrchestrationWorkflow : AggregateRoot
     /// <summary>
     /// Creates a new orchestration workflow.
     /// </summary>
+    /// <param name="id">The unique identifier.</param>
+    /// <param name="name">The name of the workflow.</param>
+    /// <param name="description">The description of the workflow.</param>
+    /// <param name="workflowDefinitionId">The workflow definition identifier.</param>
+    /// <param name="sagaId">The parent saga identifier if applicable.</param>
+    /// <param name="tenantId">The tenant identifier.</param>
+    /// <param name="totalSteps">The total number of steps.</param>
+    /// <param name="inputData">The input data.</param>
+    /// <returns>A new orchestration workflow instance.</returns>
     public static OrchestrationWorkflow Create(
         Guid id,
         string name,
@@ -141,6 +150,7 @@ public class OrchestrationWorkflow : AggregateRoot
     /// <summary>
     /// Progresses the workflow to the next step.
     /// </summary>
+    /// <param name="stepOutput">The output data from the completed step.</param>
     public void ProgressStep(string stepOutput)
     {
         if (this.Status != WorkflowStatus.Running)
@@ -162,6 +172,7 @@ public class OrchestrationWorkflow : AggregateRoot
     /// <summary>
     /// Completes the workflow successfully.
     /// </summary>
+    /// <param name="outputData">The final output data from the workflow.</param>
     public void Complete(string outputData)
     {
         if (this.Status != WorkflowStatus.Running)
@@ -182,6 +193,7 @@ public class OrchestrationWorkflow : AggregateRoot
     /// <summary>
     /// Fails the workflow.
     /// </summary>
+    /// <param name="errorMessage">The error message describing the failure.</param>
     public void Fail(string errorMessage)
     {
         if (this.Status != WorkflowStatus.Running && this.Status != WorkflowStatus.Pending)
@@ -202,6 +214,7 @@ public class OrchestrationWorkflow : AggregateRoot
     /// <summary>
     /// Compensates the workflow due to a failure in a parent saga.
     /// </summary>
+    /// <param name="reason">The reason for the compensation.</param>
     public void Compensate(string reason)
     {
         var @event = new WorkflowCompensated

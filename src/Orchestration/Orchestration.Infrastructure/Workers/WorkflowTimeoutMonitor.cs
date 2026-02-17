@@ -48,66 +48,89 @@ public class WorkflowTimeoutMonitor : IJob
 
         try
         {
-            // Get all running workflows
-            var runningWorkflowIds = await GetRunningWorkflowIdsAsync(eventStore, context.CancellationToken).ConfigureAwait(false);
-
+            var timedOutCount = await this.ProcessWorkflowTimeoutsAsync(eventStore, correlationId, context.CancellationToken).ConfigureAwait(false);
             this._logger.LogInformation(
-                "[WorkflowTimeout][{CorrelationId}] Found {Count} running workflows to check",
+                "[WorkflowTimeout][{CorrelationId}] Completed. TimedOut={TimedOut}",
                 correlationId,
-                runningWorkflowIds.Count);
-
-            int timedOutCount = 0;
-            var timeoutThreshold = TimeSpan.FromHours(1); // Configurable timeout
-
-            foreach (var workflowId in runningWorkflowIds)
-            {
-                try
-                {
-                    var workflow = await LoadWorkflowAsync(eventStore, workflowId, context.CancellationToken).ConfigureAwait(false);
-                    if (workflow == null)
-                    {
-                        continue;
-                    }
-
-                    if (ShouldTimeout(workflow, timeoutThreshold))
-                    {
-                        workflow.Fail($"Workflow timed out after {timeoutThreshold.TotalMinutes} minutes");
-                        await eventStore.AppendAsync(
-                            workflow.Id.ToString(),
-                            workflow.GetUncommittedEvents(),
-                            workflow.Version - workflow.GetUncommittedEvents().Count,
-                            context.CancellationToken).ConfigureAwait(false);
-                        workflow.MarkAsCommitted();
-
-                        timedOutCount++;
-                        this._logger.LogWarning(
-                            "[WorkflowTimeout][{CorrelationId}] Workflow {WorkflowId} timed out",
-                            correlationId,
-                            workflowId);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    this._logger.LogError(
-                        ex,
-                        "[WorkflowTimeout][{CorrelationId}] Error processing workflow {WorkflowId}",
-                        correlationId,
-                        workflowId);
-                }
-            }
-
-            this._logger.LogInformation(
-                "[WorkflowTimeout][{CorrelationId}] Completed: Checked={Checked}, TimedOut={TimedOut}",
-                correlationId,
-                runningWorkflowIds.Count,
                 timedOutCount);
         }
         catch (Exception ex)
         {
             this._logger.LogError(ex, "[WorkflowTimeout][{CorrelationId}] Job failed", correlationId);
         }
+    }
 
-        await Task.CompletedTask.ConfigureAwait(false);
+    private async Task<int> ProcessWorkflowTimeoutsAsync(IEventStore eventStore, string correlationId, CancellationToken ct)
+    {
+        var runningWorkflowIds = await GetRunningWorkflowIdsAsync(eventStore, ct).ConfigureAwait(false);
+        this._logger.LogInformation(
+            "[WorkflowTimeout][{CorrelationId}] Found {Count} running workflows to check",
+            correlationId,
+            runningWorkflowIds.Count);
+
+        int timedOutCount = 0;
+        var timeoutThreshold = TimeSpan.FromHours(1);
+
+        foreach (var workflowId in runningWorkflowIds)
+        {
+            var wasTimedOut = await this.TryTimeoutWorkflowAsync(eventStore, workflowId, timeoutThreshold, correlationId, ct).ConfigureAwait(false);
+            if (wasTimedOut)
+            {
+                timedOutCount++;
+            }
+        }
+
+        return timedOutCount;
+    }
+
+    private async Task<bool> TryTimeoutWorkflowAsync(
+        IEventStore eventStore,
+        Guid workflowId,
+        TimeSpan timeoutThreshold,
+        string correlationId,
+        CancellationToken ct)
+    {
+        try
+        {
+            var workflow = await LoadWorkflowAsync(eventStore, workflowId, ct).ConfigureAwait(false);
+            if (workflow == null || !ShouldTimeout(workflow, timeoutThreshold))
+            {
+                return false;
+            }
+
+            await this.TimeoutWorkflowAsync(eventStore, workflow, timeoutThreshold, correlationId, ct).ConfigureAwait(false);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            this._logger.LogError(
+                ex,
+                "[WorkflowTimeout][{CorrelationId}] Error processing workflow {WorkflowId}",
+                correlationId,
+                workflowId);
+            return false;
+        }
+    }
+
+    private async Task TimeoutWorkflowAsync(
+        IEventStore eventStore,
+        OrchestrationWorkflow workflow,
+        TimeSpan timeoutThreshold,
+        string correlationId,
+        CancellationToken ct)
+    {
+        workflow.Fail($"Workflow timed out after {timeoutThreshold.TotalMinutes} minutes");
+        await eventStore.AppendAsync(
+            workflow.Id.ToString(),
+            workflow.GetUncommittedEvents(),
+            workflow.Version - workflow.GetUncommittedEvents().Count,
+            ct).ConfigureAwait(false);
+        workflow.MarkAsCommitted();
+
+        this._logger.LogWarning(
+            "[WorkflowTimeout][{CorrelationId}] Workflow {WorkflowId} timed out",
+            correlationId,
+            workflow.Id);
     }
 
     private static async Task<List<Guid>> GetRunningWorkflowIdsAsync(IEventStore eventStore, CancellationToken cancellationToken)

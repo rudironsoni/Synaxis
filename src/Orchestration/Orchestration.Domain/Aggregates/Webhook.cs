@@ -40,7 +40,7 @@ public class Webhook : AggregateRoot
     /// <summary>
     /// Gets the event types to subscribe to.
     /// </summary>
-    public List<string> EventTypes { get; private set; } = new();
+    public IList<string> EventTypes { get; private set; } = new List<string>();
 
     /// <summary>
     /// Gets the tenant identifier.
@@ -75,13 +75,21 @@ public class Webhook : AggregateRoot
     /// <summary>
     /// Creates a new webhook.
     /// </summary>
+    /// <param name="id">The unique identifier.</param>
+    /// <param name="name">The name of the webhook.</param>
+    /// <param name="url">The target URL.</param>
+    /// <param name="httpMethod">The HTTP method.</param>
+    /// <param name="secret">The secret for HMAC signature.</param>
+    /// <param name="eventTypes">The event types to subscribe to.</param>
+    /// <param name="tenantId">The tenant identifier.</param>
+    /// <returns>A new webhook instance.</returns>
     public static Webhook Create(
         Guid id,
         string name,
         string url,
         string httpMethod,
         string? secret,
-        List<string> eventTypes,
+        IList<string> eventTypes,
         Guid tenantId)
     {
         var webhook = new Webhook();
@@ -104,7 +112,12 @@ public class Webhook : AggregateRoot
     /// <summary>
     /// Updates the webhook configuration.
     /// </summary>
-    public void Update(string name, string url, string httpMethod, string? secret, List<string> eventTypes)
+    /// <param name="name">The name of the webhook.</param>
+    /// <param name="url">The target URL.</param>
+    /// <param name="httpMethod">The HTTP method.</param>
+    /// <param name="secret">The secret for HMAC signature.</param>
+    /// <param name="eventTypes">The event types to subscribe to.</param>
+    public void Update(string name, string url, string httpMethod, string? secret, IList<string> eventTypes)
     {
         var @event = new WebhookUpdated
         {
@@ -161,6 +174,8 @@ public class Webhook : AggregateRoot
     /// <summary>
     /// Records a successful delivery.
     /// </summary>
+    /// <param name="eventType">The event type that was delivered.</param>
+    /// <param name="payload">The payload that was delivered.</param>
     public void RecordDelivery(string eventType, string payload)
     {
         var @event = new WebhookDelivered
@@ -177,6 +192,8 @@ public class Webhook : AggregateRoot
     /// <summary>
     /// Records a failed delivery.
     /// </summary>
+    /// <param name="eventType">The event type that failed to deliver.</param>
+    /// <param name="errorMessage">The error message describing the failure.</param>
     public void RecordFailure(string eventType, string errorMessage)
     {
         var @event = new WebhookDeliveryFailed
@@ -282,30 +299,4 @@ public class Webhook : AggregateRoot
     {
         this.Status = WebhookStatus.Deleted;
     }
-}
-
-/// <summary>
-/// Represents the status of a webhook.
-/// </summary>
-public enum WebhookStatus
-{
-    /// <summary>
-    /// Webhook is active and receiving events.
-    /// </summary>
-    Active,
-
-    /// <summary>
-    /// Webhook is inactive and not receiving events.
-    /// </summary>
-    Inactive,
-
-    /// <summary>
-    /// Webhook has been deleted.
-    /// </summary>
-    Deleted,
-
-    /// <summary>
-    /// Webhook is failing repeatedly and may be disabled.
-    /// </summary>
-    Failing,
 }

@@ -99,6 +99,11 @@ dotnet_diagnostic.SA1516.severity = none
 [**/*.g.cs]
 dotnet_diagnostic.SA1516.severity = none
 
+# GlobalUsings.cs files - suppress StyleCop rules that don't apply to global usings files
+[**/GlobalUsings.cs]
+dotnet_diagnostic.SA1200.severity = none
+dotnet_diagnostic.SA1633.severity = none
+
 # InferenceGateway - suppress SA1402 for all files with multiple DTOs/models
 [src/InferenceGateway/**/*.cs]
 dotnet_diagnostic.SA1402.severity = none

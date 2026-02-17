@@ -4,8 +4,8 @@
 
 namespace Synaxis.Inference.Domain.Aggregates;
 
-using Synaxis.Infrastructure.EventSourcing;
 using Synaxis.Inference.Domain.Events;
+using Synaxis.Infrastructure.EventSourcing;
 
 /// <summary>
 /// Aggregate root representing an AI inference request.
@@ -95,6 +95,14 @@ public class InferenceRequest : AggregateRoot
     /// <summary>
     /// Creates a new inference request.
     /// </summary>
+    /// <param name="id">The unique identifier.</param>
+    /// <param name="tenantId">The tenant identifier.</param>
+    /// <param name="userId">The user identifier.</param>
+    /// <param name="apiKeyId">The API key identifier.</param>
+    /// <param name="modelId">The model identifier.</param>
+    /// <param name="requestContent">The request content.</param>
+    /// <param name="routingDecision">The routing decision.</param>
+    /// <returns>A new inference request instance.</returns>
     public static InferenceRequest Create(
         Guid id,
         Guid tenantId,
@@ -124,6 +132,9 @@ public class InferenceRequest : AggregateRoot
     /// <summary>
     /// Routes the request to a provider.
     /// </summary>
+    /// <param name="providerId">The provider identifier.</param>
+    /// <param name="modelId">The model identifier.</param>
+    /// <param name="decision">The routing decision.</param>
     public void Route(string providerId, string modelId, RoutingDecision decision)
     {
         var @event = new InferenceRequestRouted
@@ -160,6 +171,10 @@ public class InferenceRequest : AggregateRoot
     /// <summary>
     /// Completes the request successfully.
     /// </summary>
+    /// <param name="responseContent">The response content.</param>
+    /// <param name="tokenUsage">The token usage.</param>
+    /// <param name="cost">The cost.</param>
+    /// <param name="latencyMs">The latency in milliseconds.</param>
     public void Complete(string responseContent, TokenUsage tokenUsage, decimal cost, long latencyMs)
     {
         if (this.Status != InferenceStatus.Processing)
@@ -183,6 +198,7 @@ public class InferenceRequest : AggregateRoot
     /// <summary>
     /// Fails the request.
     /// </summary>
+    /// <param name="errorMessage">The error message.</param>
     public void Fail(string errorMessage)
     {
         if (this.Status != InferenceStatus.Pending && this.Status != InferenceStatus.Processing)
@@ -203,6 +219,7 @@ public class InferenceRequest : AggregateRoot
     /// <summary>
     /// Retries the request.
     /// </summary>
+    /// <param name="newProviderId">The new provider identifier.</param>
     public void Retry(string newProviderId)
     {
         if (this.Status != InferenceStatus.Failed)
@@ -294,108 +311,4 @@ public class InferenceRequest : AggregateRoot
         this.ErrorMessage = null;
         this.CompletedAt = null;
     }
-}
-
-/// <summary>
-/// Represents the status of an inference request.
-/// </summary>
-public enum InferenceStatus
-{
-    /// <summary>
-    /// Request is pending routing.
-    /// </summary>
-    Pending,
-
-    /// <summary>
-    /// Request is being processed.
-    /// </summary>
-    Processing,
-
-    /// <summary>
-    /// Request completed successfully.
-    /// </summary>
-    Completed,
-
-    /// <summary>
-    /// Request failed.
-    /// </summary>
-    Failed,
-
-    /// <summary>
-    /// Request was cancelled.
-    /// </summary>
-    Cancelled,
-}
-
-/// <summary>
-/// Represents token usage for an inference request.
-/// </summary>
-public class TokenUsage
-{
-    /// <summary>
-    /// Gets or sets the prompt tokens.
-    /// </summary>
-    public int PromptTokens { get; set; }
-
-    /// <summary>
-    /// Gets or sets the completion tokens.
-    /// </summary>
-    public int CompletionTokens { get; set; }
-
-    /// <summary>
-    /// Gets or sets the total tokens.
-    /// </summary>
-    public int TotalTokens => this.PromptTokens + this.CompletionTokens;
-}
-
-/// <summary>
-/// Represents a routing decision.
-/// </summary>
-public class RoutingDecision
-{
-    /// <summary>
-    /// Gets or sets the selected provider.
-    /// </summary>
-    public string ProviderId { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Gets or sets the selected model.
-    /// </summary>
-    public string ModelId { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Gets or sets the routing reason.
-    /// </summary>
-    public string Reason { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Gets or sets the routing score.
-    /// </summary>
-    public double Score { get; set; }
-
-    /// <summary>
-    /// Gets or sets alternative options.
-    /// </summary>
-    public List<AlternativeOption> Alternatives { get; set; } = new();
-}
-
-/// <summary>
-/// Represents an alternative routing option.
-/// </summary>
-public class AlternativeOption
-{
-    /// <summary>
-    /// Gets or sets the provider.
-    /// </summary>
-    public string ProviderId { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Gets or sets the model.
-    /// </summary>
-    public string ModelId { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Gets or sets the score.
-    /// </summary>
-    public double Score { get; set; }
 }

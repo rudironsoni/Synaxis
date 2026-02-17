@@ -68,6 +68,11 @@ public class Saga : AggregateRoot
     /// <summary>
     /// Creates a new saga.
     /// </summary>
+    /// <param name="id">The unique identifier.</param>
+    /// <param name="name">The name of the saga.</param>
+    /// <param name="description">The description of the saga.</param>
+    /// <param name="tenantId">The tenant identifier.</param>
+    /// <returns>A new saga instance.</returns>
     public static Saga Create(
         Guid id,
         string name,
@@ -91,6 +96,11 @@ public class Saga : AggregateRoot
     /// <summary>
     /// Adds an activity to the saga.
     /// </summary>
+    /// <param name="activityId">The unique activity identifier.</param>
+    /// <param name="name">The name of the activity.</param>
+    /// <param name="sequence">The sequence number of the activity.</param>
+    /// <param name="workflowDefinitionId">The workflow definition identifier.</param>
+    /// <param name="compensationActivityId">The compensation activity identifier if applicable.</param>
     public void AddActivity(
         Guid activityId,
         string name,
@@ -134,6 +144,7 @@ public class Saga : AggregateRoot
     /// <summary>
     /// Marks an activity as started.
     /// </summary>
+    /// <param name="activityId">The unique identifier of the activity to start.</param>
     public void StartActivity(Guid activityId)
     {
         var activity = this._activities.FirstOrDefault(a => a.Id == activityId);
@@ -155,6 +166,8 @@ public class Saga : AggregateRoot
     /// <summary>
     /// Marks an activity as completed.
     /// </summary>
+    /// <param name="activityId">The activity identifier.</param>
+    /// <param name="workflowId">The workflow identifier.</param>
     public void CompleteActivity(Guid activityId, Guid workflowId)
     {
         var activity = this._activities.FirstOrDefault(a => a.Id == activityId);
@@ -196,6 +209,8 @@ public class Saga : AggregateRoot
     /// <summary>
     /// Fails the saga and triggers compensation.
     /// </summary>
+    /// <param name="failedActivityId">The identifier of the failed activity.</param>
+    /// <param name="errorMessage">The error message describing the failure.</param>
     public void Fail(Guid failedActivityId, string errorMessage)
     {
         if (this.Status != SagaStatus.Running)
@@ -217,6 +232,7 @@ public class Saga : AggregateRoot
     /// <summary>
     /// Marks an activity as compensated.
     /// </summary>
+    /// <param name="activityId">The activity identifier.</param>
     public void CompensateActivity(Guid activityId)
     {
         var @event = new SagaActivityCompensated
@@ -292,6 +308,7 @@ public class Saga : AggregateRoot
 
     private void ApplyActivityStarted()
     {
+        // Activity start is tracked externally; no state change needed in saga aggregate.
     }
 
     private void ApplyActivityCompleted(SagaActivityCompleted @event)
@@ -331,45 +348,4 @@ public class Saga : AggregateRoot
             activity.Status = ActivityStatus.Compensated;
         }
     }
-}
-
-/// <summary>
-/// Represents an activity within a saga.
-/// </summary>
-public class SagaActivity
-{
-    /// <summary>
-    /// Gets or sets the activity identifier.
-    /// </summary>
-    public Guid Id { get; set; }
-
-    /// <summary>
-    /// Gets or sets the activity name.
-    /// </summary>
-    public string Name { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Gets or sets the sequence order.
-    /// </summary>
-    public int Sequence { get; set; }
-
-    /// <summary>
-    /// Gets or sets the workflow definition identifier.
-    /// </summary>
-    public Guid WorkflowDefinitionId { get; set; }
-
-    /// <summary>
-    /// Gets or sets the compensation activity identifier.
-    /// </summary>
-    public Guid? CompensationActivityId { get; set; }
-
-    /// <summary>
-    /// Gets or sets the status.
-    /// </summary>
-    public ActivityStatus Status { get; set; }
-
-    /// <summary>
-    /// Gets or sets the executed workflow identifier.
-    /// </summary>
-    public Guid? WorkflowId { get; set; }
 }

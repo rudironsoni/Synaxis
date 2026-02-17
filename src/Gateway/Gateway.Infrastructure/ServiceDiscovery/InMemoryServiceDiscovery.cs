@@ -32,7 +32,7 @@ public class InMemoryServiceDiscovery : IServiceDiscovery
     }
 
     /// <inheritdoc/>
-    public async Task RegisterAsync(string serviceName, ServiceInstance instance, CancellationToken cancellationToken = default)
+    public Task RegisterAsync(string serviceName, ServiceInstance instance, CancellationToken cancellationToken = default)
     {
         var instances = this._services.GetOrAdd(serviceName, _ => new ConcurrentDictionary<string, ServiceInstance>(StringComparer.Ordinal));
         instances[instance.Id] = instance;
@@ -44,7 +44,7 @@ public class InMemoryServiceDiscovery : IServiceDiscovery
             instance.Address);
 
         // Notify watchers
-        await this.NotifyWatchersAsync(serviceName).ConfigureAwait(false);
+        return this.NotifyWatchersAsync(serviceName);
     }
 
     /// <inheritdoc/>
@@ -129,14 +129,14 @@ public class InMemoryServiceDiscovery : IServiceDiscovery
     }
 
     /// <inheritdoc/>
-    public async Task WatchAsync(string serviceName, Func<IReadOnlyList<ServiceInstance>, Task> onChange, CancellationToken cancellationToken = default)
+    public Task WatchAsync(string serviceName, Func<IReadOnlyList<ServiceInstance>, Task> onChange, CancellationToken cancellationToken = default)
     {
         var watchers = this._watchers.GetOrAdd(serviceName, _ => new ConcurrentBag<Func<IReadOnlyList<ServiceInstance>, Task>>());
         watchers.Add(onChange);
 
         // Immediately invoke with current instances
         var instances = this.GetHealthyInstances(serviceName);
-        await onChange(instances).ConfigureAwait(false);
+        return onChange(instances);
     }
 
     private IReadOnlyList<ServiceInstance> GetHealthyInstances(string serviceName)

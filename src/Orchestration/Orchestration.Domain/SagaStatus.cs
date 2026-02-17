@@ -44,34 +44,3 @@ public enum SagaStatus
     /// </summary>
     Cancelled,
 }
-
-/// <summary>
-/// Represents the status of a saga activity.
-/// </summary>
-public enum ActivityStatus
-{
-    /// <summary>
-    /// Activity is pending execution.
-    /// </summary>
-    Pending,
-
-    /// <summary>
-    /// Activity is currently running.
-    /// </summary>
-    Running,
-
-    /// <summary>
-    /// Activity completed successfully.
-    /// </summary>
-    Completed,
-
-    /// <summary>
-    /// Activity failed.
-    /// </summary>
-    Failed,
-
-    /// <summary>
-    /// Activity was compensated.
-    /// </summary>
-    Compensated,
-}

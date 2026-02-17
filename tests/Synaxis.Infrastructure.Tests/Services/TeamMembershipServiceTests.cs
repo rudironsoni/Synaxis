@@ -238,6 +238,14 @@ public sealed class TeamMembershipServiceTests : IAsyncLifetime, IDisposable
             CreatedInRegion = "us"
         };
 
+        var team = new Team
+        {
+            Id = _teamId,
+            OrganizationId = _orgId,
+            Slug = "test-team",
+            Name = "Test Team"
+        };
+
         var membership = new TeamMembership
         {
             Id = Guid.NewGuid(),
@@ -248,6 +256,7 @@ public sealed class TeamMembershipServiceTests : IAsyncLifetime, IDisposable
         };
 
         _context!.Users.Add(user);
+        _context.Teams.Add(team);
         _context.TeamMemberships.Add(membership);
         await _context.SaveChangesAsync();
 

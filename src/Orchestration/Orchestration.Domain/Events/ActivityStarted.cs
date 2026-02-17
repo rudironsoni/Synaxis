@@ -1,0 +1,29 @@
+// <copyright file="ActivityStarted.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
+namespace Synaxis.Orchestration.Domain.Events;
+
+using Synaxis.Abstractions.Cloud;
+
+/// <summary>
+/// Event raised when an activity starts execution.
+/// </summary>
+public class ActivityStarted : DomainEvent
+{
+    /// <summary>
+    /// Gets or sets the activity identifier.
+    /// </summary>
+    public Guid ActivityId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the timestamp.
+    /// </summary>
+    public DateTime Timestamp { get; set; }
+
+    /// <inheritdoc/>
+    public override string AggregateId => this.ActivityId.ToString();
+
+    /// <inheritdoc/>
+    public override string EventType => nameof(ActivityStarted);
+}

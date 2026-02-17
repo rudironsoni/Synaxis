@@ -54,18 +54,28 @@ public class JobSchedulerService : BackgroundService
         this._logger.LogInformation("Job Scheduler Service stopped");
     }
 
-    private async Task ProcessScheduledJobsAsync(IEventStore eventStore, CancellationToken ct)
+    private Task ProcessScheduledJobsAsync(IEventStore eventStore, CancellationToken stoppingToken)
     {
         // In production, this would query a read model or projection
         // for jobs that are scheduled and ready to execute
         this._logger.LogDebug("Checking for scheduled jobs...");
-
-        await Task.CompletedTask;
+#pragma warning disable S1172
+        _ = eventStore;
+        _ = stoppingToken;
+#pragma warning restore S1172
+        return Task.CompletedTask;
     }
 
     /// <summary>
     /// Schedules a new job for execution.
     /// </summary>
+    /// <param name="name">The name of the job.</param>
+    /// <param name="jobType">The type of the job.</param>
+    /// <param name="payload">The payload data for the job.</param>
+    /// <param name="tenantId">The tenant identifier.</param>
+    /// <param name="scheduledAt">The scheduled execution time. If null, the job executes immediately.</param>
+    /// <param name="ct">The cancellation token.</param>
+    /// <returns>The scheduled background job.</returns>
     public async Task<BackgroundJob> ScheduleJobAsync(
         string name,
         string jobType,
@@ -100,16 +110,37 @@ public class JobSchedulerService : BackgroundService
     /// <summary>
     /// Executes a pending job.
     /// </summary>
+    /// <param name="jobId">The unique identifier of the job to execute.</param>
+    /// <param name="ct">The cancellation token.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     public async Task ExecuteJobAsync(Guid jobId, CancellationToken ct)
     {
         using var scope = this._serviceProvider.CreateScope();
         var eventStore = scope.ServiceProvider.GetRequiredService<IEventStore>();
 
+        var job = await this.LoadExecutableJobAsync(eventStore, jobId, ct).ConfigureAwait(false);
+        if (job == null)
+        {
+            return;
+        }
+
+        try
+        {
+            await this.ExecuteAndCompleteJobAsync(eventStore, job, jobId, ct).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            await this.HandleJobFailureAsync(eventStore, job, jobId, ex, ct).ConfigureAwait(false);
+        }
+    }
+
+    private async Task<BackgroundJob?> LoadExecutableJobAsync(IEventStore eventStore, Guid jobId, CancellationToken ct)
+    {
         var events = await eventStore.ReadStreamAsync(jobId.ToString(), ct).ConfigureAwait(false);
         if (!events.Any())
         {
             this._logger.LogWarning("Job {JobId} not found", jobId);
-            return;
+            return null;
         }
 
         var job = new BackgroundJob();
@@ -117,70 +148,73 @@ public class JobSchedulerService : BackgroundService
 
         if (job.Status != BackgroundJobStatus.Pending && job.Status != BackgroundJobStatus.Retrying)
         {
-            this._logger.LogWarning(
-                "Job {JobId} cannot be executed in status {Status}",
-                jobId,
-                job.Status);
+            this._logger.LogWarning("Job {JobId} cannot be executed in status {Status}", jobId, job.Status);
+            return null;
+        }
+
+        return job;
+    }
+
+    private async Task ExecuteAndCompleteJobAsync(IEventStore eventStore, BackgroundJob job, Guid jobId, CancellationToken ct)
+    {
+        await StartJobAsync(eventStore, job, jobId, ct).ConfigureAwait(false);
+
+        var result = await ExecuteJobLogicAsync(job, ct).ConfigureAwait(false);
+
+        await CompleteJobAsync(eventStore, job, jobId, result, ct).ConfigureAwait(false);
+        this._logger.LogInformation("Job {JobId} completed successfully", jobId);
+    }
+
+    private static Task StartJobAsync(IEventStore eventStore, BackgroundJob job, Guid jobId, CancellationToken ct)
+    {
+        job.Start();
+        return PersistJobAsync(eventStore, job, jobId, ct);
+    }
+
+    private static Task CompleteJobAsync(IEventStore eventStore, BackgroundJob job, Guid jobId, string result, CancellationToken ct)
+    {
+        job.Complete(result);
+        return PersistJobAsync(eventStore, job, jobId, ct);
+    }
+
+    private async Task HandleJobFailureAsync(IEventStore eventStore, BackgroundJob job, Guid jobId, Exception ex, CancellationToken ct)
+    {
+        this._logger.LogError(ex, "Job {JobId} failed", jobId);
+
+        job.Fail(ex.Message);
+        await PersistJobAsync(eventStore, job, jobId, ct).ConfigureAwait(false);
+
+        await this.TryScheduleRetryAsync(eventStore, job, jobId, ct).ConfigureAwait(false);
+    }
+
+    private async Task TryScheduleRetryAsync(IEventStore eventStore, BackgroundJob job, Guid jobId, CancellationToken ct)
+    {
+        if (job.RetryCount >= job.MaxRetries)
+        {
             return;
         }
 
-        try
-        {
-            job.Start();
-            await eventStore.AppendAsync(
-                jobId.ToString(),
-                job.GetUncommittedEvents(),
-                job.Version - job.GetUncommittedEvents().Count,
-                ct).ConfigureAwait(false);
-            job.MarkAsCommitted();
+        var retryDelay = TimeSpan.FromMinutes(Math.Pow(2, job.RetryCount));
+        job.ScheduleRetry(DateTime.UtcNow.Add(retryDelay));
+        await PersistJobAsync(eventStore, job, jobId, ct).ConfigureAwait(false);
 
-            // Execute the actual job logic here
-            // In production, this would dispatch to a job handler based on job.JobType
-            var result = await this.ExecuteJobLogicAsync(job, ct).ConfigureAwait(false);
-
-            job.Complete(result);
-            await eventStore.AppendAsync(
-                jobId.ToString(),
-                job.GetUncommittedEvents(),
-                job.Version - job.GetUncommittedEvents().Count,
-                ct).ConfigureAwait(false);
-            job.MarkAsCommitted();
-
-            this._logger.LogInformation("Job {JobId} completed successfully", jobId);
-        }
-        catch (Exception ex)
-        {
-            this._logger.LogError(ex, "Job {JobId} failed", jobId);
-
-            job.Fail(ex.Message);
-            await eventStore.AppendAsync(
-                jobId.ToString(),
-                job.GetUncommittedEvents(),
-                job.Version - job.GetUncommittedEvents().Count,
-                ct).ConfigureAwait(false);
-            job.MarkAsCommitted();
-
-            // Schedule retry if applicable
-            if (job.RetryCount < job.MaxRetries)
-            {
-                var retryDelay = TimeSpan.FromMinutes(Math.Pow(2, job.RetryCount));
-                job.ScheduleRetry(DateTime.UtcNow.Add(retryDelay));
-                await eventStore.AppendAsync(
-                    jobId.ToString(),
-                    job.GetUncommittedEvents(),
-                    job.Version - job.GetUncommittedEvents().Count,
-                    ct).ConfigureAwait(false);
-                job.MarkAsCommitted();
-
-                this._logger.LogInformation(
-                    "Job {JobId} scheduled for retry at {RetryAt}",
-                    jobId,
-                    DateTime.UtcNow.Add(retryDelay));
-            }
-        }
+        this._logger.LogInformation(
+            "Job {JobId} scheduled for retry at {RetryAt}",
+            jobId,
+            DateTime.UtcNow.Add(retryDelay));
     }
 
-    private async Task<string> ExecuteJobLogicAsync(BackgroundJob job, CancellationToken ct)
+    private static async Task PersistJobAsync(IEventStore eventStore, BackgroundJob job, Guid jobId, CancellationToken ct)
+    {
+        await eventStore.AppendAsync(
+            jobId.ToString(),
+            job.GetUncommittedEvents(),
+            job.Version - job.GetUncommittedEvents().Count,
+            ct).ConfigureAwait(false);
+        job.MarkAsCommitted();
+    }
+
+    private static async Task<string> ExecuteJobLogicAsync(BackgroundJob job, CancellationToken ct)
     {
         // Job execution logic based on job type
         // This is a placeholder - in production, use a job handler registry

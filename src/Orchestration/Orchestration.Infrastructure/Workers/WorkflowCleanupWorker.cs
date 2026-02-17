@@ -63,10 +63,11 @@ public class WorkflowCleanupWorker : IJob
             this._logger.LogError(ex, "[WorkflowCleanup][{CorrelationId}] Job failed", correlationId);
         }
 
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 
-    private async Task<int> ArchiveWorkflowsAsync(DateTime cutoffDate, string correlationId, CancellationToken ct)
+    #pragma warning disable S1172 // Unused method parameters - stub methods for future implementation
+    private async Task<int> ArchiveWorkflowsAsync(DateTime cutoffDate, string correlationId, CancellationToken cancellationToken)
     {
         // Archive completed workflows older than retention period
         // In production, this would move events to cold storage
@@ -75,11 +76,11 @@ public class WorkflowCleanupWorker : IJob
             correlationId,
             cutoffDate);
 
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
         return 0;
     }
 
-    private async Task<int> CleanupWorkflowsAsync(DateTime cutoffDate, string correlationId, CancellationToken ct)
+    private async Task<int> CleanupWorkflowsAsync(DateTime cutoffDate, string correlationId, CancellationToken cancellationToken)
     {
         // Soft delete or hard delete archived workflows
         this._logger.LogInformation(
@@ -87,7 +88,8 @@ public class WorkflowCleanupWorker : IJob
             correlationId,
             cutoffDate);
 
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
         return 0;
     }
+    #pragma warning restore S1172
 }

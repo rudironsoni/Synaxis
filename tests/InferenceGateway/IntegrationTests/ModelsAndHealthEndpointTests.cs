@@ -14,17 +14,19 @@ using Xunit;
 
 namespace Synaxis.InferenceGateway.IntegrationTests;
 
-public class ModelsAndHealthEndpointTests
+[Collection("Integration")]
+public class ModelsAndHealthEndpointTests : IClassFixture<SynaxisWebApplicationFactory>
 {
-    private static WebApplicationFactory<Program> CreateFactory(Dictionary<string, string?> settings, bool suppressHealthLogs = false)
-    {
-        // Set JWT secret BEFORE factory creation so it's available when Program.cs validates
-        System.Environment.SetEnvironmentVariable(
-            "Synaxis__InferenceGateway__JwtSecret",
-            "TestJwtSecretKeyThatIsAtLeast32BytesLongForHmacSha256Algorithm");
+    private readonly SynaxisWebApplicationFactory _factory;
 
-        return new WebApplicationFactory<Program>()
-        .WithWebHostBuilder(builder =>
+    public ModelsAndHealthEndpointTests(SynaxisWebApplicationFactory factory)
+    {
+        _factory = factory;
+    }
+
+    private WebApplicationFactory<Program> CreateFactory(Dictionary<string, string?> settings, bool suppressHealthLogs = false)
+    {
+        return _factory.WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Development");
 
@@ -77,7 +79,7 @@ public class ModelsAndHealthEndpointTests
             ["Synaxis:InferenceGateway:JwtSecret"] = "TestJwtSecretKeyThatIsAtLeast32BytesLongForHmacSha256Algorithm",
         };
 
-        await using var factory = CreateFactory(settings);
+        var factory = CreateFactory(settings);
         using var client = factory.CreateClient();
 
         var response = await client.GetAsync("/openai/v1/models");
@@ -99,7 +101,7 @@ public class ModelsAndHealthEndpointTests
         {
             ["Synaxis:InferenceGateway:JwtSecret"] = "TestJwtSecretKeyThatIsAtLeast32BytesLongForHmacSha256Algorithm",
         };
-        await using var factory = CreateFactory(settings);
+        var factory = CreateFactory(settings);
         using var client = factory.CreateClient();
 
         var response = await client.GetAsync("/health/liveness");
@@ -125,7 +127,7 @@ public class ModelsAndHealthEndpointTests
             ["Synaxis:InferenceGateway:JwtSecret"] = "TestJwtSecretKeyThatIsAtLeast32BytesLongForHmacSha256Algorithm",
         };
 
-        await using var factory = CreateFactory(settings, suppressHealthLogs: true);
+        var factory = CreateFactory(settings, suppressHealthLogs: true);
         using var client = factory.CreateClient();
 
         var response = await client.GetAsync("/health/readiness");

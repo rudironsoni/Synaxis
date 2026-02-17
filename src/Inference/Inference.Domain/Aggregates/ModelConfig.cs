@@ -4,8 +4,8 @@
 
 namespace Synaxis.Inference.Domain.Aggregates;
 
-using Synaxis.Infrastructure.EventSourcing;
 using Synaxis.Inference.Domain.Events;
+using Synaxis.Infrastructure.EventSourcing;
 
 /// <summary>
 /// Aggregate root representing a model configuration.
@@ -58,7 +58,7 @@ public class ModelConfig : AggregateRoot
     public Guid TenantId { get; private set; }
 
     /// <summary>
-    /// Gets whether the model is active.
+    /// Gets a value indicating whether the model is active.
     /// </summary>
     public bool IsActive { get; private set; }
 
@@ -75,6 +75,16 @@ public class ModelConfig : AggregateRoot
     /// <summary>
     /// Creates a new model configuration.
     /// </summary>
+    /// <param name="id">The unique identifier.</param>
+    /// <param name="modelId">The model identifier.</param>
+    /// <param name="providerId">The provider identifier.</param>
+    /// <param name="displayName">The display name.</param>
+    /// <param name="description">The description.</param>
+    /// <param name="settings">The model settings.</param>
+    /// <param name="pricing">The pricing configuration.</param>
+    /// <param name="capabilities">The model capabilities.</param>
+    /// <param name="tenantId">The tenant identifier.</param>
+    /// <returns>A new model configuration instance.</returns>
     public static ModelConfig Create(
         Guid id,
         string modelId,
@@ -108,6 +118,7 @@ public class ModelConfig : AggregateRoot
     /// <summary>
     /// Updates the model settings.
     /// </summary>
+    /// <param name="settings">The model settings.</param>
     public void UpdateSettings(ModelSettings settings)
     {
         var @event = new ModelConfigUpdated
@@ -127,6 +138,7 @@ public class ModelConfig : AggregateRoot
     /// <summary>
     /// Updates the pricing.
     /// </summary>
+    /// <param name="pricing">The pricing configuration.</param>
     public void UpdatePricing(ModelPricing pricing)
     {
         var @event = new ModelPricingUpdated
@@ -243,117 +255,4 @@ public class ModelConfig : AggregateRoot
         this.IsActive = false;
         this.UpdatedAt = DateTime.UtcNow;
     }
-}
-
-/// <summary>
-/// Represents model settings.
-/// </summary>
-public class ModelSettings
-{
-    /// <summary>
-    /// Gets or sets the maximum tokens.
-    /// </summary>
-    public int MaxTokens { get; set; } = 4096;
-
-    /// <summary>
-    /// Gets or sets the temperature.
-    /// </summary>
-    public double Temperature { get; set; } = 0.7;
-
-    /// <summary>
-    /// Gets or sets the top P.
-    /// </summary>
-    public double TopP { get; set; } = 1.0;
-
-    /// <summary>
-    /// Gets or sets the frequency penalty.
-    /// </summary>
-    public double FrequencyPenalty { get; set; } = 0.0;
-
-    /// <summary>
-    /// Gets or sets the presence penalty.
-    /// </summary>
-    public double PresencePenalty { get; set; } = 0.0;
-
-    /// <summary>
-    /// Gets or sets the context window size.
-    /// </summary>
-    public int ContextWindow { get; set; } = 8192;
-
-    /// <summary>
-    /// Gets or sets the stop sequences.
-    /// </summary>
-    public List<string> StopSequences { get; set; } = new();
-}
-
-/// <summary>
-/// Represents model pricing.
-/// </summary>
-public class ModelPricing
-{
-    /// <summary>
-    /// Gets or sets the input token price per 1K tokens.
-    /// </summary>
-    public decimal InputPricePer1K { get; set; }
-
-    /// <summary>
-    /// Gets or sets the output token price per 1K tokens.
-    /// </summary>
-    public decimal OutputPricePer1K { get; set; }
-
-    /// <summary>
-    /// Gets or sets whether this is a free tier model.
-    /// </summary>
-    public bool IsFreeTier { get; set; }
-
-    /// <summary>
-    /// Gets or sets the free tier quota.
-    /// </summary>
-    public int? FreeTierQuota { get; set; }
-
-    /// <summary>
-    /// Calculates the cost for token usage.
-    /// </summary>
-    public decimal CalculateCost(int inputTokens, int outputTokens)
-    {
-        if (this.IsFreeTier)
-        {
-            return 0m;
-        }
-
-        var inputCost = (inputTokens / 1000m) * this.InputPricePer1K;
-        var outputCost = (outputTokens / 1000m) * this.OutputPricePer1K;
-        return inputCost + outputCost;
-    }
-}
-
-/// <summary>
-/// Represents model capabilities.
-/// </summary>
-public class ModelCapabilities
-{
-    /// <summary>
-    /// Gets or sets whether the model supports streaming.
-    /// </summary>
-    public bool SupportsStreaming { get; set; } = true;
-
-    /// <summary>
-    /// Gets or sets whether the model supports function calling.
-    /// </summary>
-    public bool SupportsFunctionCalling { get; set; } = false;
-
-    /// <summary>
-    /// Gets or sets whether the model supports vision.
-    /// </summary>
-    public bool SupportsVision { get; set; } = false;
-
-    /// <summary>
-    /// Gets or sets whether the model supports JSON mode.
-    /// </summary>
-    public bool SupportsJsonMode { get; set; } = false;
-
-    /// <summary>
-    /// Gets or sets the supported languages.
-    /// </summary>
-    public List<string> SupportedLanguages { get; set; } = new() { "en" };
 }

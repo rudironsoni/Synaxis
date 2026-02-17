@@ -80,6 +80,14 @@ public class BackgroundJob : AggregateRoot
     /// <summary>
     /// Creates a new background job.
     /// </summary>
+    /// <param name="id">The unique identifier.</param>
+    /// <param name="name">The name of the job.</param>
+    /// <param name="jobType">The type of the job.</param>
+    /// <param name="payload">The job payload.</param>
+    /// <param name="tenantId">The tenant identifier.</param>
+    /// <param name="scheduledAt">The scheduled time.</param>
+    /// <param name="maxRetries">The maximum retries.</param>
+    /// <returns>A new background job instance.</returns>
     public static BackgroundJob Create(
         Guid id,
         string name,
@@ -128,6 +136,7 @@ public class BackgroundJob : AggregateRoot
     /// <summary>
     /// Completes the job successfully.
     /// </summary>
+    /// <param name="result">The result of the job execution.</param>
     public void Complete(string result)
     {
         if (this.Status != BackgroundJobStatus.Running)
@@ -148,6 +157,7 @@ public class BackgroundJob : AggregateRoot
     /// <summary>
     /// Fails the job.
     /// </summary>
+    /// <param name="errorMessage">The error message describing the failure.</param>
     public void Fail(string errorMessage)
     {
         if (this.Status != BackgroundJobStatus.Running)
@@ -168,6 +178,7 @@ public class BackgroundJob : AggregateRoot
     /// <summary>
     /// Retries the job after a failure.
     /// </summary>
+    /// <param name="retryAt">The timestamp when the job should be retried.</param>
     public void ScheduleRetry(DateTime retryAt)
     {
         if (this.Status != BackgroundJobStatus.Failed)
@@ -221,8 +232,8 @@ public class BackgroundJob : AggregateRoot
             case BackgroundJobStarted:
                 this.ApplyStarted();
                 break;
-            case BackgroundJobCompleted completed:
-                this.ApplyCompleted(completed);
+            case BackgroundJobCompleted:
+                this.ApplyCompleted();
                 break;
             case BackgroundJobFailed failed:
                 this.ApplyFailed(failed);
@@ -256,7 +267,7 @@ public class BackgroundJob : AggregateRoot
         this.StartedAt = DateTime.UtcNow;
     }
 
-    private void ApplyCompleted(BackgroundJobCompleted @event)
+    private void ApplyCompleted()
     {
         this.Status = BackgroundJobStatus.Completed;
         this.CompletedAt = DateTime.UtcNow;
@@ -284,40 +295,4 @@ public class BackgroundJob : AggregateRoot
         this.Status = BackgroundJobStatus.Cancelled;
         this.CompletedAt = DateTime.UtcNow;
     }
-}
-
-/// <summary>
-/// Represents the status of a background job.
-/// </summary>
-public enum BackgroundJobStatus
-{
-    /// <summary>
-    /// Job is pending execution.
-    /// </summary>
-    Pending,
-
-    /// <summary>
-    /// Job is currently running.
-    /// </summary>
-    Running,
-
-    /// <summary>
-    /// Job completed successfully.
-    /// </summary>
-    Completed,
-
-    /// <summary>
-    /// Job failed.
-    /// </summary>
-    Failed,
-
-    /// <summary>
-    /// Job is scheduled for retry.
-    /// </summary>
-    Retrying,
-
-    /// <summary>
-    /// Job was cancelled.
-    /// </summary>
-    Cancelled,
 }

@@ -4,8 +4,8 @@
 
 namespace Synaxis.Inference.Domain.Aggregates;
 
-using Synaxis.Infrastructure.EventSourcing;
 using Synaxis.Inference.Domain.Events;
+using Synaxis.Infrastructure.EventSourcing;
 
 /// <summary>
 /// Aggregate root representing a chat template for structured prompts.
@@ -35,7 +35,7 @@ public class ChatTemplate : AggregateRoot
     /// <summary>
     /// Gets the template parameters.
     /// </summary>
-    public List<TemplateParameter> Parameters { get; private set; } = new();
+    public IList<TemplateParameter> Parameters { get; private set; } = new List<TemplateParameter>();
 
     /// <summary>
     /// Gets the template category.
@@ -48,12 +48,12 @@ public class ChatTemplate : AggregateRoot
     public Guid TenantId { get; private set; }
 
     /// <summary>
-    /// Gets whether this is a system template.
+    /// Gets a value indicating whether this is a system template.
     /// </summary>
     public bool IsSystemTemplate { get; private set; }
 
     /// <summary>
-    /// Gets whether the template is active.
+    /// Gets a value indicating whether the template is active.
     /// </summary>
     public bool IsActive { get; private set; }
 
@@ -75,12 +75,21 @@ public class ChatTemplate : AggregateRoot
     /// <summary>
     /// Creates a new chat template.
     /// </summary>
+    /// <param name="id">The unique identifier.</param>
+    /// <param name="name">The name of the template.</param>
+    /// <param name="description">The description of the template.</param>
+    /// <param name="templateContent">The content of the template.</param>
+    /// <param name="parameters">The parameters of the template.</param>
+    /// <param name="category">The category of the template.</param>
+    /// <param name="tenantId">The tenant identifier.</param>
+    /// <param name="isSystemTemplate">Whether this is a system template.</param>
+    /// <returns>A new chat template instance.</returns>
     public static ChatTemplate Create(
         Guid id,
         string name,
         string? description,
         string templateContent,
-        List<TemplateParameter> parameters,
+        IList<TemplateParameter> parameters,
         string category,
         Guid tenantId,
         bool isSystemTemplate = false)
@@ -106,7 +115,12 @@ public class ChatTemplate : AggregateRoot
     /// <summary>
     /// Updates the template.
     /// </summary>
-    public void Update(string name, string? description, string templateContent, List<TemplateParameter> parameters, string category)
+    /// <param name="name">The name of the template.</param>
+    /// <param name="description">The description of the template.</param>
+    /// <param name="templateContent">The content of the template.</param>
+    /// <param name="parameters">The parameters of the template.</param>
+    /// <param name="category">The category of the template.</param>
+    public void Update(string name, string? description, string templateContent, IList<TemplateParameter> parameters, string category)
     {
         if (this.IsSystemTemplate)
         {
@@ -130,15 +144,15 @@ public class ChatTemplate : AggregateRoot
     /// <summary>
     /// Renders the template with provided parameter values.
     /// </summary>
-    public string Render(Dictionary<string, string> parameterValues)
+    /// <param name="parameterValues">The parameter values to use when rendering.</param>
+    /// <returns>The rendered template content.</returns>
+    public string Render(IReadOnlyDictionary<string, string> parameterValues)
     {
         // Validate all required parameters are provided
-        foreach (var param in this.Parameters.Where(p => p.IsRequired))
+        var missingParam = this.Parameters.FirstOrDefault(p => p.IsRequired && !parameterValues.ContainsKey(p.Name));
+        if (missingParam != null)
         {
-            if (!parameterValues.ContainsKey(param.Name))
-            {
-                throw new ArgumentException($"Required parameter '{param.Name}' is missing.");
-            }
+            throw new ArgumentException($"Required parameter '{missingParam.Name}' is missing.", nameof(parameterValues));
         }
 
         var result = this.TemplateContent;
@@ -281,95 +295,17 @@ public class ChatTemplate : AggregateRoot
 
     private void ApplyDeactivated()
     {
-        this.IsActive = false;
-        this.UpdatedAt = DateTime.UtcNow;
+        this.SetInactive();
     }
 
     private void ApplyDeleted()
     {
+        this.SetInactive();
+    }
+
+    private void SetInactive()
+    {
         this.IsActive = false;
         this.UpdatedAt = DateTime.UtcNow;
     }
-}
-
-/// <summary>
-/// Represents a template parameter.
-/// </summary>
-public class TemplateParameter
-{
-    /// <summary>
-    /// Gets or sets the parameter name.
-    /// </summary>
-    public string Name { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Gets or sets the parameter description.
-    /// </summary>
-    public string? Description { get; set; }
-
-    /// <summary>
-    /// Gets or sets the parameter type.
-    /// </summary>
-    public ParameterType Type { get; set; } = ParameterType.String;
-
-    /// <summary>
-    /// Gets or sets whether the parameter is required.
-    /// </summary>
-    public bool IsRequired { get; set; } = true;
-
-    /// <summary>
-    /// Gets or sets the default value.
-    /// </summary>
-    public string? DefaultValue { get; set; }
-
-    /// <summary>
-    /// Gets or sets the validation regex pattern.
-    /// </summary>
-    public string? ValidationPattern { get; set; }
-
-    /// <summary>
-    /// Gets or sets the allowed values for enum type.
-    /// </summary>
-    public List<string> AllowedValues { get; set; } = new();
-}
-
-/// <summary>
-/// Represents parameter types.
-/// </summary>
-public enum ParameterType
-{
-    /// <summary>
-    /// String parameter.
-    /// </summary>
-    String,
-
-    /// <summary>
-    /// Integer parameter.
-    /// </summary>
-    Integer,
-
-    /// <summary>
-    /// Decimal parameter.
-    /// </summary>
-    Decimal,
-
-    /// <summary>
-    /// Boolean parameter.
-    /// </summary>
-    Boolean,
-
-    /// <summary>
-    /// Enum parameter with allowed values.
-    /// </summary>
-    Enum,
-
-    /// <summary>
-    /// DateTime parameter.
-    /// </summary>
-    DateTime,
-
-    /// <summary>
-    /// JSON parameter.
-    /// </summary>
-    Json,
 }
