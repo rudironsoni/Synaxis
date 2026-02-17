@@ -9,9 +9,11 @@ using BenchmarkDotNet.Diagnosers;
 using Microsoft.Extensions.Configuration;
 using Synaxis.InferenceGateway.Application.Configuration;
 
+/// <summary>
+/// Benchmarks for configuration loading performance.
+/// </summary>
 [MemoryDiagnoser]
 [SimpleJob(warmupCount: 3, iterationCount: 10)]
-
 public class ConfigurationLoadingBenchmarks
 {
     private IConfiguration _smallConfig = null!;
@@ -19,6 +21,9 @@ public class ConfigurationLoadingBenchmarks
     private IConfiguration _largeConfig = null!;
     private IConfiguration _configWithEnvVars = null!;
 
+    /// <summary>
+    /// Sets up the benchmark data.
+    /// </summary>
     [GlobalSetup]
     public void Setup()
     {
@@ -28,6 +33,10 @@ public class ConfigurationLoadingBenchmarks
         this._configWithEnvVars = CreateConfigurationWithEnvironmentVariables(13, 10, 10);
     }
 
+    /// <summary>
+    /// Benchmarks binding small configuration.
+    /// </summary>
+    /// <returns>The bound configuration.</returns>
     [Benchmark]
     public SynaxisConfiguration Bind_SmallConfiguration()
     {
@@ -36,6 +45,10 @@ public class ConfigurationLoadingBenchmarks
         return config;
     }
 
+    /// <summary>
+    /// Benchmarks binding medium configuration.
+    /// </summary>
+    /// <returns>The bound configuration.</returns>
     [Benchmark]
     public SynaxisConfiguration Bind_MediumConfiguration()
     {
@@ -44,6 +57,10 @@ public class ConfigurationLoadingBenchmarks
         return config;
     }
 
+    /// <summary>
+    /// Benchmarks binding large configuration.
+    /// </summary>
+    /// <returns>The bound configuration.</returns>
     [Benchmark]
     public SynaxisConfiguration Bind_LargeConfiguration()
     {
@@ -52,6 +69,10 @@ public class ConfigurationLoadingBenchmarks
         return config;
     }
 
+    /// <summary>
+    /// Benchmarks binding configuration with environment variables.
+    /// </summary>
+    /// <returns>The bound configuration.</returns>
     [Benchmark]
     public SynaxisConfiguration Bind_ConfigurationWithEnvironmentVariables()
     {
@@ -60,24 +81,40 @@ public class ConfigurationLoadingBenchmarks
         return config;
     }
 
+    /// <summary>
+    /// Benchmarks getting provider key from small configuration.
+    /// </summary>
+    /// <returns>The provider key.</returns>
     [Benchmark]
     public string GetProviderKey_SmallConfiguration()
     {
         return this._smallConfig["Synaxis:InferenceGateway:Providers:groq:Key"] ?? string.Empty;
     }
 
+    /// <summary>
+    /// Benchmarks getting provider key from large configuration.
+    /// </summary>
+    /// <returns>The provider key.</returns>
     [Benchmark]
     public string GetProviderKey_LargeConfiguration()
     {
         return this._largeConfig["Synaxis:InferenceGateway:Providers:provider-12:Key"] ?? string.Empty;
     }
 
+    /// <summary>
+    /// Benchmarks getting JWT secret from configuration.
+    /// </summary>
+    /// <returns>The JWT secret.</returns>
     [Benchmark]
     public string GetJwtSecret()
     {
         return this._largeConfig["Synaxis:InferenceGateway:JwtSecret"] ?? string.Empty;
     }
 
+    /// <summary>
+    /// Benchmarks getting all provider keys from configuration.
+    /// </summary>
+    /// <returns>The provider keys.</returns>
     [Benchmark]
     public string[] GetAllProviderKeys()
     {
