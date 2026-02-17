@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RunSettings>
+  <!-- Test timeout - fail tests that run longer than 2 minutes -->
+  <xUnit>
+    <MethodTimeout>00:02:00</MethodTimeout>
+  </xUnit>
   <DataCollectionRunSettings>
     <DataCollectors>
       <DataCollector friendlyName="XPlat code coverage">

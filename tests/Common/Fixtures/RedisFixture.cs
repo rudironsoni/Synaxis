@@ -73,7 +73,7 @@ public sealed class RedisFixture : IAsyncLifetime, IDisposable
     {
         if (_connection != null)
         {
-            _connection.CloseAsync().GetAwaiter().GetResult();
+            // Dispose connection directly - CloseAsync().GetAwaiter().GetResult() causes deadlocks
             _connection.Dispose();
         }
     }
