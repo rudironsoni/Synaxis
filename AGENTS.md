@@ -36,6 +36,55 @@ For every non-trivial task, follow this sequence exactly:
 
 If any required check fails, stop, fix root cause, and rerun all required checks.
 
+## GIT WORKFLOW - ABSOLUTE PROHIBITIONS
+
+### ❌ NEVER USE `git stash` TO AVOID CONFLICTS ❌
+
+**THIS IS FORBIDDEN. NO EXCEPTIONS. EVER.**
+
+Using `git stash` to hide local changes, avoid merge conflicts, or "clean up" the working directory is **STRICTLY PROHIBITED**. This behavior:
+- Hides work that may be lost or forgotten
+- Prevents proper conflict resolution
+- Breaks trust by making changes invisible
+- Creates technical debt that compounds over time
+
+**YOU MUST NEVER:**
+- Run `git stash` to "temporarily" save work
+- Run `git stash pop` without explicit user request
+- Use `git stash` before switching branches
+- Use `git stash` to avoid dealing with conflicts
+- Use `git stash` during rebase operations
+
+**WHAT TO DO INSTEAD:**
+1. **If you have uncommitted changes:**
+   - Commit them: `git add <files> && git commit -m "WIP: description"`
+   - Or discard properly: `git restore <files>` (only if truly disposable)
+
+2. **If you encounter merge conflicts:**
+   - STOP and resolve them properly
+   - Use `git status` to see conflicted files
+   - Edit files to resolve conflicts manually
+   - Use `git add <file>` to mark resolved
+   - NEVER abort with `git merge --abort` unless explicitly instructed
+
+3. **If you need to switch branches:**
+   - Commit current work first
+   - Or create a new branch: `git checkout -b new-branch-name`
+
+4. **If rebase has conflicts:**
+   - Resolve the conflicts manually
+   - Use `git rebase --continue` after resolving
+   - NEVER use `git rebase --abort` unless explicitly instructed
+
+**ENFORCEMENT:**
+- Before any git operation, check: `git status`
+- If local changes exist, COMMIT THEM or DISCARD PROPERLY
+- If stash exists: `git stash list` - DO NOT IGNORE THIS OUTPUT
+- **If you stash work, you must restore and handle it before any other work**
+
+**VIOLATION CONSEQUENCE:**
+Stashing work without immediate restoration and proper handling is a **CRITICAL ERROR** that breaks trust and risks data loss.
+
 ---
 
 # Project Instructions for AI Agents
@@ -229,6 +278,32 @@ Any missing verification evidence means the change is **NOT VERIFIED**.
 
 ---
 
+## Before ANY Git Operation - MANDATORY CHECK
+
+**You MUST run these commands BEFORE any git checkout, switch, rebase, merge, or pull:**
+
+```bash
+# 1. Check for stashes
+if git stash list | grep -q 'stash@'; then
+    echo "ERROR: Stashes exist! Handle them before proceeding."
+    echo "Run: git stash pop && git add -A && git commit -m 'Restored stashed work'"
+    exit 1
+fi
+
+# 2. Check for local changes
+if ! git diff --quiet || ! git diff --cached --quiet; then
+    echo "WARNING: Local changes exist."
+    git status
+    echo "Commit them or discard them properly before proceeding."
+fi
+```
+
+**DO NOT PROCEED** with any git operation until:
+- `git stash list` returns empty
+- You have explicitly decided what to do with local changes (commit or restore)
+
+---
+
 ## Pre-Completion Checklist (CRITICAL)
 
 Before claiming work is complete, you MUST run this checklist:
@@ -239,10 +314,13 @@ Before claiming work is complete, you MUST run this checklist:
 git stash list
 ```
 
-- If stashes exist, review each one with `git stash show -p stash@{n}`
-- Apply and commit if they contain work that should be committed
-- Drop only if truly temporary/debug stashes
-- **NEVER** leave important work in stashes uncommitted
+- **CRITICAL: If stashes exist, STOP and handle them immediately**
+- Run: `git stash list`
+- If stashes exist: `git stash pop` to restore the most recent
+- Commit the restored changes: `git add -A && git commit -m "Restored stashed work"`
+- Repeat until `git stash list` returns empty
+- **NEVER** leave work in stashes
+- **NEVER** use `git stash` to avoid conflicts or "clean" working directory
 
 ### 2. Check for Unstaged Changes
 
