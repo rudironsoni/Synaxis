@@ -368,8 +368,9 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
             user.UpdatedAt = DateTime.UtcNow;
             await this.dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-            // Generate QR code URI
-            var qrCodeUri = $"otpauth://totp/Synaxis:{user.Email}?secret={secret}&issuer=Synaxis";
+            // Generate QR code URI with URL-encoded email
+            var encodedEmail = Uri.EscapeDataString(user.Email);
+            var qrCodeUri = $"otpauth://totp/Synaxis:{encodedEmail}?secret={secret}&issuer=Synaxis";
 
             return this.Ok(new
             {
@@ -585,15 +586,10 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         private static string[] GenerateBackupCodes()
         {
             var codes = new string[10];
-            using (var rng = System.Security.Cryptography.RandomNumberGenerator.Create())
+            for (int i = 0; i < codes.Length; i++)
             {
-                var bytes = new byte[4];
-                for (int i = 0; i < 10; i++)
-                {
-                    rng.GetBytes(bytes);
-                    var value = BitConverter.ToUInt32(bytes, 0) % 100000000;
-                    codes[i] = value.ToString("D8");
-                }
+                var value = System.Security.Cryptography.RandomNumberGenerator.GetInt32(0, 100000000);
+                codes[i] = value.ToString("D8", System.Globalization.CultureInfo.InvariantCulture);
             }
 
             return codes;
@@ -623,8 +619,19 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
             using var sha256 = System.Security.Cryptography.SHA256.Create();
             var bytes = System.Text.Encoding.UTF8.GetBytes(code);
             var computedHash = sha256.ComputeHash(bytes);
-            var computedHashString = Convert.ToBase64String(computedHash);
-            return string.Equals(computedHashString, hash, StringComparison.Ordinal);
+
+            byte[] storedHashBytes;
+            try
+            {
+                storedHashBytes = Convert.FromBase64String(hash);
+            }
+            catch (FormatException)
+            {
+                return false;
+            }
+
+            // Use constant-time comparison to avoid timing attacks
+            return System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(computedHash, storedHashBytes);
         }
 
         private static string Base32Encode(byte[] data)
