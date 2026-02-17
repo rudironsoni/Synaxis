@@ -289,7 +289,7 @@ public class AuthControllerTests : IClassFixture<SynaxisWebApplicationFactory>
         this._client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
         // Act: Call MFA setup endpoint
-        var response = await this._client.PostAsync("/api/v1/auth/mfa/setup", null);
+        var response = await this._client.PostAsync("/auth/mfa/setup", null);
 
         // Assert
         response.EnsureSuccessStatusCode();
@@ -315,7 +315,7 @@ public class AuthControllerTests : IClassFixture<SynaxisWebApplicationFactory>
 
         this._client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-        var setupResponse = await this._client.PostAsync("/api/v1/auth/mfa/setup", null);
+        var setupResponse = await this._client.PostAsync("/auth/mfa/setup", null);
         setupResponse.EnsureSuccessStatusCode();
         var setupContent = await setupResponse.Content.ReadFromJsonAsync<JsonElement>();
         var secret = setupContent.GetProperty("secret").GetString();
@@ -325,7 +325,7 @@ public class AuthControllerTests : IClassFixture<SynaxisWebApplicationFactory>
         var code = totp.ComputeTotp();
 
         // Act: Enable MFA
-        var enableResponse = await this._client.PostAsJsonAsync("/api/v1/auth/mfa/enable", new { code });
+        var enableResponse = await this._client.PostAsJsonAsync("/auth/mfa/enable", new { code });
 
         // Assert
         enableResponse.EnsureSuccessStatusCode();
@@ -364,10 +364,10 @@ public class AuthControllerTests : IClassFixture<SynaxisWebApplicationFactory>
 
         this._client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-        await this._client.PostAsync("/api/v1/auth/mfa/setup", null);
+        await this._client.PostAsync("/auth/mfa/setup", null);
 
         // Act: Try to enable with invalid code
-        var response = await this._client.PostAsJsonAsync("/api/v1/auth/mfa/enable", new { code = "000000" });
+        var response = await this._client.PostAsJsonAsync("/auth/mfa/enable", new { code = "000000" });
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -385,18 +385,18 @@ public class AuthControllerTests : IClassFixture<SynaxisWebApplicationFactory>
 
         this._client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-        var setupResponse = await this._client.PostAsync("/api/v1/auth/mfa/setup", null);
+        var setupResponse = await this._client.PostAsync("/auth/mfa/setup", null);
         var setupContent = await setupResponse.Content.ReadFromJsonAsync<JsonElement>();
         var secret = setupContent.GetProperty("secret").GetString();
 
         var totp = new OtpNet.Totp(DecodeTotpSecret(secret!));
         var code = totp.ComputeTotp();
 
-        await this._client.PostAsJsonAsync("/api/v1/auth/mfa/enable", new { code });
+        await this._client.PostAsJsonAsync("/auth/mfa/enable", new { code });
 
         // Act: Disable MFA with valid TOTP code
         var disableCode = totp.ComputeTotp();
-        var response = await this._client.PostAsJsonAsync("/api/v1/auth/mfa/disable", new { code = disableCode });
+        var response = await this._client.PostAsJsonAsync("/auth/mfa/disable", new { code = disableCode });
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
@@ -427,13 +427,13 @@ public class AuthControllerTests : IClassFixture<SynaxisWebApplicationFactory>
         this._client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
         // Setup and enable MFA
-        var setupResponse = await this._client.PostAsync("/api/v1/auth/mfa/setup", null);
+        var setupResponse = await this._client.PostAsync("/auth/mfa/setup", null);
         var setupContent = await setupResponse.Content.ReadFromJsonAsync<JsonElement>();
         var secret = setupContent.GetProperty("secret").GetString();
 
         var totp = new OtpNet.Totp(DecodeTotpSecret(secret!));
         var enableCode = totp.ComputeTotp();
-        await this._client.PostAsJsonAsync("/api/v1/auth/mfa/enable", new { code = enableCode });
+        await this._client.PostAsJsonAsync("/auth/mfa/enable", new { code = enableCode });
 
         // Clear auth header
         this._client.DefaultRequestHeaders.Authorization = null;

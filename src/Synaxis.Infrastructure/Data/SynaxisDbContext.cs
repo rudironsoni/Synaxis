@@ -172,6 +172,8 @@ namespace Synaxis.Infrastructure.Data
             ConfigurePasswordHistory(modelBuilder);
             ConfigurePasswordPolicy(modelBuilder);
             ConfigureCollection(modelBuilder);
+            ConfigureCollectionMembership(modelBuilder);
+            ConfigureOrganizationApiKey(modelBuilder);
         }
 
         private static void ConfigureTableNames(ModelBuilder modelBuilder)
@@ -195,6 +197,8 @@ namespace Synaxis.Infrastructure.Data
             modelBuilder.Entity<JwtBlacklist>().ToTable("jwt_blacklists");
             modelBuilder.Entity<PasswordHistory>().ToTable("password_histories");
             modelBuilder.Entity<PasswordPolicy>().ToTable("password_policies");
+            modelBuilder.Entity<CollectionMembership>().ToTable("collection_memberships");
+            modelBuilder.Entity<OrganizationApiKey>().ToTable("organization_api_keys");
         }
 
         private static void ConfigureOrganization(ModelBuilder modelBuilder)
@@ -1046,6 +1050,98 @@ namespace Synaxis.Infrastructure.Data
             entity.HasOne(e => e.Creator).WithMany().HasForeignKey(e => e.CreatedBy).OnDelete(DeleteBehavior.Restrict);
             entity.HasIndex(e => new { e.OrganizationId, e.Slug }).IsUnique();
             entity.HasIndex(e => e.TeamId);
+        }
+
+        private static void ConfigureCollectionMembership(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<CollectionMembership>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id)
+                    .HasColumnName("id")
+                    .ValueGeneratedOnAdd();
+
+                entity.Property(e => e.UserId).HasColumnName("user_id");
+                entity.Property(e => e.CollectionId).HasColumnName("collection_id");
+                entity.Property(e => e.OrganizationId).HasColumnName("organization_id");
+                entity.Property(e => e.Role).HasColumnName("role");
+                entity.Property(e => e.JoinedAt).HasColumnName("joined_at");
+                entity.Property(e => e.AddedBy).HasColumnName("added_by");
+
+                entity.HasOne(e => e.User)
+                    .WithMany(u => u.CollectionMemberships)
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Collection)
+                    .WithMany(c => c.CollectionMemberships)
+                    .HasForeignKey(e => e.CollectionId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Organization)
+                    .WithMany()
+                    .HasForeignKey(e => e.OrganizationId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Adder)
+                    .WithMany()
+                    .HasForeignKey(e => e.AddedBy)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => new { e.UserId, e.CollectionId }).IsUnique();
+                entity.HasIndex(e => e.OrganizationId);
+                entity.HasIndex(e => e.CollectionId);
+            });
+        }
+
+        private static void ConfigureOrganizationApiKey(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<OrganizationApiKey>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id)
+                    .HasColumnName("id")
+                    .ValueGeneratedOnAdd();
+
+                entity.Property(e => e.OrganizationId).HasColumnName("organization_id");
+                entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+                entity.Property(e => e.Name).HasColumnName("name");
+                entity.Property(e => e.KeyHash).HasColumnName("key_hash");
+                entity.Property(e => e.KeyPrefix).HasColumnName("key_prefix");
+                entity.Property(e => e.ExpiresAt).HasColumnName("expires_at");
+                entity.Property(e => e.LastUsedAt).HasColumnName("last_used_at");
+                entity.Property(e => e.RevokedAt).HasColumnName("revoked_at");
+                entity.Property(e => e.RevokedReason).HasColumnName("revoked_reason");
+                entity.Property(e => e.IsActive).HasColumnName("is_active");
+                entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+                entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+                entity.Property(e => e.TotalRequests).HasColumnName("total_requests");
+                entity.Property(e => e.ErrorCount).HasColumnName("error_count");
+
+                entity.Property(e => e.Permissions)
+                    .HasColumnName("permissions")
+                    .HasConversion(
+                        v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null!),
+                        v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null!) ?? new Dictionary<string, object>(StringComparer.Ordinal),
+                        new ValueComparer<IDictionary<string, object>>(
+                            (c1, c2) => c1 != null && c2 != null && c1.Count == c2.Count && !c1.Except(c2).Any(),
+                            c => c == null ? 0 : c.Aggregate(0, (a, v) => HashCode.Combine(a, StringComparer.Ordinal.GetHashCode(v.Key), v.Value.GetHashCode())),
+                            c => c == null ? new Dictionary<string, object>(StringComparer.Ordinal) : c.ToDictionary(entry => entry.Key, entry => entry.Value)))
+                    .HasColumnType("jsonb");
+
+                entity.HasOne(e => e.Organization)
+                    .WithMany()
+                    .HasForeignKey(e => e.OrganizationId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Creator)
+                    .WithMany()
+                    .HasForeignKey(e => e.CreatedBy)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => e.KeyHash).IsUnique();
+                entity.HasIndex(e => e.OrganizationId);
+            });
         }
     }
 }
