@@ -121,7 +121,7 @@ public sealed class CosmosDbFixture : IAsyncLifetime
             _logger = logger;
         }
 
-        public Task AppendAsync(string streamId, IEnumerable<IDomainEvent> events, int expectedVersion, CancellationToken cancellationToken = default)
+        public async Task AppendAsync(string streamId, IEnumerable<IDomainEvent> events, int expectedVersion, CancellationToken cancellationToken = default)
         {
             var currentVersion = _streamVersions.GetValueOrDefault(streamId, 0);
             if (currentVersion != expectedVersion)
@@ -144,7 +144,7 @@ public sealed class CosmosDbFixture : IAsyncLifetime
                     Timestamp = domainEvent.OccurredOn
                 };
 
-                _container.CreateItemAsync(eventDocument, new PartitionKey(streamId), cancellationToken).GetAwaiter().GetResult();
+                await _container.CreateItemAsync(eventDocument, new PartitionKey(streamId), cancellationToken);
                 version++;
             }
 
@@ -154,18 +154,16 @@ public sealed class CosmosDbFixture : IAsyncLifetime
                 events.Count(),
                 streamId,
                 expectedVersion + 1);
-
-            return Task.CompletedTask;
         }
 
-        public Task<IReadOnlyList<IDomainEvent>> ReadAsync(string streamId, int fromVersion, int toVersion, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<IDomainEvent>> ReadAsync(string streamId, int fromVersion, int toVersion, CancellationToken cancellationToken = default)
         {
             var events = _container.GetItemQueryIterator(new QueryDefinition("SELECT * FROM e"));
             var result = new List<IDomainEvent>();
 
             while (events.HasMoreResults)
             {
-                var response = events.ReadNextAsync(cancellationToken).GetAwaiter().GetResult();
+                var response = await events.ReadNextAsync(cancellationToken);
                 foreach (var document in response.Where(e => e.StreamId == streamId && e.Version >= fromVersion && e.Version <= toVersion))
                 {
                     result.Add(new DomainEventWrapper
@@ -178,7 +176,7 @@ public sealed class CosmosDbFixture : IAsyncLifetime
                 }
             }
 
-            return Task.FromResult<IReadOnlyList<IDomainEvent>>(result.OrderBy(e => ((DomainEventWrapper)e).EventType).ToList().AsReadOnly());
+            return result.OrderBy(e => ((DomainEventWrapper)e).EventType).ToList().AsReadOnly();
         }
 
         public Task<IReadOnlyList<IDomainEvent>> ReadStreamAsync(string streamId, CancellationToken cancellationToken = default)

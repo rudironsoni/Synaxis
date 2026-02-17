@@ -85,7 +85,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
                 await Task.CompletedTask.ConfigureAwait(false);
             }, CancellationToken.None);
 
-            await Task.Delay(2500);
+            await Task.Delay(200);
 
             Assert.True(onSuccessCalled);
             Assert.NotNull(receivedToken);
@@ -131,7 +131,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
                 await Task.CompletedTask.ConfigureAwait(false);
             }, CancellationToken.None);
 
-            await Task.Delay(8000);
+            await Task.Delay(300);
 
             Assert.True(onSuccessCalled);
             Assert.NotNull(receivedToken);

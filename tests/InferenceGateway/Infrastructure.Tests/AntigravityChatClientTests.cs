@@ -62,18 +62,18 @@ public class AntigravityChatClientTests
                 "SendAsync",
                 ItExpr.IsAny<HttpRequestMessage>(),
                 ItExpr.IsAny<CancellationToken>())
-            .Callback<HttpRequestMessage, CancellationToken>((req, _) =>
+            .ReturnsAsync((HttpRequestMessage req, CancellationToken _) =>
             {
                 capturedRequest = req;
-                requestBody = req.Content?.ReadAsStringAsync().GetAwaiter().GetResult();
-            })
-            .ReturnsAsync(new HttpResponseMessage
-            {
-                StatusCode = HttpStatusCode.OK,
-                Content = new StringContent(responseJson),
+                requestBody = req.Content != null ? req.Content.ReadAsStringAsync().GetAwaiter().GetResult() : null;
+                return new HttpResponseMessage
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    Content = new StringContent(responseJson),
+                };
             });
 
-        var httpClient = new HttpClient(this._handlerMock.Object)
+        using var httpClient = new HttpClient(this._handlerMock.Object)
         {
             BaseAddress = new Uri("https://cloudcode-pa.googleapis.com"),
         };
@@ -134,7 +134,7 @@ data: [DONE]
                 Content = new StringContent(streamContent),
             });
 
-        var httpClient = new HttpClient(this._handlerMock.Object)
+        using var httpClient = new HttpClient(this._handlerMock.Object)
         {
             BaseAddress = new Uri("https://cloudcode-pa.googleapis.com"),
         };
@@ -142,7 +142,7 @@ data: [DONE]
 
         // Act
         var parts = new List<string>();
-        await foreach (var update in client.GetStreamingResponseAsync(new List<ChatMessage> { new ChatMessage(ChatRole.User, "Hi") }))
+        await foreach (var update in client.GetStreamingResponseAsync([new ChatMessage(ChatRole.User, "Hi")]))
         {
             parts.Add(update.Text);
         }
