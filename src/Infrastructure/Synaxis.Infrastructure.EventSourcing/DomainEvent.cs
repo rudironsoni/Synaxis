@@ -18,7 +18,6 @@ public abstract class DomainEvent : IDomainEvent
     {
         this.EventId = Guid.NewGuid().ToString();
         this.OccurredOn = DateTime.UtcNow;
-        this.EventType = this.GetType().Name;
     }
 
     /// <inheritdoc />
@@ -27,6 +26,11 @@ public abstract class DomainEvent : IDomainEvent
     /// <inheritdoc />
     public DateTime OccurredOn { get; }
 
+    /// <summary>
+    /// Gets the aggregate identifier for the event.
+    /// </summary>
+    public abstract string AggregateId { get; }
+
     /// <inheritdoc />
-    public string EventType { get; }
+    public virtual string EventType => this.GetType().Name;
 }

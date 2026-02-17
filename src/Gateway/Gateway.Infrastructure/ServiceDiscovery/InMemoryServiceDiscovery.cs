@@ -16,7 +16,7 @@ public class InMemoryServiceDiscovery : IServiceDiscovery
     private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, ServiceInstance>> _services;
     private readonly IMemoryCache _cache;
     private readonly ILogger<InMemoryServiceDiscovery> _logger;
-    private readonly ConcurrentDictionary<string, List<Func<IReadOnlyList<ServiceInstance>, Task>>> _watchers;
+    private readonly ConcurrentDictionary<string, ConcurrentBag<Func<IReadOnlyList<ServiceInstance>, Task>>> _watchers;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="InMemoryServiceDiscovery"/> class.
@@ -25,16 +25,16 @@ public class InMemoryServiceDiscovery : IServiceDiscovery
     /// <param name="logger">The logger.</param>
     public InMemoryServiceDiscovery(IMemoryCache cache, ILogger<InMemoryServiceDiscovery> logger)
     {
-        this._services = new ConcurrentDictionary<string, ConcurrentDictionary<string, ServiceInstance>>();
+        this._services = new ConcurrentDictionary<string, ConcurrentDictionary<string, ServiceInstance>>(StringComparer.Ordinal);
         this._cache = cache;
         this._logger = logger;
-        this._watchers = new ConcurrentDictionary<string, List<Func<IReadOnlyList<ServiceInstance>, Task>>>();
+        this._watchers = new ConcurrentDictionary<string, ConcurrentBag<Func<IReadOnlyList<ServiceInstance>, Task>>>(StringComparer.Ordinal);
     }
 
     /// <inheritdoc/>
-    public Task RegisterAsync(string serviceName, ServiceInstance instance, CancellationToken cancellationToken = default)
+    public async Task RegisterAsync(string serviceName, ServiceInstance instance, CancellationToken cancellationToken = default)
     {
-        var instances = this._services.GetOrAdd(serviceName, _ => new ConcurrentDictionary<string, ServiceInstance>());
+        var instances = this._services.GetOrAdd(serviceName, _ => new ConcurrentDictionary<string, ServiceInstance>(StringComparer.Ordinal));
         instances[instance.Id] = instance;
 
         this._logger.LogInformation(
@@ -44,13 +44,11 @@ public class InMemoryServiceDiscovery : IServiceDiscovery
             instance.Address);
 
         // Notify watchers
-        this.NotifyWatchersAsync(serviceName);
-
-        return Task.CompletedTask;
+        await this.NotifyWatchersAsync(serviceName).ConfigureAwait(false);
     }
 
     /// <inheritdoc/>
-    public Task DeregisterAsync(string serviceName, string instanceId, CancellationToken cancellationToken = default)
+    public async Task DeregisterAsync(string serviceName, string instanceId, CancellationToken cancellationToken = default)
     {
         if (this._services.TryGetValue(serviceName, out var instances))
         {
@@ -61,10 +59,8 @@ public class InMemoryServiceDiscovery : IServiceDiscovery
                 serviceName);
 
             // Notify watchers
-            this.NotifyWatchersAsync(serviceName);
+            await this.NotifyWatchersAsync(serviceName).ConfigureAwait(false);
         }
-
-        return Task.CompletedTask;
     }
 
     /// <inheritdoc/>
@@ -110,7 +106,7 @@ public class InMemoryServiceDiscovery : IServiceDiscovery
     }
 
     /// <inheritdoc/>
-    public Task UpdateHealthAsync(string serviceName, string instanceId, bool isHealthy, CancellationToken cancellationToken = default)
+    public async Task UpdateHealthAsync(string serviceName, string instanceId, bool isHealthy, CancellationToken cancellationToken = default)
     {
         if (this._services.TryGetValue(serviceName, out var instances) &&
             instances.TryGetValue(instanceId, out var instance))
@@ -128,23 +124,19 @@ public class InMemoryServiceDiscovery : IServiceDiscovery
             this._cache.Remove($"sd:{serviceName}");
 
             // Notify watchers
-            this.NotifyWatchersAsync(serviceName);
+            await this.NotifyWatchersAsync(serviceName).ConfigureAwait(false);
         }
-
-        return Task.CompletedTask;
     }
 
     /// <inheritdoc/>
-    public Task WatchAsync(string serviceName, Func<IReadOnlyList<ServiceInstance>, Task> onChange, CancellationToken cancellationToken = default)
+    public async Task WatchAsync(string serviceName, Func<IReadOnlyList<ServiceInstance>, Task> onChange, CancellationToken cancellationToken = default)
     {
-        var watchers = this._watchers.GetOrAdd(serviceName, _ => new List<Func<IReadOnlyList<ServiceInstance>, Task>>());
+        var watchers = this._watchers.GetOrAdd(serviceName, _ => new ConcurrentBag<Func<IReadOnlyList<ServiceInstance>, Task>>());
         watchers.Add(onChange);
 
         // Immediately invoke with current instances
         var instances = this.GetHealthyInstances(serviceName);
-        onChange(instances);
-
-        return Task.CompletedTask;
+        await onChange(instances).ConfigureAwait(false);
     }
 
     private IReadOnlyList<ServiceInstance> GetHealthyInstances(string serviceName)
@@ -159,25 +151,24 @@ public class InMemoryServiceDiscovery : IServiceDiscovery
             .ToList();
     }
 
-    private void NotifyWatchersAsync(string serviceName)
+    private async Task NotifyWatchersAsync(string serviceName)
     {
         if (this._watchers.TryGetValue(serviceName, out var watchers))
         {
             var instances = this.GetHealthyInstances(serviceName);
-            foreach (var watcher in watchers)
+            var tasks = watchers.Select(async watcher =>
             {
-                Task.Run(async () =>
+                try
                 {
-                    try
-                    {
-                        await watcher(instances);
-                    }
-                    catch (Exception ex)
-                    {
-                        this._logger.LogError(ex, "Error notifying service discovery watcher");
-                    }
-                });
-            }
+                    await watcher(instances).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    this._logger.LogError(ex, "Error notifying service discovery watcher");
+                }
+            });
+
+            await Task.WhenAll(tasks).ConfigureAwait(false);
         }
     }
 }

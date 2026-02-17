@@ -160,9 +160,9 @@ public class WebhookDelivered : DomainEvent
     public Guid WebhookId { get; set; }
 
     /// <summary>
-    /// Gets or sets the event type.
+    /// Gets or sets the delivered event type.
     /// </summary>
-    public string EventType { get; set; } = string.Empty;
+    public string DeliveredEventType { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the payload.
@@ -192,9 +192,9 @@ public class WebhookDeliveryFailed : DomainEvent
     public Guid WebhookId { get; set; }
 
     /// <summary>
-    /// Gets or sets the event type.
+    /// Gets or sets the failed event type.
     /// </summary>
-    public string EventType { get; set; } = string.Empty;
+    public string FailedEventType { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the error message.

@@ -166,7 +166,7 @@ public class Webhook : AggregateRoot
         var @event = new WebhookDelivered
         {
             WebhookId = this.Id,
-            EventType = eventType,
+            DeliveredEventType = eventType,
             Payload = payload,
             Timestamp = DateTime.UtcNow,
         };
@@ -182,7 +182,7 @@ public class Webhook : AggregateRoot
         var @event = new WebhookDeliveryFailed
         {
             WebhookId = this.Id,
-            EventType = eventType,
+            FailedEventType = eventType,
             ErrorMessage = errorMessage,
             Timestamp = DateTime.UtcNow,
         };
