@@ -44,10 +44,6 @@ external/
 .env.*
 !.env.example
 
-# Beads issue tracking
-.beads/
-
-
 
 **/bin/
 **/obj/
