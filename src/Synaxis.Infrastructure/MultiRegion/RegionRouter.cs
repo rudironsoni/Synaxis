@@ -12,6 +12,7 @@ namespace Synaxis.Infrastructure.MultiRegion
     using System.Threading.Tasks;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Options;
     using Synaxis.Core.Contracts;
     using Synaxis.Infrastructure.Data;
 
@@ -23,22 +24,8 @@ namespace Synaxis.Infrastructure.MultiRegion
         private readonly SynaxisDbContext _context;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<RegionRouter> _logger;
+        private readonly RegionRouterOptions _options;
         private readonly string _currentRegion;
-
-        // Regional endpoint mappings
-        private static readonly Dictionary<string, string> RegionEndpoints = new Dictionary<string, string>(
-StringComparer.Ordinal)
-        {
-            { "eu-west-1", "https://eu-west-1.synaxis.io" },
-            { "us-east-1", "https://us-east-1.synaxis.io" },
-            { "sa-east-1", "https://sa-east-1.synaxis.io" },
-        };
-
-        // Countries with adequacy decisions (simplified)
-        private static readonly HashSet<string> AdequacyCountries = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            "CH", "IL", "NZ", "CA", "JP", "GB", // Switzerland, Israel, New Zealand, Canada, Japan, UK
-        };
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RegionRouter"/> class.
@@ -46,17 +33,18 @@ StringComparer.Ordinal)
         /// <param name="context">The database context.</param>
         /// <param name="httpClientFactory">The HTTP client factory.</param>
         /// <param name="logger">The logger.</param>
-        /// <param name="currentRegion">The current region.</param>
+        /// <param name="options">The region router options.</param>
         public RegionRouter(
             SynaxisDbContext context,
             IHttpClientFactory httpClientFactory,
             ILogger<RegionRouter> logger,
-            string currentRegion = "us-east-1")
+            IOptions<RegionRouterOptions> options)
         {
             this._context = context ?? throw new ArgumentNullException(nameof(context));
             this._httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            this._currentRegion = currentRegion ?? "us-east-1";
+            this._options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+            this._currentRegion = this._options.DefaultRegion;
         }
 
         /// <inheritdoc/>
@@ -176,13 +164,13 @@ StringComparer.Ordinal)
             }
 
             // EU users always require consent for transfers outside EU
-            if (string.Equals(user.DataResidencyRegion, "eu-west-1", StringComparison.Ordinal) && !string.Equals(targetRegion, "eu-west-1", StringComparison.Ordinal))
+            if (string.Equals(user.DataResidencyRegion, this._options.EuRegion, StringComparison.Ordinal) && !string.Equals(targetRegion, this._options.EuRegion, StringComparison.Ordinal))
             {
                 return true;
             }
 
             // Brazil (LGPD) users require consent for transfers outside Brazil
-            if (string.Equals(user.DataResidencyRegion, "sa-east-1", StringComparison.Ordinal) && !string.Equals(targetRegion, "sa-east-1", StringComparison.Ordinal))
+            if (string.Equals(user.DataResidencyRegion, this._options.BrazilRegion, StringComparison.Ordinal) && !string.Equals(targetRegion, this._options.BrazilRegion, StringComparison.Ordinal))
             {
                 return true;
             }
@@ -216,7 +204,7 @@ StringComparer.Ordinal)
             // Calculate distances and find nearest healthy region
             var regionDistances = new List<(string Region, double Distance)>();
 
-            foreach (var region in RegionEndpoints.Keys)
+            foreach (var region in this._options.RegionEndpoints.Keys)
             {
                 if (string.Equals(region, currentRegion, StringComparison.Ordinal))
                 {
@@ -238,8 +226,8 @@ StringComparer.Ordinal)
                 return regionDistances[0].Region;
             }
 
-            // Fallback to us-east-1 if all else fails
-            return "us-east-1";
+            // Fallback to default region if all else fails
+            return this._options.FallbackRegion;
         }
 
         /// <inheritdoc/>
@@ -261,7 +249,7 @@ StringComparer.Ordinal)
             string endpoint,
             TRequest request)
         {
-            if (!RegionEndpoints.TryGetValue(targetRegion, out var baseUrl))
+            if (!this._options.RegionEndpoints.TryGetValue(targetRegion, out var baseUrl))
             {
                 throw new InvalidOperationException($"Unknown region: {targetRegion}");
             }
@@ -299,13 +287,13 @@ StringComparer.Ordinal)
         private string DetermineLegalBasis(string targetRegion)
         {
             // Simplified legal basis determination
-            if (string.Equals(targetRegion, "eu-west-1", StringComparison.Ordinal) || string.Equals(this._currentRegion, "eu-west-1", StringComparison.Ordinal))
+            if (string.Equals(targetRegion, this._options.EuRegion, StringComparison.Ordinal) || string.Equals(this._currentRegion, this._options.EuRegion, StringComparison.Ordinal))
             {
                 // EU transfers typically require SCC (Standard Contractual Clauses)
                 return "SCC";
             }
 
-            if (string.Equals(targetRegion, "sa-east-1", StringComparison.Ordinal) || string.Equals(this._currentRegion, "sa-east-1", StringComparison.Ordinal))
+            if (string.Equals(targetRegion, this._options.BrazilRegion, StringComparison.Ordinal) || string.Equals(this._currentRegion, this._options.BrazilRegion, StringComparison.Ordinal))
             {
                 // Brazil LGPD transfers
                 return "consent";
@@ -325,53 +313,32 @@ StringComparer.Ordinal)
 
         private GeoLocation GetRegionLocation(string region)
         {
-            // Approximate datacenter locations
-            return region switch
+            if (this._options.RegionLocations.TryGetValue(region, out var location))
             {
-                "eu-west-1" => new GeoLocation
+                return new GeoLocation
                 {
                     IpAddress = string.Empty,
-                    CountryCode = "IE",
-                    CountryName = "Ireland",
-                    City = "Dublin",
-                    ContinentCode = "EU",
-                    TimeZone = "Europe/Dublin",
-                    Latitude = 53.3498,
-                    Longitude = -6.2603,
-                }, // Dublin
-                "us-east-1" => new GeoLocation
-                {
-                    IpAddress = string.Empty,
-                    CountryCode = "US",
-                    CountryName = "United States",
-                    City = "Virginia",
-                    ContinentCode = "NA",
-                    TimeZone = "America/New_York",
-                    Latitude = 39.0438,
-                    Longitude = -77.4874,
-                }, // Virginia
-                "sa-east-1" => new GeoLocation
-                {
-                    IpAddress = string.Empty,
-                    CountryCode = "BR",
-                    CountryName = "Brazil",
-                    City = "São Paulo",
-                    ContinentCode = "SA",
-                    TimeZone = "America/Sao_Paulo",
-                    Latitude = -23.5505,
-                    Longitude = -46.6333,
-                }, // São Paulo
-                _ => new GeoLocation
-                {
-                    IpAddress = string.Empty,
-                    CountryCode = "Unknown",
-                    CountryName = "Unknown",
-                    City = "Unknown",
-                    ContinentCode = "Unknown",
-                    TimeZone = "UTC",
-                    Latitude = 0,
-                    Longitude = 0,
-                },
+                    CountryCode = location.CountryCode,
+                    CountryName = location.CountryName,
+                    City = location.City,
+                    ContinentCode = location.ContinentCode,
+                    TimeZone = location.TimeZone,
+                    Latitude = location.Latitude,
+                    Longitude = location.Longitude,
+                };
+            }
+
+            // Return unknown location if region not configured
+            return new GeoLocation
+            {
+                IpAddress = string.Empty,
+                CountryCode = "Unknown",
+                CountryName = "Unknown",
+                City = "Unknown",
+                ContinentCode = "Unknown",
+                TimeZone = "UTC",
+                Latitude = 0,
+                Longitude = 0,
             };
         }
 

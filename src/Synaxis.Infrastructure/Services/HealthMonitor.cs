@@ -5,6 +5,7 @@
 namespace Synaxis.Infrastructure.Services
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
@@ -34,7 +35,7 @@ namespace Synaxis.Infrastructure.Services
         };
 
         // Cached health status (in-memory, could be moved to Redis for distributed cache)
-        private readonly Dictionary<string, RegionHealth> _healthCache = new(StringComparer.Ordinal);
+        private readonly ConcurrentDictionary<string, RegionHealth> _healthCache = new(StringComparer.Ordinal);
         private readonly TimeSpan _cacheExpiry = TimeSpan.FromSeconds(30);
 
         /// <summary>

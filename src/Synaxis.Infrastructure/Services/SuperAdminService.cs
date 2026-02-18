@@ -14,8 +14,10 @@ namespace Synaxis.Infrastructure.Services
     using System.Threading.Tasks;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Options;
     using Synaxis.Core.Contracts;
     using Synaxis.Core.Models;
+    using Synaxis.Infrastructure.Configuration;
     using Synaxis.Infrastructure.Data;
 
     /// <summary>
@@ -28,25 +30,8 @@ namespace Synaxis.Infrastructure.Services
         private readonly IAuditService _auditService;
         private readonly IUserService _userService;
         private readonly ILogger<SuperAdminService> _logger;
+        private readonly SuperAdminOptions _options;
         private readonly string _currentRegion;
-
-        // Configuration - should come from IConfiguration in production
-        private readonly Dictionary<string, string> _regionEndpoints = new(StringComparer.Ordinal)
-        {
-            { "us-east-1", "https://api-us.synaxis.io" },
-            { "eu-west-1", "https://api-eu.synaxis.io" },
-            { "sa-east-1", "https://api-br.synaxis.io" },
-        };
-
-        private readonly HashSet<string> _allowedIpRanges = new(StringComparer.Ordinal)
-        {
-            "10.0.0.0/8",
-            "172.16.0.0/12",
-            "192.168.0.0/16",
-        };
-
-        private readonly int _businessHoursStart = 8; // 8 AM
-        private readonly int _businessHoursEnd = 18; // 6 PM
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SuperAdminService"/> class.
@@ -56,21 +41,22 @@ namespace Synaxis.Infrastructure.Services
         /// <param name="auditService">The audit service.</param>
         /// <param name="userService">The user service.</param>
         /// <param name="logger">The logger.</param>
-        /// <param name="currentRegion">The current region.</param>
+        /// <param name="options">The SuperAdmin options.</param>
         public SuperAdminService(
             SynaxisDbContext context,
             IHttpClientFactory httpClientFactory,
             IAuditService auditService,
             IUserService userService,
             ILogger<SuperAdminService> logger,
-            string currentRegion = "us-east-1")
+            IOptions<SuperAdminOptions> options)
         {
             this._context = context ?? throw new ArgumentNullException(nameof(context));
             this._httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
             this._auditService = auditService ?? throw new ArgumentNullException(nameof(auditService));
             this._userService = userService ?? throw new ArgumentNullException(nameof(userService));
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            this._currentRegion = currentRegion;
+            this._options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+            this._currentRegion = this._options.DefaultRegion;
         }
 
         /// <inheritdoc/>
@@ -82,7 +68,7 @@ namespace Synaxis.Infrastructure.Services
             var localOrgs = await this.GetLocalOrganizationsAsync().ConfigureAwait(false);
 
             // Fetch from all other regions in parallel
-            var otherRegions = this._regionEndpoints.Keys.Where(r => !string.Equals(r, this._currentRegion, StringComparison.Ordinal)).ToList();
+            var otherRegions = this._options.RegionEndpoints.Keys.Where(r => !string.Equals(r, this._currentRegion, StringComparison.Ordinal)).ToList();
             var tasks = otherRegions.Select(region => this.FetchOrganizationsFromRegionAsync(region));
             var remoteResults = await Task.WhenAll(tasks).ConfigureAwait(false);
 
@@ -92,7 +78,7 @@ namespace Synaxis.Infrastructure.Services
             this._logger.LogInformation(
                 "Retrieved {Count} organizations across {Regions} regions",
                 allOrgs.Count,
-                this._regionEndpoints.Count);
+                this._options.RegionEndpoints.Count);
 
             return allOrgs;
         }
@@ -218,7 +204,7 @@ namespace Synaxis.Infrastructure.Services
         {
             var localUsage = await this.GetLocalUsageAsync(start, end).ConfigureAwait(false);
 
-            var otherRegions = this._regionEndpoints.Keys.Where(r => !string.Equals(r, this._currentRegion, StringComparison.Ordinal)).ToList();
+            var otherRegions = this._options.RegionEndpoints.Keys.Where(r => !string.Equals(r, this._currentRegion, StringComparison.Ordinal)).ToList();
             var tasks = otherRegions.Select(region => this.FetchUsageFromRegionAsync(region, start, end));
             var remoteResults = await Task.WhenAll(tasks).ConfigureAwait(false);
 
@@ -375,7 +361,7 @@ namespace Synaxis.Infrastructure.Services
             healthByRegion[this._currentRegion] = localHealth;
 
             // Check remote regions in parallel
-            var otherRegions = this._regionEndpoints.Keys.Where(r => !string.Equals(r, this._currentRegion, StringComparison.Ordinal)).ToList();
+            var otherRegions = this._options.RegionEndpoints.Keys.Where(r => !string.Equals(r, this._currentRegion, StringComparison.Ordinal)).ToList();
             var tasks = otherRegions.Select(region => this.CheckRemoteRegionHealthAsync(region));
             var remoteHealthResults = await Task.WhenAll(tasks).ConfigureAwait(false);
 
@@ -609,7 +595,7 @@ namespace Synaxis.Infrastructure.Services
 
         private async Task<SuperAdminAccessValidation?> ValidateIpAddressAsync(User user, SuperAdminAccessContext context, SuperAdminAccessValidation validation)
         {
-            validation.IpAllowed = IsIpAllowed(context.IpAddress);
+            validation.IpAllowed = this.IsIpAllowed(context.IpAddress);
             if (!validation.IpAllowed)
             {
                 validation.IsValid = false;
@@ -639,12 +625,12 @@ namespace Synaxis.Infrastructure.Services
         {
             var requestTime = context.RequestTime == default ? DateTime.UtcNow : context.RequestTime;
             var currentHour = requestTime.Hour;
-            validation.WithinBusinessHours = currentHour >= this._businessHoursStart && currentHour < this._businessHoursEnd;
+            validation.WithinBusinessHours = currentHour >= this._options.BusinessHoursStart && currentHour < this._options.BusinessHoursEnd;
 
             if (!validation.WithinBusinessHours)
             {
                 validation.IsValid = false;
-                validation.FailureReason = "Super Admin access is restricted to business hours (8 AM - 6 PM UTC)";
+                validation.FailureReason = $"Super Admin access is restricted to business hours ({this._options.BusinessHoursStart}:00 - {this._options.BusinessHoursEnd}:00 UTC)";
                 await this.LogOffHoursAttemptAsync(user, context, currentHour).ConfigureAwait(false);
                 return validation;
             }
@@ -752,7 +738,7 @@ namespace Synaxis.Infrastructure.Services
             try
             {
                 using var client = this._httpClientFactory.CreateClient();
-                var endpoint = this._regionEndpoints[region];
+                var endpoint = this._options.RegionEndpoints[region];
                 using var response = await client.GetAsync($"{endpoint}/api/internal/organizations").ConfigureAwait(false);
 
                 if (response.IsSuccessStatusCode)
@@ -794,7 +780,7 @@ namespace Synaxis.Infrastructure.Services
             try
             {
                 using var client = this._httpClientFactory.CreateClient();
-                var endpoint = this._regionEndpoints[region];
+                var endpoint = this._options.RegionEndpoints[region];
                 using var response = await client.GetAsync($"{endpoint}/api/internal/usage?start={start:O}&end={end:O}").ConfigureAwait(false);
 
                 if (response.IsSuccessStatusCode)
@@ -861,9 +847,9 @@ namespace Synaxis.Infrastructure.Services
             try
             {
                 using var client = this._httpClientFactory.CreateClient();
-                client.Timeout = TimeSpan.FromSeconds(5);
+                client.Timeout = TimeSpan.FromSeconds(this._options.HttpClientTimeoutSeconds);
 
-                var endpoint = this._regionEndpoints[region];
+                var endpoint = this._options.RegionEndpoints[region];
                 using var response = await client.GetAsync($"{endpoint}/api/health").ConfigureAwait(false);
 
                 var responseTime = (DateTime.UtcNow - startTime).TotalMilliseconds;
@@ -925,20 +911,23 @@ namespace Synaxis.Infrastructure.Services
             return Convert.ToBase64String(tokenBytes);
         }
 
-        private static bool IsIpAllowed(string ipAddress)
+        private bool IsIpAllowed(string ipAddress)
         {
             if (string.IsNullOrWhiteSpace(ipAddress))
             {
                 return false;
             }
 
-            // Simple check - in production would use proper CIDR matching
-            // For now, allow private IP ranges
-            return ipAddress.StartsWith("10.", StringComparison.Ordinal) ||
-                   ipAddress.StartsWith("172.", StringComparison.Ordinal) ||
-                   ipAddress.StartsWith("192.168.", StringComparison.Ordinal) ||
-                   string.Equals(ipAddress, "127.0.0.1", StringComparison.Ordinal) ||
-                   string.Equals(ipAddress, "::1", StringComparison.Ordinal);
+            // Check localhost first
+            if (string.Equals(ipAddress, "127.0.0.1", StringComparison.Ordinal) ||
+                string.Equals(ipAddress, "::1", StringComparison.Ordinal))
+            {
+                return true;
+            }
+
+            // Check against configured allowed IP ranges
+            return this._options.AllowedIpRanges.Any(allowedRange =>
+                ipAddress.StartsWith(allowedRange.TrimEnd('*', '.'), StringComparison.Ordinal));
         }
     }
 }

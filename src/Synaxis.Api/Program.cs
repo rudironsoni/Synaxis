@@ -10,8 +10,11 @@ using Microsoft.IdentityModel.Tokens;
 using Synaxis.Api.Authentication;
 using Synaxis.Api.Middleware;
 using Synaxis.Core.Contracts;
+using Synaxis.Infrastructure.Configuration;
 using Synaxis.Infrastructure.Data;
+using Synaxis.Infrastructure.MultiRegion;
 using Synaxis.Infrastructure.Services;
+using Synaxis.Infrastructure.Services.SuperAdmin;
 using Synaxis.Providers;
 using Synaxis.Providers.Configuration;
 
@@ -64,6 +67,13 @@ builder.Services.AddAuthorization();
 
 // Register application services
 builder.Services.AddScoped<ISuperAdminService, SuperAdminService>();
+builder.Services.AddScoped<ICrossRegionService, CrossRegionService>();
+builder.Services.AddScoped<IImpersonationService, ImpersonationService>();
+builder.Services.AddScoped<IGlobalAnalyticsService, GlobalAnalyticsService>();
+builder.Services.AddScoped<IComplianceService, ComplianceService>();
+builder.Services.AddScoped<ISystemHealthService, SystemHealthService>();
+builder.Services.AddScoped<IOrganizationLimitService, OrganizationLimitService>();
+builder.Services.AddScoped<ISuperAdminAccessValidator, SuperAdminAccessValidator>();
 builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<Synaxis.Core.Contracts.IAuthenticationService, Synaxis.Infrastructure.Services.AuthenticationService>();
@@ -78,6 +88,12 @@ builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
 
 // Configure Email options
 builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection("Email"));
+
+// Configure Region Router options
+builder.Services.Configure<RegionRouterOptions>(builder.Configuration.GetSection("RegionRouter"));
+
+// Configure SuperAdmin options
+builder.Services.Configure<SuperAdminOptions>(builder.Configuration.GetSection("SuperAdmin"));
 
 // Configure HTTP clients for cross-region communication
 var euWest1Endpoint = builder.Configuration["Regions:EuWest1:Endpoint"];
