@@ -1068,6 +1068,10 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("mfa_secret");
 
+                    b.Property<string>("MfaBackupCodes")
+                        .HasColumnType("text")
+                        .HasColumnName("mfa_backup_codes");
+
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("uuid")
                         .HasColumnName("organization_id");
@@ -1097,9 +1101,15 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
                     b.HasKey("Id");
 
                     b.HasIndex("DataResidencyRegion");
+
+                    b.HasIndex("DeletedAt");
 
                     b.HasIndex("Email")
                         .IsUnique();

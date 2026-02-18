@@ -138,7 +138,7 @@ public sealed class PostgresFixture : IAsyncLifetime
     public SynaxisDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<SynaxisDbContext>()
-            .UseNpgsql(this.ConnectionString)
+            .UseNpgsql(this.ConnectionString, npgsqlOptions => npgsqlOptions.MigrationsAssembly("Synaxis.Infrastructure"))
             .ConfigureWarnings(warnings => warnings.Ignore(RelationalEventId.PendingModelChangesWarning))
             .Options;
 
@@ -152,10 +152,9 @@ public sealed class PostgresFixture : IAsyncLifetime
     /// <returns>A new SynaxisDbContext instance.</returns>
 #pragma warning disable S2325 // Instance method for API consistency with parameterless overload
     public SynaxisDbContext CreateContext(string connectionString)
-#pragma warning restore S2325
     {
         var options = new DbContextOptionsBuilder<SynaxisDbContext>()
-            .UseNpgsql(connectionString)
+            .UseNpgsql(connectionString, npgsqlOptions => npgsqlOptions.MigrationsAssembly("Synaxis.Infrastructure"))
             .ConfigureWarnings(warnings => warnings.Ignore(RelationalEventId.PendingModelChangesWarning))
             .Options;
 

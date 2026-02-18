@@ -303,6 +303,7 @@ namespace Synaxis.Infrastructure.Data
                 entity.Property(e => e.CrossBorderConsentVersion).HasColumnName("cross_border_consent_version");
                 entity.Property(e => e.MfaEnabled).HasColumnName("mfa_enabled");
                 entity.Property(e => e.MfaSecret).HasColumnName("mfa_secret");
+                entity.Property(e => e.MfaBackupCodes).HasColumnName("mfa_backup_codes");
                 entity.Property(e => e.LastLoginAt).HasColumnName("last_login_at");
                 entity.Property(e => e.FailedLoginAttempts).HasColumnName("failed_login_attempts");
                 entity.Property(e => e.LockedUntil).HasColumnName("locked_until");
@@ -312,6 +313,7 @@ namespace Synaxis.Infrastructure.Data
                 entity.Property(e => e.IsActive).HasColumnName("is_active");
                 entity.Property(e => e.CreatedAt).HasColumnName("created_at");
                 entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+                entity.Property(e => e.DeletedAt).HasColumnName("deleted_at");
 
                 entity.Property(e => e.PrivacyConsent)
                     .HasColumnName("privacy_consent")
