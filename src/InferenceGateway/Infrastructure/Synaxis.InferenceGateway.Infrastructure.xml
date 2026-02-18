@@ -1996,6 +1996,11 @@
             Gets or sets the DeletedAt.
             </summary>
         </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.Group.DeletedBy">
+            <summary>
+            Gets or sets the DeletedBy.
+            </summary>
+        </member>
         <member name="P:Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity.Group.Organization">
             <summary>
             Gets or sets the Organization.
@@ -5152,6 +5157,18 @@
             <inheritdoc />
         </member>
         <member name="M:Synaxis.InferenceGateway.Infrastructure.Migrations.FixPendingModelChanges2.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.Migrations.AddGroupDeletedBy">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Migrations.AddGroupDeletedBy.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Migrations.AddGroupDeletedBy.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Migrations.AddGroupDeletedBy.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
         <member name="T:Synaxis.InferenceGateway.Infrastructure.Optimization.Caching.RedisInFlightDeduplication">

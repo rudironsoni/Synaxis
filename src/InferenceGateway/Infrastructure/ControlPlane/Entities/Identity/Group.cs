@@ -4,10 +4,12 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity
 {
+    using Synaxis.InferenceGateway.Infrastructure.Data.Interfaces;
+
     /// <summary>
     /// Represents a group within an organization.
     /// </summary>
-    public class Group
+    public class Group : ISoftDeletable
     {
         /// <summary>
         /// Gets or sets the Id.
@@ -83,6 +85,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity
         /// Gets or sets the DeletedAt.
         /// </summary>
         public DateTime? DeletedAt { get; set; }
+
+        /// <summary>
+        /// Gets or sets the DeletedBy.
+        /// </summary>
+        public Guid? DeletedBy { get; set; }
 
         // Navigation properties
 

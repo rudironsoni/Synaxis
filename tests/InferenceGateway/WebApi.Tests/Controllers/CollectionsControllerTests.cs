@@ -854,10 +854,12 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
             notFoundResult!.Value.Should().Be("Collection not found");
         }
 
-        [Fact(Skip = "OrganizationMembership not implemented")]
+        [Fact]
         public async Task RemoveMember_WhenMemberNotFound_ReturnsNotFound()
         {
-            // Arrange - OrganizationMembership not implemented yet
+            // Arrange
+            SetupCollectionAdminPermission();
+
             var collection = new Collection
             {
                 Id = _testCollectionId,

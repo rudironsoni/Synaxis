@@ -8,7 +8,9 @@ using System.Security.Claims;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Moq;
+using Synaxis.Common.Tests.Fixtures;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Operations;
@@ -16,18 +18,29 @@ using Synaxis.InferenceGateway.Infrastructure.Data.Interceptors;
 using Xunit;
 
 /// <summary>
-/// Unit tests for SoftDeleteInterceptor.
+/// Integration tests for SoftDeleteInterceptor using PostgreSQL.
 /// Tests soft delete conversion, cascade delete for Organization, and DeletedBy tracking.
 /// </summary>
+[Trait("Category", "Integration")]
+[Collection("PostgresIntegration")]
 public class SoftDeleteInterceptorTests : IAsyncLifetime
 {
-    private readonly SynaxisDbContext _dbContext;
-    private readonly SoftDeleteInterceptor _interceptor;
-    private readonly Mock<IHttpContextAccessor> _mockHttpContextAccessor;
-    private readonly DefaultHttpContext _httpContext;
+    private readonly PostgresFixture _postgresFixture;
+    private SynaxisDbContext? _dbContext;
+    private SoftDeleteInterceptor? _interceptor;
+    private Mock<IHttpContextAccessor>? _mockHttpContextAccessor;
+    private DefaultHttpContext? _httpContext;
+    private string _connectionString = string.Empty;
 
-    public SoftDeleteInterceptorTests()
+    public SoftDeleteInterceptorTests(PostgresFixture postgresFixture)
     {
+        this._postgresFixture = postgresFixture ?? throw new ArgumentNullException(nameof(postgresFixture));
+    }
+
+    public async Task InitializeAsync()
+    {
+        this._connectionString = await this._postgresFixture.CreateIsolatedDatabaseAsync("softdelete");
+
         this._mockHttpContextAccessor = new Mock<IHttpContextAccessor>();
         this._httpContext = new DefaultHttpContext();
         this._mockHttpContextAccessor.Setup(x => x.HttpContext).Returns(this._httpContext);
@@ -35,18 +48,26 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
         this._interceptor = new SoftDeleteInterceptor(this._mockHttpContextAccessor.Object);
 
         var options = new DbContextOptionsBuilder<SynaxisDbContext>()
-            .UseInMemoryDatabase(databaseName: $"SoftDeleteTests_{Guid.NewGuid()}")
+            .UseNpgsql(this._connectionString, npgsqlOptions => npgsqlOptions.MigrationsAssembly("Synaxis.InferenceGateway.Infrastructure"))
+            .ConfigureWarnings(warnings => warnings.Ignore(RelationalEventId.PendingModelChangesWarning))
             .AddInterceptors(this._interceptor)
             .Options;
 
         this._dbContext = new SynaxisDbContext(options);
+        await this._dbContext.Database.MigrateAsync();
     }
-
-    public Task InitializeAsync() => Task.CompletedTask;
 
     public async Task DisposeAsync()
     {
-        await this._dbContext.DisposeAsync().ConfigureAwait(false);
+        if (this._dbContext is not null)
+        {
+            await this._dbContext.DisposeAsync();
+        }
+
+        if (!string.IsNullOrEmpty(this._connectionString))
+        {
+            await this._postgresFixture.DropDatabaseAsync(this._connectionString);
+        }
     }
 
     [Fact]
@@ -61,7 +82,7 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
     public void Constructor_WithHttpContextAccessor_ShouldNotThrow()
     {
         // Act & Assert
-        var act = () => new SoftDeleteInterceptor(this._mockHttpContextAccessor.Object);
+        var act = () => new SoftDeleteInterceptor(this._mockHttpContextAccessor!.Object);
         act.Should().NotThrow();
     }
 
@@ -79,13 +100,11 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             PlanTier = "Free",
         };
 
-        await this._dbContext.Organizations.AddAsync(organization);
+        await this._dbContext!.Organizations.AddAsync(organization);
         await this._dbContext.SaveChangesAsync();
 
-        // Act
-        // Note: Using direct property assignment instead of Remove() due to EF Core InMemory limitations
-        // In real PostgreSQL, Remove() would work correctly with the interceptor
-        organization.DeletedAt = DateTime.UtcNow;
+        // Act - using Remove() now works with PostgreSQL
+        this._dbContext.Organizations.Remove(organization);
         await this._dbContext.SaveChangesAsync();
 
         // Clear change tracker to force fresh query from database
@@ -124,17 +143,12 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             Status = "Active",
         };
 
-        await this._dbContext.Organizations.AddAsync(organization);
+        await this._dbContext!.Organizations.AddAsync(organization);
         await this._dbContext.Groups.AddAsync(group);
         await this._dbContext.SaveChangesAsync();
 
-        // Act
-        // Note: Using direct property assignment instead of Remove() due to EF Core InMemory limitations
-        group.DeletedAt = DateTime.UtcNow;
-
-        // Explicitly mark the DeletedAt property as modified to ensure the interceptor processes it
-        this._dbContext.Entry(group).Property(nameof(Group.DeletedAt)).IsModified = true;
-
+        // Act - using Remove() now works with PostgreSQL
+        this._dbContext.Groups.Remove(group);
         await this._dbContext.SaveChangesAsync();
 
         // Clear change tracker to force fresh query from database
@@ -150,14 +164,14 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
         deletedGroup.DeletedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
     }
 
-    [Fact(Skip = "EF Core InMemory doesn't support cascade deletes with interceptors. Run against real PostgreSQL.")]
+    [Fact]
     public async Task SaveChangesAsync_WithAuthenticatedUser_ShouldSetDeletedBy()
     {
         // Arrange
         var userId = Guid.NewGuid();
         var claims = new[] { new Claim(ClaimTypes.NameIdentifier, userId.ToString()) };
         var identity = new ClaimsIdentity(claims, "TestAuth");
-        this._httpContext.User = new ClaimsPrincipal(identity);
+        this._httpContext!.User = new ClaimsPrincipal(identity);
 
         var organization = new Organization
         {
@@ -169,7 +183,7 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             PlanTier = "Free",
         };
 
-        await this._dbContext.Organizations.AddAsync(organization);
+        await this._dbContext!.Organizations.AddAsync(organization);
         await this._dbContext.SaveChangesAsync();
 
         // Clear and reload to simulate fresh context
@@ -198,7 +212,7 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
     public async Task SaveChangesAsync_WithUnauthenticatedUser_ShouldNotSetDeletedBy()
     {
         // Arrange
-        this._httpContext.User = new ClaimsPrincipal(new ClaimsIdentity()); // Not authenticated
+        this._httpContext!.User = new ClaimsPrincipal(new ClaimsIdentity()); // Not authenticated
 
         var organization = new Organization
         {
@@ -210,12 +224,11 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             PlanTier = "Free",
         };
 
-        await this._dbContext.Organizations.AddAsync(organization);
+        await this._dbContext!.Organizations.AddAsync(organization);
         await this._dbContext.SaveChangesAsync();
 
-        // Act
-        // Note: Using direct property assignment instead of Remove() due to EF Core InMemory limitations
-        organization.DeletedAt = DateTime.UtcNow;
+        // Act - using Remove() now works with PostgreSQL
+        this._dbContext.Organizations.Remove(organization);
         await this._dbContext.SaveChangesAsync();
 
         // Clear change tracker to force fresh query from database
@@ -230,14 +243,14 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
         deletedOrg!.DeletedBy.Should().BeNull();
     }
 
-    [Fact(Skip = "EF Core InMemory doesn't support cascade deletes with interceptors. Run against real PostgreSQL.")]
+    [Fact]
     public async Task SaveChangesAsync_WithSubClaim_ShouldSetDeletedBy()
     {
         // Arrange
         var userId = Guid.NewGuid();
         var claims = new[] { new Claim("sub", userId.ToString()) }; // Use "sub" claim
         var identity = new ClaimsIdentity(claims, "TestAuth");
-        this._httpContext.User = new ClaimsPrincipal(identity);
+        this._httpContext!.User = new ClaimsPrincipal(identity);
 
         var organization = new Organization
         {
@@ -249,7 +262,7 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             PlanTier = "Free",
         };
 
-        await this._dbContext.Organizations.AddAsync(organization);
+        await this._dbContext!.Organizations.AddAsync(organization);
         await this._dbContext.SaveChangesAsync();
 
         // Clear and reload to simulate fresh context
@@ -274,7 +287,7 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
         deletedOrg!.DeletedBy.Should().Be(userId);
     }
 
-    [Fact(Skip = "EF Core InMemory doesn't support cascade deletes with interceptors. Run against real PostgreSQL.")]
+    [Fact]
     public async Task SaveChangesAsync_WithDeletedOrganization_ShouldCascadeSoftDeleteGroups()
     {
         // Arrange
@@ -306,7 +319,7 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             Status = "Active",
         };
 
-        await this._dbContext.Organizations.AddAsync(organization);
+        await this._dbContext!.Organizations.AddAsync(organization);
         await this._dbContext.Groups.AddAsync(group1);
         await this._dbContext.Groups.AddAsync(group2);
         await this._dbContext.SaveChangesAsync();
@@ -315,7 +328,6 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
         this._dbContext.ChangeTracker.Clear();
 
         // Load organization and its related groups into change tracker
-        // This is necessary because EF Core InMemory doesn't auto-load related entities
         var orgToDelete = await this._dbContext.Organizations.FirstAsync(o => o.Id == organization.Id);
         _ = await this._dbContext.Groups.Where(g => g.OrganizationId == organization.Id).ToListAsync();
 
@@ -336,7 +348,7 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
         deletedGroups.Should().OnlyContain(g => g.DeletedAt != null);
     }
 
-    [Fact(Skip = "EF Core InMemory doesn't support cascade deletes with interceptors. Run against real PostgreSQL.")]
+    [Fact]
     public async Task SaveChangesAsync_WithDeletedOrganization_ShouldCascadeRevokeApiKeys()
     {
         // Arrange
@@ -370,7 +382,7 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             IsActive = true,
         };
 
-        await this._dbContext.Organizations.AddAsync(organization);
+        await this._dbContext!.Organizations.AddAsync(organization);
         await this._dbContext.ApiKeys.AddAsync(apiKey1);
         await this._dbContext.ApiKeys.AddAsync(apiKey2);
         await this._dbContext.SaveChangesAsync();
@@ -400,14 +412,14 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
         revokedKeys.Should().OnlyContain(k => k.RevocationReason == "Organization deleted");
     }
 
-    [Fact(Skip = "EF Core InMemory doesn't support cascade deletes with interceptors. Run against real PostgreSQL.")]
+    [Fact]
     public async Task SaveChangesAsync_WithDeletedOrganization_ShouldSetRevokedByForApiKeys()
     {
         // Arrange
         var userId = Guid.NewGuid();
         var claims = new[] { new Claim(ClaimTypes.NameIdentifier, userId.ToString()) };
         var identity = new ClaimsIdentity(claims, "TestAuth");
-        this._httpContext.User = new ClaimsPrincipal(identity);
+        this._httpContext!.User = new ClaimsPrincipal(identity);
 
         var organization = new Organization
         {
@@ -429,7 +441,7 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             IsActive = true,
         };
 
-        await this._dbContext.Organizations.AddAsync(organization);
+        await this._dbContext!.Organizations.AddAsync(organization);
         await this._dbContext.ApiKeys.AddAsync(apiKey);
         await this._dbContext.SaveChangesAsync();
 
@@ -481,12 +493,11 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             RevocationReason = "Original reason",
         };
 
-        await this._dbContext.Organizations.AddAsync(organization);
+        await this._dbContext!.Organizations.AddAsync(organization);
         await this._dbContext.ApiKeys.AddAsync(apiKey);
         await this._dbContext.SaveChangesAsync();
 
-        // Act
-        // Note: Using direct property assignment instead of Remove() due to EF Core InMemory limitations
+        // Act - using direct property assignment due to the entity already being soft-deleted
         organization.DeletedAt = DateTime.UtcNow;
         await this._dbContext.SaveChangesAsync();
 
@@ -495,11 +506,11 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
 
         // Assert
         var key = await this._dbContext.ApiKeys.FirstAsync(k => k.Id == apiKey.Id);
-        key.RevokedAt.Should().Be(originalRevocationTime); // Should preserve original
+        key.RevokedAt.Should().BeCloseTo(originalRevocationTime, TimeSpan.FromMilliseconds(100)); // Should preserve original
         key.RevocationReason.Should().Be("Original reason"); // Should preserve original
     }
 
-    [Fact(Skip = "EF Core InMemory doesn't support cascade deletes with interceptors. Run against real PostgreSQL.")]
+    [Fact]
     public async Task SaveChangesAsync_WithMultipleOrganizationsDeleted_ShouldHandleCascadeCorrectly()
     {
         // Arrange
@@ -541,7 +552,7 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             Status = "Active",
         };
 
-        await this._dbContext.Organizations.AddAsync(org1);
+        await this._dbContext!.Organizations.AddAsync(org1);
         await this._dbContext.Organizations.AddAsync(org2);
         await this._dbContext.Groups.AddAsync(group1);
         await this._dbContext.Groups.AddAsync(group2);
@@ -551,9 +562,12 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
         this._dbContext.ChangeTracker.Clear();
 
         // Load organizations and their related groups into change tracker
-        var org1ToDelete = await this._dbContext.Organizations.FirstAsync(o => o.Id == org1.Id);
-        var org2ToDelete = await this._dbContext.Organizations.FirstAsync(o => o.Id == org2.Id);
-        _ = await this._dbContext.Groups.ToListAsync();
+        var org1ToDelete = await this._dbContext.Organizations
+            .Include(o => o.Groups)
+            .FirstAsync(o => o.Id == org1.Id);
+        var org2ToDelete = await this._dbContext.Organizations
+            .Include(o => o.Groups)
+            .FirstAsync(o => o.Id == org2.Id);
 
         // Act
         this._dbContext.Entry(org1ToDelete).State = EntityState.Deleted;
@@ -595,13 +609,12 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             Status = "Active",
         };
 
-        await this._dbContext.Organizations.AddAsync(organization);
+        await this._dbContext!.Organizations.AddAsync(organization);
         await this._dbContext.Groups.AddAsync(group);
         await this._dbContext.SaveChangesAsync();
 
         // Act - Delete only the group, not the organization
-        // Note: Using direct property assignment instead of Remove() due to EF Core InMemory limitations
-        group.DeletedAt = DateTime.UtcNow;
+        this._dbContext.Groups.Remove(group);
         await this._dbContext.SaveChangesAsync();
 
         // Clear change tracker to force fresh query from database
@@ -643,12 +656,12 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             PlanTier = "Free",
         };
 
-        await this._dbContext.Organizations.AddAsync(org1);
+        await this._dbContext!.Organizations.AddAsync(org1);
         await this._dbContext.Organizations.AddAsync(org2);
         await this._dbContext.SaveChangesAsync();
 
-        // Note: Using direct property assignment instead of Remove() due to EF Core InMemory limitations
-        org2.DeletedAt = DateTime.UtcNow;
+        // Delete org2 using Remove() which triggers soft delete
+        this._dbContext.Organizations.Remove(org2);
         await this._dbContext.SaveChangesAsync();
 
         // Clear change tracker to force fresh query from database
@@ -687,12 +700,12 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             PlanTier = "Free",
         };
 
-        await this._dbContext.Organizations.AddAsync(org1);
+        await this._dbContext!.Organizations.AddAsync(org1);
         await this._dbContext.Organizations.AddAsync(org2);
         await this._dbContext.SaveChangesAsync();
 
-        // Note: Using direct property assignment instead of Remove() due to EF Core InMemory limitations
-        org2.DeletedAt = DateTime.UtcNow;
+        // Delete org2 using Remove() which triggers soft delete
+        this._dbContext.Organizations.Remove(org2);
         await this._dbContext.SaveChangesAsync();
 
         // Clear change tracker to force fresh query from database
@@ -723,12 +736,11 @@ public class SoftDeleteInterceptorTests : IAsyncLifetime
             PlanTier = "Free",
         };
 
-        this._dbContext.Organizations.Add(organization);
+        this._dbContext!.Organizations.Add(organization);
         this._dbContext.SaveChanges();
 
-        // Act
-        // Note: Using direct property assignment instead of Remove() due to EF Core InMemory limitations
-        organization.DeletedAt = DateTime.UtcNow;
+        // Act - using Remove() now works with PostgreSQL
+        this._dbContext.Organizations.Remove(organization);
         this._dbContext.SaveChanges();
 
         // Clear change tracker to force fresh query from database

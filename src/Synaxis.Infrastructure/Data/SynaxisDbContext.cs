@@ -310,6 +310,8 @@ namespace Synaxis.Infrastructure.Data
                 entity.Property(e => e.PasswordExpiresAt).HasColumnName("password_expires_at");
                 entity.Property(e => e.FailedPasswordChangeAttempts).HasColumnName("failed_password_change_attempts");
                 entity.Property(e => e.PasswordChangeLockedUntil).HasColumnName("password_change_locked_until");
+                entity.Property(e => e.PasswordChangedAt).HasColumnName("password_changed_at");
+                entity.Property(e => e.MustChangePassword).HasColumnName("must_change_password");
                 entity.Property(e => e.IsActive).HasColumnName("is_active");
                 entity.Property(e => e.CreatedAt).HasColumnName("created_at");
                 entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");

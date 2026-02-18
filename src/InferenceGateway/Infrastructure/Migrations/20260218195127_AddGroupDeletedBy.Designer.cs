@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
@@ -11,9 +12,11 @@ using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 namespace Synaxis.InferenceGateway.Infrastructure.Migrations
 {
     [DbContext(typeof(SynaxisDbContext))]
-    partial class SynaxisDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260218195127_AddGroupDeletedBy")]
+    partial class AddGroupDeletedBy
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

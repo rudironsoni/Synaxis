@@ -118,7 +118,7 @@ public class ChatControllerHttpTests : IClassFixture<SynaxisWebApplicationFactor
         Assert.NotNull(content);
     }
 
-    [Fact(Skip = "Requires SSE output formatter implementation")]
+    [Fact]
     public async Task PostChatCompletionsStream_WithoutAuthentication_Returns200()
     {
         // Arrange
@@ -233,7 +233,7 @@ public class ChatControllerHttpTests : IClassFixture<SynaxisWebApplicationFactor
         Assert.Equal("chat.completion", content.Object);
     }
 
-    [Fact(Skip = "Requires SSE output formatter implementation")]
+    [Fact]
     public async Task PostChatCompletionsStream_WithValidToken_ReturnsSseFormat()
     {
         // Arrange

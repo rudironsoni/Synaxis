@@ -4,10 +4,12 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Entities.Identity
 {
+    using Synaxis.InferenceGateway.Infrastructure.Data.Interfaces;
+
     /// <summary>
     /// Represents an organization (tenant) in the identity schema.
     /// </summary>
-    public class Organization
+    public class Organization : ISoftDeletable
     {
         /// <summary>
         /// Gets or sets the organization ID.

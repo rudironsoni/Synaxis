@@ -33,7 +33,7 @@ public class WebSocketTransportTests(SynaxisWebApplicationFactory factory, ITest
     /// Tests that a Command message returns a Response message.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact(Skip = "Mediator source generator infrastructure issue")]
+    [Fact]
     public async Task CommandMessage_ReturnsResponseMessage()
     {
         // Arrange
@@ -90,7 +90,7 @@ public class WebSocketTransportTests(SynaxisWebApplicationFactory factory, ITest
         await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "Test complete", CancellationToken.None);
     }
 
-    [Fact(Skip = "Mediator source generator infrastructure issue")]
+    [Fact]
     public async Task Streaming_SendsMultipleMessages()
     {
         // Arrange
@@ -173,7 +173,7 @@ public class WebSocketTransportTests(SynaxisWebApplicationFactory factory, ITest
         await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "Test complete", CancellationToken.None);
     }
 
-    [Fact(Skip = "Mediator source generator infrastructure issue")]
+    [Fact]
     public async Task ErrorHandling_ReturnsProperErrorMessages()
     {
         // Arrange
@@ -224,7 +224,7 @@ public class WebSocketTransportTests(SynaxisWebApplicationFactory factory, ITest
         await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "Test complete", CancellationToken.None);
     }
 
-    [Fact(Skip = "Mediator source generator infrastructure issue")]
+    [Fact]
     public async Task ConnectionClose_IsHandledProperly()
     {
         // Arrange
@@ -244,7 +244,7 @@ public class WebSocketTransportTests(SynaxisWebApplicationFactory factory, ITest
         this._output.WriteLine($"[Observability] Connection closed properly - State: {client.State}, Timestamp: {DateTime.UtcNow:O}");
     }
 
-    [Fact(Skip = "Mediator source generator infrastructure issue")]
+    [Fact]
     public async Task InvalidMessageFormat_ReturnsError()
     {
         // Arrange
@@ -285,7 +285,7 @@ public class WebSocketTransportTests(SynaxisWebApplicationFactory factory, ITest
         await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "Test complete", CancellationToken.None);
     }
 
-    [Fact(Skip = "Mediator source generator infrastructure issue")]
+    [Fact]
     public async Task UnknownMessageType_ReturnsError()
     {
         // Arrange

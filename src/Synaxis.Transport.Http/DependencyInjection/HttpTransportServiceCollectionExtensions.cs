@@ -10,6 +10,7 @@ namespace Synaxis.Transport.Http.DependencyInjection
     using Microsoft.AspNetCore.Routing;
     using Microsoft.Extensions.DependencyInjection;
     using Synaxis.Transport.Http.Filters;
+    using Synaxis.Transport.Http.Formatters;
     using Synaxis.Transport.Http.Middleware;
 
     /// <summary>
@@ -54,6 +55,7 @@ namespace Synaxis.Transport.Http.DependencyInjection
             services.AddControllers(options =>
             {
                 options.Filters.Add<SynaxisExceptionFilter>();
+                options.OutputFormatters.Add(new SseOutputFormatter());
             })
             .AddJsonOptions(options =>
             {
