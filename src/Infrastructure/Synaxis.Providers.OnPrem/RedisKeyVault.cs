@@ -56,7 +56,7 @@ public class RedisKeyVault : IKeyVault
         var key = GetSecretKey(secretName);
         var value = await _database.StringGetAsync(key).ConfigureAwait(false);
 
-        if (value.IsNullOrEmpty)
+        if (value.IsNull)
         {
             _logger.LogWarning("Secret {SecretName} not found", secretName);
             return null;

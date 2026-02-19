@@ -38,11 +38,12 @@ public class SqlOutbox : IOutbox
         IDomainEvent @event,
         CancellationToken cancellationToken = default)
     {
+        var eventType = @event.GetType();
         var message = new OutboxMessage
         {
             Id = Guid.NewGuid(),
-            EventType = @event.GetType().FullName!,
-            Payload = JsonSerializer.Serialize(@event),
+            EventType = eventType.FullName!,
+            Payload = JsonSerializer.Serialize(@event, eventType),
             CreatedAt = DateTime.UtcNow,
         };
 

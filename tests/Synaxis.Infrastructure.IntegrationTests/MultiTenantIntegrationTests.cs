@@ -120,7 +120,7 @@ public sealed class MultiTenantIntegrationTests : IClassFixture<PostgreSqlTestFi
             var result = await command.ExecuteScalarAsync();
 
             // Assert - Should return null (no data for tenant 2)
-            result.Should().Be(DBNull.Value);
+            result.Should().BeNull();
         }
     }
 
@@ -286,16 +286,15 @@ public sealed class MultiTenantIntegrationTests : IClassFixture<PostgreSqlTestFi
     public async Task Concurrent_TenantOperations()
     {
         // Arrange
-        await using var connection = new NpgsqlConnection(_connectionString);
-        await connection.OpenAsync();
-
         var tenants = Enumerable.Range(1, 5)
             .Select(i => $"concurrent-tenant-{i}")
             .ToList();
 
-        // Act - Concurrent writes for different tenants
+        // Act - Concurrent writes for different tenants (each needs its own connection)
         var tasks = tenants.Select(async tenantId =>
         {
+            await using var connection = new NpgsqlConnection(_connectionString);
+            await connection.OpenAsync();
             await using var cmd = connection.CreateCommand();
             cmd.CommandText = @"
                 INSERT INTO tenant_data (tenant_id, data_key, data_value)
@@ -310,6 +309,8 @@ public sealed class MultiTenantIntegrationTests : IClassFixture<PostgreSqlTestFi
         // Assert - Each tenant has their data
         foreach (var tenantId in tenants)
         {
+            await using var connection = new NpgsqlConnection(_connectionString);
+            await connection.OpenAsync();
             await using var command = connection.CreateCommand();
             command.CommandText = @"
                 SELECT data_value FROM tenant_data

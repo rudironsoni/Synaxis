@@ -97,6 +97,7 @@ public sealed class PostgreSqlTestFixture : IAsyncLifetime
                     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                     event_type VARCHAR(500) NOT NULL,
                     payload TEXT NOT NULL,
+                    headers TEXT,
                     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     processed_at TIMESTAMP,
                     error TEXT,

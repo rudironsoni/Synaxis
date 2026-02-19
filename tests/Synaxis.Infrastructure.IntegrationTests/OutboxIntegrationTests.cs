@@ -71,7 +71,7 @@ public sealed class OutboxIntegrationTests : IClassFixture<PostgreSqlTestFixture
 
         // Assert
         messages.Should().HaveCount(1);
-        messages[0].EventType.Should().Be("TestEvent");
+        messages[0].EventType.Should().Be("Synaxis.Infrastructure.IntegrationTests.TestEvent");
         messages[0].ProcessedAt.Should().BeNull();
     }
 
@@ -125,10 +125,11 @@ public sealed class OutboxIntegrationTests : IClassFixture<PostgreSqlTestFixture
         var remainingMessages = await _outbox.GetUnprocessedAsync();
         var allMessages = await _context.OutboxMessages.ToListAsync();
 
-        // Assert
-        remainingMessages.Should().BeEmpty();
+        // Assert - Failed messages remain in unprocessed for retry (outbox pattern)
+        remainingMessages.Should().ContainSingle();
         allMessages.Should().ContainSingle();
         allMessages[0].Error.Should().Be("Processing failed");
+        allMessages[0].RetryCount.Should().Be(1);
     }
 
     [Fact]
@@ -161,6 +162,14 @@ public sealed class OutboxIntegrationTests : IClassFixture<PostgreSqlTestFixture
 
         // Act
         var batch1 = await _outbox!.GetUnprocessedAsync(10);
+
+        // Mark batch1 as processed to get remaining messages
+        foreach (var message in batch1)
+        {
+            await _outbox.MarkAsProcessedAsync(message.Id);
+        }
+
+        await _context.SaveChangesAsync();
         var batch2 = await _outbox.GetUnprocessedAsync(10);
 
         // Assert
@@ -208,8 +217,8 @@ public sealed class OutboxIntegrationTests : IClassFixture<PostgreSqlTestFixture
 
         // Assert
         messages.Should().HaveCount(2);
-        messages.Select(m => m.EventType).Should().Contain("TestEvent");
-        messages.Select(m => m.EventType).Should().Contain("AnotherTestEvent");
+        messages.Select(m => m.EventType).Should().Contain("Synaxis.Infrastructure.IntegrationTests.TestEvent");
+        messages.Select(m => m.EventType).Should().Contain("Synaxis.Infrastructure.IntegrationTests.AnotherTestEvent");
     }
 
     [Fact]
@@ -313,13 +322,16 @@ public sealed class OutboxIntegrationTests : IClassFixture<PostgreSqlTestFixture
         {
             modelBuilder.Entity<OutboxMessage>(entity =>
             {
+                entity.ToTable("outbox_messages");
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.EventType).IsRequired();
-                entity.Property(e => e.Payload).IsRequired();
-                entity.Property(e => e.CreatedAt).IsRequired();
-                entity.Property(e => e.ProcessedAt);
-                entity.Property(e => e.Error);
-                entity.Property(e => e.RetryCount).HasDefaultValue(0);
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.EventType).HasColumnName("event_type").IsRequired();
+                entity.Property(e => e.Payload).HasColumnName("payload").IsRequired();
+                entity.Property(e => e.Headers).HasColumnName("headers");
+                entity.Property(e => e.CreatedAt).HasColumnName("created_at").IsRequired();
+                entity.Property(e => e.ProcessedAt).HasColumnName("processed_at");
+                entity.Property(e => e.Error).HasColumnName("error");
+                entity.Property(e => e.RetryCount).HasColumnName("retry_count").HasDefaultValue(0);
             });
         }
     }

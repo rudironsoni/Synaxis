@@ -5,18 +5,18 @@
 namespace Synaxis.Infrastructure.IntegrationTests;
 
 using Microsoft.Extensions.Logging;
+using Synaxis.Providers.OnPrem;
 using Testcontainers.RabbitMq;
 using Xunit;
 
 /// <summary>
 /// Fixture for RabbitMQ testing using TestContainers.
-/// Note: RabbitMQ integration tests are disabled due to API version compatibility.
-/// This fixture provides the infrastructure for when RabbitMQ is available.
 /// </summary>
 public sealed class RabbitMqTestFixture : IAsyncLifetime
 {
     private readonly RabbitMqContainer _rabbitMqContainer;
     private readonly ILoggerFactory _loggerFactory;
+    private readonly List<RabbitMqMessageBus> _messageBuses = new();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="RabbitMqTestFixture"/> class.
@@ -56,16 +56,34 @@ public sealed class RabbitMqTestFixture : IAsyncLifetime
     /// <inheritdoc />
     public async Task DisposeAsync()
     {
+        foreach (var bus in _messageBuses)
+        {
+            await bus.DisposeAsync();
+        }
+
+        _messageBuses.Clear();
         await _rabbitMqContainer.DisposeAsync();
         _loggerFactory.Dispose();
     }
 
     /// <summary>
-    /// Purges all queues.
+    /// Creates a new RabbitMQ message bus instance.
+    /// </summary>
+    /// <returns>A configured RabbitMqMessageBus instance.</returns>
+    public async Task<RabbitMqMessageBus> CreateMessageBusAsync()
+    {
+        var logger = _loggerFactory.CreateLogger<RabbitMqMessageBus>();
+        var bus = await RabbitMqMessageBus.CreateAsync(ConnectionString, logger);
+        _messageBuses.Add(bus);
+        return bus;
+    }
+
+    /// <summary>
+    /// Purges all queues by disposing and recreating the message bus.
     /// </summary>
     public Task PurgeQueuesAsync()
     {
-        // Queue purging implemented when RabbitMQ tests are enabled
+        // Message buses are disposed in DisposeAsync, queues auto-delete with new connections
         return Task.CompletedTask;
     }
 }

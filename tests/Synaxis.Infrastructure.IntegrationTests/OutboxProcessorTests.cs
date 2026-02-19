@@ -93,7 +93,7 @@ public sealed class OutboxProcessorTests : IAsyncLifetime
 
         // Assert
         messages.Should().HaveCount(1);
-        messages[0].EventType.Should().Be("TestEvent");
+        messages[0].EventType.Should().Be("Synaxis.Infrastructure.IntegrationTests.TestEvent");
     }
 
     [Fact]
@@ -154,8 +154,10 @@ public sealed class OutboxProcessorTests : IAsyncLifetime
         await _context.SaveChangesAsync();
         var remainingMessages = await _outbox.GetUnprocessedAsync();
 
-        // Assert
-        remainingMessages.Should().BeEmpty();
+        // Assert - Failed messages remain in unprocessed for retry (outbox pattern)
+        remainingMessages.Should().ContainSingle();
+        remainingMessages[0].Error.Should().Be("Processing failed");
+        remainingMessages[0].RetryCount.Should().Be(1);
     }
 
     [Fact]
@@ -171,6 +173,14 @@ public sealed class OutboxProcessorTests : IAsyncLifetime
 
         // Act
         var batch1 = await _outbox.GetUnprocessedAsync(10);
+
+        // Mark batch1 as processed to get remaining messages
+        foreach (var message in batch1)
+        {
+            await _outbox.MarkAsProcessedAsync(message.Id);
+        }
+
+        await _context.SaveChangesAsync();
         var batch2 = await _outbox.GetUnprocessedAsync(10);
 
         // Assert
@@ -200,8 +210,8 @@ public sealed class OutboxProcessorTests : IAsyncLifetime
 
         // Assert
         messages.Should().HaveCount(2);
-        messages[0].EventType.Should().Be("TestEvent");
-        messages[1].EventType.Should().Be("AnotherTestEvent");
+        messages[0].EventType.Should().Be("Synaxis.Infrastructure.IntegrationTests.TestEvent");
+        messages[1].EventType.Should().Be("Synaxis.Infrastructure.IntegrationTests.AnotherTestEvent");
     }
 
     [Fact]
