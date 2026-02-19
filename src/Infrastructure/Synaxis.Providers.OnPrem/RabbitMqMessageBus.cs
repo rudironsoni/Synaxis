@@ -23,11 +23,11 @@ using Synaxis.Abstractions.Cloud;
 #pragma warning disable MA0002 // Use an overload that has a IEqualityComparer - Using default comparer for simplicity
 public sealed class RabbitMqMessageBus : IMessageBus, IAsyncDisposable
 {
-    private IConnection? _connection;
-    private IChannel? _channel;
     private readonly ILogger<RabbitMqMessageBus> _logger;
     private readonly ConcurrentDictionary<string, object> _consumers;
     private readonly string _connectionString;
+    private IConnection? _connection;
+    private IChannel? _channel;
     private bool _disposed;
     private bool _initialized;
 
@@ -76,8 +76,20 @@ public sealed class RabbitMqMessageBus : IMessageBus, IAsyncDisposable
         }
 
         var factory = new ConnectionFactory { Uri = new Uri(_connectionString) };
+
+        // Dispose any existing connection/channel before creating new ones
+        if (_channel != null)
+        {
+            await _channel.DisposeAsync().ConfigureAwait(false);
+        }
+
+        if (_connection != null)
+        {
+            await _connection.DisposeAsync().ConfigureAwait(false);
+        }
+
         _connection = await factory.CreateConnectionAsync(cancellationToken).ConfigureAwait(false);
-        _channel = await _connection.CreateChannelAsync(cancellationToken).ConfigureAwait(false);
+        _channel = await _connection.CreateChannelAsync(new CreateChannelOptions(false, false), cancellationToken).ConfigureAwait(false);
         _initialized = true;
     }
 
@@ -173,6 +185,7 @@ public sealed class RabbitMqMessageBus : IMessageBus, IAsyncDisposable
     /// <summary>
     /// Disposes the RabbitMQ connection and channel asynchronously.
     /// </summary>
+    /// <returns>A <see cref="ValueTask"/> representing the asynchronous operation.</returns>
     public async ValueTask DisposeAsync()
     {
         if (_disposed)
