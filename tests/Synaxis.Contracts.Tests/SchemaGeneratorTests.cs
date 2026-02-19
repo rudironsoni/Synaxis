@@ -43,10 +43,11 @@ public class SchemaGeneratorTests
         jsonNode.Should().NotBeNull();
     }
 
-    [Fact(Skip = "Polymorphic generic types are not supported by JSON Schema exporter")]
+    [Fact]
     public void GenerateSchema_ForPaginatedResult_ShouldReturnValidSchema()
     {
-        var schema = _generator.GenerateSchema(typeof(global::Synaxis.Contracts.V1.DTOs.PaginatedResult<global::Synaxis.Contracts.V1.DTOs.UserDto>));
+        // Use concrete PaginatedResult<UserDto> which is defined in the assembly
+        var schema = _generator.GenerateSchema<global::Synaxis.Contracts.V1.DTOs.PaginatedResult<global::Synaxis.Contracts.V1.DTOs.UserDto>>();
 
         schema.Should().NotBeNullOrEmpty();
 
