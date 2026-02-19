@@ -1,0 +1,4378 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Synaxis.Contracts</name>
+    </assembly>
+    <members>
+        <member name="T:Synaxis.Contracts.SchemaGenerator">
+            <summary>
+            Generates JSON schemas for Synaxis contracts.
+            </summary>
+        </member>
+        <member name="M:Synaxis.Contracts.SchemaGenerator.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Synaxis.Contracts.SchemaGenerator"/> class.
+            </summary>
+        </member>
+        <member name="M:Synaxis.Contracts.SchemaGenerator.GenerateSchema``1">
+            <summary>
+            Generates a JSON schema for the specified type.
+            </summary>
+            <typeparam name="T">The type to generate a schema for.</typeparam>
+            <returns>The JSON schema as a string.</returns>
+        </member>
+        <member name="M:Synaxis.Contracts.SchemaGenerator.GenerateSchema(System.Type)">
+            <summary>
+            Generates a JSON schema for the specified type.
+            </summary>
+            <param name="type">The type to generate a schema for.</param>
+            <returns>The JSON schema as a string.</returns>
+        </member>
+        <member name="M:Synaxis.Contracts.SchemaGenerator.GenerateV1Schemas(System.String)">
+            <summary>
+            Generates JSON schemas for all V1 contracts and saves them to the specified directory.
+            </summary>
+            <param name="outputDirectory">The directory to save the schemas to.</param>
+            <returns>A dictionary of type names to schema file paths.</returns>
+        </member>
+        <member name="M:Synaxis.Contracts.SchemaGenerator.GenerateV2Schemas(System.String)">
+            <summary>
+            Generates JSON schemas for all V2 contracts and saves them to the specified directory.
+            </summary>
+            <param name="outputDirectory">The directory to save the schemas to.</param>
+            <returns>A dictionary of type names to schema file paths.</returns>
+        </member>
+        <member name="M:Synaxis.Contracts.SchemaGenerator.GetV1Types">
+            <summary>
+            Gets all V1 contract types.
+            </summary>
+            <returns>A collection of V1 contract types.</returns>
+        </member>
+        <member name="M:Synaxis.Contracts.SchemaGenerator.GetV2Types">
+            <summary>
+            Gets all V2 contract types.
+            </summary>
+            <returns>A collection of V2 contract types.</returns>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Auth.AuthContext">
+            <summary>
+            Represents authentication context with user ID, organization ID, and permissions.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Auth.AuthContext.UserId">
+            <summary>
+            Gets or initializes the unique identifier of the authenticated user.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Auth.AuthContext.OrganizationId">
+            <summary>
+            Gets or initializes the unique identifier of the user's organization.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Auth.AuthContext.Permissions">
+            <summary>
+            Gets or initializes the permissions granted to the authenticated user.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Auth.ProviderCredentials">
+            <summary>
+            Represents provider-specific credentials with provider name, credential type, and value.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Auth.ProviderCredentials.ProviderName">
+            <summary>
+            Gets or initializes the name of the provider (e.g., "OpenAI", "Anthropic").
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Auth.ProviderCredentials.CredentialType">
+            <summary>
+            Gets or initializes the type of credential (e.g., "ApiKey", "OAuth", "ServiceAccount").
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Auth.ProviderCredentials.CredentialValue">
+            <summary>
+            Gets or initializes the credential value (e.g., API key, token).
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Commands.CancelAgentExecutionCommand">
+            <summary>
+            Command to cancel an ongoing agent execution.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.CancelAgentExecutionCommand.ExecutionId">
+            <summary>
+            Identifier of the execution to cancel.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.CancelAgentExecutionCommand.Reason">
+            <summary>
+            Reason for cancellation.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.CancelAgentExecutionCommand.Force">
+            <summary>
+            Whether to force immediate termination.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Commands.CommandBase">
+            <summary>
+            Base class for all commands.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.CommandBase.CommandId">
+            <summary>
+            Unique identifier for the command.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.CommandBase.CorrelationId">
+            <summary>
+            Correlation identifier for tracing requests across services.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.CommandBase.Timestamp">
+            <summary>
+            Timestamp when the command was created.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.CommandBase.UserId">
+            <summary>
+            Identifier of the user issuing the command.
+            </summary>
+        </member>
+        <member name="M:Synaxis.Contracts.V1.Commands.CommandBase.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Synaxis.Contracts.V1.Commands.CommandBase"/> class.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Commands.CreateAgentCommand">
+            <summary>
+            Command to create a new agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.CreateAgentCommand.Name">
+            <summary>
+            Name of the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.CreateAgentCommand.Description">
+            <summary>
+            Description of the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.CreateAgentCommand.AgentType">
+            <summary>
+            Type of the agent (e.g., chat, embedding, etc.).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.CreateAgentCommand.Configuration">
+            <summary>
+            Configuration settings for the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.CreateAgentCommand.Tags">
+            <summary>
+            Tags for categorizing the agent.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Commands.CreateUserCommand">
+            <summary>
+            Command to create a new user.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.CreateUserCommand.Email">
+            <summary>
+            Email address of the new user.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.CreateUserCommand.DisplayName">
+            <summary>
+            Display name for the user.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.CreateUserCommand.Password">
+            <summary>
+            Initial password for the user (will be hashed).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.CreateUserCommand.Roles">
+            <summary>
+            Roles to assign to the user.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Commands.DeleteAgentCommand">
+            <summary>
+            Command to delete an agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.DeleteAgentCommand.TargetAgentId">
+            <summary>
+            Identifier of the agent to delete.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.DeleteAgentCommand.Reason">
+            <summary>
+            Reason for deletion.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.DeleteAgentCommand.Force">
+            <summary>
+            Whether to force deletion even if agent has execution history.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Commands.DeleteUserCommand">
+            <summary>
+            Command to delete a user.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.DeleteUserCommand.TargetUserId">
+            <summary>
+            Identifier of the user to delete.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.DeleteUserCommand.Reason">
+            <summary>
+            Reason for deletion.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.DeleteUserCommand.Permanent">
+            <summary>
+            Whether to permanently delete (true) or soft delete (false).
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Commands.ExecuteAgentCommand">
+            <summary>
+            Command to execute an agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.ExecuteAgentCommand.TargetAgentId">
+            <summary>
+            Identifier of the agent to execute.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.ExecuteAgentCommand.Input">
+            <summary>
+            Input parameters for the execution.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.ExecuteAgentCommand.Priority">
+            <summary>
+            Execution priority (higher = more urgent).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.ExecuteAgentCommand.Timeout">
+            <summary>
+            Maximum allowed execution time.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.ExecuteAgentCommand.WaitForCompletion">
+            <summary>
+            Whether to wait for execution completion.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.ExecuteAgentCommand.CallbackUrl">
+            <summary>
+            Callback URL for async notifications.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Commands.IAudioSynthesisCommand`1">
+            <summary>
+            Marker interface for audio synthesis commands that produce an <see cref="T:Synaxis.Contracts.V1.Messages.AudioSynthesisResponse"/>.
+            </summary>
+            <typeparam name="TAudioSynthesisResponse">The type of audio synthesis response produced by the command.</typeparam>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Commands.IAudioTranscriptionCommand`1">
+            <summary>
+            Marker interface for audio transcription commands that produce an <see cref="T:Synaxis.Contracts.V1.Messages.AudioTranscriptionResponse"/>.
+            </summary>
+            <typeparam name="TAudioTranscriptionResponse">The type of audio transcription response produced by the command.</typeparam>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Commands.IChatCommand`1">
+            <summary>
+            Marker interface for chat completion commands that produce a <see cref="T:Synaxis.Contracts.V1.Messages.ChatResponse"/>.
+            </summary>
+            <typeparam name="TChatResponse">The type of chat response produced by the command.</typeparam>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Commands.IChatStreamCommand`1">
+            <summary>
+            Marker interface for streaming chat completion commands that produce <see cref="T:Synaxis.Contracts.V1.Messages.ChatStreamChunk"/> responses.
+            </summary>
+            <typeparam name="TChatStreamChunk">The type of chat stream chunk produced by the command.</typeparam>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Commands.IEmbeddingCommand`1">
+            <summary>
+            Marker interface for embedding generation commands that produce an <see cref="T:Synaxis.Contracts.V1.Messages.EmbeddingResponse"/>.
+            </summary>
+            <typeparam name="TEmbeddingResponse">The type of embedding response produced by the command.</typeparam>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Commands.IImageGenerationCommand`1">
+            <summary>
+            Marker interface for image generation commands that produce an <see cref="T:Synaxis.Contracts.V1.Messages.ImageGenerationResponse"/>.
+            </summary>
+            <typeparam name="TImageGenerationResponse">The type of image generation response produced by the command.</typeparam>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Commands.IRerankCommand`1">
+            <summary>
+            Marker interface for rerank commands that produce a <see cref="T:Synaxis.Contracts.V1.Messages.RerankResponse"/>.
+            </summary>
+            <typeparam name="TRerankResponse">The type of rerank response produced by the command.</typeparam>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Commands.UpdateAgentCommand">
+            <summary>
+            Command to update an existing agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.UpdateAgentCommand.TargetAgentId">
+            <summary>
+            Identifier of the agent to update.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.UpdateAgentCommand.Name">
+            <summary>
+            Updated name (null if unchanged).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.UpdateAgentCommand.Description">
+            <summary>
+            Updated description (null if unchanged).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.UpdateAgentCommand.Configuration">
+            <summary>
+            Updated configuration (null if unchanged).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.UpdateAgentCommand.Tags">
+            <summary>
+            Updated tags (null if unchanged).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.UpdateAgentCommand.Status">
+            <summary>
+            Updated status (null if unchanged).
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Commands.UpdateUserCommand">
+            <summary>
+            Command to update an existing user.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.UpdateUserCommand.TargetUserId">
+            <summary>
+            Identifier of the user to update.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.UpdateUserCommand.Email">
+            <summary>
+            Updated email address (null if unchanged).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.UpdateUserCommand.DisplayName">
+            <summary>
+            Updated display name (null if unchanged).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.UpdateUserCommand.Password">
+            <summary>
+            New password (null if not changing).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.UpdateUserCommand.Roles">
+            <summary>
+            Updated roles (null if unchanged).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Commands.UpdateUserCommand.Status">
+            <summary>
+            Updated status (null if unchanged).
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Common.AgentStatus">
+            <summary>
+            Represents the status of an agent in the system.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Common.AgentStatus.Creating">
+            <summary>
+            Agent is being created and not yet ready.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Common.AgentStatus.Idle">
+            <summary>
+            Agent is idle and ready to execute tasks.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Common.AgentStatus.Executing">
+            <summary>
+            Agent is currently executing a task.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Common.AgentStatus.Error">
+            <summary>
+            Agent has encountered an error and is unavailable.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Common.AgentStatus.Disabled">
+            <summary>
+            Agent has been disabled by an administrator.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Common.EventType">
+            <summary>
+            Represents the type of domain event.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Common.EventType.User">
+            <summary>
+            User-related event.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Common.EventType.Agent">
+            <summary>
+            Agent-related event.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Common.EventType.Workflow">
+            <summary>
+            Workflow-related event.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Common.EventType.Execution">
+            <summary>
+            Execution-related event.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Common.ExecutionStatus">
+            <summary>
+            Represents the status of an agent execution.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Common.ExecutionStatus.Pending">
+            <summary>
+            Execution is pending and has not started yet.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Common.ExecutionStatus.InProgress">
+            <summary>
+            Execution is currently in progress.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Common.ExecutionStatus.Completed">
+            <summary>
+            Execution has completed successfully.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Common.ExecutionStatus.Failed">
+            <summary>
+            Execution has failed with an error.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Common.ExecutionStatus.Cancelled">
+            <summary>
+            Execution was cancelled before completion.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Common.UserStatus">
+            <summary>
+            Represents the status of a user in the system.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Common.UserStatus.Pending">
+            <summary>
+            User account is pending activation.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Common.UserStatus.Active">
+            <summary>
+            User account is active and can access the system.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Common.UserStatus.Suspended">
+            <summary>
+            User account has been suspended.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Common.UserStatus.Deactivated">
+            <summary>
+            User account has been deactivated.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Common.WorkflowStatus">
+            <summary>
+            Represents the status of a workflow.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Common.WorkflowStatus.Pending">
+            <summary>
+            Workflow is pending and has not started yet.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Common.WorkflowStatus.InProgress">
+            <summary>
+            Workflow is currently in progress.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Common.WorkflowStatus.Completed">
+            <summary>
+            Workflow has completed successfully.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Common.WorkflowStatus.Failed">
+            <summary>
+            Workflow has failed with an error.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Common.WorkflowStatus.Cancelled">
+            <summary>
+            Workflow was cancelled before completion.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Common.WorkflowStatus.Paused">
+            <summary>
+            Workflow is paused and can be resumed.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.DomainEvents.AgentCreated">
+            <summary>
+            Event raised when a new agent is created.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.AgentCreated.Name">
+            <summary>
+            Name of the created agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.AgentCreated.Description">
+            <summary>
+            Description of the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.AgentCreated.AgentType">
+            <summary>
+            Type of the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.AgentCreated.Configuration">
+            <summary>
+            Configuration settings for the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.AgentCreated.Status">
+            <summary>
+            Initial status of the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.AgentCreated.CreatedByUserId">
+            <summary>
+            Identifier of the user who created the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.AgentCreated.CreatedAt">
+            <summary>
+            Timestamp when the agent was created.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.DomainEvents.AgentExecutionCompleted">
+            <summary>
+            Event raised when an agent execution completes.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.AgentExecutionCompleted.AgentId">
+            <summary>
+            Identifier of the executed agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.AgentExecutionCompleted.Status">
+            <summary>
+            Final status of the execution.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.AgentExecutionCompleted.Output">
+            <summary>
+            Output from the execution.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.AgentExecutionCompleted.Error">
+            <summary>
+            Error details if execution failed.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.AgentExecutionCompleted.CompletedAt">
+            <summary>
+            Timestamp when the execution completed.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.AgentExecutionCompleted.Duration">
+            <summary>
+            Total duration of the execution.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.AgentExecutionCompleted.TokensConsumed">
+            <summary>
+            Number of tokens consumed (if applicable).
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.DomainEvents.AgentExecutionStarted">
+            <summary>
+            Event raised when an agent execution starts.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.AgentExecutionStarted.AgentId">
+            <summary>
+            Identifier of the agent being executed.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.AgentExecutionStarted.InitiatedByUserId">
+            <summary>
+            Identifier of the user who initiated the execution.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.AgentExecutionStarted.Input">
+            <summary>
+            Input parameters for the execution.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.AgentExecutionStarted.Priority">
+            <summary>
+            Execution priority (higher = more urgent).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.AgentExecutionStarted.Timeout">
+            <summary>
+            Maximum allowed execution time.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.AgentExecutionStarted.StartedAt">
+            <summary>
+            Timestamp when the execution started.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.AgentExecutionStarted.Status">
+            <summary>
+            Initial status of the execution.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.DomainEvents.DomainEventBase">
+            <summary>
+            Base class for all domain events.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.DomainEventBase.EventId">
+            <summary>
+            Unique identifier for the event.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.DomainEventBase.AggregateId">
+            <summary>
+            Identifier of the aggregate that generated the event.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.DomainEventBase.Timestamp">
+            <summary>
+            Timestamp when the event occurred.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.DomainEventBase.Version">
+            <summary>
+            Version of the event schema.
+            </summary>
+        </member>
+        <member name="M:Synaxis.Contracts.V1.DomainEvents.DomainEventBase.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Synaxis.Contracts.V1.DomainEvents.DomainEventBase"/> class.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.DomainEvents.UserCreated">
+            <summary>
+            Event raised when a new user is created.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.UserCreated.Email">
+            <summary>
+            Email address of the created user.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.UserCreated.DisplayName">
+            <summary>
+            Display name of the user.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.UserCreated.Status">
+            <summary>
+            Initial status of the user.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.UserCreated.Roles">
+            <summary>
+            Roles assigned to the user.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.UserCreated.CreatedAt">
+            <summary>
+            Timestamp when the user was created.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.DomainEvents.UserDeleted">
+            <summary>
+            Event raised when a user is deleted.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.UserDeleted.Email">
+            <summary>
+            Email address of the deleted user.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.UserDeleted.Reason">
+            <summary>
+            Reason for deletion.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.UserDeleted.DeletedAt">
+            <summary>
+            Timestamp when the user was deleted.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.UserDeleted.Permanent">
+            <summary>
+            Whether the deletion was permanent or soft delete.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.DomainEvents.UserUpdated">
+            <summary>
+            Event raised when a user is updated.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.UserUpdated.Email">
+            <summary>
+            Updated email address (null if unchanged).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.UserUpdated.DisplayName">
+            <summary>
+            Updated display name (null if unchanged).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.UserUpdated.Status">
+            <summary>
+            Updated status (null if unchanged).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.UserUpdated.Roles">
+            <summary>
+            Updated roles (null if unchanged).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.UserUpdated.UpdatedAt">
+            <summary>
+            Timestamp when the user was last updated.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.DomainEvents.WorkflowCreated">
+            <summary>
+            Event raised when a new workflow is created.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.WorkflowCreated.Name">
+            <summary>
+            Name of the created workflow.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.WorkflowCreated.Description">
+            <summary>
+            Description of the workflow.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.WorkflowCreated.Steps">
+            <summary>
+            Steps in the workflow.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.WorkflowCreated.Status">
+            <summary>
+            Initial status of the workflow.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.WorkflowCreated.CreatedByUserId">
+            <summary>
+            Identifier of the user who created the workflow.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.WorkflowCreated.CreatedAt">
+            <summary>
+            Timestamp when the workflow was created.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.DomainEvents.WorkflowStepDefinition">
+            <summary>
+            Defines a step within a workflow.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.WorkflowStepDefinition.StepId">
+            <summary>
+            Unique identifier for the step.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.WorkflowStepDefinition.Name">
+            <summary>
+            Name of the step.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.WorkflowStepDefinition.StepType">
+            <summary>
+            Type of the step (e.g., agent, condition, delay).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.WorkflowStepDefinition.Configuration">
+            <summary>
+            Configuration for the step.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.WorkflowStepDefinition.Order">
+            <summary>
+            Order of execution for this step.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.DomainEvents.WorkflowFailed">
+            <summary>
+            Event raised when a workflow fails.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.WorkflowFailed.WorkflowId">
+            <summary>
+            Identifier of the failed workflow.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.WorkflowFailed.FailedStepId">
+            <summary>
+            Identifier of the step that failed (if applicable).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.WorkflowFailed.FailedStepName">
+            <summary>
+            Name of the step that failed (if applicable).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.WorkflowFailed.ErrorMessage">
+            <summary>
+            Error message describing the failure.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.WorkflowFailed.ErrorCode">
+            <summary>
+            Error code for the failure.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.WorkflowFailed.StackTrace">
+            <summary>
+            Stack trace if available.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.WorkflowFailed.Retryable">
+            <summary>
+            Whether the workflow can be retried.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.WorkflowFailed.RetryCount">
+            <summary>
+            Number of retry attempts made.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.WorkflowFailed.FailedAt">
+            <summary>
+            Timestamp when the workflow failed.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.DomainEvents.WorkflowStepCompleted">
+            <summary>
+            Event raised when a workflow step completes.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.WorkflowStepCompleted.WorkflowId">
+            <summary>
+            Identifier of the workflow.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.WorkflowStepCompleted.StepId">
+            <summary>
+            Identifier of the completed step.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.WorkflowStepCompleted.StepName">
+            <summary>
+            Name of the completed step.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.WorkflowStepCompleted.Result">
+            <summary>
+            Result of the step execution.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.WorkflowStepCompleted.Status">
+            <summary>
+            Status of the step completion.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.WorkflowStepCompleted.NextStepId">
+            <summary>
+            Identifier of the next step (null if last step).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.WorkflowStepCompleted.CompletedAt">
+            <summary>
+            Timestamp when the step completed.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DomainEvents.WorkflowStepCompleted.Duration">
+            <summary>
+            Duration of step execution.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.DTOs.AgentDto">
+            <summary>
+            Data transfer object for an agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.AgentDto.Id">
+            <summary>
+            Unique identifier of the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.AgentDto.Name">
+            <summary>
+            Name of the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.AgentDto.Description">
+            <summary>
+            Description of the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.AgentDto.AgentType">
+            <summary>
+            Type of the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.AgentDto.Status">
+            <summary>
+            Current status of the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.AgentDto.Configuration">
+            <summary>
+            Configuration settings for the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.AgentDto.Tags">
+            <summary>
+            Tags for categorizing the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.AgentDto.CreatedByUserId">
+            <summary>
+            Identifier of the user who created the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.AgentDto.CreatedAt">
+            <summary>
+            Timestamp when the agent was created.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.AgentDto.UpdatedAt">
+            <summary>
+            Timestamp when the agent was last updated.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.AgentDto.ExecutionCount">
+            <summary>
+            Total number of executions for this agent.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.DTOs.ErrorResponse">
+            <summary>
+            Standard error response format.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.ErrorResponse.StatusCode">
+            <summary>
+            HTTP status code.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.ErrorResponse.Code">
+            <summary>
+            Error code for programmatic handling.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.ErrorResponse.Message">
+            <summary>
+            Human-readable error message.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.ErrorResponse.Details">
+            <summary>
+            Detailed error description.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.ErrorResponse.TraceId">
+            <summary>
+            Trace identifier for debugging.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.ErrorResponse.Timestamp">
+            <summary>
+            Timestamp when the error occurred.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.ErrorResponse.ValidationErrors">
+            <summary>
+            Additional error details for validation errors.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.DTOs.ValidationError">
+            <summary>
+            Represents a single validation error.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.ValidationError.Property">
+            <summary>
+            Property that failed validation.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.ValidationError.Message">
+            <summary>
+            Error message.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.ValidationError.Code">
+            <summary>
+            Error code.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.DTOs.ExecutionDto">
+            <summary>
+            Data transfer object for an agent execution.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.ExecutionDto.Id">
+            <summary>
+            Unique identifier of the execution.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.ExecutionDto.AgentId">
+            <summary>
+            Identifier of the agent that was executed.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.ExecutionDto.AgentName">
+            <summary>
+            Name of the agent that was executed.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.ExecutionDto.InitiatedByUserId">
+            <summary>
+            Identifier of the user who initiated the execution.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.ExecutionDto.Status">
+            <summary>
+            Current status of the execution.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.ExecutionDto.Input">
+            <summary>
+            Input parameters for the execution.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.ExecutionDto.Output">
+            <summary>
+            Output from the execution.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.ExecutionDto.Error">
+            <summary>
+            Error details if execution failed.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.ExecutionDto.StartedAt">
+            <summary>
+            Timestamp when the execution started.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.ExecutionDto.CompletedAt">
+            <summary>
+            Timestamp when the execution completed.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.ExecutionDto.Duration">
+            <summary>
+            Total duration of the execution.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.ExecutionDto.TokensConsumed">
+            <summary>
+            Number of tokens consumed (if applicable).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.ExecutionDto.Priority">
+            <summary>
+            Execution priority.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.DTOs.PaginatedResult`1">
+            <summary>
+            Represents a paginated result set.
+            </summary>
+            <typeparam name="T">Type of items in the result.</typeparam>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.PaginatedResult`1.Items">
+            <summary>
+            Items in the current page.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.PaginatedResult`1.Page">
+            <summary>
+            Current page number (1-based).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.PaginatedResult`1.PageSize">
+            <summary>
+            Number of items per page.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.PaginatedResult`1.TotalCount">
+            <summary>
+            Total number of items across all pages.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.PaginatedResult`1.TotalPages">
+            <summary>
+            Total number of pages.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.PaginatedResult`1.HasPreviousPage">
+            <summary>
+            Whether there is a previous page.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.PaginatedResult`1.HasNextPage">
+            <summary>
+            Whether there is a next page.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.DTOs.UserDto">
+            <summary>
+            Data transfer object for a user.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.UserDto.Id">
+            <summary>
+            Unique identifier of the user.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.UserDto.Email">
+            <summary>
+            Email address of the user.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.UserDto.DisplayName">
+            <summary>
+            Display name of the user.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.UserDto.Status">
+            <summary>
+            Current status of the user.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.UserDto.Roles">
+            <summary>
+            Roles assigned to the user.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.UserDto.CreatedAt">
+            <summary>
+            Timestamp when the user was created.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.UserDto.UpdatedAt">
+            <summary>
+            Timestamp when the user was last updated.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.UserDto.LastActiveAt">
+            <summary>
+            Timestamp when the user was last active.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.DTOs.WorkflowDto">
+            <summary>
+            Data transfer object for a workflow.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.WorkflowDto.Id">
+            <summary>
+            Unique identifier of the workflow.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.WorkflowDto.Name">
+            <summary>
+            Name of the workflow.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.WorkflowDto.Description">
+            <summary>
+            Description of the workflow.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.WorkflowDto.Status">
+            <summary>
+            Current status of the workflow.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.WorkflowDto.Steps">
+            <summary>
+            Steps in the workflow.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.WorkflowDto.CreatedByUserId">
+            <summary>
+            Identifier of the user who created the workflow.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.WorkflowDto.CreatedAt">
+            <summary>
+            Timestamp when the workflow was created.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.WorkflowDto.UpdatedAt">
+            <summary>
+            Timestamp when the workflow was last updated.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.WorkflowDto.StartedAt">
+            <summary>
+            Timestamp when the workflow was started.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.WorkflowDto.CompletedAt">
+            <summary>
+            Timestamp when the workflow was completed.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.WorkflowDto.ExecutionCount">
+            <summary>
+            Total number of executions for this workflow.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.DTOs.WorkflowStepDto">
+            <summary>
+            Data transfer object for a workflow step.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.WorkflowStepDto.Id">
+            <summary>
+            Unique identifier for the step.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.WorkflowStepDto.Name">
+            <summary>
+            Name of the step.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.WorkflowStepDto.StepType">
+            <summary>
+            Type of the step.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.WorkflowStepDto.Configuration">
+            <summary>
+            Configuration for the step.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.WorkflowStepDto.Order">
+            <summary>
+            Order of execution for this step.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.DTOs.WorkflowStepDto.Status">
+            <summary>
+            Current status of the step.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Errors.ErrorCodes">
+            <summary>
+            Defines common error codes used throughout the Synaxis system.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Errors.ErrorCodes.AuthenticationFailed">
+            <summary>
+            Authentication failed due to invalid credentials.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Errors.ErrorCodes.AuthorizationDenied">
+            <summary>
+            Authorization denied due to insufficient permissions.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Errors.ErrorCodes.InvalidApiKey">
+            <summary>
+            API key is invalid or expired.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Errors.ErrorCodes.RateLimitExceeded">
+            <summary>
+            Rate limit exceeded for the current user or organization.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Errors.ErrorCodes.QuotaExceeded">
+            <summary>
+            Quota exceeded for the current billing period.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Errors.ErrorCodes.ProviderUnavailable">
+            <summary>
+            The specified provider is not available.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Errors.ErrorCodes.ProviderError">
+            <summary>
+            The provider returned an error response.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Errors.ErrorCodes.ProviderTimeout">
+            <summary>
+            Timeout occurred while waiting for provider response.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Errors.ErrorCodes.ModelNotSupported">
+            <summary>
+            The specified model is not supported by the provider.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Errors.ErrorCodes.ValidationFailed">
+            <summary>
+            Request validation failed.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Errors.ErrorCodes.RequiredFieldMissing">
+            <summary>
+            A required field is missing from the request.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Errors.ErrorCodes.InvalidFieldValue">
+            <summary>
+            A field value is invalid.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Errors.ErrorCodes.InternalError">
+            <summary>
+            An unexpected internal error occurred.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Errors.ErrorCodes.NotFound">
+            <summary>
+            The requested resource was not found.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Errors.ErrorCodes.ServiceUnavailable">
+            <summary>
+            The service is temporarily unavailable.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Errors.SynaxisError">
+            <summary>
+            Represents an error with code, message, severity, category, and additional details.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Errors.SynaxisError.Code">
+            <summary>
+            Gets or initializes the error code.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Errors.SynaxisError.Message">
+            <summary>
+            Gets or initializes the human-readable error message.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Errors.SynaxisError.Severity">
+            <summary>
+            Gets or initializes the severity level of the error.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Errors.SynaxisError.Category">
+            <summary>
+            Gets or initializes the category of the error.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Errors.SynaxisError.Details">
+            <summary>
+            Gets or initializes additional details about the error.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Errors.ErrorSeverity">
+            <summary>
+            Defines the severity levels for errors.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Errors.ErrorSeverity.Fatal">
+            <summary>
+            Fatal error that prevents the system from functioning.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Errors.ErrorSeverity.Error">
+            <summary>
+            Error that prevents the operation from completing.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Errors.ErrorSeverity.Warning">
+            <summary>
+            Warning that indicates a potential issue.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Errors.ErrorSeverity.Info">
+            <summary>
+            Informational message.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Errors.ErrorCategory">
+            <summary>
+            Defines the categories for errors.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Errors.ErrorCategory.Auth">
+            <summary>
+            Authentication or authorization error.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Errors.ErrorCategory.RateLimit">
+            <summary>
+            Rate limiting error.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Errors.ErrorCategory.Provider">
+            <summary>
+            Provider-specific error.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Errors.ErrorCategory.Validation">
+            <summary>
+            Validation error.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V1.Errors.ErrorCategory.System">
+            <summary>
+            System or infrastructure error.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Messages.AudioSynthesis">
+            <summary>
+            Represents synthesized audio data with content type information.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.AudioSynthesis.AudioData">
+            <summary>
+            Gets or initializes the audio data as a byte array.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.AudioSynthesis.ContentType">
+            <summary>
+            Gets or initializes the content type of the audio (e.g., "audio/mpeg", "audio/wav").
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Messages.AudioSynthesisResponse">
+            <summary>
+            Represents an audio synthesis response with audio data and content type.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.AudioSynthesisResponse.AudioData">
+            <summary>
+            Gets or initializes the synthesized audio data as a byte array.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.AudioSynthesisResponse.ContentType">
+            <summary>
+            Gets or initializes the content type of the audio (e.g., "audio/mpeg", "audio/wav").
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Messages.AudioTranscription">
+            <summary>
+            Represents the result of audio transcription with text, duration, and language.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.AudioTranscription.Text">
+            <summary>
+            Gets or initializes the transcribed text.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.AudioTranscription.Duration">
+            <summary>
+            Gets or initializes the duration of the audio in seconds.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.AudioTranscription.Language">
+            <summary>
+            Gets or initializes the detected or specified language of the audio.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Messages.AudioTranscriptionResponse">
+            <summary>
+            Represents an audio transcription response with text, duration, and language.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.AudioTranscriptionResponse.Text">
+            <summary>
+            Gets or initializes the transcribed text.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.AudioTranscriptionResponse.Duration">
+            <summary>
+            Gets or initializes the duration of the audio in seconds.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.AudioTranscriptionResponse.Language">
+            <summary>
+            Gets or initializes the detected or specified language of the audio.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Messages.ChatChoice">
+            <summary>
+            Represents a single choice in a chat completion response.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.ChatChoice.Index">
+            <summary>
+            Gets or initializes the index of this choice in the list of choices.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.ChatChoice.Message">
+            <summary>
+            Gets or initializes the message content for this choice.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.ChatChoice.FinishReason">
+            <summary>
+            Gets or initializes the reason why the model stopped generating tokens.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Messages.ChatMessage">
+            <summary>
+            Represents a chat message with role, content, and optional name.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.ChatMessage.Role">
+            <summary>
+            Gets or initializes the role of the message sender (e.g., "user", "assistant", "system").
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.ChatMessage.Content">
+            <summary>
+            Gets or initializes the content of the message.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.ChatMessage.Name">
+            <summary>
+            Gets or initializes the optional name of the message sender.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Messages.ChatResponse">
+            <summary>
+            Represents a chat completion response with id, model, choices, and usage statistics.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.ChatResponse.Id">
+            <summary>
+            Gets or initializes the unique identifier for this completion.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.ChatResponse.Object">
+            <summary>
+            Gets or initializes the object type (typically "chat.completion").
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.ChatResponse.Created">
+            <summary>
+            Gets or initializes the Unix timestamp when this completion was created.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.ChatResponse.Model">
+            <summary>
+            Gets or initializes the model used for this completion.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.ChatResponse.Choices">
+            <summary>
+            Gets or initializes the list of completion choices.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.ChatResponse.Usage">
+            <summary>
+            Gets or initializes the usage statistics for this completion.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Messages.ChatStreamChunk">
+            <summary>
+            Represents a chunk in a streamed chat completion response.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.ChatStreamChunk.Id">
+            <summary>
+            Gets or initializes the unique identifier for this completion.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.ChatStreamChunk.Object">
+            <summary>
+            Gets or initializes the object type (typically "chat.completion.chunk").
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.ChatStreamChunk.Created">
+            <summary>
+            Gets or initializes the Unix timestamp when this chunk was created.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.ChatStreamChunk.Model">
+            <summary>
+            Gets or initializes the model used for this completion.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.ChatStreamChunk.Choices">
+            <summary>
+            Gets or initializes the list of delta choices for this chunk.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Messages.ChatUsage">
+            <summary>
+            Represents token usage statistics for a chat completion.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.ChatUsage.PromptTokens">
+            <summary>
+            Gets or initializes the number of tokens in the prompt.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.ChatUsage.CompletionTokens">
+            <summary>
+            Gets or initializes the number of tokens in the completion.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.ChatUsage.TotalTokens">
+            <summary>
+            Gets or initializes the total number of tokens used.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Messages.EmbeddingData">
+            <summary>
+            Represents a single embedding result with index, vector data, and object type.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.EmbeddingData.Index">
+            <summary>
+            Gets or initializes the index of this embedding in the list of embeddings.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.EmbeddingData.Embedding">
+            <summary>
+            Gets or initializes the embedding vector as an array of floats.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.EmbeddingData.Object">
+            <summary>
+            Gets or initializes the object type (typically "embedding").
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Messages.EmbeddingResponse">
+            <summary>
+            Represents an embedding response with object type, data array, and usage statistics.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.EmbeddingResponse.Object">
+            <summary>
+            Gets or initializes the object type (typically "list").
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.EmbeddingResponse.Data">
+            <summary>
+            Gets or initializes the array of embedding data results.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.EmbeddingResponse.Usage">
+            <summary>
+            Gets or initializes the usage statistics for this embedding request.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Messages.EmbeddingUsage">
+            <summary>
+            Represents token usage statistics for an embedding request.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.EmbeddingUsage.PromptTokens">
+            <summary>
+            Gets or initializes the number of tokens in the prompt.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.EmbeddingUsage.TotalTokens">
+            <summary>
+            Gets or initializes the total number of tokens used.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Messages.ImageData">
+            <summary>
+            Represents generated image data with URL, base64-encoded data, or revised prompt.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.ImageData.Url">
+            <summary>
+            Gets or initializes the URL of the generated image.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.ImageData.B64Json">
+            <summary>
+            Gets or initializes the base64-encoded JSON representation of the image.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.ImageData.RevisedPrompt">
+            <summary>
+            Gets or initializes the revised prompt that was used to generate the image.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Messages.ImageGenerationResponse">
+            <summary>
+            Represents an image generation response with created timestamp and data array.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.ImageGenerationResponse.Created">
+            <summary>
+            Gets or initializes the Unix timestamp when these images were created.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.ImageGenerationResponse.Data">
+            <summary>
+            Gets or initializes the array of generated image data.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Messages.RerankResponse">
+            <summary>
+            Represents a rerank response with results array and optional usage statistics.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.RerankResponse.Results">
+            <summary>
+            Gets or initializes the array of rerank results.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.RerankResponse.Usage">
+            <summary>
+            Gets or initializes the usage statistics for this rerank request.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Messages.RerankResult">
+            <summary>
+            Represents a rerank result with index, relevance score, and document text.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.RerankResult.Index">
+            <summary>
+            Gets or initializes the index of the document in the original list.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.RerankResult.Score">
+            <summary>
+            Gets or initializes the relevance score assigned to the document.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Messages.RerankResult.Document">
+            <summary>
+            Gets or initializes the document text.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Queries.GetAgentByIdQuery">
+            <summary>
+            Query to get an agent by its identifier.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Queries.GetAgentByIdQuery.TargetAgentId">
+            <summary>
+            Identifier of the agent to retrieve.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Queries.GetAgentByIdQuery.IncludeConfiguration">
+            <summary>
+            Whether to include configuration details.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Queries.GetAgentsQuery">
+            <summary>
+            Query to get a paginated list of agents.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Queries.GetAgentsQuery.Page">
+            <summary>
+            Page number (1-based).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Queries.GetAgentsQuery.PageSize">
+            <summary>
+            Number of items per page.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Queries.GetAgentsQuery.AgentType">
+            <summary>
+            Filter by agent type.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Queries.GetAgentsQuery.Status">
+            <summary>
+            Filter by status.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Queries.GetAgentsQuery.Search">
+            <summary>
+            Search term for name or description.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Queries.GetAgentsQuery.Tags">
+            <summary>
+            Filter by tags.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Queries.GetAgentsQuery.SortBy">
+            <summary>
+            Sort field.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Queries.GetAgentsQuery.SortDirection">
+            <summary>
+            Sort direction (asc or desc).
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Queries.GetExecutionByIdQuery">
+            <summary>
+            Query to get an execution by its identifier.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Queries.GetExecutionByIdQuery.TargetExecutionId">
+            <summary>
+            Identifier of the execution to retrieve.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Queries.GetExecutionByIdQuery.IncludeLogs">
+            <summary>
+            Whether to include detailed logs.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Queries.GetExecutionByIdQuery.IncludeData">
+            <summary>
+            Whether to include input/output data.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Queries.GetExecutionsQuery">
+            <summary>
+            Query to get a paginated list of executions.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Queries.GetExecutionsQuery.Page">
+            <summary>
+            Page number (1-based).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Queries.GetExecutionsQuery.PageSize">
+            <summary>
+            Number of items per page.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Queries.GetExecutionsQuery.AgentId">
+            <summary>
+            Filter by agent identifier.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Queries.GetExecutionsQuery.Status">
+            <summary>
+            Filter by status.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Queries.GetExecutionsQuery.InitiatedByUserId">
+            <summary>
+            Filter by user who initiated the execution.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Queries.GetExecutionsQuery.CreatedAfter">
+            <summary>
+            Filter executions created after this date.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Queries.GetExecutionsQuery.CreatedBefore">
+            <summary>
+            Filter executions created before this date.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Queries.GetExecutionsQuery.SortBy">
+            <summary>
+            Sort field.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Queries.GetExecutionsQuery.SortDirection">
+            <summary>
+            Sort direction (asc or desc).
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Queries.GetUserByIdQuery">
+            <summary>
+            Query to get a user by their identifier.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Queries.GetUserByIdQuery.TargetUserId">
+            <summary>
+            Identifier of the user to retrieve.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Queries.GetUserByIdQuery.IncludeDeleted">
+            <summary>
+            Whether to include soft-deleted users.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Queries.GetUsersQuery">
+            <summary>
+            Query to get a paginated list of users.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Queries.GetUsersQuery.Page">
+            <summary>
+            Page number (1-based).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Queries.GetUsersQuery.PageSize">
+            <summary>
+            Number of items per page.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Queries.GetUsersQuery.Status">
+            <summary>
+            Filter by status.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Queries.GetUsersQuery.Search">
+            <summary>
+            Search term for name or email.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Queries.GetUsersQuery.SortBy">
+            <summary>
+            Sort field.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Queries.GetUsersQuery.SortDirection">
+            <summary>
+            Sort direction (asc or desc).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Queries.GetUsersQuery.IncludeDeleted">
+            <summary>
+            Whether to include soft-deleted users.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V1.Queries.QueryBase">
+            <summary>
+            Base class for all queries.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Queries.QueryBase.QueryId">
+            <summary>
+            Unique identifier for the query.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Queries.QueryBase.CorrelationId">
+            <summary>
+            Correlation identifier for tracing requests across services.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Queries.QueryBase.Timestamp">
+            <summary>
+            Timestamp when the query was created.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V1.Queries.QueryBase.UserId">
+            <summary>
+            Identifier of the user issuing the query.
+            </summary>
+        </member>
+        <member name="M:Synaxis.Contracts.V1.Queries.QueryBase.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Synaxis.Contracts.V1.Queries.QueryBase"/> class.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.Commands.CancelAgentExecutionCommand">
+            <summary>
+            Command to cancel an ongoing agent execution (V2).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.CancelAgentExecutionCommand.ExecutionId">
+            <summary>
+            Identifier of the execution to cancel.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.CancelAgentExecutionCommand.Reason">
+            <summary>
+            Reason for cancellation.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.CancelAgentExecutionCommand.Force">
+            <summary>
+            Whether to force immediate termination.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.CancelAgentExecutionCommand.WaitForGracefulShutdown">
+            <summary>
+            Whether to wait for graceful shutdown.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.Commands.CommandBase">
+            <summary>
+            Base class for all commands (V2).
+            </summary>
+            <remarks>
+            V2 Breaking Changes:
+            - CommandId renamed to Id
+            - Added TenantId for multi-tenancy
+            - Added Source property
+            - Timestamp is now required in constructor
+            </remarks>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.CommandBase.Id">
+            <summary>
+            Unique identifier for the command.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.CommandBase.CorrelationId">
+            <summary>
+            Correlation identifier for tracing requests across services.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.CommandBase.TenantId">
+            <summary>
+            Identifier of the tenant (for multi-tenancy).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.CommandBase.Timestamp">
+            <summary>
+            Timestamp when the command was created.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.CommandBase.UserId">
+            <summary>
+            Identifier of the user issuing the command.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.CommandBase.Source">
+            <summary>
+            Source system or service that issued the command.
+            </summary>
+        </member>
+        <member name="M:Synaxis.Contracts.V2.Commands.CommandBase.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Synaxis.Contracts.V2.Commands.CommandBase"/> class.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.Commands.CreateAgentCommand">
+            <summary>
+            Command to create a new agent (V2).
+            </summary>
+            <remarks>
+            V2 Breaking Changes:
+            - Added ResourceRequirements for scheduling
+            - Added Labels for Kubernetes-style tagging
+            - Tags renamed to Labels
+            </remarks>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.CreateAgentCommand.Name">
+            <summary>
+            Name of the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.CreateAgentCommand.Description">
+            <summary>
+            Description of the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.CreateAgentCommand.AgentType">
+            <summary>
+            Type of the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.CreateAgentCommand.Configuration">
+            <summary>
+            Configuration settings for the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.CreateAgentCommand.Resources">
+            <summary>
+            Resource requirements for the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.CreateAgentCommand.Labels">
+            <summary>
+            Labels for the agent.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.Commands.ResourceRequirements">
+            <summary>
+            Resource requirements for an agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.ResourceRequirements.Cpu">
+            <summary>
+            CPU limit in millicores.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.ResourceRequirements.Memory">
+            <summary>
+            Memory limit (e.g., "512Mi", "1Gi").
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.ResourceRequirements.Gpu">
+            <summary>
+            GPU requirements.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.Commands.CreateUserCommand">
+            <summary>
+            Command to create a new user (V2).
+            </summary>
+            <remarks>
+            V2 Breaking Changes:
+            - Added TenantId for multi-tenancy
+            - IsAdmin flag replaces roles list
+            - Added Metadata for extensibility
+            </remarks>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.CreateUserCommand.Email">
+            <summary>
+            Email address of the new user.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.CreateUserCommand.DisplayName">
+            <summary>
+            Display name for the user.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.CreateUserCommand.Password">
+            <summary>
+            Initial password for the user (will be hashed).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.CreateUserCommand.IsAdmin">
+            <summary>
+            Whether the user should have administrator privileges.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.CreateUserCommand.Metadata">
+            <summary>
+            Metadata for extensibility.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.Commands.DeleteAgentCommand">
+            <summary>
+            Command to delete an agent (V2).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.DeleteAgentCommand.TargetAgentId">
+            <summary>
+            Identifier of the agent to delete.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.DeleteAgentCommand.Reason">
+            <summary>
+            Reason for deletion.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.DeleteAgentCommand.Force">
+            <summary>
+            Whether to force deletion even if agent has execution history.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.DeleteAgentCommand.Cascade">
+            <summary>
+            Whether to cascade delete executions.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.Commands.DeleteUserCommand">
+            <summary>
+            Command to delete a user (V2).
+            </summary>
+            <remarks>
+            V2 Breaking Changes:
+            - Added Anonymize flag for GDPR compliance
+            - Added DataRetentionPeriod for soft deletes
+            </remarks>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.DeleteUserCommand.TargetUserId">
+            <summary>
+            Identifier of the user to delete.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.DeleteUserCommand.Reason">
+            <summary>
+            Reason for deletion.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.DeleteUserCommand.Permanent">
+            <summary>
+            Whether to permanently delete (true) or soft delete (false).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.DeleteUserCommand.Anonymize">
+            <summary>
+            Whether to anonymize user data for GDPR compliance.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.DeleteUserCommand.DataRetentionPeriod">
+            <summary>
+            Data retention period for soft-deleted users.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.Commands.ExecuteAgentCommand">
+            <summary>
+            Command to execute an agent (V2).
+            </summary>
+            <remarks>
+            V2 Breaking Changes:
+            - Added ExecutionContext for distributed tracing
+            - Added ResourceRequirements for scheduling
+            - Added WorkflowId for workflow integration
+            </remarks>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.ExecuteAgentCommand.TargetAgentId">
+            <summary>
+            Identifier of the agent to execute.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.ExecuteAgentCommand.ParentExecutionId">
+            <summary>
+            Parent execution identifier (for nested executions).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.ExecuteAgentCommand.WorkflowId">
+            <summary>
+            Workflow identifier (if part of a workflow).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.ExecuteAgentCommand.Input">
+            <summary>
+            Input parameters for the execution.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.ExecuteAgentCommand.Priority">
+            <summary>
+            Execution priority (higher = more urgent).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.ExecuteAgentCommand.Timeout">
+            <summary>
+            Maximum allowed execution time.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.ExecuteAgentCommand.Resources">
+            <summary>
+            Resource requirements for the execution.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.ExecuteAgentCommand.WaitForCompletion">
+            <summary>
+            Whether to wait for execution completion.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.ExecuteAgentCommand.CallbackUrl">
+            <summary>
+            Callback URL for async notifications.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.Commands.UpdateAgentCommand">
+            <summary>
+            Command to update an existing agent (V2).
+            </summary>
+            <remarks>
+            V2 Breaking Changes:
+            - Uses UpdateMask for partial updates
+            - Tags renamed to Labels
+            </remarks>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.UpdateAgentCommand.TargetAgentId">
+            <summary>
+            Identifier of the agent to update.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.UpdateAgentCommand.UpdateMask">
+            <summary>
+            Fields to update.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.UpdateAgentCommand.Name">
+            <summary>
+            Updated name.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.UpdateAgentCommand.Description">
+            <summary>
+            Updated description.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.UpdateAgentCommand.Configuration">
+            <summary>
+            Updated configuration.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.UpdateAgentCommand.Resources">
+            <summary>
+            Updated resource requirements.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.UpdateAgentCommand.Labels">
+            <summary>
+            Updated labels.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.UpdateAgentCommand.Status">
+            <summary>
+            Updated status.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.Commands.UpdateUserCommand">
+            <summary>
+            Command to update an existing user (V2).
+            </summary>
+            <remarks>
+            V2 Breaking Changes:
+            - Uses UpdateMask for partial updates
+            - IsAdmin replaces roles list
+            </remarks>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.UpdateUserCommand.TargetUserId">
+            <summary>
+            Identifier of the user to update.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.UpdateUserCommand.UpdateMask">
+            <summary>
+            Fields to update.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.UpdateUserCommand.Email">
+            <summary>
+            Updated email address.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.UpdateUserCommand.DisplayName">
+            <summary>
+            Updated display name.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.UpdateUserCommand.Password">
+            <summary>
+            New password (null if not changing).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.UpdateUserCommand.IsAdmin">
+            <summary>
+            Updated admin status.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.UpdateUserCommand.Status">
+            <summary>
+            Updated status.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Commands.UpdateUserCommand.Metadata">
+            <summary>
+            Updated metadata (null if not changing).
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.Common.AgentStatus">
+            <summary>
+            Represents the status of an agent in the system (V2).
+            </summary>
+            <remarks>
+            V2 Breaking Changes:
+            - Renamed 'Creating' to 'Provisioning' to better reflect cloud-native terminology
+            - Split 'Executing' into 'Running' and 'Processing' for finer granularity
+            - Added 'Draining' status for graceful shutdown
+            </remarks>
+        </member>
+        <member name="F:Synaxis.Contracts.V2.Common.AgentStatus.Provisioning">
+            <summary>
+            Agent is being provisioned and not yet ready.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V2.Common.AgentStatus.Idle">
+            <summary>
+            Agent is idle and ready to execute tasks.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V2.Common.AgentStatus.Running">
+            <summary>
+            Agent is running but waiting for input.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V2.Common.AgentStatus.Processing">
+            <summary>
+            Agent is actively processing a task.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V2.Common.AgentStatus.Draining">
+            <summary>
+            Agent is draining and will not accept new tasks.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V2.Common.AgentStatus.Error">
+            <summary>
+            Agent has encountered an error and is unavailable.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V2.Common.AgentStatus.Disabled">
+            <summary>
+            Agent has been disabled by an administrator.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.Common.EventType">
+            <summary>
+            Represents the type of domain event (V2).
+            </summary>
+            <remarks>
+            V2 Breaking Changes:
+            - Values are now explicit for forward compatibility
+            - Added 'System' event type for platform-level events
+            </remarks>
+        </member>
+        <member name="F:Synaxis.Contracts.V2.Common.EventType.User">
+            <summary>
+            User-related event.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V2.Common.EventType.Agent">
+            <summary>
+            Agent-related event.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V2.Common.EventType.Workflow">
+            <summary>
+            Workflow-related event.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V2.Common.EventType.Execution">
+            <summary>
+            Execution-related event.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V2.Common.EventType.System">
+            <summary>
+            System/platform-level event.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.Common.ExecutionStatus">
+            <summary>
+            Represents the status of an agent execution (V2).
+            </summary>
+            <remarks>
+            V2 Breaking Changes:
+            - Renamed 'InProgress' to 'Running' for consistency with agent status
+            - Added 'Paused' status for suspending execution
+            - Added 'Timeout' status for explicit timeout handling
+            </remarks>
+        </member>
+        <member name="F:Synaxis.Contracts.V2.Common.ExecutionStatus.Pending">
+            <summary>
+            Execution is pending and has not started yet.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V2.Common.ExecutionStatus.Running">
+            <summary>
+            Execution is currently running.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V2.Common.ExecutionStatus.Paused">
+            <summary>
+            Execution has been paused and can be resumed.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V2.Common.ExecutionStatus.Completed">
+            <summary>
+            Execution has completed successfully.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V2.Common.ExecutionStatus.Failed">
+            <summary>
+            Execution has failed with an error.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V2.Common.ExecutionStatus.Cancelled">
+            <summary>
+            Execution was cancelled before completion.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V2.Common.ExecutionStatus.Timeout">
+            <summary>
+            Execution timed out.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.Common.UserStatus">
+            <summary>
+            Represents the status of a user in the system (V2).
+            </summary>
+            <remarks>
+            V2 Breaking Changes:
+            - Renamed 'Deactivated' to 'Inactive' for clarity
+            - Removed 'Pending' status (users are now immediately Active or require explicit approval)
+            - Added 'PendingVerification' for email verification flow
+            </remarks>
+        </member>
+        <member name="F:Synaxis.Contracts.V2.Common.UserStatus.PendingVerification">
+            <summary>
+            User account is pending email verification.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V2.Common.UserStatus.Active">
+            <summary>
+            User account is active and can access the system.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V2.Common.UserStatus.Suspended">
+            <summary>
+            User account has been suspended by an administrator.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V2.Common.UserStatus.Inactive">
+            <summary>
+            User account has been marked as inactive.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.Common.WorkflowStatus">
+            <summary>
+            Represents the status of a workflow (V2).
+            </summary>
+            <remarks>
+            V2: No breaking changes, added 'Scheduled' status for future execution.
+            </remarks>
+        </member>
+        <member name="F:Synaxis.Contracts.V2.Common.WorkflowStatus.Scheduled">
+            <summary>
+            Workflow is scheduled for future execution.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V2.Common.WorkflowStatus.Pending">
+            <summary>
+            Workflow is pending and has not started yet.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V2.Common.WorkflowStatus.InProgress">
+            <summary>
+            Workflow is currently in progress.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V2.Common.WorkflowStatus.Completed">
+            <summary>
+            Workflow has completed successfully.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V2.Common.WorkflowStatus.Failed">
+            <summary>
+            Workflow has failed with an error.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V2.Common.WorkflowStatus.Cancelled">
+            <summary>
+            Workflow was cancelled before completion.
+            </summary>
+        </member>
+        <member name="F:Synaxis.Contracts.V2.Common.WorkflowStatus.Paused">
+            <summary>
+            Workflow is paused and can be resumed.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.Converters.IAgentConverter">
+            <summary>
+            Converts V1 AgentDto to V2 AgentDto.
+            </summary>
+        </member>
+        <member name="M:Synaxis.Contracts.V2.Converters.IAgentConverter.Convert(Synaxis.Contracts.V1.DTOs.AgentDto)">
+            <summary>
+            Converts a V1 AgentDto to V2 AgentDto.
+            </summary>
+            <param name="v1Agent">The V1 agent DTO.</param>
+            <returns>The V2 agent DTO.</returns>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.Converters.AgentConverter">
+            <summary>
+            Default implementation of the agent converter.
+            </summary>
+        </member>
+        <member name="M:Synaxis.Contracts.V2.Converters.AgentConverter.Convert(Synaxis.Contracts.V1.DTOs.AgentDto)">
+            <inheritdoc />
+        </member>
+        <member name="T:Synaxis.Contracts.V2.Converters.AgentConverterExtensions">
+            <summary>
+            Extension methods for agent conversion.
+            </summary>
+        </member>
+        <member name="M:Synaxis.Contracts.V2.Converters.AgentConverterExtensions.ToV2(Synaxis.Contracts.V1.DTOs.AgentDto)">
+            <summary>
+            Converts a V1 AgentDto to V2 AgentDto.
+            </summary>
+            <param name="v1Agent">The V1 agent DTO.</param>
+            <returns>The V2 agent DTO.</returns>
+        </member>
+        <member name="M:Synaxis.Contracts.V2.Converters.AgentConverterExtensions.ToV2(System.Collections.Generic.IEnumerable{Synaxis.Contracts.V1.DTOs.AgentDto})">
+            <summary>
+            Converts a collection of V1 AgentDto to V2 AgentDto.
+            </summary>
+            <param name="v1Agents">The V1 agent DTOs.</param>
+            <returns>The V2 agent DTOs.</returns>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.Converters.IUserConverter">
+            <summary>
+            Converts V1 UserDto to V2 UserDto.
+            </summary>
+        </member>
+        <member name="M:Synaxis.Contracts.V2.Converters.IUserConverter.Convert(Synaxis.Contracts.V1.DTOs.UserDto)">
+            <summary>
+            Converts a V1 UserDto to V2 UserDto.
+            </summary>
+            <param name="v1User">The V1 user DTO.</param>
+            <returns>The V2 user DTO.</returns>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.Converters.UserConverter">
+            <summary>
+            Default implementation of the user converter.
+            </summary>
+        </member>
+        <member name="M:Synaxis.Contracts.V2.Converters.UserConverter.Convert(Synaxis.Contracts.V1.DTOs.UserDto)">
+            <inheritdoc />
+        </member>
+        <member name="T:Synaxis.Contracts.V2.Converters.UserConverterExtensions">
+            <summary>
+            Extension methods for user conversion.
+            </summary>
+        </member>
+        <member name="M:Synaxis.Contracts.V2.Converters.UserConverterExtensions.ToV2(Synaxis.Contracts.V1.DTOs.UserDto)">
+            <summary>
+            Converts a V1 UserDto to V2 UserDto.
+            </summary>
+            <param name="v1User">The V1 user DTO.</param>
+            <returns>The V2 user DTO.</returns>
+        </member>
+        <member name="M:Synaxis.Contracts.V2.Converters.UserConverterExtensions.ToV2(System.Collections.Generic.IEnumerable{Synaxis.Contracts.V1.DTOs.UserDto})">
+            <summary>
+            Converts a collection of V1 UserDto to V2 UserDto.
+            </summary>
+            <param name="v1Users">The V1 user DTOs.</param>
+            <returns>The V2 user DTOs.</returns>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.DomainEvents.AgentCreated">
+            <summary>
+            Event raised when a new agent is created (V2).
+            </summary>
+            <remarks>
+            V2 Breaking Changes:
+            - Configuration is now strongly typed with AgentConfiguration record
+            - Added ResourceRequirements for scheduling
+            - Added Labels for Kubernetes-style tagging
+            </remarks>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.AgentCreated.Name">
+            <summary>
+            Name of the created agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.AgentCreated.Description">
+            <summary>
+            Description of the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.AgentCreated.AgentType">
+            <summary>
+            Type of the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.AgentCreated.Configuration">
+            <summary>
+            Configuration settings for the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.AgentCreated.Resources">
+            <summary>
+            Resource requirements for the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.AgentCreated.Labels">
+            <summary>
+            Labels for the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.AgentCreated.Status">
+            <summary>
+            Initial status of the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.AgentCreated.CreatedByUserId">
+            <summary>
+            Identifier of the user who created the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.AgentCreated.CreatedAt">
+            <summary>
+            Timestamp when the agent was created.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.DomainEvents.ResourceRequirements">
+            <summary>
+            Resource requirements for an agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.ResourceRequirements.Cpu">
+            <summary>
+            CPU limit in millicores.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.ResourceRequirements.Memory">
+            <summary>
+            Memory limit (e.g., "512Mi", "1Gi").
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.ResourceRequirements.Gpu">
+            <summary>
+            GPU requirements.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.DomainEvents.AgentExecutionCompleted">
+            <summary>
+            Event raised when an agent execution completes (V2).
+            </summary>
+            <remarks>
+            V2 Breaking Changes:
+            - Added Metrics for performance tracking
+            - Output is now strongly typed
+            - Added ExecutionStages for detailed progress
+            </remarks>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.AgentExecutionCompleted.AgentId">
+            <summary>
+            Identifier of the executed agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.AgentExecutionCompleted.Status">
+            <summary>
+            Final status of the execution.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.AgentExecutionCompleted.Output">
+            <summary>
+            Output from the execution.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.AgentExecutionCompleted.Error">
+            <summary>
+            Error details if execution failed.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.AgentExecutionCompleted.CompletedAt">
+            <summary>
+            Timestamp when the execution completed.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.AgentExecutionCompleted.Duration">
+            <summary>
+            Total duration of the execution.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.AgentExecutionCompleted.Metrics">
+            <summary>
+            Execution metrics.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.AgentExecutionCompleted.Stages">
+            <summary>
+            Execution stages for detailed progress.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.DomainEvents.ExecutionError">
+            <summary>
+            Execution error details.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.ExecutionError.Code">
+            <summary>
+            Error code.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.ExecutionError.Message">
+            <summary>
+            Error message.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.ExecutionError.Details">
+            <summary>
+            Error details.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.ExecutionError.Retryable">
+            <summary>
+            Whether the error is retryable.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.DomainEvents.ExecutionMetrics">
+            <summary>
+            Execution metrics.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.ExecutionMetrics.TokensConsumed">
+            <summary>
+            Number of tokens consumed (if applicable).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.ExecutionMetrics.CpuTime">
+            <summary>
+            CPU time used.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.ExecutionMetrics.MemoryBytes">
+            <summary>
+            Memory used in bytes.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.ExecutionMetrics.Custom">
+            <summary>
+            Custom metrics.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.DomainEvents.ExecutionStage">
+            <summary>
+            Execution stage details.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.ExecutionStage.Name">
+            <summary>
+            Name of the stage.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.ExecutionStage.Status">
+            <summary>
+            Status of the stage.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.ExecutionStage.Duration">
+            <summary>
+            Duration of the stage.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.DomainEvents.AgentExecutionStarted">
+            <summary>
+            Event raised when an agent execution starts (V2).
+            </summary>
+            <remarks>
+            V2 Breaking Changes:
+            - Added ExecutionContext for distributed tracing
+            - Input is now strongly typed
+            - Added ResourceAllocation for scheduling
+            </remarks>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.AgentExecutionStarted.AgentId">
+            <summary>
+            Identifier of the agent being executed.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.AgentExecutionStarted.InitiatedByUserId">
+            <summary>
+            Identifier of the user who initiated the execution.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.AgentExecutionStarted.ExecutionContext">
+            <summary>
+            Execution context for distributed tracing.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.AgentExecutionStarted.Input">
+            <summary>
+            Input parameters for the execution.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.AgentExecutionStarted.Priority">
+            <summary>
+            Execution priority (higher = more urgent).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.AgentExecutionStarted.Timeout">
+            <summary>
+            Maximum allowed execution time.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.AgentExecutionStarted.Resources">
+            <summary>
+            Resource allocation for the execution.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.AgentExecutionStarted.StartedAt">
+            <summary>
+            Timestamp when the execution started.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.AgentExecutionStarted.Status">
+            <summary>
+            Initial status of the execution.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.DomainEvents.ExecutionContext">
+            <summary>
+            Execution context for distributed tracing.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.ExecutionContext.ParentExecutionId">
+            <summary>
+            Parent execution identifier (for nested executions).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.ExecutionContext.TraceId">
+            <summary>
+            Trace identifier for distributed tracing.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.ExecutionContext.SpanId">
+            <summary>
+            Span identifier for distributed tracing.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.DomainEvents.DomainEventBase">
+            <summary>
+            Base class for all domain events (V2).
+            </summary>
+            <remarks>
+            V2 Breaking Changes:
+            - EventId renamed to Id for consistency
+            - Added TenantId for multi-tenancy support
+            - Added Source property for event sourcing
+            - Timestamp is now required in constructor
+            </remarks>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.DomainEventBase.Id">
+            <summary>
+            Unique identifier for the event.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.DomainEventBase.AggregateId">
+            <summary>
+            Identifier of the aggregate that generated the event.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.DomainEventBase.TenantId">
+            <summary>
+            Identifier of the tenant (for multi-tenancy).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.DomainEventBase.Timestamp">
+            <summary>
+            Timestamp when the event occurred.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.DomainEventBase.Version">
+            <summary>
+            Version of the event schema.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.DomainEventBase.Source">
+            <summary>
+            Source system or service that generated the event.
+            </summary>
+        </member>
+        <member name="M:Synaxis.Contracts.V2.DomainEvents.DomainEventBase.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Synaxis.Contracts.V2.DomainEvents.DomainEventBase"/> class.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.DomainEvents.UserCreated">
+            <summary>
+            Event raised when a new user is created (V2).
+            </summary>
+            <remarks>
+            V2 Breaking Changes:
+            - Added TenantId for multi-tenancy
+            - Email is now an EmailAddress record type
+            - Added Metadata dictionary for extensibility
+            - Removed Roles from creation (now assigned via separate event)
+            </remarks>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.UserCreated.Email">
+            <summary>
+            Email address of the created user.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.UserCreated.DisplayName">
+            <summary>
+            Display name of the user.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.UserCreated.Status">
+            <summary>
+            Initial status of the user.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.UserCreated.IsAdmin">
+            <summary>
+            Whether the user is an administrator.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.UserCreated.Metadata">
+            <summary>
+            Metadata for extensibility.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.UserCreated.CreatedAt">
+            <summary>
+            Timestamp when the user was created.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.DomainEvents.UserDeleted">
+            <summary>
+            Event raised when a user is deleted (V2).
+            </summary>
+            <remarks>
+            V2 Breaking Changes:
+            - Email is now optional (may not be available for GDPR deletion)
+            - Added Anonymized flag for GDPR compliance
+            - Added DataRetentionPeriod for compliance
+            </remarks>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.UserDeleted.Email">
+            <summary>
+            Email address of the deleted user (null if anonymized).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.UserDeleted.Reason">
+            <summary>
+            Reason for deletion.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.UserDeleted.DeletedAt">
+            <summary>
+            Timestamp when the user was deleted.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.UserDeleted.Permanent">
+            <summary>
+            Whether the deletion was permanent or soft delete.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.UserDeleted.Anonymized">
+            <summary>
+            Whether user data was anonymized for GDPR compliance.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.UserDeleted.DataRetentionPeriod">
+            <summary>
+            Data retention period for soft-deleted users.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.DomainEvents.UserUpdated">
+            <summary>
+            Event raised when a user is updated (V2).
+            </summary>
+            <remarks>
+            V2 Breaking Changes:
+            - Uses Patch semantics with UpdateMask for partial updates
+            - Added PreviousValues for audit trail
+            </remarks>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.UserUpdated.UpdateMask">
+            <summary>
+            Fields that were updated.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.UserUpdated.Email">
+            <summary>
+            Updated email address.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.UserUpdated.DisplayName">
+            <summary>
+            Updated display name.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.UserUpdated.Status">
+            <summary>
+            Updated status.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.UserUpdated.IsAdmin">
+            <summary>
+            Updated admin status.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.UserUpdated.PreviousValues">
+            <summary>
+            Previous values for audit trail.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.UserUpdated.UpdatedAt">
+            <summary>
+            Timestamp when the user was last updated.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.DomainEvents.WorkflowCreated">
+            <summary>
+            Event raised when a new workflow is created (V2).
+            </summary>
+            <remarks>
+            V2 Breaking Changes:
+            - Steps now use strongly typed definitions
+            - Added Schedule for scheduled workflows
+            - Added Variables for workflow variables
+            </remarks>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowCreated.Name">
+            <summary>
+            Name of the created workflow.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowCreated.Description">
+            <summary>
+            Description of the workflow.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowCreated.Steps">
+            <summary>
+            Steps in the workflow.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowCreated.Variables">
+            <summary>
+            Workflow variables.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowCreated.Schedule">
+            <summary>
+            Schedule for recurring workflows.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowCreated.Status">
+            <summary>
+            Initial status of the workflow.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowCreated.CreatedByUserId">
+            <summary>
+            Identifier of the user who created the workflow.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowCreated.CreatedAt">
+            <summary>
+            Timestamp when the workflow was created.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.DomainEvents.WorkflowStepDefinition">
+            <summary>
+            Defines a step within a workflow (V2).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowStepDefinition.Id">
+            <summary>
+            Unique identifier for the step.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowStepDefinition.Name">
+            <summary>
+            Name of the step.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowStepDefinition.StepType">
+            <summary>
+            Type of the step.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowStepDefinition.Configuration">
+            <summary>
+            Configuration for the step.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowStepDefinition.Order">
+            <summary>
+            Order of execution for this step.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowStepDefinition.Condition">
+            <summary>
+            Condition for executing this step.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowStepDefinition.RetryPolicy">
+            <summary>
+            Retry policy for the step.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.DomainEvents.WorkflowVariable">
+            <summary>
+            Workflow variable definition.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowVariable.Name">
+            <summary>
+            Variable name.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowVariable.Type">
+            <summary>
+            Variable type.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowVariable.DefaultValue">
+            <summary>
+            Default value.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowVariable.Required">
+            <summary>
+            Whether the variable is required.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.DomainEvents.WorkflowSchedule">
+            <summary>
+            Workflow schedule definition.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowSchedule.Cron">
+            <summary>
+            Cron expression for scheduling.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowSchedule.Timezone">
+            <summary>
+            Time zone for the schedule.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowSchedule.Enabled">
+            <summary>
+            Whether the schedule is enabled.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.DomainEvents.RetryPolicy">
+            <summary>
+            Retry policy for workflow steps.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.RetryPolicy.MaxRetries">
+            <summary>
+            Maximum number of retries.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.RetryPolicy.InitialDelay">
+            <summary>
+            Initial delay between retries.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.RetryPolicy.BackoffMultiplier">
+            <summary>
+            Backoff multiplier for retries.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.DomainEvents.WorkflowFailed">
+            <summary>
+            Event raised when a workflow fails (V2).
+            </summary>
+            <remarks>
+            V2 Breaking Changes:
+            - Added ExecutionId for traceability
+            - Error is now strongly typed
+            - Added FailedSteps for multiple failures
+            </remarks>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowFailed.WorkflowId">
+            <summary>
+            Identifier of the failed workflow.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowFailed.ExecutionId">
+            <summary>
+            Execution identifier.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowFailed.Error">
+            <summary>
+            Primary error that caused the failure.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowFailed.FailedSteps">
+            <summary>
+            Steps that failed (for parallel execution scenarios).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowFailed.Retryable">
+            <summary>
+            Whether the workflow can be retried.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowFailed.RetryCount">
+            <summary>
+            Number of retry attempts made.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowFailed.FailedAt">
+            <summary>
+            Timestamp when the workflow failed.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.DomainEvents.FailedStepInfo">
+            <summary>
+            Information about a failed step.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.FailedStepInfo.StepId">
+            <summary>
+            Identifier of the failed step.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.FailedStepInfo.StepName">
+            <summary>
+            Name of the failed step.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.FailedStepInfo.Error">
+            <summary>
+            Error details.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.DomainEvents.WorkflowStepCompleted">
+            <summary>
+            Event raised when a workflow step completes (V2).
+            </summary>
+            <remarks>
+            V2 Breaking Changes:
+            - Added Metrics for step performance
+            - Added Attempts for retry tracking
+            </remarks>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowStepCompleted.WorkflowId">
+            <summary>
+            Identifier of the workflow.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowStepCompleted.ExecutionId">
+            <summary>
+            Execution identifier.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowStepCompleted.StepId">
+            <summary>
+            Identifier of the completed step.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowStepCompleted.StepName">
+            <summary>
+            Name of the completed step.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowStepCompleted.Result">
+            <summary>
+            Result of the step execution.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowStepCompleted.Status">
+            <summary>
+            Status of the step completion.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowStepCompleted.NextStepId">
+            <summary>
+            Identifier of the next step (null if last step).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowStepCompleted.CompletedAt">
+            <summary>
+            Timestamp when the step completed.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowStepCompleted.Duration">
+            <summary>
+            Duration of step execution.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowStepCompleted.Attempts">
+            <summary>
+            Number of attempts made (including retries).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DomainEvents.WorkflowStepCompleted.Metrics">
+            <summary>
+            Step metrics.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.DTOs.AgentDto">
+            <summary>
+            Data transfer object for an agent (V2).
+            </summary>
+            <remarks>
+            V2 Breaking Changes:
+            - Added ResourceRequirements
+            - Tags renamed to Labels
+            - Added ExecutionStats
+            </remarks>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.AgentDto.Id">
+            <summary>
+            Unique identifier of the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.AgentDto.Name">
+            <summary>
+            Name of the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.AgentDto.Description">
+            <summary>
+            Description of the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.AgentDto.AgentType">
+            <summary>
+            Type of the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.AgentDto.Status">
+            <summary>
+            Current status of the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.AgentDto.Configuration">
+            <summary>
+            Configuration settings for the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.AgentDto.Resources">
+            <summary>
+            Resource requirements for the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.AgentDto.Labels">
+            <summary>
+            Labels for the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.AgentDto.CreatedByUserId">
+            <summary>
+            Identifier of the user who created the agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.AgentDto.CreatedAt">
+            <summary>
+            Timestamp when the agent was created.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.AgentDto.UpdatedAt">
+            <summary>
+            Timestamp when the agent was last updated.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.AgentDto.Stats">
+            <summary>
+            Execution statistics.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.DTOs.ResourceRequirements">
+            <summary>
+            Resource requirements for an agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ResourceRequirements.Cpu">
+            <summary>
+            CPU limit in millicores.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ResourceRequirements.Memory">
+            <summary>
+            Memory limit (e.g., "512Mi", "1Gi").
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ResourceRequirements.Gpu">
+            <summary>
+            GPU requirements.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.DTOs.ExecutionStats">
+            <summary>
+            Execution statistics for an agent.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ExecutionStats.TotalCount">
+            <summary>
+            Total number of executions.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ExecutionStats.SuccessCount">
+            <summary>
+            Number of successful executions.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ExecutionStats.FailureCount">
+            <summary>
+            Number of failed executions.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ExecutionStats.AverageDuration">
+            <summary>
+            Average execution duration.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ExecutionStats.LastExecutedAt">
+            <summary>
+            Last execution timestamp.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.DTOs.ErrorResponse">
+            <summary>
+            Standard error response format (V2).
+            </summary>
+            <remarks>
+            V2 Breaking Changes:
+            - Added RequestId for correlation
+            - Added Path for the request path
+            - ValidationErrors is now a dictionary for easier access
+            </remarks>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ErrorResponse.StatusCode">
+            <summary>
+            HTTP status code.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ErrorResponse.Code">
+            <summary>
+            Error code for programmatic handling.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ErrorResponse.Message">
+            <summary>
+            Human-readable error message.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ErrorResponse.Details">
+            <summary>
+            Detailed error description.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ErrorResponse.RequestId">
+            <summary>
+            Request identifier for correlation.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ErrorResponse.TraceId">
+            <summary>
+            Trace identifier for debugging.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ErrorResponse.Path">
+            <summary>
+            Request path that caused the error.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ErrorResponse.Timestamp">
+            <summary>
+            Timestamp when the error occurred.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ErrorResponse.ValidationErrors">
+            <summary>
+            Additional error details for validation errors.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.DTOs.ExecutionDto">
+            <summary>
+            Data transfer object for an agent execution (V2).
+            </summary>
+            <remarks>
+            V2 Breaking Changes:
+            - Added ParentExecutionId for nested executions
+            - Added WorkflowId for workflow integration
+            - Added ExecutionContext for distributed tracing
+            - Added Metrics and Stages
+            </remarks>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ExecutionDto.Id">
+            <summary>
+            Unique identifier of the execution.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ExecutionDto.AgentId">
+            <summary>
+            Identifier of the agent that was executed.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ExecutionDto.AgentName">
+            <summary>
+            Name of the agent that was executed.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ExecutionDto.ParentExecutionId">
+            <summary>
+            Parent execution identifier (for nested executions).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ExecutionDto.WorkflowId">
+            <summary>
+            Workflow identifier (if part of a workflow).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ExecutionDto.InitiatedByUserId">
+            <summary>
+            Identifier of the user who initiated the execution.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ExecutionDto.Status">
+            <summary>
+            Current status of the execution.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ExecutionDto.ExecutionContext">
+            <summary>
+            Execution context for distributed tracing.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ExecutionDto.Input">
+            <summary>
+            Input parameters for the execution.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ExecutionDto.Output">
+            <summary>
+            Output from the execution.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ExecutionDto.Error">
+            <summary>
+            Error details if execution failed.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ExecutionDto.StartedAt">
+            <summary>
+            Timestamp when the execution started.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ExecutionDto.CompletedAt">
+            <summary>
+            Timestamp when the execution completed.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ExecutionDto.Duration">
+            <summary>
+            Total duration of the execution.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ExecutionDto.Priority">
+            <summary>
+            Execution priority.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ExecutionDto.Metrics">
+            <summary>
+            Execution metrics.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ExecutionDto.Stages">
+            <summary>
+            Execution stages.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.DTOs.ExecutionContext">
+            <summary>
+            Execution context for distributed tracing.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ExecutionContext.TraceId">
+            <summary>
+            Trace identifier for distributed tracing.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ExecutionContext.SpanId">
+            <summary>
+            Span identifier for distributed tracing.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.DTOs.ExecutionError">
+            <summary>
+            Execution error details.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ExecutionError.Code">
+            <summary>
+            Error code.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ExecutionError.Message">
+            <summary>
+            Error message.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ExecutionError.Details">
+            <summary>
+            Error details.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ExecutionError.Retryable">
+            <summary>
+            Whether the error is retryable.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.DTOs.ExecutionMetrics">
+            <summary>
+            Execution metrics.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ExecutionMetrics.TokensConsumed">
+            <summary>
+            Number of tokens consumed (if applicable).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ExecutionMetrics.CpuTime">
+            <summary>
+            CPU time used.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ExecutionMetrics.MemoryBytes">
+            <summary>
+            Memory used in bytes.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ExecutionMetrics.Custom">
+            <summary>
+            Custom metrics.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.DTOs.ExecutionStage">
+            <summary>
+            Execution stage details.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ExecutionStage.Name">
+            <summary>
+            Name of the stage.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ExecutionStage.Status">
+            <summary>
+            Status of the stage.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.ExecutionStage.Duration">
+            <summary>
+            Duration of the stage.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.DTOs.PaginatedResult`1">
+            <summary>
+            Represents a paginated result set (V2).
+            </summary>
+            <remarks>
+            V2 Breaking Changes:
+            - Added Cursor and PreviousCursor for cursor-based pagination
+            - Added HasPrevious flag
+            </remarks>
+            <typeparam name="T">Type of items in the result.</typeparam>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.PaginatedResult`1.Items">
+            <summary>
+            Items in the current page.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.PaginatedResult`1.Page">
+            <summary>
+            Current page number (1-based).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.PaginatedResult`1.PageSize">
+            <summary>
+            Number of items per page.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.PaginatedResult`1.TotalCount">
+            <summary>
+            Total number of items across all pages.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.PaginatedResult`1.TotalPages">
+            <summary>
+            Total number of pages.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.PaginatedResult`1.HasPreviousPage">
+            <summary>
+            Whether there is a previous page.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.PaginatedResult`1.HasNextPage">
+            <summary>
+            Whether there is a next page.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.PaginatedResult`1.Cursor">
+            <summary>
+            Cursor for the next page (cursor-based pagination).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.PaginatedResult`1.PreviousCursor">
+            <summary>
+            Cursor for the previous page (cursor-based pagination).
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.DTOs.UserDto">
+            <summary>
+            Data transfer object for a user (V2).
+            </summary>
+            <remarks>
+            V2 Breaking Changes:
+            - Added TenantId for multi-tenancy
+            - IsAdmin flag replaces roles list
+            - Added Metadata for extensibility
+            </remarks>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.UserDto.Id">
+            <summary>
+            Unique identifier of the user.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.UserDto.TenantId">
+            <summary>
+            Identifier of the tenant.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.UserDto.Email">
+            <summary>
+            Email address of the user.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.UserDto.DisplayName">
+            <summary>
+            Display name of the user.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.UserDto.Status">
+            <summary>
+            Current status of the user.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.UserDto.IsAdmin">
+            <summary>
+            Whether the user has administrator privileges.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.UserDto.Metadata">
+            <summary>
+            Metadata for extensibility.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.UserDto.CreatedAt">
+            <summary>
+            Timestamp when the user was created.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.UserDto.UpdatedAt">
+            <summary>
+            Timestamp when the user was last updated.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.UserDto.LastActiveAt">
+            <summary>
+            Timestamp when the user was last active.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.DTOs.WorkflowDto">
+            <summary>
+            Data transfer object for a workflow (V2).
+            </summary>
+            <remarks>
+            V2 Breaking Changes:
+            - Added Schedule for recurring workflows
+            - Added Variables for workflow variables
+            - Steps now include RetryPolicy
+            </remarks>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.WorkflowDto.Id">
+            <summary>
+            Unique identifier of the workflow.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.WorkflowDto.Name">
+            <summary>
+            Name of the workflow.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.WorkflowDto.Description">
+            <summary>
+            Description of the workflow.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.WorkflowDto.Status">
+            <summary>
+            Current status of the workflow.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.WorkflowDto.Steps">
+            <summary>
+            Steps in the workflow.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.WorkflowDto.Variables">
+            <summary>
+            Workflow variables.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.WorkflowDto.Schedule">
+            <summary>
+            Schedule for recurring workflows.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.WorkflowDto.CreatedByUserId">
+            <summary>
+            Identifier of the user who created the workflow.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.WorkflowDto.CreatedAt">
+            <summary>
+            Timestamp when the workflow was created.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.WorkflowDto.UpdatedAt">
+            <summary>
+            Timestamp when the workflow was last updated.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.WorkflowDto.StartedAt">
+            <summary>
+            Timestamp when the workflow was started.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.WorkflowDto.CompletedAt">
+            <summary>
+            Timestamp when the workflow was completed.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.WorkflowDto.ExecutionCount">
+            <summary>
+            Total number of executions for this workflow.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.DTOs.WorkflowStepDto">
+            <summary>
+            Data transfer object for a workflow step (V2).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.WorkflowStepDto.Id">
+            <summary>
+            Unique identifier for the step.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.WorkflowStepDto.Name">
+            <summary>
+            Name of the step.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.WorkflowStepDto.StepType">
+            <summary>
+            Type of the step.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.WorkflowStepDto.Configuration">
+            <summary>
+            Configuration for the step.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.WorkflowStepDto.Order">
+            <summary>
+            Order of execution for this step.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.WorkflowStepDto.Condition">
+            <summary>
+            Condition for executing this step.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.WorkflowStepDto.Status">
+            <summary>
+            Current status of the step.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.WorkflowStepDto.RetryPolicy">
+            <summary>
+            Retry policy for the step.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.DTOs.WorkflowVariable">
+            <summary>
+            Workflow variable definition.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.WorkflowVariable.Name">
+            <summary>
+            Variable name.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.WorkflowVariable.Type">
+            <summary>
+            Variable type.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.WorkflowVariable.DefaultValue">
+            <summary>
+            Default value.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.WorkflowVariable.Required">
+            <summary>
+            Whether the variable is required.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.DTOs.WorkflowSchedule">
+            <summary>
+            Workflow schedule definition.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.WorkflowSchedule.Cron">
+            <summary>
+            Cron expression for scheduling.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.WorkflowSchedule.Timezone">
+            <summary>
+            Time zone for the schedule.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.WorkflowSchedule.Enabled">
+            <summary>
+            Whether the schedule is enabled.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.DTOs.RetryPolicy">
+            <summary>
+            Retry policy for workflow steps.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.RetryPolicy.MaxRetries">
+            <summary>
+            Maximum number of retries.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.RetryPolicy.InitialDelay">
+            <summary>
+            Initial delay between retries.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.DTOs.RetryPolicy.BackoffMultiplier">
+            <summary>
+            Backoff multiplier for retries.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.Queries.GetAgentByIdQuery">
+            <summary>
+            Query to get an agent by its identifier (V2).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetAgentByIdQuery.TargetAgentId">
+            <summary>
+            Identifier of the agent to retrieve.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetAgentByIdQuery.IncludeConfiguration">
+            <summary>
+            Whether to include configuration details.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetAgentByIdQuery.IncludeResources">
+            <summary>
+            Whether to include resource requirements.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetAgentByIdQuery.IncludeStats">
+            <summary>
+            Whether to include execution statistics.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.Queries.GetAgentsQuery">
+            <summary>
+            Query to get a paginated list of agents (V2).
+            </summary>
+            <remarks>
+            V2 Breaking Changes:
+            - Cursor-based pagination added
+            - Tags renamed to Labels
+            </remarks>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetAgentsQuery.Page">
+            <summary>
+            Page number (1-based).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetAgentsQuery.PageSize">
+            <summary>
+            Number of items per page.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetAgentsQuery.Cursor">
+            <summary>
+            Cursor for cursor-based pagination.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetAgentsQuery.CursorDirection">
+            <summary>
+            Cursor direction (next or previous).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetAgentsQuery.AgentType">
+            <summary>
+            Filter by agent type.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetAgentsQuery.Status">
+            <summary>
+            Filter by status.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetAgentsQuery.Search">
+            <summary>
+            Search term for name or description.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetAgentsQuery.Labels">
+            <summary>
+            Filter by labels (key=value pairs).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetAgentsQuery.SortBy">
+            <summary>
+            Sort field.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetAgentsQuery.SortDirection">
+            <summary>
+            Sort direction (asc or desc).
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.Queries.GetExecutionByIdQuery">
+            <summary>
+            Query to get an execution by its identifier (V2).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetExecutionByIdQuery.TargetExecutionId">
+            <summary>
+            Identifier of the execution to retrieve.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetExecutionByIdQuery.IncludeLogs">
+            <summary>
+            Whether to include detailed logs.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetExecutionByIdQuery.IncludeData">
+            <summary>
+            Whether to include input/output data.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetExecutionByIdQuery.IncludeMetrics">
+            <summary>
+            Whether to include execution metrics.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetExecutionByIdQuery.IncludeStages">
+            <summary>
+            Whether to include execution stages.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.Queries.GetExecutionsQuery">
+            <summary>
+            Query to get a paginated list of executions (V2).
+            </summary>
+            <remarks>
+            V2 Breaking Changes:
+            - Cursor-based pagination added
+            - Added WorkflowId filter for workflow executions
+            </remarks>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetExecutionsQuery.Page">
+            <summary>
+            Page number (1-based).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetExecutionsQuery.PageSize">
+            <summary>
+            Number of items per page.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetExecutionsQuery.Cursor">
+            <summary>
+            Cursor for cursor-based pagination.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetExecutionsQuery.CursorDirection">
+            <summary>
+            Cursor direction (next or previous).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetExecutionsQuery.AgentId">
+            <summary>
+            Filter by agent identifier.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetExecutionsQuery.WorkflowId">
+            <summary>
+            Filter by workflow identifier.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetExecutionsQuery.Status">
+            <summary>
+            Filter by status.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetExecutionsQuery.InitiatedByUserId">
+            <summary>
+            Filter by user who initiated the execution.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetExecutionsQuery.CreatedAfter">
+            <summary>
+            Filter executions created after this date.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetExecutionsQuery.CreatedBefore">
+            <summary>
+            Filter executions created before this date.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetExecutionsQuery.SortBy">
+            <summary>
+            Sort field.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetExecutionsQuery.SortDirection">
+            <summary>
+            Sort direction (asc or desc).
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.Queries.GetUserByIdQuery">
+            <summary>
+            Query to get a user by their identifier (V2).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetUserByIdQuery.TargetUserId">
+            <summary>
+            Identifier of the user to retrieve.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetUserByIdQuery.IncludeDeleted">
+            <summary>
+            Whether to include soft-deleted users.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetUserByIdQuery.IncludeMetadata">
+            <summary>
+            Whether to include metadata.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.Queries.GetUsersQuery">
+            <summary>
+            Query to get a paginated list of users (V2).
+            </summary>
+            <remarks>
+            V2 Breaking Changes:
+            - Cursor-based pagination added (Cursor, CursorDirection)
+            - Offset-based pagination still supported but deprecated
+            </remarks>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetUsersQuery.Page">
+            <summary>
+            Page number (1-based).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetUsersQuery.PageSize">
+            <summary>
+            Number of items per page.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetUsersQuery.Cursor">
+            <summary>
+            Cursor for cursor-based pagination (overrides page/pageSize).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetUsersQuery.CursorDirection">
+            <summary>
+            Cursor direction (next or previous).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetUsersQuery.Status">
+            <summary>
+            Filter by status.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetUsersQuery.IsAdmin">
+            <summary>
+            Filter by admin status.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetUsersQuery.Search">
+            <summary>
+            Search term for name or email.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetUsersQuery.SortBy">
+            <summary>
+            Sort field.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetUsersQuery.SortDirection">
+            <summary>
+            Sort direction (asc or desc).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetUsersQuery.IncludeDeleted">
+            <summary>
+            Whether to include soft-deleted users.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.GetUsersQuery.IncludeMetadata">
+            <summary>
+            Whether to include metadata.
+            </summary>
+        </member>
+        <member name="T:Synaxis.Contracts.V2.Queries.QueryBase">
+            <summary>
+            Base class for all queries (V2).
+            </summary>
+            <remarks>
+            V2 Breaking Changes:
+            - QueryId renamed to Id
+            - Added TenantId for multi-tenancy
+            - Added Source property
+            </remarks>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.QueryBase.Id">
+            <summary>
+            Unique identifier for the query.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.QueryBase.CorrelationId">
+            <summary>
+            Correlation identifier for tracing requests across services.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.QueryBase.TenantId">
+            <summary>
+            Identifier of the tenant (for multi-tenancy).
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.QueryBase.Timestamp">
+            <summary>
+            Timestamp when the query was created.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.QueryBase.UserId">
+            <summary>
+            Identifier of the user issuing the query.
+            </summary>
+        </member>
+        <member name="P:Synaxis.Contracts.V2.Queries.QueryBase.Source">
+            <summary>
+            Source system or service that issued the query.
+            </summary>
+        </member>
+        <member name="M:Synaxis.Contracts.V2.Queries.QueryBase.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Synaxis.Contracts.V2.Queries.QueryBase"/> class.
+            </summary>
+        </member>
+    </members>
+</doc>
