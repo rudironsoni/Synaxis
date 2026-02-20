@@ -248,3 +248,46 @@ bd_test
 
 # Gas Town (added by gt)
 .logs/
+
+# === CLEANUP ADDITIONS ===
+# Log files
+/*.log
+/*.txt
+!/README.md
+!/AGENTS.md
+!/LICENSE
+!/.env.example
+build-*.txt
+test-*.txt
+*-results.txt
+*-report.md
+
+# Merge conflicts
+*.rej
+*.orig
+*.backup
+
+# Temp files
+.beads/*.bak
+.beads/*.log
+.beads/dolt/
+.beads/.migration-hint-ts
+.beads/last-touched
+.beads/.local_version
+.beads/export-state/
+
+# Binary archives
+**/copilot-cli/**/*.tgz
+
+# IDE state
+.opencollection/
+.sisyphus/
+.envsitter/
+.worktrees/
+.runtime/
+
+# Docs archive
+/docs/archive/
+
+# Node modules (ensure excluded)
+**/node_modules/
