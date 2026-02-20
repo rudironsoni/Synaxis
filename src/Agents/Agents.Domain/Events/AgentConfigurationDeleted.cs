@@ -4,12 +4,13 @@
 
 namespace Synaxis.Agents.Domain.Events;
 
+using Mediator;
 using Synaxis.Abstractions.Cloud;
 
 /// <summary>
 /// Event raised when an agent configuration is deleted.
 /// </summary>
-public record AgentConfigurationDeleted : IDomainEvent
+public record AgentConfigurationDeleted : IDomainEvent, INotification
 {
     /// <inheritdoc/>
     public string EventId { get; init; } = Guid.NewGuid().ToString();

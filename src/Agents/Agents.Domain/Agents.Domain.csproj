@@ -10,6 +10,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Mediator.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\Abstractions\Synaxis.Abstractions.Cloud\Synaxis.Abstractions.Cloud.csproj" />
     <ProjectReference Include="..\..\Contracts\Synaxis.Contracts\Synaxis.Contracts.csproj" />
     <ProjectReference Include="..\..\Infrastructure\Synaxis.Infrastructure.EventSourcing\Synaxis.Infrastructure.EventSourcing.csproj" />

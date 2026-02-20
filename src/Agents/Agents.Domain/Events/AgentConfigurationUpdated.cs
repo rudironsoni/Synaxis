@@ -4,12 +4,13 @@
 
 namespace Synaxis.Agents.Domain.Events;
 
+using Mediator;
 using Synaxis.Abstractions.Cloud;
 
 /// <summary>
 /// Event raised when an agent configuration is updated.
 /// </summary>
-public record AgentConfigurationUpdated : IDomainEvent
+public record AgentConfigurationUpdated : IDomainEvent, INotification
 {
     /// <inheritdoc/>
     public string EventId { get; init; } = Guid.NewGuid().ToString();

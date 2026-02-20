@@ -4,12 +4,13 @@
 
 namespace Synaxis.Agents.Domain.Events;
 
+using Mediator;
 using Synaxis.Abstractions.Cloud;
 
 /// <summary>
 /// Event raised when an agent execution completes successfully.
 /// </summary>
-public record ExecutionCompleted : IDomainEvent
+public record ExecutionCompleted : IDomainEvent, INotification
 {
     /// <inheritdoc/>
     public string EventId { get; init; } = Guid.NewGuid().ToString();

@@ -5,12 +5,13 @@
 namespace Synaxis.Agents.Domain.Events;
 
 using System;
+using Mediator;
 using Synaxis.Abstractions.Cloud;
 
 /// <summary>
 /// Event raised when a new agent configuration is created.
 /// </summary>
-public record AgentConfigurationCreated : IDomainEvent
+public record AgentConfigurationCreated : IDomainEvent, INotification
 {
     /// <inheritdoc/>
     public string EventId { get; init; } = Guid.NewGuid().ToString();

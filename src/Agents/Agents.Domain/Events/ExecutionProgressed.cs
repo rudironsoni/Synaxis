@@ -4,13 +4,14 @@
 
 namespace Synaxis.Agents.Domain.Events;
 
+using Mediator;
 using Synaxis.Abstractions.Cloud;
 using Synaxis.Agents.Domain.ValueObjects;
 
 /// <summary>
 /// Event raised when an agent execution progresses to a new step.
 /// </summary>
-public record ExecutionProgressed : IDomainEvent
+public record ExecutionProgressed : IDomainEvent, INotification
 {
     /// <inheritdoc/>
     public string EventId { get; init; } = Guid.NewGuid().ToString();
