@@ -14,11 +14,13 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Agents.Domain\Agents.Domain.csproj" />
     <ProjectReference Include="..\..\Abstractions\Synaxis.Abstractions.Cloud\Synaxis.Abstractions.Cloud.csproj" />
+    <ProjectReference Include="..\..\Synaxis.Contracts\Synaxis.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

@@ -77,9 +77,9 @@ public class AgentExecution : AggregateRoot
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AgentExecution"/> class.
-    /// Required for deserialization.
+    /// Required for event sourcing rehydration.
     /// </summary>
-    private AgentExecution()
+    public AgentExecution()
     {
     }
 

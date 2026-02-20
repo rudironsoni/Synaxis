@@ -71,9 +71,9 @@ public class AgentWorkflow : AggregateRoot
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AgentWorkflow"/> class.
-    /// Required for deserialization.
+    /// Required for event sourcing rehydration.
     /// </summary>
-    private AgentWorkflow()
+    public AgentWorkflow()
     {
     }
 
