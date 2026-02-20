@@ -7,7 +7,7 @@ namespace Synaxis.Contracts.V2.DomainEvents;
 /// </summary>
 /// <remarks>
 /// V2 Breaking Changes:
-    /// - Configuration is now strongly typed with AgentConfiguration record
+/// - Configuration is now strongly typed with AgentConfiguration record
 /// - Added ResourceRequirements for scheduling
 /// - Added Labels for Kubernetes-style tagging
 /// </remarks>
