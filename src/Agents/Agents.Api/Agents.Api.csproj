@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Agents.Application\Agents.Application.csproj" />
     <ProjectReference Include="..\Agents.Infrastructure\Agents.Infrastructure.csproj" />
   </ItemGroup>
 
