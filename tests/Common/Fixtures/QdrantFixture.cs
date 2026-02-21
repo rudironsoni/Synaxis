@@ -23,7 +23,7 @@ using Xunit;
 /// </summary>
 public sealed class QdrantFixture : IAsyncLifetime, IDisposable
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
+    private readonly JsonSerializerOptions _jsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         PropertyNameCaseInsensitive = true,
@@ -108,7 +108,7 @@ public sealed class QdrantFixture : IAsyncLifetime, IDisposable
         };
 
         var content = new StringContent(
-            JsonSerializer.Serialize(payload, JsonOptions),
+            JsonSerializer.Serialize(payload, _jsonOptions),
             Encoding.UTF8,
             "application/json");
 
@@ -169,7 +169,7 @@ public sealed class QdrantFixture : IAsyncLifetime, IDisposable
         };
 
         using var content = new StringContent(
-            JsonSerializer.Serialize(payload, JsonOptions),
+            JsonSerializer.Serialize(payload, _jsonOptions),
             Encoding.UTF8,
             "application/json");
 
@@ -204,7 +204,7 @@ public sealed class QdrantFixture : IAsyncLifetime, IDisposable
         };
 
         using var content = new StringContent(
-            JsonSerializer.Serialize(payload, JsonOptions),
+            JsonSerializer.Serialize(payload, _jsonOptions),
             Encoding.UTF8,
             "application/json");
 
@@ -212,7 +212,7 @@ public sealed class QdrantFixture : IAsyncLifetime, IDisposable
         response.EnsureSuccessStatusCode();
 
         var json = await response.Content.ReadAsStringAsync();
-        var result = JsonSerializer.Deserialize<QdrantSearchResponse>(json, JsonOptions);
+        var result = JsonSerializer.Deserialize<QdrantSearchResponse>(json, _jsonOptions);
 
         return result?.Result ?? new List<QdrantSearchResult>();
     }
@@ -230,7 +230,7 @@ public sealed class QdrantFixture : IAsyncLifetime, IDisposable
         };
 
         using var content = new StringContent(
-            JsonSerializer.Serialize(payload, JsonOptions),
+            JsonSerializer.Serialize(payload, _jsonOptions),
             Encoding.UTF8,
             "application/json");
 

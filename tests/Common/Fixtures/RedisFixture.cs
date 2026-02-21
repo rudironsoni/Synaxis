@@ -16,7 +16,7 @@ using Xunit;
 /// Shared Redis fixture for integration tests.
 /// Manages a single Redis container for the test assembly.
 /// </summary>
-public sealed class RedisFixture : IAsyncLifetime, IDisposable
+public sealed class RedisFixture : IAsyncLifetime
 {
     private RedisContainer? _container;
     private IConnectionMultiplexer? _connection;
@@ -60,21 +60,15 @@ public sealed class RedisFixture : IAsyncLifetime, IDisposable
     /// <returns>A task representing the asynchronous operation.</returns>
     public async Task DisposeAsync()
     {
+        if (_connection != null)
+        {
+            await _connection.CloseAsync();
+            await _connection.DisposeAsync();
+        }
+
         if (_container != null)
         {
             await _container.DisposeAsync();
-        }
-    }
-
-    /// <summary>
-    /// Disposes the Redis connection.
-    /// </summary>
-    public void Dispose()
-    {
-        if (_connection != null)
-        {
-            // Dispose connection directly - CloseAsync().GetAwaiter().GetResult() causes deadlocks
-            _connection.Dispose();
         }
     }
 

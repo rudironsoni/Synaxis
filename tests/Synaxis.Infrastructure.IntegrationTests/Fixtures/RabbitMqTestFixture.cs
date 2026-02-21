@@ -23,8 +23,7 @@ public sealed class RabbitMqTestFixture : IAsyncLifetime
     /// </summary>
     public RabbitMqTestFixture()
     {
-        _rabbitMqContainer = new RabbitMqBuilder()
-            .WithImage("rabbitmq:3.13-alpine")
+        _rabbitMqContainer = new RabbitMqBuilder("rabbitmq:3.13-alpine")
             .WithUsername("test")
             .WithPassword("test")
             .Build();
