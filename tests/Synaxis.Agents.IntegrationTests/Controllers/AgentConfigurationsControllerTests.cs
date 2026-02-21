@@ -9,19 +9,28 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
 using Synaxis.Agents.Application.DTOs;
+using Synaxis.Agents.IntegrationTests;
 using Xunit;
+using Xunit.Abstractions;
 
 [Trait("Category", "Integration")]
-public class AgentConfigurationsControllerTests : IClassFixture<WebApplicationFactory<Agents.Api.Program>>
+public class AgentConfigurationsControllerTests : IClassFixture<AgentsWebApplicationFactory>
 {
     private readonly HttpClient _client;
-    private readonly WebApplicationFactory<Agents.Api.Program> _factory;
+    private readonly AgentsWebApplicationFactory _factory;
+    private readonly ITestOutputHelper _output;
 
-    public AgentConfigurationsControllerTests(WebApplicationFactory<Agents.Api.Program> factory)
+    public AgentConfigurationsControllerTests(AgentsWebApplicationFactory factory, ITestOutputHelper output)
     {
         this._factory = factory;
         this._client = factory.CreateClient();
+        this._output = output;
+
+        // Debug: Verify event store type
+        var eventStore = factory.Services.GetService(typeof(Synaxis.Abstractions.Cloud.IEventStore));
+        this._output.WriteLine($"EventStore type: {eventStore?.GetType().FullName ?? "null"}");
     }
 
     [Fact]
@@ -50,13 +59,25 @@ public class AgentConfigurationsControllerTests : IClassFixture<WebApplicationFa
             TenantId = Guid.NewGuid(),
         };
 
+        // Clear event store before test
+        TestEventStore.Clear();
+
         var createResponse = await this._client.PostAsJsonAsync("/api/agents/configurations", createRequest);
         createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
         var createdAgent = await createResponse.Content.ReadFromJsonAsync<AgentDto>();
         createdAgent.Should().NotBeNull();
+        this._output.WriteLine($"Created agent with ID: {createdAgent!.Id}");
+
+        // Debug: Check event store contents
+        var eventStore = this._factory.Services.GetRequiredService<Synaxis.Abstractions.Cloud.IEventStore>();
+        var streamId = createdAgent.Id.ToString();
+        var events = await eventStore.ReadStreamAsync(streamId);
+        this._output.WriteLine($"Event store has {events.Count} events for stream {streamId}");
 
         // Act
-        var response = await this._client.GetAsync($"/api/agents/configurations/{createdAgent!.Id}");
+        var response = await this._client.GetAsync($"/api/agents/configurations/{createdAgent.Id}");
+        var responseContent = await response.Content.ReadAsStringAsync();
+        this._output.WriteLine($"Get response: {response.StatusCode} - {responseContent}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -146,6 +167,11 @@ public class AgentConfigurationsControllerTests : IClassFixture<WebApplicationFa
 
         // Act
         var response = await this._client.PutAsJsonAsync($"/api/agents/configurations/{createdAgent!.Id}", updateRequest);
+
+        // Debug: Print response details
+        var responseContent = await response.Content.ReadAsStringAsync();
+        this._output.WriteLine($"Response Status: {response.StatusCode}");
+        this._output.WriteLine($"Response Content: {responseContent}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);

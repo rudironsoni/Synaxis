@@ -113,7 +113,7 @@ public class AgentConfiguration : AggregateRoot
             Version = 1,
         };
 
-        agent.Apply(@event);
+        agent.ApplyEvent(@event);
         return agent;
     }
 
@@ -135,7 +135,7 @@ public class AgentConfiguration : AggregateRoot
             Version = this.Version + 1,
         };
 
-        this.Apply(@event);
+        this.ApplyEvent(@event);
     }
 
     /// <summary>
@@ -155,7 +155,7 @@ public class AgentConfiguration : AggregateRoot
             Version = this.Version + 1,
         };
 
-        this.Apply(@event);
+        this.ApplyEvent(@event);
     }
 
     /// <summary>
@@ -175,7 +175,7 @@ public class AgentConfiguration : AggregateRoot
             Version = this.Version + 1,
         };
 
-        this.Apply(@event);
+        this.ApplyEvent(@event);
     }
 
     /// <inheritdoc/>

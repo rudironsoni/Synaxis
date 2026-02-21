@@ -93,9 +93,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Agents.Infrastructure", "sr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Agents.Api", "src\Agents\Agents.Api\Agents.Api.csproj", "{71035804-25D3-4DC3-8519-73F84E5A192E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Agents.UnitTests", "tests\Agents.UnitTests\Agents.UnitTests.csproj", "{047CEB0C-7CBE-4C4A-B420-8DE8A72A082A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Synaxis.Agents.UnitTests", "tests\Synaxis.Agents.UnitTests\Synaxis.Agents.UnitTests.csproj", "{047CEB0C-7CBE-4C4A-B420-8DE8A72A082A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Agents.IntegrationTests", "tests\Agents.IntegrationTests\Agents.IntegrationTests.csproj", "{FDFA0B2F-203C-4DB0-96BF-D4BD67842942}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Synaxis.Agents.IntegrationTests", "tests\Synaxis.Agents.IntegrationTests\Synaxis.Agents.IntegrationTests.csproj", "{FDFA0B2F-203C-4DB0-96BF-D4BD67842942}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Identity", "Identity", "{65ABFB5D-2B10-DF64-BF12-C17976F8E5D9}"
 EndProject

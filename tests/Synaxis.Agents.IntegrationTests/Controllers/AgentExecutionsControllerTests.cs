@@ -12,12 +12,12 @@ using Synaxis.Agents.Application.DTOs;
 using Xunit;
 
 [Trait("Category", "Integration")]
-public class AgentExecutionsControllerTests : IClassFixture<WebApplicationFactory<Agents.Api.Program>>
+public class AgentExecutionsControllerTests : IClassFixture<AgentsWebApplicationFactory>
 {
     private readonly HttpClient _client;
-    private readonly WebApplicationFactory<Agents.Api.Program> _factory;
+    private readonly AgentsWebApplicationFactory _factory;
 
-    public AgentExecutionsControllerTests(WebApplicationFactory<Agents.Api.Program> factory)
+    public AgentExecutionsControllerTests(AgentsWebApplicationFactory factory)
     {
         this._factory = factory;
         this._client = factory.CreateClient();
