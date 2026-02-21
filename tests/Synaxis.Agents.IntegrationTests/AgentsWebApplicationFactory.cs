@@ -13,12 +13,13 @@ using Synaxis.Abstractions.Cloud;
 using Synaxis.Infrastructure.EventSourcing;
 
 /// <summary>
-/// Thread-safe shared event store for integration tests using static backing storage.
+/// Thread-safe event store for integration tests using instance-based backing storage.
+/// Each test class gets its own isolated instance via IClassFixture.
 /// </summary>
 public class TestEventStore : EventStore
 {
-    private static readonly ConcurrentDictionary<string, List<IDomainEvent>> Streams = new(StringComparer.Ordinal);
-    private static readonly ConcurrentDictionary<string, int> StreamVersions = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, List<IDomainEvent>> Streams = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, int> StreamVersions = new(StringComparer.Ordinal);
 
     public override Task AppendAsync(
         string streamId,
@@ -98,7 +99,7 @@ public class TestEventStore : EventStore
         return Task.CompletedTask;
     }
 
-    public static void Clear()
+    public void Clear()
     {
         Streams.Clear();
         StreamVersions.Clear();
@@ -111,12 +112,6 @@ public class TestEventStore : EventStore
 /// </summary>
 public class AgentsWebApplicationFactory : WebApplicationFactory<Agents.Api.Program>
 {
-    static AgentsWebApplicationFactory()
-    {
-        // Clear event store before test run starts
-        TestEventStore.Clear();
-    }
-
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.ConfigureServices(services =>

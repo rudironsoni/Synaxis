@@ -10,6 +10,7 @@ using System.Text.Json;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Synaxis.Agents.Application.DTOs;
 using Synaxis.Agents.IntegrationTests;
 using Xunit;
@@ -60,7 +61,11 @@ public class AgentConfigurationsControllerTests : IClassFixture<AgentsWebApplica
         };
 
         // Clear event store before test
-        TestEventStore.Clear();
+        using (var scope = this._factory.Services.CreateScope())
+        {
+            var testEventStore = scope.ServiceProvider.GetRequiredService<Synaxis.Abstractions.Cloud.IEventStore>() as TestEventStore;
+            testEventStore?.Clear();
+        }
 
         var createResponse = await this._client.PostAsJsonAsync("/api/agents/configurations", createRequest);
         createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
