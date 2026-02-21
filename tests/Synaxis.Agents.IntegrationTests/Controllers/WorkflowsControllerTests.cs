@@ -119,7 +119,7 @@ public class WorkflowsControllerTests : IClassFixture<AgentsWebApplicationFactor
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Accepted);
-        var result = await response.Content.ReadFromJsonAsync<AgentExecutionDto>();
+        var result = await response.Content.ReadFromJsonAsync<AgentWorkflowDto>();
         result.Should().NotBeNull();
         result!.Id.Should().NotBeEmpty();
         response.Headers.Location.Should().NotBeNull();

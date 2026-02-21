@@ -75,4 +75,11 @@ public class AgentWorkflowRepository : IAgentWorkflowRepository
     {
         return Task.FromResult<IReadOnlyList<AgentWorkflow>>(new List<AgentWorkflow>());
     }
+
+    /// <inheritdoc/>
+    public Task<IReadOnlyList<AgentWorkflow>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        // Event-sourced repository without read model - return empty list for now
+        return Task.FromResult<IReadOnlyList<AgentWorkflow>>(new List<AgentWorkflow>());
+    }
 }

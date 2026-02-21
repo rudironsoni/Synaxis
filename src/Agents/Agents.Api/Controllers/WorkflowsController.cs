@@ -128,9 +128,9 @@ public class WorkflowsController : ControllerBase
     /// </summary>
     /// <param name="id">The workflow identifier.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>The execution details.</returns>
+    /// <returns>The workflow details.</returns>
     [HttpPost("{id:guid}/execute")]
-    public async Task<ActionResult<AgentExecutionDto>> Execute(
+    public async Task<ActionResult<AgentWorkflowDto>> Execute(
         [FromRoute] Guid id,
         CancellationToken cancellationToken)
     {

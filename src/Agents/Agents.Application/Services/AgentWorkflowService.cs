@@ -90,11 +90,12 @@ public class AgentWorkflowService : IAgentWorkflowService
         GetWorkflowsRequest request,
         CancellationToken cancellationToken = default)
     {
-        // Get all workflows by tenant (or empty list if tenant not specified)
-        var tenantId = request.TenantId ?? string.Empty;
-        var workflows = await this._workflowRepository.GetByTenantAsync(
-            Guid.Parse(tenantId),
-            cancellationToken).ConfigureAwait(false);
+        // Get all workflows by tenant (or all workflows if tenant not specified)
+        var workflows = string.IsNullOrWhiteSpace(request.TenantId)
+            ? await this._workflowRepository.GetAllAsync(cancellationToken).ConfigureAwait(false)
+            : await this._workflowRepository.GetByTenantAsync(
+                Guid.Parse(request.TenantId),
+                cancellationToken).ConfigureAwait(false);
 
         // Apply status filter if specified
         if (request.Status.HasValue)

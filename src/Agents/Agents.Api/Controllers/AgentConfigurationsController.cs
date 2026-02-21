@@ -102,6 +102,12 @@ public class AgentConfigurationsController : ControllerBase
     {
         try
         {
+            // Validate input
+            if (string.IsNullOrWhiteSpace(request.Name))
+            {
+                return this.BadRequest(new { message = "Name is required" });
+            }
+
             this._logger.LogInformation("Creating new agent configuration: {Name}", request.Name);
 
             var result = await this._configurationService.CreateAgentAsync(request, cancellationToken);

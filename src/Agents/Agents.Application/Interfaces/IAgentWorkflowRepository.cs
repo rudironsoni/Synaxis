@@ -34,4 +34,11 @@ public interface IAgentWorkflowRepository
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A read-only list of agent workflows for the specified tenant.</returns>
     Task<IReadOnlyList<AgentWorkflow>> GetByTenantAsync(Guid tenantId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets all agent workflows.
+    /// </summary>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A read-only list of all agent workflows.</returns>
+    Task<IReadOnlyList<AgentWorkflow>> GetAllAsync(CancellationToken cancellationToken = default);
 }

@@ -91,6 +91,13 @@ public class AgentConfigurationService : IAgentConfigurationService
         Guid id,
         CancellationToken cancellationToken = default)
     {
+        // Check if agent exists before deleting
+        var agent = await this._repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+        if (agent == null)
+        {
+            throw new InvalidOperationException($"Agent configuration with ID {id} not found.");
+        }
+
         await this._repository.DeleteAsync(id, cancellationToken).ConfigureAwait(false);
 
         this._logger.LogInformation("Deleted agent configuration {AgentId}", id);
