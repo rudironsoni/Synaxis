@@ -1042,3 +1042,24 @@ Quality gates (use when applicable)
 
 Specialist agents
 - dotnet-concurrency-specialist, dotnet-performance-analyst, dotnet-benchmark-designer, akka-net-specialist, docfx-specialist
+
+---
+
+# Hard-Won Learnings
+
+### Test Verification Requirements
+- Run `dotnet test <Solution>.sln` - individual test classes can pass while full suite fails
+- Build success (0 warnings, 0 errors) ≠ test success - verify separately
+- Static state in test fixtures causes isolation failures - tests pass individually but fail in batch
+
+### Test Isolation Warning
+- Static fields in test fixtures persist across tests within same process
+- `static MyClass() { Clear(); }` only runs once per process, not per test
+- Use instance-based state or `IAsyncLifetime.InitializeAsync()` for per-test cleanup
+- Warning sign: tests pass individually (`--filter`) but fail when run together
+
+### Evidence-Based Reporting
+- Never claim "tests pass" without running full `dotnet test <Solution>.sln`
+- Include exact commands run and their output in verification sections
+- Distinguish between "build passes" and "tests pass" - they are separate gates
+- If tests cannot be run, mark output as **NOT VERIFIED** with concrete reason
