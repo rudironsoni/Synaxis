@@ -1,0 +1,1088 @@
+{
+  "version": 1,
+  "createdAt": "2026-02-21T12:10:37.4707068+00:00",
+  "updatedAt": "2026-02-21T12:10:37.4785663+00:00",
+  "description": "Initial baseline created by 'slopwatch init' on 2026-02-21 12:10:37 UTC",
+  "entries": [
+    {
+      "hash": "55fdc66ab7dff105",
+      "ruleId": "SW003",
+      "filePath": "samples/SaaSClient/Program.cs",
+      "lineNumber": 147,
+      "codeSnippet": "catch (JsonException)\n            {\n                // Skip malformed JSON\n            }",
+      "message": "Empty catch block swallows exceptions without handling",
+      "baselinedAt": "2026-02-21T12:10:37.4778158+00:00"
+    },
+    {
+      "hash": "79402b13d1708525",
+      "ruleId": "SW003",
+      "filePath": "samples/SaaSClient/Program.cs",
+      "lineNumber": 189,
+      "codeSnippet": "catch\n            {\n                // Could not parse error response\n            }",
+      "message": "Empty catch block swallows exceptions without handling",
+      "baselinedAt": "2026-02-21T12:10:37.4779386+00:00"
+    },
+    {
+      "hash": "a5b50b7a2e3c17cd",
+      "ruleId": "SW003",
+      "filePath": "tests/Synaxis.Abstractions.Tests/Execution/StreamExecutorTests.cs",
+      "lineNumber": 56,
+      "codeSnippet": "catch (OperationCanceledException)\n        {\n            // Expected\n        }",
+      "message": "Empty catch block swallows exceptions without handling",
+      "baselinedAt": "2026-02-21T12:10:37.4779465+00:00"
+    },
+    {
+      "hash": "f938bd536df3dfdf",
+      "ruleId": "SW004",
+      "filePath": "tests/Synaxis.Abstractions.Tests/Execution/StreamExecutorTests.cs",
+      "lineNumber": 138,
+      "codeSnippet": "Task.Delay(1, cancellationToken).ConfigureAwait(false)",
+      "message": "Test uses Task.Delay(false) which may indicate a timing-dependent test",
+      "baselinedAt": "2026-02-21T12:10:37.4779504+00:00"
+    },
+    {
+      "hash": "b46dcd7f93b78968",
+      "ruleId": "SW004",
+      "filePath": "tests/Synaxis.Abstractions.Tests/Execution/StreamExecutorTests.cs",
+      "lineNumber": 138,
+      "codeSnippet": "Task.Delay(1, cancellationToken)",
+      "message": "Test uses Task.Delay(1) which may indicate a timing-dependent test",
+      "baselinedAt": "2026-02-21T12:10:37.4779656+00:00"
+    },
+    {
+      "hash": "bfcb02d368ea0a6a",
+      "ruleId": "SW003",
+      "filePath": "tests/Synaxis.TestUtilities.Tests/Persistence/InMemoryEventStoreTests.cs",
+      "lineNumber": 341,
+      "codeSnippet": "catch\n                {\n                    // Ignore - some threads may fail due to timing, but that's OK for this test\n                }",
+      "message": "Empty catch block swallows exceptions without handling",
+      "baselinedAt": "2026-02-21T12:10:37.4779837+00:00"
+    },
+    {
+      "hash": "6fde167bf55560cc",
+      "ruleId": "SW004",
+      "filePath": "tests/Synaxis.TestUtilities.Tests/Persistence/InMemoryEventStoreTests.cs",
+      "lineNumber": 258,
+      "codeSnippet": "Task.Delay(TimeSpan.FromSeconds(1))",
+      "message": "Test uses Task.Delay(TimeSpan.FromSeconds(1)) which may indicate a timing-dependent test",
+      "baselinedAt": "2026-02-21T12:10:37.4779878+00:00"
+    },
+    {
+      "hash": "a0877af9484bc8e8",
+      "ruleId": "SW002",
+      "filePath": "tests/Synaxis.TestUtilities/Builders/ConfigurationBuilder.cs",
+      "lineNumber": 298,
+      "codeSnippet": "SuppressMessage(\"Design\", \"CA1052:Static holder types should be sealed\", Justification = \"Utility class\")",
+      "message": "SuppressMessage attribute suppressing Design:CA1052:Static holder types should be sealed",
+      "baselinedAt": "2026-02-21T12:10:37.477992+00:00"
+    },
+    {
+      "hash": "3be884f28533a773",
+      "ruleId": "SW003",
+      "filePath": "tests/Synaxis.TestUtilities/Doubles/MockMessageBus.cs",
+      "lineNumber": 59,
+      "codeSnippet": "catch\n                    {\n                        // Ignore handler exceptions in tests\n                    }",
+      "message": "Empty catch block swallows exceptions without handling",
+      "baselinedAt": "2026-02-21T12:10:37.4779969+00:00"
+    },
+    {
+      "hash": "ed75c026245b18a7",
+      "ruleId": "SW003",
+      "filePath": "tests/Synaxis.TestUtilities/Persistence/InMemoryEventStore.cs",
+      "lineNumber": 103,
+      "codeSnippet": "catch\n                    {\n                        // Ignore subscriber exceptions in tests\n                    }",
+      "message": "Empty catch block swallows exceptions without handling",
+      "baselinedAt": "2026-02-21T12:10:37.4780094+00:00"
+    },
+    {
+      "hash": "3a3a43418ace69d6",
+      "ruleId": "SW002",
+      "filePath": "tests/Synaxis.Infrastructure.Tests/Services/TeamMembershipServiceIntegrationTests.cs",
+      "lineNumber": 18,
+      "codeSnippet": "#pragma warning disable IDISP003 // False positive: _context is only assigned once in InitializeAsync",
+      "message": "#pragma warning disable for warnings IDISP003 without matching restore in same scope",
+      "baselinedAt": "2026-02-21T12:10:37.4780136+00:00"
+    },
+    {
+      "hash": "03a9c901218fbf3f",
+      "ruleId": "SW002",
+      "filePath": "tests/Synaxis.Infrastructure.Tests/Services/TeamMembershipServiceIntegrationTests.cs",
+      "lineNumber": 19,
+      "codeSnippet": "#pragma warning disable IDISP006 // IAsyncLifetime provides async cleanup, IDisposable not needed",
+      "message": "#pragma warning disable for warnings IDISP006 without matching restore in same scope",
+      "baselinedAt": "2026-02-21T12:10:37.4780172+00:00"
+    },
+    {
+      "hash": "59c9f3d99413b91d",
+      "ruleId": "SW002",
+      "filePath": "tests/Synaxis.Infrastructure.Tests/Services/OrganizationSettingsServiceIntegrationTests.cs",
+      "lineNumber": 22,
+      "codeSnippet": "#pragma warning disable IDISP003 // False positive: _context is only assigned once in InitializeAsync",
+      "message": "#pragma warning disable for warnings IDISP003 without matching restore in same scope",
+      "baselinedAt": "2026-02-21T12:10:37.4780216+00:00"
+    },
+    {
+      "hash": "3f7866dbb9d18644",
+      "ruleId": "SW002",
+      "filePath": "tests/Synaxis.Infrastructure.Tests/Services/OrganizationSettingsServiceIntegrationTests.cs",
+      "lineNumber": 23,
+      "codeSnippet": "#pragma warning disable IDISP006 // IAsyncLifetime provides async cleanup, IDisposable not needed",
+      "message": "#pragma warning disable for warnings IDISP006 without matching restore in same scope",
+      "baselinedAt": "2026-02-21T12:10:37.4780251+00:00"
+    },
+    {
+      "hash": "5563024508887b2b",
+      "ruleId": "SW002",
+      "filePath": "tests/Synaxis.Infrastructure.Tests/Services/TeamServiceIntegrationTests.cs",
+      "lineNumber": 22,
+      "codeSnippet": "#pragma warning disable IDISP003 // False positive: _context is only assigned once in InitializeAsync",
+      "message": "#pragma warning disable for warnings IDISP003 without matching restore in same scope",
+      "baselinedAt": "2026-02-21T12:10:37.4780288+00:00"
+    },
+    {
+      "hash": "5a63054976b3eb4f",
+      "ruleId": "SW002",
+      "filePath": "tests/Synaxis.Infrastructure.Tests/Services/TeamServiceIntegrationTests.cs",
+      "lineNumber": 23,
+      "codeSnippet": "#pragma warning disable IDISP006 // IAsyncLifetime provides async cleanup, IDisposable not needed",
+      "message": "#pragma warning disable for warnings IDISP006 without matching restore in same scope",
+      "baselinedAt": "2026-02-21T12:10:37.478032+00:00"
+    },
+    {
+      "hash": "b830044e1155ac3c",
+      "ruleId": "SW002",
+      "filePath": "tests/Synaxis.Infrastructure.Tests/Migrations/TestcontainersMigrationTests.cs",
+      "lineNumber": 22,
+      "codeSnippet": "#pragma warning disable IDISP003 // False positive: _context is only assigned once in InitializeAsync",
+      "message": "#pragma warning disable for warnings IDISP003 without matching restore in same scope",
+      "baselinedAt": "2026-02-21T12:10:37.4780379+00:00"
+    },
+    {
+      "hash": "429e00d5b916442d",
+      "ruleId": "SW002",
+      "filePath": "tests/Synaxis.Infrastructure.Tests/Migrations/TestcontainersMigrationTests.cs",
+      "lineNumber": 23,
+      "codeSnippet": "#pragma warning disable IDISP006 // IAsyncLifetime provides async cleanup, IDisposable not needed",
+      "message": "#pragma warning disable for warnings IDISP006 without matching restore in same scope",
+      "baselinedAt": "2026-02-21T12:10:37.4780421+00:00"
+    },
+    {
+      "hash": "adceeaadc612e225",
+      "ruleId": "SW003",
+      "filePath": "tests/Synaxis.Infrastructure.Tests/Migrations/TestcontainersMigrationTests.cs",
+      "lineNumber": 333,
+      "codeSnippet": "catch\n        {\n            // Expected that one may fail due to locking\n        }",
+      "message": "Empty catch block swallows exceptions without handling",
+      "baselinedAt": "2026-02-21T12:10:37.4780466+00:00"
+    },
+    {
+      "hash": "669eda86f29d9043",
+      "ruleId": "SW002",
+      "filePath": "tests/Common/Fixtures/PostgresFixture.cs",
+      "lineNumber": 153,
+      "codeSnippet": "#pragma warning disable S2325 // Instance method for API consistency with parameterless overload",
+      "message": "#pragma warning disable for warnings S2325 without matching restore in same scope",
+      "baselinedAt": "2026-02-21T12:10:37.4780503+00:00"
+    },
+    {
+      "hash": "6b3dbcb70bb6367b",
+      "ruleId": "SW002",
+      "filePath": "tests/Common/Fixtures/QdrantFixture.cs",
+      "lineNumber": 16,
+      "codeSnippet": "#pragma warning disable IDISP003 // False positive: fields are only assigned once in InitializeAsync",
+      "message": "#pragma warning disable for warnings IDISP003 without matching restore in same scope",
+      "baselinedAt": "2026-02-21T12:10:37.4780537+00:00"
+    },
+    {
+      "hash": "a1cd9e8d7066e402",
+      "ruleId": "SW002",
+      "filePath": "tests/Common/Fixtures/QdrantFixture.cs",
+      "lineNumber": 17,
+      "codeSnippet": "#pragma warning disable IDISP001 // HttpResponseMessage is properly disposed by using statements",
+      "message": "#pragma warning disable for warnings IDISP001 without matching restore in same scope",
+      "baselinedAt": "2026-02-21T12:10:37.478057+00:00"
+    },
+    {
+      "hash": "3b3d4fd31c9f120b",
+      "ruleId": "SW002",
+      "filePath": "tests/Common/Fixtures/QdrantFixture.cs",
+      "lineNumber": 18,
+      "codeSnippet": "#pragma warning disable IDISP017 // HttpResponseMessage is properly disposed by using statements",
+      "message": "#pragma warning disable for warnings IDISP017 without matching restore in same scope",
+      "baselinedAt": "2026-02-21T12:10:37.4780621+00:00"
+    },
+    {
+      "hash": "524323b8178eb4c3",
+      "ruleId": "SW004",
+      "filePath": "tests/Common/Fixtures/QdrantFixture.cs",
+      "lineNumber": 126,
+      "codeSnippet": "Task.Delay(100).ConfigureAwait(false)",
+      "message": "Test uses Task.Delay(false) which may indicate a timing-dependent test",
+      "baselinedAt": "2026-02-21T12:10:37.478066+00:00"
+    },
+    {
+      "hash": "17511909e9c83796",
+      "ruleId": "SW004",
+      "filePath": "tests/Common/Fixtures/QdrantFixture.cs",
+      "lineNumber": 126,
+      "codeSnippet": "Task.Delay(100)",
+      "message": "Test uses Task.Delay(100) which may indicate a timing-dependent test",
+      "baselinedAt": "2026-02-21T12:10:37.4780694+00:00"
+    },
+    {
+      "hash": "c1399ad23f8d47f1",
+      "ruleId": "SW002",
+      "filePath": "tests/Common/Fixtures/RedisFixture.cs",
+      "lineNumber": 13,
+      "codeSnippet": "#pragma warning disable IDISP003 // False positive: fields are only assigned once in InitializeAsync",
+      "message": "#pragma warning disable for warnings IDISP003 without matching restore in same scope",
+      "baselinedAt": "2026-02-21T12:10:37.4780762+00:00"
+    },
+    {
+      "hash": "58919cce8ccdd2e1",
+      "ruleId": "SW004",
+      "filePath": "tests/Synaxis.Infrastructure.IntegrationTests/OutboxIntegrationTests.cs",
+      "lineNumber": 247,
+      "codeSnippet": "Task.Delay(100)",
+      "message": "Test uses Task.Delay(100) which may indicate a timing-dependent test",
+      "baselinedAt": "2026-02-21T12:10:37.47808+00:00"
+    },
+    {
+      "hash": "59a105180b6c259e",
+      "ruleId": "SW004",
+      "filePath": "tests/Synaxis.Infrastructure.IntegrationTests/OutboxIntegrationTests.cs",
+      "lineNumber": 265,
+      "codeSnippet": "Task.Delay(10)",
+      "message": "Test uses Task.Delay(10) which may indicate a timing-dependent test",
+      "baselinedAt": "2026-02-21T12:10:37.4780833+00:00"
+    },
+    {
+      "hash": "2382f4339d85181f",
+      "ruleId": "SW004",
+      "filePath": "tests/Synaxis.Infrastructure.IntegrationTests/MessageBusIntegrationTests.cs",
+      "lineNumber": 66,
+      "codeSnippet": "Task.Delay(TimeSpan.FromSeconds(5))",
+      "message": "Test uses Task.Delay(TimeSpan.FromSeconds(5)) which may indicate a timing-dependent test",
+      "baselinedAt": "2026-02-21T12:10:37.4780869+00:00"
+    },
+    {
+      "hash": "986f39ea4979ff6e",
+      "ruleId": "SW004",
+      "filePath": "tests/Synaxis.Infrastructure.IntegrationTests/MessageBusIntegrationTests.cs",
+      "lineNumber": 103,
+      "codeSnippet": "Task.Delay(TimeSpan.FromSeconds(10))",
+      "message": "Test uses Task.Delay(TimeSpan.FromSeconds(10)) which may indicate a timing-dependent test",
+      "baselinedAt": "2026-02-21T12:10:37.4780907+00:00"
+    },
+    {
+      "hash": "e9f242890157dab4",
+      "ruleId": "SW004",
+      "filePath": "tests/Synaxis.Infrastructure.IntegrationTests/MessageBusIntegrationTests.cs",
+      "lineNumber": 328,
+      "codeSnippet": "Task.Delay(TimeSpan.FromSeconds(30))",
+      "message": "Test uses Task.Delay(TimeSpan.FromSeconds(30)) which may indicate a timing-dependent test",
+      "baselinedAt": "2026-02-21T12:10:37.4781181+00:00"
+    },
+    {
+      "hash": "6102feae0bf08bcb",
+      "ruleId": "SW005",
+      "filePath": "tests/Synaxis.Api.Tests/Synaxis.Api.Tests.csproj",
+      "lineNumber": 9,
+      "codeSnippet": "<TreatWarningsAsErrors>false</TreatWarningsAsErrors>",
+      "message": "TreatWarningsAsErrors is disabled - warnings will not fail the build",
+      "baselinedAt": "2026-02-21T12:10:37.4781217+00:00"
+    },
+    {
+      "hash": "a68aa4ac1e1a5479",
+      "ruleId": "SW005",
+      "filePath": "tests/Synaxis.Api.Tests/Synaxis.Api.Tests.csproj",
+      "lineNumber": 6,
+      "codeSnippet": "<Nullable>disable</Nullable>",
+      "message": "Nullable reference types are disabled",
+      "baselinedAt": "2026-02-21T12:10:37.4781249+00:00"
+    },
+    {
+      "hash": "00f558d35e38268a",
+      "ruleId": "SW003",
+      "filePath": "tests/Synaxis.Health.IntegrationTests/RedisHealthCheckTests.cs",
+      "lineNumber": 58,
+      "codeSnippet": "catch\n                {\n                    // Retry\n                }",
+      "message": "Empty catch block swallows exceptions without handling",
+      "baselinedAt": "2026-02-21T12:10:37.4781296+00:00"
+    },
+    {
+      "hash": "f5c0864f68dfbe09",
+      "ruleId": "SW004",
+      "filePath": "tests/Synaxis.Health.IntegrationTests/RedisHealthCheckTests.cs",
+      "lineNumber": 63,
+      "codeSnippet": "Task.Delay(100).ConfigureAwait(false)",
+      "message": "Test uses Task.Delay(false) which may indicate a timing-dependent test",
+      "baselinedAt": "2026-02-21T12:10:37.4781334+00:00"
+    },
+    {
+      "hash": "da2aef0cc183a2e7",
+      "ruleId": "SW004",
+      "filePath": "tests/Synaxis.Health.IntegrationTests/RedisHealthCheckTests.cs",
+      "lineNumber": 63,
+      "codeSnippet": "Task.Delay(100)",
+      "message": "Test uses Task.Delay(100) which may indicate a timing-dependent test",
+      "baselinedAt": "2026-02-21T12:10:37.4781368+00:00"
+    },
+    {
+      "hash": "d0f1466238aca5f6",
+      "ruleId": "SW004",
+      "filePath": "tests/Synaxis.Health.IntegrationTests/RedisHealthCheckTests.cs",
+      "lineNumber": 97,
+      "codeSnippet": "Task.Delay(retryDelay)",
+      "message": "Test uses Task.Delay(retryDelay) which may indicate a timing-dependent test",
+      "baselinedAt": "2026-02-21T12:10:37.47814+00:00"
+    },
+    {
+      "hash": "dbb58c50b6260b35",
+      "ruleId": "SW005",
+      "filePath": "tests/Synaxis.Tests/Synaxis.Tests.csproj",
+      "lineNumber": 9,
+      "codeSnippet": "<TreatWarningsAsErrors>false</TreatWarningsAsErrors>",
+      "message": "TreatWarningsAsErrors is disabled - warnings will not fail the build",
+      "baselinedAt": "2026-02-21T12:10:37.4781432+00:00"
+    },
+    {
+      "hash": "885e8ec74ed3ed39",
+      "ruleId": "SW004",
+      "filePath": "tests/Synaxis.Tests/Behaviors/LoggingBehaviorTests.cs",
+      "lineNumber": 183,
+      "codeSnippet": "Task.Delay(10, ct)",
+      "message": "Test uses Task.Delay(10) which may indicate a timing-dependent test",
+      "baselinedAt": "2026-02-21T12:10:37.4781471+00:00"
+    },
+    {
+      "hash": "c9473a2baae6b42a",
+      "ruleId": "SW004",
+      "filePath": "tests/Synaxis.Tests/Behaviors/MetricsBehaviorTests.cs",
+      "lineNumber": 178,
+      "codeSnippet": "Task.Delay(10, ct)",
+      "message": "Test uses Task.Delay(10) which may indicate a timing-dependent test",
+      "baselinedAt": "2026-02-21T12:10:37.4781507+00:00"
+    },
+    {
+      "hash": "aeb48774b8bd364f",
+      "ruleId": "SW005",
+      "filePath": "tests/InferenceGateway/Infrastructure.Tests/Synaxis.InferenceGateway.Infrastructure.Tests.csproj",
+      "lineNumber": 9,
+      "codeSnippet": "<NoWarn>CS1591</NoWarn>",
+      "message": "Setting NoWarn to suppress warnings: CS1591",
+      "baselinedAt": "2026-02-21T12:10:37.4781545+00:00"
+    },
+    {
+      "hash": "401f833b767c19b9",
+      "ruleId": "SW003",
+      "filePath": "tests/InferenceGateway/Infrastructure.Tests/Identity/EncryptedFileTokenStoreTests.cs",
+      "lineNumber": 35,
+      "codeSnippet": "catch\r\n            {\r\n            }",
+      "message": "Empty catch block swallows exceptions without handling",
+      "baselinedAt": "2026-02-21T12:10:37.4781642+00:00"
+    },
+    {
+      "hash": "b5cf2c3c8cd974ef",
+      "ruleId": "SW004",
+      "filePath": "tests/InferenceGateway/Infrastructure.Tests/Identity/Strategies/GitHub/DeviceFlowServiceTests.cs",
+      "lineNumber": 40,
+      "codeSnippet": "Task.Delay(100)",
+      "message": "Test uses Task.Delay(100) which may indicate a timing-dependent test",
+      "baselinedAt": "2026-02-21T12:10:37.4781679+00:00"
+    },
+    {
+      "hash": "53ed57d7f0997bfe",
+      "ruleId": "SW004",
+      "filePath": "tests/InferenceGateway/Infrastructure.Tests/Identity/Strategies/GitHub/DeviceFlowServiceTests.cs",
+      "lineNumber": 88,
+      "codeSnippet": "Task.Delay(1500)",
+      "message": "Test uses Task.Delay(1500) which may indicate a timing-dependent test",
+      "baselinedAt": "2026-02-21T12:10:37.478171+00:00"
+    },
+    {
+      "hash": "15e247dea598ef44",
+      "ruleId": "SW004",
+      "filePath": "tests/InferenceGateway/Infrastructure.Tests/Identity/Strategies/GitHub/DeviceFlowServiceTests.cs",
+      "lineNumber": 134,
+      "codeSnippet": "Task.Delay(7000)",
+      "message": "Test uses Task.Delay(7000) which may indicate a timing-dependent test",
+      "baselinedAt": "2026-02-21T12:10:37.4781741+00:00"
+    },
+    {
+      "hash": "28f52142011bf630",
+      "ruleId": "SW003",
+      "filePath": "tests/InferenceGateway/Infrastructure.Tests/Identity/Strategies/GitHub/GitHubAuthStrategyTests.cs",
+      "lineNumber": 175,
+      "codeSnippet": "catch\r\n            {\r\n            }",
+      "message": "Empty catch block swallows exceptions without handling",
+      "baselinedAt": "2026-02-21T12:10:37.4781916+00:00"
+    },
+    {
+      "hash": "f87984e033a073ba",
+      "ruleId": "SW004",
+      "filePath": "tests/InferenceGateway/Infrastructure.Tests/Identity/Strategies/GitHub/GitHubAuthStrategyTests.cs",
+      "lineNumber": 71,
+      "codeSnippet": "Task.Delay(50)",
+      "message": "Test uses Task.Delay(50) which may indicate a timing-dependent test",
+      "baselinedAt": "2026-02-21T12:10:37.4781951+00:00"
+    },
+    {
+      "hash": "cf92303cbf1e125b",
+      "ruleId": "SW004",
+      "filePath": "tests/InferenceGateway/Infrastructure.Tests/Security/ApiKeyServiceTests.cs",
+      "lineNumber": 585,
+      "codeSnippet": "Task.Delay(100)",
+      "message": "Test uses Task.Delay(100) which may indicate a timing-dependent test",
+      "baselinedAt": "2026-02-21T12:10:37.4781991+00:00"
+    },
+    {
+      "hash": "bdaf9b7c68657b09",
+      "ruleId": "SW003",
+      "filePath": "tests/InferenceGateway/Infrastructure.Tests/Auth/FileTokenStoreTests.cs",
+      "lineNumber": 42,
+      "codeSnippet": "catch\r\n            {\r\n            }",
+      "message": "Empty catch block swallows exceptions without handling",
+      "baselinedAt": "2026-02-21T12:10:37.4782032+00:00"
+    },
+    {
+      "hash": "e375d99a1473700c",
+      "ruleId": "SW004",
+      "filePath": "tests/InferenceGateway/Infrastructure.Tests/External/GitHub/CopilotSdkClientTests.cs",
+      "lineNumber": 42,
+      "codeSnippet": "Task.Delay(1).ConfigureAwait(false)",
+      "message": "Test uses Task.Delay(false) which may indicate a timing-dependent test",
+      "baselinedAt": "2026-02-21T12:10:37.4782068+00:00"
+    },
+    {
+      "hash": "b7326240a7357093",
+      "ruleId": "SW004",
+      "filePath": "tests/InferenceGateway/Infrastructure.Tests/External/GitHub/CopilotSdkClientTests.cs",
+      "lineNumber": 42,
+      "codeSnippet": "Task.Delay(1)",
+      "message": "Test uses Task.Delay(1) which may indicate a timing-dependent test",
+      "baselinedAt": "2026-02-21T12:10:37.47821+00:00"
+    },
+    {
+      "hash": "66655c4de2c4778a",
+      "ruleId": "SW004",
+      "filePath": "tests/InferenceGateway/Infrastructure.Tests/Optimization/Caching/RedisInFlightDeduplicationTests.cs",
+      "lineNumber": 77,
+      "codeSnippet": "Task.Delay(10).ConfigureAwait(false)",
+      "message": "Test uses Task.Delay(false) which may indicate a timing-dependent test",
+      "baselinedAt": "2026-02-21T12:10:37.4782137+00:00"
+    },
+    {
+      "hash": "8e382e9940f2f8fd",
+      "ruleId": "SW004",
+      "filePath": "tests/InferenceGateway/Infrastructure.Tests/Optimization/Caching/RedisInFlightDeduplicationTests.cs",
+      "lineNumber": 77,
+      "codeSnippet": "Task.Delay(10)",
+      "message": "Test uses Task.Delay(10) which may indicate a timing-dependent test",
+      "baselinedAt": "2026-02-21T12:10:37.4782179+00:00"
+    },
+    {
+      "hash": "cc3260ed41810a30",
+      "ruleId": "SW004",
+      "filePath": "tests/InferenceGateway/Infrastructure.Tests/Optimization/Caching/RedisInFlightDeduplicationTests.cs",
+      "lineNumber": 188,
+      "codeSnippet": "Task.Delay(50).ConfigureAwait(false)",
+      "message": "Test uses Task.Delay(false) which may indicate a timing-dependent test",
+      "baselinedAt": "2026-02-21T12:10:37.4782213+00:00"
+    },
+    {
+      "hash": "d505aa0d6d116da7",
+      "ruleId": "SW004",
+      "filePath": "tests/InferenceGateway/Infrastructure.Tests/Optimization/Caching/RedisInFlightDeduplicationTests.cs",
+      "lineNumber": 188,
+      "codeSnippet": "Task.Delay(50)",
+      "message": "Test uses Task.Delay(50) which may indicate a timing-dependent test",
+      "baselinedAt": "2026-02-21T12:10:37.4782247+00:00"
+    },
+    {
+      "hash": "6f5f13bf4d0f869c",
+      "ruleId": "SW005",
+      "filePath": "tests/InferenceGateway/Application.Tests/Synaxis.InferenceGateway.Application.Tests.csproj",
+      "lineNumber": 8,
+      "codeSnippet": "<TreatWarningsAsErrors>false</TreatWarningsAsErrors>",
+      "message": "TreatWarningsAsErrors is disabled - warnings will not fail the build",
+      "baselinedAt": "2026-02-21T12:10:37.4782551+00:00"
+    },
+    {
+      "hash": "29d4961cc8d03a3b",
+      "ruleId": "SW003",
+      "filePath": "tests/InferenceGateway/Application.Tests/Routing/SmartRouterTests.cs",
+      "lineNumber": 241,
+      "codeSnippet": "catch (ArgumentException)\n        {\n            // Expected - no providers\n        }",
+      "message": "Empty catch block swallows exceptions without handling",
+      "baselinedAt": "2026-02-21T12:10:37.4782599+00:00"
+    },
+    {
+      "hash": "dbeab7a1617d0d2f",
+      "ruleId": "SW005",
+      "filePath": "tests/InferenceGateway/IntegrationTests/Synaxis.InferenceGateway.IntegrationTests.csproj",
+      "lineNumber": 8,
+      "codeSnippet": "<TreatWarningsAsErrors>false</TreatWarningsAsErrors>",
+      "message": "TreatWarningsAsErrors is disabled - warnings will not fail the build",
+      "baselinedAt": "2026-02-21T12:10:37.4782637+00:00"
+    },
+    {
+      "hash": "7f88377fd3a85602",
+      "ruleId": "SW003",
+      "filePath": "tests/InferenceGateway/IntegrationTests/HealthCheckUnitTests.cs",
+      "lineNumber": 212,
+      "codeSnippet": "catch (OperationCanceledException)\n            {\n            }",
+      "message": "Empty catch block swallows exceptions without handling",
+      "baselinedAt": "2026-02-21T12:10:37.4782678+00:00"
+    },
+    {
+      "hash": "ecf8b227e851aa07",
+      "ruleId": "SW004",
+      "filePath": "tests/InferenceGateway/IntegrationTests/RealTime/WebSocketConnectivityTests.cs",
+      "lineNumber": 192,
+      "codeSnippet": "Task.Delay(TimeSpan.FromSeconds(5))",
+      "message": "Test uses Task.Delay(TimeSpan.FromSeconds(5)) which may indicate a timing-dependent test",
+      "baselinedAt": "2026-02-21T12:10:37.4782713+00:00"
+    },
+    {
+      "hash": "fd05e6ead9a87f9a",
+      "ruleId": "SW004",
+      "filePath": "tests/InferenceGateway/IntegrationTests/RealTime/WebSocketConnectivityTests.cs",
+      "lineNumber": 245,
+      "codeSnippet": "Task.Delay(100)",
+      "message": "Test uses Task.Delay(100) which may indicate a timing-dependent test",
+      "baselinedAt": "2026-02-21T12:10:37.4782746+00:00"
+    },
+    {
+      "hash": "cb3ff4f1047e6d02",
+      "ruleId": "SW003",
+      "filePath": "tests/InferenceGateway/IntegrationTests/Security/RetryPolicyTests.cs",
+      "lineNumber": 95,
+      "codeSnippet": "catch\n        {\n            // Expected to fail after max retries\n        }",
+      "message": "Empty catch block swallows exceptions without handling",
+      "baselinedAt": "2026-02-21T12:10:37.4782793+00:00"
+    },
+    {
+      "hash": "d1fb753a1d199b8c",
+      "ruleId": "SW004",
+      "filePath": "tests/InferenceGateway/IntegrationTests/Controllers/TeamMembershipsControllerTests.cs",
+      "lineNumber": 732,
+      "codeSnippet": "Task.Delay(50 * (1 << attempt)).ConfigureAwait(false)",
+      "message": "Test uses Task.Delay(false) which may indicate a timing-dependent test",
+      "baselinedAt": "2026-02-21T12:10:37.4782947+00:00"
+    },
+    {
+      "hash": "f2dfff7c3e5d9eee",
+      "ruleId": "SW004",
+      "filePath": "tests/InferenceGateway/IntegrationTests/Controllers/TeamMembershipsControllerTests.cs",
+      "lineNumber": 732,
+      "codeSnippet": "Task.Delay(50 * (1 << attempt))",
+      "message": "Test uses Task.Delay(50 * (1 << attempt)) which may indicate a timing-dependent test",
+      "baselinedAt": "2026-02-21T12:10:37.4782989+00:00"
+    },
+    {
+      "hash": "4e59ddb3a0cd8cd0",
+      "ruleId": "SW004",
+      "filePath": "tests/InferenceGateway/IntegrationTests/SmokeTests/Infrastructure/RetryPolicy.cs",
+      "lineNumber": 35,
+      "codeSnippet": "Task.Delay(delayWithJitter).ConfigureAwait(false)",
+      "message": "Test uses Task.Delay(false) which may indicate a timing-dependent test",
+      "baselinedAt": "2026-02-21T12:10:37.4783028+00:00"
+    },
+    {
+      "hash": "c7f16dfef97e99dc",
+      "ruleId": "SW004",
+      "filePath": "tests/InferenceGateway/IntegrationTests/SmokeTests/Infrastructure/RetryPolicy.cs",
+      "lineNumber": 35,
+      "codeSnippet": "Task.Delay(delayWithJitter)",
+      "message": "Test uses Task.Delay(delayWithJitter) which may indicate a timing-dependent test",
+      "baselinedAt": "2026-02-21T12:10:37.4783062+00:00"
+    },
+    {
+      "hash": "fd594cfd2e559dc0",
+      "ruleId": "SW003",
+      "filePath": "tests/InferenceGateway/IntegrationTests/SmokeTests/Infrastructure/MockHttpHandler.cs",
+      "lineNumber": 137,
+      "codeSnippet": "catch\n        {\n            // Fallback to simple parsing if JSON.NET fails\n        }",
+      "message": "Empty catch block swallows exceptions without handling",
+      "baselinedAt": "2026-02-21T12:10:37.4783102+00:00"
+    },
+    {
+      "hash": "a4584b593a49a5f3",
+      "ruleId": "SW003",
+      "filePath": "tests/InferenceGateway/IntegrationTests/SmokeTests/Infrastructure/SmokeTestExecutor.cs",
+      "lineNumber": 161,
+      "codeSnippet": "catch\n        {\n            // ignore parse errors\n        }",
+      "message": "Empty catch block swallows exceptions without handling",
+      "baselinedAt": "2026-02-21T12:10:37.4783144+00:00"
+    },
+    {
+      "hash": "5a70312e0b34511c",
+      "ruleId": "SW002",
+      "filePath": "tests/InferenceGateway/IntegrationTests/Transport/Grpc/ChatGrpcServiceTests.cs",
+      "lineNumber": 337,
+      "codeSnippet": "System.Diagnostics.CodeAnalysis.SuppressMessage(\"IDisposableAnalyzers\", \"IDISP007:Don't dispose injected\", Justification = \"Channel is created locally, not injected\")",
+      "message": "SuppressMessage attribute suppressing IDisposableAnalyzers:IDISP007:Don't dispose injected",
+      "baselinedAt": "2026-02-21T12:10:37.4783198+00:00"
+    },
+    {
+      "hash": "3c6d2b8f8101ef61",
+      "ruleId": "SW002",
+      "filePath": "tests/InferenceGateway/IntegrationTests/Transport/Grpc/ChatGrpcServiceTests.cs",
+      "lineNumber": 377,
+      "codeSnippet": "System.Diagnostics.CodeAnalysis.SuppressMessage(\"IDisposableAnalyzers\", \"IDISP005:Return type should indicate that the value should be disposed\", Justification = \"Task is awaited by caller\")",
+      "message": "SuppressMessage attribute suppressing IDisposableAnalyzers:IDISP005:Return type should indicate that the value should be disposed",
+      "baselinedAt": "2026-02-21T12:10:37.478337+00:00"
+    },
+    {
+      "hash": "f118d3e0cd3b73f2",
+      "ruleId": "SW002",
+      "filePath": "tests/InferenceGateway/IntegrationTests/Transport/Grpc/ChatGrpcServiceTests.cs",
+      "lineNumber": 396,
+      "codeSnippet": "System.Diagnostics.CodeAnalysis.SuppressMessage(\"IDisposableAnalyzers\", \"IDISP005:Return type should indicate that the value should be disposed\", Justification = \"Caller is responsible for disposing the AsyncServerStreamingCall\")",
+      "message": "SuppressMessage attribute suppressing IDisposableAnalyzers:IDISP005:Return type should indicate that the value should be disposed",
+      "baselinedAt": "2026-02-21T12:10:37.4783422+00:00"
+    },
+    {
+      "hash": "8360e47035d1ac4a",
+      "ruleId": "SW004",
+      "filePath": "tests/InferenceGateway/IntegrationTests/Optimization/TokenOptimizationEndToEndTests.cs",
+      "lineNumber": 156,
+      "codeSnippet": "Task.Delay(100)",
+      "message": "Test uses Task.Delay(100) which may indicate a timing-dependent test",
+      "baselinedAt": "2026-02-21T12:10:37.4783459+00:00"
+    },
+    {
+      "hash": "6878fa90abfbec2f",
+      "ruleId": "SW004",
+      "filePath": "tests/InferenceGateway/IntegrationTests/Optimization/RedisInfrastructureIntegrationTests.cs",
+      "lineNumber": 209,
+      "codeSnippet": "Task.Delay(TimeSpan.FromSeconds(2.5))",
+      "message": "Test uses Task.Delay(TimeSpan.FromSeconds(2.5)) which may indicate a timing-dependent test",
+      "baselinedAt": "2026-02-21T12:10:37.4783505+00:00"
+    },
+    {
+      "hash": "b6a9e0310cf6134d",
+      "ruleId": "SW002",
+      "filePath": "src/Synaxis.Routing/CircuitBreaker/CircuitBreakerPolicy.cs",
+      "lineNumber": 5,
+      "codeSnippet": "#pragma warning disable SA1402 // File contains multiple types - generic and non-generic versions are intentionally in the same file",
+      "message": "#pragma warning disable for warnings SA1402 without matching restore in same scope",
+      "baselinedAt": "2026-02-21T12:10:37.4783545+00:00"
+    },
+    {
+      "hash": "a777590162d1b5ba",
+      "ruleId": "SW002",
+      "filePath": "src/Synaxis.Routing/CircuitBreaker/CircuitBreaker.cs",
+      "lineNumber": 5,
+      "codeSnippet": "#pragma warning disable MA0049 // Type name matches namespace - this is intentional for the CircuitBreaker pattern",
+      "message": "#pragma warning disable for warnings MA0049 without matching restore in same scope",
+      "baselinedAt": "2026-02-21T12:10:37.4783583+00:00"
+    },
+    {
+      "hash": "a975517e9dd3f25e",
+      "ruleId": "SW002",
+      "filePath": "src/Synaxis.Routing/CircuitBreaker/CircuitBreakerStore.cs",
+      "lineNumber": 256,
+      "codeSnippet": "#pragma warning disable S3011 // Reflection is used for serialization/persistence - this is intentional and safe",
+      "message": "#pragma warning disable for warnings S3011 without matching restore in same scope",
+      "baselinedAt": "2026-02-21T12:10:37.4783619+00:00"
+    },
+    {
+      "hash": "21b3548df3d3972a",
+      "ruleId": "SW002",
+      "filePath": "src/Synaxis.Routing/Health/ProviderHealthCheckResult.cs",
+      "lineNumber": 42,
+      "codeSnippet": "System.Diagnostics.CodeAnalysis.SuppressMessage(\"Meziantou.Analyzer\", \"MA0016\", Justification = \"Public API uses concrete type for backward compatibility\")",
+      "message": "SuppressMessage attribute suppressing Meziantou.Analyzer:MA0016",
+      "baselinedAt": "2026-02-21T12:10:37.4783691+00:00"
+    },
+    {
+      "hash": "560a3952d98d6d3f",
+      "ruleId": "SW002",
+      "filePath": "src/Synaxis.Routing/Health/ProviderHealthMonitor.cs",
+      "lineNumber": 112,
+      "codeSnippet": "System.Diagnostics.CodeAnalysis.SuppressMessage(\"Meziantou.Analyzer\", \"MA0016\", Justification = \"Public API returns concrete type for backward compatibility\")",
+      "message": "SuppressMessage attribute suppressing Meziantou.Analyzer:MA0016",
+      "baselinedAt": "2026-02-21T12:10:37.4783742+00:00"
+    },
+    {
+      "hash": "b163e92fd0e44a13",
+      "ruleId": "SW002",
+      "filePath": "src/Synaxis.Routing/SmartRouter/SmartRouter.cs",
+      "lineNumber": 5,
+      "codeSnippet": "#pragma warning disable MA0049 // Type name matches namespace - this is intentional for the SmartRouter pattern",
+      "message": "#pragma warning disable for warnings MA0049 without matching restore in same scope",
+      "baselinedAt": "2026-02-21T12:10:37.4783855+00:00"
+    },
+    {
+      "hash": "dd4b085954bf6a77",
+      "ruleId": "SW005",
+      "filePath": "src/Synaxis.Server/Synaxis.Server.csproj",
+      "lineNumber": 5,
+      "codeSnippet": "<Nullable>disable</Nullable>",
+      "message": "Nullable reference types are disabled",
+      "baselinedAt": "2026-02-21T12:10:37.4783888+00:00"
+    },
+    {
+      "hash": "303a509fbf548617",
+      "ruleId": "SW003",
+      "filePath": "src/Synaxis.Server/Controllers/StreamingController.cs",
+      "lineNumber": 80,
+      "codeSnippet": "catch (OperationCanceledException)\n            {\n                // Operation was cancelled, no need to log\n            }",
+      "message": "Empty catch block swallows exceptions without handling",
+      "baselinedAt": "2026-02-21T12:10:37.4783938+00:00"
+    },
+    {
+      "hash": "c3ffad1287a1b614",
+      "ruleId": "SW005",
+      "filePath": "src/Synaxis.Api/Synaxis.Api.csproj",
+      "lineNumber": 4,
+      "codeSnippet": "<Nullable>disable</Nullable>",
+      "message": "Nullable reference types are disabled",
+      "baselinedAt": "2026-02-21T12:10:37.4783973+00:00"
+    },
+    {
+      "hash": "9dc778af1a0d016b",
+      "ruleId": "SW005",
+      "filePath": "src/Synaxis.Contracts/Synaxis.Contracts.csproj",
+      "lineNumber": 11,
+      "codeSnippet": "<NoWarn>SA1200;SA1402;SA1623;SA1629;SA1633;SA1413;SA1101;SA1501;SA1503;MA0016;MA0048;MA0002;MA1503</NoWarn>",
+      "message": "Setting NoWarn to suppress warnings: SA1200;SA1402;SA1623;SA1629;SA1633;SA1413;SA1101;SA1501;SA1503;MA0016;MA0048;MA0002;MA1503",
+      "baselinedAt": "2026-02-21T12:10:37.4784013+00:00"
+    },
+    {
+      "hash": "2c518af7b7db1263",
+      "ruleId": "SW005",
+      "filePath": "src/Synaxis.Webhooks/Synaxis.Webhooks.csproj",
+      "lineNumber": 4,
+      "codeSnippet": "<Nullable>disable</Nullable>",
+      "message": "Nullable reference types are disabled",
+      "baselinedAt": "2026-02-21T12:10:37.4784048+00:00"
+    },
+    {
+      "hash": "cbabd9f18ada2482",
+      "ruleId": "SW003",
+      "filePath": "src/Synaxis.BatchProcessing/BatchQueueHostedService.cs",
+      "lineNumber": 51,
+      "codeSnippet": "catch (OperationCanceledException)\n        {\n            // Expected when service is stopping\n        }",
+      "message": "Empty catch block swallows exceptions without handling",
+      "baselinedAt": "2026-02-21T12:10:37.4784088+00:00"
+    },
+    {
+      "hash": "3f4acd6599d10493",
+      "ruleId": "SW005",
+      "filePath": "src/Synaxis.BatchProcessing/Synaxis.BatchProcessing.csproj",
+      "lineNumber": 5,
+      "codeSnippet": "<Nullable>disable</Nullable>",
+      "message": "Nullable reference types are disabled",
+      "baselinedAt": "2026-02-21T12:10:37.4784121+00:00"
+    },
+    {
+      "hash": "15fc0db0745c04ac",
+      "ruleId": "SW005",
+      "filePath": "src/Tests/Benchmarks/Synaxis.Benchmarks.csproj",
+      "lineNumber": 11,
+      "codeSnippet": "<NoWarn>SA0001</NoWarn>",
+      "message": "Setting NoWarn to suppress warnings: SA0001",
+      "baselinedAt": "2026-02-21T12:10:37.4784156+00:00"
+    },
+    {
+      "hash": "5dd3db0f586adcd5",
+      "ruleId": "SW002",
+      "filePath": "src/Synaxis.Infrastructure/Data/Migrations/20260209030000_AddInvitationEntity.cs",
+      "lineNumber": 5,
+      "codeSnippet": "#pragma warning disable MA0051 // Auto-generated EF Core migrations",
+      "message": "#pragma warning disable for warnings MA0051 without matching restore in same scope",
+      "baselinedAt": "2026-02-21T12:10:37.4784199+00:00"
+    },
+    {
+      "hash": "917b8a84cca4f410",
+      "ruleId": "SW002",
+      "filePath": "src/Synaxis.Infrastructure/Data/Migrations/20260211121134_AddPasswordManagement.cs",
+      "lineNumber": 5,
+      "codeSnippet": "#pragma warning disable MA0051 // Auto-generated EF Core migrations",
+      "message": "#pragma warning disable for warnings MA0051 without matching restore in same scope",
+      "baselinedAt": "2026-02-21T12:10:37.4784235+00:00"
+    },
+    {
+      "hash": "9044f66294042ee6",
+      "ruleId": "SW002",
+      "filePath": "src/Synaxis.Infrastructure/Data/Migrations/20260210223935_MfaBackupCodesAndJwtBlacklist.cs",
+      "lineNumber": 5,
+      "codeSnippet": "#pragma warning disable MA0051 // Auto-generated EF Core migrations",
+      "message": "#pragma warning disable for warnings MA0051 without matching restore in same scope",
+      "baselinedAt": "2026-02-21T12:10:37.4784271+00:00"
+    },
+    {
+      "hash": "b36c34e6b25635df",
+      "ruleId": "SW002",
+      "filePath": "src/Synaxis.Infrastructure/Data/Migrations/20260210170220_FixPendingChanges.cs",
+      "lineNumber": 5,
+      "codeSnippet": "#pragma warning disable MA0051 // Auto-generated EF Core migrations",
+      "message": "#pragma warning disable for warnings MA0051 without matching restore in same scope",
+      "baselinedAt": "2026-02-21T12:10:37.4784322+00:00"
+    },
+    {
+      "hash": "90ebc13503f06947",
+      "ruleId": "SW002",
+      "filePath": "src/Synaxis.Infrastructure/Data/Migrations/20260210110030_FixPendingModelChanges.cs",
+      "lineNumber": 5,
+      "codeSnippet": "#pragma warning disable MA0051 // Auto-generated EF Core migrations",
+      "message": "#pragma warning disable for warnings MA0051 without matching restore in same scope",
+      "baselinedAt": "2026-02-21T12:10:37.4784358+00:00"
+    },
+    {
+      "hash": "6c944038d779b2ad",
+      "ruleId": "SW002",
+      "filePath": "src/Synaxis.Infrastructure/Data/Migrations/20260212191500_AddDeletedAtColumnToUsers.cs",
+      "lineNumber": 5,
+      "codeSnippet": "#pragma warning disable MA0051 // Auto-generated EF Core migrations",
+      "message": "#pragma warning disable for warnings MA0051 without matching restore in same scope",
+      "baselinedAt": "2026-02-21T12:10:37.4784395+00:00"
+    },
+    {
+      "hash": "c9726d86a3c8242d",
+      "ruleId": "SW002",
+      "filePath": "src/Synaxis.Infrastructure/Data/Migrations/SynaxisDbContextModelSnapshot.cs",
+      "lineNumber": 2,
+      "codeSnippet": "#pragma warning disable MA0051 // Auto-generated EF Core migrations",
+      "message": "#pragma warning disable for warnings MA0051 without matching restore in same scope",
+      "baselinedAt": "2026-02-21T12:10:37.4784431+00:00"
+    },
+    {
+      "hash": "34d67949b2d0661f",
+      "ruleId": "SW002",
+      "filePath": "src/Synaxis.Infrastructure/Data/Migrations/20260208232422_AddPerformanceIndexes.cs",
+      "lineNumber": 5,
+      "codeSnippet": "#pragma warning disable MA0051 // Auto-generated EF Core migrations",
+      "message": "#pragma warning disable for warnings MA0051 without matching restore in same scope",
+      "baselinedAt": "2026-02-21T12:10:37.4784465+00:00"
+    },
+    {
+      "hash": "b6a3f917528b4980",
+      "ruleId": "SW002",
+      "filePath": "src/Synaxis.Infrastructure/Data/Migrations/20260211143843_RenameMfaBackupCodesColumn.cs",
+      "lineNumber": 5,
+      "codeSnippet": "#pragma warning disable MA0051 // Auto-generated EF Core migrations",
+      "message": "#pragma warning disable for warnings MA0051 without matching restore in same scope",
+      "baselinedAt": "2026-02-21T12:10:37.4784504+00:00"
+    },
+    {
+      "hash": "55723c7b15f16df7",
+      "ruleId": "SW002",
+      "filePath": "src/Synaxis.Infrastructure/Data/Migrations/20260208232036_InitialMultiTenant.cs",
+      "lineNumber": 5,
+      "codeSnippet": "#pragma warning disable MA0051 // Auto-generated EF Core migrations",
+      "message": "#pragma warning disable for warnings MA0051 without matching restore in same scope",
+      "baselinedAt": "2026-02-21T12:10:37.478454+00:00"
+    },
+    {
+      "hash": "62c02f7400e5a594",
+      "ruleId": "SW002",
+      "filePath": "src/Synaxis.Infrastructure/Data/Migrations/20260208232616_AddDataIntegrityConstraints.cs",
+      "lineNumber": 5,
+      "codeSnippet": "#pragma warning disable MA0051 // Auto-generated EF Core migrations",
+      "message": "#pragma warning disable for warnings MA0051 without matching restore in same scope",
+      "baselinedAt": "2026-02-21T12:10:37.4784574+00:00"
+    },
+    {
+      "hash": "ebdf3033e41c4e6c",
+      "ruleId": "SW002",
+      "filePath": "src/Synaxis.Infrastructure/Data/Migrations/20260209182013_NullableReferenceTypesUpdate.cs",
+      "lineNumber": 5,
+      "codeSnippet": "#pragma warning disable MA0051 // Auto-generated EF Core migrations",
+      "message": "#pragma warning disable for warnings MA0051 without matching restore in same scope",
+      "baselinedAt": "2026-02-21T12:10:37.4784612+00:00"
+    },
+    {
+      "hash": "7d826bae2dc04c91",
+      "ruleId": "SW003",
+      "filePath": "src/Synaxis.Providers.Anthropic/AnthropicClient.cs",
+      "lineNumber": 248,
+      "codeSnippet": "catch\n            {\n                // Use default error message if JSON parsing fails\n            }",
+      "message": "Empty catch block swallows exceptions without handling",
+      "baselinedAt": "2026-02-21T12:10:37.4784654+00:00"
+    },
+    {
+      "hash": "7732b1855c574993",
+      "ruleId": "SW003",
+      "filePath": "src/InferenceGateway/Application/ChatClients/SmartRoutingChatClient.cs",
+      "lineNumber": 415,
+      "codeSnippet": "catch\n            {\n                // Suppress exceptions during failure recording to prevent cascading failures\n            }",
+      "message": "Empty catch block swallows exceptions without handling",
+      "baselinedAt": "2026-02-21T12:10:37.4784705+00:00"
+    },
+    {
+      "hash": "f7254acb7a7dc738",
+      "ruleId": "SW002",
+      "filePath": "src/InferenceGateway/Application/Routing/FallbackOrchestrator.cs",
+      "lineNumber": 54,
+      "codeSnippet": "System.Diagnostics.CodeAnalysis.SuppressMessage(\"StyleCop.CSharp.ReadabilityRules\", \"MA0051:Method is too long\", Justification = \"Multi-tier fallback orchestration requires sequential logic\")",
+      "message": "SuppressMessage attribute suppressing StyleCop.CSharp.ReadabilityRules:MA0051:Method is too long",
+      "baselinedAt": "2026-02-21T12:10:37.4784751+00:00"
+    },
+    {
+      "hash": "1aa0f6b1fe720977",
+      "ruleId": "SW002",
+      "filePath": "src/InferenceGateway/Application/Routing/ModelResolver.cs",
+      "lineNumber": 62,
+      "codeSnippet": "System.Diagnostics.CodeAnalysis.SuppressMessage(\"StyleCop.CSharp.ReadabilityRules\", \"MA0051:Method is too long\", Justification = \"Complex resolution logic requires sequential steps\")",
+      "message": "SuppressMessage attribute suppressing StyleCop.CSharp.ReadabilityRules:MA0051:Method is too long",
+      "baselinedAt": "2026-02-21T12:10:37.4784792+00:00"
+    },
+    {
+      "hash": "97d6108164accae2",
+      "ruleId": "SW002",
+      "filePath": "src/InferenceGateway/Application/Routing/ModelResolver.cs",
+      "lineNumber": 176,
+      "codeSnippet": "System.Diagnostics.CodeAnalysis.SuppressMessage(\"StyleCop.CSharp.ReadabilityRules\", \"MA0051:Method is too long\", Justification = \"Complex candidate resolution with multiple fallback paths\")",
+      "message": "SuppressMessage attribute suppressing StyleCop.CSharp.ReadabilityRules:MA0051:Method is too long",
+      "baselinedAt": "2026-02-21T12:10:37.4784833+00:00"
+    },
+    {
+      "hash": "d1feee483fd2a240",
+      "ruleId": "SW003",
+      "filePath": "src/InferenceGateway/Application/Routing/ModelResolver.cs",
+      "lineNumber": 132,
+      "codeSnippet": "catch\n                    {\n                        /* Ignore invalid JSON */\n                    }",
+      "message": "Empty catch block swallows exceptions without handling",
+      "baselinedAt": "2026-02-21T12:10:37.4784873+00:00"
+    },
+    {
+      "hash": "a69efb5fee357b1f",
+      "ruleId": "SW003",
+      "filePath": "src/InferenceGateway/Infrastructure/AntigravityChatClient.cs",
+      "lineNumber": 161,
+      "codeSnippet": "catch (JsonException)\n                    {\n                        // Ignore malformed lines\n                    }",
+      "message": "Empty catch block swallows exceptions without handling",
+      "baselinedAt": "2026-02-21T12:10:37.478492+00:00"
+    },
+    {
+      "hash": "61658f31abfddcb0",
+      "ruleId": "SW003",
+      "filePath": "src/InferenceGateway/Infrastructure/CohereChatClient.cs",
+      "lineNumber": 258,
+      "codeSnippet": "catch\n            {\n                /* ignore any reflection issues */\n            }",
+      "message": "Empty catch block swallows exceptions without handling",
+      "baselinedAt": "2026-02-21T12:10:37.4784962+00:00"
+    },
+    {
+      "hash": "224d0b0bf2c3bee1",
+      "ruleId": "SW002",
+      "filePath": "src/InferenceGateway/Infrastructure/ControlPlane/Migrations/20260129134724_AddDynamicModelRegistry.cs",
+      "lineNumber": 107,
+      "codeSnippet": "#pragma warning disable MA0051 // Method is too long - Migrations are inherently complex",
+      "message": "#pragma warning disable for warnings MA0051 without matching restore in same scope",
+      "baselinedAt": "2026-02-21T12:10:37.4785006+00:00"
+    },
+    {
+      "hash": "227cc141bb842804",
+      "ruleId": "SW002",
+      "filePath": "src/InferenceGateway/Infrastructure/ControlPlane/Migrations/20260126165801_AddModelCosts.cs",
+      "lineNumber": 481,
+      "codeSnippet": "#pragma warning disable MA0051 // Method is too long - Migrations are inherently complex",
+      "message": "#pragma warning disable for warnings MA0051 without matching restore in same scope",
+      "baselinedAt": "2026-02-21T12:10:37.4785046+00:00"
+    },
+    {
+      "hash": "02b2bfe4eaca4726",
+      "ruleId": "SW002",
+      "filePath": "src/InferenceGateway/Infrastructure/ControlPlane/Migrations/20260202100718_AddUserPasswordAndApiKeyUser.cs",
+      "lineNumber": 49,
+      "codeSnippet": "#pragma warning disable MA0051 // Method is too long - Migrations are inherently complex",
+      "message": "#pragma warning disable for warnings MA0051 without matching restore in same scope",
+      "baselinedAt": "2026-02-21T12:10:37.4785086+00:00"
+    },
+    {
+      "hash": "d0a7473ac136b8f6",
+      "ruleId": "SW002",
+      "filePath": "src/InferenceGateway/Infrastructure/ControlPlane/Migrations/20260204151324_AddEnterpriseMultiTenantSchema.cs",
+      "lineNumber": 843,
+      "codeSnippet": "#pragma warning disable MA0051 // Method is too long - Migrations are inherently complex",
+      "message": "#pragma warning disable for warnings MA0051 without matching restore in same scope",
+      "baselinedAt": "2026-02-21T12:10:37.4785132+00:00"
+    },
+    {
+      "hash": "392e48fd5b461657",
+      "ruleId": "SW003",
+      "filePath": "src/InferenceGateway/Infrastructure/Identity/Strategies/Google/GoogleAuthStrategy.cs",
+      "lineNumber": 375,
+      "codeSnippet": "catch (JsonException)\n            {\n                // Intentionally empty - return empty string if JSON parsing fails\n            }",
+      "message": "Empty catch block swallows exceptions without handling",
+      "baselinedAt": "2026-02-21T12:10:37.4785174+00:00"
+    },
+    {
+      "hash": "03222f9f89c2065c",
+      "ruleId": "SW003",
+      "filePath": "src/InferenceGateway/Infrastructure/Services/ApiKeyService.cs",
+      "lineNumber": 453,
+      "codeSnippet": "catch\n                {\n                    // Silently ignore errors in background update\n                }",
+      "message": "Empty catch block swallows exceptions without handling",
+      "baselinedAt": "2026-02-21T12:10:37.4785218+00:00"
+    },
+    {
+      "hash": "0fb6a1d641fac589",
+      "ruleId": "SW003",
+      "filePath": "src/InferenceGateway/Infrastructure/Auth/AntigravityAuthManager.cs",
+      "lineNumber": 576,
+      "codeSnippet": "catch (JsonException)\n            {\n                // Silently ignore JSON parsing errors for project ID extraction\n            }",
+      "message": "Empty catch block swallows exceptions without handling",
+      "baselinedAt": "2026-02-21T12:10:37.4785259+00:00"
+    },
+    {
+      "hash": "b24f53430988fb58",
+      "ruleId": "SW003",
+      "filePath": "src/InferenceGateway/Infrastructure/External/Google/GoogleChatClient.cs",
+      "lineNumber": 84,
+      "codeSnippet": "catch\n                {\n                    /* ignore parse errors and fall back to _modelId */\n                }",
+      "message": "Empty catch block swallows exceptions without handling",
+      "baselinedAt": "2026-02-21T12:10:37.4785306+00:00"
+    },
+    {
+      "hash": "2bf5b1d988ce1680",
+      "ruleId": "SW003",
+      "filePath": "src/InferenceGateway/Infrastructure/External/DuckDuckGo/DuckDuckGoChatClient.cs",
+      "lineNumber": 134,
+      "codeSnippet": "catch\n            {\n                // Ignore JSON parsing errors and return null\n            }",
+      "message": "Empty catch block swallows exceptions without handling",
+      "baselinedAt": "2026-02-21T12:10:37.4785355+00:00"
+    },
+    {
+      "hash": "922e129d6d9a258e",
+      "ruleId": "SW003",
+      "filePath": "src/InferenceGateway/WebApi/Middleware/OpenAIErrorHandlerMiddleware.cs",
+      "lineNumber": 135,
+      "codeSnippet": "catch\n                                {\n                                    // ignore reflection failures and keep default\n                                }",
+      "message": "Empty catch block swallows exceptions without handling",
+      "baselinedAt": "2026-02-21T12:10:37.4785405+00:00"
+    },
+    {
+      "hash": "45bc21a89332a411",
+      "ruleId": "SW003",
+      "filePath": "src/InferenceGateway/WebApi/Helpers/OpenAIRequestParser.cs",
+      "lineNumber": 45,
+      "codeSnippet": "catch\n            {\n                // swallow - use default\n            }",
+      "message": "Empty catch block swallows exceptions without handling",
+      "baselinedAt": "2026-02-21T12:10:37.4785449+00:00"
+    },
+    {
+      "hash": "3633d707b8727653",
+      "ruleId": "SW002",
+      "filePath": "src/InferenceGateway/WebApi/Controllers/TeamMembershipsController.cs",
+      "lineNumber": 23,
+      "codeSnippet": "System.Diagnostics.CodeAnalysis.SuppressMessage(\"SonarLint\", \"S6934:Specify the RouteAttribute when an HttpMethodAttribute or RouteAttribute is specified at an action level\", Justification = \"Route templates are correctly specified in HttpMethod attributes following ASP.NET Core convention\")",
+      "message": "SuppressMessage attribute suppressing SonarLint:S6934:Specify the RouteAttribute when an HttpMethodAttribute or RouteAttribute is specified at an action level",
+      "baselinedAt": "2026-02-21T12:10:37.4785501+00:00"
+    },
+    {
+      "hash": "0054b172579e658b",
+      "ruleId": "SW003",
+      "filePath": "src/InferenceGateway/WebApi/Endpoints/Dashboard/ProvidersEndpoints.cs",
+      "lineNumber": 71,
+      "codeSnippet": "catch\n                    {\n                        // Redis unavailable, use defaults\n                    }",
+      "message": "Empty catch block swallows exceptions without handling",
+      "baselinedAt": "2026-02-21T12:10:37.4785662+00:00"
+    }
+  ]
+}
