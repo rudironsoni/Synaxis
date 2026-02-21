@@ -138,8 +138,7 @@ public sealed class AuthControllerEmailVerificationTests : IDisposable
         var result = await _controller.GetVerificationStatus();
 
         // Assert
-        result.Result.Should().BeOfType<OkObjectResult>();
-        var okResult = result.Result as OkObjectResult;
+        var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         var status = okResult.Value as EmailVerificationStatusDto;
         status.Should().NotBeNull();
         status.IsVerified.Should().BeTrue();
@@ -158,6 +157,7 @@ public sealed class AuthControllerEmailVerificationTests : IDisposable
         // Assert
         result.Result.Should().BeOfType<UnauthorizedObjectResult>();
     }
+
 
     [Fact]
     public async Task Register_SendsVerificationEmail()
@@ -196,8 +196,7 @@ public sealed class AuthControllerEmailVerificationTests : IDisposable
         var result = await _controller.Register(request);
 
         // Assert
-        result.Result.Should().BeOfType<OkObjectResult>();
-        var okResult = result.Result as OkObjectResult;
+        var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         var authResult = okResult.Value as DTOs.Authentication.AuthenticationResult;
         authResult.Should().NotBeNull();
         authResult.Success.Should().BeTrue();

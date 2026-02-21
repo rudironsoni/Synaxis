@@ -62,10 +62,10 @@ public class AntigravityChatClientTests
                 "SendAsync",
                 ItExpr.IsAny<HttpRequestMessage>(),
                 ItExpr.IsAny<CancellationToken>())
-            .ReturnsAsync((HttpRequestMessage req, CancellationToken _) =>
+            .Returns(async (HttpRequestMessage req, CancellationToken _) =>
             {
                 capturedRequest = req;
-                requestBody = req.Content != null ? req.Content.ReadAsStringAsync().GetAwaiter().GetResult() : null;
+                requestBody = req.Content != null ? await req.Content.ReadAsStringAsync() : null;
                 return new HttpResponseMessage
                 {
                     StatusCode = HttpStatusCode.OK,

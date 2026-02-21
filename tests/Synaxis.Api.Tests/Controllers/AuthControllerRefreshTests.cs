@@ -94,9 +94,8 @@ public sealed class AuthControllerRefreshTests : IDisposable
         var result = await _controller.RefreshToken(request);
 
         // Assert
-        result.Result.Should().BeOfType<OkObjectResult>();
-        var okResult = result.Result as OkObjectResult;
-        var authResult = okResult.Value as Core.Contracts.AuthenticationResult;
+        var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        var authResult = okResult.Value.Should().BeAssignableTo<Core.Contracts.AuthenticationResult>().Subject;
 
         authResult.Should().NotBeNull();
         authResult.Success.Should().BeTrue();
@@ -137,8 +136,7 @@ public sealed class AuthControllerRefreshTests : IDisposable
         var result = await _controller.RefreshToken(request);
 
         // Assert
-        result.Result.Should().BeOfType<UnauthorizedObjectResult>();
-        var unauthorizedResult = result.Result as UnauthorizedObjectResult;
+        var unauthorizedResult = result.Result.Should().BeOfType<UnauthorizedObjectResult>().Subject;
         unauthorizedResult.Value.Should().BeEquivalentTo(new { message = "Refresh token is required" });
     }
 
@@ -155,8 +153,7 @@ public sealed class AuthControllerRefreshTests : IDisposable
         var result = await _controller.RefreshToken(request);
 
         // Assert
-        result.Result.Should().BeOfType<UnauthorizedObjectResult>();
-        var unauthorizedResult = result.Result as UnauthorizedObjectResult;
+        var unauthorizedResult = result.Result.Should().BeOfType<UnauthorizedObjectResult>().Subject;
         unauthorizedResult.Value.Should().BeEquivalentTo(new { message = "Refresh token is required" });
     }
 
@@ -173,8 +170,7 @@ public sealed class AuthControllerRefreshTests : IDisposable
         var result = await _controller.RefreshToken(request);
 
         // Assert
-        result.Result.Should().BeOfType<UnauthorizedObjectResult>();
-        var unauthorizedResult = result.Result as UnauthorizedObjectResult;
+        var unauthorizedResult = result.Result.Should().BeOfType<UnauthorizedObjectResult>().Subject;
         unauthorizedResult.Value.Should().BeEquivalentTo(new { message = "Invalid refresh token" });
     }
 
@@ -194,8 +190,7 @@ public sealed class AuthControllerRefreshTests : IDisposable
         var result = await _controller.RefreshToken(request);
 
         // Assert
-        result.Result.Should().BeOfType<UnauthorizedObjectResult>();
-        var unauthorizedResult = result.Result as UnauthorizedObjectResult;
+        var unauthorizedResult = result.Result.Should().BeOfType<UnauthorizedObjectResult>().Subject;
         unauthorizedResult.Value.Should().BeEquivalentTo(new { message = "Refresh token has expired" });
     }
 
@@ -215,8 +210,7 @@ public sealed class AuthControllerRefreshTests : IDisposable
         var result = await _controller.RefreshToken(request);
 
         // Assert
-        result.Result.Should().BeOfType<UnauthorizedObjectResult>();
-        var unauthorizedResult = result.Result as UnauthorizedObjectResult;
+        var unauthorizedResult = result.Result.Should().BeOfType<UnauthorizedObjectResult>().Subject;
         unauthorizedResult.Value.Should().BeEquivalentTo(new { message = "Refresh token has been revoked" });
     }
 
@@ -236,8 +230,7 @@ public sealed class AuthControllerRefreshTests : IDisposable
         var result = await _controller.RefreshToken(request);
 
         // Assert
-        result.Result.Should().BeOfType<UnauthorizedObjectResult>();
-        var unauthorizedResult = result.Result as UnauthorizedObjectResult;
+        var unauthorizedResult = result.Result.Should().BeOfType<UnauthorizedObjectResult>().Subject;
         unauthorizedResult.Value.Should().BeEquivalentTo(new { message = "User account is not active" });
     }
 
@@ -264,8 +257,7 @@ public sealed class AuthControllerRefreshTests : IDisposable
         var secondResult = await _controller.RefreshToken(secondRequest);
 
         // Assert
-        secondResult.Result.Should().BeOfType<UnauthorizedObjectResult>();
-        var unauthorizedResult = secondResult.Result as UnauthorizedObjectResult;
+        var unauthorizedResult = secondResult.Result.Should().BeOfType<UnauthorizedObjectResult>().Subject;
         unauthorizedResult.Value.Should().BeEquivalentTo(new { message = "Refresh token has been revoked" });
     }
 
@@ -336,8 +328,8 @@ public sealed class AuthControllerRefreshTests : IDisposable
 
         // Act
         var result = await _controller.RefreshToken(request);
-        var okResult = result.Result as OkObjectResult;
-        var authResult = okResult.Value as Core.Contracts.AuthenticationResult;
+        var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        var authResult = okResult.Value.Should().BeAssignableTo<Core.Contracts.AuthenticationResult>().Subject;
 
         // Assert
         var isValid = await _authenticationService.ValidateTokenAsync(authResult.AccessToken);
