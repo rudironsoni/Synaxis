@@ -18,7 +18,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers;
 
 [Trait("Category", "Integration")]
 [Collection("Integration")]
-public class AuthenticationControllerTests : IClassFixture<SynaxisWebApplicationFactory>
+public class AuthenticationControllerTests
 {
     private readonly SynaxisWebApplicationFactory _factory;
     private readonly ITestOutputHelper _output;

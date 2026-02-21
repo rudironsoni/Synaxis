@@ -24,7 +24,7 @@ using Xunit;
 /// Tests for the MFA disable endpoint.
 /// </summary>
 [Collection("Integration")]
-public class AuthControllerMfaDisableTests : IClassFixture<SynaxisWebApplicationFactory>
+public class AuthControllerMfaDisableTests
 {
     private readonly SynaxisWebApplicationFactory _factory;
     private readonly HttpClient _client;

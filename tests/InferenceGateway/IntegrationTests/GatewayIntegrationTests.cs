@@ -17,7 +17,7 @@ using Xunit.Abstractions;
 namespace Synaxis.InferenceGateway.IntegrationTests;
 
 [Collection("Integration")]
-public class GatewayIntegrationTests : IClassFixture<SynaxisWebApplicationFactory>
+public class GatewayIntegrationTests
 {
     private readonly SynaxisWebApplicationFactory _factory;
     private readonly HttpClient _client;

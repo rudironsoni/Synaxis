@@ -25,7 +25,7 @@ using Xunit.Abstractions;
 /// </summary>
 [Trait("Category", "Integration")]
 [Collection("Integration")]
-public class OrganizationsControllerTests : IClassFixture<SynaxisWebApplicationFactory>
+public class OrganizationsControllerTests
 {
     private readonly SynaxisWebApplicationFactory _factory;
     private readonly ITestOutputHelper _output;

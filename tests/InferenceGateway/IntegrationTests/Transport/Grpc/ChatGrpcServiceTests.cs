@@ -23,7 +23,8 @@ using Xunit.Abstractions;
 /// <summary>
 /// Integration tests for the ChatGrpcService.
 /// </summary>
-public class ChatGrpcServiceTests : IClassFixture<SynaxisWebApplicationFactory>
+[Collection("Integration")]
+public class ChatGrpcServiceTests
 {
     private readonly SynaxisWebApplicationFactory _factory;
     private readonly ITestOutputHelper _output;

@@ -24,7 +24,8 @@ using Xunit.Abstractions;
 /// </remarks>
 /// <param name="factory">The web application factory.</param>
 /// <param name="output">The test output helper.</param>
-public class WebSocketTransportTests(SynaxisWebApplicationFactory factory, ITestOutputHelper output) : IClassFixture<SynaxisWebApplicationFactory>
+[Collection("Integration")]
+public class WebSocketTransportTests(SynaxisWebApplicationFactory factory, ITestOutputHelper output)
 {
     private readonly SynaxisWebApplicationFactory _factory = factory;
     private readonly ITestOutputHelper _output = output;

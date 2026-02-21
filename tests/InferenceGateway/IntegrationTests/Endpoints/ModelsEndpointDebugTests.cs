@@ -12,7 +12,7 @@ using Xunit.Abstractions;
 namespace Synaxis.InferenceGateway.IntegrationTests.Endpoints;
 
 [Collection("Integration")]
-public class ModelsEndpointDebugTests(SynaxisWebApplicationFactory factory, ITestOutputHelper output) : IClassFixture<SynaxisWebApplicationFactory>
+public class ModelsEndpointDebugTests(SynaxisWebApplicationFactory factory, ITestOutputHelper output)
 {
     private readonly SynaxisWebApplicationFactory _factory = factory;
     private readonly HttpClient _client = factory.CreateClient();

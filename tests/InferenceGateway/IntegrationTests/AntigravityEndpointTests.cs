@@ -19,7 +19,7 @@ using Xunit;
 using Xunit.Abstractions;
 
 [Collection("Integration")]
-public class AntigravityEndpointTests : IClassFixture<SynaxisWebApplicationFactory>
+public class AntigravityEndpointTests
 {
     private readonly SynaxisWebApplicationFactory _factory;
     private readonly HttpClient _client;

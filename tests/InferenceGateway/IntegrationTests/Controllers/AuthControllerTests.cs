@@ -20,7 +20,7 @@ using Xunit.Abstractions;
 namespace Synaxis.InferenceGateway.IntegrationTests.Controllers;
 
 [Collection("Integration")]
-public class AuthControllerTests : IClassFixture<SynaxisWebApplicationFactory>
+public class AuthControllerTests
 {
     private readonly SynaxisWebApplicationFactory _factory;
     private readonly ITestOutputHelper _output;

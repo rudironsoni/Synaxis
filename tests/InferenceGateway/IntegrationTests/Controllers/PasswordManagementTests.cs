@@ -19,7 +19,7 @@ using Xunit.Abstractions;
 
 [Trait("Category", "Integration")]
 [Collection("Integration")]
-public class PasswordManagementTests : IClassFixture<SynaxisWebApplicationFactory>
+public class PasswordManagementTests
 {
     private readonly SynaxisWebApplicationFactory _factory;
     private readonly ITestOutputHelper _output;

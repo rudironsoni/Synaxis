@@ -26,7 +26,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.SmokeTests;
 [Trait("Category", "Smoke")]
 [Trait("Type", "Integration")]
 [Collection("Integration")]
-public class CircuitBreakerSmokeTests : IClassFixture<SynaxisWebApplicationFactory>
+public class CircuitBreakerSmokeTests
 {
     private readonly SynaxisWebApplicationFactory _factory;
     private readonly ITestOutputHelper _output;

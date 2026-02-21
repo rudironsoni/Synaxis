@@ -19,7 +19,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers;
 /// Tests the complete authentication flow including user creation and token generation.
 /// </summary>
 [Collection("Integration")]
-public class GoogleAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFactory>
+public class GoogleAuthIntegrationTests
 {
     private readonly SynaxisWebApplicationFactory _factory;
     private readonly ITestOutputHelper _output;

@@ -15,7 +15,7 @@ using Xunit;
 namespace Synaxis.InferenceGateway.IntegrationTests;
 
 [Collection("Integration")]
-public class ModelsAndHealthEndpointTests : IClassFixture<SynaxisWebApplicationFactory>
+public class ModelsAndHealthEndpointTests
 {
     private readonly SynaxisWebApplicationFactory _factory;
 

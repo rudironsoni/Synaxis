@@ -22,7 +22,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Controllers;
 /// Tests device flow, token refresh, and user creation scenarios.
 /// </summary>
 [Collection("Integration")]
-public class GitHubAuthIntegrationTests : IClassFixture<SynaxisWebApplicationFactory>
+public class GitHubAuthIntegrationTests
 {
     private readonly SynaxisWebApplicationFactory _factory;
     private readonly ITestOutputHelper _output;

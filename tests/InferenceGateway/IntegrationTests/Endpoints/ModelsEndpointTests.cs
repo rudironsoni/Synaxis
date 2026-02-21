@@ -11,7 +11,7 @@ using Xunit;
 namespace Synaxis.InferenceGateway.IntegrationTests.Endpoints;
 
 [Collection("Integration")]
-public class ModelsEndpointTests(SynaxisWebApplicationFactory factory) : IClassFixture<SynaxisWebApplicationFactory>
+public class ModelsEndpointTests(SynaxisWebApplicationFactory factory)
 {
     private readonly SynaxisWebApplicationFactory _factory = factory;
     private readonly HttpClient _client = factory.CreateClient();

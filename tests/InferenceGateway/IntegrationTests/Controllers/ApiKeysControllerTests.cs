@@ -19,7 +19,7 @@ using Synaxis.Infrastructure.Data;
 using Xunit.Abstractions;
 
 [Collection("Integration")]
-public class ApiKeysControllerTests : IClassFixture<SynaxisWebApplicationFactory>
+public class ApiKeysControllerTests
 {
     private readonly SynaxisWebApplicationFactory _factory;
     private readonly ITestOutputHelper _output;

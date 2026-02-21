@@ -18,7 +18,7 @@ using Xunit;
 namespace Synaxis.InferenceGateway.IntegrationTests.Endpoints;
 
 [Collection("Integration")]
-public class ResponsesEndpointTests : IClassFixture<SynaxisWebApplicationFactory>
+public class ResponsesEndpointTests
 {
     private readonly SynaxisWebApplicationFactory _factory;
     private readonly HttpClient _client;

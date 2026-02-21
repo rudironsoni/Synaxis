@@ -22,7 +22,8 @@ using Xunit.Abstractions;
 /// Integration tests for the ChatController HTTP transport layer.
 /// Tests the /v1/chat/completions endpoints for both streaming and non-streaming requests.
 /// </summary>
-public class ChatControllerHttpTests : IClassFixture<SynaxisWebApplicationFactory>
+[Collection("Integration")]
+public class ChatControllerHttpTests
 {
     private readonly SynaxisWebApplicationFactory _factory;
     private readonly ITestOutputHelper _output;

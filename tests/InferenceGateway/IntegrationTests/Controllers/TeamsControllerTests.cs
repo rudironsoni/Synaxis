@@ -17,7 +17,7 @@ using Xunit.Abstractions;
 
 [Trait("Category", "Integration")]
 [Collection("Integration")]
-public class TeamsControllerTests : IClassFixture<SynaxisWebApplicationFactory>
+public class TeamsControllerTests
 {
     private readonly SynaxisWebApplicationFactory _factory;
     private readonly ITestOutputHelper _output;

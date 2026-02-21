@@ -10,7 +10,7 @@ using Xunit.Abstractions;
 namespace Synaxis.InferenceGateway.IntegrationTests;
 
 [Collection("Integration")]
-public class ApiErrorHandlingTests : IClassFixture<SynaxisWebApplicationFactory>
+public class ApiErrorHandlingTests
 {
     private readonly SynaxisWebApplicationFactory _factory;
     private readonly HttpClient _client;
