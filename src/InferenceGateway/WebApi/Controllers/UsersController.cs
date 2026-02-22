@@ -799,6 +799,16 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
                 return this.BadRequest(new { success = false, errorMessage = result.ErrorMessage });
             }
 
+            // Update PasswordChangedAt timestamp
+            var user = await this._synaxisDbContext.Users
+                .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken)
+                .ConfigureAwait(false);
+            if (user != null)
+            {
+                user.PasswordChangedAt = DateTime.UtcNow;
+                await this._synaxisDbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            }
+
             return this.Ok(new
             {
                 success = true,

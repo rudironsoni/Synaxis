@@ -4,29 +4,29 @@
 
 namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
 {
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading;
-using System.Threading.Tasks;
-using FluentAssertions;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Synaxis.Core.Contracts;
-using Synaxis.Core.Models;
-using Synaxis.Infrastructure.Data;
-using Synaxis.InferenceGateway.WebApi.Controllers;
-using Xunit;
-using OrganizationSettingsResponse = Synaxis.Core.Contracts.OrganizationSettingsResponse;
+    using System;
+    using System.Collections.Generic;
+    using System.Globalization;
+    using System.Linq;
+    using System.Security.Claims;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using FluentAssertions;
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.AspNetCore.Mvc;
+    using Microsoft.EntityFrameworkCore;
+    using Synaxis.Core.Contracts;
+    using Synaxis.Core.Models;
+    using Synaxis.Infrastructure.Data;
+    using Synaxis.InferenceGateway.WebApi.Controllers;
+    using Synaxis.InferenceGateway.WebApi.Controllers.Organizations;
+    using Xunit;
+    using OrganizationSettingsResponse = Synaxis.Core.Contracts.OrganizationSettingsResponse;
 
-[Trait("Category", "Unit")]
-public class OrganizationsControllerTests : IDisposable
-{
+    [Trait("Category", "Unit")]
+    public class OrganizationsControllerTests : IDisposable
+    {
         private readonly SynaxisDbContext _dbContext;
-        private readonly TestPasswordService _passwordService;
         private readonly OrganizationsController _controller;
         private readonly Guid _testUserId = Guid.NewGuid();
         private readonly Guid _testOrganizationId = Guid.NewGuid();
@@ -38,9 +38,99 @@ public class OrganizationsControllerTests : IDisposable
                 .UseInMemoryDatabase(databaseName: $"TestDb_{Guid.NewGuid()}")
                 .Options;
             _dbContext = new SynaxisDbContext(options);
-            _passwordService = new TestPasswordService();
 
-            _controller = new OrganizationsController(_dbContext, _passwordService);
+            _controller = new OrganizationsController(_dbContext);
+            SetupControllerContext();
+        }
+
+        public void Dispose()
+        {
+            if (!_disposed)
+            {
+                _dbContext.Dispose();
+                _disposed = true;
+            }
+        }
+
+        private Organization CreateTestOrganization()
+        {
+            return new Organization
+            {
+                Id = _testOrganizationId,
+                Name = "Test Organization",
+                Slug = "test-org",
+                Description = "Test organization",
+                PrimaryRegion = "us-east-1",
+                Tier = "free",
+                BillingCurrency = "USD",
+                CreditBalance = 0.00m,
+                CreditCurrency = "USD",
+                SubscriptionStatus = "active",
+                IsTrial = false,
+                DataRetentionDays = 30,
+                RequireSso = false,
+                IsActive = true,
+                IsVerified = false,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                AllowedEmailDomains = new List<string>(),
+                AvailableRegions = new List<string>(),
+                PrivacyConsent = new Dictionary<string, object>()
+            };
+        }
+
+        private TeamMembership CreateTestTeamMembership(Guid userId, Guid teamId, Guid organizationId, string role = "Member")
+        {
+            return new TeamMembership
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                TeamId = teamId,
+                OrganizationId = organizationId,
+                Role = role,
+                JoinedAt = DateTime.UtcNow
+            };
+        }
+
+        private void SetupControllerContext()
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, _testUserId.ToString()),
+                new Claim("sub", _testUserId.ToString())
+            };
+
+            var identity = new ClaimsIdentity(claims, "TestAuth");
+            var claimsPrincipal = new ClaimsPrincipal(identity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = claimsPrincipal
+                }
+            };
+        }
+    }
+
+    [Trait("Category", "Unit")]
+    public class OrganizationSettingsControllerTests : IDisposable
+    {
+        private readonly SynaxisDbContext _dbContext;
+        private readonly OrganizationSettingsController _controller;
+        private readonly Guid _testUserId = Guid.NewGuid();
+        private readonly Guid _testOrganizationId = Guid.NewGuid();
+        private bool _disposed;
+
+        public OrganizationSettingsControllerTests()
+        {
+            var options = new DbContextOptionsBuilder<SynaxisDbContext>()
+                .UseInMemoryDatabase(databaseName: $"TestDb_{Guid.NewGuid()}")
+                .Options;
+            _dbContext = new SynaxisDbContext(options);
+
+            var passwordService = new TestPasswordService();
+            _controller = new OrganizationSettingsController(_dbContext, passwordService);
             SetupControllerContext();
         }
 
@@ -97,6 +187,137 @@ public class OrganizationsControllerTests : IDisposable
 
             // Assert
             result.Should().BeOfType<OkObjectResult>();
+        }
+
+        private Organization CreateTestOrganization()
+        {
+            return new Organization
+            {
+                Id = _testOrganizationId,
+                Name = "Test Organization",
+                Slug = "test-org",
+                Description = "Test organization",
+                PrimaryRegion = "us-east-1",
+                Tier = "free",
+                BillingCurrency = "USD",
+                CreditBalance = 0.00m,
+                CreditCurrency = "USD",
+                SubscriptionStatus = "active",
+                IsTrial = false,
+                DataRetentionDays = 30,
+                RequireSso = false,
+                IsActive = true,
+                IsVerified = false,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                AllowedEmailDomains = new List<string>(),
+                AvailableRegions = new List<string>(),
+                PrivacyConsent = new Dictionary<string, object>()
+            };
+        }
+
+        private TeamMembership CreateTestTeamMembership(Guid userId, Guid teamId, Guid organizationId, string role = "Member")
+        {
+            return new TeamMembership
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                TeamId = teamId,
+                OrganizationId = organizationId,
+                Role = role,
+                JoinedAt = DateTime.UtcNow
+            };
+        }
+
+        private void SetupControllerContext()
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, _testUserId.ToString()),
+                new Claim("sub", _testUserId.ToString())
+            };
+
+            var identity = new ClaimsIdentity(claims, "TestAuth");
+            var claimsPrincipal = new ClaimsPrincipal(identity);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = claimsPrincipal
+                }
+            };
+        }
+
+        /// <summary>
+        /// Test implementation of IPasswordService.
+        /// </summary>
+        private class TestPasswordService : IPasswordService
+        {
+            public Task<ChangePasswordResult> ChangePasswordAsync(Guid userId, string currentPassword, string newPassword)
+            {
+                return Task.FromResult(new ChangePasswordResult { Success = true });
+            }
+
+            public Task<PasswordExpirationStatus> CheckPasswordExpirationAsync(Guid userId)
+            {
+                return Task.FromResult(new PasswordExpirationStatus { IsExpired = false, IsExpiringSoon = false, DaysUntilExpiration = 90 });
+            }
+
+            public int GetPasswordStrength(string password)
+            {
+                return 80;
+            }
+
+            public Task<PasswordPolicy> GetPasswordPolicyAsync(Guid organizationId)
+            {
+                return Task.FromResult(new PasswordPolicy());
+            }
+
+            public Task<ResetPasswordResult> ResetPasswordAsync(Guid userId, string newPassword)
+            {
+                return Task.FromResult(new ResetPasswordResult { Success = true });
+            }
+
+            public Task<PasswordValidationResult> ValidatePasswordAsync(Guid userId, string password)
+            {
+                return Task.FromResult(new PasswordValidationResult { IsValid = true, StrengthScore = 80, StrengthLevel = "Strong" });
+            }
+
+            public Task<PasswordPolicy> UpdatePasswordPolicyAsync(Guid organizationId, PasswordPolicy policy)
+            {
+                return Task.FromResult(policy);
+            }
+        }
+    }
+
+    [Trait("Category", "Unit")]
+    public class OrganizationApiKeysControllerTests : IDisposable
+    {
+        private readonly SynaxisDbContext _dbContext;
+        private readonly OrganizationApiKeysController _controller;
+        private readonly Guid _testUserId = Guid.NewGuid();
+        private readonly Guid _testOrganizationId = Guid.NewGuid();
+        private bool _disposed;
+
+        public OrganizationApiKeysControllerTests()
+        {
+            var options = new DbContextOptionsBuilder<SynaxisDbContext>()
+                .UseInMemoryDatabase(databaseName: $"TestDb_{Guid.NewGuid()}")
+                .Options;
+            _dbContext = new SynaxisDbContext(options);
+
+            _controller = new OrganizationApiKeysController(_dbContext);
+            SetupControllerContext();
+        }
+
+        public void Dispose()
+        {
+            if (!_disposed)
+            {
+                _dbContext.Dispose();
+                _disposed = true;
+            }
         }
 
         [Fact]
@@ -754,47 +975,6 @@ public class OrganizationsControllerTests : IDisposable
                     User = claimsPrincipal
                 }
             };
-        }
-
-        /// <summary>
-        /// Test implementation of IPasswordService.
-        /// </summary>
-        private class TestPasswordService : IPasswordService
-        {
-            public Task<ChangePasswordResult> ChangePasswordAsync(Guid userId, string currentPassword, string newPassword)
-            {
-                return Task.FromResult(new ChangePasswordResult { Success = true });
-            }
-
-            public Task<PasswordExpirationStatus> CheckPasswordExpirationAsync(Guid userId)
-            {
-                return Task.FromResult(new PasswordExpirationStatus { IsExpired = false, IsExpiringSoon = false, DaysUntilExpiration = 90 });
-            }
-
-            public int GetPasswordStrength(string password)
-            {
-                return 80;
-            }
-
-            public Task<PasswordPolicy> GetPasswordPolicyAsync(Guid organizationId)
-            {
-                return Task.FromResult(new PasswordPolicy());
-            }
-
-            public Task<ResetPasswordResult> ResetPasswordAsync(Guid userId, string newPassword)
-            {
-                return Task.FromResult(new ResetPasswordResult { Success = true });
-            }
-
-            public Task<PasswordValidationResult> ValidatePasswordAsync(Guid userId, string password)
-            {
-                return Task.FromResult(new PasswordValidationResult { IsValid = true, StrengthScore = 80, StrengthLevel = "Strong" });
-            }
-
-            public Task<PasswordPolicy> UpdatePasswordPolicyAsync(Guid organizationId, PasswordPolicy policy)
-            {
-                return Task.FromResult(policy);
-            }
         }
     }
 }

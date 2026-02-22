@@ -37,7 +37,7 @@ public class ApiKeysControllerTests
     public async Task CreateKey_WithoutAuth_ReturnsUnauthorized()
     {
         var orgId = Guid.NewGuid();
-        var request = new { TeamId = Guid.NewGuid(), Name = "Test Key" };
+        var request = new { Name = "Test Key" };
 
         var response = await this._client.PostAsJsonAsync($"/api/v1/organizations/{orgId}/api-keys", request);
 
@@ -45,13 +45,13 @@ public class ApiKeysControllerTests
     }
 
     [Fact]
-    public async Task CreateKey_WithAuth_InvalidProject_ReturnsNotFound()
+    public async Task CreateKey_WithAuth_InvalidOrg_ReturnsNotFound()
     {
         var (client, user, org, _) = await this.CreateAuthenticatedClientWithOrgAndTeamAsync();
-        var invalidTeamId = Guid.NewGuid();
+        var invalidOrgId = Guid.NewGuid();
 
-        var request = new { TeamId = invalidTeamId, Name = "Test Key" };
-        var response = await client.PostAsJsonAsync($"/api/v1/organizations/{org.Id}/api-keys", request);
+        var request = new { Name = "Test Key" };
+        var response = await client.PostAsJsonAsync($"/api/v1/organizations/{invalidOrgId}/api-keys", request);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
@@ -61,7 +61,7 @@ public class ApiKeysControllerTests
     {
         var (client, user, org, team) = await this.CreateAuthenticatedClientWithOrgAndTeamAsync();
 
-        var request = new { TeamId = team.Id, Name = "Production API Key" };
+        var request = new { Name = "Production API Key" };
         var response = await client.PostAsJsonAsync($"/api/v1/organizations/{org.Id}/api-keys", request);
 
         if (!response.IsSuccessStatusCode)
@@ -93,7 +93,7 @@ public class ApiKeysControllerTests
         var (_, user2, org2, team2) = await this.CreateAuthenticatedClientWithOrgAndTeamAsync("user2@example.com");
 
         // Try to create key in user2's org using user1's token
-        var request = new { TeamId = team2.Id, Name = "Test Key" };
+        var request = new { Name = "Test Key" };
         var response = await client1.PostAsJsonAsync($"/api/v1/organizations/{org2.Id}/api-keys", request);
 
         // Should be Forbidden since user1 is not a member of org2
@@ -123,10 +123,10 @@ public class ApiKeysControllerTests
     }
 
     [Fact]
-    public async Task RevokeKey_WithAuth_InvalidProject_ReturnsNotFound()
+    public async Task RevokeKey_WithAuth_InvalidOrg_ReturnsNotFound()
     {
         var (client, user, org, team) = await this.CreateAuthenticatedClientWithOrgAndTeamAsync();
-        var apiKey = await this.CreateTestVirtualKeyAsync(org.Id, team.Id, user.Id, "Test Key");
+        var apiKey = await this.CreateTestOrganizationApiKeyAsync(org.Id, user.Id, "Test Key");
         var invalidOrgId = Guid.NewGuid();
 
         var response = await client.DeleteAsync($"/api/v1/organizations/{invalidOrgId}/api-keys/{apiKey.Id}");
@@ -138,7 +138,7 @@ public class ApiKeysControllerTests
     public async Task RevokeKey_WithAuth_ValidKey_ReturnsNoContent()
     {
         var (client, user, org, team) = await this.CreateAuthenticatedClientWithOrgAndTeamAsync();
-        var apiKey = await this.CreateTestVirtualKeyAsync(org.Id, team.Id, user.Id, "Test Key");
+        var apiKey = await this.CreateTestOrganizationApiKeyAsync(org.Id, user.Id, "Test Key");
 
         var response = await client.DeleteAsync($"/api/v1/organizations/{org.Id}/api-keys/{apiKey.Id}");
 
@@ -147,7 +147,7 @@ public class ApiKeysControllerTests
         // Verify the key is revoked in the database
         var scope = this._factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<SynaxisDbContext>();
-        var revokedKey = await dbContext.VirtualKeys.FindAsync(apiKey.Id);
+        var revokedKey = await dbContext.OrganizationApiKeys.FindAsync(apiKey.Id);
         Assert.NotNull(revokedKey);
         Assert.True(revokedKey.IsRevoked);
     }
@@ -160,7 +160,7 @@ public class ApiKeysControllerTests
 
         // Create second user with their own org/team
         var (_, user2, org2, team2) = await this.CreateAuthenticatedClientWithOrgAndTeamAsync("user2@example.com");
-        var apiKey = await this.CreateTestVirtualKeyAsync(org2.Id, team2.Id, user2.Id, "Test Key");
+        var apiKey = await this.CreateTestOrganizationApiKeyAsync(org2.Id, user2.Id, "Test Key");
 
         // Try to revoke key in user2's org using user1's token
         var response = await client1.DeleteAsync($"/api/v1/organizations/{org2.Id}/api-keys/{apiKey.Id}");
@@ -174,7 +174,7 @@ public class ApiKeysControllerTests
     {
         var (client, user, org, team) = await this.CreateAuthenticatedClientWithOrgAndTeamAsync();
 
-        var request = new { TeamId = team.Id, Name = "Database Test Key" };
+        var request = new { Name = "Database Test Key" };
         var response = await client.PostAsJsonAsync($"/api/v1/organizations/{org.Id}/api-keys", request);
 
         response.EnsureSuccessStatusCode();
@@ -184,10 +184,10 @@ public class ApiKeysControllerTests
         // Verify in database
         var scope = this._factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<SynaxisDbContext>();
-        var storedKey = await dbContext.VirtualKeys.FindAsync(keyId);
+        var storedKey = await dbContext.OrganizationApiKeys.FindAsync(keyId);
 
         Assert.NotNull(storedKey);
-        Assert.Equal(team.Id, storedKey.TeamId);
+        Assert.Equal(org.Id, storedKey.OrganizationId);
         Assert.Equal("Database Test Key", storedKey.Name);
         Assert.True(storedKey.IsActive);
         Assert.False(storedKey.IsRevoked);
@@ -199,17 +199,16 @@ public class ApiKeysControllerTests
     public async Task RevokeKey_CreatesAuditLog()
     {
         var (client, user, org, team) = await this.CreateAuthenticatedClientWithOrgAndTeamAsync();
-        var apiKey = await this.CreateTestVirtualKeyAsync(org.Id, team.Id, user.Id, "Test Key");
+        var apiKey = await this.CreateTestOrganizationApiKeyAsync(org.Id, user.Id, "Test Key");
 
         var response = await client.DeleteAsync($"/api/v1/organizations/{org.Id}/api-keys/{apiKey.Id}");
 
         response.EnsureSuccessStatusCode();
 
-        // VirtualKeysController does not currently log to audit logs like ApiKeysController did
-        // This test now just verifies the key was revoked
+        // OrganizationApiKeysController test - verifies the key was revoked
         var scope = this._factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<SynaxisDbContext>();
-        var revokedKey = await dbContext.VirtualKeys.FindAsync(apiKey.Id);
+        var revokedKey = await dbContext.OrganizationApiKeys.FindAsync(apiKey.Id);
         Assert.NotNull(revokedKey);
         Assert.True(revokedKey.IsRevoked);
     }
@@ -219,18 +218,17 @@ public class ApiKeysControllerTests
     {
         var (client, user, org, team) = await this.CreateAuthenticatedClientWithOrgAndTeamAsync();
 
-        var request = new { TeamId = team.Id, Name = "Audit Test Key" };
+        var request = new { Name = "Audit Test Key" };
         var response = await client.PostAsJsonAsync($"/api/v1/organizations/{org.Id}/api-keys", request);
 
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
         var keyId = content.GetProperty("id").GetGuid();
 
-        // VirtualKeysController does not currently log to audit logs like ApiKeysController did
-        // This test now just verifies the key was created
+        // OrganizationApiKeysController test - verifies the key was created
         var scope = this._factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<SynaxisDbContext>();
-        var storedKey = await dbContext.VirtualKeys.FindAsync(keyId);
+        var storedKey = await dbContext.OrganizationApiKeys.FindAsync(keyId);
         Assert.NotNull(storedKey);
         Assert.Equal("Audit Test Key", storedKey.Name);
     }
@@ -240,7 +238,7 @@ public class ApiKeysControllerTests
     {
         var (client, user, org, team) = await this.CreateAuthenticatedClientWithOrgAndTeamAsync();
 
-        var request = new { TeamId = team.Id, Name = "Hash Test Key" };
+        var request = new { Name = "Hash Test Key" };
         var response = await client.PostAsJsonAsync($"/api/v1/organizations/{org.Id}/api-keys", request);
 
         response.EnsureSuccessStatusCode();
@@ -252,7 +250,7 @@ public class ApiKeysControllerTests
         // Get the stored hash
         var scope = this._factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<SynaxisDbContext>();
-        var storedKey = await dbContext.VirtualKeys.FindAsync(keyId);
+        var storedKey = await dbContext.OrganizationApiKeys.FindAsync(keyId);
 
         Assert.NotNull(storedKey);
 
@@ -365,36 +363,31 @@ public class ApiKeysControllerTests
         return (client, user, org, team);
     }
 
-    private async Task<VirtualKey> CreateTestVirtualKeyAsync(Guid organizationId, Guid teamId, Guid userId, string name)
+    private async Task<OrganizationApiKey> CreateTestOrganizationApiKeyAsync(Guid organizationId, Guid userId, string name)
     {
         var scope = this._factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<SynaxisDbContext>();
 
-        var user = await dbContext.Users.FindAsync(userId).ConfigureAwait(false);
-        var org = await dbContext.Organizations.FindAsync(organizationId).ConfigureAwait(false);
-
         var rawKey = "sk_" + Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
         var keyHash = Convert.ToBase64String(SHA256.HashData(Encoding.UTF8.GetBytes(rawKey)));
 
-        var virtualKey = new VirtualKey
+        var apiKey = new OrganizationApiKey
         {
             Id = Guid.NewGuid(),
             OrganizationId = organizationId,
-            TeamId = teamId,
             CreatedBy = userId,
             Name = name,
             KeyHash = keyHash,
-            UserRegion = user?.DataResidencyRegion ?? org?.PrimaryRegion ?? "us-east-1",
+            KeyPrefix = rawKey[..Math.Min(8, rawKey.Length)],
             IsActive = true,
-            IsRevoked = false,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
-        dbContext.VirtualKeys.Add(virtualKey);
+        dbContext.OrganizationApiKeys.Add(apiKey);
         await dbContext.SaveChangesAsync().ConfigureAwait(false);
 
-        return virtualKey;
+        return apiKey;
     }
 
 #pragma warning disable SA1124 // Do not use regions

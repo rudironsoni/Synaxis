@@ -205,7 +205,7 @@ public class PasswordManagementTests
     public async Task GetPasswordPolicy_WithoutAuth_ReturnsUnauthorized()
     {
         var org = await CreateTestOrganizationAsync();
-        var response = await _client.GetAsync($"/api/v1/organizations/{org.Id}/password-policy");
+        var response = await _client.GetAsync($"/api/v1/organizations/{org.Id}/settings/password-policy");
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
@@ -214,7 +214,7 @@ public class PasswordManagementTests
     {
         var (client, user) = await CreateAuthenticatedUserAsync("TestPassword123!");
 
-        var response = await client.GetAsync($"/api/v1/organizations/{user.OrganizationId}/password-policy");
+        var response = await client.GetAsync($"/api/v1/organizations/{user.OrganizationId}/settings/password-policy");
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -246,7 +246,7 @@ public class PasswordManagementTests
             blockUserInfoInPassword = true
         };
 
-        var response = await client.PutAsJsonAsync($"/api/v1/organizations/{user.OrganizationId}/password-policy", request);
+        var response = await client.PutAsJsonAsync($"/api/v1/organizations/{user.OrganizationId}/settings/password-policy", request);
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var content = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -269,7 +269,7 @@ public class PasswordManagementTests
             requireSpecialCharacters = true
         };
 
-        var response = await client.PutAsJsonAsync($"/api/v1/organizations/{user.OrganizationId}/password-policy", request);
+        var response = await client.PutAsJsonAsync($"/api/v1/organizations/{user.OrganizationId}/settings/password-policy", request);
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }

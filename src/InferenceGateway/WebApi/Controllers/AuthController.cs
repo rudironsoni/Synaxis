@@ -251,7 +251,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
 
                 if (user == null || !user.IsActive)
                 {
-                    return this.BadRequest(new { success = false, message = "Invalid token or user not active" });
+                    return this.Unauthorized(new { success = false, message = "Invalid token or user not active" });
                 }
 
                 var newToken = this.jwtService.GenerateToken(user);

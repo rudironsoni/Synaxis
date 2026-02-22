@@ -440,7 +440,7 @@ public class AuthControllerTests
 
         // Act: Login with MFA
         var mfaCode = totp.ComputeTotp();
-        var response = await this._client.PostAsJsonAsync("/api/v1/auth/login/mfa", new { Email = email, Password = password, Code = mfaCode });
+        var response = await this._client.PostAsJsonAsync("/auth/login/mfa", new { Email = email, Password = password, Code = mfaCode });
 
         // Assert
         response.EnsureSuccessStatusCode();
