@@ -304,4 +304,6 @@ namespace Synaxis.Infrastructure.Data.Migrations
                 name: "collections");
         }
     }
+
+#pragma warning restore MA0051 // Auto-generated EF Core migrations
 }
