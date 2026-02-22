@@ -136,8 +136,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             var mockDevice = new Mock<DeviceFlowService>(client, Mock.Of<ILogger<DeviceFlowService>>());
 
             Func<TokenResponse, Task>? capturedCallback = null;
-            mockDevice.Setup(d => d.StartPollingAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<Func<TokenResponse, Task>>(), It.IsAny<CancellationToken>()))
-                .Callback<string, int, Func<TokenResponse, Task>, CancellationToken>((dc, iv, cb, ct) => capturedCallback = cb)
+            mockDevice.Setup(d => d.StartPollingAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<Func<TokenResponse, Task>>(), It.IsAny<CancellationToken>(), It.IsAny<TaskCompletionSource>()))
+                .Callback<string, int, Func<TokenResponse, Task>, CancellationToken, TaskCompletionSource>((dc, iv, cb, ct, tcs) => capturedCallback = cb)
                 .Returns(Task.CompletedTask);
 
             var logger = new Mock<ILogger<GitHubAuthStrategy>>();

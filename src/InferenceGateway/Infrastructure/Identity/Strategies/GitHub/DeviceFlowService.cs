@@ -39,8 +39,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
         /// <param name="intervalSeconds">The polling interval in seconds.</param>
         /// <param name="onSuccess">Callback to invoke when token is successfully received.</param>
         /// <param name="ct">Cancellation token to stop polling.</param>
+        /// <param name="testCallbackTcs">Optional TaskCompletionSource for testing. Signals when callback completes.</param>
         /// <returns>A task that represents the asynchronous polling operation.</returns>
-        public virtual Task StartPollingAsync(string deviceCode, int intervalSeconds, Func<TokenResponse, Task> onSuccess, CancellationToken ct)
+        public virtual Task StartPollingAsync(string deviceCode, int intervalSeconds, Func<TokenResponse, Task> onSuccess, CancellationToken ct, TaskCompletionSource? testCallbackTcs = null)
         {
             if (string.IsNullOrEmpty(deviceCode))
             {
@@ -54,14 +55,15 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
 
             // Run background polling
             return Task.Run(
-                async () => await this.PollDeviceCodeAsync(deviceCode, intervalSeconds, onSuccess, ct).ConfigureAwait(false), ct);
+                async () => await this.PollDeviceCodeAsync(deviceCode, intervalSeconds, onSuccess, ct, testCallbackTcs).ConfigureAwait(false), ct);
         }
 
         private async Task PollDeviceCodeAsync(
             string deviceCode,
             int intervalSeconds,
             Func<TokenResponse, Task> onSuccess,
-            CancellationToken ct)
+            CancellationToken ct,
+            TaskCompletionSource? testCallbackTcs = null)
         {
             var interval = Math.Max(1, intervalSeconds);
 #pragma warning disable S1075 // URIs should not be hardcoded - OAuth endpoint
@@ -70,7 +72,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
 
             while (!ct.IsCancellationRequested)
             {
-                var (shouldContinue, newInterval) = await this.PollOnceAsync(url, deviceCode, onSuccess, interval, ct).ConfigureAwait(false);
+                var (shouldContinue, newInterval, _) = await this.PollOnceAsync(url, deviceCode, onSuccess, interval, ct, testCallbackTcs).ConfigureAwait(false);
                 interval = newInterval;
                 if (!shouldContinue)
                 {
@@ -84,12 +86,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
             }
         }
 
-        private async Task<(bool ShouldContinue, int Interval)> PollOnceAsync(
+        private async Task<(bool ShouldContinue, int Interval, bool CallbackCompleted)> PollOnceAsync(
             string url,
             string deviceCode,
             Func<TokenResponse, Task> onSuccess,
             int interval,
-            CancellationToken ct)
+            CancellationToken ct,
+            TaskCompletionSource? testCallbackTcs = null)
         {
             try
             {
@@ -110,24 +113,25 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
                     this._logger.LogWarning("Empty response when polling GitHub device token endpoint");
                 }
 
-                var (shouldContinue, newInterval) = await this.ProcessPollingResponseAsync(txt, onSuccess, interval).ConfigureAwait(false);
-                return (shouldContinue, newInterval);
+                var (shouldContinue, newInterval, callbackCompleted) = await this.ProcessPollingResponseAsync(txt, onSuccess, interval, testCallbackTcs).ConfigureAwait(false);
+                return (shouldContinue, newInterval, callbackCompleted);
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested)
             {
-                return (false, interval);
+                return (false, interval, false);
             }
             catch (Exception ex)
             {
                 this._logger.LogError(ex, "Error while polling GitHub device token endpoint");
-                return (false, interval);
+                return (false, interval, false);
             }
         }
 
-        private async Task<(bool ShouldContinue, int Interval)> ProcessPollingResponseAsync(
+        private async Task<(bool ShouldContinue, int Interval, bool CallbackCompleted)> ProcessPollingResponseAsync(
             string responseText,
             Func<TokenResponse, Task> onSuccess,
-            int interval)
+            int interval,
+            TaskCompletionSource? testCallbackTcs = null)
         {
             try
             {
@@ -137,12 +141,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
                 {
                     var tokenResponse = this.CreateTokenResponse(root, at);
                     await onSuccess(tokenResponse).ConfigureAwait(false);
-                    return (false, interval); // Stop polling
+                    testCallbackTcs?.TrySetResult(); // Signal test that callback completed
+                    return (false, interval, true); // Stop polling, callback completed
                 }
 
                 if (root.TryGetProperty("error", out var err))
                 {
-                    return this.HandlePollingError(err.GetString(), interval);
+                    var (shouldContinue, newInterval) = this.HandlePollingError(err.GetString(), interval);
+                    return (shouldContinue, newInterval, false);
                 }
             }
             catch (JsonException jex)
@@ -150,7 +156,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
                 this._logger.LogError(jex, "Failed to parse GitHub device token response: {Text}", responseText);
             }
 
-            return (true, interval); // Continue polling
+            return (true, interval, false); // Continue polling
         }
 
         private TokenResponse CreateTokenResponse(JsonElement root, JsonElement accessToken)

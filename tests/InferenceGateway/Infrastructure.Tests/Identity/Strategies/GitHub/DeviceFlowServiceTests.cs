@@ -13,12 +13,16 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
     using Microsoft.Extensions.Logging;
     using Moq;
     using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
+    using Synaxis.Common.Tests.Attributes;
     using Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub;
     using Xunit;
 
     public class DeviceFlowServiceTests
     {
+        private static readonly TimeSpan TestTimeout = TimeSpan.FromSeconds(10);
+
         [Fact]
+        [SlopwatchSuppress("SW004", "Task.Delay is safety timeout for Task.WhenAny, not polling")]
         public async Task StartPollingAsync_ReceivesToken_AndCallsOnSuccess()
         {
             var responseJson = "{\"access_token\":\"test-access-token\",\"refresh_token\":\"test-refresh-token\",\"expires_in\":3600}";
@@ -29,15 +33,18 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
 
             TokenResponse? receivedToken = null;
             var onSuccessCalled = false;
+            var callbackTcs = new TaskCompletionSource();
 
             var task = service.StartPollingAsync("device-code-123", 1, async (token) =>
             {
                 receivedToken = token;
                 onSuccessCalled = true;
                 await Task.CompletedTask.ConfigureAwait(false);
-            }, CancellationToken.None);
+            }, CancellationToken.None, callbackTcs);
 
-            await Task.Delay(100);
+            // Wait for actual callback (with safety timeout)
+            var completed = await Task.WhenAny(callbackTcs.Task, Task.Delay(TestTimeout));
+            Assert.Same(callbackTcs.Task, completed); // Verify callback fired
 
             Assert.True(onSuccessCalled);
             Assert.NotNull(receivedToken);
@@ -47,6 +54,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
         }
 
         [Fact]
+        [SlopwatchSuppress("SW004", "Task.Delay is safety timeout for Task.WhenAny, not polling")]
         public async Task StartPollingAsync_HandlesAuthorizationPending()
         {
             var callCount = 0;
@@ -77,15 +85,18 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
 
             TokenResponse? receivedToken = null;
             var onSuccessCalled = false;
+            var callbackTcs = new TaskCompletionSource();
 
             var task = service.StartPollingAsync("device-code-123", 1, async (token) =>
             {
                 receivedToken = token;
                 onSuccessCalled = true;
                 await Task.CompletedTask.ConfigureAwait(false);
-            }, CancellationToken.None);
+            }, CancellationToken.None, callbackTcs);
 
-            await Task.Delay(1500);
+            // Wait for actual callback (with safety timeout)
+            var completed = await Task.WhenAny(callbackTcs.Task, Task.Delay(TestTimeout));
+            Assert.Same(callbackTcs.Task, completed); // Verify callback fired
 
             Assert.True(onSuccessCalled);
             Assert.NotNull(receivedToken);
@@ -93,6 +104,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
         }
 
         [Fact]
+        [SlopwatchSuppress("SW004", "Task.Delay is safety timeout for Task.WhenAny, not polling")]
         public async Task StartPollingAsync_HandlesSlowDown()
         {
             var callCount = 0;
@@ -123,15 +135,18 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
 
             TokenResponse? receivedToken = null;
             var onSuccessCalled = false;
+            var callbackTcs = new TaskCompletionSource();
 
             var task = service.StartPollingAsync("device-code-123", 1, async (token) =>
             {
                 receivedToken = token;
                 onSuccessCalled = true;
                 await Task.CompletedTask.ConfigureAwait(false);
-            }, CancellationToken.None);
+            }, CancellationToken.None, callbackTcs);
 
-            await Task.Delay(7000);
+            // Wait for actual callback (with safety timeout) - slow_down adds 5s delay
+            var completed = await Task.WhenAny(callbackTcs.Task, Task.Delay(TimeSpan.FromSeconds(15)));
+            Assert.Same(callbackTcs.Task, completed); // Verify callback fired
 
             Assert.True(onSuccessCalled);
             Assert.NotNull(receivedToken);
@@ -139,6 +154,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
         }
 
         [Fact]
+        [SlopwatchSuppress("SW004", "Task.Delay is safety timeout for Task.WhenAny, not polling")]
         public async Task StartPollingAsync_HandlesExpiredToken()
         {
             var responseJson = "{\"error\":\"expired_token\"}";
@@ -150,20 +166,26 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             TokenResponse? receivedToken = null;
             var onSuccessCalled = false;
 
+            // Use CancellationToken to stop polling after first check
+            using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
+
             var task = service.StartPollingAsync("device-code-123", 1, async (token) =>
             {
                 receivedToken = token;
                 onSuccessCalled = true;
                 await Task.CompletedTask.ConfigureAwait(false);
-            }, CancellationToken.None);
+            }, cts.Token);
 
-            await Task.Delay(100);
+            // Wait for polling to complete or timeout
+            var completed = await Task.WhenAny(task, Task.Delay(TestTimeout));
+            Assert.Same(task, completed); // Verify polling completed (error stops polling)
 
             Assert.False(onSuccessCalled);
             Assert.Null(receivedToken);
         }
 
         [Fact]
+        [SlopwatchSuppress("SW004", "Task.Delay is safety timeout for Task.WhenAny, not polling")]
         public async Task StartPollingAsync_HandlesAccessDenied()
         {
             var responseJson = "{\"error\":\"access_denied\"}";
@@ -175,20 +197,26 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             TokenResponse? receivedToken = null;
             var onSuccessCalled = false;
 
+            // Use CancellationToken to stop polling after first check
+            using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
+
             var task = service.StartPollingAsync("device-code-123", 1, async (token) =>
             {
                 receivedToken = token;
                 onSuccessCalled = true;
                 await Task.CompletedTask.ConfigureAwait(false);
-            }, CancellationToken.None);
+            }, cts.Token);
 
-            await Task.Delay(100);
+            // Wait for polling to complete or timeout
+            var completed = await Task.WhenAny(task, Task.Delay(TestTimeout));
+            Assert.Same(task, completed); // Verify polling completed (error stops polling)
 
             Assert.False(onSuccessCalled);
             Assert.Null(receivedToken);
         }
 
         [Fact]
+        [SlopwatchSuppress("SW004", "Task.Delay is safety timeout for Task.WhenAny, not polling")]
         public async Task StartPollingAsync_HandlesNetworkError()
         {
             var handler = new DelegatingHandlerStub((req, ct) =>
@@ -202,20 +230,26 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             TokenResponse? receivedToken = null;
             var onSuccessCalled = false;
 
+            // Use CancellationToken to stop polling after first check
+            using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
+
             var task = service.StartPollingAsync("device-code-123", 1, async (token) =>
             {
                 receivedToken = token;
                 onSuccessCalled = true;
                 await Task.CompletedTask.ConfigureAwait(false);
-            }, CancellationToken.None);
+            }, cts.Token);
 
-            await Task.Delay(100);
+            // Wait for polling to complete or timeout
+            var completed = await Task.WhenAny(task, Task.Delay(TestTimeout));
+            Assert.Same(task, completed); // Verify polling completed (error stops polling)
 
             Assert.False(onSuccessCalled);
             Assert.Null(receivedToken);
         }
 
         [Fact]
+        [SlopwatchSuppress("SW004", "Task.Delay is safety timeout for Task.WhenAny, not polling")]
         public async Task StartPollingAsync_HandlesInvalidJson()
         {
             var client = CreateClientReturningJson(HttpStatusCode.OK, "invalid json");
@@ -226,14 +260,20 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             TokenResponse? receivedToken = null;
             var onSuccessCalled = false;
 
+            // Use CancellationToken to stop polling after first check
+            // Invalid JSON causes polling to continue, so we need to cancel it
+            using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
+
             var task = service.StartPollingAsync("device-code-123", 1, async (token) =>
             {
                 receivedToken = token;
                 onSuccessCalled = true;
                 await Task.CompletedTask.ConfigureAwait(false);
-            }, CancellationToken.None);
+            }, cts.Token);
 
-            await Task.Delay(100);
+            // Wait for polling to complete or timeout
+            var completed = await Task.WhenAny(task, Task.Delay(TestTimeout));
+            Assert.Same(task, completed); // Verify polling completed (cancelled)
 
             Assert.False(onSuccessCalled);
             Assert.Null(receivedToken);
