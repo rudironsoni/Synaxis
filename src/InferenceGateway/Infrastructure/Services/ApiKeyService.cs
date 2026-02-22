@@ -9,6 +9,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
     using System.Text;
     using BCrypt.Net;
     using Microsoft.EntityFrameworkCore;
+    using Synaxis.Abstractions.Time;
     using Synaxis.InferenceGateway.Application.ApiKeys;
     using Synaxis.InferenceGateway.Application.ApiKeys.Models;
     using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
@@ -33,15 +34,19 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
         private const string Base62Chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
         private readonly SynaxisDbContext _context;
+        private readonly ITimeProvider _timeProvider;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ApiKeyService"/> class.
         /// </summary>
         /// <param name="context">The database context.</param>
-        public ApiKeyService(SynaxisDbContext context)
+        /// <param name="timeProvider">The time provider.</param>
+        public ApiKeyService(SynaxisDbContext context, ITimeProvider timeProvider)
         {
             ArgumentNullException.ThrowIfNull(context);
+            ArgumentNullException.ThrowIfNull(timeProvider);
             this._context = context;
+            this._timeProvider = timeProvider;
         }
 
         /// <inheritdoc />
@@ -81,7 +86,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                 RateLimitRpm = request.RateLimitRpm,
                 RateLimitTpm = request.RateLimitTpm,
                 IsActive = true,
-                CreatedAt = DateTime.UtcNow,
+                CreatedAt = this._timeProvider.UtcNow,
                 CreatedBy = request.CreatedBy,
             };
 
@@ -122,7 +127,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             }
 
             // Validate key status
-            if (!ValidateKeyStatus(matchedKey, result))
+            if (!this.ValidateKeyStatus(matchedKey, result))
             {
                 return result;
             }
@@ -163,7 +168,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             }
 
             apiKey.IsActive = false;
-            apiKey.RevokedAt = DateTime.UtcNow;
+            apiKey.RevokedAt = this._timeProvider.UtcNow;
             apiKey.RevokedBy = revokedBy;
             apiKey.RevocationReason = reason;
 
@@ -231,7 +236,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
 
             if (apiKey != null)
             {
-                apiKey.LastUsedAt = DateTime.UtcNow;
+                apiKey.LastUsedAt = this._timeProvider.UtcNow;
                 await this._context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             }
         }
@@ -406,7 +411,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             return candidates.FirstOrDefault(candidate => VerifyApiKeyWithBcrypt(apiKey, candidate.KeyHash));
         }
 
-        private static bool ValidateKeyStatus(ApiKey matchedKey, ApiKeyValidationResult result)
+        private bool ValidateKeyStatus(ApiKey matchedKey, ApiKeyValidationResult result)
         {
             // Check revoked first, as it's more specific than IsActive
             if (matchedKey.RevokedAt.HasValue)
@@ -421,7 +426,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
                 return false;
             }
 
-            if (matchedKey.ExpiresAt.HasValue && matchedKey.ExpiresAt.Value < DateTime.UtcNow)
+            if (matchedKey.ExpiresAt.HasValue && matchedKey.ExpiresAt.Value < this._timeProvider.UtcNow)
             {
                 result.ErrorMessage = $"API key expired on {matchedKey.ExpiresAt.Value:yyyy-MM-dd HH:mm:ss} UTC.";
                 return false;

@@ -8,6 +8,7 @@ namespace Synaxis.Health.IntegrationTests
     using Microsoft.Extensions.Diagnostics.HealthChecks;
     using Microsoft.Extensions.Logging;
     using Moq;
+    using Polly;
     using StackExchange.Redis;
     using Synaxis.Health.Checks;
     using Testcontainers.Redis;
@@ -40,31 +41,27 @@ namespace Synaxis.Health.IntegrationTests
         {
             await this._redis.StartAsync().ConfigureAwait(false);
 
-            // Wait for Redis to be ready
+            // Wait for Redis to be ready with exponential backoff
             var connectionString = this._redis.GetConnectionString();
-            var retryCount = 0;
-            const int maxRetries = 10;
 
-            while (retryCount < maxRetries)
-            {
-                try
+            await Policy
+                .Handle<Exception>()
+                .WaitAndRetryAsync(
+                    10,
+                    retryAttempt => TimeSpan.FromMilliseconds(100 * Math.Pow(2, retryAttempt)),
+                    onRetry: (ex, delay, attempt, ctx) =>
+                    {
+                        Console.WriteLine($"Waiting for Redis... attempt {attempt}, delay {delay.TotalMilliseconds:F0}ms");
+                    })
+                .ExecuteAsync(async ct =>
                 {
                     using var connection = await ConnectionMultiplexer.ConnectAsync(connectionString).ConfigureAwait(false);
-                    if (connection.IsConnected)
+                    if (!connection.IsConnected)
                     {
-                        return;
+                        throw new InvalidOperationException("Redis not connected");
                     }
-                }
-                catch
-                {
-                    // Retry
-                }
-
-                await Task.Delay(100).ConfigureAwait(false);
-                retryCount++;
-            }
-
-            throw new InvalidOperationException("Redis container failed to become ready");
+                }, CancellationToken.None)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -89,13 +86,23 @@ namespace Synaxis.Health.IntegrationTests
             options.AbortOnConnectFail = false;
             var connectionMultiplexer = await ConnectionMultiplexer.ConnectAsync(options);
 
-            // Wait for connection to be ready
-            var maxRetries = 10;
-            var retryDelay = TimeSpan.FromMilliseconds(100);
-            for (int i = 0; i < maxRetries && !connectionMultiplexer.IsConnected; i++)
-            {
-                await Task.Delay(retryDelay);
-            }
+            // Wait for connection to be ready with exponential backoff
+            await Policy
+                .Handle<Exception>()
+                .WaitAndRetryAsync(
+                    10,
+                    retryAttempt => TimeSpan.FromMilliseconds(100 * Math.Pow(2, retryAttempt)),
+                    onRetry: (ex, delay, attempt, ctx) =>
+                    {
+                        Console.WriteLine($"Waiting for Redis connection... attempt {attempt}, delay {delay.TotalMilliseconds:F0}ms");
+                    })
+                .ExecuteAsync(async ct =>
+                {
+                    if (!connectionMultiplexer.IsConnected)
+                    {
+                        throw new InvalidOperationException("Redis not connected");
+                    }
+                }, CancellationToken.None);
 
             connectionMultiplexer.IsConnected.Should().BeTrue("Redis should be connected");
             var healthCheck = new RedisHealthCheck(connectionMultiplexer, this._loggerMock.Object);

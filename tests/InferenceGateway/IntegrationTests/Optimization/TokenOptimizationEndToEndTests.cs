@@ -146,29 +146,65 @@ public class TokenOptimizationEndToEndTests(
             x_session_id = sessionId,
         };
 
-        // Act - First request (cache miss)
-        var response1 = await this._client!.PostAsJsonAsync("/openai/v1/chat/completions", request);
-        Assert.True(response1.IsSuccessStatusCode);
-        var content1 = await response1.Content.ReadFromJsonAsync<JsonElement>();
-        var firstResponse = content1.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString();
+        // Setup Redis keyspace notification subscription for result:* pattern
+        // This allows us to wait for the actual cache write instead of using Task.Delay
+        var subscriber = this._redisConnection!.GetSubscriber();
+        var cacheReadyTcs = new TaskCompletionSource();
+        var channelPattern = "__keyspace@0__:result:*";
 
-        // Small delay to ensure cache write completes
-        await Task.Delay(100);
+        // Subscribe to keyspace notifications before the operation
+        await subscriber.SubscribeAsync(
+            new RedisChannel(channelPattern, RedisChannel.PatternMode.Pattern),
+            (_, message) =>
+            {
+                // When a "set" event is received on any result:* key, signal completion
+                if (message.ToString().Equals("set", StringComparison.OrdinalIgnoreCase))
+                {
+                    cacheReadyTcs.TrySetResult();
+                }
+            }).ConfigureAwait(false);
 
-        // Act - Second request (should be cache hit)
-        var response2 = await this._client!.PostAsJsonAsync("/openai/v1/chat/completions", request);
-        Assert.True(response2.IsSuccessStatusCode);
-        var content2 = await response2.Content.ReadFromJsonAsync<JsonElement>();
-        var secondResponse = content2.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString();
+        try
+        {
+            // Act - First request (cache miss)
+            var response1 = await this._client!.PostAsJsonAsync("/openai/v1/chat/completions", request);
+            Assert.True(response1.IsSuccessStatusCode);
+            var content1 = await response1.Content.ReadFromJsonAsync<JsonElement>();
+            var firstResponse = content1.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString();
 
-        // Assert - Responses should match (from cache)
-        Assert.Equal(firstResponse, secondResponse);
+            // Wait for actual cache write completion using keyspace notification (with timeout)
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            try
+            {
+                await cacheReadyTcs.Task.WaitAsync(cts.Token).ConfigureAwait(false);
+                this._output.WriteLine("Cache write confirmed via keyspace notification");
+            }
+            catch (OperationCanceledException)
+            {
+                this._output.WriteLine("WARNING: Cache write notification timeout - proceeding with potential race condition");
+            }
 
-        // Check for cache hit header in real implementation
-        // response2.Headers.TryGetValues("x-cache-status", out var cacheStatus);
-        // Assert.Contains("hit", cacheStatus?.FirstOrDefault() ?? "miss");
-        this._output.WriteLine($"First response: {firstResponse}");
-        this._output.WriteLine($"Second response: {secondResponse}");
+            // Act - Second request (should be cache hit)
+            var response2 = await this._client!.PostAsJsonAsync("/openai/v1/chat/completions", request);
+            Assert.True(response2.IsSuccessStatusCode);
+            var content2 = await response2.Content.ReadFromJsonAsync<JsonElement>();
+            var secondResponse = content2.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString();
+
+            // Assert - Responses should match (from cache)
+            Assert.Equal(firstResponse, secondResponse);
+
+            // Check for cache hit header in real implementation
+            // response2.Headers.TryGetValues("x-cache-status", out var cacheStatus);
+            // Assert.Contains("hit", cacheStatus?.FirstOrDefault() ?? "miss");
+            this._output.WriteLine($"First response: {firstResponse}");
+            this._output.WriteLine($"Second response: {secondResponse}");
+        }
+        finally
+        {
+            // Cleanup: Unsubscribe from keyspace notifications to prevent memory leaks
+            await subscriber.UnsubscribeAsync(
+                new RedisChannel(channelPattern, RedisChannel.PatternMode.Pattern)).ConfigureAwait(false);
+        }
     }
 
     [ExternalE2EFact]

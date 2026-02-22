@@ -11,6 +11,7 @@ namespace Synaxis.Infrastructure.Services
     using System.Threading.Tasks;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Logging;
+    using Synaxis.Abstractions.Time;
     using Synaxis.Core.Contracts;
     using Synaxis.Core.Models;
     using Synaxis.Infrastructure.Data;
@@ -22,16 +23,19 @@ namespace Synaxis.Infrastructure.Services
     {
         private readonly SynaxisDbContext _context;
         private readonly ILogger<ApiKeyService> _logger;
+        private readonly ITimeProvider _timeProvider;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ApiKeyService"/> class.
         /// </summary>
         /// <param name="context">The database context.</param>
         /// <param name="logger">The logger.</param>
-        public ApiKeyService(SynaxisDbContext context, ILogger<ApiKeyService> logger)
+        /// <param name="timeProvider">The time provider.</param>
+        public ApiKeyService(SynaxisDbContext context, ILogger<ApiKeyService> logger, ITimeProvider timeProvider)
         {
             this._context = context ?? throw new ArgumentNullException(nameof(context));
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
         }
 
         /// <inheritdoc/>
@@ -52,7 +56,7 @@ namespace Synaxis.Infrastructure.Services
                     return CreateInvalidResult("Invalid API key.");
                 }
 
-                if (IsKeyExpired(matchingKey))
+                if (this.IsKeyExpired(matchingKey))
                 {
                     this._logger.LogWarning("API key validation failed: Key expired");
                     return CreateInvalidResult("API key has expired.");
@@ -124,14 +128,14 @@ namespace Synaxis.Infrastructure.Services
             return null;
         }
 
-        private static bool IsKeyExpired(OrganizationApiKey key)
+        private bool IsKeyExpired(OrganizationApiKey key)
         {
-            return key.ExpiresAt.HasValue && key.ExpiresAt.Value < DateTime.UtcNow;
+            return key.ExpiresAt.HasValue && key.ExpiresAt.Value < this._timeProvider.UtcNow;
         }
 
         private Task UpdateLastUsedAsync(OrganizationApiKey key)
         {
-            key.LastUsedAt = DateTime.UtcNow;
+            key.LastUsedAt = this._timeProvider.UtcNow;
             return this._context.SaveChangesAsync();
         }
 

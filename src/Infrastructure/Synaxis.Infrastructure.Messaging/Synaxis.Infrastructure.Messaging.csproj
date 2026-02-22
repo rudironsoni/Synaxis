@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Abstractions\Synaxis.Abstractions.Cloud\Synaxis.Abstractions.Cloud.csproj" />
+    <ProjectReference Include="..\..\Synaxis.Abstractions\Synaxis.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

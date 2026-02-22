@@ -31,6 +31,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Synaxis.Core\Synaxis.Core.csproj" />
+    <ProjectReference Include="..\Synaxis.Abstractions\Synaxis.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

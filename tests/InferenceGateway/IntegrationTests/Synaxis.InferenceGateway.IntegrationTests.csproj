@@ -23,6 +23,7 @@
     <PackageReference Include="Microsoft.Playwright" />
     <PackageReference Include="Moq" />
     <PackageReference Include="NSubstitute" />
+    <PackageReference Include="Polly" />
     <PackageReference Include="StackExchange.Redis" />
     <PackageReference Include="Testcontainers" />
     <PackageReference Include="Testcontainers.PostgreSql" />

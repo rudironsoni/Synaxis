@@ -4560,7 +4560,7 @@
             <param name="http">The HTTP client to use.</param>
             <param name="logger">The logger instance.</param>
         </member>
-        <member name="M:Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub.DeviceFlowService.StartPollingAsync(System.String,System.Int32,System.Func{Synaxis.InferenceGateway.Infrastructure.Identity.Core.TokenResponse,System.Threading.Tasks.Task},System.Threading.CancellationToken)">
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub.DeviceFlowService.StartPollingAsync(System.String,System.Int32,System.Func{Synaxis.InferenceGateway.Infrastructure.Identity.Core.TokenResponse,System.Threading.Tasks.Task},System.Threading.CancellationToken,System.Threading.Tasks.TaskCompletionSource)">
             <summary>
             Start polling GitHub token endpoint for the device flow. Calls onSuccess when token received.
             </summary>
@@ -4568,6 +4568,7 @@
             <param name="intervalSeconds">The polling interval in seconds.</param>
             <param name="onSuccess">Callback to invoke when token is successfully received.</param>
             <param name="ct">Cancellation token to stop polling.</param>
+            <param name="testCallbackTcs">Optional TaskCompletionSource for testing. Signals when callback completes.</param>
             <returns>A task that represents the asynchronous polling operation.</returns>
         </member>
         <member name="T:Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub.GhConfigWriter">
@@ -5529,11 +5530,12 @@
             - Hash: bcrypt with work factor 12.
             </remarks>
         </member>
-        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.ApiKeyService.#ctor(Synaxis.InferenceGateway.Infrastructure.ControlPlane.SynaxisDbContext)">
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.ApiKeyService.#ctor(Synaxis.InferenceGateway.Infrastructure.ControlPlane.SynaxisDbContext,Synaxis.Abstractions.Time.ITimeProvider)">
             <summary>
             Initializes a new instance of the <see cref="T:Synaxis.InferenceGateway.Infrastructure.Services.ApiKeyService"/> class.
             </summary>
             <param name="context">The database context.</param>
+            <param name="timeProvider">The time provider.</param>
         </member>
         <member name="M:Synaxis.InferenceGateway.Infrastructure.Services.ApiKeyService.GenerateApiKeyAsync(Synaxis.InferenceGateway.Application.ApiKeys.Models.GenerateApiKeyRequest,System.Threading.CancellationToken)">
             <inheritdoc />

@@ -10,6 +10,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Polly;
 using Testcontainers.Qdrant;
 using Xunit;
 
@@ -115,18 +116,24 @@ public sealed class QdrantFixture : IAsyncLifetime, IDisposable
         using var response = await HttpClient.PutAsync($"/collections/{collectionName}?wait=true", content);
         response.EnsureSuccessStatusCode();
 
-        // Ensure collection is queryable before returning.
-        for (var retry = 0; retry < 10; retry++)
-        {
-            if (await this.CollectionExistsAsync(collectionName).ConfigureAwait(false))
+        // Ensure collection is queryable before returning with exponential backoff.
+        await Policy
+            .Handle<Exception>()
+            .WaitAndRetryAsync(
+                10,
+                retryAttempt => TimeSpan.FromMilliseconds(100 * Math.Pow(2, retryAttempt)),
+                onRetry: (ex, delay, attempt, ctx) =>
+                {
+                    Console.WriteLine($"Waiting for Qdrant collection '{collectionName}'... attempt {attempt}, delay {delay.TotalMilliseconds:F0}ms");
+                })
+            .ExecuteAsync(async ct =>
             {
-                return;
-            }
-
-            await Task.Delay(100).ConfigureAwait(false);
-        }
-
-        throw new InvalidOperationException($"Collection '{collectionName}' was not available after creation.");
+                if (!await this.CollectionExistsAsync(collectionName).ConfigureAwait(false))
+                {
+                    throw new InvalidOperationException($"Collection '{collectionName}' not yet available");
+                }
+            }, CancellationToken.None)
+            .ConfigureAwait(false);
     }
 
     /// <summary>

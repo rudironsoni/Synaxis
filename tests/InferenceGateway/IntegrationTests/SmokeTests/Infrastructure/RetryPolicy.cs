@@ -32,6 +32,10 @@ public class RetryPolicy(int maxRetries, int initialDelayMs, double backoffMulti
                 // Exponential backoff with multiplier and 10% jitter
                 double jitter = 1.0 + ((this._rng.NextDouble() * 0.2) - 0.1); // between 0.9 and 1.1
                 int delayWithJitter = Math.Max(0, (int)(delay * jitter));
+
+                // Production retry logic with exponential backoff - intentionally uses Task.Delay
+                // for rate limiting between retry attempts. This is not a test anti-pattern but
+                // production resilience code that prevents thundering herd scenarios.
                 await Task.Delay(delayWithJitter).ConfigureAwait(false);
                 delay = (int)(delay * this._backoffMultiplier);
             }

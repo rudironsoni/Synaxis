@@ -7,6 +7,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Moq;
+using Synaxis.Abstractions.Time;
+using Synaxis.Common.Tests.Time;
 using Synaxis.InferenceGateway.Application.ApiKeys;
 using Synaxis.InferenceGateway.Application.ApiKeys.Models;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
@@ -22,6 +24,7 @@ public class ApiKeyServiceTests : IAsyncLifetime
 {
     private readonly SynaxisDbContext _dbContext;
     private readonly ApiKeyService _apiKeyService;
+    private readonly TestTimeProvider _timeProvider;
 
     public ApiKeyServiceTests()
     {
@@ -30,8 +33,9 @@ public class ApiKeyServiceTests : IAsyncLifetime
             .UseInMemoryDatabase(databaseName: $"ApiKeyServiceTests_{Guid.NewGuid()}")
             .Options;
 
+        this._timeProvider = new TestTimeProvider();
         this._dbContext = new SynaxisDbContext(options);
-        this._apiKeyService = new ApiKeyService(this._dbContext);
+        this._apiKeyService = new ApiKeyService(this._dbContext, this._timeProvider);
     }
 
     public Task InitializeAsync() => Task.CompletedTask;
@@ -581,8 +585,8 @@ public class ApiKeyServiceTests : IAsyncLifetime
         };
         var generated = await this._apiKeyService.GenerateApiKeyAsync(request);
 
-        var beforeUpdate = DateTime.UtcNow;
-        await Task.Delay(100); // Small delay to ensure timestamp difference
+        var beforeUpdate = this._timeProvider.UtcNow;
+        await this._timeProvider.Delay(TimeSpan.FromMilliseconds(100)); // Instant time advancement
 
         // Act
         await this._apiKeyService.UpdateLastUsedAsync(generated.Id);

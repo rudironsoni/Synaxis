@@ -7,6 +7,7 @@ namespace Synaxis.Extensions.DI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Synaxis.Abstractions.Cloud;
+using Synaxis.Abstractions.Time;
 using Synaxis.Contracts.V1.Messages;
 using Synaxis.Infrastructure.Encryption;
 using Synaxis.Infrastructure.EventSourcing;
@@ -70,6 +71,9 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddSynaxisMessaging(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
+
+        // Time provider
+        services.TryAddSingleton<ITimeProvider, SystemTimeProvider>();
 
         // Outbox
         services.TryAddSingleton<IOutbox, SqlOutbox>();

@@ -13,6 +13,8 @@ using Microsoft.Extensions.Logging;
 using Npgsql;
 using Npgsql.EntityFrameworkCore.PostgreSQL;
 using Synaxis.Abstractions.Cloud;
+using Synaxis.Abstractions.Time;
+using Synaxis.Common.Tests.Time;
 using Synaxis.Infrastructure.Messaging;
 using Xunit;
 
@@ -26,6 +28,7 @@ public sealed class OutboxIntegrationTests : IClassFixture<PostgreSqlTestFixture
     private readonly PostgreSqlTestFixture _fixture;
     private TestDbContext? _context;
     private SqlOutbox? _outbox;
+    private TestTimeProvider? _timeProvider;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="OutboxIntegrationTests"/> class.
@@ -46,8 +49,9 @@ public sealed class OutboxIntegrationTests : IClassFixture<PostgreSqlTestFixture
         _context = new TestDbContext(options);
         await _context.Database.EnsureCreatedAsync();
 
+        _timeProvider = new TestTimeProvider();
         var logger = _fixture.LoggerFactory.CreateLogger<SqlOutbox>();
-        _outbox = new SqlOutbox(_context, logger);
+        _outbox = new SqlOutbox(_context, logger, _timeProvider);
     }
 
     /// <inheritdoc />
@@ -239,12 +243,12 @@ public sealed class OutboxIntegrationTests : IClassFixture<PostgreSqlTestFixture
         await _outbox!.SaveAsync(@event);
         await _context!.SaveChangesAsync();
 
-        var beforeProcessing = DateTime.UtcNow;
+        var beforeProcessing = _timeProvider!.UtcNow;
         var messages = await _outbox.GetUnprocessedAsync();
         var messageId = messages[0].Id;
 
         // Act
-        await Task.Delay(100); // Ensure time passes
+        await _timeProvider.Delay(TimeSpan.FromMilliseconds(100)); // Instant time advancement
         await _outbox.MarkAsProcessedAsync(messageId);
         await _context.SaveChangesAsync();
 
@@ -262,7 +266,7 @@ public sealed class OutboxIntegrationTests : IClassFixture<PostgreSqlTestFixture
         for (int i = 0; i < 5; i++)
         {
             await _outbox!.SaveAsync(new TestEvent { Data = $"event{i}", Value = i });
-            await Task.Delay(10); // Small delay to ensure ordering
+            await _timeProvider!.Delay(TimeSpan.FromMilliseconds(10)); // Instant time advancement for ordering
         }
 
         await _context!.SaveChangesAsync();

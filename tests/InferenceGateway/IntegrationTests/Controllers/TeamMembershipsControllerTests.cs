@@ -11,6 +11,7 @@ using System.Text.Json;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Polly;
 using Synaxis.Core.Models;
 using Synaxis.Infrastructure.Data;
 using Xunit.Abstractions;
@@ -712,25 +713,22 @@ public class TeamMembershipsControllerTests
         var userId = Guid.Parse(jwtToken.Claims.First(c => string.Equals(c.Type, JwtRegisteredClaimNames.Sub, StringComparison.Ordinal)).Value);
 
         // dev-login creates user in SynaxisDbContext, retrieve it
-        // Retry logic to handle transaction commit timing issues
-        User? synaxisUser = null;
-        for (int attempt = 0; attempt < 5; attempt++)
-        {
-            using var scope = _factory.Services.CreateScope();
-            var synaxisDbContext = scope.ServiceProvider.GetRequiredService<SynaxisDbContext>();
-
-            synaxisUser = await synaxisDbContext.Users
-                .AsNoTracking()
-                .FirstOrDefaultAsync(u => u.Id == userId).ConfigureAwait(false);
-
-            if (synaxisUser != null)
+        // Use Polly retry to handle transaction commit timing issues
+        var synaxisUser = await Policy
+            .HandleResult<User?>(u => u == null)
+            .WaitAndRetryAsync(
+                5,
+                retryAttempt => TimeSpan.FromMilliseconds(50),
+                onRetry: (result, ts, attempt, ctx) =>
+                    _output.WriteLine($"User not found, retrying... (attempt {attempt})"))
+            .ExecuteAsync(async ct =>
             {
-                break;
-            }
-
-            // Wait: 50ms, 100ms, 200ms, 400ms, 800ms (total 1550ms max)
-            await Task.Delay(50 * (1 << attempt)).ConfigureAwait(false);
-        }
+                using var scope = _factory.Services.CreateScope();
+                var synaxisDbContext = scope.ServiceProvider.GetRequiredService<SynaxisDbContext>();
+                return await synaxisDbContext.Users
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(u => u.Id == userId, ct).ConfigureAwait(false);
+            }, CancellationToken.None).ConfigureAwait(false);
 
         synaxisUser.Should().NotBeNull($"User with ID {userId} should exist in SynaxisDbContext after dev-login for email {email}");
 

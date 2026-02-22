@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Synaxis.Abstractions.Cloud;
+using Synaxis.Abstractions.Time;
 
 /// <summary>
 /// SQL Server implementation of the outbox pattern using Entity Framework Core.
@@ -21,16 +22,19 @@ public class SqlOutbox : IOutbox
 {
     private readonly DbContext _dbContext;
     private readonly ILogger<SqlOutbox> _logger;
+    private readonly ITimeProvider _timeProvider;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SqlOutbox"/> class.
     /// </summary>
     /// <param name="dbContext">The database context.</param>
     /// <param name="logger">The logger instance.</param>
-    public SqlOutbox(DbContext dbContext, ILogger<SqlOutbox> logger)
+    /// <param name="timeProvider">The time provider.</param>
+    public SqlOutbox(DbContext dbContext, ILogger<SqlOutbox> logger, ITimeProvider timeProvider)
     {
         this._dbContext = dbContext;
         this._logger = logger;
+        this._timeProvider = timeProvider;
     }
 
     /// <inheritdoc/>
@@ -44,7 +48,7 @@ public class SqlOutbox : IOutbox
             Id = Guid.NewGuid(),
             EventType = eventType.FullName!,
             Payload = JsonSerializer.Serialize(@event, eventType),
-            CreatedAt = DateTime.UtcNow,
+            CreatedAt = this._timeProvider.UtcNow,
         };
 
         this._dbContext.Set<OutboxMessage>().Add(message);
@@ -84,7 +88,7 @@ public class SqlOutbox : IOutbox
 
         if (message != null)
         {
-            message.ProcessedAt = DateTime.UtcNow;
+            message.ProcessedAt = this._timeProvider.UtcNow;
             this._logger.LogDebug("Marked outbox message {MessageId} as processed", messageId);
         }
     }

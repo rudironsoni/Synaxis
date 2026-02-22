@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Synaxis.Abstractions.Time;
+using Synaxis.Common.Tests.Time;
 using Synaxis.InferenceGateway.Application.ApiKeys;
 using Synaxis.InferenceGateway.Application.ApiKeys.Models;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
@@ -15,6 +17,7 @@ public sealed class ApiKeyServiceTests : IDisposable
 {
     private readonly SynaxisDbContext _context;
     private readonly ApiKeyService _service;
+    private readonly TestTimeProvider _timeProvider;
     private readonly Guid _organizationId;
 
     public ApiKeyServiceTests()
@@ -24,8 +27,9 @@ public sealed class ApiKeyServiceTests : IDisposable
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
 
+        this._timeProvider = new TestTimeProvider();
         this._context = new SynaxisDbContext(options);
-        this._service = new ApiKeyService(this._context);
+        this._service = new ApiKeyService(this._context, this._timeProvider);
 
         // Setup test organization
         this._organizationId = Guid.NewGuid();
