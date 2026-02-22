@@ -10,7 +10,7 @@ using Xunit;
 /// Collection definition for infrastructure integration tests.
 /// Uses collection fixture to share TestContainers across tests.
 /// </summary>
-[CollectionDefinition("Infrastructure")]
+[CollectionDefinition("Infrastructure", DisableParallelization = true)]
 public class InfrastructureTestCollection : ICollectionFixture<InfrastructureTestFixture>
 {
 }

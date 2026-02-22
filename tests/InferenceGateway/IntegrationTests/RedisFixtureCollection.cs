@@ -9,7 +9,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests;
 /// <summary>
 /// Collection definition for Redis integration tests.
 /// </summary>
-[CollectionDefinition("RedisIntegration")]
+[CollectionDefinition("RedisIntegration", DisableParallelization = true)]
 public class RedisFixtureCollection : ICollectionFixture<Synaxis.Common.Tests.Fixtures.RedisFixture>
 {
     // This class has no code, and is never created. Its purpose is simply

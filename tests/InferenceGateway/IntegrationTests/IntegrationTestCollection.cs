@@ -10,7 +10,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests;
 /// Collection fixture for integration tests to share one web application factory instance.
 /// The factory owns and shares infrastructure containers across the collection.
 /// </summary>
-[CollectionDefinition("Integration")]
+[CollectionDefinition("Integration", DisableParallelization = true)]
 public sealed class IntegrationTestCollection : ICollectionFixture<SynaxisWebApplicationFactory>
 {
     // This class has no code, and is never created. Its purpose is simply
