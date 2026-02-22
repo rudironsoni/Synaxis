@@ -59,13 +59,31 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
 
                 var isStreamingRequest = IsStreamingRequest(context);
 
-                this._logger.LogError(
-                    ex,
-                    "Unhandled exception caught. RequestId: {RequestId}, Path: {Path}, Method: {Method}, IsStreaming: {IsStreaming}",
-                    requestId,
-                    context.Request.Path,
-                    context.Request.Method,
-                    isStreamingRequest);
+                // Client errors (4xx) are logged at Information level per Microsoft guidance.
+                // These indicate client problems, not server issues requiring investigation.
+                // Only server errors (5xx) should be logged as Error.
+                bool isClientError = ex is BadHttpRequestException ||
+                                     (ex.InnerException is JsonException);
+
+                if (isClientError)
+                {
+                    this._logger.LogInformation(
+                        "Client request validation failed. RequestId: {RequestId}, Path: {Path}, Method: {Method}, Error: {ErrorMessage}",
+                        requestId,
+                        context.Request.Path,
+                        context.Request.Method,
+                        ex.Message);
+                }
+                else
+                {
+                    this._logger.LogError(
+                        ex,
+                        "Unhandled exception caught. RequestId: {RequestId}, Path: {Path}, Method: {Method}, IsStreaming: {IsStreaming}",
+                        requestId,
+                        context.Request.Path,
+                        context.Request.Method,
+                        isStreamingRequest);
+                }
 
                 // Special handling for AggregateException produced by the router
                 if (ex is AggregateException agg)

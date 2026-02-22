@@ -69,7 +69,7 @@ public class ApiErrorHandlingTests
     }
 
     [Fact]
-    public async Task Post_ChatCompletions_MalformedJson_ReturnsError()
+    public async Task Post_ChatCompletions_MalformedJson_Returns400()
     {
         // Arrange
         var content = new StringContent("{invalid json", System.Text.Encoding.UTF8, "application/json");
@@ -77,11 +77,10 @@ public class ApiErrorHandlingTests
         // Act
         var response = await this._client.PostAsync("/openai/v1/chat/completions", content);
 
-        // Assert - Malformed JSON returns 400 or 500 depending on middleware
-        Assert.True(
-            response.StatusCode == HttpStatusCode.BadRequest ||
-            response.StatusCode == HttpStatusCode.InternalServerError,
-            $"Expected 400 or 500 but got {(int)response.StatusCode}");
+        // Assert - Malformed JSON must return 400 Bad Request (client error)
+        var responseBody = await response.Content.ReadAsStringAsync();
+        this._factory.OutputHelper?.WriteLine($"Response: {responseBody}");
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]
