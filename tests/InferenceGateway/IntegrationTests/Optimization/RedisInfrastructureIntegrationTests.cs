@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using StackExchange.Redis;
+using Synaxis.Common.Tests.Attributes;
 using Synaxis.InferenceGateway.IntegrationTests;
 using Xunit;
 using Xunit.Abstractions;
@@ -37,6 +38,10 @@ public class RedisInfrastructureIntegrationTests(ITestOutputHelper output, Synax
 
         // Flush Redis DB for deterministic state
         await _database.ExecuteAsync("FLUSHDB").ConfigureAwait(false);
+
+        // Enable keyspace notifications for expiration events (required for TTL tests)
+        await _database.ExecuteAsync("CONFIG", "SET", "notify-keyspace-events", "Ex").ConfigureAwait(false);
+
         _output.WriteLine($"Redis database ready and flushed");
     }
 
@@ -191,26 +196,53 @@ public class RedisInfrastructureIntegrationTests(ITestOutputHelper output, Synax
     }
 
     [Fact]
+    [SlopwatchSuppress("SW004", "Safety timeout for keyspace notification fallback")]
     public async Task Expiration_TtlRespected()
     {
         // Arrange
         var key = "expiration-test";
         var value = "test-value";
-        var ttl = TimeSpan.FromSeconds(2);
+        var shortTtl = TimeSpan.FromMilliseconds(100);
 
-        // Act - Set with TTL
-        await this._database!.StringSetAsync(key, value, ttl);
+        var subscriber = this._redisConnection!.GetSubscriber();
+        var expirationTcs = new TaskCompletionSource();
 
-        // Assert - Key exists immediately
-        var exists = await this._database.KeyExistsAsync(key);
-        Assert.True(exists, "Key should exist immediately after set");
+        // Subscribe to keyspace expiration events
+        await subscriber.SubscribeAsync(
+            "__keyevent@0__:expired",
+            (channel, expiredKey) =>
+            {
+                if (expiredKey.ToString() == key)
+                {
+                    expirationTcs.TrySetResult();
+                }
+            });
 
-        // Wait for expiration
-        await Task.Delay(TimeSpan.FromSeconds(2.5));
+        try
+        {
+            // Act - Set with short TTL
+            await this._database!.StringSetAsync(key, value, shortTtl);
 
-        // Assert - Key expired
-        var existsAfter = await this._database.KeyExistsAsync(key);
-        Assert.False(existsAfter, "Key should be expired after TTL");
+            // Assert - Key exists immediately
+            var existsImmediately = await this._database.KeyExistsAsync(key);
+            Assert.True(existsImmediately, "Key should exist immediately after set");
+
+            // Wait for actual expiration event (with timeout safety)
+            var completed = await Task.WhenAny(
+                expirationTcs.Task,
+                Task.Delay(TimeSpan.FromSeconds(2)));
+
+            Assert.Same(expirationTcs.Task, completed);
+
+            // Assert - Key expired
+            var existsAfter = await this._database.KeyExistsAsync(key);
+            Assert.False(existsAfter, "Key should be expired after TTL");
+        }
+        finally
+        {
+            // Cleanup subscription
+            await subscriber.UnsubscribeAsync("__keyevent@0__:expired");
+        }
     }
 
     [Fact]
