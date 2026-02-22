@@ -59,26 +59,13 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
 
                 var isStreamingRequest = IsStreamingRequest(context);
 
-                // Client validation errors (400) should be WARNING, not ERROR
-                if (ex is BadHttpRequestException)
-                {
-                    this._logger.LogWarning(
-                        "Client request validation failed. RequestId: {RequestId}, Path: {Path}, Method: {Method}, Error: {ErrorMessage}",
-                        requestId,
-                        context.Request.Path,
-                        context.Request.Method,
-                        ex.Message);
-                }
-                else
-                {
-                    this._logger.LogError(
-                        ex,
-                        "Unhandled exception caught. RequestId: {RequestId}, Path: {Path}, Method: {Method}, IsStreaming: {IsStreaming}",
-                        requestId,
-                        context.Request.Path,
-                        context.Request.Method,
-                        isStreamingRequest);
-                }
+                this._logger.LogError(
+                    ex,
+                    "Unhandled exception caught. RequestId: {RequestId}, Path: {Path}, Method: {Method}, IsStreaming: {IsStreaming}",
+                    requestId,
+                    context.Request.Path,
+                    context.Request.Method,
+                    isStreamingRequest);
 
                 // Special handling for AggregateException produced by the router
                 if (ex is AggregateException agg)
