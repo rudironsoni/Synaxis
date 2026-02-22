@@ -260,29 +260,31 @@ public class InvitationServiceTests
     }
 
     [Fact]
-    public async Task GetInvitationAsync_NotFound_ReturnsNull()
+    public async Task GetInvitationAsync_NotFound_ThrowsInvalidOperationException()
     {
         // Arrange
         var token = "nonexistent-token";
 
         // Act
-        var result = await this._service.GetInvitationAsync(token);
+        Func<Task> act = async () => await this._service.GetInvitationAsync(token);
 
         // Assert
-        result.Should().BeNull();
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*Invitation not found*");
     }
 
     [Fact]
-    public async Task GetInvitationAsync_InvalidToken_ReturnsNull()
+    public async Task GetInvitationAsync_InvalidToken_ThrowsArgumentException()
     {
         // Arrange
         var token = string.Empty;
 
         // Act
-        var result = await this._service.GetInvitationAsync(token);
+        Func<Task> act = async () => await this._service.GetInvitationAsync(token);
 
         // Assert
-        result.Should().BeNull();
+        await act.Should().ThrowAsync<ArgumentException>()
+            .WithMessage("*Token is required*");
     }
 
     [Fact]

@@ -6,11 +6,11 @@ namespace Synaxis.Core.Tests.Services
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using FluentAssertions;
     using Microsoft.EntityFrameworkCore;
-    using Moq;
     using Synaxis.Core.Contracts;
     using Synaxis.Core.Models;
     using Synaxis.Infrastructure.Data;
@@ -21,21 +21,30 @@ namespace Synaxis.Core.Tests.Services
     /// Unit tests for OrganizationSettingsService.
     /// </summary>
     [Trait("Category", "Unit")]
-    public class OrganizationSettingsServiceTests
+    public class OrganizationSettingsServiceTests : IDisposable
     {
-        private readonly Mock<DbSet<Organization>> mockDbSet;
-        private readonly Mock<SynaxisDbContext> mockContext;
-        private readonly OrganizationSettingsService service;
+        private readonly SynaxisDbContext _context;
+        private readonly OrganizationSettingsService _service;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OrganizationSettingsServiceTests"/> class.
         /// </summary>
         public OrganizationSettingsServiceTests()
         {
-            this.mockDbSet = new Mock<DbSet<Organization>>();
-            this.mockContext = new Mock<SynaxisDbContext>(new DbContextOptions<SynaxisDbContext>());
-            this.mockContext.Setup(c => c.Organizations).Returns(this.mockDbSet.Object);
-            this.service = new OrganizationSettingsService(this.mockContext.Object);
+            var options = new DbContextOptionsBuilder<SynaxisDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                .Options;
+
+            _context = new SynaxisDbContext(options);
+            _service = new OrganizationSettingsService(_context);
+        }
+
+        /// <summary>
+        /// Disposes the test context.
+        /// </summary>
+        public void Dispose()
+        {
+            _context.Dispose();
         }
 
         [Fact]
@@ -57,11 +66,11 @@ namespace Synaxis.Core.Tests.Services
                 MonthlyTokenLimit = 5000000,
             };
 
-            this.mockDbSet.Setup(m => m.FindAsync(new object[] { orgId }, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(organization);
+            _context.Organizations.Add(organization);
+            await _context.SaveChangesAsync();
 
             // Act
-            var result = await this.service.GetOrganizationLimitsAsync(orgId, CancellationToken.None);
+            var result = await _service.GetOrganizationLimitsAsync(orgId, CancellationToken.None);
 
             // Assert
             result.Should().NotBeNull();
@@ -78,11 +87,9 @@ namespace Synaxis.Core.Tests.Services
         {
             // Arrange
             var orgId = Guid.NewGuid();
-            this.mockDbSet.Setup(m => m.FindAsync(new object[] { orgId }, It.IsAny<CancellationToken>()))
-                .ReturnsAsync((Organization?)null);
 
             // Act
-            Func<Task> act = async () => await this.service.GetOrganizationLimitsAsync(orgId, CancellationToken.None);
+            Func<Task> act = async () => await _service.GetOrganizationLimitsAsync(orgId, CancellationToken.None);
 
             // Assert
             await act.Should().ThrowAsync<KeyNotFoundException>()
@@ -108,11 +115,11 @@ namespace Synaxis.Core.Tests.Services
                 MonthlyTokenLimit = null,
             };
 
-            this.mockDbSet.Setup(m => m.FindAsync(new object[] { orgId }, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(organization);
+            _context.Organizations.Add(organization);
+            await _context.SaveChangesAsync();
 
             // Act
-            var result = await this.service.GetOrganizationLimitsAsync(orgId, CancellationToken.None);
+            var result = await _service.GetOrganizationLimitsAsync(orgId, CancellationToken.None);
 
             // Assert
             result.Should().NotBeNull();
@@ -140,6 +147,9 @@ namespace Synaxis.Core.Tests.Services
                 MaxUsersPerTeam = 25,
             };
 
+            _context.Organizations.Add(organization);
+            await _context.SaveChangesAsync();
+
             var request = new UpdateOrganizationLimitsRequest
             {
                 MaxTeams = 20,
@@ -147,24 +157,21 @@ namespace Synaxis.Core.Tests.Services
                 MaxKeysPerUser = 10,
             };
 
-            this.mockDbSet.Setup(m => m.FindAsync(new object[] { orgId }, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(organization);
-
-            this.mockContext.Setup(m => m.SaveChangesAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(1);
-
             // Act
-            var result = await this.service.UpdateOrganizationLimitsAsync(orgId, request, userId, CancellationToken.None);
+            var result = await _service.UpdateOrganizationLimitsAsync(orgId, request, userId, CancellationToken.None);
 
             // Assert
             result.Should().NotBeNull();
             result.MaxTeams.Should().Be(20);
             result.MaxUsersPerTeam.Should().Be(100);
             result.MaxKeysPerUser.Should().Be(10);
-            organization.MaxTeams.Should().Be(20);
-            organization.MaxUsersPerTeam.Should().Be(100);
-            organization.MaxKeysPerUser.Should().Be(10);
-            this.mockContext.Verify(m => m.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+
+            // Verify in database
+            var updatedOrg = await _context.Organizations.FindAsync(orgId);
+            updatedOrg.Should().NotBeNull();
+            updatedOrg!.MaxTeams.Should().Be(20);
+            updatedOrg.MaxUsersPerTeam.Should().Be(100);
+            updatedOrg.MaxKeysPerUser.Should().Be(10);
         }
 
         [Fact]
@@ -178,11 +185,8 @@ namespace Synaxis.Core.Tests.Services
                 MaxTeams = 20,
             };
 
-            this.mockDbSet.Setup(m => m.FindAsync(new object[] { orgId }, It.IsAny<CancellationToken>()))
-                .ReturnsAsync((Organization?)null);
-
             // Act
-            Func<Task> act = async () => await this.service.UpdateOrganizationLimitsAsync(orgId, request, userId, CancellationToken.None);
+            Func<Task> act = async () => await _service.UpdateOrganizationLimitsAsync(orgId, request, userId, CancellationToken.None);
 
             // Assert
             await act.Should().ThrowAsync<KeyNotFoundException>()
@@ -203,16 +207,16 @@ namespace Synaxis.Core.Tests.Services
                 PrimaryRegion = "us-east-1",
             };
 
+            _context.Organizations.Add(organization);
+            await _context.SaveChangesAsync();
+
             var request = new UpdateOrganizationLimitsRequest
             {
                 MaxTeams = -5,
             };
 
-            this.mockDbSet.Setup(m => m.FindAsync(new object[] { orgId }, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(organization);
-
             // Act
-            Func<Task> act = async () => await this.service.UpdateOrganizationLimitsAsync(orgId, request, userId, CancellationToken.None);
+            Func<Task> act = async () => await _service.UpdateOrganizationLimitsAsync(orgId, request, userId, CancellationToken.None);
 
             // Assert
             await act.Should().ThrowAsync<ArgumentException>()
@@ -233,16 +237,16 @@ namespace Synaxis.Core.Tests.Services
                 PrimaryRegion = "us-east-1",
             };
 
+            _context.Organizations.Add(organization);
+            await _context.SaveChangesAsync();
+
             var request = new UpdateOrganizationLimitsRequest
             {
                 MonthlyRequestLimit = -1000,
             };
 
-            this.mockDbSet.Setup(m => m.FindAsync(new object[] { orgId }, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(organization);
-
             // Act
-            Func<Task> act = async () => await this.service.UpdateOrganizationLimitsAsync(orgId, request, userId, CancellationToken.None);
+            Func<Task> act = async () => await _service.UpdateOrganizationLimitsAsync(orgId, request, userId, CancellationToken.None);
 
             // Assert
             await act.Should().ThrowAsync<ArgumentException>()
@@ -272,11 +276,11 @@ namespace Synaxis.Core.Tests.Services
                 },
             };
 
-            this.mockDbSet.Setup(m => m.FindAsync(new object[] { orgId }, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(organization);
+            _context.Organizations.Add(organization);
+            await _context.SaveChangesAsync();
 
             // Act
-            var result = await this.service.GetOrganizationSettingsAsync(orgId, CancellationToken.None);
+            var result = await _service.GetOrganizationSettingsAsync(orgId, CancellationToken.None);
 
             // Assert
             result.Should().NotBeNull();
@@ -293,11 +297,9 @@ namespace Synaxis.Core.Tests.Services
         {
             // Arrange
             var orgId = Guid.NewGuid();
-            this.mockDbSet.Setup(m => m.FindAsync(new object[] { orgId }, It.IsAny<CancellationToken>()))
-                .ReturnsAsync((Organization?)null);
 
             // Act
-            Func<Task> act = async () => await this.service.GetOrganizationSettingsAsync(orgId, CancellationToken.None);
+            Func<Task> act = async () => await _service.GetOrganizationSettingsAsync(orgId, CancellationToken.None);
 
             // Assert
             await act.Should().ThrowAsync<KeyNotFoundException>()
@@ -322,6 +324,9 @@ namespace Synaxis.Core.Tests.Services
                 AllowedEmailDomains = new List<string>(),
             };
 
+            _context.Organizations.Add(organization);
+            await _context.SaveChangesAsync();
+
             var request = new UpdateOrganizationSettingsRequest
             {
                 DataRetentionDays = 180,
@@ -329,24 +334,21 @@ namespace Synaxis.Core.Tests.Services
                 AllowedEmailDomains = new List<string> { "company.com" },
             };
 
-            this.mockDbSet.Setup(m => m.FindAsync(new object[] { orgId }, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(organization);
-
-            this.mockContext.Setup(m => m.SaveChangesAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(1);
-
             // Act
-            var result = await this.service.UpdateOrganizationSettingsAsync(orgId, request, userId, CancellationToken.None);
+            var result = await _service.UpdateOrganizationSettingsAsync(orgId, request, userId, CancellationToken.None);
 
             // Assert
             result.Should().NotBeNull();
             result.DataRetentionDays.Should().Be(180);
             result.RequireSso.Should().BeTrue();
             result.AllowedEmailDomains.Should().BeEquivalentTo(new[] { "company.com" });
-            organization.DataRetentionDays.Should().Be(180);
-            organization.RequireSso.Should().BeTrue();
-            organization.AllowedEmailDomains.Should().BeEquivalentTo(new[] { "company.com" });
-            this.mockContext.Verify(m => m.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+
+            // Verify in database
+            var updatedOrg = await _context.Organizations.FindAsync(orgId);
+            updatedOrg.Should().NotBeNull();
+            updatedOrg!.DataRetentionDays.Should().Be(180);
+            updatedOrg.RequireSso.Should().BeTrue();
+            updatedOrg.AllowedEmailDomains.Should().BeEquivalentTo(new[] { "company.com" });
         }
 
         [Fact]
@@ -361,11 +363,8 @@ namespace Synaxis.Core.Tests.Services
                 AllowedEmailDomains = new List<string>(),
             };
 
-            this.mockDbSet.Setup(m => m.FindAsync(new object[] { orgId }, It.IsAny<CancellationToken>()))
-                .ReturnsAsync((Organization?)null);
-
             // Act
-            Func<Task> act = async () => await this.service.UpdateOrganizationSettingsAsync(orgId, request, userId, CancellationToken.None);
+            Func<Task> act = async () => await _service.UpdateOrganizationSettingsAsync(orgId, request, userId, CancellationToken.None);
 
             // Assert
             await act.Should().ThrowAsync<KeyNotFoundException>()
@@ -387,17 +386,17 @@ namespace Synaxis.Core.Tests.Services
                 Tier = "free",
             };
 
+            _context.Organizations.Add(organization);
+            await _context.SaveChangesAsync();
+
             var request = new UpdateOrganizationSettingsRequest
             {
                 DataRetentionDays = -5,
                 AllowedEmailDomains = new List<string>(),
             };
 
-            this.mockDbSet.Setup(m => m.FindAsync(new object[] { orgId }, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(organization);
-
             // Act
-            Func<Task> act = async () => await this.service.UpdateOrganizationSettingsAsync(orgId, request, userId, CancellationToken.None);
+            Func<Task> act = async () => await _service.UpdateOrganizationSettingsAsync(orgId, request, userId, CancellationToken.None);
 
             // Assert
             await act.Should().ThrowAsync<ArgumentException>()
@@ -419,17 +418,17 @@ namespace Synaxis.Core.Tests.Services
                 Tier = "free",
             };
 
+            _context.Organizations.Add(organization);
+            await _context.SaveChangesAsync();
+
             var request = new UpdateOrganizationSettingsRequest
             {
                 DataRetentionDays = 10000,
                 AllowedEmailDomains = new List<string>(),
             };
 
-            this.mockDbSet.Setup(m => m.FindAsync(new object[] { orgId }, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(organization);
-
             // Act
-            Func<Task> act = async () => await this.service.UpdateOrganizationSettingsAsync(orgId, request, userId, CancellationToken.None);
+            Func<Task> act = async () => await _service.UpdateOrganizationSettingsAsync(orgId, request, userId, CancellationToken.None);
 
             // Assert
             await act.Should().ThrowAsync<ArgumentException>()

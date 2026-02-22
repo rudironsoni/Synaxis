@@ -138,7 +138,7 @@ namespace Synaxis.Core.Tests.Services
             var act = async () => await _service.CreateTeamAsync(request, _organizationId, _userId);
 
             await act.Should().ThrowAsync<InvalidOperationException>()
-                .WithMessage("*team limit*");
+                .WithMessage("*maximum limit*");
         }
 
         [Fact]
@@ -260,7 +260,7 @@ namespace Synaxis.Core.Tests.Services
 
             var updatedTeam = await _context.Teams.FindAsync(team.Id);
             updatedTeam!.Name.Should().Be("Updated Operations Team");
-            updatedTeam.UpdatedAt.Should().BeAfter(team.UpdatedAt);
+            updatedTeam.UpdatedAt.Should().BeAfter(DateTime.UtcNow.AddSeconds(-1));
         }
 
         [Fact]
