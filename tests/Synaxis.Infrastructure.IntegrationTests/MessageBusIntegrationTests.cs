@@ -11,6 +11,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Synaxis.Common.Tests.Attributes;
 using Synaxis.Providers.OnPrem;
 using Xunit;
 
@@ -45,6 +46,7 @@ public sealed class MessageBusIntegrationTests : IClassFixture<RabbitMqTestFixtu
     }
 
     [Fact]
+    [SlopwatchSuppress("SW004", "Task.WhenAny with Task.Delay used as defensive timeout for async message bus operations - prevents test hangs")]
     public async Task PublishAsync_PublishesMessageToRabbitMQ()
     {
         // Arrange
@@ -70,6 +72,7 @@ public sealed class MessageBusIntegrationTests : IClassFixture<RabbitMqTestFixtu
     }
 
     [Fact]
+    [SlopwatchSuppress("SW004", "Task.WhenAny with Task.Delay used as defensive timeout for async message bus operations - prevents test hangs")]
     public async Task SubscribeAsync_ReceivesMessages()
     {
         // Arrange
@@ -106,6 +109,7 @@ public sealed class MessageBusIntegrationTests : IClassFixture<RabbitMqTestFixtu
     }
 
     [Fact]
+    [SlopwatchSuppress("SW004", "Task.WhenAny with Task.Delay used as defensive timeout for async message bus operations - prevents test hangs")]
     public async Task PublishAsync_WithTopic_RoutesToCorrectTopic()
     {
         // Arrange
@@ -140,6 +144,7 @@ public sealed class MessageBusIntegrationTests : IClassFixture<RabbitMqTestFixtu
     }
 
     [Fact]
+    [SlopwatchSuppress("SW004", "Task.WhenAny with Task.Delay used as defensive timeout for async message bus operations - prevents test hangs")]
     public async Task SubscribeAsync_HandlesMultipleSubscribers()
     {
         // Arrange
@@ -175,6 +180,7 @@ public sealed class MessageBusIntegrationTests : IClassFixture<RabbitMqTestFixtu
     }
 
     [Fact]
+    [SlopwatchSuppress("SW004", "Task.WhenAny with Task.Delay used as defensive timeout for async message bus operations - prevents test hangs")]
     public async Task SubscribeAsync_HandlesMessageProcessingErrors()
     {
         // Arrange
@@ -205,6 +211,7 @@ public sealed class MessageBusIntegrationTests : IClassFixture<RabbitMqTestFixtu
     }
 
     [Fact]
+    [SlopwatchSuppress("SW004", "Task.WhenAny with Task.Delay used as defensive timeout for async message bus operations - prevents test hangs")]
     public async Task PublishAsync_WithLargeMessage()
     {
         // Arrange
@@ -231,6 +238,7 @@ public sealed class MessageBusIntegrationTests : IClassFixture<RabbitMqTestFixtu
     }
 
     [Fact]
+    [SlopwatchSuppress("SW004", "Task.WhenAny with Task.Delay used as defensive timeout for async message bus operations - prevents test hangs")]
     public async Task PublishAsync_HandlesUnicodeContent()
     {
         // Arrange
@@ -257,6 +265,7 @@ public sealed class MessageBusIntegrationTests : IClassFixture<RabbitMqTestFixtu
     }
 
     [Fact]
+    [SlopwatchSuppress("SW004", "Task.WhenAny with Task.Delay used as defensive timeout for async message bus operations - prevents test hangs")]
     public async Task PublishAsync_HandlesComplexMessageTypes()
     {
         // Arrange
@@ -293,6 +302,7 @@ public sealed class MessageBusIntegrationTests : IClassFixture<RabbitMqTestFixtu
     }
 
     [Fact]
+    [SlopwatchSuppress("SW004", "Task.WhenAny with Task.Delay used as defensive timeout for async message bus operations - prevents test hangs")]
     public async Task PublishAsync_HandlesHighVolume()
     {
         // Arrange
