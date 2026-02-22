@@ -39,7 +39,7 @@ public class CopilotSdkClientTests
         async IAsyncEnumerable<ChatResponseUpdate> GetUpdates()
         {
             yield return new ChatResponseUpdate { Role = ChatRole.Assistant };
-            await Task.Delay(1).ConfigureAwait(false);
+            await Task.Yield();
             yield return new ChatResponseUpdate { Role = ChatRole.Assistant };
         }
 

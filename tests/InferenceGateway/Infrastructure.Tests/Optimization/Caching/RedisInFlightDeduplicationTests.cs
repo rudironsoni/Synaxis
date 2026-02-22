@@ -75,7 +75,7 @@ public class RedisInFlightDeduplicationTests
         Func<Task<string>> operation = async () =>
         {
             executed = true;
-            await Task.Delay(10).ConfigureAwait(false);
+            await Task.Yield();
             return "Result from operation";
         };
 
@@ -187,7 +187,7 @@ public class RedisInFlightDeduplicationTests
         Func<Task<string>> operation = async () =>
         {
             Interlocked.Increment(ref executionCount);
-            await Task.Delay(50).ConfigureAwait(false);
+            await Task.Yield();
             return "Result from operation";
         };
 
@@ -246,7 +246,7 @@ public class RedisInFlightDeduplicationTests
         Func<Task<string>> operation = async () =>
         {
             executed = true;
-            await Task.Delay(10).ConfigureAwait(false);
+            await Task.Yield();
             return "Fallback result";
         };
 
@@ -306,7 +306,7 @@ public class RedisInFlightDeduplicationTests
 
         Func<Task<string>> operation = async () =>
         {
-            await Task.Delay(10).ConfigureAwait(false);
+            await Task.Yield();
             return "Operation result";
         };
 
@@ -372,7 +372,7 @@ public class RedisInFlightDeduplicationTests
 
         Func<Task<string>> operation = async () =>
         {
-            await Task.Delay(10).ConfigureAwait(false);
+            await Task.Yield();
             throw new InvalidOperationException("Operation failed");
         };
 
@@ -520,7 +520,7 @@ public class RedisInFlightDeduplicationTests
         Func<Task<string>> operation = async () =>
         {
             executed = true;
-            await Task.Delay(10).ConfigureAwait(false);
+            await Task.Yield();
             return "Direct execution result";
         };
 

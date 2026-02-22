@@ -135,7 +135,7 @@ public class StreamExecutorTests
             for (var i = 0; i < request.Count; i++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                await Task.Delay(1, cancellationToken).ConfigureAwait(false);
+                await Task.Yield();
                 yield return i;
             }
         }
@@ -150,7 +150,7 @@ public class StreamExecutorTests
             for (var i = 0; i < 3; i++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                await Task.Delay(1, cancellationToken).ConfigureAwait(false);
+                await Task.Yield();
                 yield return new ComplexResult { Data = $"{request.Query}_{i}" };
             }
         }

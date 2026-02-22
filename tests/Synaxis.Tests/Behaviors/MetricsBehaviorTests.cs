@@ -175,7 +175,7 @@ namespace Synaxis.Tests.Behaviors
             var message = new TestMessage();
             MessageHandlerDelegate<TestMessage, TestResponse> next = async (msg, ct) =>
             {
-                await Task.Delay(10, ct);
+                await Task.Yield();
                 return new TestResponse();
             };
 
