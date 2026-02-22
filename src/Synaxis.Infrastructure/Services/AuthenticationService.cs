@@ -167,6 +167,15 @@ namespace Synaxis.Infrastructure.Services
 
                 return await this.RefreshTokensAsync(refreshTokenEntity).ConfigureAwait(false);
             }
+            catch (InvalidOperationException ex)
+            {
+                this._logger.LogWarning(ex, "Token refresh failed: {Message}", ex.Message);
+                return new AuthenticationResult
+                {
+                    Success = false,
+                    ErrorMessage = ex.Message,
+                };
+            }
             catch (Exception ex)
             {
                 this._logger.LogError(ex, "Error during token refresh");

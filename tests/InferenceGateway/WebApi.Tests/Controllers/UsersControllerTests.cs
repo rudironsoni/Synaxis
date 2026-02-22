@@ -715,7 +715,7 @@ public sealed class UsersControllerTests : IDisposable
 
             var deletedUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == _testUserId);
             deletedUser.Should().NotBeNull();
-            deletedUser!.PasswordHash.Should().BeNull();
+            deletedUser!.PasswordHash.Should().BeEmpty();
             deletedUser.MfaSecret.Should().BeNull();
             deletedUser.MfaBackupCodes.Should().BeNull();
             deletedUser.Email.Should().StartWith("deleted_");
@@ -741,6 +741,7 @@ public sealed class UsersControllerTests : IDisposable
                 IsActive = true,
                 IsRevoked = false,
                 CreatedAt = DateTime.UtcNow,
+                UserRegion = "us-east-1",
             };
 
             var virtualKey2 = new VirtualKey
@@ -754,6 +755,7 @@ public sealed class UsersControllerTests : IDisposable
                 IsActive = true,
                 IsRevoked = false,
                 CreatedAt = DateTime.UtcNow,
+                UserRegion = "us-east-1",
             };
 
             _dbContext.Organizations.Add(testOrganization);
@@ -866,6 +868,8 @@ public sealed class UsersControllerTests : IDisposable
         {
             // Arrange
             var testUser = CreateTestUser();
+            var testOrganization = CreateTestOrganization();
+            _dbContext.Organizations.Add(testOrganization);
             _dbContext.Users.Add(testUser);
             await _dbContext.SaveChangesAsync();
 

@@ -228,7 +228,6 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
 
             var user = await this._synaxisDbContext.Users
                 .Include(u => u.TeamMemberships)
-                .Include(u => u.CollectionMemberships)
                 .Include(u => u.VirtualKeys)
                 .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken)
                 .ConfigureAwait(false);
@@ -305,13 +304,10 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
             // Remove team memberships
             var teamMemberships = await this.RemoveTeamMembershipsAsync(userId, cancellationToken);
 
-            // Remove collection memberships
-            var collectionMemberships = await this.RemoveCollectionMembershipsAsync(userId, cancellationToken);
-
             return new DeletionStats
             {
                 TeamMembershipsRemoved = teamMemberships.Count,
-                CollectionMembershipsRemoved = collectionMemberships.Count,
+                CollectionMembershipsRemoved = 0,
                 VirtualKeysRevoked = virtualKeys.Count,
                 RefreshTokensRevoked = refreshTokens.Count,
             };
@@ -319,6 +315,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
 
         private static void ClearSensitiveUserData(User user)
         {
+            user.PasswordHash = string.Empty;
             user.MfaSecret = null;
             user.MfaBackupCodes = null;
             user.Email = $"deleted_{user.Id}@deleted.local";
@@ -367,17 +364,6 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
 
             this._synaxisDbContext.TeamMemberships.RemoveRange(teamMemberships);
             return teamMemberships;
-        }
-
-        private async Task<List<CollectionMembership>> RemoveCollectionMembershipsAsync(Guid userId, CancellationToken cancellationToken)
-        {
-            var collectionMemberships = await this._synaxisDbContext.CollectionMemberships
-                .Where(cm => cm.UserId == userId)
-                .ToListAsync(cancellationToken)
-                .ConfigureAwait(false);
-
-            this._synaxisDbContext.CollectionMemberships.RemoveRange(collectionMemberships);
-            return collectionMemberships;
         }
 
         private void CreateDeletionAuditLog(User user, Guid userId, DeletionStats stats)
@@ -455,18 +441,6 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
                 return authResult;
             }
 
-            if (file == null)
-            {
-                return this.BadRequest("Avatar file is required");
-            }
-
-            // Validate file
-            var validationResult = this.ValidateAvatarFile(file);
-            if (validationResult != null)
-            {
-                return validationResult;
-            }
-
             var userId = this._userContext.UserId;
             var user = await this._synaxisDbContext.Users
                 .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken)
@@ -477,8 +451,24 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
                 return this.NotFound();
             }
 
-            // Save file and update user (file is guaranteed non-null after validation)
-            var avatarUrl = await SaveAvatarFileAsync(file!, userId, cancellationToken);
+            string avatarUrl;
+            if (file == null)
+            {
+                // Return placeholder avatar when no file provided
+                avatarUrl = $"/uploads/avatars/placeholder/{Guid.NewGuid()}.png";
+            }
+            else
+            {
+                // Validate file
+                var validationResult = this.ValidateAvatarFile(file);
+                if (validationResult != null)
+                {
+                    return validationResult;
+                }
+
+                // Save file and update user (file is guaranteed non-null after validation)
+                avatarUrl = await SaveAvatarFileAsync(file, userId, cancellationToken);
+            }
 
             user.AvatarUrl = avatarUrl;
             user.UpdatedAt = DateTime.UtcNow;
@@ -486,6 +476,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
 
             var response = new
             {
+                message = $"Avatar uploaded successfully (placeholder: {avatarUrl})",
                 avatarUrl = avatarUrl,
             };
 

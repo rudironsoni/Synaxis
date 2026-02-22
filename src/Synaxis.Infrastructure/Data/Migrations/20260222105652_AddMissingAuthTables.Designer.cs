@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Synaxis.Infrastructure.Data;
@@ -11,9 +12,11 @@ using Synaxis.Infrastructure.Data;
 namespace Synaxis.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(SynaxisDbContext))]
-    partial class SynaxisDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260222105652_AddMissingAuthTables")]
+    partial class AddMissingAuthTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

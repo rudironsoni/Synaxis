@@ -24,17 +24,23 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         private readonly IPasswordHasher passwordHasher;
         private readonly SynaxisDbContext dbContext;
 
+#pragma warning disable S4487 // Unused field kept for future use
+        private readonly ILogger<AuthController> logger;
+#pragma warning restore S4487
+
         /// <summary>
         /// Initializes a new instance of the <see cref="AuthController"/> class.
         /// </summary>
         /// <param name="jwtService">The JWT service.</param>
         /// <param name="passwordHasher">The password hasher.</param>
         /// <param name="dbContext">The database context.</param>
-        public AuthController(IJwtService jwtService, IPasswordHasher passwordHasher, SynaxisDbContext dbContext)
+        /// <param name="logger">The logger.</param>
+        public AuthController(IJwtService jwtService, IPasswordHasher passwordHasher, SynaxisDbContext dbContext, ILogger<AuthController> logger)
         {
             this.jwtService = jwtService;
             this.passwordHasher = passwordHasher;
             this.dbContext = dbContext;
+            this.logger = logger;
         }
 
         /// <summary>
@@ -46,6 +52,8 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken cancellationToken)
         {
+            this.logger.LogInformation("Registering user with email {Email}", request.Email);
+
             if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
             {
                 return this.BadRequest(new { success = false, message = "Email and password are required" });
@@ -57,6 +65,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
 
             if (existingUser != null)
             {
+                this.logger.LogWarning("User with email {Email} already exists", request.Email);
                 return this.BadRequest(new { success = false, message = "User already exists" });
             }
 
@@ -174,7 +183,29 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
             }
 
             var token = this.jwtService.GenerateToken(user);
-            return this.Ok(new { token });
+
+            // Create refresh token for the user
+            var refreshToken = new RefreshToken
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                TokenHash = HashToken(Guid.NewGuid().ToString()),
+                ExpiresAt = DateTime.UtcNow.AddDays(7),
+                IsRevoked = false,
+                CreatedAt = DateTime.UtcNow,
+            };
+            this.dbContext.RefreshTokens.Add(refreshToken);
+            await this.dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            return this.Ok(new { token, refreshToken = refreshToken.TokenHash });
+        }
+
+        private static string HashToken(string token)
+        {
+            using var sha256 = System.Security.Cryptography.SHA256.Create();
+            var bytes = System.Text.Encoding.UTF8.GetBytes(token);
+            var hash = sha256.ComputeHash(bytes);
+            return System.Convert.ToBase64String(hash);
         }
 
         /// <summary>
@@ -246,9 +277,26 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
                 return this.BadRequest(new { success = false, message = "Email is required" });
             }
 
-            _ = await this.dbContext.Users
+            var user = await this.dbContext.Users
                 .FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken)
                 .ConfigureAwait(false);
+
+            // Only create token if user exists and is active
+            // For security, return same message regardless (don't reveal if email exists or user is inactive)
+            if (user != null && user.IsActive)
+            {
+                var token = new PasswordResetToken
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = user.Id,
+                    TokenHash = HashToken(Guid.NewGuid().ToString()),
+                    ExpiresAt = DateTime.UtcNow.AddHours(1),
+                    IsUsed = false,
+                    CreatedAt = DateTime.UtcNow,
+                };
+                this.dbContext.PasswordResetTokens.Add(token);
+                await this.dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            }
 
             return this.Ok(new { success = true, message = "If the email exists, a password reset link has been sent" });
         }

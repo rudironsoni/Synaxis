@@ -153,6 +153,16 @@ public class TeamRepositoryTests : IAsyncLifetime
                     CreatedAt DATETIME2 NOT NULL,
                     UpdatedAt DATETIME2 NOT NULL
                 );
+            END;
+
+            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'TeamMembers')
+            BEGIN
+                CREATE TABLE TeamMembers (
+                    TeamId NVARCHAR(100) NOT NULL,
+                    UserId NVARCHAR(100) NOT NULL,
+                    Role INT NOT NULL,
+                    PRIMARY KEY (TeamId, UserId)
+                );
             END";
 
         using var command = new SqlCommand(createTableSql, connection);
@@ -187,6 +197,22 @@ public class TeamRepositoryTests : IAsyncLifetime
         command.Parameters.AddWithValue("@UpdatedAt", team.UpdatedAt);
 
         await command.ExecuteNonQueryAsync();
+
+        // Delete existing members and insert current ones
+        var deleteMembersSql = "DELETE FROM TeamMembers WHERE TeamId = @TeamId";
+        using var deleteCommand = new SqlCommand(deleteMembersSql, connection);
+        deleteCommand.Parameters.AddWithValue("@TeamId", team.Id);
+        await deleteCommand.ExecuteNonQueryAsync();
+
+        foreach (var member in team.Members)
+        {
+            var insertMemberSql = "INSERT INTO TeamMembers (TeamId, UserId, Role) VALUES (@TeamId, @UserId, @Role)";
+            using var memberCommand = new SqlCommand(insertMemberSql, connection);
+            memberCommand.Parameters.AddWithValue("@TeamId", team.Id);
+            memberCommand.Parameters.AddWithValue("@UserId", member.Key);
+            memberCommand.Parameters.AddWithValue("@Role", (int)member.Value);
+            await memberCommand.ExecuteNonQueryAsync();
+        }
     }
 
     private async Task<Team?> LoadTeamAsync(string teamId)
@@ -208,8 +234,20 @@ public class TeamRepositoryTests : IAsyncLifetime
                 reader.GetString(reader.GetOrdinal("Description")),
                 reader.GetString(reader.GetOrdinal("TenantId")));
 
-            // Note: In a real implementation, we would use a repository to properly reconstruct the aggregate
-            // For this test, we're just verifying the data can be stored and retrieved
+            // Load members and add them to the team using reflection
+            await reader.CloseAsync();
+            var memberSql = "SELECT UserId, Role FROM TeamMembers WHERE TeamId = @TeamId";
+            using var memberCommand = new SqlCommand(memberSql, connection);
+            memberCommand.Parameters.AddWithValue("@TeamId", teamId);
+            using var memberReader = await memberCommand.ExecuteReaderAsync();
+
+            while (await memberReader.ReadAsync())
+            {
+                var userId = memberReader.GetString(memberReader.GetOrdinal("UserId"));
+                var role = (Role)memberReader.GetInt32(memberReader.GetOrdinal("Role"));
+                team.AddMember(userId, role);
+            }
+
             return team;
         }
 

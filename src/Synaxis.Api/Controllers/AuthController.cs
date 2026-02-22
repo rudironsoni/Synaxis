@@ -331,6 +331,11 @@ namespace Synaxis.Api.Controllers
 
                 return this.Ok(result);
             }
+            catch (InvalidOperationException ex)
+            {
+                this._logger.LogWarning(ex, "Token refresh failed: {Message}", ex.Message);
+                return this.Unauthorized(new { message = ex.Message });
+            }
             catch (Exception ex)
             {
                 this._logger.LogError(ex, "Error during token refresh");

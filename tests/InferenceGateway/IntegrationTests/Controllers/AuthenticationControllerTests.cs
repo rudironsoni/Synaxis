@@ -214,12 +214,12 @@ public class AuthenticationControllerTests
         var passwordHasher = scope.ServiceProvider.GetRequiredService<Synaxis.InferenceGateway.Application.Security.IPasswordHasher>();
         var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
 
-        // Create a password reset token
-        var tokenValue = "valid_reset_token_123";
+        // Create a password reset token with format reset_{userId}_{token}
+        var tokenValue = $"reset_{user!.Id}_{Guid.NewGuid()}";
         var resetToken = new PasswordResetToken
         {
             Id = Guid.NewGuid(),
-            UserId = user!.Id,
+            UserId = user.Id,
             TokenHash = passwordHasher.HashPassword(tokenValue),
             ExpiresAt = DateTime.UtcNow.AddHours(1),
             IsUsed = false,

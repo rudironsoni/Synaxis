@@ -38,6 +38,198 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         }
 
         /// <summary>
+        /// Adds a member to a team.
+        /// </summary>
+        /// <param name="orgId">The organization ID.</param>
+        /// <param name="teamId">The team ID.</param>
+        /// <param name="request">The add member request.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>Created membership.</returns>
+        [HttpPost("members")]
+        public async Task<IActionResult> AddMember(
+            Guid orgId,
+            Guid teamId,
+            [FromBody] AddTeamMemberRequest request,
+            CancellationToken cancellationToken)
+        {
+            var userId = this.GetUserId();
+
+            if (!await this.CheckTeamAdminPermissionAsync(userId, orgId, teamId, cancellationToken).ConfigureAwait(false))
+            {
+                return this.Forbid();
+            }
+
+            var validRole = ValidateRole(request.Role);
+            if (validRole == null)
+            {
+                return this.BadRequest("Role must be 'admin' or 'member'");
+            }
+
+            if (!await this._dbContext.Teams.AnyAsync(g => g.Id == teamId && g.OrganizationId == orgId, cancellationToken).ConfigureAwait(false))
+            {
+                return this.NotFound("Team not found");
+            }
+
+            if (!await this._dbContext.Users.AnyAsync(u => u.Id == request.UserId && u.OrganizationId == orgId, cancellationToken).ConfigureAwait(false))
+            {
+                return this.BadRequest("User is not a member of this organization");
+            }
+
+            if (await this._dbContext.TeamMemberships.AnyAsync(m => m.UserId == request.UserId && m.TeamId == teamId, cancellationToken).ConfigureAwait(false))
+            {
+                return this.BadRequest("User is already a member of this team");
+            }
+
+            var membership = new TeamMembership
+            {
+                Id = Guid.NewGuid(),
+                UserId = request.UserId,
+                TeamId = teamId,
+                OrganizationId = orgId,
+                Role = validRole,
+                JoinedAt = DateTime.UtcNow,
+            };
+
+            this._dbContext.TeamMemberships.Add(membership);
+            await this._dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            await this._auditService.LogAsync(
+                orgId, userId, "AddTeamMember", new { TeamId = teamId, UserId = request.UserId, Role = validRole }, cancellationToken).ConfigureAwait(false);
+
+            return this.CreatedAtAction(
+                nameof(this.GetMember),
+                new { orgId, teamId, memberId = request.UserId },
+                new { id = membership.Id, userId = membership.UserId, role = membership.Role, joinedAt = membership.JoinedAt });
+        }
+
+        /// <summary>
+        /// Removes a member from a team.
+        /// </summary>
+        /// <param name="orgId">The organization ID.</param>
+        /// <param name="teamId">The team ID.</param>
+        /// <param name="memberId">The member ID (user ID).</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>No content response.</returns>
+        [HttpDelete("members/{memberId}")]
+        public async Task<IActionResult> RemoveMember(
+            Guid orgId,
+            Guid teamId,
+            Guid memberId,
+            CancellationToken cancellationToken)
+        {
+            var userId = this.GetUserId();
+
+            var membership = await this._dbContext.TeamMemberships
+                .FirstOrDefaultAsync(m => m.UserId == memberId && m.TeamId == teamId, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (membership == null)
+            {
+                return this.NotFound("Member not found");
+            }
+
+            var isSelfRemoval = userId == memberId;
+            if (!isSelfRemoval)
+            {
+                var hasPermission = await this.CheckTeamAdminPermissionAsync(userId, orgId, teamId, cancellationToken).ConfigureAwait(false);
+                if (!hasPermission)
+                {
+                    return this.Forbid();
+                }
+            }
+
+            var team = await this._dbContext.Teams
+                .FirstOrDefaultAsync(g => g.Id == teamId && g.OrganizationId == orgId, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (team == null)
+            {
+                return this.NotFound("Team not found");
+            }
+
+            this._dbContext.TeamMemberships.Remove(membership);
+            await this._dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            await this._auditService.LogAsync(
+                orgId,
+                userId,
+                "RemoveTeamMember",
+                new { TeamId = teamId, UserId = memberId },
+                cancellationToken).ConfigureAwait(false);
+
+            return this.NoContent();
+        }
+
+        /// <summary>
+        /// Updates a member's role.
+        /// </summary>
+        /// <param name="orgId">The organization ID.</param>
+        /// <param name="teamId">The team ID.</param>
+        /// <param name="memberId">The member ID (user ID).</param>
+        /// <param name="request">The update role request.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>OK response.</returns>
+        [HttpPut("members/{memberId}/role")]
+        public async Task<IActionResult> UpdateMemberRole(
+            Guid orgId,
+            Guid teamId,
+            Guid memberId,
+            [FromBody] UpdateMemberRoleRequest request,
+            CancellationToken cancellationToken)
+        {
+            var userId = this.GetUserId();
+
+            var hasPermission = await this.CheckTeamAdminPermissionAsync(userId, orgId, teamId, cancellationToken).ConfigureAwait(false);
+            if (!hasPermission)
+            {
+                return this.Forbid();
+            }
+
+            var validRole = ValidateRole(request.Role);
+            if (validRole == null)
+            {
+                return this.BadRequest("Role must be 'admin' or 'member'");
+            }
+
+            var team = await this._dbContext.Teams
+                .FirstOrDefaultAsync(g => g.Id == teamId && g.OrganizationId == orgId, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (team == null)
+            {
+                return this.NotFound("Team not found");
+            }
+
+            var membership = await this._dbContext.TeamMemberships
+                .FirstOrDefaultAsync(m => m.UserId == memberId && m.TeamId == teamId, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (membership == null)
+            {
+                return this.NotFound("Member not found");
+            }
+
+            membership.Role = validRole;
+
+            await this._dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            await this._auditService.LogAsync(
+                orgId,
+                userId,
+                "UpdateTeamMemberRole",
+                new { TeamId = teamId, UserId = memberId, NewRole = validRole },
+                cancellationToken).ConfigureAwait(false);
+
+            return this.Ok(new
+            {
+                id = membership.Id,
+                userId = membership.UserId,
+                role = membership.Role,
+                joinedAt = membership.JoinedAt,
+            });
+        }
+
+        /// <summary>
         /// Lists members of a team.
         /// </summary>
         /// <param name="orgId">The organization ID.</param>
@@ -480,6 +672,22 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
     {
         /// <summary>
         /// Gets or sets the new role for the member.
+        /// </summary>
+        public required string Role { get; set; }
+    }
+
+    /// <summary>
+    /// Request to add a member to a team.
+    /// </summary>
+    public class AddTeamMemberRequest
+    {
+        /// <summary>
+        /// Gets or sets the user ID to add.
+        /// </summary>
+        public required Guid UserId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the role for the member.
         /// </summary>
         public required string Role { get; set; }
     }

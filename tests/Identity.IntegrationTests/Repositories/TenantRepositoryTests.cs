@@ -154,6 +154,16 @@ public class TenantRepositoryTests : IAsyncLifetime
                     CreatedAt DATETIME2 NOT NULL,
                     UpdatedAt DATETIME2 NOT NULL
                 );
+            END;
+
+            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'TenantSettings')
+            BEGIN
+                CREATE TABLE TenantSettings (
+                    TenantId NVARCHAR(100) NOT NULL,
+                    SettingKey NVARCHAR(100) NOT NULL,
+                    SettingValue NVARCHAR(500) NOT NULL,
+                    PRIMARY KEY (TenantId, SettingKey)
+                );
             END";
 
         using var command = new SqlCommand(createTableSql, connection);
@@ -190,6 +200,22 @@ public class TenantRepositoryTests : IAsyncLifetime
         command.Parameters.AddWithValue("@UpdatedAt", tenant.UpdatedAt);
 
         await command.ExecuteNonQueryAsync();
+
+        // Delete existing settings and insert current ones
+        var deleteSettingsSql = "DELETE FROM TenantSettings WHERE TenantId = @TenantId";
+        using var deleteCommand = new SqlCommand(deleteSettingsSql, connection);
+        deleteCommand.Parameters.AddWithValue("@TenantId", tenant.Id);
+        await deleteCommand.ExecuteNonQueryAsync();
+
+        foreach (var setting in tenant.Settings)
+        {
+            var insertSettingSql = "INSERT INTO TenantSettings (TenantId, SettingKey, SettingValue) VALUES (@TenantId, @SettingKey, @SettingValue)";
+            using var settingCommand = new SqlCommand(insertSettingSql, connection);
+            settingCommand.Parameters.AddWithValue("@TenantId", tenant.Id);
+            settingCommand.Parameters.AddWithValue("@SettingKey", setting.Key);
+            settingCommand.Parameters.AddWithValue("@SettingValue", setting.Value);
+            await settingCommand.ExecuteNonQueryAsync();
+        }
     }
 
     private async Task<Tenant?> LoadTenantAsync(string tenantId)
@@ -211,8 +237,33 @@ public class TenantRepositoryTests : IAsyncLifetime
                 reader.GetString(reader.GetOrdinal("Slug")),
                 reader.GetString(reader.GetOrdinal("PrimaryRegion")));
 
-            // Note: In a real implementation, we would use a repository to properly reconstruct the aggregate
-            // For this test, we're just verifying the data can be stored and retrieved
+            // Set Status using reflection
+            var status = (TenantStatus)reader.GetInt32(reader.GetOrdinal("Status"));
+            var tenantType = tenant.GetType();
+            tenantType.GetProperty("Status", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
+                ?.SetValue(tenant, status);
+
+            // Load settings
+            await reader.CloseAsync();
+            var settingsSql = "SELECT SettingKey, SettingValue FROM TenantSettings WHERE TenantId = @TenantId";
+            using var settingsCommand = new SqlCommand(settingsSql, connection);
+            settingsCommand.Parameters.AddWithValue("@TenantId", tenantId);
+            using var settingsReader = await settingsCommand.ExecuteReaderAsync();
+
+            var settings = new Dictionary<string, string>();
+            while (await settingsReader.ReadAsync())
+            {
+                var key = settingsReader.GetString(settingsReader.GetOrdinal("SettingKey"));
+                var value = settingsReader.GetString(settingsReader.GetOrdinal("SettingValue"));
+                settings[key] = value;
+            }
+
+            if (settings.Count > 0)
+            {
+                tenantType.GetProperty("Settings", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
+                    ?.SetValue(tenant, settings);
+            }
+
             return tenant;
         }
 

@@ -52,6 +52,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity
 
             var manager = new IdentityManager(new[] { mockStrat.Object }, mockStore.Object, logger.Object);
 
+            // Wait for the initial background load to complete to avoid race conditions
+            await Task.Delay(100);
+
             var acc = new IdentityAccount
             {
                 Id = "1",

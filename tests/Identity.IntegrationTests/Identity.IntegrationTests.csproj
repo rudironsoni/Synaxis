@@ -6,6 +6,8 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <RootNamespace>Synaxis.Identity.IntegrationTests</RootNamespace>
+    <AssemblyName>Synaxis.Identity.IntegrationTests</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

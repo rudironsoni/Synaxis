@@ -277,8 +277,19 @@ public class UserRepositoryTests : IAsyncLifetime
                 ? (DateTime?)null
                 : reader.GetDateTime(reader.GetOrdinal("LockedUntil"));
 
-            // Note: In a real implementation, we would use a repository to properly reconstruct the aggregate
-            // For this test, we're just verifying the data can be stored and retrieved
+            // Apply properties to user using reflection for testing purposes
+            // These properties have private setters, so we need to use reflection with non-public binding
+            var userType = user.GetType();
+            var emailVerifiedAtProp = userType.GetProperty("EmailVerifiedAt", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            var lastLoginAtProp = userType.GetProperty("LastLoginAt", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            var failedLoginAttemptsProp = userType.GetProperty("FailedLoginAttempts", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            var lockedUntilProp = userType.GetProperty("LockedUntil", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+
+            emailVerifiedAtProp?.SetValue(user, emailVerifiedAt);
+            lastLoginAtProp?.SetValue(user, lastLoginAt);
+            failedLoginAttemptsProp?.SetValue(user, failedLoginAttempts);
+            lockedUntilProp?.SetValue(user, lockedUntil);
+
             return user;
         }
 

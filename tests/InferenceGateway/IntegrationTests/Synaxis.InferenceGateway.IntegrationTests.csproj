@@ -5,7 +5,8 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <RootNamespace>Synaxis.InferenceGateway.IntegrationTests</RootNamespace>
+    <AssemblyName>Synaxis.InferenceGateway.IntegrationTests</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="DotNetEnv" />
