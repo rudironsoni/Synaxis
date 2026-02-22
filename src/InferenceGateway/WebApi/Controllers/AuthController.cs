@@ -335,6 +335,23 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
                 return this.BadRequest(new { success = false, message = "Invalid reset token" });
             }
 
+            // Find and validate the reset token if one exists in the database
+            var resetToken = await this.dbContext.PasswordResetTokens
+                .FirstOrDefaultAsync(t => t.UserId == userId && !t.IsUsed && t.ExpiresAt > DateTime.UtcNow, cancellationToken)
+                .ConfigureAwait(false);
+
+            // If a token exists in the database, validate it
+            if (resetToken != null && !this.passwordHasher.VerifyPassword(request.Token, resetToken.TokenHash))
+            {
+                return this.BadRequest(new { success = false, message = "Invalid or expired reset token" });
+            }
+
+            // Mark token as used if found
+            if (resetToken != null)
+            {
+                resetToken.IsUsed = true;
+            }
+
             user.PasswordHash = this.passwordHasher.HashPassword(request.Password);
             user.UpdatedAt = DateTime.UtcNow;
             await this.dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

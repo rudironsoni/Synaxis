@@ -46,6 +46,7 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
 
             // Setup password hasher to return a hashed password
             _mockPasswordHasher.Setup(x => x.HashPassword(It.IsAny<string>())).Returns((string password) => $"hashed_{password}");
+            _mockPasswordHasher.Setup(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
 
             _controller = new AuthController(
                 _mockJwtService.Object,
@@ -480,20 +481,18 @@ namespace Synaxis.InferenceGateway.WebApi.Tests.Controllers
 
             // Step 2: Reset password
             var newPassword = "NewSecurePassword123!";
-            var resetRequest = new ResetPasswordRequest
-            {
-                Token = resetToken.TokenHash, // This is the hash, we need the actual token
-                Password = newPassword
-            };
 
-            // We need to get the actual token value from the token hash
-            // Since we can't reverse the hash, we'll create a new token with the same hash
-            var actualToken = GenerateSecureToken();
+            // Create a properly formatted token: reset_{userId}
+            var actualToken = $"reset_{testUser.Id}";
             _mockPasswordHasher
                 .Setup(x => x.VerifyPassword(actualToken, resetToken.TokenHash))
                 .Returns(true);
 
-            resetRequest.Token = actualToken;
+            var resetRequest = new ResetPasswordRequest
+            {
+                Token = actualToken,
+                Password = newPassword
+            };
             _mockPasswordHasher
                 .Setup(x => x.HashPassword(newPassword))
                 .Returns("new_hashed_password");

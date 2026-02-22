@@ -62,6 +62,44 @@ namespace Synaxis.Infrastructure.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "organization_api_keys",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    organization_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    created_by = table.Column<Guid>(type: "uuid", nullable: false),
+                    name = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    key_hash = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
+                    key_prefix = table.Column<string>(type: "character varying(8)", maxLength: 8, nullable: false),
+                    permissions = table.Column<string>(type: "jsonb", nullable: false),
+                    expires_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    last_used_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    revoked_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    revoked_reason = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    is_active = table.Column<bool>(type: "boolean", nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    total_requests = table.Column<long>(type: "bigint", nullable: true),
+                    error_count = table.Column<long>(type: "bigint", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_organization_api_keys", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_organization_api_keys_organizations_organization_id",
+                        column: x => x.organization_id,
+                        principalTable: "organizations",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_organization_api_keys_users_created_by",
+                        column: x => x.created_by,
+                        principalTable: "users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "jwt_blacklists",
                 columns: table => new
                 {
@@ -93,6 +131,22 @@ namespace Synaxis.Infrastructure.Data.Migrations
                 column: "expires_at");
 
             migrationBuilder.CreateIndex(
+                name: "IX_organization_api_keys_created_by",
+                table: "organization_api_keys",
+                column: "created_by");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_organization_api_keys_key_hash",
+                table: "organization_api_keys",
+                column: "key_hash",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_organization_api_keys_organization_id",
+                table: "organization_api_keys",
+                column: "organization_id");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_jwt_blacklists_token_id",
                 table: "jwt_blacklists",
                 column: "token_id",
@@ -117,6 +171,9 @@ namespace Synaxis.Infrastructure.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "jwt_blacklists");
+
+            migrationBuilder.DropTable(
+                name: "organization_api_keys");
 
             migrationBuilder.DropTable(
                 name: "PasswordResetTokens");

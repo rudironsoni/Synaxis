@@ -220,7 +220,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
 
             if (collectionEntity == null)
             {
-                return this.NotFound();
+                return this.NotFound("Collection not found");
             }
 
             var collection = new
@@ -240,11 +240,6 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
                 updatedAt = collectionEntity.UpdatedAt,
                 createdBy = collectionEntity.CreatedBy,
             };
-
-            if (collection == null)
-            {
-                return this.NotFound("Collection not found");
-            }
 
             return this.Ok(collection);
         }

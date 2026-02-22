@@ -304,10 +304,13 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
             // Remove team memberships
             var teamMemberships = await this.RemoveTeamMembershipsAsync(userId, cancellationToken);
 
+            // Remove collection memberships
+            var collectionMemberships = await this.RemoveCollectionMembershipsAsync(userId, cancellationToken);
+
             return new DeletionStats
             {
                 TeamMembershipsRemoved = teamMemberships.Count,
-                CollectionMembershipsRemoved = 0,
+                CollectionMembershipsRemoved = collectionMemberships.Count,
                 VirtualKeysRevoked = virtualKeys.Count,
                 RefreshTokensRevoked = refreshTokens.Count,
             };
@@ -364,6 +367,17 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
 
             this._synaxisDbContext.TeamMemberships.RemoveRange(teamMemberships);
             return teamMemberships;
+        }
+
+        private async Task<List<CollectionMembership>> RemoveCollectionMembershipsAsync(Guid userId, CancellationToken cancellationToken)
+        {
+            var collectionMemberships = await this._synaxisDbContext.CollectionMemberships
+                .Where(cm => cm.UserId == userId)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            this._synaxisDbContext.CollectionMemberships.RemoveRange(collectionMemberships);
+            return collectionMemberships;
         }
 
         private void CreateDeletionAuditLog(User user, Guid userId, DeletionStats stats)
@@ -451,24 +465,15 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
                 return this.NotFound();
             }
 
-            string avatarUrl;
-            if (file == null)
+            // Validate file is present
+            var validationResult = this.ValidateAvatarFile(file);
+            if (validationResult != null)
             {
-                // Return placeholder avatar when no file provided
-                avatarUrl = $"/uploads/avatars/placeholder/{Guid.NewGuid()}.png";
+                return validationResult;
             }
-            else
-            {
-                // Validate file
-                var validationResult = this.ValidateAvatarFile(file);
-                if (validationResult != null)
-                {
-                    return validationResult;
-                }
 
-                // Save file and update user (file is guaranteed non-null after validation)
-                avatarUrl = await SaveAvatarFileAsync(file, userId, cancellationToken);
-            }
+            // Save file and update user (file is guaranteed non-null after validation)
+            var avatarUrl = await SaveAvatarFileAsync(file!, userId, cancellationToken);
 
             user.AvatarUrl = avatarUrl;
             user.UpdatedAt = DateTime.UtcNow;
