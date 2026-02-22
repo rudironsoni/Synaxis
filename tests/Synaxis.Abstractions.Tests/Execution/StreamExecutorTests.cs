@@ -59,7 +59,7 @@ public class StreamExecutorTests
         }
 
         // Assert
-        results.Should().HaveCountLessOrEqualTo(5);
+        results.Count.Should().BeInRange(0, 5);
     }
 
     [Fact]

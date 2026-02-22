@@ -358,6 +358,7 @@ namespace Synaxis.Core.Tests.Services
             var request = new UpdateOrganizationSettingsRequest
             {
                 DataRetentionDays = 180,
+                AllowedEmailDomains = new List<string>(),
             };
 
             this.mockDbSet.Setup(m => m.FindAsync(new object[] { orgId }, It.IsAny<CancellationToken>()))
@@ -389,6 +390,7 @@ namespace Synaxis.Core.Tests.Services
             var request = new UpdateOrganizationSettingsRequest
             {
                 DataRetentionDays = -5,
+                AllowedEmailDomains = new List<string>(),
             };
 
             this.mockDbSet.Setup(m => m.FindAsync(new object[] { orgId }, It.IsAny<CancellationToken>()))
@@ -420,6 +422,7 @@ namespace Synaxis.Core.Tests.Services
             var request = new UpdateOrganizationSettingsRequest
             {
                 DataRetentionDays = 10000,
+                AllowedEmailDomains = new List<string>(),
             };
 
             this.mockDbSet.Setup(m => m.FindAsync(new object[] { orgId }, It.IsAny<CancellationToken>()))
