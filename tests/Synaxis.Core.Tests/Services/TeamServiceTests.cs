@@ -27,7 +27,7 @@ namespace Synaxis.Core.Tests.Services
         private Guid _organizationId;
         private Guid _userId;
 
-        public Task InitializeAsync()
+        public async Task InitializeAsync()
         {
             var options = new DbContextOptionsBuilder<SynaxisDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
@@ -50,9 +50,7 @@ namespace Synaxis.Core.Tests.Services
             };
 
             _context.Organizations.Add(organization);
-            _context.SaveChanges();
-
-            return Task.CompletedTask;
+            await _context.SaveChangesAsync();
         }
 
         public async Task DisposeAsync()

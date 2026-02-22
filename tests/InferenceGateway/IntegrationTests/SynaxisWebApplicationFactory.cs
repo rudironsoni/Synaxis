@@ -153,9 +153,6 @@ public class SynaxisWebApplicationFactory : WebApplicationFactory<Program>, ITes
         // Seed the database
         await TestDatabaseSeeder.SeedAsync(controlPlaneContext, config);
 
-        // Post-seed test data: create test-alias model for integration tests
-        await PostSeedTestDataAsync(controlPlaneContext);
-
         _initialized = true;
     }
 
