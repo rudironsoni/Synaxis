@@ -200,7 +200,7 @@ Run these commands and ensure they succeed:
 dotnet format --verify-no-changes
 
 # Build the solution (warnings treated as errors):
-dotnet build <Solution.sln> -c Release -warnaserror
+dotnet build <Solution.sln> -warnaserror
 
 # Test the solution:
 dotnet test <Solution.sln> --no-build
@@ -345,7 +345,7 @@ git diff --name-only
 
 ```bash
 dotnet format --verify-no-changes
-dotnet build <Solution.sln> -c Release -warnaserror
+dotnet build <Solution.sln> -warnaserror
 dotnet test <Solution.sln> --no-build
 ```
 
