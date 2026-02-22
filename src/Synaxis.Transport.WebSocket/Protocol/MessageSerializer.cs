@@ -29,11 +29,7 @@ namespace Synaxis.Transport.WebSocket.Protocol
         /// <exception cref="ArgumentNullException">Thrown when message is null.</exception>
         public static byte[] Serialize(WebSocketMessage message)
         {
-            if (message is null)
-            {
-                throw new ArgumentNullException(nameof(message));
-            }
-
+            ArgumentNullException.ThrowIfNull(message);
             string json = JsonSerializer.Serialize(message, JsonOptions);
             return Encoding.UTF8.GetBytes(json);
         }
@@ -47,11 +43,7 @@ namespace Synaxis.Transport.WebSocket.Protocol
         /// <exception cref="JsonException">Thrown when deserialization fails.</exception>
         public static WebSocketMessage Deserialize(byte[] data)
         {
-            if (data is null)
-            {
-                throw new ArgumentNullException(nameof(data));
-            }
-
+            ArgumentNullException.ThrowIfNull(data);
             string json = Encoding.UTF8.GetString(data);
             return JsonSerializer.Deserialize<WebSocketMessage>(json, JsonOptions)
                 ?? throw new JsonException("Failed to deserialize WebSocket message");
@@ -69,11 +61,7 @@ namespace Synaxis.Transport.WebSocket.Protocol
             byte[] data,
             CancellationToken cancellationToken = default)
         {
-            if (data is null)
-            {
-                throw new ArgumentNullException(nameof(data));
-            }
-
+            ArgumentNullException.ThrowIfNull(data);
             using var stream = new System.IO.MemoryStream(data);
             return await JsonSerializer.DeserializeAsync<WebSocketMessage>(stream, JsonOptions, cancellationToken).ConfigureAwait(false)
                 ?? throw new JsonException("Failed to deserialize WebSocket message");

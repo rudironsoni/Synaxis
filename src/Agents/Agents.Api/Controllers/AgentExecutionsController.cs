@@ -28,8 +28,10 @@ public class AgentExecutionsController : ControllerBase
         IAgentExecutionService executionService,
         ILogger<AgentExecutionsController> logger)
     {
-        this._executionService = executionService ?? throw new ArgumentNullException(nameof(executionService));
-        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        ArgumentNullException.ThrowIfNull(executionService);
+        ArgumentNullException.ThrowIfNull(logger);
+        this._executionService = executionService;
+        this._logger = logger;
     }
 
     /// <summary>

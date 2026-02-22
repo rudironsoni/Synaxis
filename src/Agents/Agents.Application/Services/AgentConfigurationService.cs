@@ -27,8 +27,10 @@ public class AgentConfigurationService : IAgentConfigurationService
         IAgentConfigurationRepository repository,
         ILogger<AgentConfigurationService> logger)
     {
-        this._repository = repository ?? throw new ArgumentNullException(nameof(repository));
-        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        ArgumentNullException.ThrowIfNull(repository);
+        ArgumentNullException.ThrowIfNull(logger);
+        this._repository = repository;
+        this._logger = logger;
     }
 
     /// <inheritdoc/>

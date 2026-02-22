@@ -25,7 +25,7 @@ namespace Synaxis.Adapters.Agents.State
         /// <param name="maxHistoryMessages">The maximum number of messages to keep in history (default: 20).</param>
         public ConversationStateManager(IConversationStorage storage, int maxHistoryMessages = 20)
         {
-            this._storage = storage ?? throw new ArgumentNullException(nameof(storage));
+            this._storage = storage!;
             this._maxHistoryMessages = maxHistoryMessages > 0 ? maxHistoryMessages : 20;
         }
 
@@ -65,11 +65,7 @@ namespace Synaxis.Adapters.Agents.State
                 throw new ArgumentException("Conversation ID cannot be null or empty.", nameof(conversationId));
             }
 
-            if (message == null)
-            {
-                throw new ArgumentNullException(nameof(message));
-            }
-
+            ArgumentNullException.ThrowIfNull(message);
             var state = await this._storage.GetAsync(conversationId, cancellationToken).ConfigureAwait(false)
                 ?? new ConversationState { Messages = new System.Collections.Generic.List<ChatMessage>() };
 

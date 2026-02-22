@@ -25,7 +25,7 @@ namespace Synaxis.Providers.Anthropic
         /// <param name="client">The Anthropic client.</param>
         public AnthropicChatProvider(AnthropicClient client)
         {
-            this.client = client ?? throw new ArgumentNullException(nameof(client));
+            this.client = client!;
         }
 
         /// <inheritdoc/>
@@ -38,11 +38,7 @@ namespace Synaxis.Providers.Anthropic
             object? options = null,
             CancellationToken cancellationToken = default)
         {
-            if (messages == null)
-            {
-                throw new ArgumentNullException(nameof(messages));
-            }
-
+            ArgumentNullException.ThrowIfNull(messages);
             if (string.IsNullOrWhiteSpace(model))
             {
                 throw new ArgumentException("Model cannot be null or empty.", nameof(model));

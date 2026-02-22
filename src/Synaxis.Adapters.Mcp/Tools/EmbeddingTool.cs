@@ -28,7 +28,7 @@ namespace Synaxis.Adapters.Mcp.Tools
         /// <param name="executor">The embedding command executor.</param>
         public EmbeddingTool(ICommandExecutor<EmbeddingCommand, EmbeddingResponse> executor)
         {
-            this._executor = executor ?? throw new ArgumentNullException(nameof(executor));
+            this._executor = executor!;
 
             // Define JSON schema for the tool's input parameters
             var schemaJson = """

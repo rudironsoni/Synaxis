@@ -28,11 +28,7 @@ namespace Synaxis.Adapters.Mcp.DependencyInjection
             this IServiceCollection services,
             Action<McpAdapterOptions>? configure = null)
         {
-            if (services is null)
-            {
-                throw new ArgumentNullException(nameof(services));
-            }
-
+            ArgumentNullException.ThrowIfNull(services);
             // Configure options
             if (configure is not null)
             {
@@ -75,16 +71,8 @@ namespace Synaxis.Adapters.Mcp.DependencyInjection
             this IServiceCollection services,
             Action<ModelResourceBuilder> configureModels)
         {
-            if (services is null)
-            {
-                throw new ArgumentNullException(nameof(services));
-            }
-
-            if (configureModels is null)
-            {
-                throw new ArgumentNullException(nameof(configureModels));
-            }
-
+            ArgumentNullException.ThrowIfNull(services);
+            ArgumentNullException.ThrowIfNull(configureModels);
             var builder = new ModelResourceBuilder();
             configureModels(builder);
 
@@ -103,16 +91,8 @@ namespace Synaxis.Adapters.Mcp.DependencyInjection
             this IServiceCollection services,
             Action<PromptTemplateBuilder> configurePrompts)
         {
-            if (services is null)
-            {
-                throw new ArgumentNullException(nameof(services));
-            }
-
-            if (configurePrompts is null)
-            {
-                throw new ArgumentNullException(nameof(configurePrompts));
-            }
-
+            ArgumentNullException.ThrowIfNull(services);
+            ArgumentNullException.ThrowIfNull(configurePrompts);
             var builder = new PromptTemplateBuilder();
             configurePrompts(builder);
 

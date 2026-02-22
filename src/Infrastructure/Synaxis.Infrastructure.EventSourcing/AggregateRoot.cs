@@ -63,11 +63,7 @@ public abstract class AggregateRoot
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="events"/> is null.</exception>
     public void LoadFromHistory(IEnumerable<IDomainEvent> events)
     {
-        if (events == null)
-        {
-            throw new ArgumentNullException(nameof(events));
-        }
-
+        ArgumentNullException.ThrowIfNull(events);
         foreach (var @event in events)
         {
             this.Apply(@event);

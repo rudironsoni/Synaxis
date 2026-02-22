@@ -34,7 +34,7 @@ namespace Synaxis.Transport.Http.Controllers
         /// <param name="logger">The logger instance.</param>
         public ChatController(ILogger<ChatController> logger)
         {
-            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this.logger = logger!;
         }
 
         /// <summary>

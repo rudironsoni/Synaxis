@@ -50,11 +50,7 @@ public class SmartRouter : IRouter
     /// <returns>A routing decision containing the selected provider and metadata.</returns>
     public async Task<RoutingDecision> RouteRequestAsync(RoutingRequest request, CancellationToken cancellationToken = default)
     {
-        if (request == null)
-        {
-            throw new ArgumentNullException(nameof(request));
-        }
-
+        ArgumentNullException.ThrowIfNull(request);
         var availableProviders = this.GetAvailableProviders(request);
         if (availableProviders.Count == 0)
         {
@@ -110,11 +106,7 @@ public class SmartRouter : IRouter
         int outputTokens,
         CancellationToken cancellationToken = default)
     {
-        if (decision == null)
-        {
-            throw new ArgumentNullException(nameof(decision));
-        }
-
+        ArgumentNullException.ThrowIfNull(decision);
         var providerId = decision.SelectedProvider.Id;
         var cost = CalculateActualCost(decision.SelectedProvider, inputTokens, outputTokens);
 
@@ -208,11 +200,7 @@ public class SmartRouter : IRouter
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public Task AddOrUpdateProviderAsync(Provider provider, CancellationToken cancellationToken = default)
     {
-        if (provider == null)
-        {
-            throw new ArgumentNullException(nameof(provider));
-        }
-
+        ArgumentNullException.ThrowIfNull(provider);
         if (string.IsNullOrEmpty(provider.Id))
         {
             throw new ArgumentException("Provider ID cannot be null or empty.", nameof(provider));

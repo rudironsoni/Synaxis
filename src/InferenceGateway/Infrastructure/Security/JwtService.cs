@@ -26,11 +26,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
         /// <param name="config">The configuration options containing JWT settings.</param>
         public JwtService(IOptions<SynaxisConfiguration> config)
         {
-            if (config is null)
-            {
-                throw new ArgumentNullException(nameof(config));
-            }
-
+            ArgumentNullException.ThrowIfNull(config);
             this._config = config.Value;
         }
 

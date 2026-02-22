@@ -24,7 +24,7 @@ public class WorkflowStepCompletedHandler : INotificationHandler<WorkflowStepCom
     /// <param name="logger">The logger.</param>
     public WorkflowStepCompletedHandler(ILogger<WorkflowStepCompletedHandler> logger)
     {
-        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this._logger = logger!;
     }
 
     /// <summary>

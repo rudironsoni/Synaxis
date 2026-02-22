@@ -29,9 +29,9 @@ namespace Synaxis.Adapters.Mcp.Transports
             string baseUrl,
             ILogger<HttpTransport> logger)
         {
-            _ = server ?? throw new ArgumentNullException(nameof(server));
-            this._baseUrl = baseUrl ?? throw new ArgumentNullException(nameof(baseUrl));
-            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _ = server!;
+            this._baseUrl = baseUrl!;
+            this._logger = logger!;
         }
 
         /// <inheritdoc/>

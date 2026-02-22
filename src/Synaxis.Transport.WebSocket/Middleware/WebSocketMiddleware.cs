@@ -34,10 +34,11 @@ namespace Synaxis.Transport.WebSocket.Middleware
             ILogger<WebSocketMiddleware> logger,
             IOptions<WebSocketTransportOptions> options)
         {
-            this.next = next ?? throw new ArgumentNullException(nameof(next));
-            this.handler = handler ?? throw new ArgumentNullException(nameof(handler));
-            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            this.options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+            this.next = next!;
+            this.handler = handler!;
+            this.logger = logger!;
+            ArgumentNullException.ThrowIfNull(options);
+            this.options = options.Value;
         }
 
         /// <summary>
@@ -47,11 +48,7 @@ namespace Synaxis.Transport.WebSocket.Middleware
         /// <returns>A task representing the asynchronous operation.</returns>
         public async Task InvokeAsync(HttpContext context)
         {
-            if (context is null)
-            {
-                throw new ArgumentNullException(nameof(context));
-            }
-
+            ArgumentNullException.ThrowIfNull(context);
             if (context.Request.Path == this.options.Path && context.WebSockets.IsWebSocketRequest)
             {
                 this.logger.LogInformation("WebSocket upgrade request received for path: {Path}", context.Request.Path);

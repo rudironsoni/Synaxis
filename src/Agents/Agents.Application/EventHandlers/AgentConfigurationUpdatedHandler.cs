@@ -24,7 +24,7 @@ public class AgentConfigurationUpdatedHandler : INotificationHandler<AgentConfig
     /// <param name="logger">The logger.</param>
     public AgentConfigurationUpdatedHandler(ILogger<AgentConfigurationUpdatedHandler> logger)
     {
-        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this._logger = logger!;
     }
 
     /// <inheritdoc/>

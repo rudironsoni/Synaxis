@@ -34,9 +34,9 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             IMemoryCache cache,
             ILogger<RateLimitingMiddleware> logger)
         {
-            this._next = next ?? throw new ArgumentNullException(nameof(next));
-            this._cache = cache ?? throw new ArgumentNullException(nameof(cache));
-            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._next = next!;
+            this._cache = cache!;
+            this._logger = logger!;
         }
 
         /// <summary>

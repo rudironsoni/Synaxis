@@ -28,8 +28,8 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             ILogger<SecurityHeadersMiddleware> logger,
             IWebHostEnvironment environment)
         {
-            this._next = next ?? throw new ArgumentNullException(nameof(next));
-            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._next = next!;
+            this._logger = logger!;
             this._isDevelopment = environment.IsDevelopment();
         }
 

@@ -32,9 +32,12 @@ public sealed class TenantKeyService
         ILogger<TenantKeyService> logger,
         IOptions<EncryptionOptions> options)
     {
-        this._keyVault = keyVault ?? throw new ArgumentNullException(nameof(keyVault));
-        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        this._options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+        ArgumentNullException.ThrowIfNull(keyVault);
+        this._keyVault = keyVault;
+        ArgumentNullException.ThrowIfNull(logger);
+        this._logger = logger;
+        ArgumentNullException.ThrowIfNull(options);
+        this._options = options.Value;
         this._keyCache = new ConcurrentDictionary<string, TenantKeyMetadata>(StringComparer.Ordinal);
     }
 

@@ -25,8 +25,10 @@ namespace Synaxis.Health.Checks
             IServiceDiscoveryClient discoveryClient,
             ILogger<ServiceDiscoveryHealthCheck> logger)
         {
-            this._discoveryClient = discoveryClient ?? throw new ArgumentNullException(nameof(discoveryClient));
-            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(discoveryClient);
+            this._discoveryClient = discoveryClient;
+            ArgumentNullException.ThrowIfNull(logger);
+            this._logger = logger;
         }
 
         /// <summary>

@@ -23,11 +23,7 @@ namespace Synaxis.Adapters.Mcp.Resources
         /// <param name="models">The collection of available models.</param>
         public ModelResourceProvider(IEnumerable<ModelResource> models)
         {
-            if (models is null)
-            {
-                throw new ArgumentNullException(nameof(models));
-            }
-
+            ArgumentNullException.ThrowIfNull(models);
             this._models = models.ToList().AsReadOnly();
         }
 

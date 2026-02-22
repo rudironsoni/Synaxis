@@ -23,7 +23,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
         /// <param name="httpContextAccessor">The HTTP context accessor.</param>
         public OrganizationUserContext(IHttpContextAccessor httpContextAccessor)
         {
-            this._httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+            ArgumentNullException.ThrowIfNull(httpContextAccessor);
+            this._httpContextAccessor = httpContextAccessor;
         }
 
         /// <inheritdoc/>

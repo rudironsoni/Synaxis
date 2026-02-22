@@ -27,7 +27,8 @@ namespace Synaxis.Behaviors
         /// <param name="logger">The logger.</param>
         public LoggingBehavior(ILogger<LoggingBehavior<TMessage, TResponse>> logger)
         {
-            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(logger);
+            this._logger = logger;
         }
 
         /// <inheritdoc/>
@@ -36,16 +37,8 @@ namespace Synaxis.Behaviors
             MessageHandlerDelegate<TMessage, TResponse> next,
             CancellationToken cancellationToken)
         {
-            if (message is null)
-            {
-                throw new ArgumentNullException(nameof(message));
-            }
-
-            if (next is null)
-            {
-                throw new ArgumentNullException(nameof(next));
-            }
-
+            ArgumentNullException.ThrowIfNull(message);
+            ArgumentNullException.ThrowIfNull(next);
             var messageType = typeof(TMessage).Name;
             this._logger.LogInformation("Handling {MessageType}", messageType);
 

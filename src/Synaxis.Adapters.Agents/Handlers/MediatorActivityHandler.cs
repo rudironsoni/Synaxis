@@ -35,9 +35,9 @@ namespace Synaxis.Adapters.Agents.Handlers
             ConversationStateManager stateManager,
             ILogger<MediatorActivityHandler> logger)
         {
-            this._executor = executor ?? throw new ArgumentNullException(nameof(executor));
-            this._stateManager = stateManager ?? throw new ArgumentNullException(nameof(stateManager));
-            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._executor = executor!;
+            this._stateManager = stateManager!;
+            this._logger = logger!;
         }
 
         /// <summary>

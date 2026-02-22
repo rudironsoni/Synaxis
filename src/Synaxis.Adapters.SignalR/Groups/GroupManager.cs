@@ -21,7 +21,7 @@ namespace Synaxis.Adapters.SignalR.Groups
         /// <param name="hubContext">The hub context for group operations.</param>
         public GroupManager(IHubContext<Hubs.SynaxisHub> hubContext)
         {
-            this.hubContext = hubContext ?? throw new ArgumentNullException(nameof(hubContext));
+            this.hubContext = hubContext!;
         }
 
         /// <summary>

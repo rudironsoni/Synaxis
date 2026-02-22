@@ -25,8 +25,10 @@ namespace Synaxis.InferenceGateway.WebApi.Hubs
             IHubContext<SynaxisHub> hubContext,
             ILogger<RealTimeNotifier> logger)
         {
-            this._hubContext = hubContext ?? throw new ArgumentNullException(nameof(hubContext));
-            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(hubContext);
+            this._hubContext = hubContext;
+            ArgumentNullException.ThrowIfNull(logger);
+            this._logger = logger;
         }
 
         /// <inheritdoc/>

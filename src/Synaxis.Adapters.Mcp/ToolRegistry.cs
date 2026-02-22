@@ -18,11 +18,7 @@ namespace Synaxis.Adapters.Mcp
         /// <inheritdoc/>
         public void Register(IMcpTool tool)
         {
-            if (tool is null)
-            {
-                throw new ArgumentNullException(nameof(tool));
-            }
-
+            ArgumentNullException.ThrowIfNull(tool);
             if (string.IsNullOrWhiteSpace(tool.Name))
             {
                 throw new ArgumentException("Tool name cannot be null or whitespace.", nameof(tool));

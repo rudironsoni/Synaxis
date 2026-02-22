@@ -30,8 +30,8 @@ public class AzureServiceBus : IMessageBus
     /// <param name="logger">The logger instance.</param>
     public AzureServiceBus(IBus bus, ILogger<AzureServiceBus> logger)
     {
-        this._bus = bus ?? throw new ArgumentNullException(nameof(bus));
-        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this._bus = bus!;
+        this._logger = logger!;
         this._retryPolicy = Policy
             .Handle<Exception>()
             .WaitAndRetryAsync(

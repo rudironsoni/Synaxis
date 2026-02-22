@@ -60,15 +60,23 @@ namespace Synaxis.InferenceGateway.Application.ChatClients
             IFallbackOrchestrator fallbackOrchestrator,
             ILogger<SmartRoutingChatClient> logger)
         {
-            this.chatClientFactory = chatClientFactory ?? throw new ArgumentNullException(nameof(chatClientFactory));
-            _ = smartRouter ?? throw new ArgumentNullException(nameof(smartRouter)); // Validate but don't store
-            this.healthStore = healthStore ?? throw new ArgumentNullException(nameof(healthStore));
-            this.quotaTracker = quotaTracker ?? throw new ArgumentNullException(nameof(quotaTracker));
-            this.pipelineProvider = pipelineProvider ?? throw new ArgumentNullException(nameof(pipelineProvider));
-            this.strategies = strategies ?? throw new ArgumentNullException(nameof(strategies));
-            this.activitySource = activitySource ?? throw new ArgumentNullException(nameof(activitySource));
-            this.fallbackOrchestrator = fallbackOrchestrator ?? throw new ArgumentNullException(nameof(fallbackOrchestrator));
-            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(chatClientFactory);
+            this.chatClientFactory = chatClientFactory;
+            ArgumentNullException.ThrowIfNull(smartRouter); // Validate but don't store
+            ArgumentNullException.ThrowIfNull(healthStore);
+            this.healthStore = healthStore;
+            ArgumentNullException.ThrowIfNull(quotaTracker);
+            this.quotaTracker = quotaTracker;
+            ArgumentNullException.ThrowIfNull(pipelineProvider);
+            this.pipelineProvider = pipelineProvider;
+            ArgumentNullException.ThrowIfNull(strategies);
+            this.strategies = strategies;
+            ArgumentNullException.ThrowIfNull(activitySource);
+            this.activitySource = activitySource;
+            ArgumentNullException.ThrowIfNull(fallbackOrchestrator);
+            this.fallbackOrchestrator = fallbackOrchestrator;
+            ArgumentNullException.ThrowIfNull(logger);
+            this.logger = logger;
         }
 
         /// <summary>

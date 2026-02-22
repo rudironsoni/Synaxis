@@ -51,9 +51,10 @@ namespace Synaxis.Providers.Adapters
             IOptions<AzureOpenAIOptions> options,
             ILogger<AzureOpenAIAdapter> logger)
         {
-            this._httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-            this._options = options?.Value ?? throw new ArgumentNullException(nameof(options));
-            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._httpClient = httpClient!;
+            ArgumentNullException.ThrowIfNull(options);
+            this._options = options.Value;
+            this._logger = logger!;
 
             this._tokenLock = new SemaphoreSlim(1, 1);
             this._tokenExpiry = DateTimeOffset.MinValue;

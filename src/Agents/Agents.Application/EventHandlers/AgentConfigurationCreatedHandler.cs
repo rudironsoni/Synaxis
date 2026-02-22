@@ -30,8 +30,8 @@ public class AgentConfigurationCreatedHandler : INotificationHandler<AgentConfig
         ILogger<AgentConfigurationCreatedHandler> logger,
         IAuditService auditService)
     {
-        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        this._auditService = auditService ?? throw new ArgumentNullException(nameof(auditService));
+        this._logger = logger!;
+        this._auditService = auditService!;
     }
 
     /// <inheritdoc/>

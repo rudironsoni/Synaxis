@@ -23,17 +23,14 @@ namespace Synaxis.Routing
         /// <param name="logger">The logger.</param>
         public ProviderSelector(ILogger<ProviderSelector> logger)
         {
-            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(logger);
+            this._logger = logger;
         }
 
         /// <inheritdoc/>
         public Task<string> SelectProviderAsync(object request, CancellationToken cancellationToken)
         {
-            if (request is null)
-            {
-                throw new ArgumentNullException(nameof(request));
-            }
-
+            ArgumentNullException.ThrowIfNull(request);
             this._logger.LogDebug("Selecting provider for request type {RequestType}", request.GetType().Name);
             return Task.FromResult("default");
         }

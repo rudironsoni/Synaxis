@@ -20,7 +20,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
         /// Initializes a new instance of the <see cref="CopilotClientAdapter"/> class.
         /// </summary>
         /// <param name="inner">The inner Copilot client.</param>
-        public CopilotClientAdapter(CopilotClient inner) => this._inner = inner ?? throw new ArgumentNullException(nameof(inner));
+        public CopilotClientAdapter(CopilotClient inner)
+        {
+            ArgumentNullException.ThrowIfNull(inner);
+            this._inner = inner;
+        }
 
         /// <inheritdoc/>
         public ConnectionState State => this._inner.State;
@@ -55,7 +59,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
         /// Initializes a new instance of the <see cref="CopilotSessionAdapter"/> class.
         /// </summary>
         /// <param name="inner">The inner Copilot session.</param>
-        public CopilotSessionAdapter(CopilotSession inner) => this._inner = inner ?? throw new ArgumentNullException(nameof(inner));
+        public CopilotSessionAdapter(CopilotSession inner)
+        {
+            ArgumentNullException.ThrowIfNull(inner);
+            this._inner = inner;
+        }
 
         /// <inheritdoc/>
         public IDisposable On(SessionEventHandler handler) => this._inner.On(handler);

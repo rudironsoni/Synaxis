@@ -142,11 +142,7 @@ public sealed class CircuitBreakerStore : IDisposable
             throw new ArgumentException("Provider name cannot be null or empty.", nameof(providerName));
         }
 
-        if (breaker == null)
-        {
-            throw new ArgumentNullException(nameof(breaker));
-        }
-
+        ArgumentNullException.ThrowIfNull(breaker);
         if (this._redisDatabase == null)
         {
             return;

@@ -31,8 +31,8 @@ public class AzureCosmosEventStore : IEventStore
     /// <param name="logger">The logger instance.</param>
     public AzureCosmosEventStore(Container container, ILogger<AzureCosmosEventStore> logger)
     {
-        this._container = container ?? throw new ArgumentNullException(nameof(container));
-        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this._container = container!;
+        this._logger = logger!;
         this._retryPolicy = Policy
             .Handle<CosmosException>()
             .Or<TimeoutException>()

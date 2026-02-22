@@ -31,18 +31,16 @@ namespace Synaxis.Handlers.Chat
             IProviderSelector providerSelector,
             ILogger<ChatCommandHandler> logger)
         {
-            this._providerSelector = providerSelector ?? throw new ArgumentNullException(nameof(providerSelector));
-            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(providerSelector);
+            this._providerSelector = providerSelector;
+            ArgumentNullException.ThrowIfNull(logger);
+            this._logger = logger;
         }
 
         /// <inheritdoc/>
         public async ValueTask<ChatResponse> Handle(ChatCommand request, CancellationToken cancellationToken)
         {
-            if (request is null)
-            {
-                throw new ArgumentNullException(nameof(request));
-            }
-
+            ArgumentNullException.ThrowIfNull(request);
             this._logger.LogDebug("Processing chat command for model {Model}", request.Model);
 
             var providerName = await this._providerSelector.SelectProviderAsync(request, cancellationToken)

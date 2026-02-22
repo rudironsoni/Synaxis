@@ -39,10 +39,14 @@ public sealed class EncryptionService : IEncryptionService
         ILogger<EncryptionService> logger,
         IOptions<EncryptionOptions> options)
     {
-        this._keyVault = keyVault ?? throw new ArgumentNullException(nameof(keyVault));
-        this._tenantKeyService = tenantKeyService ?? throw new ArgumentNullException(nameof(tenantKeyService));
-        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        this._options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+        ArgumentNullException.ThrowIfNull(keyVault);
+        this._keyVault = keyVault;
+        ArgumentNullException.ThrowIfNull(tenantKeyService);
+        this._tenantKeyService = tenantKeyService;
+        ArgumentNullException.ThrowIfNull(logger);
+        this._logger = logger;
+        ArgumentNullException.ThrowIfNull(options);
+        this._options = options.Value;
         this._options.Validate();
     }
 
@@ -53,11 +57,7 @@ public sealed class EncryptionService : IEncryptionService
         string keyId,
         CancellationToken cancellationToken = default)
     {
-        if (plaintext == null)
-        {
-            throw new ArgumentNullException(nameof(plaintext));
-        }
-
+        ArgumentNullException.ThrowIfNull(plaintext);
         if (string.IsNullOrWhiteSpace(tenantId))
         {
             throw new ArgumentException("Tenant ID cannot be empty", nameof(tenantId));
@@ -115,11 +115,7 @@ public sealed class EncryptionService : IEncryptionService
         string tenantId,
         CancellationToken cancellationToken = default)
     {
-        if (encryptedData == null)
-        {
-            throw new ArgumentNullException(nameof(encryptedData));
-        }
-
+        ArgumentNullException.ThrowIfNull(encryptedData);
         if (string.IsNullOrWhiteSpace(tenantId))
         {
             throw new ArgumentException("Tenant ID cannot be empty", nameof(tenantId));
@@ -159,11 +155,7 @@ public sealed class EncryptionService : IEncryptionService
         string keyId,
         CancellationToken cancellationToken = default)
     {
-        if (plaintext == null)
-        {
-            throw new ArgumentNullException(nameof(plaintext));
-        }
-
+        ArgumentNullException.ThrowIfNull(plaintext);
         var plaintextBytes = Encoding.UTF8.GetBytes(plaintext);
         return this.EncryptAsync(plaintextBytes, tenantId, keyId, cancellationToken);
     }

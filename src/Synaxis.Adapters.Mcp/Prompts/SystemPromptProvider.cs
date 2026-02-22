@@ -23,11 +23,7 @@ namespace Synaxis.Adapters.Mcp.Prompts
         /// <param name="prompts">The collection of available prompt templates.</param>
         public SystemPromptProvider(IEnumerable<PromptTemplate> prompts)
         {
-            if (prompts is null)
-            {
-                throw new ArgumentNullException(nameof(prompts));
-            }
-
+            ArgumentNullException.ThrowIfNull(prompts);
             this._prompts = prompts.ToDictionary(p => p.Name, p => p, StringComparer.Ordinal);
         }
 

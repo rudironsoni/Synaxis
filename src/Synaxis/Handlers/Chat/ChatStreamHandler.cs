@@ -31,8 +31,10 @@ namespace Synaxis.Handlers.Chat
             IProviderSelector providerSelector,
             ILogger<ChatStreamHandler> logger)
         {
-            this._providerSelector = providerSelector ?? throw new ArgumentNullException(nameof(providerSelector));
-            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(providerSelector);
+            this._providerSelector = providerSelector;
+            ArgumentNullException.ThrowIfNull(logger);
+            this._logger = logger;
         }
 
         /// <inheritdoc/>
@@ -40,11 +42,7 @@ namespace Synaxis.Handlers.Chat
             ChatStreamCommand request,
             CancellationToken cancellationToken)
         {
-            if (request is null)
-            {
-                throw new ArgumentNullException(nameof(request));
-            }
-
+            ArgumentNullException.ThrowIfNull(request);
             return this.HandleCore(request, cancellationToken);
         }
 

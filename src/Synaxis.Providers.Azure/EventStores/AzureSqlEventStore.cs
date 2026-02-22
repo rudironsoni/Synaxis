@@ -32,8 +32,8 @@ public class AzureSqlEventStore : IEventStore
     /// <param name="logger">The logger instance.</param>
     public AzureSqlEventStore(string connectionString, ILogger<AzureSqlEventStore> logger)
     {
-        this._connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
-        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this._connectionString = connectionString!;
+        this._logger = logger!;
         this._retryPolicy = Policy
             .Handle<SqlException>()
             .Or<TimeoutException>()

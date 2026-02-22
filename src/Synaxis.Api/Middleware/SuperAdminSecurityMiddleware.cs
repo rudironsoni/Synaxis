@@ -32,8 +32,10 @@ namespace Synaxis.Api.Middleware
             RequestDelegate next,
             ILogger<SuperAdminSecurityMiddleware> logger)
         {
-            this._next = next ?? throw new ArgumentNullException(nameof(next));
-            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(next);
+            this._next = next;
+            ArgumentNullException.ThrowIfNull(logger);
+            this._logger = logger;
         }
 
         /// <summary>

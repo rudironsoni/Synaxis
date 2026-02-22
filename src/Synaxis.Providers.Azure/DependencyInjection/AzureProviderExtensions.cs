@@ -24,16 +24,8 @@ namespace Synaxis.Providers.Azure.DependencyInjection
             this IServiceCollection services,
             Action<AzureOpenAIOptions> configure)
         {
-            if (services == null)
-            {
-                throw new ArgumentNullException(nameof(services));
-            }
-
-            if (configure == null)
-            {
-                throw new ArgumentNullException(nameof(configure));
-            }
-
+            ArgumentNullException.ThrowIfNull(services);
+            ArgumentNullException.ThrowIfNull(configure);
             services.Configure(configure);
             services.AddHttpClient<AzureClient>();
             services.AddSingleton<IChatProvider, AzureChatProvider>();
@@ -51,16 +43,8 @@ namespace Synaxis.Providers.Azure.DependencyInjection
             this IServiceCollection services,
             Action<AzureOpenAIOptions> configure)
         {
-            if (services == null)
-            {
-                throw new ArgumentNullException(nameof(services));
-            }
-
-            if (configure == null)
-            {
-                throw new ArgumentNullException(nameof(configure));
-            }
-
+            ArgumentNullException.ThrowIfNull(services);
+            ArgumentNullException.ThrowIfNull(configure);
             services.Configure(configure);
             services.AddHttpClient<AzureClient>();
             services.AddSingleton<IEmbeddingProvider, AzureEmbeddingProvider>();
@@ -78,16 +62,8 @@ namespace Synaxis.Providers.Azure.DependencyInjection
             this IServiceCollection services,
             Action<AzureOpenAIOptions> configure)
         {
-            if (services == null)
-            {
-                throw new ArgumentNullException(nameof(services));
-            }
-
-            if (configure == null)
-            {
-                throw new ArgumentNullException(nameof(configure));
-            }
-
+            ArgumentNullException.ThrowIfNull(services);
+            ArgumentNullException.ThrowIfNull(configure);
             services.Configure(configure);
             services.AddHttpClient<AzureClient>();
             services.AddSingleton<IChatProvider, AzureChatProvider>();

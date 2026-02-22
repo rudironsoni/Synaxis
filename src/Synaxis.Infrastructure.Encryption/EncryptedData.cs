@@ -32,13 +32,20 @@ public sealed record EncryptedData
         string keyId,
         string keyVersion)
     {
-        this.Ciphertext = ciphertext ?? throw new ArgumentNullException(nameof(ciphertext));
-        this.EncryptedKey = encryptedKey ?? throw new ArgumentNullException(nameof(encryptedKey));
-        this.Nonce = nonce ?? throw new ArgumentNullException(nameof(nonce));
-        this.Tag = tag ?? throw new ArgumentNullException(nameof(tag));
-        this.Algorithm = algorithm ?? throw new ArgumentNullException(nameof(algorithm));
-        this.KeyId = keyId ?? throw new ArgumentNullException(nameof(keyId));
-        this.KeyVersion = keyVersion ?? throw new ArgumentNullException(nameof(keyVersion));
+        ArgumentNullException.ThrowIfNull(ciphertext);
+        this.Ciphertext = ciphertext;
+        ArgumentNullException.ThrowIfNull(encryptedKey);
+        this.EncryptedKey = encryptedKey;
+        ArgumentNullException.ThrowIfNull(nonce);
+        this.Nonce = nonce;
+        ArgumentNullException.ThrowIfNull(tag);
+        this.Tag = tag;
+        ArgumentNullException.ThrowIfNull(algorithm);
+        this.Algorithm = algorithm;
+        ArgumentNullException.ThrowIfNull(keyId);
+        this.KeyId = keyId;
+        ArgumentNullException.ThrowIfNull(keyVersion);
+        this.KeyVersion = keyVersion;
     }
 
     /// <summary>

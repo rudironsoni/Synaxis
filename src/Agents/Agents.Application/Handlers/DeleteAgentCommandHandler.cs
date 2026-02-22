@@ -29,18 +29,14 @@ public sealed class DeleteAgentCommandHandler : IRequestHandler<DeleteAgentComma
         IAgentConfigurationRepository repository,
         ILogger<DeleteAgentCommandHandler> logger)
     {
-        this._repository = repository ?? throw new ArgumentNullException(nameof(repository));
-        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this._repository = repository!;
+        this._logger = logger!;
     }
 
     /// <inheritdoc/>
     public async ValueTask<Unit> Handle(DeleteAgentCommand request, CancellationToken cancellationToken)
     {
-        if (request is null)
-        {
-            throw new ArgumentNullException(nameof(request));
-        }
-
+        ArgumentNullException.ThrowIfNull(request);
         this._logger.LogInformation(
             "Deleting agent with ID {AgentId}. Force: {Force}, Cascade: {Cascade}",
             request.TargetAgentId,

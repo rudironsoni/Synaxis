@@ -34,9 +34,9 @@ public class ExecutionFailedHandler : INotificationHandler<ExecutionFailed>
         IAuditService auditService,
         IExecutionMetrics metrics)
     {
-        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        this._auditService = auditService ?? throw new ArgumentNullException(nameof(auditService));
-        this._metrics = metrics ?? throw new ArgumentNullException(nameof(metrics));
+        this._logger = logger!;
+        this._auditService = auditService!;
+        this._metrics = metrics!;
     }
 
     /// <inheritdoc/>

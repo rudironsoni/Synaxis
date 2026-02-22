@@ -90,11 +90,7 @@ namespace Synaxis.Transport.Http.Formatters
         /// <inheritdoc />
         public override async Task WriteResponseBodyAsync(OutputFormatterWriteContext context, Encoding selectedEncoding)
         {
-            if (context == null)
-            {
-                throw new ArgumentNullException(nameof(context));
-            }
-
+            ArgumentNullException.ThrowIfNull(context);
             if (context.Object is not IAsyncEnumerable<string> asyncEnumerable)
             {
                 return;

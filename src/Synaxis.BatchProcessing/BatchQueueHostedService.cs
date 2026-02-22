@@ -25,8 +25,10 @@ public class BatchQueueHostedService : BackgroundService
         IBatchQueueService queueService,
         ILogger<BatchQueueHostedService> logger)
     {
-        this._queueService = queueService ?? throw new ArgumentNullException(nameof(queueService));
-        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        ArgumentNullException.ThrowIfNull(queueService);
+        this._queueService = queueService;
+        ArgumentNullException.ThrowIfNull(logger);
+        this._logger = logger;
     }
 
     /// <summary>

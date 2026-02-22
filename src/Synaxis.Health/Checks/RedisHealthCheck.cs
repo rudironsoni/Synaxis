@@ -27,8 +27,10 @@ namespace Synaxis.Health.Checks
             IConnectionMultiplexer connectionMultiplexer,
             ILogger<RedisHealthCheck> logger)
         {
-            this._connectionMultiplexer = connectionMultiplexer ?? throw new ArgumentNullException(nameof(connectionMultiplexer));
-            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(connectionMultiplexer);
+            this._connectionMultiplexer = connectionMultiplexer;
+            ArgumentNullException.ThrowIfNull(logger);
+            this._logger = logger;
         }
 
         /// <summary>

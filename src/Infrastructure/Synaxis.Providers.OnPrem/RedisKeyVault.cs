@@ -33,7 +33,8 @@ public class RedisKeyVault : IKeyVault
         ILogger<RedisKeyVault> logger)
     {
         _redis = ConnectionMultiplexer.Connect(connectionString);
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        ArgumentNullException.ThrowIfNull(logger);
+        _logger = logger;
         _database = _redis.GetDatabase();
     }
 

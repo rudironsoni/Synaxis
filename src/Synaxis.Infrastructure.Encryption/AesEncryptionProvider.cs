@@ -47,21 +47,9 @@ public static class AesEncryptionProvider
         byte[] key,
         byte[] nonce)
     {
-        if (plaintext == null)
-        {
-            throw new ArgumentNullException(nameof(plaintext));
-        }
-
-        if (key == null)
-        {
-            throw new ArgumentNullException(nameof(key));
-        }
-
-        if (nonce == null)
-        {
-            throw new ArgumentNullException(nameof(nonce));
-        }
-
+        ArgumentNullException.ThrowIfNull(plaintext);
+        ArgumentNullException.ThrowIfNull(key);
+        ArgumentNullException.ThrowIfNull(nonce);
         if (key.Length != KeySizeBytes)
         {
             throw new ArgumentException($"Key must be {KeySizeBytes} bytes for AES-256", nameof(key));
@@ -98,26 +86,10 @@ public static class AesEncryptionProvider
         byte[] key,
         byte[] nonce)
     {
-        if (ciphertext == null)
-        {
-            throw new ArgumentNullException(nameof(ciphertext));
-        }
-
-        if (tag == null)
-        {
-            throw new ArgumentNullException(nameof(tag));
-        }
-
-        if (key == null)
-        {
-            throw new ArgumentNullException(nameof(key));
-        }
-
-        if (nonce == null)
-        {
-            throw new ArgumentNullException(nameof(nonce));
-        }
-
+        ArgumentNullException.ThrowIfNull(ciphertext);
+        ArgumentNullException.ThrowIfNull(tag);
+        ArgumentNullException.ThrowIfNull(key);
+        ArgumentNullException.ThrowIfNull(nonce);
         if (key.Length != KeySizeBytes)
         {
             throw new ArgumentException($"Key must be {KeySizeBytes} bytes for AES-256", nameof(key));

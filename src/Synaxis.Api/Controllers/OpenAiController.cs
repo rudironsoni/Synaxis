@@ -39,8 +39,10 @@ namespace Synaxis.Api.Controllers
             ILogger<OpenAiController> logger,
             ProviderFactory providerFactory)
         {
-            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            this._providerFactory = providerFactory ?? throw new ArgumentNullException(nameof(providerFactory));
+            ArgumentNullException.ThrowIfNull(logger);
+            ArgumentNullException.ThrowIfNull(providerFactory);
+            this._logger = logger;
+            this._providerFactory = providerFactory;
         }
 
         /// <summary>

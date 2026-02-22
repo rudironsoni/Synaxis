@@ -50,7 +50,7 @@ public class AzureContainerApps : IContainerPlatform
         }
 
         this._containerAppName = containerAppName;
-        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this._logger = logger!;
         this._retryPolicy = Policy
             .Handle<Exception>()
             .Or<TimeoutException>()

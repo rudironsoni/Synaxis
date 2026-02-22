@@ -32,7 +32,8 @@ namespace Synaxis.Api.Controllers
         /// <param name="logger">The logger.</param>
         public MultiModalController(ILogger<MultiModalController> logger)
         {
-            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(logger);
+            this._logger = logger;
         }
 
         /// <summary>

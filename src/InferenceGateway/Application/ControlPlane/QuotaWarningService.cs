@@ -31,9 +31,12 @@ namespace Synaxis.InferenceGateway.Application.ControlPlane
             INotificationService notificationService,
             ILogger<QuotaWarningService> logger)
         {
-            this._quotaTracker = quotaTracker ?? throw new ArgumentNullException(nameof(quotaTracker));
-            this.notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
-            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(quotaTracker);
+            this._quotaTracker = quotaTracker;
+            ArgumentNullException.ThrowIfNull(notificationService);
+            this.notificationService = notificationService;
+            ArgumentNullException.ThrowIfNull(logger);
+            this.logger = logger;
         }
 
         /// <summary>

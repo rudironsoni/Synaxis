@@ -36,8 +36,9 @@ namespace Synaxis.Providers.Azure
         /// <param name="options">Azure OpenAI configuration options.</param>
         public AzureClient(HttpClient httpClient, IOptions<AzureOpenAIOptions> options)
         {
-            this.httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-            this.options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+            this.httpClient = httpClient!;
+            ArgumentNullException.ThrowIfNull(options);
+            this.options = options.Value;
             this.options.Validate();
 
             this.tokenLock = new SemaphoreSlim(1, 1);

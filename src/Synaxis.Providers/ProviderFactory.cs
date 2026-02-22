@@ -20,7 +20,7 @@ namespace Synaxis.Providers
         /// <param name="serviceProvider">The service provider.</param>
         public ProviderFactory(IServiceProvider serviceProvider)
         {
-            this._serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+            this._serviceProvider = serviceProvider!;
         }
 
         /// <summary>

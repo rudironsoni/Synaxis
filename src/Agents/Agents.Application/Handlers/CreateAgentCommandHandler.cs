@@ -32,18 +32,14 @@ public sealed class CreateAgentCommandHandler : IRequestHandler<CreateAgentComma
         IAgentConfigurationRepository repository,
         ILogger<CreateAgentCommandHandler> logger)
     {
-        this._repository = repository ?? throw new ArgumentNullException(nameof(repository));
-        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this._repository = repository!;
+        this._logger = logger!;
     }
 
     /// <inheritdoc/>
     public async ValueTask<AgentDto> Handle(CreateAgentCommand request, CancellationToken cancellationToken)
     {
-        if (request is null)
-        {
-            throw new ArgumentNullException(nameof(request));
-        }
-
+        ArgumentNullException.ThrowIfNull(request);
         this._logger.LogInformation(
             "Creating agent '{AgentName}' of type '{AgentType}'",
             request.Name,

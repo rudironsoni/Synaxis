@@ -31,10 +31,14 @@ namespace Synaxis.Core.Agents
             ILogger logger)
         {
             this.Id = id;
-            this.Name = name ?? throw new ArgumentNullException(nameof(name));
-            this.ModelEndpoint = modelEndpoint ?? throw new ArgumentNullException(nameof(modelEndpoint));
-            this.Capabilities = capabilities ?? throw new ArgumentNullException(nameof(capabilities));
-            this.Logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(name);
+            this.Name = name;
+            ArgumentNullException.ThrowIfNull(modelEndpoint);
+            this.ModelEndpoint = modelEndpoint;
+            ArgumentNullException.ThrowIfNull(capabilities);
+            this.Capabilities = capabilities;
+            ArgumentNullException.ThrowIfNull(logger);
+            this.Logger = logger;
             this.IsInitialized = false;
         }
 

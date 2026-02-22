@@ -41,7 +41,8 @@ public class CircuitBreakerPolicy<TResult>
         Func<Exception, bool>? exceptionPredicate = null,
         Func<CancellationToken, Task<TResult>>? fallback = null)
     {
-        this._circuitBreaker = circuitBreaker ?? throw new ArgumentNullException(nameof(circuitBreaker));
+        ArgumentNullException.ThrowIfNull(circuitBreaker);
+        this._circuitBreaker = circuitBreaker;
         this._exceptionPredicate = exceptionPredicate ?? (ex => true);
         this._fallback = fallback;
         this._metrics = new CircuitBreakerMetrics();
@@ -58,11 +59,7 @@ public class CircuitBreakerPolicy<TResult>
         Func<CancellationToken, Task<TResult>> operation,
         CancellationToken cancellationToken = default)
     {
-        if (operation == null)
-        {
-            throw new ArgumentNullException(nameof(operation));
-        }
-
+        ArgumentNullException.ThrowIfNull(operation);
         this._metrics.TotalRequests++;
 
         // Check if the circuit allows the request
@@ -113,11 +110,7 @@ public class CircuitBreakerPolicy<TResult>
         int maxRetries = 3,
         CancellationToken cancellationToken = default)
     {
-        if (operation == null)
-        {
-            throw new ArgumentNullException(nameof(operation));
-        }
-
+        ArgumentNullException.ThrowIfNull(operation);
         Exception? lastException = null;
 
         for (int attempt = 1; attempt <= maxRetries; attempt++)
@@ -199,7 +192,8 @@ public class CircuitBreakerPolicy
         Func<Exception, bool>? exceptionPredicate = null,
         Func<CancellationToken, Task>? fallback = null)
     {
-        this._circuitBreaker = circuitBreaker ?? throw new ArgumentNullException(nameof(circuitBreaker));
+        ArgumentNullException.ThrowIfNull(circuitBreaker);
+        this._circuitBreaker = circuitBreaker;
         this._exceptionPredicate = exceptionPredicate ?? (ex => true);
         this._fallback = fallback;
         this._metrics = new CircuitBreakerMetrics();
@@ -216,11 +210,7 @@ public class CircuitBreakerPolicy
         Func<CancellationToken, Task> operation,
         CancellationToken cancellationToken = default)
     {
-        if (operation == null)
-        {
-            throw new ArgumentNullException(nameof(operation));
-        }
-
+        ArgumentNullException.ThrowIfNull(operation);
         this._metrics.TotalRequests++;
 
         // Check if the circuit allows the request
@@ -272,11 +262,7 @@ public class CircuitBreakerPolicy
         int maxRetries = 3,
         CancellationToken cancellationToken = default)
     {
-        if (operation == null)
-        {
-            throw new ArgumentNullException(nameof(operation));
-        }
-
+        ArgumentNullException.ThrowIfNull(operation);
         Exception? lastException = null;
 
         for (int attempt = 1; attempt <= maxRetries; attempt++)

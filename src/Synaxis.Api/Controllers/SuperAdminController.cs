@@ -34,8 +34,10 @@ namespace Synaxis.Api.Controllers
             ISuperAdminService superAdminService,
             ILogger<SuperAdminController> logger)
         {
-            this._superAdminService = superAdminService ?? throw new ArgumentNullException(nameof(superAdminService));
-            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(superAdminService);
+            ArgumentNullException.ThrowIfNull(logger);
+            this._superAdminService = superAdminService;
+            this._logger = logger;
         }
 
         /// <summary>

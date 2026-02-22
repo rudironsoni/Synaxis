@@ -29,7 +29,8 @@ namespace Synaxis.Server.Controllers
         /// <param name="logger">The logger instance.</param>
         public StreamingController(ILogger<StreamingController> logger)
         {
-            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(logger);
+            this._logger = logger;
         }
 
         /// <summary>
@@ -43,11 +44,7 @@ namespace Synaxis.Server.Controllers
             [FromBody] StreamingChatRequest request,
             CancellationToken cancellationToken = default)
         {
-            if (request == null)
-            {
-                throw new ArgumentNullException(nameof(request));
-            }
-
+            ArgumentNullException.ThrowIfNull(request);
             this._logger.LogInformation(
                 "Starting streaming chat for conversation {ConversationId}",
                 request.ConversationId);

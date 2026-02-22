@@ -35,8 +35,9 @@ namespace Synaxis.Providers.Anthropic
         /// <param name="options">The Anthropic configuration options.</param>
         public AnthropicClient(HttpClient httpClient, IOptions<AnthropicOptions> options)
         {
-            this.httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-            this.options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+            this.httpClient = httpClient!;
+            ArgumentNullException.ThrowIfNull(options);
+            this.options = options.Value;
             this.options.Validate();
 
             this.jsonOptions = new JsonSerializerOptions

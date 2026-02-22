@@ -75,8 +75,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             IConnectionMultiplexer redis,
             ILogger<RedisRateLimitingService> logger)
         {
-            this._redis = redis ?? throw new ArgumentNullException(nameof(redis));
-            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(redis);
+            this._redis = redis;
+            ArgumentNullException.ThrowIfNull(logger);
+            this._logger = logger;
         }
 
         /// <summary>
@@ -165,11 +167,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
             RateLimitConfig config,
             CancellationToken cancellationToken = default)
         {
-            if (config == null)
-            {
-                throw new ArgumentNullException(nameof(config));
-            }
-
+            ArgumentNullException.ThrowIfNull(config);
             if (!config.HasLimits())
             {
                 this._logger.LogDebug("No rate limits configured, allowing request");

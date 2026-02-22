@@ -26,11 +26,7 @@ public class InMemoryEventStore : EventStore
             throw new ArgumentException("Stream ID cannot be null or whitespace.", nameof(streamId));
         }
 
-        if (events == null)
-        {
-            throw new ArgumentNullException(nameof(events));
-        }
-
+        ArgumentNullException.ThrowIfNull(events);
         var eventList = events.ToList();
 
         if (eventList.Count == 0)

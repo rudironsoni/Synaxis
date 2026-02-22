@@ -24,11 +24,7 @@ namespace Synaxis.Providers.Anthropic.DependencyInjection
             this IServiceCollection services,
             string apiKey)
         {
-            if (services == null)
-            {
-                throw new ArgumentNullException(nameof(services));
-            }
-
+            ArgumentNullException.ThrowIfNull(services);
             if (string.IsNullOrWhiteSpace(apiKey))
             {
                 throw new ArgumentException("API key cannot be null or empty.", nameof(apiKey));
@@ -50,16 +46,8 @@ namespace Synaxis.Providers.Anthropic.DependencyInjection
             this IServiceCollection services,
             Action<AnthropicOptions> configure)
         {
-            if (services == null)
-            {
-                throw new ArgumentNullException(nameof(services));
-            }
-
-            if (configure == null)
-            {
-                throw new ArgumentNullException(nameof(configure));
-            }
-
+            ArgumentNullException.ThrowIfNull(services);
+            ArgumentNullException.ThrowIfNull(configure);
             services.Configure(configure);
             services.AddHttpClient<AnthropicClient>();
             services.AddSingleton<AnthropicClient>();

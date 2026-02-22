@@ -35,8 +35,10 @@ namespace Synaxis.Webhooks.Controllers
         /// <param name="logger">The logger.</param>
         public WebhookController(WebhooksDbContext dbContext, ILogger<WebhookController> logger)
         {
-            this._dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(dbContext);
+            ArgumentNullException.ThrowIfNull(logger);
+            this._dbContext = dbContext;
+            this._logger = logger;
         }
 
         /// <summary>

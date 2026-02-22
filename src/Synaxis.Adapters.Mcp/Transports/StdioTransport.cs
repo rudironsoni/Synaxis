@@ -28,8 +28,8 @@ namespace Synaxis.Adapters.Mcp.Transports
         /// <param name="logger">The logger instance.</param>
         public StdioTransport(SynaxisMcpServer server, ILogger<StdioTransport> logger)
         {
-            this._server = server ?? throw new ArgumentNullException(nameof(server));
-            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._server = server!;
+            this._logger = logger!;
         }
 
         /// <inheritdoc/>

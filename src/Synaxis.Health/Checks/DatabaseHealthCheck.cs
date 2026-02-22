@@ -24,8 +24,10 @@ namespace Synaxis.Health.Checks
         /// <param name="logger">The logger.</param>
         public DatabaseHealthCheck(string connectionString, ILogger<DatabaseHealthCheck> logger)
         {
-            this._connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
-            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(connectionString);
+            this._connectionString = connectionString;
+            ArgumentNullException.ThrowIfNull(logger);
+            this._logger = logger;
         }
 
         /// <summary>

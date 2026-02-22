@@ -37,9 +37,12 @@ namespace Synaxis.BatchProcessing.Controllers
             IBatchQueueService queueService,
             ILogger<BatchController> logger)
         {
-            this._storageService = storageService ?? throw new ArgumentNullException(nameof(storageService));
-            this._queueService = queueService ?? throw new ArgumentNullException(nameof(queueService));
-            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(storageService);
+            ArgumentNullException.ThrowIfNull(queueService);
+            ArgumentNullException.ThrowIfNull(logger);
+            this._storageService = storageService;
+            this._queueService = queueService;
+            this._logger = logger;
         }
 
         /// <summary>

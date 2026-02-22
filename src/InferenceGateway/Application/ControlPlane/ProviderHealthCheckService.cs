@@ -33,9 +33,12 @@ namespace Synaxis.InferenceGateway.Application.ControlPlane
             IChatClientFactory chatClientFactory,
             ILogger<ProviderHealthCheckService> logger)
         {
-            this.healthStore = healthStore ?? throw new ArgumentNullException(nameof(healthStore));
-            this.chatClientFactory = chatClientFactory ?? throw new ArgumentNullException(nameof(chatClientFactory));
-            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(healthStore);
+            this.healthStore = healthStore;
+            ArgumentNullException.ThrowIfNull(chatClientFactory);
+            this.chatClientFactory = chatClientFactory;
+            ArgumentNullException.ThrowIfNull(logger);
+            this.logger = logger;
         }
 
         /// <summary>

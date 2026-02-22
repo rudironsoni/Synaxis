@@ -21,7 +21,8 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         /// <param name="logger">The logger.</param>
         public UserController(ILogger<UserController> logger)
         {
-            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(logger);
+            this.logger = logger;
         }
 
         /// <summary>

@@ -23,7 +23,7 @@ public class ExecutionProgressedHandler : INotificationHandler<ExecutionProgress
     /// <param name="logger">The logger.</param>
     public ExecutionProgressedHandler(ILogger<ExecutionProgressedHandler> logger)
     {
-        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this._logger = logger!;
     }
 
     /// <inheritdoc/>

@@ -84,8 +84,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
             this._settings = settings;
             this._logger = logger;
             this._httpClientFactory = httpClientFactory;
-            this._tokenStore = tokenStore ?? throw new ArgumentNullException(nameof(tokenStore));
-
+            ArgumentNullException.ThrowIfNull(tokenStore);
+            this._tokenStore = tokenStore;
             if (string.IsNullOrWhiteSpace(this._settings.ClientId) || string.IsNullOrWhiteSpace(this._settings.ClientSecret))
             {
                 throw new InvalidOperationException("Antigravity ClientId and ClientSecret must be configured.");

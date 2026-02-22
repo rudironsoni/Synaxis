@@ -42,7 +42,8 @@ public sealed class RabbitMqMessageBus : IMessageBus, IAsyncDisposable
         ILogger<RabbitMqMessageBus> logger)
     {
         _connectionString = connectionString;
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        ArgumentNullException.ThrowIfNull(logger);
+        _logger = logger;
         _consumers = new ConcurrentDictionary<string, object>(StringComparer.Ordinal);
     }
 

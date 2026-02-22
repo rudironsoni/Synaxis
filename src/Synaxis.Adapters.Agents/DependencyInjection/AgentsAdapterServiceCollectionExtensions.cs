@@ -26,11 +26,7 @@ namespace Synaxis.Adapters.Agents.DependencyInjection
             this IServiceCollection services,
             Action<AgentsAdapterOptions>? configureOptions = null)
         {
-            if (services == null)
-            {
-                throw new ArgumentNullException(nameof(services));
-            }
-
+            ArgumentNullException.ThrowIfNull(services);
             // Register options
             var optionsBuilder = services.AddOptions<AgentsAdapterOptions>();
             if (configureOptions != null)
@@ -68,16 +64,8 @@ namespace Synaxis.Adapters.Agents.DependencyInjection
             Func<IServiceProvider, IConversationStorage> storageFactory,
             Action<AgentsAdapterOptions>? configureOptions = null)
         {
-            if (services == null)
-            {
-                throw new ArgumentNullException(nameof(services));
-            }
-
-            if (storageFactory == null)
-            {
-                throw new ArgumentNullException(nameof(storageFactory));
-            }
-
+            ArgumentNullException.ThrowIfNull(services);
+            ArgumentNullException.ThrowIfNull(storageFactory);
             // Register options
             var optionsBuilder = services.AddOptions<AgentsAdapterOptions>();
             if (configureOptions != null)

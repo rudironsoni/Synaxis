@@ -24,11 +24,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
         /// <param name="dbContext">The dbContext.</param>
         public AuditService(SynaxisDbContext dbContext)
         {
-            if (dbContext is null)
-            {
-                throw new ArgumentNullException(nameof(dbContext));
-            }
-
+            ArgumentNullException.ThrowIfNull(dbContext);
             this._dbContext = dbContext;
         }
 

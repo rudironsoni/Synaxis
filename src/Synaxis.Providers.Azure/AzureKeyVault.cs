@@ -44,7 +44,7 @@ public class AzureKeyVault : IKeyVault
 
         this._secretClient = new SecretClient(new Uri(keyVaultUrl), credential);
         this._keyClient = new KeyClient(new Uri(keyVaultUrl), credential);
-        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this._logger = logger!;
         this._retryPolicy = Policy
             .Handle<global::Azure.RequestFailedException>()
             .Or<TimeoutException>()

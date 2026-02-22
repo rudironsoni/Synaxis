@@ -86,11 +86,7 @@ public class EventSerializer
     /// <returns>A JSON string representation of the events.</returns>
     public string SerializeMany(IEnumerable<IDomainEvent> events)
     {
-        if (events == null)
-        {
-            throw new ArgumentNullException(nameof(events));
-        }
-
+        ArgumentNullException.ThrowIfNull(events);
         return JsonConvert.SerializeObject(events, this._settings);
     }
 

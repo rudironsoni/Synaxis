@@ -29,7 +29,7 @@ namespace Synaxis.Transport.Http.Controllers
         /// <param name="logger">The logger instance.</param>
         public EmbeddingsController(ILogger<EmbeddingsController> logger)
         {
-            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this.logger = logger!;
         }
 
         /// <summary>

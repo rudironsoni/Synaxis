@@ -64,11 +64,7 @@ namespace Synaxis.Core.Agents
         /// <param name="agent">The agent to register.</param>
         public void RegisterAgent(SynaxisInferenceAgent agent)
         {
-            if (agent == null)
-            {
-                throw new ArgumentNullException(nameof(agent));
-            }
-
+            ArgumentNullException.ThrowIfNull(agent);
             lock (this._lock)
             {
                 if (this._agents.Contains(agent))

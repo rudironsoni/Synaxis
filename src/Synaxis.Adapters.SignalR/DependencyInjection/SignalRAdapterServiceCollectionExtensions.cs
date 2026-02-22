@@ -27,11 +27,7 @@ namespace Synaxis.Adapters.SignalR.DependencyInjection
             this IServiceCollection services,
             Action<SignalRAdapterOptions>? configure = null)
         {
-            if (services == null)
-            {
-                throw new ArgumentNullException(nameof(services));
-            }
-
+            ArgumentNullException.ThrowIfNull(services);
             // Register options
             var options = new SignalRAdapterOptions();
             configure?.Invoke(options);
@@ -61,11 +57,7 @@ namespace Synaxis.Adapters.SignalR.DependencyInjection
             this IEndpointRouteBuilder endpoints,
             SignalRAdapterOptions? options = null)
         {
-            if (endpoints == null)
-            {
-                throw new ArgumentNullException(nameof(endpoints));
-            }
-
+            ArgumentNullException.ThrowIfNull(endpoints);
             options ??= new SignalRAdapterOptions();
 
             // Map hubs

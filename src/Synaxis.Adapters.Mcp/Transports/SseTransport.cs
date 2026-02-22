@@ -29,9 +29,9 @@ namespace Synaxis.Adapters.Mcp.Transports
             string endpoint,
             ILogger<SseTransport> logger)
         {
-            _ = server ?? throw new ArgumentNullException(nameof(server));
-            this._endpoint = endpoint ?? throw new ArgumentNullException(nameof(endpoint));
-            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _ = server!;
+            this._endpoint = endpoint!;
+            this._logger = logger!;
         }
 
         /// <inheritdoc/>

@@ -67,9 +67,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
         /// <param name="logger">The logger instance.</param>
         public GoogleAuthStrategy(AntigravitySettings settings, IHttpClientFactory httpClientFactory, ILogger<GoogleAuthStrategy> logger)
         {
-            this._settings = settings ?? throw new ArgumentNullException(nameof(settings));
-            this._httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(settings);
+            this._settings = settings;
+            ArgumentNullException.ThrowIfNull(httpClientFactory);
+            this._httpClientFactory = httpClientFactory;
+            ArgumentNullException.ThrowIfNull(logger);
+            this._logger = logger;
         }
 
         /// <inheritdoc/>

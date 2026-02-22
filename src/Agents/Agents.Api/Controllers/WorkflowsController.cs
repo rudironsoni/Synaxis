@@ -28,8 +28,10 @@ public class WorkflowsController : ControllerBase
         IAgentWorkflowService workflowService,
         ILogger<WorkflowsController> logger)
     {
-        this._workflowService = workflowService ?? throw new ArgumentNullException(nameof(workflowService));
-        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        ArgumentNullException.ThrowIfNull(workflowService);
+        ArgumentNullException.ThrowIfNull(logger);
+        this._workflowService = workflowService;
+        this._logger = logger;
     }
 
     /// <summary>

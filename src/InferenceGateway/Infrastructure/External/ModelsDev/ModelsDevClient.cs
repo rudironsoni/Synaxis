@@ -28,7 +28,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.ModelsDev
         /// <param name="logger">The optional logger instance.</param>
         public ModelsDevClient(HttpClient httpClient, ILogger<ModelsDevClient>? logger = null)
         {
-            this._httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+            ArgumentNullException.ThrowIfNull(httpClient);
+            this._httpClient = httpClient;
             this._logger = logger;
         }
 

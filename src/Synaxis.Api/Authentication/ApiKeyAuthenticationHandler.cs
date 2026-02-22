@@ -36,7 +36,8 @@ namespace Synaxis.Api.Authentication
             IApiKeyService apiKeyService)
             : base(options, logger, encoder)
         {
-            this._apiKeyService = apiKeyService ?? throw new ArgumentNullException(nameof(apiKeyService));
+            ArgumentNullException.ThrowIfNull(apiKeyService);
+            this._apiKeyService = apiKeyService;
         }
 
         /// <inheritdoc/>

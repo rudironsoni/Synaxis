@@ -22,7 +22,7 @@ namespace Synaxis.Adapters.SignalR.Hubs
         /// <param name="connectionManager">The connection manager for tracking connections.</param>
         public SynaxisHub(ConnectionManager connectionManager)
         {
-            this.connectionManager = connectionManager ?? throw new ArgumentNullException(nameof(connectionManager));
+            this.connectionManager = connectionManager!;
         }
 
         /// <summary>

@@ -26,7 +26,7 @@ namespace Synaxis.Adapters.Agents.Tools
         /// <param name="executor">The command executor for processing chat commands.</param>
         public ChatTool(ICommandExecutor<IChatCommand<ChatResponse>, ChatResponse> executor)
         {
-            this._executor = executor ?? throw new ArgumentNullException(nameof(executor));
+            this._executor = executor!;
         }
 
         /// <summary>

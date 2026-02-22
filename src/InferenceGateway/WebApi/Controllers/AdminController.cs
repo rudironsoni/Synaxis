@@ -27,8 +27,10 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
             IProviderHealthCheckService healthCheckService,
             ILogger<AdminController> logger)
         {
-            this.healthCheckService = healthCheckService ?? throw new ArgumentNullException(nameof(healthCheckService));
-            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(healthCheckService);
+            ArgumentNullException.ThrowIfNull(logger);
+            this.healthCheckService = healthCheckService;
+            this.logger = logger;
         }
 
         /// <summary>

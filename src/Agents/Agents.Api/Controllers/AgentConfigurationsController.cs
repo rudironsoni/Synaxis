@@ -28,8 +28,10 @@ public class AgentConfigurationsController : ControllerBase
         IAgentConfigurationService configurationService,
         ILogger<AgentConfigurationsController> logger)
     {
-        this._configurationService = configurationService ?? throw new ArgumentNullException(nameof(configurationService));
-        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        ArgumentNullException.ThrowIfNull(configurationService);
+        ArgumentNullException.ThrowIfNull(logger);
+        this._configurationService = configurationService;
+        this._logger = logger;
     }
 
     /// <summary>

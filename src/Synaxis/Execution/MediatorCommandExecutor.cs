@@ -26,17 +26,14 @@ namespace Synaxis.Execution
         /// <param name="mediator">The mediator instance.</param>
         public MediatorCommandExecutor(IMediator mediator)
         {
-            this._mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
+            ArgumentNullException.ThrowIfNull(mediator);
+            this._mediator = mediator;
         }
 
         /// <inheritdoc/>
         public ValueTask<TResult> ExecuteAsync(TCommand command, CancellationToken cancellationToken)
         {
-            if (command is null)
-            {
-                throw new ArgumentNullException(nameof(command));
-            }
-
+            ArgumentNullException.ThrowIfNull(command);
             if (command is not IRequest<TResult> request)
             {
                 throw new InvalidOperationException(

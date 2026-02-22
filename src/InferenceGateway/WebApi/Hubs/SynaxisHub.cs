@@ -23,7 +23,8 @@ namespace Synaxis.InferenceGateway.WebApi.Hubs
         /// <param name="logger">The logger instance.</param>
         public SynaxisHub(ILogger<SynaxisHub> logger)
         {
-            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(logger);
+            this._logger = logger;
         }
 
         /// <summary>

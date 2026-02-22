@@ -30,9 +30,12 @@ public class AgentExecutionService : IAgentExecutionService
         IAgentConfigurationRepository configurationRepository,
         ILogger<AgentExecutionService> logger)
     {
-        this._executionRepository = executionRepository ?? throw new ArgumentNullException(nameof(executionRepository));
-        this._configurationRepository = configurationRepository ?? throw new ArgumentNullException(nameof(configurationRepository));
-        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        ArgumentNullException.ThrowIfNull(executionRepository);
+        ArgumentNullException.ThrowIfNull(configurationRepository);
+        ArgumentNullException.ThrowIfNull(logger);
+        this._executionRepository = executionRepository;
+        this._configurationRepository = configurationRepository;
+        this._logger = logger;
     }
 
     /// <inheritdoc/>

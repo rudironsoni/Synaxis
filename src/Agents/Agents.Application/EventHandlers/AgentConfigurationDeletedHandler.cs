@@ -24,7 +24,7 @@ public class AgentConfigurationDeletedHandler : INotificationHandler<AgentConfig
     /// <param name="logger">The logger.</param>
     public AgentConfigurationDeletedHandler(ILogger<AgentConfigurationDeletedHandler> logger)
     {
-        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this._logger = logger!;
     }
 
     /// <inheritdoc/>

@@ -27,8 +27,10 @@ public class AgentWorkflowService : IAgentWorkflowService
         IAgentWorkflowRepository workflowRepository,
         ILogger<AgentWorkflowService> logger)
     {
-        this._workflowRepository = workflowRepository ?? throw new ArgumentNullException(nameof(workflowRepository));
-        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        ArgumentNullException.ThrowIfNull(workflowRepository);
+        ArgumentNullException.ThrowIfNull(logger);
+        this._workflowRepository = workflowRepository;
+        this._logger = logger;
     }
 
     /// <inheritdoc/>

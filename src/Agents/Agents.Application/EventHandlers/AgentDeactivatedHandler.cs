@@ -24,7 +24,7 @@ public class AgentDeactivatedHandler : INotificationHandler<AgentDeactivated>
     /// <param name="logger">The logger.</param>
     public AgentDeactivatedHandler(ILogger<AgentDeactivatedHandler> logger)
     {
-        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this._logger = logger!;
     }
 
     /// <inheritdoc/>

@@ -23,7 +23,8 @@ public sealed class AgentExecutionService
     /// <param name="logger">The logger instance.</param>
     public AgentExecutionService(ILogger<AgentExecutionService> logger)
     {
-        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        ArgumentNullException.ThrowIfNull(logger);
+        this._logger = logger;
         this._functionRegistry = new ConcurrentDictionary<string, Func<string, Task<object>>>(StringComparer.OrdinalIgnoreCase);
     }
 

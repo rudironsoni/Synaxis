@@ -30,8 +30,8 @@ namespace Synaxis.Providers.OpenAI
             OpenAIClient client,
             ILogger<OpenAIChatProvider> logger)
         {
-            this._client = client ?? throw new ArgumentNullException(nameof(client));
-            _ = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._client = client!;
+            _ = logger!;
         }
 
         /// <inheritdoc/>

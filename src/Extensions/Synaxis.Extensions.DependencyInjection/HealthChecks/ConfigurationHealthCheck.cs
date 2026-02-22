@@ -21,7 +21,8 @@ public class ConfigurationHealthCheck : IHealthCheck
     /// <param name="cloudOptions">The cloud provider options monitor.</param>
     public ConfigurationHealthCheck(IOptionsMonitor<CloudProviderOptions> cloudOptions)
     {
-        this._cloudOptions = cloudOptions ?? throw new ArgumentNullException(nameof(cloudOptions));
+        ArgumentNullException.ThrowIfNull(cloudOptions);
+        this._cloudOptions = cloudOptions;
     }
 
     /// <summary>

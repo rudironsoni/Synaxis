@@ -27,7 +27,8 @@ namespace Synaxis.Core.Streaming
         /// <param name="logger">The logger instance.</param>
         public StreamingService(ILogger<StreamingService> logger)
         {
-            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(logger);
+            this._logger = logger;
             this._adapters = new ConcurrentDictionary<string, IStreamingAdapter>(StringComparer.OrdinalIgnoreCase);
         }
 
@@ -37,11 +38,7 @@ namespace Synaxis.Core.Streaming
         /// <param name="adapter">The adapter to register.</param>
         public void RegisterAdapter(IStreamingAdapter adapter)
         {
-            if (adapter == null)
-            {
-                throw new ArgumentNullException(nameof(adapter));
-            }
-
+            ArgumentNullException.ThrowIfNull(adapter);
             if (string.IsNullOrEmpty(adapter.ProviderName))
             {
                 throw new ArgumentException("Adapter provider name cannot be null or empty", nameof(adapter));

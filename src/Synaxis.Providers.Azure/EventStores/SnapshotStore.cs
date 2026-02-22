@@ -28,8 +28,8 @@ public class SnapshotStore
     /// <param name="logger">The logger instance.</param>
     public SnapshotStore(Container container, ILogger<SnapshotStore> logger)
     {
-        this._container = container ?? throw new ArgumentNullException(nameof(container));
-        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this._container = container!;
+        this._logger = logger!;
         this._retryPolicy = Policy
             .Handle<CosmosException>()
             .Or<TimeoutException>()

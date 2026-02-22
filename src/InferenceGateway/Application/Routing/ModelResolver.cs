@@ -31,21 +31,9 @@ namespace Synaxis.InferenceGateway.Application.Routing
         /// <param name="store">The control plane store.</param>
         public ModelResolver(IOptions<SynaxisConfiguration> config, IProviderRegistry registry, IControlPlaneStore store)
         {
-            if (config is null)
-            {
-                throw new ArgumentNullException(nameof(config));
-            }
-
-            if (registry is null)
-            {
-                throw new ArgumentNullException(nameof(registry));
-            }
-
-            if (store is null)
-            {
-                throw new ArgumentNullException(nameof(store));
-            }
-
+            ArgumentNullException.ThrowIfNull(config);
+            ArgumentNullException.ThrowIfNull(registry);
+            ArgumentNullException.ThrowIfNull(store);
             this.config = config.Value;
             this.registry = registry;
             this.store = store;

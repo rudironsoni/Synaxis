@@ -53,7 +53,8 @@ public sealed class HealthCheckScheduler : IDisposable
         HealthCheckOptions? options = null,
         ILogger<HealthCheckScheduler>? logger = null)
     {
-        this._healthChecker = healthChecker ?? throw new ArgumentNullException(nameof(healthChecker));
+        ArgumentNullException.ThrowIfNull(healthChecker);
+        this._healthChecker = healthChecker;
         this._options = options ?? new HealthCheckOptions();
         this._providers = new ConcurrentDictionary<string, Provider>(StringComparer.Ordinal);
         this._lastCheckTimes = new ConcurrentDictionary<string, DateTime>(StringComparer.Ordinal);
@@ -120,11 +121,7 @@ public sealed class HealthCheckScheduler : IDisposable
     /// <param name="provider">The provider to monitor.</param>
     public void AddProvider(Provider provider)
     {
-        if (provider == null)
-        {
-            throw new ArgumentNullException(nameof(provider));
-        }
-
+        ArgumentNullException.ThrowIfNull(provider);
         if (string.IsNullOrEmpty(provider.Id))
         {
             throw new ArgumentException("Provider ID cannot be null or empty.", nameof(provider));

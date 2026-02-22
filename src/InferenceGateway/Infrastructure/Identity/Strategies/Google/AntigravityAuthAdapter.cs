@@ -23,7 +23,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
         /// <param name="identityManager">The identity manager instance.</param>
         public AntigravityAuthAdapter(IdentityManager identityManager)
         {
-            this._identityManager = identityManager ?? throw new ArgumentNullException(nameof(identityManager));
+            ArgumentNullException.ThrowIfNull(identityManager);
+            this._identityManager = identityManager;
         }
 
         /// <inheritdoc/>

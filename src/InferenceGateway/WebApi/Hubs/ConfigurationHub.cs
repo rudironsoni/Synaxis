@@ -20,7 +20,8 @@ namespace Synaxis.InferenceGateway.WebApi.Hubs
         /// <param name="logger">The logger instance.</param>
         public ConfigurationHub(ILogger<ConfigurationHub> logger)
         {
-            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(logger);
+            this._logger = logger;
         }
 
         /// <summary>

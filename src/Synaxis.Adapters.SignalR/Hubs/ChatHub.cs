@@ -30,8 +30,8 @@ namespace Synaxis.Adapters.SignalR.Hubs
         /// <param name="connectionManager">The connection manager for tracking connections.</param>
         public ChatHub(IMediator mediator, ConnectionManager connectionManager)
         {
-            this.mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
-            this.connectionManager = connectionManager ?? throw new ArgumentNullException(nameof(connectionManager));
+            this.mediator = mediator!;
+            this.connectionManager = connectionManager!;
         }
 
         /// <summary>
@@ -42,11 +42,7 @@ namespace Synaxis.Adapters.SignalR.Hubs
         /// <returns>An async enumerable of chat stream chunks.</returns>
         public IAsyncEnumerable<ChatStreamChunk> StreamChat(ChatStreamCommand command, CancellationToken ct)
         {
-            if (command == null)
-            {
-                throw new ArgumentNullException(nameof(command));
-            }
-
+            ArgumentNullException.ThrowIfNull(command);
             return this.StreamChatCore(command, ct);
         }
 
@@ -67,11 +63,7 @@ namespace Synaxis.Adapters.SignalR.Hubs
         /// <returns>A task that represents the asynchronous operation, containing the chat response.</returns>
         public async Task<ChatResponse> SendChat(ChatCommand command)
         {
-            if (command == null)
-            {
-                throw new ArgumentNullException(nameof(command));
-            }
-
+            ArgumentNullException.ThrowIfNull(command);
             return await this.mediator.Send(command).ConfigureAwait(false);
         }
 

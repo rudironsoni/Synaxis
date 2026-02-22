@@ -40,10 +40,14 @@ namespace Synaxis.Infrastructure.MultiRegion
             ILogger<RegionRouter> logger,
             IOptions<RegionRouterOptions> options)
         {
-            this._context = context ?? throw new ArgumentNullException(nameof(context));
-            this._httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            this._options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+            ArgumentNullException.ThrowIfNull(context);
+            this._context = context;
+            ArgumentNullException.ThrowIfNull(httpClientFactory);
+            this._httpClientFactory = httpClientFactory;
+            ArgumentNullException.ThrowIfNull(logger);
+            this._logger = logger;
+            ArgumentNullException.ThrowIfNull(options);
+            this._options = options.Value;
             this._currentRegion = this._options.DefaultRegion;
         }
 
@@ -181,11 +185,7 @@ namespace Synaxis.Infrastructure.MultiRegion
         /// <inheritdoc/>
         public async Task<string> GetNearestHealthyRegionAsync(string currentRegion, GeoLocation userLocation)
         {
-            if (userLocation == null)
-            {
-                throw new ArgumentNullException(nameof(userLocation));
-            }
-
+            ArgumentNullException.ThrowIfNull(userLocation);
             await Task.CompletedTask.ConfigureAwait(false);
 
             // In production, check health endpoints for each region
@@ -233,11 +233,7 @@ namespace Synaxis.Infrastructure.MultiRegion
         /// <inheritdoc/>
         public Task LogCrossBorderTransferAsync(CrossBorderTransferContext context)
         {
-            if (context == null)
-            {
-                throw new ArgumentNullException(nameof(context));
-            }
-
+            ArgumentNullException.ThrowIfNull(context);
             this._logger.LogWarning("Cross-border transfer: User {UserId}, Org {OrgId}, {FromRegion} -> {ToRegion}, Basis: {LegalBasis}", context.UserId, context.OrganizationId, context.FromRegion, context.ToRegion, context.LegalBasis);
 
             // In production, write to cross_border_transfers table

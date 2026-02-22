@@ -25,7 +25,7 @@ namespace Synaxis.Transport.Http.Filters
         /// <param name="logger">The logger instance.</param>
         public SynaxisExceptionFilter(ILogger<SynaxisExceptionFilter> logger)
         {
-            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this.logger = logger!;
         }
 
         /// <summary>
@@ -34,11 +34,7 @@ namespace Synaxis.Transport.Http.Filters
         /// <param name="context">The exception context.</param>
         public void OnException(ExceptionContext context)
         {
-            if (context == null)
-            {
-                throw new ArgumentNullException(nameof(context));
-            }
-
+            ArgumentNullException.ThrowIfNull(context);
             var error = this.MapExceptionToError(context.Exception);
             var statusCode = GetStatusCode(error);
 

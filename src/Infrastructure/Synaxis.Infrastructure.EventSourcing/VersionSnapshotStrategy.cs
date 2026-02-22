@@ -31,11 +31,7 @@ public class VersionSnapshotStrategy : ISnapshotStrategy
     /// <inheritdoc />
     public bool ShouldCreateSnapshot(AggregateRoot aggregate)
     {
-        if (aggregate == null)
-        {
-            throw new ArgumentNullException(nameof(aggregate));
-        }
-
+        ArgumentNullException.ThrowIfNull(aggregate);
         return aggregate.Version == this._targetVersion;
     }
 }

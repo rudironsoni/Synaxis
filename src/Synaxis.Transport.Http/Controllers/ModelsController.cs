@@ -26,7 +26,7 @@ namespace Synaxis.Transport.Http.Controllers
         /// <param name="logger">The logger instance.</param>
         public ModelsController(ILogger<ModelsController> logger)
         {
-            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this.logger = logger!;
         }
 
         /// <summary>

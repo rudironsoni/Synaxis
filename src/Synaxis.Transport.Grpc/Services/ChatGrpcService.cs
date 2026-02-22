@@ -29,8 +29,8 @@ namespace Synaxis.Transport.Grpc.Services
         /// <param name="logger">The logger instance.</param>
         public ChatGrpcService(IMediator mediator, ILogger<ChatGrpcService> logger)
         {
-            this.mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
-            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this.mediator = mediator!;
+            this.logger = logger!;
         }
 
         /// <summary>

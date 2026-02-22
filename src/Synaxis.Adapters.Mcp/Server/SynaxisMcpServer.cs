@@ -34,17 +34,9 @@ namespace Synaxis.Adapters.Mcp.Server
             ICommandExecutor<EmbeddingCommand, EmbeddingResponse> embeddingExecutor,
             ILogger<SynaxisMcpServer> logger)
         {
-            if (chatExecutor is null)
-            {
-                throw new ArgumentNullException(nameof(chatExecutor));
-            }
-
-            if (embeddingExecutor is null)
-            {
-                throw new ArgumentNullException(nameof(embeddingExecutor));
-            }
-
-            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(chatExecutor);
+            ArgumentNullException.ThrowIfNull(embeddingExecutor);
+            this._logger = logger!;
 
             this._registry = new ToolRegistry();
             this.ConfigureTools(chatExecutor, embeddingExecutor);

@@ -104,8 +104,10 @@ public sealed class CircuitBreaker
     /// <param name="options">The configuration options.</param>
     public CircuitBreaker(string name, CircuitBreakerOptions options)
     {
-        _ = name ?? throw new ArgumentNullException(nameof(name));
-        this._options = options ?? throw new ArgumentNullException(nameof(options));
+        ArgumentNullException.ThrowIfNull(name);
+        _ = name;
+        ArgumentNullException.ThrowIfNull(options);
+        this._options = options;
     }
 
     /// <summary>

@@ -23,7 +23,7 @@ namespace Synaxis.Providers.Azure
         /// <param name="client">The Azure client for making API requests.</param>
         public AzureEmbeddingProvider(AzureClient client)
         {
-            this.client = client ?? throw new ArgumentNullException(nameof(client));
+            this.client = client!;
         }
 
         /// <inheritdoc/>
@@ -36,11 +36,7 @@ namespace Synaxis.Providers.Azure
             object? options = null,
             CancellationToken cancellationToken = default)
         {
-            if (inputs == null)
-            {
-                throw new ArgumentNullException(nameof(inputs));
-            }
-
+            ArgumentNullException.ThrowIfNull(inputs);
             if (string.IsNullOrWhiteSpace(model))
             {
                 throw new ArgumentException("Model cannot be null or whitespace.", nameof(model));

@@ -27,7 +27,7 @@ namespace Synaxis.Adapters.Mcp.Tools
         /// <param name="executor">The chat command executor.</param>
         public ChatCompletionTool(ICommandExecutor<ChatCommand, ChatResponse> executor)
         {
-            this._executor = executor ?? throw new ArgumentNullException(nameof(executor));
+            this._executor = executor!;
 
             // Define JSON schema for the tool's input parameters
             var schemaJson = """

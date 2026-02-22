@@ -31,8 +31,10 @@ namespace Synaxis.Core.Services
             Agents.RoutingAgent routingAgent,
             ILogger<AgentOrchestrator> logger)
         {
-            this._routingAgent = routingAgent ?? throw new ArgumentNullException(nameof(routingAgent));
-            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(routingAgent);
+            ArgumentNullException.ThrowIfNull(logger);
+            this._routingAgent = routingAgent;
+            this._logger = logger;
             this._agents = new Dictionary<Guid, Agents.SynaxisInferenceAgent>();
             this._isStarted = false;
         }
@@ -116,11 +118,7 @@ namespace Synaxis.Core.Services
         /// <param name="agent">The agent to register.</param>
         public void RegisterAgent(Agents.SynaxisInferenceAgent agent)
         {
-            if (agent == null)
-            {
-                throw new ArgumentNullException(nameof(agent));
-            }
-
+            ArgumentNullException.ThrowIfNull(agent);
             lock (this._lock)
             {
                 if (this._agents.ContainsKey(agent.Id))

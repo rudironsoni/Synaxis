@@ -26,17 +26,14 @@ namespace Synaxis.Execution
         /// <param name="mediator">The mediator instance.</param>
         public MediatorStreamExecutor(IMediator mediator)
         {
-            this._mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
+            ArgumentNullException.ThrowIfNull(mediator);
+            this._mediator = mediator;
         }
 
         /// <inheritdoc/>
         public IAsyncEnumerable<TResult> ExecuteStreamAsync(TRequest request, CancellationToken cancellationToken)
         {
-            if (request is null)
-            {
-                throw new ArgumentNullException(nameof(request));
-            }
-
+            ArgumentNullException.ThrowIfNull(request);
             if (request is not IStreamRequest<TResult> streamRequest)
             {
                 throw new InvalidOperationException(

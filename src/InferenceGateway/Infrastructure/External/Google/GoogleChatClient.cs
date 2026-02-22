@@ -46,7 +46,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.Google
         /// <param name="logger">Optional logger instance.</param>
         public GoogleChatClient(string apiKey, string modelId, HttpClient httpClient, ILogger<GoogleChatClient>? logger = null)
         {
-            this._httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+            ArgumentNullException.ThrowIfNull(httpClient);
+            this._httpClient = httpClient;
             this._modelId = modelId ?? "default";
             this._logger = logger;
             if (!string.IsNullOrEmpty(apiKey))

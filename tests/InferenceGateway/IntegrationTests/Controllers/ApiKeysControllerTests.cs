@@ -80,7 +80,7 @@ public class ApiKeysControllerTests
         Assert.Equal("Production API Key", name);
         var key = content.GetProperty("key").GetString();
         Assert.NotNull(key);
-        Assert.StartsWith("sk_", key, StringComparison.Ordinal);
+        Assert.StartsWith("sk-", key, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -135,14 +135,15 @@ public class ApiKeysControllerTests
     }
 
     [Fact]
-    public async Task RevokeKey_WithAuth_ValidKey_ReturnsNoContent()
+    public async Task RevokeKey_WithAuth_ValidKey_ReturnsOk()
     {
         var (client, user, org, team) = await this.CreateAuthenticatedClientWithOrgAndTeamAsync();
         var apiKey = await this.CreateTestOrganizationApiKeyAsync(org.Id, user.Id, "Test Key");
 
-        var response = await client.DeleteAsync($"/api/v1/organizations/{org.Id}/api-keys/{apiKey.Id}");
+        var revokeRequest = new { Revoke = true, RevokedReason = "Test revocation" };
+        var response = await client.PutAsJsonAsync($"/api/v1/organizations/{org.Id}/api-keys/{apiKey.Id}", revokeRequest);
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         // Verify the key is revoked in the database
         var scope = this._factory.Services.CreateScope();
@@ -163,7 +164,8 @@ public class ApiKeysControllerTests
         var apiKey = await this.CreateTestOrganizationApiKeyAsync(org2.Id, user2.Id, "Test Key");
 
         // Try to revoke key in user2's org using user1's token
-        var response = await client1.DeleteAsync($"/api/v1/organizations/{org2.Id}/api-keys/{apiKey.Id}");
+        var revokeRequest = new { Revoke = true };
+        var response = await client1.PutAsJsonAsync($"/api/v1/organizations/{org2.Id}/api-keys/{apiKey.Id}", revokeRequest);
 
         // Should be Forbidden since user1 is not a member of org2
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -201,7 +203,8 @@ public class ApiKeysControllerTests
         var (client, user, org, team) = await this.CreateAuthenticatedClientWithOrgAndTeamAsync();
         var apiKey = await this.CreateTestOrganizationApiKeyAsync(org.Id, user.Id, "Test Key");
 
-        var response = await client.DeleteAsync($"/api/v1/organizations/{org.Id}/api-keys/{apiKey.Id}");
+        var revokeRequest = new { Revoke = true, RevokedReason = "Audit log test" };
+        var response = await client.PutAsJsonAsync($"/api/v1/organizations/{org.Id}/api-keys/{apiKey.Id}", revokeRequest);
 
         response.EnsureSuccessStatusCode();
 
@@ -254,8 +257,8 @@ public class ApiKeysControllerTests
 
         Assert.NotNull(storedKey);
 
-        // Verify the hash is valid by computing it ourselves
-        var expectedHash = Convert.ToBase64String(SHA256.HashData(Encoding.UTF8.GetBytes(rawKey)));
+        // Verify the hash is valid by computing it ourselves (controller uses hex encoding, not Base64)
+        var expectedHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(rawKey))).ToLowerInvariant();
         Assert.Equal(expectedHash, storedKey.KeyHash);
     }
 
@@ -368,7 +371,7 @@ public class ApiKeysControllerTests
         var scope = this._factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<SynaxisDbContext>();
 
-        var rawKey = "sk_" + Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
+        var rawKey = "sk-" + Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
         var keyHash = Convert.ToBase64String(SHA256.HashData(Encoding.UTF8.GetBytes(rawKey)));
 
         var apiKey = new OrganizationApiKey

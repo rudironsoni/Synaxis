@@ -25,7 +25,7 @@ namespace Synaxis.Transport.Grpc.Interceptors
         /// <param name="logger">The logger instance.</param>
         public AuthenticationInterceptor(ILogger<AuthenticationInterceptor> logger)
         {
-            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this.logger = logger!;
         }
 
         /// <summary>

@@ -31,11 +31,7 @@ public class IntervalSnapshotStrategy : ISnapshotStrategy
     /// <inheritdoc />
     public bool ShouldCreateSnapshot(AggregateRoot aggregate)
     {
-        if (aggregate == null)
-        {
-            throw new ArgumentNullException(nameof(aggregate));
-        }
-
+        ArgumentNullException.ThrowIfNull(aggregate);
         return aggregate.Version > 0 && aggregate.Version % this._interval == 0;
     }
 }

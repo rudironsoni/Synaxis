@@ -5,6 +5,7 @@
 namespace Synaxis.InferenceGateway.IntegrationTests.Controllers;
 
 using System;
+using System.IO;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -12,6 +13,8 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using Synaxis.Core.Models;
 using Synaxis.Infrastructure.Data;
 using Xunit;
@@ -122,15 +125,29 @@ public class UsersControllerTests
     }
 
     [Fact]
-    public async Task UploadAvatar_ValidRequest_ReturnsPlaceholder()
+    public async Task UploadAvatar_ValidRequest_ReturnsSuccess()
     {
         var (client, user) = await CreateAuthenticatedUserAsync();
 
-        var response = await client.PostAsync("/api/v1/users/me/avatar", null);
+        // Create a valid 100x100 PNG image using ImageSharp
+        byte[] pngBytes;
+        using (var image = new Image<Rgba32>(100, 100))
+        {
+            using var stream = new MemoryStream();
+            image.SaveAsPng(stream);
+            pngBytes = stream.ToArray();
+        }
+
+        var content = new MultipartFormDataContent();
+        var fileContent = new ByteArrayContent(pngBytes);
+        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/png");
+        content.Add(fileContent, "file", "avatar.png");
+
+        var response = await client.PostAsync("/api/v1/users/me/avatar", content);
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var content = await response.Content.ReadFromJsonAsync<JsonElement>();
-        content.GetProperty("message").GetString().Should().Contain("placeholder");
+        var responseContent = await response.Content.ReadFromJsonAsync<JsonElement>();
+        responseContent.GetProperty("message").GetString().Should().Contain("successfully");
     }
 
     [Fact]

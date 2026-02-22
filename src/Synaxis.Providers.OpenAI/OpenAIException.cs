@@ -19,7 +19,7 @@ namespace Synaxis.Providers.OpenAI
         public OpenAIException(SynaxisError error)
             : base(error?.Message ?? "OpenAI API error")
         {
-            this.Error = error ?? throw new ArgumentNullException(nameof(error));
+            this.Error = error!;
         }
 
         /// <summary>
@@ -30,7 +30,7 @@ namespace Synaxis.Providers.OpenAI
         public OpenAIException(SynaxisError error, Exception? innerException)
             : base(error?.Message ?? "OpenAI API error", innerException)
         {
-            this.Error = error ?? throw new ArgumentNullException(nameof(error));
+            this.Error = error!;
         }
 
         /// <summary>

@@ -24,7 +24,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
         /// <param name="adapter">The Copilot SDK adapter.</param>
         public CopilotSdkClient(ICopilotSdkAdapter adapter)
         {
-            this._adapter = adapter ?? throw new ArgumentNullException(nameof(adapter));
+            ArgumentNullException.ThrowIfNull(adapter);
+            this._adapter = adapter;
         }
 
         // Note: For scenarios where the SDK is available at runtime a factory/wrapper can be

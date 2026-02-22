@@ -27,7 +27,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
         /// <param name="logger">The logger instance.</param>
         public FileTokenStore(string path, ILogger<FileTokenStore> logger)
         {
-            this._path = path ?? throw new ArgumentNullException(nameof(path));
+            ArgumentNullException.ThrowIfNull(path);
+            this._path = path;
             this._logger = logger;
         }
 

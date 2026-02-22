@@ -34,7 +34,8 @@ public class DockerContainerPlatform : IContainerPlatform
     public DockerContainerPlatform(ILogger<DockerContainerPlatform> logger)
     {
         _dockerClient = new DockerClientConfiguration().CreateClient();
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        ArgumentNullException.ThrowIfNull(logger);
+        _logger = logger;
     }
 
     /// <inheritdoc />

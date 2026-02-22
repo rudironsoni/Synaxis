@@ -30,8 +30,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
             ILogger<SecurityConfigurationValidator> logger,
             string environmentName = "Production")
         {
-            this._configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(configuration);
+            this._configuration = configuration;
+            ArgumentNullException.ThrowIfNull(logger);
+            this._logger = logger;
             this._isDevelopment = string.Equals(environmentName, "Development", StringComparison.Ordinal);
         }
 

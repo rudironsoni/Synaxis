@@ -23,17 +23,14 @@ namespace Synaxis.InferenceGateway.Application
         /// <param name="config">Synaxis configuration options.</param>
         public ProviderRegistry(IOptions<SynaxisConfiguration> config)
         {
-            this.config = config?.Value ?? throw new ArgumentNullException(nameof(config));
+            ArgumentNullException.ThrowIfNull(config);
+            this.config = config.Value;
         }
 
         /// <inheritdoc/>
         public IEnumerable<(string ServiceKey, int Tier)> GetCandidates(string modelId)
         {
-            if (modelId == null)
-            {
-                throw new ArgumentNullException(nameof(modelId));
-            }
-
+            ArgumentNullException.ThrowIfNull(modelId);
             var providers = this.config.Providers?
                 .Where(p => p.Value?.Enabled == true)
                 .ToList() ?? new List<KeyValuePair<string, ProviderConfig>>();
@@ -64,11 +61,7 @@ namespace Synaxis.InferenceGateway.Application
         /// <inheritdoc/>
         public ProviderConfig? GetProvider(string serviceKey)
         {
-            if (serviceKey == null)
-            {
-                throw new ArgumentNullException(nameof(serviceKey));
-            }
-
+            ArgumentNullException.ThrowIfNull(serviceKey);
             if (string.IsNullOrEmpty(serviceKey))
             {
                 return null;

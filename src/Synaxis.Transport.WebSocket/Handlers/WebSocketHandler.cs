@@ -39,9 +39,10 @@ namespace Synaxis.Transport.WebSocket.Handlers
             ILogger<WebSocketHandler> logger,
             IOptions<WebSocketTransportOptions> options)
         {
-            this.scopeFactory = scopeFactory ?? throw new ArgumentNullException(nameof(scopeFactory));
-            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            this.options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+            this.scopeFactory = scopeFactory!;
+            this.logger = logger!;
+            ArgumentNullException.ThrowIfNull(options);
+            this.options = options.Value;
         }
 
         /// <summary>
@@ -52,16 +53,8 @@ namespace Synaxis.Transport.WebSocket.Handlers
         /// <returns>A task representing the asynchronous operation.</returns>
         public async Task HandleAsync(System.Net.WebSockets.WebSocket webSocket, HttpContext context)
         {
-            if (webSocket is null)
-            {
-                throw new ArgumentNullException(nameof(webSocket));
-            }
-
-            if (context is null)
-            {
-                throw new ArgumentNullException(nameof(context));
-            }
-
+            ArgumentNullException.ThrowIfNull(webSocket);
+            ArgumentNullException.ThrowIfNull(context);
             var cancellationToken = context.RequestAborted;
             var buffer = ArrayPool<byte>.Shared.Rent(this.options.ReceiveBufferSize);
 

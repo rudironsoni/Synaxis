@@ -37,20 +37,16 @@ public sealed class ExecuteAgentCommandHandler : IRequestHandler<ExecuteAgentCom
         IAgentExecutionService executionService,
         ILogger<ExecuteAgentCommandHandler> logger)
     {
-        this._configurationRepository = configurationRepository ?? throw new ArgumentNullException(nameof(configurationRepository));
-        this._executionRepository = executionRepository ?? throw new ArgumentNullException(nameof(executionRepository));
-        this._executionService = executionService ?? throw new ArgumentNullException(nameof(executionService));
-        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this._configurationRepository = configurationRepository!;
+        this._executionRepository = executionRepository!;
+        this._executionService = executionService!;
+        this._logger = logger!;
     }
 
     /// <inheritdoc/>
     public async ValueTask<Guid> Handle(ExecuteAgentCommand request, CancellationToken cancellationToken)
     {
-        if (request is null)
-        {
-            throw new ArgumentNullException(nameof(request));
-        }
-
+        ArgumentNullException.ThrowIfNull(request);
         this._logger.LogInformation(
             "Starting execution for agent {AgentId}",
             request.TargetAgentId);

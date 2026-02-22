@@ -36,11 +36,7 @@ namespace Synaxis.Adapters.Agents.State
                 throw new ArgumentException("Conversation ID cannot be null or empty.", nameof(conversationId));
             }
 
-            if (state == null)
-            {
-                throw new ArgumentNullException(nameof(state));
-            }
-
+            ArgumentNullException.ThrowIfNull(state);
             this._storage[conversationId] = state;
             return Task.CompletedTask;
         }

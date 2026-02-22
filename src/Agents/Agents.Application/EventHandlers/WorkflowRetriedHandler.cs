@@ -24,7 +24,7 @@ public class WorkflowRetriedHandler : INotificationHandler<WorkflowRetried>
     /// <param name="logger">The logger.</param>
     public WorkflowRetriedHandler(ILogger<WorkflowRetriedHandler> logger)
     {
-        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this._logger = logger!;
     }
 
     /// <summary>

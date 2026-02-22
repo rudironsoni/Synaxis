@@ -51,11 +51,7 @@ namespace Synaxis.Routing.SmartRouter
         /// <returns>A routing decision containing the selected provider and metadata.</returns>
         public async Task<RoutingDecision> RouteRequestAsync(RoutingRequest request, CancellationToken cancellationToken = default)
         {
-            if (request == null)
-            {
-                throw new ArgumentNullException(nameof(request));
-            }
-
+            ArgumentNullException.ThrowIfNull(request);
             var availableProviders = this.GetAvailableProviders();
             if (availableProviders.Count == 0)
             {
@@ -111,11 +107,7 @@ namespace Synaxis.Routing.SmartRouter
             int outputTokens,
             CancellationToken cancellationToken = default)
         {
-            if (decision == null)
-            {
-                throw new ArgumentNullException(nameof(decision));
-            }
-
+            ArgumentNullException.ThrowIfNull(decision);
             this._performanceTracker.RecordRequest(decision.SelectedProvider.Id, success, (int)latencyMs, inputTokens, outputTokens, 0);
 
             // Update predictor with actual result for learning
@@ -141,11 +133,7 @@ namespace Synaxis.Routing.SmartRouter
         /// <param name="provider">The provider to register.</param>
         public void RegisterProvider(Provider provider)
         {
-            if (provider == null)
-            {
-                throw new ArgumentNullException(nameof(provider));
-            }
-
+            ArgumentNullException.ThrowIfNull(provider);
             this._providers[provider.Id] = provider;
 
             // Create circuit breaker for this provider

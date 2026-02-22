@@ -35,8 +35,10 @@ public class PostgreSqlEventStore : IEventStore
         string connectionString,
         ILogger<PostgreSqlEventStore> logger)
     {
-        _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        ArgumentNullException.ThrowIfNull(connectionString);
+        _connectionString = connectionString;
+        ArgumentNullException.ThrowIfNull(logger);
+        _logger = logger;
     }
 
     /// <inheritdoc />

@@ -28,8 +28,8 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             RequestDelegate next,
             ILogger<InputValidationMiddleware> logger)
         {
-            this._next = next ?? throw new ArgumentNullException(nameof(next));
-            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._next = next!;
+            this._logger = logger!;
         }
 
         /// <summary>

@@ -24,8 +24,10 @@ public class AgentExecutionRepository : IAgentExecutionRepository
     /// <param name="logger">The logger.</param>
     public AgentExecutionRepository(IEventStore eventStore, ILogger<AgentExecutionRepository> logger)
     {
-        this._eventStore = eventStore ?? throw new ArgumentNullException(nameof(eventStore));
-        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        ArgumentNullException.ThrowIfNull(eventStore);
+        ArgumentNullException.ThrowIfNull(logger);
+        this._eventStore = eventStore;
+        this._logger = logger;
     }
 
     /// <inheritdoc/>

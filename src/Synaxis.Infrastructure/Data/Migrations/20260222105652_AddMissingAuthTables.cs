@@ -17,6 +17,48 @@ namespace Synaxis.Infrastructure.Data.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            // Create collections table first (required by collection_memberships FK)
+            migrationBuilder.CreateTable(
+                name: "collections",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    organization_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    team_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    slug = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    name = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    description = table.Column<string>(type: "text", nullable: false),
+                    is_active = table.Column<bool>(type: "boolean", nullable: false),
+                    type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    visibility = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    tags = table.Column<string>(type: "jsonb", nullable: false),
+                    metadata = table.Column<string>(type: "jsonb", nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    created_by = table.Column<Guid>(type: "uuid", nullable: false),
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_collections", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_collections_organizations_organization_id",
+                        column: x => x.organization_id,
+                        principalTable: "organizations",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_collections_teams_team_id",
+                        column: x => x.team_id,
+                        principalTable: "teams",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_collections_users_created_by",
+                        column: x => x.created_by,
+                        principalTable: "users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateTable(
                 name: "EmailVerificationTokens",
                 columns: table => new
@@ -100,6 +142,46 @@ namespace Synaxis.Infrastructure.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "collection_memberships",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    user_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    collection_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    organization_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    role = table.Column<string>(type: "text", nullable: false),
+                    joined_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    added_by = table.Column<Guid>(type: "uuid", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_collection_memberships", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_collection_memberships_collections_collection_id",
+                        column: x => x.collection_id,
+                        principalTable: "collections",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_collection_memberships_organizations_organization_id",
+                        column: x => x.organization_id,
+                        principalTable: "organizations",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_collection_memberships_users_added_by",
+                        column: x => x.added_by,
+                        principalTable: "users",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_collection_memberships_users_user_id",
+                        column: x => x.user_id,
+                        principalTable: "users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "jwt_blacklists",
                 columns: table => new
                 {
@@ -121,6 +203,22 @@ namespace Synaxis.Infrastructure.Data.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_collections_created_by",
+                table: "collections",
+                column: "created_by");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_collections_team_id",
+                table: "collections",
+                column: "team_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_collections_organization_id_slug",
+                table: "collections",
+                columns: new[] { "organization_id", "slug" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_EmailVerificationTokens_UserId",
                 table: "EmailVerificationTokens",
                 column: "UserId");
@@ -129,6 +227,27 @@ namespace Synaxis.Infrastructure.Data.Migrations
                 name: "IX_jwt_blacklists_expires_at",
                 table: "jwt_blacklists",
                 column: "expires_at");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_collection_memberships_added_by",
+                table: "collection_memberships",
+                column: "added_by");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_collection_memberships_collection_id",
+                table: "collection_memberships",
+                column: "collection_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_collection_memberships_organization_id",
+                table: "collection_memberships",
+                column: "organization_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_collection_memberships_user_id_collection_id",
+                table: "collection_memberships",
+                columns: new[] { "user_id", "collection_id" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_organization_api_keys_created_by",
@@ -170,6 +289,9 @@ namespace Synaxis.Infrastructure.Data.Migrations
                 name: "EmailVerificationTokens");
 
             migrationBuilder.DropTable(
+                name: "collection_memberships");
+
+            migrationBuilder.DropTable(
                 name: "jwt_blacklists");
 
             migrationBuilder.DropTable(
@@ -177,6 +299,9 @@ namespace Synaxis.Infrastructure.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "PasswordResetTokens");
+
+            migrationBuilder.DropTable(
+                name: "collections");
         }
     }
 }

@@ -22,11 +22,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Routing
         /// <param name="dbContext">The dbContext.</param>
         public CostService(ControlPlaneDbContext dbContext)
         {
-            if (dbContext is null)
-            {
-                throw new ArgumentNullException(nameof(dbContext));
-            }
-
+            ArgumentNullException.ThrowIfNull(dbContext);
             this._dbContext = dbContext;
         }
 

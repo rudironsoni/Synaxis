@@ -25,7 +25,8 @@ public class ServiceHealthCheck : IHealthCheck
     /// <param name="serviceProvider">The service provider.</param>
     public ServiceHealthCheck(IServiceProvider serviceProvider)
     {
-        this._serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+        ArgumentNullException.ThrowIfNull(serviceProvider);
+        this._serviceProvider = serviceProvider;
     }
 
     /// <summary>

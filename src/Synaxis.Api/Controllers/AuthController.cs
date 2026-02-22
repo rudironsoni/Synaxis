@@ -45,11 +45,16 @@ namespace Synaxis.Api.Controllers
             ILogger<AuthController> logger,
             Synaxis.Infrastructure.Data.SynaxisDbContext dbContext)
         {
-            this._authenticationService = authenticationService ?? throw new ArgumentNullException(nameof(authenticationService));
-            this._userService = userService ?? throw new ArgumentNullException(nameof(userService));
-            this._emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
-            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            this._dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+            ArgumentNullException.ThrowIfNull(authenticationService);
+            ArgumentNullException.ThrowIfNull(userService);
+            ArgumentNullException.ThrowIfNull(emailService);
+            ArgumentNullException.ThrowIfNull(logger);
+            ArgumentNullException.ThrowIfNull(dbContext);
+            this._authenticationService = authenticationService;
+            this._userService = userService;
+            this._emailService = emailService;
+            this._logger = logger;
+            this._dbContext = dbContext;
         }
 
         /// <summary>

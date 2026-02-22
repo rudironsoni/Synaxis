@@ -32,18 +32,14 @@ public sealed class UpdateAgentCommandHandler : IRequestHandler<UpdateAgentComma
         IAgentConfigurationRepository repository,
         ILogger<UpdateAgentCommandHandler> logger)
     {
-        this._repository = repository ?? throw new ArgumentNullException(nameof(repository));
-        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this._repository = repository!;
+        this._logger = logger!;
     }
 
     /// <inheritdoc/>
     public async ValueTask<AgentDto> Handle(UpdateAgentCommand request, CancellationToken cancellationToken)
     {
-        if (request is null)
-        {
-            throw new ArgumentNullException(nameof(request));
-        }
-
+        ArgumentNullException.ThrowIfNull(request);
         this._logger.LogInformation(
             "Updating agent with ID {AgentId}",
             request.TargetAgentId);

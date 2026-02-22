@@ -33,7 +33,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
         /// <param name="logger">Optional logger instance.</param>
         public GitHubCopilotChatClient(ICopilotClient copilotClient, ILogger<GitHubCopilotChatClient>? logger = null)
         {
-            this._copilotClient = copilotClient ?? throw new ArgumentNullException(nameof(copilotClient));
+            ArgumentNullException.ThrowIfNull(copilotClient);
+            this._copilotClient = copilotClient;
             this._logger = logger;
         }
 
@@ -68,11 +69,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
         /// <inheritdoc/>
         public IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default)
         {
-            if (messages is null)
-            {
-                throw new ArgumentNullException(nameof(messages));
-            }
-
+            ArgumentNullException.ThrowIfNull(messages);
             return this.GetStreamingResponseInternalAsync(messages, cancellationToken);
         }
 

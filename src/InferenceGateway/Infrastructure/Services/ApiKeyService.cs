@@ -40,7 +40,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
         /// <param name="context">The database context.</param>
         public ApiKeyService(SynaxisDbContext context)
         {
-            this._context = context ?? throw new ArgumentNullException(nameof(context));
+            ArgumentNullException.ThrowIfNull(context);
+            this._context = context;
         }
 
         /// <inheritdoc />
