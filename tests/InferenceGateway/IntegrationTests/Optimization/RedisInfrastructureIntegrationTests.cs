@@ -209,7 +209,7 @@ public class RedisInfrastructureIntegrationTests(ITestOutputHelper output, Synax
 
         // Subscribe to keyspace expiration events
         await subscriber.SubscribeAsync(
-            "__keyevent@0__:expired",
+            RedisChannel.Literal("__keyevent@0__:expired"),
             (channel, expiredKey) =>
             {
                 if (expiredKey.ToString() == key)
@@ -241,7 +241,7 @@ public class RedisInfrastructureIntegrationTests(ITestOutputHelper output, Synax
         finally
         {
             // Cleanup subscription
-            await subscriber.UnsubscribeAsync("__keyevent@0__:expired");
+            await subscriber.UnsubscribeAsync(RedisChannel.Literal("__keyevent@0__:expired"));
         }
     }
 
