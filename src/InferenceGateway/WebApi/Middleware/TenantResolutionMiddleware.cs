@@ -40,8 +40,10 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         /// <param name="logger">The logger instance.</param>
         public TenantResolutionMiddleware(RequestDelegate next, ILogger<TenantResolutionMiddleware> logger)
         {
-            this._next = next!;
-            this._logger = logger!;
+            ArgumentNullException.ThrowIfNull(next);
+            ArgumentNullException.ThrowIfNull(logger);
+            this._next = next;
+            this._logger = logger;
         }
 
         /// <summary>
