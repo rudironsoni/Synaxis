@@ -5,6 +5,7 @@
 namespace Synaxis.Identity.Domain.Aggregates;
 
 using Synaxis.Abstractions.Cloud;
+using Synaxis.Abstractions.Time;
 using Synaxis.Identity.Domain.Events;
 using Synaxis.Identity.Domain.ValueObjects;
 using Synaxis.Infrastructure.EventSourcing;
@@ -15,6 +16,11 @@ using Synaxis.Infrastructure.EventSourcing;
 public sealed class ApiKey : AggregateRoot
 {
     private ApiKey()
+    {
+    }
+
+    private ApiKey(ITimeProvider timeProvider)
+        : base(timeProvider)
     {
     }
 
@@ -73,6 +79,7 @@ public sealed class ApiKey : AggregateRoot
     /// <param name="tenantId">The unique identifier of the tenant.</param>
     /// <param name="userId">The unique identifier of the user.</param>
     /// <param name="expiresAt">The expiration timestamp of the key.</param>
+    /// <param name="timeProvider">The time provider for deterministic time access.</param>
     /// <returns>A new <see cref="ApiKey"/> instance.</returns>
     public static ApiKey Create(
         string id,
@@ -81,9 +88,10 @@ public sealed class ApiKey : AggregateRoot
         string providerType,
         string tenantId,
         string userId,
-        DateTime? expiresAt)
+        DateTime? expiresAt,
+        ITimeProvider timeProvider)
     {
-        var apiKey = new ApiKey
+        var apiKey = new ApiKey(timeProvider)
         {
             Id = id,
             KeyId = keyId,
@@ -92,13 +100,13 @@ public sealed class ApiKey : AggregateRoot
             TenantId = tenantId,
             UserId = userId,
             IsActive = true,
-            CreatedAt = DateTime.UtcNow,
+            CreatedAt = timeProvider.UtcNow,
             ExpiresAt = expiresAt,
         };
 
         var @event = new ApiKeyAdded(
             Guid.NewGuid().ToString(),
-            DateTime.UtcNow,
+            timeProvider.UtcNow,
             nameof(ApiKeyAdded),
             apiKey.Id,
             apiKey.KeyId.Value,
@@ -129,7 +137,7 @@ public sealed class ApiKey : AggregateRoot
 
         var @event = new ApiKeyRotated(
             Guid.NewGuid().ToString(),
-            DateTime.UtcNow,
+            this.TimeProvider.UtcNow,
             nameof(ApiKeyRotated),
             this.Id,
             this.KeyId.Value);
@@ -151,7 +159,7 @@ public sealed class ApiKey : AggregateRoot
 
         var @event = new ApiKeyRevoked(
             Guid.NewGuid().ToString(),
-            DateTime.UtcNow,
+            this.TimeProvider.UtcNow,
             nameof(ApiKeyRevoked),
             this.Id);
 
@@ -168,12 +176,12 @@ public sealed class ApiKey : AggregateRoot
             throw new InvalidOperationException("Cannot mark an inactive API key as used.");
         }
 
-        if (this.ExpiresAt.HasValue && this.ExpiresAt.Value < DateTime.UtcNow)
+        if (this.ExpiresAt.HasValue && this.ExpiresAt.Value < this.TimeProvider.UtcNow)
         {
             throw new InvalidOperationException("Cannot mark an expired API key as used.");
         }
 
-        this.LastUsedAt = DateTime.UtcNow;
+        this.LastUsedAt = this.TimeProvider.UtcNow;
     }
 
     /// <summary>
@@ -183,7 +191,7 @@ public sealed class ApiKey : AggregateRoot
     {
         var @event = new ApiKeyDeleted(
             Guid.NewGuid().ToString(),
-            DateTime.UtcNow,
+            this.TimeProvider.UtcNow,
             nameof(ApiKeyDeleted),
             this.Id);
 
@@ -196,7 +204,7 @@ public sealed class ApiKey : AggregateRoot
     /// <returns>True if the API key is expired, otherwise false.</returns>
     public bool IsExpired()
     {
-        return this.ExpiresAt.HasValue && this.ExpiresAt.Value < DateTime.UtcNow;
+        return this.ExpiresAt.HasValue && this.ExpiresAt.Value < this.TimeProvider.UtcNow;
     }
 
     /// <summary>

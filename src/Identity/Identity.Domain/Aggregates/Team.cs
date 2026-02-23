@@ -5,6 +5,7 @@
 namespace Synaxis.Identity.Domain.Aggregates;
 
 using Synaxis.Abstractions.Cloud;
+using Synaxis.Abstractions.Time;
 using Synaxis.Identity.Domain.Events;
 using Synaxis.Identity.Domain.ValueObjects;
 using Synaxis.Infrastructure.EventSourcing;
@@ -17,6 +18,11 @@ public sealed class Team : AggregateRoot
     private readonly Dictionary<string, Role> _members = new(StringComparer.Ordinal);
 
     private Team()
+    {
+    }
+
+    private Team(ITimeProvider timeProvider)
+        : base(timeProvider)
     {
     }
 
@@ -57,26 +63,28 @@ public sealed class Team : AggregateRoot
     /// <param name="name">The name of the team.</param>
     /// <param name="description">The description of the team.</param>
     /// <param name="tenantId">The unique identifier of the tenant.</param>
+    /// <param name="timeProvider">The time provider for deterministic time access.</param>
     /// <returns>A new <see cref="Team"/> instance.</returns>
     public static Team Create(
         string id,
         TeamName name,
         string description,
-        string tenantId)
+        string tenantId,
+        ITimeProvider timeProvider)
     {
-        var team = new Team
+        var team = new Team(timeProvider)
         {
             Id = id,
             Name = name,
             Description = description,
             TenantId = tenantId,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
+            CreatedAt = timeProvider.UtcNow,
+            UpdatedAt = timeProvider.UtcNow,
         };
 
         var @event = new TeamCreated(
             Guid.NewGuid().ToString(),
-            DateTime.UtcNow,
+            timeProvider.UtcNow,
             nameof(TeamCreated),
             team.Id,
             team.Name.Value,
@@ -97,11 +105,11 @@ public sealed class Team : AggregateRoot
     {
         this.Name = name;
         this.Description = description;
-        this.UpdatedAt = DateTime.UtcNow;
+        this.UpdatedAt = this.TimeProvider.UtcNow;
 
         var @event = new TeamUpdated(
             Guid.NewGuid().ToString(),
-            DateTime.UtcNow,
+            this.TimeProvider.UtcNow,
             nameof(TeamUpdated),
             this.Id,
             this.Name.Value,
@@ -123,11 +131,11 @@ public sealed class Team : AggregateRoot
         }
 
         this._members[userId] = role;
-        this.UpdatedAt = DateTime.UtcNow;
+        this.UpdatedAt = this.TimeProvider.UtcNow;
 
         var @event = new UserAddedToTeam(
             Guid.NewGuid().ToString(),
-            DateTime.UtcNow,
+            this.TimeProvider.UtcNow,
             nameof(UserAddedToTeam),
             this.Id,
             userId,
@@ -148,11 +156,11 @@ public sealed class Team : AggregateRoot
         }
 
         this._members.Remove(userId);
-        this.UpdatedAt = DateTime.UtcNow;
+        this.UpdatedAt = this.TimeProvider.UtcNow;
 
         var @event = new UserRemovedFromTeam(
             Guid.NewGuid().ToString(),
-            DateTime.UtcNow,
+            this.TimeProvider.UtcNow,
             nameof(UserRemovedFromTeam),
             this.Id,
             userId);
@@ -173,7 +181,7 @@ public sealed class Team : AggregateRoot
         }
 
         this._members[userId] = role;
-        this.UpdatedAt = DateTime.UtcNow;
+        this.UpdatedAt = this.TimeProvider.UtcNow;
     }
 
     /// <summary>
@@ -181,11 +189,11 @@ public sealed class Team : AggregateRoot
     /// </summary>
     public void Archive()
     {
-        this.UpdatedAt = DateTime.UtcNow;
+        this.UpdatedAt = this.TimeProvider.UtcNow;
 
         var @event = new TeamArchived(
             Guid.NewGuid().ToString(),
-            DateTime.UtcNow,
+            this.TimeProvider.UtcNow,
             nameof(TeamArchived),
             this.Id);
 

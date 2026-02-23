@@ -4,6 +4,8 @@
 
 namespace Synaxis.Identity.UnitTests.Aggregates;
 
+using Synaxis.Abstractions.Time;
+using Synaxis.Common.Tests.Time;
 using Synaxis.Identity.Domain.Aggregates;
 using Synaxis.Identity.Domain.ValueObjects;
 using Xunit;
@@ -23,9 +25,10 @@ public class ApiKeyTests
         var tenantId = Guid.NewGuid().ToString();
         var userId = Guid.NewGuid().ToString();
         var expiresAt = DateTime.UtcNow.AddDays(30);
+        var timeProvider = new TestTimeProvider();
 
         // Act
-        var apiKey = ApiKey.Create(id, keyId, encryptedKey, providerType, tenantId, userId, expiresAt);
+        var apiKey = ApiKey.Create(id, keyId, encryptedKey, providerType, tenantId, userId, expiresAt, timeProvider);
 
         // Assert
         apiKey.Id.Should().Be(id);
@@ -35,7 +38,7 @@ public class ApiKeyTests
         apiKey.TenantId.Should().Be(tenantId);
         apiKey.UserId.Should().Be(userId);
         apiKey.IsActive.Should().BeTrue();
-        apiKey.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+        apiKey.CreatedAt.Should().Be(timeProvider.UtcNow);
         apiKey.ExpiresAt.Should().BeCloseTo(expiresAt, TimeSpan.FromSeconds(1));
         apiKey.LastUsedAt.Should().BeNull();
     }
@@ -50,9 +53,10 @@ public class ApiKeyTests
         var providerType = "TestProvider";
         var tenantId = Guid.NewGuid().ToString();
         var userId = Guid.NewGuid().ToString();
+        var timeProvider = new TestTimeProvider();
 
         // Act
-        var apiKey = ApiKey.Create(id, keyId, encryptedKey, providerType, tenantId, userId, null);
+        var apiKey = ApiKey.Create(id, keyId, encryptedKey, providerType, tenantId, userId, null, timeProvider);
 
         // Assert
         apiKey.ExpiresAt.Should().BeNull();
@@ -123,13 +127,14 @@ public class ApiKeyTests
     public void MarkAsUsed_UpdatesLastUsedAt()
     {
         // Arrange
-        var apiKey = CreateTestApiKey();
+        var timeProvider = new TestTimeProvider();
+        var apiKey = CreateTestApiKey(timeProvider: timeProvider);
 
         // Act
         apiKey.MarkAsUsed();
 
         // Assert
-        apiKey.LastUsedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+        apiKey.LastUsedAt.Should().Be(timeProvider.UtcNow);
     }
 
     [Fact]
@@ -151,7 +156,9 @@ public class ApiKeyTests
     public void MarkAsUsed_ExpiredKey_ThrowsException()
     {
         // Arrange
-        var apiKey = CreateTestApiKey(DateTime.UtcNow.AddHours(-1));
+        var timeProvider = new TestTimeProvider();
+        var pastTime = timeProvider.UtcNow.AddHours(-1);
+        var apiKey = CreateTestApiKey(pastTime, timeProvider);
 
         // Act
         var act = () => apiKey.MarkAsUsed();
@@ -165,7 +172,9 @@ public class ApiKeyTests
     public void IsExpired_WithExpiration_ReturnsTrue()
     {
         // Arrange
-        var apiKey = CreateTestApiKey(DateTime.UtcNow.AddHours(-1));
+        var timeProvider = new TestTimeProvider();
+        var pastTime = timeProvider.UtcNow.AddHours(-1);
+        var apiKey = CreateTestApiKey(pastTime, timeProvider);
 
         // Act
         var result = apiKey.IsExpired();
@@ -178,7 +187,8 @@ public class ApiKeyTests
     public void IsExpired_WithoutExpiration_ReturnsFalse()
     {
         // Arrange
-        var apiKey = CreateTestApiKey(null);
+        var timeProvider = new TestTimeProvider();
+        var apiKey = CreateTestApiKey(null, timeProvider);
 
         // Act
         var result = apiKey.IsExpired();
@@ -191,7 +201,9 @@ public class ApiKeyTests
     public void IsExpired_NotExpired_ReturnsFalse()
     {
         // Arrange
-        var apiKey = CreateTestApiKey(DateTime.UtcNow.AddDays(30));
+        var timeProvider = new TestTimeProvider();
+        var futureTime = timeProvider.UtcNow.AddDays(30);
+        var apiKey = CreateTestApiKey(futureTime, timeProvider);
 
         // Act
         var result = apiKey.IsExpired();
@@ -204,7 +216,9 @@ public class ApiKeyTests
     public void IsValid_ActiveAndNotExpired_ReturnsTrue()
     {
         // Arrange
-        var apiKey = CreateTestApiKey(DateTime.UtcNow.AddDays(30));
+        var timeProvider = new TestTimeProvider();
+        var futureTime = timeProvider.UtcNow.AddDays(30);
+        var apiKey = CreateTestApiKey(futureTime, timeProvider);
 
         // Act
         var result = apiKey.IsValid();
@@ -217,7 +231,9 @@ public class ApiKeyTests
     public void IsValid_Inactive_ReturnsFalse()
     {
         // Arrange
-        var apiKey = CreateTestApiKey(DateTime.UtcNow.AddDays(30));
+        var timeProvider = new TestTimeProvider();
+        var futureTime = timeProvider.UtcNow.AddDays(30);
+        var apiKey = CreateTestApiKey(futureTime, timeProvider);
         apiKey.Revoke();
 
         // Act
@@ -231,7 +247,9 @@ public class ApiKeyTests
     public void IsValid_Expired_ReturnsFalse()
     {
         // Arrange
-        var apiKey = CreateTestApiKey(DateTime.UtcNow.AddHours(-1));
+        var timeProvider = new TestTimeProvider();
+        var pastTime = timeProvider.UtcNow.AddHours(-1);
+        var apiKey = CreateTestApiKey(pastTime, timeProvider);
 
         // Act
         var result = apiKey.IsValid();
@@ -253,8 +271,9 @@ public class ApiKeyTests
         apiKey.IsActive.Should().BeFalse();
     }
 
-    private static ApiKey CreateTestApiKey(DateTime? expiresAt = null)
+    private static ApiKey CreateTestApiKey(DateTime? expiresAt = null, ITimeProvider? timeProvider = null)
     {
+        timeProvider ??= new TestTimeProvider();
         return ApiKey.Create(
             Guid.NewGuid().ToString(),
             KeyId.Create("test-key-id"),
@@ -262,6 +281,7 @@ public class ApiKeyTests
             "TestProvider",
             Guid.NewGuid().ToString(),
             Guid.NewGuid().ToString(),
-            expiresAt ?? DateTime.UtcNow.AddDays(30));
+            expiresAt ?? timeProvider.UtcNow.AddDays(30),
+            timeProvider);
     }
 }

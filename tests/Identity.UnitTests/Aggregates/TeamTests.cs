@@ -4,6 +4,7 @@
 
 namespace Synaxis.Identity.UnitTests.Aggregates;
 
+using Synaxis.Common.Tests.Time;
 using Synaxis.Identity.Domain.Aggregates;
 using Synaxis.Identity.Domain.ValueObjects;
 using Xunit;
@@ -20,17 +21,18 @@ public class TeamTests
         var name = TeamName.Create("Test Team");
         var description = "A test team";
         var tenantId = Guid.NewGuid().ToString();
+        var timeProvider = new TestTimeProvider();
 
         // Act
-        var team = Team.Create(id, name, description, tenantId);
+        var team = Team.Create(id, name, description, tenantId, timeProvider);
 
         // Assert
         team.Id.Should().Be(id);
         team.Name.Should().Be(name);
         team.Description.Should().Be(description);
         team.TenantId.Should().Be(tenantId);
-        team.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
-        team.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+        team.CreatedAt.Should().Be(timeProvider.UtcNow);
+        team.UpdatedAt.Should().Be(timeProvider.UtcNow);
         team.Members.Should().BeEmpty();
     }
 
@@ -222,10 +224,12 @@ public class TeamTests
 
     private static Team CreateTestTeam()
     {
+        var timeProvider = new TestTimeProvider();
         return Team.Create(
             Guid.NewGuid().ToString(),
             TeamName.Create("Test Team"),
             "A test team",
-            Guid.NewGuid().ToString());
+            Guid.NewGuid().ToString(),
+            timeProvider);
     }
 }

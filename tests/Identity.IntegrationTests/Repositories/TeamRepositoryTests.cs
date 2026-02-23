@@ -6,6 +6,7 @@ namespace Synaxis.Identity.IntegrationTests.Repositories;
 
 using Synaxis.Identity.Domain.Aggregates;
 using Synaxis.Identity.Domain.ValueObjects;
+using Synaxis.Common.Tests.Time;
 using Testcontainers.SqlEdge;
 using Xunit;
 using FluentAssertions;
@@ -44,7 +45,8 @@ public class TeamRepositoryTests : IAsyncLifetime
         var description = "A test team";
         var tenantId = Guid.NewGuid().ToString();
 
-        var team = Team.Create(teamId, name, description, tenantId);
+        var timeProvider = new TestTimeProvider();
+        var team = Team.Create(teamId, name, description, tenantId, timeProvider);
 
         // Act
         await SaveTeamAsync(team);
@@ -63,11 +65,13 @@ public class TeamRepositoryTests : IAsyncLifetime
     {
         // Arrange
         var teamId = Guid.NewGuid().ToString();
+        var timeProvider = new TestTimeProvider();
         var team = Team.Create(
             teamId,
             TeamName.Create("Test Team"),
             "A test team",
-            Guid.NewGuid().ToString());
+            Guid.NewGuid().ToString(),
+            timeProvider);
 
         await SaveTeamAsync(team);
 
@@ -90,11 +94,13 @@ public class TeamRepositoryTests : IAsyncLifetime
     {
         // Arrange
         var teamId = Guid.NewGuid().ToString();
+        var timeProvider = new TestTimeProvider();
         var team = Team.Create(
             teamId,
             TeamName.Create("Test Team"),
             "A test team",
-            Guid.NewGuid().ToString());
+            Guid.NewGuid().ToString(),
+            timeProvider);
 
         var userId = Guid.NewGuid().ToString();
         team.AddMember(userId, Role.Member);
@@ -116,11 +122,13 @@ public class TeamRepositoryTests : IAsyncLifetime
     {
         // Arrange
         var teamId = Guid.NewGuid().ToString();
+        var timeProvider = new TestTimeProvider();
         var team = Team.Create(
             teamId,
             TeamName.Create("Test Team"),
             "A test team",
-            Guid.NewGuid().ToString());
+            Guid.NewGuid().ToString(),
+            timeProvider);
 
         var userId = Guid.NewGuid().ToString();
         team.AddMember(userId, Role.Member);
@@ -228,11 +236,13 @@ public class TeamRepositoryTests : IAsyncLifetime
         using var reader = await command.ExecuteReaderAsync();
         if (await reader.ReadAsync())
         {
+            var timeProvider = new TestTimeProvider();
             var team = Team.Create(
                 reader.GetString(reader.GetOrdinal("Id")),
                 TeamName.Create(reader.GetString(reader.GetOrdinal("Name"))),
                 reader.GetString(reader.GetOrdinal("Description")),
-                reader.GetString(reader.GetOrdinal("TenantId")));
+                reader.GetString(reader.GetOrdinal("TenantId")),
+                timeProvider);
 
             // Load members and add them to the team using reflection
             await reader.CloseAsync();
