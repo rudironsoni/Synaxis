@@ -39,7 +39,7 @@ public class ApiKeyTests
         apiKey.UserId.Should().Be(userId);
         apiKey.IsActive.Should().BeTrue();
         apiKey.CreatedAt.Should().Be(timeProvider.UtcNow);
-        apiKey.ExpiresAt.Should().BeCloseTo(expiresAt, TimeSpan.FromSeconds(1));
+        apiKey.ExpiresAt.Should().Be(expiresAt);
         apiKey.LastUsedAt.Should().BeNull();
     }
 

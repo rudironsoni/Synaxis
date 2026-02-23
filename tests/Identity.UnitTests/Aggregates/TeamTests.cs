@@ -4,6 +4,7 @@
 
 namespace Synaxis.Identity.UnitTests.Aggregates;
 
+using Synaxis.Abstractions.Time;
 using Synaxis.Common.Tests.Time;
 using Synaxis.Identity.Domain.Aggregates;
 using Synaxis.Identity.Domain.ValueObjects;
@@ -40,7 +41,8 @@ public class TeamTests
     public void AddMember_AddsUserToMembers()
     {
         // Arrange
-        var team = CreateTestTeam();
+        var timeProvider = new TestTimeProvider();
+        var team = CreateTestTeam(timeProvider);
         var userId = Guid.NewGuid().ToString();
         var role = Role.Member;
 
@@ -51,7 +53,7 @@ public class TeamTests
         team.Members.Should().HaveCount(1);
         team.Members.Should().ContainKey(userId);
         team.Members[userId].Should().Be(role);
-        team.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+        team.UpdatedAt.Should().Be(timeProvider.UtcNow);
     }
 
     [Fact]
@@ -74,7 +76,8 @@ public class TeamTests
     public void RemoveMember_RemovesUserFromMembers()
     {
         // Arrange
-        var team = CreateTestTeam();
+        var timeProvider = new TestTimeProvider();
+        var team = CreateTestTeam(timeProvider);
         var userId = Guid.NewGuid().ToString();
         team.AddMember(userId, Role.Member);
 
@@ -83,7 +86,7 @@ public class TeamTests
 
         // Assert
         team.Members.Should().BeEmpty();
-        team.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+        team.UpdatedAt.Should().Be(timeProvider.UtcNow);
     }
 
     [Fact]
@@ -105,7 +108,8 @@ public class TeamTests
     public void UpdateMemberRole_UpdatesRole()
     {
         // Arrange
-        var team = CreateTestTeam();
+        var timeProvider = new TestTimeProvider();
+        var team = CreateTestTeam(timeProvider);
         var userId = Guid.NewGuid().ToString();
         team.AddMember(userId, Role.Member);
 
@@ -114,7 +118,7 @@ public class TeamTests
 
         // Assert
         team.Members[userId].Should().Be(Role.Admin);
-        team.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+        team.UpdatedAt.Should().Be(timeProvider.UtcNow);
     }
 
     [Fact]
@@ -136,20 +140,22 @@ public class TeamTests
     public void Archive_SetsArchivedFlag()
     {
         // Arrange
-        var team = CreateTestTeam();
+        var timeProvider = new TestTimeProvider();
+        var team = CreateTestTeam(timeProvider);
 
         // Act
         team.Archive();
 
         // Assert
-        team.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+        team.UpdatedAt.Should().Be(timeProvider.UtcNow);
     }
 
     [Fact]
     public void UpdateProfile_UpdatesProperties()
     {
         // Arrange
-        var team = CreateTestTeam();
+        var timeProvider = new TestTimeProvider();
+        var team = CreateTestTeam(timeProvider);
         var newName = TeamName.Create("Updated Team");
         var newDescription = "Updated description";
 
@@ -159,7 +165,7 @@ public class TeamTests
         // Assert
         team.Name.Should().Be(newName);
         team.Description.Should().Be(newDescription);
-        team.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+        team.UpdatedAt.Should().Be(timeProvider.UtcNow);
     }
 
     [Fact]
@@ -222,9 +228,9 @@ public class TeamTests
             .WithMessage($"User {userId} is not a member of the team.");
     }
 
-    private static Team CreateTestTeam()
+    private static Team CreateTestTeam(ITimeProvider? timeProvider = null)
     {
-        var timeProvider = new TestTimeProvider();
+        timeProvider ??= new TestTimeProvider();
         return Team.Create(
             Guid.NewGuid().ToString(),
             TeamName.Create("Test Team"),
