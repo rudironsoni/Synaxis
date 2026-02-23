@@ -291,3 +291,4 @@ test-*.txt
 
 # Node modules (ensure excluded)
 **/node_modules/
+.sisyphus/
