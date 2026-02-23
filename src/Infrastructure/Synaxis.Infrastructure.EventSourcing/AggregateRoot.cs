@@ -5,6 +5,7 @@
 namespace Synaxis.Infrastructure.EventSourcing;
 
 using Synaxis.Abstractions.Cloud;
+using Synaxis.Abstractions.Time;
 
 /// <summary>
 /// Base class for event-sourced aggregates that apply domain events to maintain state.
@@ -12,6 +13,36 @@ using Synaxis.Abstractions.Cloud;
 public abstract class AggregateRoot
 {
     private readonly List<IDomainEvent> _uncommittedEvents = new();
+
+    /// <summary>
+    /// The time provider for deterministic time access.
+    /// </summary>
+    private readonly ITimeProvider? _timeProvider;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AggregateRoot"/> class.
+    /// Parameterless constructor for event reconstitution.
+    /// </summary>
+    protected AggregateRoot()
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AggregateRoot"/> class with a time provider.
+    /// </summary>
+    /// <param name="timeProvider">The time provider for deterministic time access.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="timeProvider"/> is null.</exception>
+    protected AggregateRoot(ITimeProvider timeProvider)
+    {
+        this._timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
+    }
+
+    /// <summary>
+    /// Gets the time provider for deterministic time access.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown when time provider is not available.</exception>
+    protected ITimeProvider TimeProvider =>
+        this._timeProvider ?? throw new InvalidOperationException("TimeProvider not available. Use constructor with ITimeProvider for new aggregates.");
 
     /// <summary>
     /// Gets or sets the unique identifier of the aggregate.

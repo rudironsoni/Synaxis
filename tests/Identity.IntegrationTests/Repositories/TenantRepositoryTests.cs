@@ -4,6 +4,7 @@
 
 namespace Synaxis.Identity.IntegrationTests.Repositories;
 
+using Synaxis.Common.Tests.Time;
 using Synaxis.Identity.Domain.Aggregates;
 using Synaxis.Identity.Domain.ValueObjects;
 using Testcontainers.SqlEdge;
@@ -43,8 +44,9 @@ public class TenantRepositoryTests : IAsyncLifetime
         var name = TenantName.Create("Test Tenant");
         var slug = "test-tenant";
         var primaryRegion = "eastus";
+        var timeProvider = new TestTimeProvider();
 
-        var tenant = Tenant.Provision(tenantId, name, slug, primaryRegion);
+        var tenant = Tenant.Provision(tenantId, name, slug, primaryRegion, timeProvider);
 
         // Act
         await SaveTenantAsync(tenant);
@@ -64,11 +66,13 @@ public class TenantRepositoryTests : IAsyncLifetime
     {
         // Arrange
         var tenantId = Guid.NewGuid().ToString();
+        var timeProvider = new TestTimeProvider();
         var tenant = Tenant.Provision(
             tenantId,
             TenantName.Create("Test Tenant"),
             "test-tenant",
-            "eastus");
+            "eastus",
+            timeProvider);
 
         await SaveTenantAsync(tenant);
 
@@ -93,11 +97,13 @@ public class TenantRepositoryTests : IAsyncLifetime
     {
         // Arrange
         var tenantId = Guid.NewGuid().ToString();
+        var timeProvider = new TestTimeProvider();
         var tenant = Tenant.Provision(
             tenantId,
             TenantName.Create("Test Tenant"),
             "test-tenant",
-            "eastus");
+            "eastus",
+            timeProvider);
 
         await SaveTenantAsync(tenant);
 
@@ -117,11 +123,13 @@ public class TenantRepositoryTests : IAsyncLifetime
     {
         // Arrange
         var tenantId = Guid.NewGuid().ToString();
+        var timeProvider = new TestTimeProvider();
         var tenant = Tenant.Provision(
             tenantId,
             TenantName.Create("Test Tenant"),
             "test-tenant",
-            "eastus");
+            "eastus",
+            timeProvider);
 
         tenant.Suspend();
         await SaveTenantAsync(tenant);
@@ -231,11 +239,13 @@ public class TenantRepositoryTests : IAsyncLifetime
         using var reader = await command.ExecuteReaderAsync();
         if (await reader.ReadAsync())
         {
+            var timeProvider = new TestTimeProvider();
             var tenant = Tenant.Provision(
                 reader.GetString(reader.GetOrdinal("Id")),
                 TenantName.Create(reader.GetString(reader.GetOrdinal("Name"))),
                 reader.GetString(reader.GetOrdinal("Slug")),
-                reader.GetString(reader.GetOrdinal("PrimaryRegion")));
+                reader.GetString(reader.GetOrdinal("PrimaryRegion")),
+                timeProvider);
 
             // Set Status using reflection
             var status = (TenantStatus)reader.GetInt32(reader.GetOrdinal("Status"));

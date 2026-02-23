@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Identity\Identity.Application\Identity.Application.csproj" />
+    <ProjectReference Include="..\Common\Synaxis.Common.Tests.csproj" />
   </ItemGroup>
 
 </Project>

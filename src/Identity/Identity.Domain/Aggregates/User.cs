@@ -5,6 +5,7 @@
 namespace Synaxis.Identity.Domain.Aggregates;
 
 using Synaxis.Abstractions.Cloud;
+using Synaxis.Abstractions.Time;
 using Synaxis.Identity.Domain.Events;
 using Synaxis.Identity.Domain.ValueObjects;
 using Synaxis.Infrastructure.EventSourcing;
@@ -18,6 +19,11 @@ public sealed class User : AggregateRoot
     private readonly List<string> _teamIds = new();
 
     private User()
+    {
+    }
+
+    private User(ITimeProvider timeProvider)
+        : base(timeProvider)
     {
     }
 
@@ -95,6 +101,7 @@ public sealed class User : AggregateRoot
     /// <param name="firstName">The first name of the user.</param>
     /// <param name="lastName">The last name of the user.</param>
     /// <param name="tenantId">The unique identifier of the tenant.</param>
+    /// <param name="timeProvider">The time provider for timestamp generation.</param>
     /// <returns>A new <see cref="User"/> instance.</returns>
     public static User Create(
         string id,
@@ -102,9 +109,10 @@ public sealed class User : AggregateRoot
         PasswordHash passwordHash,
         string firstName,
         string lastName,
-        string tenantId)
+        string tenantId,
+        ITimeProvider timeProvider)
     {
-        var user = new User
+        var user = new User(timeProvider)
         {
             Id = id,
             Email = email,
@@ -112,14 +120,14 @@ public sealed class User : AggregateRoot
             FirstName = firstName,
             LastName = lastName,
             Status = UserStatus.Active,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
+            CreatedAt = timeProvider.UtcNow,
+            UpdatedAt = timeProvider.UtcNow,
             TenantId = tenantId,
         };
 
         var @event = new UserCreated(
             Guid.NewGuid().ToString(),
-            DateTime.UtcNow,
+            timeProvider.UtcNow,
             nameof(UserCreated),
             user.Id,
             user.Email.Value,
@@ -144,11 +152,11 @@ public sealed class User : AggregateRoot
         }
 
         this.PasswordHash = newPasswordHash;
-        this.UpdatedAt = DateTime.UtcNow;
+        this.UpdatedAt = this.TimeProvider.UtcNow;
 
         var @event = new UserPasswordChanged(
             Guid.NewGuid().ToString(),
-            DateTime.UtcNow,
+            this.TimeProvider.UtcNow,
             nameof(UserPasswordChanged),
             this.Id);
 
@@ -165,12 +173,12 @@ public sealed class User : AggregateRoot
             throw new InvalidOperationException("Email is already verified.");
         }
 
-        this.EmailVerifiedAt = DateTime.UtcNow;
-        this.UpdatedAt = DateTime.UtcNow;
+        this.EmailVerifiedAt = this.TimeProvider.UtcNow;
+        this.UpdatedAt = this.TimeProvider.UtcNow;
 
         var @event = new UserEmailVerified(
             Guid.NewGuid().ToString(),
-            DateTime.UtcNow,
+            this.TimeProvider.UtcNow,
             nameof(UserEmailVerified),
             this.Id);
 
@@ -193,11 +201,11 @@ public sealed class User : AggregateRoot
         }
 
         this.Status = UserStatus.Suspended;
-        this.UpdatedAt = DateTime.UtcNow;
+        this.UpdatedAt = this.TimeProvider.UtcNow;
 
         var @event = new UserSuspended(
             Guid.NewGuid().ToString(),
-            DateTime.UtcNow,
+            this.TimeProvider.UtcNow,
             nameof(UserSuspended),
             this.Id);
 
@@ -220,11 +228,11 @@ public sealed class User : AggregateRoot
         }
 
         this.Status = UserStatus.Active;
-        this.UpdatedAt = DateTime.UtcNow;
+        this.UpdatedAt = this.TimeProvider.UtcNow;
 
         var @event = new UserActivated(
             Guid.NewGuid().ToString(),
-            DateTime.UtcNow,
+            this.TimeProvider.UtcNow,
             nameof(UserActivated),
             this.Id);
 
@@ -242,12 +250,12 @@ public sealed class User : AggregateRoot
             throw new InvalidOperationException("Cannot lock a deleted user.");
         }
 
-        this.LockedUntil = DateTime.UtcNow.Add(duration);
-        this.UpdatedAt = DateTime.UtcNow;
+        this.LockedUntil = this.TimeProvider.UtcNow.Add(duration);
+        this.UpdatedAt = this.TimeProvider.UtcNow;
 
         var @event = new UserLocked(
             Guid.NewGuid().ToString(),
-            DateTime.UtcNow,
+            this.TimeProvider.UtcNow,
             nameof(UserLocked),
             this.Id,
             this.LockedUntil.Value);
@@ -267,11 +275,11 @@ public sealed class User : AggregateRoot
 
         this.LockedUntil = null;
         this.FailedLoginAttempts = 0;
-        this.UpdatedAt = DateTime.UtcNow;
+        this.UpdatedAt = this.TimeProvider.UtcNow;
 
         var @event = new UserUnlocked(
             Guid.NewGuid().ToString(),
-            DateTime.UtcNow,
+            this.TimeProvider.UtcNow,
             nameof(UserUnlocked),
             this.Id);
 
@@ -296,9 +304,9 @@ public sealed class User : AggregateRoot
     /// </summary>
     public void RecordSuccessfulLogin()
     {
-        this.LastLoginAt = DateTime.UtcNow;
+        this.LastLoginAt = this.TimeProvider.UtcNow;
         this.FailedLoginAttempts = 0;
-        this.UpdatedAt = DateTime.UtcNow;
+        this.UpdatedAt = this.TimeProvider.UtcNow;
     }
 
     /// <summary>
@@ -315,11 +323,11 @@ public sealed class User : AggregateRoot
 
         this.FirstName = firstName;
         this.LastName = lastName;
-        this.UpdatedAt = DateTime.UtcNow;
+        this.UpdatedAt = this.TimeProvider.UtcNow;
 
         var @event = new UserUpdated(
             Guid.NewGuid().ToString(),
-            DateTime.UtcNow,
+            this.TimeProvider.UtcNow,
             nameof(UserUpdated),
             this.Id,
             this.FirstName,
@@ -339,11 +347,11 @@ public sealed class User : AggregateRoot
         }
 
         this.Status = UserStatus.Deleted;
-        this.UpdatedAt = DateTime.UtcNow;
+        this.UpdatedAt = this.TimeProvider.UtcNow;
 
         var @event = new UserDeleted(
             Guid.NewGuid().ToString(),
-            DateTime.UtcNow,
+            this.TimeProvider.UtcNow,
             nameof(UserDeleted),
             this.Id);
 

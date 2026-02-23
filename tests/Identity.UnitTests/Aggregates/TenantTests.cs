@@ -4,6 +4,7 @@
 
 namespace Synaxis.Identity.UnitTests.Aggregates;
 
+using Synaxis.Common.Tests.Time;
 using Synaxis.Identity.Domain.Aggregates;
 using Synaxis.Identity.Domain.ValueObjects;
 using Xunit;
@@ -20,9 +21,10 @@ public class TenantTests
         var name = TenantName.Create("Test Tenant");
         var slug = "test-tenant";
         var primaryRegion = "eastus";
+        var timeProvider = new TestTimeProvider();
 
         // Act
-        var tenant = Tenant.Provision(id, name, slug, primaryRegion);
+        var tenant = Tenant.Provision(id, name, slug, primaryRegion, timeProvider);
 
         // Assert
         tenant.Id.Should().Be(id);
@@ -225,10 +227,12 @@ public class TenantTests
 
     private static Tenant CreateTestTenant()
     {
+        var timeProvider = new TestTimeProvider();
         return Tenant.Provision(
             Guid.NewGuid().ToString(),
             TenantName.Create("Test Tenant"),
             "test-tenant",
-            "eastus");
+            "eastus",
+            timeProvider);
     }
 }

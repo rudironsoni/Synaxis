@@ -4,6 +4,7 @@
 
 namespace Synaxis.Identity.IntegrationTests.Repositories;
 
+using Synaxis.Common.Tests.Time;
 using Synaxis.Identity.Domain.Aggregates;
 using Synaxis.Identity.Domain.ValueObjects;
 using Testcontainers.SqlEdge;
@@ -45,8 +46,9 @@ public class UserRepositoryTests : IAsyncLifetime
         var firstName = "John";
         var lastName = "Doe";
         var tenantId = Guid.NewGuid().ToString();
+        var timeProvider = new TestTimeProvider();
 
-        var user = User.Create(userId, email, passwordHash, firstName, lastName, tenantId);
+        var user = User.Create(userId, email, passwordHash, firstName, lastName, tenantId, timeProvider);
 
         // Act
         await SaveUserAsync(user);
@@ -67,13 +69,15 @@ public class UserRepositoryTests : IAsyncLifetime
     {
         // Arrange
         var userId = Guid.NewGuid().ToString();
+        var timeProvider = new TestTimeProvider();
         var user = User.Create(
             userId,
             Email.Create("test@example.com"),
             PasswordHash.Create("oldpassword"),
             "John",
             "Doe",
-            Guid.NewGuid().ToString());
+            Guid.NewGuid().ToString(),
+            timeProvider);
 
         await SaveUserAsync(user);
 
@@ -94,13 +98,15 @@ public class UserRepositoryTests : IAsyncLifetime
     {
         // Arrange
         var userId = Guid.NewGuid().ToString();
+        var timeProvider = new TestTimeProvider();
         var user = User.Create(
             userId,
             Email.Create("test@example.com"),
             PasswordHash.Create("hashedpassword"),
             "John",
             "Doe",
-            Guid.NewGuid().ToString());
+            Guid.NewGuid().ToString(),
+            timeProvider);
 
         await SaveUserAsync(user);
 
@@ -121,13 +127,15 @@ public class UserRepositoryTests : IAsyncLifetime
     {
         // Arrange
         var userId = Guid.NewGuid().ToString();
+        var timeProvider = new TestTimeProvider();
         var user = User.Create(
             userId,
             Email.Create("test@example.com"),
             PasswordHash.Create("hashedpassword"),
             "John",
             "Doe",
-            Guid.NewGuid().ToString());
+            Guid.NewGuid().ToString(),
+            timeProvider);
 
         await SaveUserAsync(user);
 
@@ -148,13 +156,15 @@ public class UserRepositoryTests : IAsyncLifetime
     {
         // Arrange
         var userId = Guid.NewGuid().ToString();
+        var timeProvider = new TestTimeProvider();
         var user = User.Create(
             userId,
             Email.Create("test@example.com"),
             PasswordHash.Create("hashedpassword"),
             "John",
             "Doe",
-            Guid.NewGuid().ToString());
+            Guid.NewGuid().ToString(),
+            timeProvider);
 
         await SaveUserAsync(user);
 
@@ -256,13 +266,15 @@ public class UserRepositoryTests : IAsyncLifetime
         using var reader = await command.ExecuteReaderAsync();
         if (await reader.ReadAsync())
         {
+            var timeProvider = new TestTimeProvider();
             var user = User.Create(
                 reader.GetString(reader.GetOrdinal("Id")),
                 Email.Create(reader.GetString(reader.GetOrdinal("Email"))),
                 PasswordHash.Create(reader.GetString(reader.GetOrdinal("PasswordHash"))),
                 reader.GetString(reader.GetOrdinal("FirstName")),
                 reader.GetString(reader.GetOrdinal("LastName")),
-                reader.GetString(reader.GetOrdinal("TenantId")));
+                reader.GetString(reader.GetOrdinal("TenantId")),
+                timeProvider);
 
             // Update additional properties
             var status = (UserStatus)reader.GetInt32(reader.GetOrdinal("Status"));

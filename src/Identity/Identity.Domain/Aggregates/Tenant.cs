@@ -5,6 +5,7 @@
 namespace Synaxis.Identity.Domain.Aggregates;
 
 using Synaxis.Abstractions.Cloud;
+using Synaxis.Abstractions.Time;
 using Synaxis.Identity.Domain.Events;
 using Synaxis.Identity.Domain.ValueObjects;
 using Synaxis.Infrastructure.EventSourcing;
@@ -15,6 +16,11 @@ using Synaxis.Infrastructure.EventSourcing;
 public sealed class Tenant : AggregateRoot
 {
     private Tenant()
+    {
+    }
+
+    private Tenant(ITimeProvider timeProvider)
+        : base(timeProvider)
     {
     }
 
@@ -60,27 +66,29 @@ public sealed class Tenant : AggregateRoot
     /// <param name="name">The name of the tenant.</param>
     /// <param name="slug">The slug of the tenant.</param>
     /// <param name="primaryRegion">The primary region of the tenant.</param>
+    /// <param name="timeProvider">The time provider.</param>
     /// <returns>A new <see cref="Tenant"/> instance.</returns>
     public static Tenant Provision(
         string id,
         TenantName name,
         string slug,
-        string primaryRegion)
+        string primaryRegion,
+        ITimeProvider timeProvider)
     {
-        var tenant = new Tenant
+        var tenant = new Tenant(timeProvider)
         {
             Id = id,
             Name = name,
             Slug = slug,
             Status = TenantStatus.Active,
             PrimaryRegion = primaryRegion,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
+            CreatedAt = timeProvider.UtcNow,
+            UpdatedAt = timeProvider.UtcNow,
         };
 
         var @event = new TenantProvisioned(
             Guid.NewGuid().ToString(),
-            DateTime.UtcNow,
+            timeProvider.UtcNow,
             nameof(TenantProvisioned),
             tenant.Id,
             tenant.Name.Value,
@@ -104,11 +112,11 @@ public sealed class Tenant : AggregateRoot
         }
 
         this.Settings = new Dictionary<string, string>(settings, StringComparer.Ordinal);
-        this.UpdatedAt = DateTime.UtcNow;
+        this.UpdatedAt = this.TimeProvider.UtcNow;
 
         var @event = new TenantUpdated(
             Guid.NewGuid().ToString(),
-            DateTime.UtcNow,
+            this.TimeProvider.UtcNow,
             nameof(TenantUpdated),
             this.Id,
             this.Name.Value,
@@ -131,11 +139,11 @@ public sealed class Tenant : AggregateRoot
 
         this.Name = name;
         this.PrimaryRegion = primaryRegion;
-        this.UpdatedAt = DateTime.UtcNow;
+        this.UpdatedAt = this.TimeProvider.UtcNow;
 
         var @event = new TenantUpdated(
             Guid.NewGuid().ToString(),
-            DateTime.UtcNow,
+            this.TimeProvider.UtcNow,
             nameof(TenantUpdated),
             this.Id,
             this.Name.Value,
@@ -160,11 +168,11 @@ public sealed class Tenant : AggregateRoot
         }
 
         this.Status = TenantStatus.Suspended;
-        this.UpdatedAt = DateTime.UtcNow;
+        this.UpdatedAt = this.TimeProvider.UtcNow;
 
         var @event = new TenantSuspended(
             Guid.NewGuid().ToString(),
-            DateTime.UtcNow,
+            this.TimeProvider.UtcNow,
             nameof(TenantSuspended),
             this.Id);
 
@@ -187,11 +195,11 @@ public sealed class Tenant : AggregateRoot
         }
 
         this.Status = TenantStatus.Active;
-        this.UpdatedAt = DateTime.UtcNow;
+        this.UpdatedAt = this.TimeProvider.UtcNow;
 
         var @event = new TenantActivated(
             Guid.NewGuid().ToString(),
-            DateTime.UtcNow,
+            this.TimeProvider.UtcNow,
             nameof(TenantActivated),
             this.Id);
 
@@ -209,11 +217,11 @@ public sealed class Tenant : AggregateRoot
         }
 
         this.Status = TenantStatus.Deleted;
-        this.UpdatedAt = DateTime.UtcNow;
+        this.UpdatedAt = this.TimeProvider.UtcNow;
 
         var @event = new TenantDeleted(
             Guid.NewGuid().ToString(),
-            DateTime.UtcNow,
+            this.TimeProvider.UtcNow,
             nameof(TenantDeleted),
             this.Id);
 

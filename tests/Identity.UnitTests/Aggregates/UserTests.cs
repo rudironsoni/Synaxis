@@ -4,6 +4,7 @@
 
 namespace Synaxis.Identity.UnitTests.Aggregates;
 
+using Synaxis.Common.Tests.Time;
 using Synaxis.Identity.Domain.Aggregates;
 using Synaxis.Identity.Domain.ValueObjects;
 using Xunit;
@@ -22,9 +23,10 @@ public class UserTests
         var firstName = "John";
         var lastName = "Doe";
         var tenantId = Guid.NewGuid().ToString();
+        var timeProvider = new TestTimeProvider();
 
         // Act
-        var user = User.Create(id, email, passwordHash, firstName, lastName, tenantId);
+        var user = User.Create(id, email, passwordHash, firstName, lastName, tenantId, timeProvider);
 
         // Assert
         user.Id.Should().Be(id);
@@ -34,8 +36,8 @@ public class UserTests
         user.LastName.Should().Be(lastName);
         user.TenantId.Should().Be(tenantId);
         user.Status.Should().Be(UserStatus.Active);
-        user.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
-        user.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+        user.CreatedAt.Should().Be(timeProvider.UtcNow);
+        user.UpdatedAt.Should().Be(timeProvider.UtcNow);
         user.EmailVerifiedAt.Should().BeNull();
         user.LastLoginAt.Should().BeNull();
         user.FailedLoginAttempts.Should().Be(0);
@@ -324,6 +326,7 @@ public class UserTests
             PasswordHash.Create("hashedpassword"),
             "John",
             "Doe",
-            Guid.NewGuid().ToString());
+            Guid.NewGuid().ToString(),
+            new TestTimeProvider());
     }
 }
