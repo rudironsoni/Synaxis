@@ -7,17 +7,18 @@ namespace Synaxis.Identity.IntegrationTests.Repositories;
 using Synaxis.Common.Tests.Time;
 using Synaxis.Identity.Domain.Aggregates;
 using Synaxis.Identity.Domain.ValueObjects;
-using Testcontainers.SqlEdge;
+using Testcontainers.PostgreSql;
 using Xunit;
 using FluentAssertions;
-using Microsoft.Data.SqlClient;
+using Npgsql;
 
 [Trait("Category", "Integration")]
 public class TenantRepositoryTests : IAsyncLifetime
 {
-    private readonly SqlEdgeContainer _sqlContainer = new SqlEdgeBuilder()
-        .WithImage("mcr.microsoft.com/azure-sql-edge:latest")
-        .WithPassword("YourStrong@Passw0rd")
+    private readonly PostgreSqlContainer _sqlContainer = new PostgreSqlBuilder("postgres:16")
+        .WithDatabase("testdb")
+        .WithUsername("testuser")
+        .WithPassword("testpass")
         .Build();
 
     private string _connectionString = null!;
@@ -147,58 +148,47 @@ public class TenantRepositoryTests : IAsyncLifetime
 
     private async Task CreateSchemaAsync()
     {
-        using var connection = new SqlConnection(_connectionString);
+        using var connection = new NpgsqlConnection(_connectionString);
         await connection.OpenAsync();
 
         var createTableSql = @"
-            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Tenants')
-            BEGIN
-                CREATE TABLE Tenants (
-                    Id NVARCHAR(100) PRIMARY KEY,
-                    Name NVARCHAR(255) NOT NULL,
-                    Slug NVARCHAR(100) NOT NULL,
-                    Status INT NOT NULL,
-                    PrimaryRegion NVARCHAR(50) NOT NULL,
-                    CreatedAt DATETIME2 NOT NULL,
-                    UpdatedAt DATETIME2 NOT NULL
-                );
-            END;
+            CREATE TABLE IF NOT EXISTS Tenants (
+                Id VARCHAR(100) PRIMARY KEY,
+                Name VARCHAR(255) NOT NULL,
+                Slug VARCHAR(100) NOT NULL,
+                Status INTEGER NOT NULL,
+                PrimaryRegion VARCHAR(50) NOT NULL,
+                CreatedAt TIMESTAMP NOT NULL,
+                UpdatedAt TIMESTAMP NOT NULL
+            );
 
-            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'TenantSettings')
-            BEGIN
-                CREATE TABLE TenantSettings (
-                    TenantId NVARCHAR(100) NOT NULL,
-                    SettingKey NVARCHAR(100) NOT NULL,
-                    SettingValue NVARCHAR(500) NOT NULL,
-                    PRIMARY KEY (TenantId, SettingKey)
-                );
-            END";
+            CREATE TABLE IF NOT EXISTS TenantSettings (
+                TenantId VARCHAR(100) NOT NULL,
+                SettingKey VARCHAR(100) NOT NULL,
+                SettingValue VARCHAR(500) NOT NULL,
+                PRIMARY KEY (TenantId, SettingKey)
+            );";
 
-        using var command = new SqlCommand(createTableSql, connection);
+        using var command = new NpgsqlCommand(createTableSql, connection);
         await command.ExecuteNonQueryAsync();
     }
 
     private async Task SaveTenantAsync(Tenant tenant)
     {
-        using var connection = new SqlConnection(_connectionString);
+        using var connection = new NpgsqlConnection(_connectionString);
         await connection.OpenAsync();
 
         var upsertSql = @"
-            MERGE Tenants AS target
-            USING (SELECT @Id AS Id, @Name AS Name, @Slug AS Slug, @Status AS Status, @PrimaryRegion AS PrimaryRegion, @CreatedAt AS CreatedAt, @UpdatedAt AS UpdatedAt) AS source
-            ON (target.Id = source.Id)
-            WHEN MATCHED THEN
-                UPDATE SET
-                    Name = source.Name,
-                    Slug = source.Slug,
-                    Status = source.Status,
-                    PrimaryRegion = source.PrimaryRegion,
-                    UpdatedAt = source.UpdatedAt
-            WHEN NOT MATCHED THEN
-                INSERT (Id, Name, Slug, Status, PrimaryRegion, CreatedAt, UpdatedAt)
-                VALUES (source.Id, source.Name, source.Slug, source.Status, source.PrimaryRegion, source.CreatedAt, source.UpdatedAt);";
+            INSERT INTO Tenants (Id, Name, Slug, Status, PrimaryRegion, CreatedAt, UpdatedAt)
+            VALUES (@Id, @Name, @Slug, @Status, @PrimaryRegion, @CreatedAt, @UpdatedAt)
+            ON CONFLICT (Id) DO UPDATE SET
+                Name = EXCLUDED.Name,
+                Slug = EXCLUDED.Slug,
+                Status = EXCLUDED.Status,
+                PrimaryRegion = EXCLUDED.PrimaryRegion,
+                UpdatedAt = EXCLUDED.UpdatedAt;";
 
-        using var command = new SqlCommand(upsertSql, connection);
+        using var command = new NpgsqlCommand(upsertSql, connection);
         command.Parameters.AddWithValue("@Id", tenant.Id);
         command.Parameters.AddWithValue("@Name", tenant.Name.Value);
         command.Parameters.AddWithValue("@Slug", tenant.Slug);
@@ -211,14 +201,14 @@ public class TenantRepositoryTests : IAsyncLifetime
 
         // Delete existing settings and insert current ones
         var deleteSettingsSql = "DELETE FROM TenantSettings WHERE TenantId = @TenantId";
-        using var deleteCommand = new SqlCommand(deleteSettingsSql, connection);
+        using var deleteCommand = new NpgsqlCommand(deleteSettingsSql, connection);
         deleteCommand.Parameters.AddWithValue("@TenantId", tenant.Id);
         await deleteCommand.ExecuteNonQueryAsync();
 
         foreach (var setting in tenant.Settings)
         {
             var insertSettingSql = "INSERT INTO TenantSettings (TenantId, SettingKey, SettingValue) VALUES (@TenantId, @SettingKey, @SettingValue)";
-            using var settingCommand = new SqlCommand(insertSettingSql, connection);
+            using var settingCommand = new NpgsqlCommand(insertSettingSql, connection);
             settingCommand.Parameters.AddWithValue("@TenantId", tenant.Id);
             settingCommand.Parameters.AddWithValue("@SettingKey", setting.Key);
             settingCommand.Parameters.AddWithValue("@SettingValue", setting.Value);
@@ -228,12 +218,12 @@ public class TenantRepositoryTests : IAsyncLifetime
 
     private async Task<Tenant?> LoadTenantAsync(string tenantId)
     {
-        using var connection = new SqlConnection(_connectionString);
+        using var connection = new NpgsqlConnection(_connectionString);
         await connection.OpenAsync();
 
         var selectSql = "SELECT * FROM Tenants WHERE Id = @Id";
 
-        using var command = new SqlCommand(selectSql, connection);
+        using var command = new NpgsqlCommand(selectSql, connection);
         command.Parameters.AddWithValue("@Id", tenantId);
 
         using var reader = await command.ExecuteReaderAsync();
@@ -256,7 +246,7 @@ public class TenantRepositoryTests : IAsyncLifetime
             // Load settings
             await reader.CloseAsync();
             var settingsSql = "SELECT SettingKey, SettingValue FROM TenantSettings WHERE TenantId = @TenantId";
-            using var settingsCommand = new SqlCommand(settingsSql, connection);
+            using var settingsCommand = new NpgsqlCommand(settingsSql, connection);
             settingsCommand.Parameters.AddWithValue("@TenantId", tenantId);
             using var settingsReader = await settingsCommand.ExecuteReaderAsync();
 

@@ -7,17 +7,18 @@ namespace Synaxis.Identity.IntegrationTests.Repositories;
 using Synaxis.Common.Tests.Time;
 using Synaxis.Identity.Domain.Aggregates;
 using Synaxis.Identity.Domain.ValueObjects;
-using Testcontainers.SqlEdge;
+using Testcontainers.PostgreSql;
 using Xunit;
 using FluentAssertions;
-using Microsoft.Data.SqlClient;
+using Npgsql;
 
 [Trait("Category", "Integration")]
 public class UserRepositoryTests : IAsyncLifetime
 {
-    private readonly SqlEdgeContainer _sqlContainer = new SqlEdgeBuilder()
-        .WithImage("mcr.microsoft.com/azure-sql-edge:latest")
-        .WithPassword("YourStrong@Passw0rd")
+    private readonly PostgreSqlContainer _sqlContainer = new PostgreSqlBuilder("postgres:16")
+        .WithDatabase("testdb")
+        .WithUsername("testuser")
+        .WithPassword("testpass")
         .Build();
 
     private string _connectionString = null!;
@@ -182,60 +183,52 @@ public class UserRepositoryTests : IAsyncLifetime
 
     private async Task CreateSchemaAsync()
     {
-        using var connection = new SqlConnection(_connectionString);
+        using var connection = new NpgsqlConnection(_connectionString);
         await connection.OpenAsync();
 
         var createTableSql = @"
-            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Users')
-            BEGIN
-                CREATE TABLE Users (
-                    Id NVARCHAR(100) PRIMARY KEY,
-                    Email NVARCHAR(255) NOT NULL,
-                    PasswordHash NVARCHAR(255) NOT NULL,
-                    FirstName NVARCHAR(100) NOT NULL,
-                    LastName NVARCHAR(100) NOT NULL,
-                    Status INT NOT NULL,
-                    TenantId NVARCHAR(100) NOT NULL,
-                    CreatedAt DATETIME2 NOT NULL,
-                    UpdatedAt DATETIME2 NOT NULL,
-                    EmailVerifiedAt DATETIME2 NULL,
-                    LastLoginAt DATETIME2 NULL,
-                    FailedLoginAttempts INT NOT NULL,
-                    LockedUntil DATETIME2 NULL
-                );
-            END";
+            CREATE TABLE IF NOT EXISTS Users (
+                Id VARCHAR(100) PRIMARY KEY,
+                Email VARCHAR(255) NOT NULL,
+                PasswordHash VARCHAR(255) NOT NULL,
+                FirstName VARCHAR(100) NOT NULL,
+                LastName VARCHAR(100) NOT NULL,
+                Status INTEGER NOT NULL,
+                TenantId VARCHAR(100) NOT NULL,
+                CreatedAt TIMESTAMP NOT NULL,
+                UpdatedAt TIMESTAMP NOT NULL,
+                EmailVerifiedAt TIMESTAMP NULL,
+                LastLoginAt TIMESTAMP NULL,
+                FailedLoginAttempts INTEGER NOT NULL,
+                LockedUntil TIMESTAMP NULL
+            );";
 
-        using var command = new SqlCommand(createTableSql, connection);
+        using var command = new NpgsqlCommand(createTableSql, connection);
         await command.ExecuteNonQueryAsync();
     }
 
     private async Task SaveUserAsync(User user)
     {
-        using var connection = new SqlConnection(_connectionString);
+        using var connection = new NpgsqlConnection(_connectionString);
         await connection.OpenAsync();
 
         var upsertSql = @"
-            MERGE Users AS target
-            USING (SELECT @Id AS Id, @Email AS Email, @PasswordHash AS PasswordHash, @FirstName AS FirstName, @LastName AS LastName, @Status AS Status, @TenantId AS TenantId, @CreatedAt AS CreatedAt, @UpdatedAt AS UpdatedAt, @EmailVerifiedAt AS EmailVerifiedAt, @LastLoginAt AS LastLoginAt, @FailedLoginAttempts AS FailedLoginAttempts, @LockedUntil AS LockedUntil) AS source
-            ON (target.Id = source.Id)
-            WHEN MATCHED THEN
-                UPDATE SET
-                    Email = source.Email,
-                    PasswordHash = source.PasswordHash,
-                    FirstName = source.FirstName,
-                    LastName = source.LastName,
-                    Status = source.Status,
-                    TenantId = source.TenantId,
-                    UpdatedAt = source.UpdatedAt,
-                    EmailVerifiedAt = source.EmailVerifiedAt,
-                    LastLoginAt = source.LastLoginAt,
-                    FailedLoginAttempts = source.FailedLoginAttempts,
-                    LockedUntil = source.LockedUntil
-            WHEN NOT MATCHED THEN
-                INSERT (Id, Email, PasswordHash, FirstName, LastName, Status, TenantId, CreatedAt, UpdatedAt, EmailVerifiedAt, LastLoginAt, FailedLoginAttempts, LockedUntil)
-                VALUES (source.Id, source.Email, source.PasswordHash, source.FirstName, source.LastName, source.Status, source.TenantId, source.CreatedAt, source.UpdatedAt, source.EmailVerifiedAt, source.LastLoginAt, source.FailedLoginAttempts, source.LockedUntil);";
+            INSERT INTO Users (Id, Email, PasswordHash, FirstName, LastName, Status, TenantId, CreatedAt, UpdatedAt, EmailVerifiedAt, LastLoginAt, FailedLoginAttempts, LockedUntil)
+            VALUES (@Id, @Email, @PasswordHash, @FirstName, @LastName, @Status, @TenantId, @CreatedAt, @UpdatedAt, @EmailVerifiedAt, @LastLoginAt, @FailedLoginAttempts, @LockedUntil)
+            ON CONFLICT (Id) DO UPDATE SET
+                Email = EXCLUDED.Email,
+                PasswordHash = EXCLUDED.PasswordHash,
+                FirstName = EXCLUDED.FirstName,
+                LastName = EXCLUDED.LastName,
+                Status = EXCLUDED.Status,
+                TenantId = EXCLUDED.TenantId,
+                UpdatedAt = EXCLUDED.UpdatedAt,
+                EmailVerifiedAt = EXCLUDED.EmailVerifiedAt,
+                LastLoginAt = EXCLUDED.LastLoginAt,
+                FailedLoginAttempts = EXCLUDED.FailedLoginAttempts,
+                LockedUntil = EXCLUDED.LockedUntil;";
 
-        using var command = new SqlCommand(upsertSql, connection);
+        using var command = new NpgsqlCommand(upsertSql, connection);
         command.Parameters.AddWithValue("@Id", user.Id);
         command.Parameters.AddWithValue("@Email", user.Email.Value);
         command.Parameters.AddWithValue("@PasswordHash", user.PasswordHash.Value);
@@ -255,12 +248,12 @@ public class UserRepositoryTests : IAsyncLifetime
 
     private async Task<User?> LoadUserAsync(string userId)
     {
-        using var connection = new SqlConnection(_connectionString);
+        using var connection = new NpgsqlConnection(_connectionString);
         await connection.OpenAsync();
 
         var selectSql = "SELECT * FROM Users WHERE Id = @Id";
 
-        using var command = new SqlCommand(selectSql, connection);
+        using var command = new NpgsqlCommand(selectSql, connection);
         command.Parameters.AddWithValue("@Id", userId);
 
         using var reader = await command.ExecuteReaderAsync();
