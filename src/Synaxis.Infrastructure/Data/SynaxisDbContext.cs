@@ -29,122 +29,122 @@ namespace Synaxis.Infrastructure.Data
         /// <summary>
         /// Gets or sets the organizations.
         /// </summary>
-        public DbSet<Organization> Organizations { get; set; }
+        public DbSet<Organization> Organizations { get; set; } = null!;
 
         /// <summary>
         /// Gets or sets the teams.
         /// </summary>
-        public DbSet<Team> Teams { get; set; }
+        public DbSet<Team> Teams { get; set; } = null!;
 
         /// <summary>
         /// Gets or sets the users.
         /// </summary>
-        public DbSet<User> Users { get; set; }
+        public DbSet<User> Users { get; set; } = null!;
 
         /// <summary>
         /// Gets or sets the team memberships.
         /// </summary>
-        public DbSet<TeamMembership> TeamMemberships { get; set; }
+        public DbSet<TeamMembership> TeamMemberships { get; set; } = null!;
 
         /// <summary>
         /// Gets or sets the virtual keys.
         /// </summary>
-        public DbSet<VirtualKey> VirtualKeys { get; set; }
+        public DbSet<VirtualKey> VirtualKeys { get; set; } = null!;
 
         /// <summary>
         /// Gets or sets the requests.
         /// </summary>
-        public DbSet<Request> Requests { get; set; }
+        public DbSet<Request> Requests { get; set; } = null!;
 
         /// <summary>
         /// Gets or sets the subscription plans.
         /// </summary>
-        public DbSet<SubscriptionPlan> SubscriptionPlans { get; set; }
+        public DbSet<SubscriptionPlan> SubscriptionPlans { get; set; } = null!;
 
         /// <summary>
         /// Gets or sets the backup configurations.
         /// </summary>
-        public DbSet<BackupConfig> BackupConfigs { get; set; }
+        public DbSet<BackupConfig> BackupConfigs { get; set; } = null!;
 
         /// <summary>
         /// Gets or sets the audit logs.
         /// </summary>
-        public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<AuditLog> AuditLogs { get; set; } = null!;
 
         /// <summary>
         /// Gets or sets the spend logs.
         /// </summary>
-        public DbSet<SpendLog> SpendLogs { get; set; }
+        public DbSet<SpendLog> SpendLogs { get; set; } = null!;
 
         /// <summary>
         /// Gets or sets the credit transactions.
         /// </summary>
-        public DbSet<CreditTransaction> CreditTransactions { get; set; }
+        public DbSet<CreditTransaction> CreditTransactions { get; set; } = null!;
 
         /// <summary>
         /// Gets or sets the invoices.
         /// </summary>
-        public DbSet<Invoice> Invoices { get; set; }
+        public DbSet<Invoice> Invoices { get; set; } = null!;
 
         /// <summary>
         /// Gets or sets the invitations.
         /// </summary>
-        public DbSet<Invitation> Invitations { get; set; }
+        public DbSet<Invitation> Invitations { get; set; } = null!;
 
         /// <summary>
         /// Gets or sets the conversations.
         /// </summary>
-        public DbSet<Conversation> Conversations { get; set; }
+        public DbSet<Conversation> Conversations { get; set; } = null!;
 
         /// <summary>
         /// Gets or sets the conversation turns.
         /// </summary>
-        public DbSet<ConversationTurn> ConversationTurns { get; set; }
+        public DbSet<ConversationTurn> ConversationTurns { get; set; } = null!;
 
         /// <summary>
         /// Gets or sets the refresh tokens.
         /// </summary>
-        public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
 
         /// <summary>
         /// Gets or sets the JWT blacklists.
         /// </summary>
-        public DbSet<JwtBlacklist> JwtBlacklists { get; set; }
+        public DbSet<JwtBlacklist> JwtBlacklists { get; set; } = null!;
 
         /// <summary>
         /// Gets or sets the password histories.
         /// </summary>
-        public DbSet<PasswordHistory> PasswordHistories { get; set; }
+        public DbSet<PasswordHistory> PasswordHistories { get; set; } = null!;
 
         /// <summary>
         /// Gets or sets the password policies.
         /// </summary>
-        public DbSet<PasswordPolicy> PasswordPolicies { get; set; }
+        public DbSet<PasswordPolicy> PasswordPolicies { get; set; } = null!;
 
         /// <summary>
         /// Gets or sets the email verification tokens.
         /// </summary>
-        public DbSet<EmailVerificationToken> EmailVerificationTokens { get; set; }
+        public DbSet<EmailVerificationToken> EmailVerificationTokens { get; set; } = null!;
 
         /// <summary>
         /// Gets or sets the password reset tokens.
         /// </summary>
-        public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
+        public DbSet<PasswordResetToken> PasswordResetTokens { get; set; } = null!;
 
         /// <summary>
         /// Gets or sets the collections.
         /// </summary>
-        public DbSet<Collection> Collections { get; set; }
+        public DbSet<Collection> Collections { get; set; } = null!;
 
         /// <summary>
         /// Gets or sets the collection memberships.
         /// </summary>
-        public DbSet<CollectionMembership> CollectionMemberships { get; set; }
+        public DbSet<CollectionMembership> CollectionMemberships { get; set; } = null!;
 
         /// <summary>
         /// Gets or sets the organization API keys.
         /// </summary>
-        public DbSet<OrganizationApiKey> OrganizationApiKeys { get; set; }
+        public DbSet<OrganizationApiKey> OrganizationApiKeys { get; set; } = null!;
 
         /// <inheritdoc/>
         protected override void OnModelCreating(ModelBuilder modelBuilder)
