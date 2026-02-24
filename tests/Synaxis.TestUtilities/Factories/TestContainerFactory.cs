@@ -1,4 +1,4 @@
-namespace Synaxis.InferenceGateway.Tests.Common;
+namespace Synaxis.TestUtilities.Factories;
 
 using Microsoft.Extensions.Logging;
 
@@ -43,7 +43,7 @@ public class TestContainerFactory : IAsyncDisposable
 
         _logger.LogInformation("Creating new container '{ContainerKey}'", containerKey);
         var container = await factory();
-        _containers[containerKey] = container;
+        _containers[containerKey] = container!;
 
         return container;
     }

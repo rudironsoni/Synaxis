@@ -2,7 +2,7 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Testing;
+namespace Synaxis.TestUtilities.Builders;
 
 using System;
 using AutoFixture;

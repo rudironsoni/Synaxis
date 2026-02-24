@@ -2,15 +2,15 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Testing;
+namespace Synaxis.TestUtilities.Builders;
 
 using Synaxis.Abstractions.Cloud;
 using Synaxis.Infrastructure.EventSourcing;
 
 /// <summary>
-/// Base aggregate class for testing purposes.
+/// Test aggregate for AutoFixture test data generation.
 /// </summary>
-public class TestAggregate : AggregateRoot
+public sealed class TestAggregate : AggregateRoot
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="TestAggregate"/> class.
@@ -59,9 +59,9 @@ public class TestAggregate : AggregateRoot
 }
 
 /// <summary>
-/// Test domain event for testing purposes.
+/// Test domain event for AutoFixture test data generation.
 /// </summary>
-public class TestDomainEvent : DomainEvent
+public sealed class TestDomainEvent : DomainEvent
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="TestDomainEvent"/> class.
@@ -80,6 +80,9 @@ public class TestDomainEvent : DomainEvent
         this.PropertyValue = propertyValue;
         this.NumericValue = numericValue;
     }
+
+    /// <inheritdoc />
+    public override string AggregateId { get; } = Guid.NewGuid().ToString();
 
     /// <summary>
     /// Gets or sets the property value.

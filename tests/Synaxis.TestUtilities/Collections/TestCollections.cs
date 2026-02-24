@@ -1,5 +1,6 @@
-namespace Synaxis.InferenceGateway.Tests.Common;
+namespace Synaxis.TestUtilities.Collections;
 
+using Synaxis.TestUtilities.Factories;
 using Xunit;
 
 /// <summary>

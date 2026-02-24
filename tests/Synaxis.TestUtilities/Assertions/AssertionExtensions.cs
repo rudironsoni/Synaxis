@@ -2,7 +2,7 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Testing;
+namespace Synaxis.TestUtilities.Assertions;
 
 using System.Collections.Generic;
 using System.Linq;
