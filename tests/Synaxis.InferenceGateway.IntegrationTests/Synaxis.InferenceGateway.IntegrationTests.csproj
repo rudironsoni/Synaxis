@@ -33,21 +33,22 @@
     <PackageReference Include="xunit.runner.visualstudio" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\InferenceGateway\WebApi\Synaxis.InferenceGateway.WebApi.csproj" />
-    <ProjectReference Include="..\..\..\src\Synaxis.Infrastructure\Synaxis.Infrastructure.csproj" />
-    <ProjectReference Include="..\..\..\src\Synaxis.Transport.Grpc\Synaxis.Transport.Grpc.csproj" />
-    <ProjectReference Include="..\..\..\src\Synaxis.Transport.WebSocket\Synaxis.Transport.WebSocket.csproj" />
-    <ProjectReference Include="..\..\..\src\Synaxis.Transport.Http\Synaxis.Transport.Http.csproj" />
-    <ProjectReference Include="..\..\Common\Synaxis.Common.Tests.csproj" />
+    <ProjectReference Include="/home/rrj/src/github/rudironsoni/Synaxis/src/InferenceGateway/WebApi/Synaxis.InferenceGateway.WebApi.csproj" />
+    <ProjectReference Include="/home/rrj/src/github/rudironsoni/Synaxis/src/Synaxis.Core/Synaxis.Core.csproj" />
+    <ProjectReference Include="/home/rrj/src/github/rudironsoni/Synaxis/src/Synaxis.Infrastructure/Synaxis.Infrastructure.csproj" />
+    <ProjectReference Include="/home/rrj/src/github/rudironsoni/Synaxis/src/Synaxis.Transport.Grpc/Synaxis.Transport.Grpc.csproj" />
+    <ProjectReference Include="/home/rrj/src/github/rudironsoni/Synaxis/src/Synaxis.Transport.WebSocket/Synaxis.Transport.WebSocket.csproj" />
+    <ProjectReference Include="/home/rrj/src/github/rudironsoni/Synaxis/src/Synaxis.Transport.Http/Synaxis.Transport.Http.csproj" />
+    <ProjectReference Include="/home/rrj/src/github/rudironsoni/Synaxis/tests/Common/Synaxis.Common.Tests.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="..\..\..\src\InferenceGateway\WebApi\appsettings.json">
+    <Content Include="/home/rrj/src/github/rudironsoni/Synaxis/src/InferenceGateway/WebApi/appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\..\src\InferenceGateway\WebApi\appsettings.Development.json">
+    <Content Include="/home/rrj/src/github/rudironsoni/Synaxis/src/InferenceGateway/WebApi/appsettings.Development.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
