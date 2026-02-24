@@ -58,8 +58,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             var logger = new Mock<ILogger<GitHubAuthStrategy>>();
             var strat = new GitHubAuthStrategy(deviceClient, deviceService, logger.Object);
 
-            IdentityAccount? emitted = null;
-            strat.AccountAuthenticated += (_, acc) => emitted = acc.Account;
+            var tcs = new TaskCompletionSource<IdentityAccount>();
+            strat.AccountAuthenticated += (_, acc) => tcs.TrySetResult(acc.Account);
 
             var res = await strat.InitiateFlowAsync(CancellationToken.None);
 
@@ -67,10 +67,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             Assert.Equal(devicePayload.user_code, res.UserCode);
             Assert.Equal(devicePayload.verification_uri, res.VerificationUri);
 
-            // Give a small delay to allow background polling to run and invoke callback
-            await Task.Delay(50);
+            // Wait for background polling to complete and invoke callback
+            var emitted = await tcs.Task;
             Assert.NotNull(emitted);
-            Assert.Equal("github", emitted!.Provider);
+            Assert.Equal("github", emitted.Provider);
         }
 
         [Fact]

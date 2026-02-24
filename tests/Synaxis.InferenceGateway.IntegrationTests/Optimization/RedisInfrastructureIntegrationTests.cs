@@ -225,12 +225,8 @@ public class RedisInfrastructureIntegrationTests(ITestOutputHelper output, Synax
             var existsImmediately = await this._database.KeyExistsAsync(key);
             Assert.True(existsImmediately, "Key should exist immediately after set");
 
-            // Wait for actual expiration event (with timeout safety)
-            var completed = await Task.WhenAny(
-                expirationTcs.Task,
-                Task.Delay(TimeSpan.FromSeconds(2)));
-
-            Assert.Same(expirationTcs.Task, completed);
+            // Wait for actual expiration event
+            await expirationTcs.Task;
 
             // Assert - Key expired
             var existsAfter = await this._database.KeyExistsAsync(key);

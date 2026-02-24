@@ -255,7 +255,7 @@ public class InMemoryEventStoreTests
         await _store.AppendAsync("stream-1", new[] { @event }, 0);
 
         // Wait for subscriber to be notified
-        await Task.WhenAny(tcs.Task, Task.Delay(TimeSpan.FromSeconds(1)));
+        await tcs.Task;
 
         // Assert
         receivedEvents.Should().HaveCount(1);

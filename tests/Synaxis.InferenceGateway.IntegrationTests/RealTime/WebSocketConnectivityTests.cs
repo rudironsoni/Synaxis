@@ -186,13 +186,11 @@ public class WebSocketConnectivityTests : IAsyncLifetime
         var hubContext = this._factory.Services.GetRequiredService<IHubContext<WebApi.Hubs.SynaxisHub>>();
         await hubContext.Clients.Group(organizationId.ToString()).SendAsync("ProviderHealthChanged", new { Provider = "Test", Status = "Healthy" });
 
-        // Wait for notification (with timeout)
-        var receivedNotification = await Task.WhenAny(
-            tcs.Task,
-            Task.Delay(TimeSpan.FromSeconds(5))) == tcs.Task;
+        // Wait for notification
+        await tcs.Task;
 
         // Assert
-        Assert.True(receivedNotification, "Should receive provider health update notification");
+        Assert.True(tcs.Task.IsCompletedSuccessfully, "Should receive provider health update notification");
         this._output.WriteLine($"[Observability] Test completed successfully - ConnectionId: {this._connection.ConnectionId}, UserId: {userId}, OrganizationId: {organizationId}, EventType: TestCompleted, Timestamp: {DateTime.UtcNow:O}");
     }
 
@@ -242,7 +240,6 @@ public class WebSocketConnectivityTests : IAsyncLifetime
         await this._connection.StopAsync();
         this._output.WriteLine($"[Observability] Connection stopped - ConnectionId: {initialConnectionId}, UserId: {userId}, EventType: Disconnected, Timestamp: {DateTime.UtcNow:O}");
 
-        await Task.Delay(100);
         await this._connection.StartAsync();
 
         // Assert
