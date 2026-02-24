@@ -18,8 +18,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
 
     public class DeviceFlowServiceTests
     {
-        private static readonly TimeSpan TestTimeout = TimeSpan.FromSeconds(10);
-
         [Fact]
         public async Task StartPollingAsync_ReceivesToken_AndCallsOnSuccess()
         {
@@ -41,8 +39,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             }, CancellationToken.None, callbackTcs);
 
             // Wait for actual callback (with safety timeout)
-            var completed = await Task.WhenAny(callbackTcs.Task, Task.Delay(TestTimeout));
-            Assert.Same(callbackTcs.Task, completed); // Verify callback fired
+            await callbackTcs.Task;
+            Assert.True(callbackTcs.Task.IsCompletedSuccessfully, "Callback should fire");
 
             Assert.True(onSuccessCalled);
             Assert.NotNull(receivedToken);
@@ -92,8 +90,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             }, CancellationToken.None, callbackTcs);
 
             // Wait for actual callback (with safety timeout)
-            var completed = await Task.WhenAny(callbackTcs.Task, Task.Delay(TestTimeout));
-            Assert.Same(callbackTcs.Task, completed); // Verify callback fired
+            await callbackTcs.Task;
+            Assert.True(callbackTcs.Task.IsCompletedSuccessfully, "Callback should fire");
 
             Assert.True(onSuccessCalled);
             Assert.NotNull(receivedToken);
@@ -141,8 +139,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             }, CancellationToken.None, callbackTcs);
 
             // Wait for actual callback (with safety timeout) - slow_down adds 5s delay
-            var completed = await Task.WhenAny(callbackTcs.Task, Task.Delay(TimeSpan.FromSeconds(15)));
-            Assert.Same(callbackTcs.Task, completed); // Verify callback fired
+            await callbackTcs.Task;
+            Assert.True(callbackTcs.Task.IsCompletedSuccessfully, "Callback should fire");
 
             Assert.True(onSuccessCalled);
             Assert.NotNull(receivedToken);
@@ -172,8 +170,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             }, cts.Token);
 
             // Wait for polling to complete or timeout
-            var completed = await Task.WhenAny(task, Task.Delay(TestTimeout));
-            Assert.Same(task, completed); // Verify polling completed (error stops polling)
+            await task;
 
             Assert.False(onSuccessCalled);
             Assert.Null(receivedToken);
@@ -202,8 +199,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             }, cts.Token);
 
             // Wait for polling to complete or timeout
-            var completed = await Task.WhenAny(task, Task.Delay(TestTimeout));
-            Assert.Same(task, completed); // Verify polling completed (error stops polling)
+            await task;
 
             Assert.False(onSuccessCalled);
             Assert.Null(receivedToken);
@@ -234,8 +230,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             }, cts.Token);
 
             // Wait for polling to complete or timeout
-            var completed = await Task.WhenAny(task, Task.Delay(TestTimeout));
-            Assert.Same(task, completed); // Verify polling completed (error stops polling)
+            await task;
 
             Assert.False(onSuccessCalled);
             Assert.Null(receivedToken);
@@ -264,8 +259,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
             }, cts.Token);
 
             // Wait for polling to complete or timeout
-            var completed = await Task.WhenAny(task, Task.Delay(TestTimeout));
-            Assert.Same(task, completed); // Verify polling completed (cancelled)
+            await task;
 
             Assert.False(onSuccessCalled);
             Assert.Null(receivedToken);

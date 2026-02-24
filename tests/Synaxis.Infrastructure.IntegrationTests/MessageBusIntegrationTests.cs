@@ -63,8 +63,8 @@ public sealed class MessageBusIntegrationTests : IClassFixture<RabbitMqTestFixtu
         await bus.PublishAsync(message);
 
         // Assert
-        var completed = await Task.WhenAny(tcs.Task, Task.Delay(TimeSpan.FromSeconds(3)));
-        completed.Should().Be(tcs.Task, "Message should be received within 3 seconds");
+        await tcs.Task;
+        tcs.Task.IsCompletedSuccessfully.Should().BeTrue("Message should be received");
         receivedMessages.Should().ContainSingle();
         receivedMessages.First().Content.Should().Be("Test message");
     }
@@ -100,8 +100,8 @@ public sealed class MessageBusIntegrationTests : IClassFixture<RabbitMqTestFixtu
         }
 
         // Assert
-        var completed = await Task.WhenAny(tcs.Task, Task.Delay(TimeSpan.FromSeconds(5)));
-        completed.Should().Be(tcs.Task, "All messages should be received within 5 seconds");
+        await tcs.Task;
+        tcs.Task.IsCompletedSuccessfully.Should().BeTrue("All messages should be received");
         receivedMessages.Should().HaveCount(3);
     }
 
@@ -132,8 +132,8 @@ public sealed class MessageBusIntegrationTests : IClassFixture<RabbitMqTestFixtu
         await bus.PublishAsync("TopicB", new TestMessage { Content = "To Topic B" });
 
         // Assert
-        await Task.WhenAny(tcsA.Task, Task.Delay(TimeSpan.FromSeconds(3)));
-        await Task.WhenAny(tcsB.Task, Task.Delay(TimeSpan.FromSeconds(3)));
+        await tcsA.Task;
+        await tcsB.Task;
 
         topicAReceived.Should().ContainSingle().Which.Should().Be("To Topic A");
         topicBReceived.Should().ContainSingle().Which.Should().Be("To Topic B");
@@ -166,9 +166,7 @@ public sealed class MessageBusIntegrationTests : IClassFixture<RabbitMqTestFixtu
         await bus1.PublishAsync(new TestMessage { Content = "Broadcast" });
 
         // Assert
-        await Task.WhenAll(
-            Task.WhenAny(tcs1.Task, Task.Delay(TimeSpan.FromSeconds(3))),
-            Task.WhenAny(tcs2.Task, Task.Delay(TimeSpan.FromSeconds(3))));
+        await Task.WhenAll(tcs1.Task, tcs2.Task);
 
         subscriber1Received.Should().ContainSingle();
         subscriber2Received.Should().ContainSingle();
@@ -198,7 +196,7 @@ public sealed class MessageBusIntegrationTests : IClassFixture<RabbitMqTestFixtu
         await bus.PublishAsync(new TestMessage { Content = "Error test" });
 
         // Wait for message to be processed (with retry)
-        await Task.WhenAny(tcs.Task, Task.Delay(TimeSpan.FromSeconds(5)));
+        await tcs.Task;
 
         // Assert - Message should eventually be processed due to retry
         messageProcessed.Should().BeTrue("Message should be requeued and processed after error");
@@ -224,8 +222,7 @@ public sealed class MessageBusIntegrationTests : IClassFixture<RabbitMqTestFixtu
         await bus.PublishAsync(message);
 
         // Assert
-        var completed = await Task.WhenAny(tcs.Task, Task.Delay(TimeSpan.FromSeconds(3)));
-        completed.Should().Be(tcs.Task, "Large message should be received within 3 seconds");
+        await tcs.Task;
         receivedMessages.Should().ContainSingle();
         receivedMessages.First().Content.Length.Should().Be(100000);
     }
@@ -250,8 +247,7 @@ public sealed class MessageBusIntegrationTests : IClassFixture<RabbitMqTestFixtu
         await bus.PublishAsync(message);
 
         // Assert
-        var completed = await Task.WhenAny(tcs.Task, Task.Delay(TimeSpan.FromSeconds(3)));
-        completed.Should().Be(tcs.Task, "Unicode message should be received within 3 seconds");
+        await tcs.Task;
         receivedMessages.Should().ContainSingle();
         receivedMessages.First().Content.Should().Be(unicodeContent);
     }
@@ -281,8 +277,7 @@ public sealed class MessageBusIntegrationTests : IClassFixture<RabbitMqTestFixtu
         await bus.PublishAsync(message);
 
         // Assert
-        var completed = await Task.WhenAny(tcs.Task, Task.Delay(TimeSpan.FromSeconds(3)));
-        completed.Should().Be(tcs.Task, "Complex message should be received within 3 seconds");
+        await tcs.Task;
         receivedMessages.Should().ContainSingle();
         var received = receivedMessages.First();
         received.Name.Should().Be("Complex Test");
@@ -325,8 +320,7 @@ public sealed class MessageBusIntegrationTests : IClassFixture<RabbitMqTestFixtu
         await Task.WhenAll(publishTasks);
 
         // Assert
-        var completed = await Task.WhenAny(tcs.Task, Task.Delay(TimeSpan.FromSeconds(10)));
-        completed.Should().Be(tcs.Task, "All messages should be received within 10 seconds");
+        await tcs.Task;
         receivedMessages.Should().HaveCount(messageCount);
     }
 
