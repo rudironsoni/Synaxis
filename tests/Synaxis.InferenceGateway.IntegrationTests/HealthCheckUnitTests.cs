@@ -211,6 +211,7 @@ public class HealthCheckUnitTests
             }
             catch (OperationCanceledException)
             {
+                // Expected: Server was stopped, cancel the accept loop
             }
         }
 

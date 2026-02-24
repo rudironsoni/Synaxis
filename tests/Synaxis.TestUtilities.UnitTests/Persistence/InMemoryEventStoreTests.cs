@@ -338,9 +338,9 @@ public class InMemoryEventStoreTests
                         successCount++;
                     }
                 }
-                catch
+                catch (InvalidOperationException)
                 {
-                    // Ignore - some threads may fail due to timing, but that's OK for this test
+                    // Expected: Some threads may fail due to concurrent write timing
                 }
             }));
         }

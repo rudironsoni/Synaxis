@@ -17,9 +17,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../../src/Agents/Agents.Application/Agents.Application.csproj" />
-    <ProjectReference Include="../../../src/Agents/Agents.Domain/Agents.Domain.csproj" />
-    <ProjectReference Include="../../../src/Synaxis.Core/Synaxis.Core.csproj" />
+    <ProjectReference Include="/home/rrj/src/github/rudironsoni/Synaxis/src/Agents/Agents.Application/Agents.Application.csproj" />
+    <ProjectReference Include="/home/rrj/src/github/rudironsoni/Synaxis/src/Agents/Agents.Domain/Agents.Domain.csproj" />
+    <ProjectReference Include="/home/rrj/src/github/rudironsoni/Synaxis/src/Synaxis.Core/Synaxis.Core.csproj" />
   </ItemGroup>
 
 </Project>

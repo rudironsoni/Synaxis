@@ -8,6 +8,7 @@ using System;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using Synaxis.Common.Tests.Fixtures;
 using Synaxis.Core.Models;
 using Synaxis.Infrastructure.Data;

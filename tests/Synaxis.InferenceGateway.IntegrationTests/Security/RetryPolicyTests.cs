@@ -92,9 +92,9 @@ public class RetryPolicyTests(ITestOutputHelper output)
                 return "success";
             }, ex => ex is HttpRequestException);
         }
-        catch
+        catch (HttpRequestException)
         {
-            // Expected to fail after max retries
+            // Expected: All retries exhausted, final exception propagates
         }
 
         // Assert
@@ -128,9 +128,9 @@ public class RetryPolicyTests(ITestOutputHelper output)
                 return "success";
             }, ex => ex is HttpRequestException);
         }
-        catch
+        catch (HttpRequestException)
         {
-            // Expected to fail after max retries
+            // Expected: All retries exhausted, final exception propagates
         }
 
         sw.Stop();
@@ -379,9 +379,9 @@ public class RetryPolicyTests(ITestOutputHelper output)
                 },
                 ex => ex is HttpRequestException);
         }
-        catch
+        catch (HttpRequestException)
         {
-            // Expected to fail after max retries
+            // Expected: All retries exhausted, final exception propagates
         }
 
         sw.Stop();
@@ -416,9 +416,9 @@ public class RetryPolicyTests(ITestOutputHelper output)
                 },
                 ex => ex is HttpRequestException);
         }
-        catch
+        catch (HttpRequestException)
         {
-            // Expected to fail after max retries
+            // Expected: All retries exhausted, final exception propagates
         }
 
         // Assert
