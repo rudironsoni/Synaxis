@@ -8,7 +8,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using StackExchange.Redis;
-using Synaxis.Common.Tests.Attributes;
 using Synaxis.InferenceGateway.IntegrationTests;
 using Xunit;
 using Xunit.Abstractions;
@@ -196,7 +195,6 @@ public class RedisInfrastructureIntegrationTests(ITestOutputHelper output, Synax
     }
 
     [Fact]
-    [SlopwatchSuppress("SW004", "Safety timeout for keyspace notification fallback")]
     public async Task Expiration_TtlRespected()
     {
         // Arrange

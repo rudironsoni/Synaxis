@@ -21,9 +21,9 @@ namespace Synaxis.Core.Tests.Services
     [Trait("Category", "Unit")]
     public class TeamServiceTests : IAsyncLifetime
     {
-        private SynaxisDbContext _context;
-        private Mock<IInvitationService> _invitationServiceMock;
-        private TeamService _service;
+        private SynaxisDbContext _context = null!;
+        private Mock<IInvitationService> _invitationServiceMock = null!;
+        private TeamService _service = null!;
         private Guid _organizationId;
         private Guid _userId;
 

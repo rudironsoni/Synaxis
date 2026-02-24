@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Synaxis.Common.Tests.Attributes;
 using Synaxis.InferenceGateway.IntegrationTests.Helpers;
 using Xunit;
 using Xunit.Abstractions;
@@ -198,7 +197,6 @@ public class WebSocketConnectivityTests : IAsyncLifetime
     }
 
     [Fact]
-    [SlopwatchSuppress("SW004", "Intentional delay simulating realistic network disconnect/reconnect timing for WebSocket observability testing")]
     public async Task ConnectionReconnects_AfterDisconnection()
     {
         // Arrange

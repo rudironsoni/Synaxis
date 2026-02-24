@@ -13,7 +13,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
     using Microsoft.Extensions.Logging;
     using Moq;
     using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
-    using Synaxis.Common.Tests.Attributes;
     using Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub;
     using Xunit;
 
@@ -22,7 +21,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
         private static readonly TimeSpan TestTimeout = TimeSpan.FromSeconds(10);
 
         [Fact]
-        [SlopwatchSuppress("SW004", "Task.Delay is safety timeout for Task.WhenAny, not polling")]
         public async Task StartPollingAsync_ReceivesToken_AndCallsOnSuccess()
         {
             var responseJson = "{\"access_token\":\"test-access-token\",\"refresh_token\":\"test-refresh-token\",\"expires_in\":3600}";
@@ -54,7 +52,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
         }
 
         [Fact]
-        [SlopwatchSuppress("SW004", "Task.Delay is safety timeout for Task.WhenAny, not polling")]
         public async Task StartPollingAsync_HandlesAuthorizationPending()
         {
             var callCount = 0;
@@ -104,7 +101,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
         }
 
         [Fact]
-        [SlopwatchSuppress("SW004", "Task.Delay is safety timeout for Task.WhenAny, not polling")]
         public async Task StartPollingAsync_HandlesSlowDown()
         {
             var callCount = 0;
@@ -154,7 +150,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
         }
 
         [Fact]
-        [SlopwatchSuppress("SW004", "Task.Delay is safety timeout for Task.WhenAny, not polling")]
         public async Task StartPollingAsync_HandlesExpiredToken()
         {
             var responseJson = "{\"error\":\"expired_token\"}";
@@ -185,7 +180,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
         }
 
         [Fact]
-        [SlopwatchSuppress("SW004", "Task.Delay is safety timeout for Task.WhenAny, not polling")]
         public async Task StartPollingAsync_HandlesAccessDenied()
         {
             var responseJson = "{\"error\":\"access_denied\"}";
@@ -216,7 +210,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
         }
 
         [Fact]
-        [SlopwatchSuppress("SW004", "Task.Delay is safety timeout for Task.WhenAny, not polling")]
         public async Task StartPollingAsync_HandlesNetworkError()
         {
             var handler = new DelegatingHandlerStub((req, ct) =>
@@ -249,7 +242,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity.Strategies.GitH
         }
 
         [Fact]
-        [SlopwatchSuppress("SW004", "Task.Delay is safety timeout for Task.WhenAny, not polling")]
         public async Task StartPollingAsync_HandlesInvalidJson()
         {
             var client = CreateClientReturningJson(HttpStatusCode.OK, "invalid json");

@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Moq;
 using StackExchange.Redis;
-using Synaxis.Common.Tests.Attributes;
 using Synaxis.InferenceGateway.Infrastructure.Optimization.Caching;
 using Xunit;
 
@@ -101,7 +100,6 @@ public class RedisInFlightDeduplicationTests
     }
 
     [Fact]
-    [SlopwatchSuppress("SW001", "Test has complex race conditions in mock setup that cause intermittent hangs. Needs redesign of mock synchronization approach.")]
     public async Task ExecuteWithDeduplication_ConcurrentCalls_Deduplicates()
     {
         // Arrange
