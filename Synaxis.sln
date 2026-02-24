@@ -11,11 +11,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Synaxis.InferenceGateway.Ap
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Synaxis.InferenceGateway.Infrastructure", "src\InferenceGateway\Infrastructure\Synaxis.InferenceGateway.Infrastructure.csproj", "{C360AA58-CDA7-4154-9FF4-4EDC32140479}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Synaxis.InferenceGateway.IntegrationTests", "tests\InferenceGateway\IntegrationTests\Synaxis.InferenceGateway.IntegrationTests.csproj", "{37AE4ED6-7417-42A8-9935-7039C204128F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Synaxis.InferenceGateway.IntegrationTests", "tests\Synaxis.InferenceGateway.IntegrationTests\Synaxis.InferenceGateway.IntegrationTests.csproj", "{37AE4ED6-7417-42A8-9935-7039C204128F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Synaxis.InferenceGateway.Application.Tests", "tests\InferenceGateway\Application.Tests\Synaxis.InferenceGateway.Application.Tests.csproj", "{9D024BEF-BDEB-4D5F-89E3-C2031AB035D7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Synaxis.InferenceGateway.Application.Tests", "tests\Synaxis.InferenceGateway.Application.Tests\Synaxis.InferenceGateway.Application.Tests.csproj", "{9D024BEF-BDEB-4D5F-89E3-C2031AB035D7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Synaxis.InferenceGateway.Infrastructure.Tests", "tests\InferenceGateway\Infrastructure.Tests\Synaxis.InferenceGateway.Infrastructure.Tests.csproj", "{F47C121D-71FE-48AB-96B3-0BE27CDC9F04}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Synaxis.InferenceGateway.Infrastructure.Tests", "tests\Synaxis.InferenceGateway.Infrastructure.Tests\Synaxis.InferenceGateway.Infrastructure.Tests.csproj", "{F47C121D-71FE-48AB-96B3-0BE27CDC9F04}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{6DA411B4-8507-4C34-B5F2-EB79DE717705}"
 EndProject
@@ -23,7 +23,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "InferenceGateway.UnitTests", "InferenceGateway.UnitTests", "{668ECFE5-6F8B-0031-5C1B-AC6218541994}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Synaxis.InferenceGateway.UnitTests", "tests\InferenceGateway.UnitTests\Synaxis.InferenceGateway.UnitTests.csproj", "{A615CF5B-99ED-495F-A88D-8629DBA25083}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Synaxis.InferenceGateway.UnitTests", "tests\Synaxis.InferenceGateway.UnitTests\Synaxis.InferenceGateway.UnitTests.csproj", "{A615CF5B-99ED-495F-A88D-8629DBA25083}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{CEA09484-30F6-4D44-02F6-822E06DBC57C}"
 EndProject
@@ -107,9 +107,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Identity.Infrastructure", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Identity.Api", "src\Identity\Identity.Api\Identity.Api.csproj", "{EC39BF37-49EB-49DA-8A7C-460A9D07CA36}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Identity.UnitTests", "tests\Identity.UnitTests\Identity.UnitTests.csproj", "{4BE3CC6F-1567-4DED-A963-650D73140D90}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Synaxis.Identity.UnitTests", "tests\Synaxis.Identity.UnitTests\Synaxis.Identity.UnitTests.csproj", "{4BE3CC6F-1567-4DED-A963-650D73140D90}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Identity.IntegrationTests", "tests\Identity.IntegrationTests\Identity.IntegrationTests.csproj", "{A6173BBD-BE18-415F-A395-F913381BE5B2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Synaxis.Identity.IntegrationTests", "tests\Synaxis.Identity.IntegrationTests\Synaxis.Identity.IntegrationTests.csproj", "{A6173BBD-BE18-415F-A395-F913381BE5B2}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Orchestration", "Orchestration", "{8B260A08-A83E-5A86-27DB-EBC08B683631}"
 EndProject
@@ -169,7 +169,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Synaxis.Extensions.Dependen
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Agents", "Agents", "{8237E8CD-D5D3-64BA-5E58-2DC77AA393FA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Agents.Application.Tests", "tests\Agents\Agents.Application.Tests\Agents.Application.Tests.csproj", "{5E745B3D-8DA5-44BE-A01B-4C8F3AD595D0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Synaxis.Agents.Application.Tests", "tests\Synaxis.Agents.Application.Tests\Synaxis.Agents.Application.Tests.csproj", "{5E745B3D-8DA5-44BE-A01B-4C8F3AD595D0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
