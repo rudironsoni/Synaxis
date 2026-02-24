@@ -309,3 +309,6 @@ public sealed class OrganizationSettingsServiceIntegrationTests(Synaxis.Common.T
             .WithMessage("*DataRetentionDays*");
     }
 }
+
+#pragma warning restore IDISP006
+#pragma warning restore IDISP003

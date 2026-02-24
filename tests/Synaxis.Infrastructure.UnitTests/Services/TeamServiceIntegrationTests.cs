@@ -344,3 +344,6 @@ public sealed class TeamServiceIntegrationTests(Synaxis.Common.Tests.Fixtures.Po
             Times.Once);
     }
 }
+
+#pragma warning restore IDISP006
+#pragma warning restore IDISP003

@@ -55,7 +55,8 @@ public class StreamExecutorTests
         }
         catch (OperationCanceledException)
         {
-            // Expected
+            // Expected: Stream was intentionally cancelled after receiving 3 items
+            // This is the desired behavior - cancellation should stop the stream
         }
 
         // Assert

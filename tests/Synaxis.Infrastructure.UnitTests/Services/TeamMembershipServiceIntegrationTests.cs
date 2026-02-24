@@ -268,3 +268,6 @@ public sealed class TeamMembershipServiceIntegrationTests(Synaxis.Common.Tests.F
             .WithMessage("*already a member*");
     }
 }
+
+#pragma warning restore IDISP006
+#pragma warning restore IDISP003

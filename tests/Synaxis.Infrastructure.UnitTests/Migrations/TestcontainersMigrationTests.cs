@@ -330,9 +330,10 @@ public sealed class TestcontainersMigrationTests(Synaxis.Common.Tests.Fixtures.P
         {
             await Task.WhenAll(migration1, migration2);
         }
-        catch
+        catch (Exception ex) when (ex is InvalidOperationException || ex is PostgresException)
         {
-            // Expected that one may fail due to locking
+            // Expected: One migration may fail due to database locking during concurrent execution
+            // This is acceptable - the other migration will complete successfully
         }
 
         // Assert - At least one should succeed and database should be migrated
@@ -473,3 +474,6 @@ public sealed class TestcontainersMigrationTests(Synaxis.Common.Tests.Fixtures.P
         }
     }
 }
+
+#pragma warning restore IDISP006
+#pragma warning restore IDISP003
