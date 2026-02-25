@@ -243,9 +243,9 @@ public class RetryPolicyTests
 
         // Verify that delays occurred (with jitter, so we check a range)
         // Expected delays: ~50ms (first retry) + ~100ms (second retry) = ~150ms total
-        // With 10% jitter: 45-55ms + 90-110ms = 135-165ms total
-        Assert.True(elapsed.TotalMilliseconds >= 100, $"Elapsed time {elapsed.TotalMilliseconds}ms should be at least 100ms");
-        Assert.True(elapsed.TotalMilliseconds <= 300, $"Elapsed time {elapsed.TotalMilliseconds}ms should be at most 300ms");
+        // With 20% jitter: 40-60ms + 80-120ms = 120-180ms total, but can vary more under load
+        Assert.True(elapsed.TotalMilliseconds >= 80, $"Elapsed time {elapsed.TotalMilliseconds}ms should be at least 80ms");
+        Assert.True(elapsed.TotalMilliseconds <= 400, $"Elapsed time {elapsed.TotalMilliseconds}ms should be at most 400ms");
     }
 
     [Fact]

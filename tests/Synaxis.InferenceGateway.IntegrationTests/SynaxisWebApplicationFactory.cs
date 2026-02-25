@@ -364,6 +364,9 @@ public class SynaxisWebApplicationFactory : WebApplicationFactory<Program>, ITes
             // Register core Synaxis services (includes Mediator, handlers, ProviderSelector)
             services.AddSynaxis();
 
+            // Register AuditService required by controllers
+            services.AddScoped<Synaxis.InferenceGateway.Application.Security.IAuditService, Synaxis.InferenceGateway.Infrastructure.Security.AuditService>();
+
             // Register CORS policy
             services.AddCors(options =>
             {

@@ -8,8 +8,8 @@ using Microsoft.Extensions.Logging;
 /// </summary>
 public class TestContainerFactory : IAsyncDisposable
 {
-    private static readonly Lazy<TestContainerFactory> _instance = new (() => new TestContainerFactory());
-    private readonly Dictionary<string, object> _containers = new ();
+    private static readonly Lazy<TestContainerFactory> _instance = new(() => new TestContainerFactory());
+    private readonly Dictionary<string, object> _containers = new();
     private readonly ILogger<TestContainerFactory> _logger;
     private bool _disposed;
 

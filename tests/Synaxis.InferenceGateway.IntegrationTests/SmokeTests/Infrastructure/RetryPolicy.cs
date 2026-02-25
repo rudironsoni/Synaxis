@@ -29,9 +29,10 @@ public class RetryPolicy(int maxRetries, int initialDelayMs, double backoffMulti
             {
                 attempt++;
 
-                // Exponential backoff without Task.Delay - uses Task.Yield for async fairness
+                // Exponential backoff with jitter
                 delay = (int)(delay * this._backoffMultiplier);
-                await Task.Yield();
+                var jitteredDelay = (int)(delay * (0.9 + (this._rng.NextDouble() * 0.2)));
+                await Task.Delay(jitteredDelay).ConfigureAwait(false);
             }
         }
     }

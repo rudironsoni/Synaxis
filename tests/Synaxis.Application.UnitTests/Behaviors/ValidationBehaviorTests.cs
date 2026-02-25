@@ -36,8 +36,7 @@ namespace Synaxis.Tests.Behaviors
         {
             // Arrange
             var message = new TestMessage();
-            MessageHandlerDelegate<TestMessage, TestResponse> next = (msg, ct) => 
-                ValueTask.FromResult(new TestResponse());
+            MessageHandlerDelegate<TestMessage, TestResponse> next = (msg, ct) => ValueTask.FromResult(new TestResponse());
 
             // Act
             await this._behavior.Handle(message, next, CancellationToken.None);
@@ -94,8 +93,7 @@ namespace Synaxis.Tests.Behaviors
         public async Task Handle_WithNullMessage_ThrowsArgumentNullException()
         {
             // Arrange
-            MessageHandlerDelegate<TestMessage, TestResponse> next = (msg, ct) => 
-                ValueTask.FromResult(new TestResponse());
+            MessageHandlerDelegate<TestMessage, TestResponse> next = (msg, ct) => ValueTask.FromResult(new TestResponse());
 
             // Act
             Func<Task> act = async () => await this._behavior.Handle(null!, next, CancellationToken.None);
