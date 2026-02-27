@@ -1,0 +1,48 @@
+{
+  "mcp": {
+    "serena": {
+      "type": "local",
+      "command": [
+        "uvx",
+        "--from",
+        "git+https://github.com/oraios/serena",
+        "serena",
+        "start-mcp-server",
+        "--context",
+        "ide-assistant",
+        "--enable-web-dashboard",
+        "false",
+        "--project",
+        "."
+      ],
+      "enabled": true,
+      "environment": {}
+    },
+    "context7": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@upstash/context7-mcp@latest"
+      ],
+      "enabled": true,
+      "environment": {}
+    },
+    "microsoftdocs-mcp": {
+      "type": "remote",
+      "url": "https://learn.microsoft.com/api/mcp",
+      "enabled": true
+    },
+    "mcp-windbg": {
+      "type": "local",
+      "command": [
+        "uvx",
+        "--from",
+        "git+https://github.com/svnscha/mcp-windbg",
+        "mcp-windbg"
+      ],
+      "enabled": true,
+      "environment": {}
+    }
+  }
+}

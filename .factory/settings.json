@@ -1,0 +1,27 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$FACTORY_PROJECT_DIR/.rulesync/hooks/session-start-context.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$FACTORY_PROJECT_DIR/.rulesync/hooks/post-edit-dotnet.sh",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  }
+}
