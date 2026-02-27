@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
-    <ProjectReference Include="..\..\Synaxis.Core\Synaxis.Core.csproj" />
+    <ProjectReference Include="../../Synaxis.Core/Synaxis.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Agents.Core" />

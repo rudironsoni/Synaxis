@@ -18,16 +18,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Configuration\Synaxis.Configuration\Synaxis.Configuration.csproj" />
-    <ProjectReference Include="..\..\Synaxis.Abstractions\Synaxis.Abstractions.csproj" />
-    <ProjectReference Include="..\..\Abstractions\Synaxis.Abstractions.Cloud\Synaxis.Abstractions.Cloud.csproj" />
-    <ProjectReference Include="..\..\Synaxis.Contracts\Synaxis.Contracts.csproj" />
-    <ProjectReference Include="..\..\Synaxis.Infrastructure\Synaxis.Infrastructure.csproj" />
-    <ProjectReference Include="..\..\Infrastructure\Synaxis.Infrastructure.EventSourcing\Synaxis.Infrastructure.EventSourcing.csproj" />
-    <ProjectReference Include="..\..\Infrastructure\Synaxis.Infrastructure.Messaging\Synaxis.Infrastructure.Messaging.csproj" />
-    <ProjectReference Include="..\..\Synaxis.Infrastructure.Encryption\Synaxis.Infrastructure.Encryption.csproj" />
-    <ProjectReference Include="..\..\Synaxis.Providers\Synaxis.Providers.csproj" />
-    <ProjectReference Include="..\..\Synaxis.Providers.Azure\Synaxis.Providers.Azure.csproj" />
+    <ProjectReference Include="../../Configuration/Synaxis.Configuration/Synaxis.Configuration.csproj" />
+    <ProjectReference Include="../../Synaxis.Abstractions/Synaxis.Abstractions.csproj" />
+    <ProjectReference Include="../../Abstractions/Synaxis.Abstractions.Cloud/Synaxis.Abstractions.Cloud.csproj" />
+    <ProjectReference Include="../../Synaxis.Contracts/Synaxis.Contracts.csproj" />
+    <ProjectReference Include="../../Synaxis.Infrastructure/Synaxis.Infrastructure.csproj" />
+    <ProjectReference Include="../../Infrastructure/Synaxis.Infrastructure.EventSourcing/Synaxis.Infrastructure.EventSourcing.csproj" />
+    <ProjectReference Include="../../Infrastructure/Synaxis.Infrastructure.Messaging/Synaxis.Infrastructure.Messaging.csproj" />
+    <ProjectReference Include="../../Synaxis.Infrastructure.Encryption/Synaxis.Infrastructure.Encryption.csproj" />
+    <ProjectReference Include="../../Synaxis.Providers/Synaxis.Providers.csproj" />
+    <ProjectReference Include="../../Synaxis.Providers.Azure/Synaxis.Providers.Azure.csproj" />
   </ItemGroup>
 
 </Project>

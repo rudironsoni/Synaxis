@@ -10,8 +10,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Synaxis.Abstractions\Synaxis.Abstractions.csproj" />
-    <ProjectReference Include="..\Synaxis.Contracts\Synaxis.Contracts.csproj" />
+    <ProjectReference Include="../Synaxis.Abstractions/Synaxis.Abstractions.csproj" />
+    <ProjectReference Include="../Synaxis.Contracts/Synaxis.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

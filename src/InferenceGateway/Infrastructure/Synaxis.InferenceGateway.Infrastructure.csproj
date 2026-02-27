@@ -35,9 +35,9 @@
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Application\Synaxis.InferenceGateway.Application.csproj" />
-    <ProjectReference Include="..\..\Synaxis.Infrastructure\Synaxis.Infrastructure.csproj" />
-    <ProjectReference Include="..\..\Synaxis.Abstractions\Synaxis.Abstractions.csproj" />
+    <ProjectReference Include="../Application/Synaxis.InferenceGateway.Application.csproj" />
+    <ProjectReference Include="../../Synaxis.Infrastructure/Synaxis.Infrastructure.csproj" />
+    <ProjectReference Include="../../Synaxis.Abstractions/Synaxis.Abstractions.csproj" />
   </ItemGroup>
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />

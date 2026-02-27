@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Synaxis.Core\Synaxis.Core.csproj" />
-    <ProjectReference Include="..\Synaxis.Infrastructure\Synaxis.Infrastructure.csproj" />
+    <ProjectReference Include="../Synaxis.Core/Synaxis.Core.csproj" />
+    <ProjectReference Include="../Synaxis.Infrastructure/Synaxis.Infrastructure.csproj" />
   </ItemGroup>
 </Project>

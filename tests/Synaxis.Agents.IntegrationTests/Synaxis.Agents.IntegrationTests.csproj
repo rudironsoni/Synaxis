@@ -27,9 +27,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Agents\Agents.Api\Agents.Api.csproj" />
-    <ProjectReference Include="..\..\src\Agents\Agents.Domain\Agents.Domain.csproj" />
-    <ProjectReference Include="..\..\src\Agents\Agents.Infrastructure\Agents.Infrastructure.csproj" />
+    <ProjectReference Include="../../src/Agents/Agents.Api/Agents.Api.csproj" />
+    <ProjectReference Include="../../src/Agents/Agents.Domain/Agents.Domain.csproj" />
+    <ProjectReference Include="../../src/Agents/Agents.Infrastructure/Agents.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

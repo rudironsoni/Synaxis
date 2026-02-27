@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Synaxis.Health\Synaxis.Health.csproj" />
+    <ProjectReference Include="../../src/Synaxis.Health/Synaxis.Health.csproj" />
   </ItemGroup>
 
 </Project>

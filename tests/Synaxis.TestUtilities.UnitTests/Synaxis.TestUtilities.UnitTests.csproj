@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Synaxis.TestUtilities\Synaxis.TestUtilities.csproj" />
+    <ProjectReference Include="../Synaxis.TestUtilities/Synaxis.TestUtilities.csproj" />
   </ItemGroup>
 
 </Project>

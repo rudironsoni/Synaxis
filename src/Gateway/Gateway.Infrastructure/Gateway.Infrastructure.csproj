@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Gateway.Application\Gateway.Application.csproj" />
+    <ProjectReference Include="../Gateway.Application/Gateway.Application.csproj" />
   </ItemGroup>
 
 </Project>

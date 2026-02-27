@@ -24,6 +24,6 @@
     <Using Include="Xunit" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Synaxis.Contracts\Synaxis.Contracts.csproj" />
+    <ProjectReference Include="../../src/Synaxis.Contracts/Synaxis.Contracts.csproj" />
   </ItemGroup>
 </Project>

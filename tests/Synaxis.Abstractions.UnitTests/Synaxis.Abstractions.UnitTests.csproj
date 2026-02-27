@@ -24,6 +24,6 @@
     <Using Include="Xunit" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Synaxis.Abstractions\Synaxis.Abstractions.csproj" />
+    <ProjectReference Include="../../src/Synaxis.Abstractions/Synaxis.Abstractions.csproj" />
   </ItemGroup>
 </Project>

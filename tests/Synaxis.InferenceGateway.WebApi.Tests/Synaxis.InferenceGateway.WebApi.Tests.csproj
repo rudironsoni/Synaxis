@@ -24,8 +24,8 @@
     <Using Include="Xunit" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\InferenceGateway\Application\Synaxis.InferenceGateway.Application.csproj" />
-    <ProjectReference Include="..\..\..\src\InferenceGateway\WebApi\Synaxis.InferenceGateway.WebApi.csproj" />
-    <ProjectReference Include="..\..\Common\Synaxis.Common.Tests.csproj" />
+    <ProjectReference Include="../../../src/InferenceGateway/Application/Synaxis.InferenceGateway.Application.csproj" />
+    <ProjectReference Include="../../../src/InferenceGateway/WebApi/Synaxis.InferenceGateway.WebApi.csproj" />
+    <ProjectReference Include="../../Common/Synaxis.Common.Tests.csproj" />
   </ItemGroup>
 </Project>

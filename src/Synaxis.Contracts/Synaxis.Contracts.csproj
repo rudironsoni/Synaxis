@@ -12,7 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Synaxis.Abstractions\Synaxis.Abstractions.csproj" />
+    <ProjectReference Include="../Synaxis.Abstractions/Synaxis.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

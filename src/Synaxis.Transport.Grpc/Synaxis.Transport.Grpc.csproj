@@ -10,9 +10,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Synaxis.Abstractions\Synaxis.Abstractions.csproj" />
-    <ProjectReference Include="..\Synaxis.Contracts\Synaxis.Contracts.csproj" />
-    <ProjectReference Include="..\Synaxis\Synaxis.csproj" />
+    <ProjectReference Include="../Synaxis.Abstractions/Synaxis.Abstractions.csproj" />
+    <ProjectReference Include="../Synaxis.Contracts/Synaxis.Contracts.csproj" />
+    <ProjectReference Include="../Synaxis/Synaxis.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -25,5 +25,5 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Protobuf Include="Protos\synaxis\v1\*.proto" GrpcServices="Server" ProtoRoot="Protos" />
+    <Protobuf Include="Protos/synaxis/v1/*.proto" GrpcServices="Server" ProtoRoot="Protos" />
   </ItemGroup></Project>

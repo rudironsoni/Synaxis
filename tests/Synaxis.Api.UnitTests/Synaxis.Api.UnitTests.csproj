@@ -27,9 +27,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Synaxis.Api\Synaxis.Api.csproj" />
-    <ProjectReference Include="..\..\src\Synaxis.Core\Synaxis.Core.csproj" />
-    <ProjectReference Include="..\..\src\Synaxis.Infrastructure\Synaxis.Infrastructure.csproj" />
+    <ProjectReference Include="../../src/Synaxis.Api/Synaxis.Api.csproj" />
+    <ProjectReference Include="../../src/Synaxis.Core/Synaxis.Core.csproj" />
+    <ProjectReference Include="../../src/Synaxis.Infrastructure/Synaxis.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

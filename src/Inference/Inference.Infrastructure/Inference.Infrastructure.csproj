@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Inference.Application\Inference.Application.csproj" />
+    <ProjectReference Include="../Inference.Application/Inference.Application.csproj" />
   </ItemGroup>
 
 </Project>

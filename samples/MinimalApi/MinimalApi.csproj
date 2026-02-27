@@ -9,8 +9,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Synaxis\Synaxis.csproj" />
-    <ProjectReference Include="..\..\src\Synaxis.Providers.OpenAI\Synaxis.Providers.OpenAI.csproj" />
+    <ProjectReference Include="../../src/Synaxis/Synaxis.csproj" />
+    <ProjectReference Include="../../src/Synaxis.Providers.OpenAI/Synaxis.Providers.OpenAI.csproj" />
   </ItemGroup>
 
 </Project>

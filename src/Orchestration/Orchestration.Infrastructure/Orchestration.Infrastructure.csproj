@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Orchestration.Application\Orchestration.Application.csproj" />
+    <ProjectReference Include="../Orchestration.Application/Orchestration.Application.csproj" />
   </ItemGroup>
 
 </Project>

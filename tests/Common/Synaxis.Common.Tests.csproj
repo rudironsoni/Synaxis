@@ -29,10 +29,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\InferenceGateway\Application\Synaxis.InferenceGateway.Application.csproj" />
-    <ProjectReference Include="..\..\src\InferenceGateway\Infrastructure\Synaxis.InferenceGateway.Infrastructure.csproj" />
-    <ProjectReference Include="..\..\src\InferenceGateway\WebApi\Synaxis.InferenceGateway.WebApi.csproj" />
-    <ProjectReference Include="..\..\src\Synaxis.Abstractions\Synaxis.Abstractions.csproj" />
+    <ProjectReference Include="../../src/InferenceGateway/Application/Synaxis.InferenceGateway.Application.csproj" />
+    <ProjectReference Include="../../src/InferenceGateway/Infrastructure/Synaxis.InferenceGateway.Infrastructure.csproj" />
+    <ProjectReference Include="../../src/InferenceGateway/WebApi/Synaxis.InferenceGateway.WebApi.csproj" />
+    <ProjectReference Include="../../src/Synaxis.Abstractions/Synaxis.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>
