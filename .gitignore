@@ -292,3 +292,9 @@ test-*.txt
 # Node modules (ensure excluded)
 **/node_modules/
 .sisyphus/
+
+# AI tool generated files
+.config/
+.factory/
+.gemini/antigravity/
+.serena/logs/

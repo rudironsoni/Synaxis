@@ -4,7 +4,7 @@ description: Routes .NET/C# work to domain skills. Loads coding-standards for co
 ---
 # dotnet-advisor
 
-Router and index skill for **dotnet-harness-toolkit**. Always loaded. Routes .NET development queries to the appropriate specialist skills based on context.
+Router and index skill for **dotnet-agent-harness**. Always loaded. Routes .NET development queries to the appropriate specialist skills based on context.
 
 ## Scope
 

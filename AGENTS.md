@@ -1,3 +1,13 @@
+Please also reference the following rules as needed. The list below is provided in TOON format, and `@` stands for the project root directory.
+
+rules[2]:
+  - path: @.opencode/memories/10-conventions.md
+    description: "dotnet-harness-toolkit authoring conventions for skills, subagents, commands, and hooks"
+    applyTo[1]: .rulesync/**/*
+  - path: @.opencode/memories/20-workflow.md
+    description: Workflow for RuleSync-based multi-agent generation
+    applyTo[1]: **/*
+
 # dotnet-harness-toolkit
 
 Comprehensive .NET development guidance for modern C#, ASP.NET Core, MAUI, Blazor, and cloud-native apps.
