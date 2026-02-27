@@ -98,15 +98,11 @@ namespace Synaxis.Health.Checks
             Dictionary<string, object> data,
             CancellationToken cancellationToken)
         {
-#pragma warning disable MA0004 // await using doesn't need ConfigureAwait
             await using var connection = new NpgsqlConnection(this._connectionString);
-#pragma warning restore MA0004
             await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
             // Execute simple query to verify connectivity
-#pragma warning disable MA0004 // await using doesn't need ConfigureAwait
             await using var command = new NpgsqlCommand("SELECT 1", connection);
-#pragma warning restore MA0004
             _ = await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
             stopwatch.Stop();
             var latencyMs = stopwatch.ElapsedMilliseconds;

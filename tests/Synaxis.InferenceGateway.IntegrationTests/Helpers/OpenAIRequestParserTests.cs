@@ -755,9 +755,7 @@ public class OpenAIRequestParserTests
         Assert.Equal(0.0, result.Temperature);
     }
 
-#pragma warning disable SA1124 // Do not use regions
     #region Helper Methods
-#pragma warning restore SA1124 // Do not use regions
 
     private static HttpContext CreateHttpContextWithBody(
         string body,

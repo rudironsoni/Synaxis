@@ -26,7 +26,6 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
         /// </summary>
         /// <param name="app">The endpoint route builder.</param>
         /// <returns>The endpoint route builder for chaining.</returns>
-#pragma warning disable MA0051 // Method too long
         public static IEndpointRouteBuilder MapProvidersEndpoints(this IEndpointRouteBuilder app)
         {
             var dashboardGroup = app.MapGroup("/api/providers")
@@ -132,15 +131,11 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
                         var endpoint = GetProviderEndpoint(provider);
                         if (!string.IsNullOrEmpty(endpoint))
                         {
-#pragma warning disable IDISP001 // Dispose created
                             var httpClient = httpClientFactory.CreateClient();
                             httpClient.Timeout = TimeSpan.FromSeconds(5);
 
                             var request = new HttpRequestMessage(HttpMethod.Head, endpoint);
-#pragma warning restore IDISP001
-#pragma warning disable IDISP004 // Don't ignore created IDisposable
                             _ = await httpClient.SendAsync(request, ct).ConfigureAwait(false);
-#pragma warning restore IDISP004
 
                             // Accept any response (including 401, 404) as "reachable"
                             status = "healthy";
@@ -196,7 +191,6 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
 
             return app;
         }
-#pragma warning restore MA0051 // Method too long
 
         private static string? GetProviderEndpoint(ProviderConfig provider)
         {

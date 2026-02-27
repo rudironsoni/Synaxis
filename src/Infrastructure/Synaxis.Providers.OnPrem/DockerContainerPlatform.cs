@@ -19,9 +19,6 @@ using Synaxis.Abstractions.Cloud;
 /// <summary>
 /// Docker-based implementation of IContainerPlatform for on-premise deployments.
 /// </summary>
-#pragma warning disable SA1101 // Prefix local calls with this - Fields are prefixed with underscore, not this
-#pragma warning disable MA0002 // Use an overload that has a IEqualityComparer - Using default comparer for simplicity
-#pragma warning disable IDISP006 // Implement IDisposable - DockerClient manages its own lifecycle
 public class DockerContainerPlatform : IContainerPlatform
 {
     private readonly DockerClient _dockerClient;
@@ -240,6 +237,3 @@ public class DockerContainerPlatform : IContainerPlatform
         };
     }
 }
-#pragma warning restore IDISP006 // Implement IDisposable
-#pragma warning restore MA0002 // Use an overload that has a IEqualityComparer
-#pragma warning restore SA1101 // Prefix local calls with this

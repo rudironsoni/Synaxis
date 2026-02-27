@@ -393,9 +393,7 @@ public class PerformanceTests : IDisposable
         var cancellationToken = CancellationToken.None;
 
         const int iterations = 1000;
-#pragma warning disable S1215 // "GC.Collect" should not be called - Required for memory footprint testing
         var initialMemory = GC.GetTotalMemory(true);
-#pragma warning restore S1215
         var stopwatch = Stopwatch.StartNew();
 
         // Act - Execute many requests
@@ -406,16 +404,12 @@ public class PerformanceTests : IDisposable
             // Force garbage collection periodically
             if (i % 100 == 0)
             {
-#pragma warning disable S1215 // "GC.Collect" should not be called - Required for memory footprint testing
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
-#pragma warning restore S1215
             }
         }
 
-#pragma warning disable S1215 // "GC.Collect" should not be called - Required for memory footprint testing
         var finalMemory = GC.GetTotalMemory(true);
-#pragma warning restore S1215
         stopwatch.Stop();
 
         // Assert

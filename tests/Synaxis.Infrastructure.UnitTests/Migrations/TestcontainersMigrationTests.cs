@@ -20,8 +20,6 @@ using Xunit;
 /// </summary>
 [Trait("Category", "Integration")]
 [Collection("PostgresIntegration")]
-#pragma warning disable IDISP003 // False positive: _context is only assigned once in InitializeAsync
-#pragma warning disable IDISP006 // IAsyncLifetime provides async cleanup, IDisposable not needed
 public sealed class TestcontainersMigrationTests(Synaxis.Common.Tests.Fixtures.PostgresFixture postgresFixture) : IAsyncLifetime
 {
     private readonly Synaxis.Common.Tests.Fixtures.PostgresFixture _postgresFixture = postgresFixture ?? throw new ArgumentNullException(nameof(postgresFixture));
@@ -436,9 +434,7 @@ public sealed class TestcontainersMigrationTests(Synaxis.Common.Tests.Fixtures.P
 
     private static async Task<bool> TableExistsAsync(SynaxisDbContext context, string tableName)
     {
-#pragma warning disable IDISP001 // Dispose created - connection is managed by EF Core
         var connection = context.Database.GetDbConnection();
-#pragma warning restore IDISP001
 
         // Only open connection if it's not already open
         var shouldClose = false;
@@ -476,5 +472,3 @@ public sealed class TestcontainersMigrationTests(Synaxis.Common.Tests.Fixtures.P
     }
 }
 
-#pragma warning restore IDISP006
-#pragma warning restore IDISP003

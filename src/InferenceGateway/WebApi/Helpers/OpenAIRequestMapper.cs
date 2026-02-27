@@ -144,10 +144,8 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
 
                 if (element.ValueKind == JsonValueKind.Array)
                 {
-#pragma warning disable IDISP004 // Don't ignore created IDisposable
                     var list = new List<string>();
                     foreach (var item in element.EnumerateArray())
-#pragma warning restore IDISP004
                     {
                         if (item.ValueKind == JsonValueKind.String)
                         {

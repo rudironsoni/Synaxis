@@ -7,28 +7,27 @@ namespace Synaxis.Core.Authorization;
 /// <summary>
 /// Defines authorization policy names and role constants for the RBAC system.
 /// </summary>
-#pragma warning disable S3218 // Inner classes should not shadow outer class members - intentional design for flexibility
 public static class AuthorizationPolicies
 {
     /// <summary>
     /// Policy name for Organization Administrators with full organization management rights.
     /// </summary>
-    public const string OrgAdmin = "OrgAdmin";
+    public const string OrgAdminPolicy = "OrgAdmin";
 
     /// <summary>
     /// Policy name for Team Administrators with team-level management rights.
     /// </summary>
-    public const string TeamAdmin = "TeamAdmin";
+    public const string TeamAdminPolicy = "TeamAdmin";
 
     /// <summary>
     /// Policy name for Members with read/write access within their teams.
     /// </summary>
-    public const string Member = "Member";
+    public const string MemberPolicy = "Member";
 
     /// <summary>
     /// Policy name for Viewers with read-only access.
     /// </summary>
-    public const string Viewer = "Viewer";
+    public const string ViewerPolicy = "Viewer";
 
     /// <summary>
     /// Nested class containing role name constants for use in claims and authorization.
@@ -56,4 +55,3 @@ public static class AuthorizationPolicies
         public const string Viewer = "Viewer";
     }
 }
-#pragma warning restore S3218

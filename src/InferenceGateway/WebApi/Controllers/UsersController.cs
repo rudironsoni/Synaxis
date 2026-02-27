@@ -422,14 +422,12 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
             return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(payload)));
         }
 
-#pragma warning disable S6932 // Use model binding instead of accessing the raw request data
         private (string IpAddress, string UserAgent) GetRequestMetadata()
         {
             var ipAddress = this.HttpContext.Connection.RemoteIpAddress?.ToString() ?? string.Empty;
             var userAgent = this.HttpContext.Request.Headers["User-Agent"].ToString();
             return (ipAddress, userAgent);
         }
-#pragma warning restore S6932 // Use model binding instead of accessing the raw request data
 
         private sealed class DeletionStats
         {

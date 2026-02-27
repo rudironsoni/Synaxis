@@ -2,7 +2,8 @@
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-#pragma warning disable MA0049 // Type name matches namespace - this is intentional for the SmartRouter pattern
+#pragma warning disable MA0049 // Type name matches namespace - false positive, type has unique name
+
 namespace Synaxis.Routing.SmartRouter;
 
 using System.Collections.Concurrent;
@@ -386,3 +387,5 @@ public class SmartRouter : IRouter
         return ((currentAverage * (totalRequests - 1)) + newLatencyMs) / totalRequests;
     }
 }
+
+#pragma warning restore MA0049

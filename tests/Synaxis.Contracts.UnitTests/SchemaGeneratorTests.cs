@@ -144,9 +144,7 @@ public class SchemaGeneratorTests
     [Fact]
     public void GenerateSchema_WithNullType_ShouldThrowArgumentNullException()
     {
-#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         Action act = () => _generator.GenerateSchema(null);
-#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
 
         act.Should().Throw<ArgumentNullException>();
     }

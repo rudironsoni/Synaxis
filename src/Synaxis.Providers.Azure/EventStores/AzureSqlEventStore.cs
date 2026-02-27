@@ -58,14 +58,10 @@ public class AzureSqlEventStore : IEventStore
     {
         return this._retryPolicy.ExecuteAsync(async () =>
         {
-#pragma warning disable MA0004 // await using doesn't support ConfigureAwait(false)
             await using var connection = new SqlConnection(this._connectionString);
-#pragma warning restore MA0004
             await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
-#pragma warning disable MA0004 // await using doesn't support ConfigureAwait(false)
             await using var transaction = (SqlTransaction)await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
-#pragma warning restore MA0004
 
             try
             {
@@ -121,9 +117,7 @@ public class AzureSqlEventStore : IEventStore
     {
         return await this._retryPolicy.ExecuteAsync(async () =>
         {
-#pragma warning disable MA0004 // await using doesn't support ConfigureAwait(false)
             await using var connection = new SqlConnection(this._connectionString);
-#pragma warning restore MA0004
             await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
             using var command = new SqlCommand(
@@ -138,9 +132,7 @@ public class AzureSqlEventStore : IEventStore
             command.Parameters.AddWithValue("@ToVersion", toVersion);
 
             var events = new List<IDomainEvent>();
-#pragma warning disable MA0004 // await using doesn't support ConfigureAwait(false)
             await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
-#pragma warning restore MA0004
 
             while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
             {
@@ -177,9 +169,7 @@ public class AzureSqlEventStore : IEventStore
     {
         return this._retryPolicy.ExecuteAsync(async () =>
         {
-#pragma warning disable MA0004 // await using doesn't support ConfigureAwait(false)
             await using var connection = new SqlConnection(this._connectionString);
-#pragma warning restore MA0004
             await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
             using var command = new SqlCommand(
@@ -207,9 +197,7 @@ public class AzureSqlEventStore : IEventStore
     {
         return this._retryPolicy.ExecuteAsync(async () =>
         {
-#pragma warning disable MA0004 // await using doesn't support ConfigureAwait(false)
             await using var connection = new SqlConnection(this._connectionString);
-#pragma warning restore MA0004
             await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
             using var command = new SqlCommand(

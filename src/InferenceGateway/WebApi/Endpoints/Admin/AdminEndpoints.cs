@@ -25,7 +25,6 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Admin
         /// </summary>
         /// <param name="app">The endpoint route builder.</param>
         /// <returns>The configured endpoint route builder with admin routes.</returns>
-#pragma warning disable MA0051 // Method too long
         public static IEndpointRouteBuilder MapAdminEndpoints(this IEndpointRouteBuilder app)
         {
             var adminGroup = app.MapGroup("/admin")
@@ -166,7 +165,6 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Admin
 
             return app;
         }
-#pragma warning restore MA0051 // Method too long
 
         private static string DetermineOverallStatus(List<ServiceHealthDto> services, List<ProviderHealthDto> providers)
         {

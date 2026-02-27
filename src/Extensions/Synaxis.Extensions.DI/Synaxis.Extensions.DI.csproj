@@ -3,11 +3,9 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <IsPackable>true</IsPackable>
-    <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <LangVersion>latest</LangVersion>
-    <ImplicitUsings>enable</ImplicitUsings>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
 
@@ -19,7 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../../Abstractions/Synaxis.Abstractions.Cloud/Synaxis.Abstractions.Cloud.csproj" />
-    <ProjectReference Include="../../Contracts/Synaxis.Contracts/Synaxis.Contracts.csproj" />
+    <ProjectReference Include="../../Contracts/Synaxis.Messages.Contracts/Synaxis.Messages.Contracts.csproj" />
     <ProjectReference Include="../../Infrastructure/Synaxis.Infrastructure.EventSourcing/Synaxis.Infrastructure.EventSourcing.csproj" />
     <ProjectReference Include="../../Infrastructure/Synaxis.Infrastructure.Messaging/Synaxis.Infrastructure.Messaging.csproj" />
     <ProjectReference Include="../../Synaxis.Infrastructure.Encryption/Synaxis.Infrastructure.Encryption.csproj" />

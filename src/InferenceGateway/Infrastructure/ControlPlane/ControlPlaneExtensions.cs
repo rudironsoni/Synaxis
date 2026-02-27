@@ -38,12 +38,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                 if (!string.IsNullOrWhiteSpace(options.ConnectionString))
                 {
                     // Mask password for logging
-#pragma warning disable MA0009 // Add timeout to regex - Simple pattern with no backtracking risk
                     var connStrMasked = System.Text.RegularExpressions.Regex.Replace(
                         options.ConnectionString,
                         @"Password=([^;]+)",
                         "Password=***");
-#pragma warning restore MA0009
                     logger?.LogInformation("Using PostgreSQL with connection string: {ConnectionString}", connStrMasked);
                 }
 

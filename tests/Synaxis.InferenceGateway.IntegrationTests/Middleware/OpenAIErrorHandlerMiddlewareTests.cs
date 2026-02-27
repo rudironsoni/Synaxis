@@ -324,9 +324,7 @@ public class OpenAIErrorHandlerMiddlewareTests
     }
 
     [Fact]
-#pragma warning disable S4144 // Methods should not have identical implementations
     public async Task InvokeAsync_StreamingRequest_ReturnsSSEFormatError()
-#pragma warning restore S4144 // Methods should not have identical implementations
     {
         // Arrange
         var context = CreateMockHttpContext();

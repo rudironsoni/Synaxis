@@ -54,9 +54,7 @@ namespace Synaxis.Transport.WebSocket.Middleware
                 this.logger.LogInformation("WebSocket upgrade request received for path: {Path}", context.Request.Path);
 
                 // WebSocket is owned by ASP.NET Core and will be disposed by the framework
-#pragma warning disable IDISP001 // Dispose created
                 var webSocket = await context.WebSockets.AcceptWebSocketAsync().ConfigureAwait(false);
-#pragma warning restore IDISP001 // Dispose created
                 await this.handler.HandleAsync(webSocket, context).ConfigureAwait(false);
             }
             else

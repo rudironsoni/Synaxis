@@ -59,10 +59,8 @@ public class JobSchedulerService : BackgroundService
         // In production, this would query a read model or projection
         // for jobs that are scheduled and ready to execute
         this._logger.LogDebug("Checking for scheduled jobs...");
-#pragma warning disable S1172
         _ = eventStore;
         _ = stoppingToken;
-#pragma warning restore S1172
         return Task.CompletedTask;
     }
 

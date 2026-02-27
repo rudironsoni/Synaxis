@@ -2,7 +2,6 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-#pragma warning disable MA0051 // Auto-generated EF Core migrations
 
 using System;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -305,5 +304,4 @@ namespace Synaxis.Infrastructure.Data.Migrations
         }
     }
 
-#pragma warning restore MA0051 // Auto-generated EF Core migrations
 }

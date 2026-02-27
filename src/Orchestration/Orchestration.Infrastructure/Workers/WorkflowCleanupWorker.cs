@@ -66,7 +66,6 @@ public class WorkflowCleanupWorker : IJob
         await Task.CompletedTask.ConfigureAwait(false);
     }
 
-#pragma warning disable S1172 // Unused method parameters - stub methods for future implementation
     private async Task<int> ArchiveWorkflowsAsync(DateTime cutoffDate, string correlationId, CancellationToken cancellationToken)
     {
         // Archive completed workflows older than retention period
@@ -91,5 +90,4 @@ public class WorkflowCleanupWorker : IJob
         await Task.CompletedTask.ConfigureAwait(false);
         return 0;
     }
-#pragma warning restore S1172
 }

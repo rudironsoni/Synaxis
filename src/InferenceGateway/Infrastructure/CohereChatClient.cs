@@ -45,9 +45,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
             this._modelId = modelId;
             this._httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
             this._httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Synaxis/1.0");
-#pragma warning disable S1075 // URIs should not be hardcoded - API endpoint
             this._metadata = new ChatClientMetadata("Cohere", new Uri("https://api.cohere.com/v2/chat"), modelId);
-#pragma warning restore S1075 // URIs should not be hardcoded
         }
 
         /// <summary>
@@ -59,11 +57,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
         public async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default)
         {
             var requestObj = this.CreateRequest(messages, options, stream: false);
-#pragma warning disable S1075 // URIs should not be hardcoded - API endpoint
-#pragma warning disable IDISP001 // HttpRequestMessage created and disposed within using block
             var request = new HttpRequestMessage(HttpMethod.Post, "https://api.cohere.com/v2/chat")
-#pragma warning restore S1075 // URIs should not be hardcoded
-#pragma warning restore IDISP001
             {
                 Content = JsonContent.Create(requestObj),
             };
@@ -92,9 +86,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
         public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             var requestObj = this.CreateRequest(messages, options, stream: true);
-#pragma warning disable IDISP001
             var request = this.CreateStreamRequest(requestObj);
-#pragma warning restore IDISP001
 
             using var response = await this._httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
@@ -114,11 +106,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
 
         private HttpRequestMessage CreateStreamRequest(object requestObj)
         {
-#pragma warning disable S1075 // URIs should not be hardcoded - API endpoint
-#pragma warning disable IDISP001 // HttpRequestMessage created and disposed within using block
             var request = new HttpRequestMessage(HttpMethod.Post, "https://api.cohere.com/v2/chat")
-#pragma warning restore S1075 // URIs should not be hardcoded
-#pragma warning restore IDISP001
             {
                 Content = JsonContent.Create(requestObj),
             };

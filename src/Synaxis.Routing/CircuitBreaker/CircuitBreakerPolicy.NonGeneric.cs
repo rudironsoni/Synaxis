@@ -1,4 +1,4 @@
-// <copyright file="CircuitBreakerPolicy.cs" company="PlaceholderCompany">
+// <copyright file="CircuitBreakerPolicy.NonGeneric.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
@@ -9,15 +9,14 @@ using System.Threading;
 using System.Threading.Tasks;
 
 /// <summary>
-/// A generic policy wrapper for executing operations through a circuit breaker.
+/// A non-generic policy wrapper for executing operations through a circuit breaker.
 /// </summary>
-/// <typeparam name="TResult">The type of result returned by the operation.</typeparam>
-public class CircuitBreakerPolicy<TResult>
+public class CircuitBreakerPolicy
 {
     private readonly CircuitBreaker _circuitBreaker;
     private readonly CircuitBreakerMetrics _metrics;
     private readonly Func<Exception, bool> _exceptionPredicate;
-    private readonly Func<CancellationToken, Task<TResult>>? _fallback;
+    private readonly Func<CancellationToken, Task>? _fallback;
 
     /// <summary>
     /// Gets the circuit breaker associated with this policy.
@@ -30,7 +29,7 @@ public class CircuitBreakerPolicy<TResult>
     public CircuitBreakerMetrics Metrics => this._metrics;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="CircuitBreakerPolicy{TResult}"/> class.
+    /// Initializes a new instance of the <see cref="CircuitBreakerPolicy"/> class.
     /// </summary>
     /// <param name="circuitBreaker">The circuit breaker to use.</param>
     /// <param name="exceptionPredicate">A predicate to determine which exceptions should be treated as failures.</param>
@@ -38,7 +37,7 @@ public class CircuitBreakerPolicy<TResult>
     public CircuitBreakerPolicy(
         CircuitBreaker circuitBreaker,
         Func<Exception, bool>? exceptionPredicate = null,
-        Func<CancellationToken, Task<TResult>>? fallback = null)
+        Func<CancellationToken, Task>? fallback = null)
     {
         ArgumentNullException.ThrowIfNull(circuitBreaker);
         this._circuitBreaker = circuitBreaker;
@@ -52,10 +51,10 @@ public class CircuitBreakerPolicy<TResult>
     /// </summary>
     /// <param name="operation">The operation to execute.</param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
-    /// <returns>The result of the operation.</returns>
     /// <exception cref="CircuitBreakerOpenException">Thrown when the circuit breaker is open and no fallback is provided.</exception>
-    public async Task<TResult> ExecuteAsync(
-        Func<CancellationToken, Task<TResult>> operation,
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    public async Task ExecuteAsync(
+        Func<CancellationToken, Task> operation,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(operation);
@@ -69,7 +68,8 @@ public class CircuitBreakerPolicy<TResult>
             if (this._fallback != null)
             {
                 this._metrics.FallbackExecutions++;
-                return await this._fallback(cancellationToken).ConfigureAwait(false);
+                await this._fallback(cancellationToken).ConfigureAwait(false);
+                return;
             }
 
             throw new CircuitBreakerOpenException(this._circuitBreaker.GetType().Name);
@@ -77,10 +77,9 @@ public class CircuitBreakerPolicy<TResult>
 
         try
         {
-            var result = await operation(cancellationToken).ConfigureAwait(false);
+            await operation(cancellationToken).ConfigureAwait(false);
             this._circuitBreaker.RecordSuccess();
             this._metrics.SuccessfulRequests++;
-            return result;
         }
         catch (Exception ex) when (this._exceptionPredicate(ex))
         {
@@ -90,7 +89,8 @@ public class CircuitBreakerPolicy<TResult>
             if (this._fallback != null)
             {
                 this._metrics.FallbackExecutions++;
-                return await this._fallback(cancellationToken).ConfigureAwait(false);
+                await this._fallback(cancellationToken).ConfigureAwait(false);
+                return;
             }
 
             throw;
@@ -103,9 +103,9 @@ public class CircuitBreakerPolicy<TResult>
     /// <param name="operation">The operation to execute.</param>
     /// <param name="maxRetries">The maximum number of retry attempts.</param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
-    /// <returns>The result of the operation.</returns>
-    public async Task<TResult> ExecuteWithRetryAsync(
-        Func<CancellationToken, Task<TResult>> operation,
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    public async Task ExecuteWithRetryAsync(
+        Func<CancellationToken, Task> operation,
         int maxRetries = 3,
         CancellationToken cancellationToken = default)
     {
@@ -116,7 +116,8 @@ public class CircuitBreakerPolicy<TResult>
         {
             try
             {
-                return await this.ExecuteAsync(operation, cancellationToken).ConfigureAwait(false);
+                await this.ExecuteAsync(operation, cancellationToken).ConfigureAwait(false);
+                return;
             }
             catch (CircuitBreakerOpenException)
             {
@@ -138,10 +139,22 @@ public class CircuitBreakerPolicy<TResult>
         if (this._fallback != null)
         {
             this._metrics.FallbackExecutions++;
-            return await this._fallback(cancellationToken).ConfigureAwait(false);
+            await this._fallback(cancellationToken).ConfigureAwait(false);
+            return;
         }
 
         throw lastException ?? new InvalidOperationException("Operation failed after retries.");
+    }
+
+    /// <summary>
+    /// Creates a generic circuit breaker policy for operations that return a result.
+    /// </summary>
+    /// <typeparam name="TResult">The type of result returned by the operation.</typeparam>
+    /// <param name="fallback">An optional fallback function to execute when the circuit is open or an exception occurs.</param>
+    /// <returns>A new generic circuit breaker policy.</returns>
+    public CircuitBreakerPolicy<TResult> AsGenericPolicy<TResult>(Func<CancellationToken, Task<TResult>>? fallback = null)
+    {
+        return new CircuitBreakerPolicy<TResult>(this._circuitBreaker, this._exceptionPredicate, fallback);
     }
 
     /// <summary>

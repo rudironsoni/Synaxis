@@ -37,9 +37,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.DuckDuckGo
         {
             this._httpClient = httpClient;
             this._modelId = modelId;
-#pragma warning disable S1075 // URIs should not be hardcoded - API endpoint
             this._metadata = new ChatClientMetadata("DuckDuckGo", new Uri("https://duckduckgo.com/"), modelId);
-#pragma warning restore S1075 // URIs should not be hardcoded
         }
 
         /// <summary>
@@ -73,9 +71,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.DuckDuckGo
 
         private HttpRequestMessage CreateHttpRequest(object requestObj)
         {
-#pragma warning disable S1075 // URIs should not be hardcoded - API endpoint
             var httpRequest = new HttpRequestMessage(HttpMethod.Post, "https://duckduckgo.com/duckchat/v1/chat")
-#pragma warning restore S1075 // URIs should not be hardcoded
             {
                 Content = JsonContent.Create(requestObj, options: new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }),
             };
@@ -177,9 +173,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.DuckDuckGo
                 return;
             }
 
-#pragma warning disable S1075 // URIs should not be hardcoded - API endpoint
             using var response = await this._httpClient.GetAsync("https://duckduckgo.com/duckchat/v1/status", cancellationToken).ConfigureAwait(false);
-#pragma warning restore S1075 // URIs should not be hardcoded
             if (response.Headers.TryGetValues("x-vqd-4", out var vals))
             {
                 this._vqdToken = vals.FirstOrDefault();

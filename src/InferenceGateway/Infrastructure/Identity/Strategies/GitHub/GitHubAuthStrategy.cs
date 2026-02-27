@@ -50,9 +50,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
         /// <inheritdoc/>
         public async Task<AuthResult> InitiateFlowAsync(CancellationToken ct)
         {
-#pragma warning disable S1075 // URIs should not be hardcoded - OAuth endpoint
             var url = "https://github.com/login/device/code";
-#pragma warning restore S1075 // URIs should not be hardcoded
             using var req = new HttpRequestMessage(HttpMethod.Post, url);
             req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             var body = new System.Collections.Generic.Dictionary<string, string>
@@ -98,17 +96,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
         /// <inheritdoc/>
         public Task<AuthResult> CompleteFlowAsync(string code, string state, CancellationToken ct)
         {
-#pragma warning disable MA0025 // Not yet implemented
             throw new NotImplementedException();
-#pragma warning restore MA0025
         }
 
         /// <inheritdoc/>
         public async Task<TokenResponse> RefreshTokenAsync(IdentityAccount account, CancellationToken ct)
         {
-#pragma warning disable S1075 // URIs should not be hardcoded - OAuth endpoint
             var url = "https://github.com/login/oauth/access_token";
-#pragma warning restore S1075 // URIs should not be hardcoded
             using var req = new HttpRequestMessage(HttpMethod.Post, url);
             req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             var body = new System.Collections.Generic.Dictionary<string, string>

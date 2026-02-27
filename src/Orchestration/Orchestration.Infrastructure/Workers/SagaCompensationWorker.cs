@@ -103,10 +103,8 @@ public class SagaCompensationWorker : IJob
     {
         // Query for sagas with Failed status that haven't been compensated
         // In production, use read models/projections for efficient querying
-#pragma warning disable S1172
         _ = eventStore;
         _ = cancellationToken;
-#pragma warning restore S1172
         await Task.CompletedTask.ConfigureAwait(false);
         return new List<Guid>();
     }

@@ -45,9 +45,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
             this._httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
 
             // Store the raw model id; Cloudflare expects path-like model ids (e.g. @cf/meta/...) as raw segments.
-#pragma warning disable S1075 // URIs should not be hardcoded - API endpoint
             this._metadata = new ChatClientMetadata("Cloudflare", new Uri($"https://api.cloudflare.com/client/v4/accounts/{accountId}/ai/run/{modelId}"), modelId);
-#pragma warning restore S1075 // URIs should not be hardcoded
         }
 
         /// <summary>
@@ -59,9 +57,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
         public async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default)
         {
             var request = this.CreateRequest(messages, stream: false);
-#pragma warning disable S1075 // URIs should not be hardcoded - API endpoint
             var url = $"https://api.cloudflare.com/client/v4/accounts/{this._accountId}/ai/run/{this._modelId}";
-#pragma warning restore S1075 // URIs should not be hardcoded
 
             // Debug: print the full request URL and model id to help diagnose 404s
             var requestUrl = url;
@@ -74,9 +70,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
                 Console.WriteLine($"CloudflareChatClient sending request. Url: {requestUrl} ModelId: {this._modelId}");
             }
 
-#pragma warning disable IDISP001 // HttpClient created by IHttpClientFactory
             var response = await this._httpClient.PostAsJsonAsync(url, request, cancellationToken).ConfigureAwait(false);
-#pragma warning restore IDISP001
             response.EnsureSuccessStatusCode();
 
             var cloudflareResponse = await response.Content.ReadFromJsonAsync<CloudflareResponse>(cancellationToken: cancellationToken).ConfigureAwait(false);
@@ -97,16 +91,12 @@ namespace Synaxis.InferenceGateway.Infrastructure
         public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             var request = this.CreateRequest(messages, stream: true);
-#pragma warning disable S1075 // URIs should not be hardcoded - API endpoint
             var url = $"https://api.cloudflare.com/client/v4/accounts/{this._accountId}/ai/run/{this._modelId}";
-#pragma warning restore S1075 // URIs should not be hardcoded
 
-#pragma warning disable IDISP001 // HttpRequestMessage created and disposed within using block
             var httpRequest = new HttpRequestMessage(HttpMethod.Post, url)
             {
                 Content = JsonContent.Create(request),
             };
-#pragma warning restore IDISP001
 
             using var response = await this._httpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();

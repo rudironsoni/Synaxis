@@ -44,17 +44,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
         {
             return new[]
             {
-#pragma warning disable S1075 // URIs should not be hardcoded - Provider default endpoints
                 CreateProvider("openai", "OpenAI", "OpenAI", "https://api.openai.com/v1", "OPENAI_API_KEY", true, true, true, false),
                 CreateProvider("anthropic", "Anthropic", "Anthropic", "https://api.anthropic.com/v1", "ANTHROPIC_API_KEY", true, true, true, false),
                 CreateProvider("google", "Google AI (Gemini)", "Google", "https://generativelanguage.googleapis.com/v1", "GOOGLE_API_KEY", true, true, true, true),
                 CreateProvider("cohere", "Cohere", "Cohere", "https://api.cohere.ai/v1", "COHERE_API_KEY", true, true, false, true),
-#pragma warning restore S1075 // URIs should not be hardcoded
                 CreateProvider("azure-openai", "Azure OpenAI", "Azure", null, "AZURE_OPENAI_API_KEY", true, true, true, false),
                 CreateProvider("aws-bedrock", "AWS Bedrock", "AWS", null, "AWS_ACCESS_KEY_ID", true, true, true, false),
-#pragma warning disable S1075 // URIs should not be hardcoded - Provider default endpoints
                 CreateProvider("cloudflare", "Cloudflare Workers AI", "Cloudflare", "https://api.cloudflare.com/client/v4", "CLOUDFLARE_API_KEY", true, false, false, true),
-#pragma warning restore S1075 // URIs should not be hardcoded
             };
         }
 

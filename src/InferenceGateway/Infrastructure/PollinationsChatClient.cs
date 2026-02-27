@@ -34,9 +34,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
         {
             this._httpClient = httpClient;
             this._modelId = modelId ?? "openai";
-#pragma warning disable S1075 // URIs should not be hardcoded - API endpoint
             this._metadata = new ChatClientMetadata("Pollinations", new Uri("https://text.pollinations.ai/"), this._modelId);
-#pragma warning restore S1075 // URIs should not be hardcoded
         }
 
         /// <summary>
@@ -48,11 +46,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
         public async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default)
         {
             var request = this.CreateRequest(messages, options, stream: false);
-#pragma warning disable S1075 // URIs should not be hardcoded - API endpoint
-#pragma warning disable IDISP001 // HttpClient created by IHttpClientFactory
             var response = await this._httpClient.PostAsJsonAsync("https://text.pollinations.ai/", request, cancellationToken).ConfigureAwait(false);
-#pragma warning restore S1075 // URIs should not be hardcoded
-#pragma warning restore IDISP001
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
@@ -70,11 +64,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
         {
             var request = this.CreateRequest(messages, options, stream: true);
 
-#pragma warning disable S1075 // URIs should not be hardcoded - API endpoint
-#pragma warning disable IDISP001 // HttpRequestMessage created and disposed within using block
             var httpRequest = new HttpRequestMessage(HttpMethod.Post, "https://text.pollinations.ai/")
-#pragma warning restore S1075 // URIs should not be hardcoded
-#pragma warning restore IDISP001
             {
                 Content = JsonContent.Create(request),
             };
@@ -141,9 +131,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
         /// <summary>
         /// Disposes the resources used by this client.
         /// </summary>
-#pragma warning disable IDISP007 // Don't dispose injected - HttpClient is injected and managed by IHttpClientFactory
         public void Dispose() => this._httpClient.Dispose();
-#pragma warning restore IDISP007
 
         /// <summary>
         /// Gets a service of the specified type.

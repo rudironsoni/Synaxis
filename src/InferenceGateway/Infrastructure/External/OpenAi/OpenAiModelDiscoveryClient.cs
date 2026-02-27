@@ -62,9 +62,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.OpenAi
                     return new List<string>();
                 }
 
-#pragma warning disable IDISP001 // Stream obtained from response content - disposed with response
                 var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
-#pragma warning restore IDISP001
                 var dto = await JsonSerializer.DeserializeAsync<OpenAiModelsResponse>(stream, cancellationToken: ct).ConfigureAwait(false);
                 if (dto == null || dto.Data == null)
                 {

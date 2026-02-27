@@ -40,12 +40,10 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         /// <param name="tenantContext">The tenant context.</param>
         /// <param name="quotaService">The quota service.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-#pragma warning disable MA0051 // Method is too long
         public async Task InvokeAsync(
             HttpContext context,
             ITenantContext tenantContext,
             IQuotaService quotaService)
-#pragma warning restore MA0051
         {
             try
             {

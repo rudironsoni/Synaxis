@@ -35,13 +35,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
                 headers.Add("X-Title", siteName);
             }
 
-#pragma warning disable S1075 // URIs should not be hardcoded - API endpoint
             services.AddKeyedSingleton<IChatClient>(serviceKey, (_, _) => new GenericOpenAiChatClient(
                 apiKey,
                 new Uri("https://openrouter.ai/api/v1/"),
                 modelId,
                 headers));
-#pragma warning restore S1075 // URIs should not be hardcoded
 
             return services;
         }

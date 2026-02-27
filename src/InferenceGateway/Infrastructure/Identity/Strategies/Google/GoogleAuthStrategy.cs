@@ -23,7 +23,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
     /// </summary>
     public class GoogleAuthStrategy : IAuthStrategy
     {
-#pragma warning disable S1075 // URIs should not be hardcoded - OAuth endpoints
         private const string AuthorizationEndpoint = "https://accounts.google.com/o/oauth2/v2/auth";
         private const string TokenEndpoint = "https://oauth2.googleapis.com/token";
         private const string UserInfoEndpoint = "https://www.googleapis.com/oauth2/v1/userinfo?alt=json";
@@ -48,7 +47,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
             "https://www.googleapis.com/auth/userinfo.email",
             "https://www.googleapis.com/auth/userinfo.profile",
         };
-#pragma warning restore S1075 // URIs should not be hardcoded
 
         private readonly AntigravitySettings _settings;
         private readonly IHttpClientFactory _httpClientFactory;

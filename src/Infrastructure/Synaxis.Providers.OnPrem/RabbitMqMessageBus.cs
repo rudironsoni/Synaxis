@@ -19,8 +19,6 @@ using Synaxis.Abstractions.Cloud;
 /// <summary>
 /// RabbitMQ-based implementation of IMessageBus for on-premise deployments.
 /// </summary>
-#pragma warning disable SA1101 // Prefix local calls with this - Fields are prefixed with underscore, not this
-#pragma warning disable MA0002 // Use an overload that has a IEqualityComparer - Using default comparer for simplicity
 public sealed class RabbitMqMessageBus : IMessageBus, IAsyncDisposable
 {
     private readonly ILogger<RabbitMqMessageBus> _logger;
@@ -207,5 +205,3 @@ public sealed class RabbitMqMessageBus : IMessageBus, IAsyncDisposable
         _disposed = true;
     }
 }
-#pragma warning restore MA0002 // Use an overload that has a IEqualityComparer
-#pragma warning restore SA1101 // Prefix local calls with this

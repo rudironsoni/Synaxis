@@ -52,5 +52,11 @@ namespace Synaxis.Infrastructure.Configuration
         /// Gets or sets the HTTP client timeout in seconds for cross-region requests.
         /// </summary>
         public int HttpClientTimeoutSeconds { get; set; } = 5;
+
+        /// <summary>
+        /// Gets or sets the token secret key for HMAC operations.
+        /// This should be set via configuration and not hardcoded.
+        /// </summary>
+        public string TokenSecret { get; set; } = string.Empty;
     }
 }

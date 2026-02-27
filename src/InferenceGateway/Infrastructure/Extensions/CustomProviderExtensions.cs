@@ -26,13 +26,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
         /// <returns>The service collection for chaining.</returns>
         public static IServiceCollection AddCohere(this IServiceCollection services, string apiKey, string modelId)
         {
-#pragma warning disable IDISP001 // Dispose created - HttpClient from factory is managed by DI container
             services.AddChatClient(sp =>
             {
                 var httpClient = new HttpClient();
                 return new CohereChatClient(httpClient, modelId, apiKey);
             });
-#pragma warning restore IDISP001 // Dispose created
             return services;
         }
 
@@ -44,13 +42,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
         /// <returns>The service collection for chaining.</returns>
         public static IServiceCollection AddPollinations(this IServiceCollection services, string? modelId = null)
         {
-#pragma warning disable IDISP001 // Dispose created - HttpClient from factory is managed by DI container
             services.AddChatClient(sp =>
             {
                 var httpClient = new HttpClient();
                 return new PollinationsChatClient(httpClient, modelId);
             });
-#pragma warning restore IDISP001 // Dispose created
             return services;
         }
 
@@ -64,13 +60,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
         /// <returns>The service collection for chaining.</returns>
         public static IServiceCollection AddCloudflare(this IServiceCollection services, string apiKey, string accountId, string modelId)
         {
-#pragma warning disable IDISP001 // Dispose created - HttpClient from factory is managed by DI container
             services.AddChatClient(sp =>
             {
                 var httpClient = new HttpClient();
                 return new CloudflareChatClient(httpClient, accountId, modelId, apiKey);
             });
-#pragma warning restore IDISP001 // Dispose created
             return services;
         }
 
@@ -119,13 +113,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
         /// <returns>The service collection for chaining.</returns>
         public static IServiceCollection AddDuckDuckGo(this IServiceCollection services, string name, string modelId)
         {
-#pragma warning disable IDISP001 // Dispose created - HttpClient from factory is managed by DI container
             services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>
             {
                 var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
                 return new Synaxis.InferenceGateway.Infrastructure.External.DuckDuckGo.DuckDuckGoChatClient(httpClient, modelId);
             });
-#pragma warning restore IDISP001 // Dispose created
             return services;
         }
 
@@ -138,13 +130,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
         /// <returns>The service collection for chaining.</returns>
         public static IServiceCollection AddAiHorde(this IServiceCollection services, string name, string apiKey)
         {
-#pragma warning disable IDISP001 // Dispose created - HttpClient from factory is managed by DI container
             services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>
             {
                 var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
                 return new Synaxis.InferenceGateway.Infrastructure.External.AiHorde.AiHordeChatClient(httpClient, apiKey);
             });
-#pragma warning restore IDISP001 // Dispose created
             return services;
         }
     }

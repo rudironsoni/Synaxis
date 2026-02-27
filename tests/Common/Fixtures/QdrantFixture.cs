@@ -14,9 +14,6 @@ using Polly;
 using Testcontainers.Qdrant;
 using Xunit;
 
-#pragma warning disable IDISP003 // False positive: fields are only assigned once in InitializeAsync
-#pragma warning disable IDISP001 // HttpResponseMessage is properly disposed by using statements
-#pragma warning disable IDISP017 // HttpResponseMessage is properly disposed by using statements
 
 /// <summary>
 /// Shared Qdrant fixture for integration tests.

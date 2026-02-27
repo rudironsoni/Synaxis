@@ -70,9 +70,7 @@ namespace Synaxis.Providers.Azure
             var json = JsonSerializer.Serialize(requestBody);
 
             // Content is owned by the request and will be disposed when request is disposed
-#pragma warning disable IDISP001 // Dispose created
             request.Content = new StringContent(json, Encoding.UTF8, "application/json");
-#pragma warning restore IDISP001 // Dispose created
 
             using var response = await this.httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();

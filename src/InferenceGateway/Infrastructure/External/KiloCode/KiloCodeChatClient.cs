@@ -14,9 +14,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.KiloCode
     /// </summary>
     public class KiloCodeChatClient : GenericOpenAiChatClient
     {
-#pragma warning disable S1075 // URIs should not be hardcoded - API endpoint
         private const string KiloApiUrl = "https://api.kilo.ai/api/openrouter";
-#pragma warning restore S1075 // URIs should not be hardcoded
 
         /// <summary>
         /// Initializes a new instance of the <see cref="KiloCodeChatClient"/> class.

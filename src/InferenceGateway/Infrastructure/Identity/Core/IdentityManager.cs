@@ -92,9 +92,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
             this._timer = new Timer(
                 _ =>
                 {
-#pragma warning disable S1854 // Intentional fire-and-forget async operation
                     _ = Task.Run(async () =>
-#pragma warning restore S1854
                     {
                         try
                         {

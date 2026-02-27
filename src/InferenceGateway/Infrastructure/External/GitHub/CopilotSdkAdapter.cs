@@ -22,9 +22,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
         private readonly object _client;
         private readonly ILogger<CopilotSdkAdapter>? _logger;
         private readonly SemaphoreSlim _startLock = new(1, 1);
-#pragma warning disable S1075 // URIs should not be hardcoded - API endpoint
         private readonly ChatClientMetadata _metadata = new ChatClientMetadata("GitHubCopilot", new Uri("https://copilot.github.com/"), "copilot");
-#pragma warning restore S1075 // URIs should not be hardcoded
         private readonly string _modelId = "copilot";
         private bool _started;
 

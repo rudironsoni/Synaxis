@@ -150,7 +150,6 @@ public sealed class PostgresFixture : IAsyncLifetime
     /// </summary>
     /// <param name="connectionString">Connection string for target database.</param>
     /// <returns>A new SynaxisDbContext instance.</returns>
-#pragma warning disable S2325 // Instance method for API consistency with parameterless overload
     public SynaxisDbContext CreateContext(string connectionString)
     {
         var options = new DbContextOptionsBuilder<SynaxisDbContext>()

@@ -24,13 +24,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
         /// <returns>The service collection for chaining.</returns>
         public static IServiceCollection AddCohereClient(this IServiceCollection services, string key, string apiKey, string modelId)
         {
-#pragma warning disable IDISP001 // Dispose created - HttpClient from factory is managed by DI container
             services.AddKeyedSingleton<IChatClient>(key, (sp, obj) =>
             {
                 var httpClient = new HttpClient();
                 return new CohereChatClient(httpClient, modelId, apiKey);
             });
-#pragma warning restore IDISP001 // Dispose created
             return services;
         }
 
@@ -43,13 +41,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
         /// <returns>The service collection for chaining.</returns>
         public static IServiceCollection AddPollinationsClient(this IServiceCollection services, string key, string modelId)
         {
-#pragma warning disable IDISP001 // Dispose created - HttpClient from factory is managed by DI container
             services.AddKeyedSingleton<IChatClient>(key, (sp, obj) =>
             {
                 var httpClient = new HttpClient();
                 return new PollinationsChatClient(httpClient, modelId);
             });
-#pragma warning restore IDISP001 // Dispose created
             return services;
         }
     }

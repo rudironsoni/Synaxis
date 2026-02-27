@@ -21,9 +21,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
         /// <returns>The service collection for chaining.</returns>
         public static IServiceCollection AddGeminiClient(this IServiceCollection services, string apiKey, string modelId)
         {
-#pragma warning disable IDISP001 // Google.GenAI.Client manages its own lifetime
             var client = new Google.GenAI.Client(vertexAI: false, apiKey: apiKey);
-#pragma warning restore IDISP001
 
             services.AddChatClient(_ => client.AsIChatClient(modelId));
 

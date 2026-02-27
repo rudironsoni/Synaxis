@@ -22,12 +22,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
         /// <returns>The service collection for chaining.</returns>
         public static IServiceCollection AddHuggingFaceClient(this IServiceCollection services, string serviceKey, string apiKey, string modelId)
         {
-#pragma warning disable S1075 // URIs should not be hardcoded - API endpoint
             services.AddKeyedSingleton<IChatClient>(serviceKey, (_, _) => new GenericOpenAiChatClient(
                 apiKey,
                 new Uri("https://router.huggingface.co/v1/"),
                 modelId));
-#pragma warning restore S1075 // URIs should not be hardcoded
 
             return services;
         }

@@ -57,9 +57,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
             this._tokenProvider = tokenProvider;
 
             // Prefer the configured BaseAddress on the provided HttpClient when available
-#pragma warning disable S1075 // URIs should not be hardcoded - Default API endpoint
             this._metadata = new ChatClientMetadata("Antigravity", this._httpClient.BaseAddress ?? new Uri("https://cloudcode-pa.googleapis.com"), modelId);
-#pragma warning restore S1075 // URIs should not be hardcoded
         }
 
         /// <summary>

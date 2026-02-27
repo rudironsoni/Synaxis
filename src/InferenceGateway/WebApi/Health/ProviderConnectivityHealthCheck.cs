@@ -36,9 +36,7 @@ namespace Synaxis.InferenceGateway.WebApi.Health
         /// <param name="context">The health check context.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The health check result.</returns>
-#pragma warning disable MA0051 // Method is too long
         public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
-#pragma warning restore MA0051
         {
             var failures = new List<string>();
 
@@ -145,26 +143,18 @@ namespace Synaxis.InferenceGateway.WebApi.Health
             // 3. TLS (1200ms) - only if https
             if (string.Equals(uri.Scheme, "https", StringComparison.Ordinal))
             {
-#pragma warning disable IDISP001 // Dispose created
-#pragma warning disable IDISP004 // Don't ignore created IDisposable
                 using var tlsCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
                 tlsCts.CancelAfter(TimeSpan.FromMilliseconds(1200));
                 using var sslStream = new SslStream(tcpClient.GetStream(), false);
                 await sslStream.AuthenticateAsClientAsync(new SslClientAuthenticationOptions { TargetHost = host }, tlsCts.Token).ConfigureAwait(false);
-#pragma warning restore IDISP004
-#pragma warning restore IDISP001
             }
 
             // 4. HTTP HEAD (500ms)
-#pragma warning disable IDISP001 // Dispose created
-#pragma warning disable IDISP004 // Don't ignore created IDisposable
             using var httpCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
             using var httpClient = new HttpClient { Timeout = TimeSpan.FromMilliseconds(500) };
             httpCts.CancelAfter(TimeSpan.FromMilliseconds(500));
             var request = new HttpRequestMessage(HttpMethod.Head, uri);
             _ = await httpClient.SendAsync(request, httpCts.Token).ConfigureAwait(false);
-#pragma warning restore IDISP004
-#pragma warning restore IDISP001
 
             // We don't strictly require 200 OK, just that the server responded.
             // Many APIs return 401/404 on HEAD without tokens, which is fine for connectivity.
