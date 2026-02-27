@@ -56,10 +56,8 @@ public class TranslationPipelineTests
 
         public bool CanHandle(CanonicalRequest request) => this._canHandle;
 
-#pragma warning disable SA1101 // False positive with record 'with' expressions
         public CanonicalRequest Translate(CanonicalRequest request)
             => request with { Model = this._model };
-#pragma warning restore SA1101
     }
 
     private sealed class TestResponseTranslator(string content, bool canHandle) : IResponseTranslator
@@ -69,10 +67,8 @@ public class TranslationPipelineTests
 
         public bool CanHandle(CanonicalResponse response) => this._canHandle;
 
-#pragma warning disable SA1101 // False positive with record 'with' expressions
         public CanonicalResponse Translate(CanonicalResponse response)
             => response with { Content = this._content };
-#pragma warning restore SA1101
     }
 
     private sealed class TestStreamingTranslator(string text) : IStreamingTranslator

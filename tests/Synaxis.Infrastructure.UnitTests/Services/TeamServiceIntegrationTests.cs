@@ -19,8 +19,6 @@ using Xunit;
 
 [Trait("Category", "Integration")]
 [Collection("PostgresIntegration")]
-#pragma warning disable IDISP003 // False positive: _context is only assigned once in InitializeAsync
-#pragma warning disable IDISP006 // IAsyncLifetime provides async cleanup, IDisposable not needed
 public sealed class TeamServiceIntegrationTests(Synaxis.Common.Tests.Fixtures.PostgresFixture postgresFixture) : IAsyncLifetime
 {
     private readonly Synaxis.Common.Tests.Fixtures.PostgresFixture _postgresFixture = postgresFixture ?? throw new ArgumentNullException(nameof(postgresFixture));
@@ -345,5 +343,3 @@ public sealed class TeamServiceIntegrationTests(Synaxis.Common.Tests.Fixtures.Po
     }
 }
 
-#pragma warning restore IDISP006
-#pragma warning restore IDISP003

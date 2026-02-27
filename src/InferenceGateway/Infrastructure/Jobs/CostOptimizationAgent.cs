@@ -10,6 +10,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
+    using Npgsql;
     using Quartz;
     using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
     using Synaxis.InferenceGateway.Infrastructure.Agents.Tools;
@@ -305,7 +306,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                 .Where(pm => pm.GlobalModelId == modelId && pm.ProviderId != currentProvider && pm.IsAvailable)
                 .Join(
                     db.Database.SqlQuery<OrgProviderDto>(
-                        $"SELECT \"Id\", \"ProviderId\", \"IsEnabled\" FROM operations.\"OrganizationProvider\" WHERE \"OrganizationId\" = {organizationId} AND \"IsEnabled\" = true"),
+                        $"SELECT \"Id\", \"ProviderId\", \"IsEnabled\" FROM operations.\"OrganizationProvider\" WHERE \"OrganizationId\" = ${{organizationId}} AND \"IsEnabled\" = true",
+                        new[] { new Npgsql.NpgsqlParameter("organizationId", organizationId) }),
                     pm => pm.ProviderId,
                     op => op.ProviderId.ToString(),
                     (pm, op) => new { pm.ProviderId, op.Id })
@@ -322,7 +324,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
 
                 // Get health status
                 var health = await db.Database.SqlQuery<HealthDto>(
-                    $"SELECT \"IsHealthy\" FROM operations.\"ProviderHealthStatus\" WHERE \"OrganizationProviderId\" = {alt.Id} ORDER BY \"LastCheckedAt\" DESC LIMIT 1")
+                    $"SELECT \"IsHealthy\" FROM operations.\"ProviderHealthStatus\" WHERE \"OrganizationProviderId\" = ${{organizationProviderId}} ORDER BY \"LastCheckedAt\" DESC LIMIT 1",
+                    new[] { new Npgsql.NpgsqlParameter("organizationProviderId", alt.Id) })
                     .FirstOrDefaultAsync(ct).ConfigureAwait(false);
 
                 result.Add(new ProviderAlternative

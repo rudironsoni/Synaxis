@@ -41,9 +41,7 @@ namespace Synaxis.InferenceGateway.Application.Translation
                 normalizedCalls.Add(newCall);
             }
 
-#pragma warning disable SA1101 // Prefix local calls with this - False positive: 'response' is a parameter, not a member
             return response with { ToolCalls = normalizedCalls };
-#pragma warning restore SA1101 // Prefix local calls with this
         }
 
         /// <summary>

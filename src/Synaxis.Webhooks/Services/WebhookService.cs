@@ -102,9 +102,7 @@ namespace Synaxis.Webhooks.Services
         /// <param name="payload">The event payload.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-#pragma warning disable MA0051 // Method is too long
         public async Task DeliverToWebhookAsync(Webhook webhook, string eventType, string payload, CancellationToken cancellationToken = default)
-#pragma warning restore MA0051 // Method is too long
         {
             var startTime = DateTime.UtcNow;
             var deliveryLog = new WebhookDeliveryLog
@@ -136,7 +134,6 @@ namespace Synaxis.Webhooks.Services
                     webhook.Url,
                     eventType);
 
-#pragma warning disable IDISP001 // Dispose created
                 var response = await this._retryPolicy.ExecuteAsync(async () =>
                 {
                     using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -144,7 +141,6 @@ namespace Synaxis.Webhooks.Services
 
                     return await this._httpClient.SendAsync(request, cts.Token).ConfigureAwait(false);
                 }).ConfigureAwait(false);
-#pragma warning restore IDISP001 // Dispose created
 
                 var duration = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
                 deliveryLog.DurationMs = duration;

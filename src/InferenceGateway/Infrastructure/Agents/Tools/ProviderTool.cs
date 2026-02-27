@@ -6,6 +6,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
 {
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Logging;
+    using Npgsql;
     using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 
     /// <summary>
@@ -68,7 +69,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
             {
                 // Query from Operations schema - ProviderHealthStatus
                 var healthStatus = await this._db.Database.SqlQuery<ProviderHealthStatusDto>(
-                    $"SELECT \"IsHealthy\", \"LastCheckedAt\" FROM operations.\"ProviderHealthStatus\" WHERE \"OrganizationProviderId\" = {providerId} ORDER BY \"LastCheckedAt\" DESC LIMIT 1").FirstOrDefaultAsync(ct).ConfigureAwait(false);
+                    $"SELECT \"IsHealthy\", \"LastCheckedAt\" FROM operations.\"ProviderHealthStatus\" WHERE \"OrganizationProviderId\" = ${{providerId}} ORDER BY \"LastCheckedAt\" DESC LIMIT 1",
+                    new[] { new Npgsql.NpgsqlParameter("providerId", providerId) }).FirstOrDefaultAsync(ct).ConfigureAwait(false);
 
                 return new ProviderStatus(
                     true, // IsEnabled - would need to query OrganizationProvider

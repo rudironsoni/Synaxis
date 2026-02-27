@@ -70,7 +70,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
         private static string GetDefaultEndpointByType(string? providerType)
         {
             var type = providerType ?? string.Empty;
-#pragma warning disable S1075 // URIs should not be hardcoded - Default provider endpoints
             return type.Trim().ToLowerInvariant() switch
             {
                 "nvidia" => "https://integrate.api.nvidia.com",
@@ -91,7 +90,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                 "kilocode" => "https://api.kilocode.ai",
                 _ => string.Empty,
             };
-#pragma warning restore S1075 // URIs should not be hardcoded
         }
 
         private static string CleanupEndpointUrl(string url)

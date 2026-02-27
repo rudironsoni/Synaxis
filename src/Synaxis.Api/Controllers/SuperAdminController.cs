@@ -361,7 +361,6 @@ namespace Synaxis.Api.Controllers
 
         private static string GetClientIpAddress(Microsoft.AspNetCore.Http.HttpContext context)
         {
-#pragma warning disable S6932 // Accessing headers in helper method is acceptable for IP address resolution
             // Try X-Forwarded-For first (for proxied requests)
             var forwardedFor = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             if (!string.IsNullOrEmpty(forwardedFor))
@@ -372,7 +371,6 @@ namespace Synaxis.Api.Controllers
 
             // Fall back to direct connection IP
             return context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-#pragma warning restore S6932 // Accessing headers in helper method is acceptable for IP address resolution
         }
     }
 }

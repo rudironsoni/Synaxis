@@ -160,7 +160,6 @@ public class SmartRouterTests
     }
 
     [Fact]
-#pragma warning disable MA0051
     public async Task GetCandidatesAsync_ShouldSortByPriority_FreeFirst_ThenCost_ThenTier()
     {
         // Arrange
@@ -242,7 +241,6 @@ public class SmartRouterTests
         Assert.Equal(0.001m, result[2].CostPerToken);
         Assert.Equal(0.002m, result[3].CostPerToken);
     }
-#pragma warning restore MA0051
 
     [Fact]
     public async Task GetCandidatesAsync_ShouldPassThroughCapabilities()

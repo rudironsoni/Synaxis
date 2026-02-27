@@ -39,10 +39,8 @@ namespace Synaxis.Webhooks.Models
         /// <summary>
         /// Gets or sets the list of events this webhook subscribes to.
         /// </summary>
-#pragma warning disable SA1137 // Elements should have the same indentation
         [Required]
         public IList<string> Events { get; set; } = new List<string>();
-#pragma warning restore SA1137 // Elements should have the same indentation
 
         /// <summary>
         /// Gets or sets a value indicating whether the webhook is active.
@@ -78,8 +76,6 @@ namespace Synaxis.Webhooks.Models
         /// <summary>
         /// Gets or sets the delivery logs for this webhook.
         /// </summary>
-#pragma warning disable SA1137 // Elements should have the same indentation
         public IList<WebhookDeliveryLog> DeliveryLogs { get; set; } = new List<WebhookDeliveryLog>();
-#pragma warning restore SA1137 // Elements should have the same indentation
     }
 }

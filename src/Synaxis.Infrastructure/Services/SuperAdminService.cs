@@ -899,12 +899,12 @@ namespace Synaxis.Infrastructure.Services
             }
         }
 
-        private static string GenerateSecureToken(object tokenData)
+        private string GenerateSecureToken(object tokenData)
         {
             var json = JsonSerializer.Serialize(tokenData);
             var bytes = Encoding.UTF8.GetBytes(json);
 
-            using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes("super-secret-key-should-be-in-config"));
+            using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(this._options.TokenSecret));
             var hash = hmac.ComputeHash(bytes);
 
             var tokenBytes = bytes.Concat(hash).ToArray();

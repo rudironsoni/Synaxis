@@ -9,7 +9,6 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Synaxis.InferenceGateway.Infrastructure.Migrations
 {
-#pragma warning disable MA0051 // Migrations are auto-generated and may have long methods
 
     /// <inheritdoc />
     public partial class AddGroupDeletedBy : Migration
@@ -109,5 +108,4 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
         }
     }
 
-#pragma warning restore MA0051
 }

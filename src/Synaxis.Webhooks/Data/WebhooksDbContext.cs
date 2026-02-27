@@ -35,14 +35,12 @@ namespace Synaxis.Webhooks.Data
         /// </summary>
         public DbSet<WebhookDeliveryLog> WebhookDeliveryLogs { get; set; }
 
-#pragma warning disable MA0051 // Method is too long
         /// <summary>
         /// Configures the model that was discovered by convention from the entity types
         /// exposed in <see cref="DbSet{TEntity}"/> properties on your derived context.
         /// </summary>
         /// <param name="modelBuilder">The builder being used to construct the model for this context.</param>
         protected override void OnModelCreating(ModelBuilder modelBuilder)
-#pragma warning restore MA0051 // Method is too long
         {
             base.OnModelCreating(modelBuilder);
 

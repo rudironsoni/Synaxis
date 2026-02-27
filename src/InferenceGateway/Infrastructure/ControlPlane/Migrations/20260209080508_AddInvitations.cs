@@ -13,7 +13,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations
     public partial class AddInvitations : Migration
     {
         /// <inheritdoc />
-#pragma warning disable MA0051 // Migration methods are inherently long
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
@@ -100,7 +99,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations
                 table: "Invitations",
                 column: "Token",
                 unique: true);
-#pragma warning restore MA0051
         }
 
         /// <inheritdoc />

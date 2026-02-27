@@ -22,9 +22,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.Google
     /// </summary>
     public sealed class GoogleChatClient : IChatClient
     {
-#pragma warning disable S1075 // URIs should not be hardcoded - API endpoint
         private const string Endpoint = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
-#pragma warning restore S1075 // URIs should not be hardcoded
 
         private readonly HttpClient _httpClient;
         private readonly string _modelId;
@@ -102,9 +100,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.Google
                 Console.WriteLine($"GoogleChatClient debug logging failed: {ex}");
             }
 
-#pragma warning disable IDISP001 // HttpClient created by IHttpClientFactory
             var response = await this._httpClient.PostAsJsonAsync(Endpoint, requestObj, cancellationToken).ConfigureAwait(false);
-#pragma warning restore IDISP001
             if (!response.IsSuccessStatusCode)
             {
                 var err = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);

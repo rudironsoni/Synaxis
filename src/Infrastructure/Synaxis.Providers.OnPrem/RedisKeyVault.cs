@@ -15,8 +15,6 @@ using Synaxis.Abstractions.Cloud;
 /// Redis-based implementation of IKeyVault for on-premise deployments.
 /// Provides simple secret storage with basic encryption capabilities.
 /// </summary>
-#pragma warning disable SA1101 // Prefix local calls with this - Fields are prefixed with underscore, not this
-#pragma warning disable S1450 // Remove the field '_redis' - Used for connection management
 public class RedisKeyVault : IKeyVault
 {
     private readonly IConnectionMultiplexer _redis;
@@ -117,5 +115,3 @@ public class RedisKeyVault : IKeyVault
         return $"tenant-{tenantId}-{secretName}";
     }
 }
-#pragma warning restore S1450 // Remove the field '_redis'
-#pragma warning restore SA1101 // Prefix local calls with this

@@ -17,11 +17,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
     /// <summary>
     /// A generic OpenAI chat client that wraps the OpenAI SDK and supports custom endpoints and headers.
     /// </summary>
-#pragma warning disable IDISP025 // Class with no virtual dispose method should be sealed
-#pragma warning disable S3881 // "IDisposable" should be implemented correctly
     public class GenericOpenAiChatClient : IChatClient
-#pragma warning restore S3881 // "IDisposable" should be implemented correctly
-#pragma warning restore IDISP025 // Class with no virtual dispose method should be sealed
     {
         private readonly IChatClient _innerClient;
 

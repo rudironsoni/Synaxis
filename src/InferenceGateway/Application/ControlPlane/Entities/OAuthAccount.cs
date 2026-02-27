@@ -34,9 +34,7 @@ namespace Synaxis.InferenceGateway.Application.ControlPlane.Entities
         /// <summary>
         /// Gets or sets the encrypted refresh token.
         /// </summary>
-#pragma warning disable SA1011 // Closing square bracket should be followed by a space
         public byte[]? RefreshTokenEncrypted { get; set; }
-#pragma warning restore SA1011 // Closing square bracket should be followed by a space
 
         /// <summary>
         /// Gets or sets the token expiration time.

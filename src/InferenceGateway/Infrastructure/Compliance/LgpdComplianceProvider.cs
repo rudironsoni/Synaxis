@@ -326,9 +326,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
 
                 return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 await transaction.RollbackAsync().ConfigureAwait(false);
+                this._logger.LogError(ex, "Failed to delete user data for user {UserId}", userId);
                 throw;
             }
         }

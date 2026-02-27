@@ -4,6 +4,7 @@
 
 namespace Synaxis.Agents.Api.Controllers;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Synaxis.Agents.Application.DTOs;
@@ -13,6 +14,7 @@ using Synaxis.Agents.Application.Services;
 /// Controller for managing agent workflows.
 /// </summary>
 [ApiController]
+[Authorize]
 [Route("api/workflows")]
 public class WorkflowsController : ControllerBase
 {

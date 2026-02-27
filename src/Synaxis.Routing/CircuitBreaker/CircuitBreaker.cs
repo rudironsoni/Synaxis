@@ -2,7 +2,8 @@
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-#pragma warning disable MA0049 // Type name matches namespace - this is intentional for the CircuitBreaker pattern
+#pragma warning disable MA0049 // Type name matches namespace - false positive, type has unique name
+
 namespace Synaxis.Routing.CircuitBreaker;
 
 using System;
@@ -21,9 +22,7 @@ public sealed class CircuitBreaker
     private int _failureCount;
     private int _successCount;
     private int _totalRequests;
-#pragma warning disable S4487 // Field is accessed via reflection in CircuitBreakerStore for persistence
     private DateTime? _lastFailureTime;
-#pragma warning restore S4487
     private DateTime? _openedAt;
     private int _consecutiveSuccessesInHalfOpen;
 
@@ -98,6 +97,20 @@ public sealed class CircuitBreaker
     }
 
     /// <summary>
+    /// Gets the timestamp of the last failure, or null if no failures have occurred.
+    /// </summary>
+    public DateTime? LastFailureTime
+    {
+        get
+        {
+            lock (this._lock)
+            {
+                return this._lastFailureTime;
+            }
+        }
+    }
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="CircuitBreaker"/> class.
     /// </summary>
     /// <param name="name">The name of the circuit breaker.</param>
@@ -105,7 +118,6 @@ public sealed class CircuitBreaker
     public CircuitBreaker(string name, CircuitBreakerOptions options)
     {
         ArgumentNullException.ThrowIfNull(name);
-        _ = name;
         ArgumentNullException.ThrowIfNull(options);
         this._options = options;
     }
@@ -276,3 +288,5 @@ public sealed class CircuitBreaker
         this._consecutiveSuccessesInHalfOpen = 0;
     }
 }
+
+#pragma warning restore MA0049

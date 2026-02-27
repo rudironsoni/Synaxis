@@ -358,7 +358,6 @@ namespace Synaxis.Infrastructure.Services
             };
         }
 
-#pragma warning disable AsyncFixer01 // Method has synchronous work before await
         private async Task ResetPasswordInternalAsync(User user, string newPassword, PasswordPolicy policy)
         {
             var historyEntry = new PasswordHistory
@@ -386,7 +385,6 @@ namespace Synaxis.Infrastructure.Services
             user.UpdatedAt = DateTime.UtcNow;
             await this._context.SaveChangesAsync().ConfigureAwait(false);
         }
-#pragma warning restore AsyncFixer01 // Method has synchronous work before await
 
         /// <inheritdoc/>
         public async Task<PasswordPolicy> GetPasswordPolicyAsync(Guid organizationId)

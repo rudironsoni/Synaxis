@@ -20,7 +20,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
         /// Creates partition functions, migrates existing data, and sets up monthly partitioning.
         /// </summary>
         /// <param name="migrationBuilder">The migration builder instance.</param>
-#pragma warning disable MA0051 // Method is too long - Migrations are inherently complex
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             // Step 1: Drop existing indexes that will be recreated on parent table
@@ -190,14 +189,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
             ");
         }
 
-#pragma warning restore MA0051 // Method is too long
 
         /// <summary>
         /// Reverts the migration by dropping partitioned table and restoring from backup.
         /// Removes partition management functions.
         /// </summary>
         /// <param name="migrationBuilder">The migration builder instance.</param>
-#pragma warning disable MA0051 // Method is too long - Migrations are inherently complex
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             // Restore from backup if it exists
@@ -214,4 +211,3 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
         }
     }
 }
-#pragma warning restore MA0051 // Method is too long

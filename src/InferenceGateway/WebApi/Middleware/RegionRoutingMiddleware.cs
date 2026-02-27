@@ -40,13 +40,11 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         /// <param name="regionRouter">The region router.</param>
         /// <param name="geoIPService">The GeoIP service.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-#pragma warning disable MA0051 // Method is too long
         public async Task InvokeAsync(
             HttpContext context,
             ITenantContext tenantContext,
             IRegionRouter regionRouter,
             IGeoIPService geoIPService)
-#pragma warning restore MA0051
         {
             try
             {

@@ -1,8 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
@@ -24,8 +22,6 @@
     <Using Include="Xunit" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="../../../src/InferenceGateway/Application/Synaxis.InferenceGateway.Application.csproj" />
-    <ProjectReference Include="../../../src/InferenceGateway/WebApi/Synaxis.InferenceGateway.WebApi.csproj" />
-    <ProjectReference Include="../../Common/Synaxis.Common.Tests.csproj" />
+    <ProjectReference Include="../../src/InferenceGateway/WebApi/Synaxis.InferenceGateway.WebApi.csproj" />
   </ItemGroup>
 </Project>

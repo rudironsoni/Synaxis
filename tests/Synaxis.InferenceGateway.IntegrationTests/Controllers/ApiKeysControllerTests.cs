@@ -262,9 +262,7 @@ public class ApiKeysControllerTests
         Assert.Equal(expectedHash, storedKey.KeyHash);
     }
 
-#pragma warning disable SA1124 // Do not use regions
     #region Helper Methods
-#pragma warning restore SA1124 // Do not use regions
 
     private async Task<(HttpClient Client, User User)> CreateAuthenticatedClientAsync(string email = "test@example.com")
     {
@@ -393,7 +391,5 @@ public class ApiKeysControllerTests
         return apiKey;
     }
 
-#pragma warning disable SA1124 // Do not use regions
     #endregion
-#pragma warning restore SA1124 // Do not use regions
 }

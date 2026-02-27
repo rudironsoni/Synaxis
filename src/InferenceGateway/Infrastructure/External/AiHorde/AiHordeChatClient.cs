@@ -20,14 +20,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.AiHorde
     /// </summary>
     public sealed class AiHordeChatClient : IChatClient
     {
-#pragma warning disable S1075 // URIs should not be hardcoded - API endpoints
         private const string GenerateUrl = "https://stablehorde.net/api/v2/generate/text/async";
         private const string StatusUrlTemplate = "https://stablehorde.net/api/v2/generate/text/status/{0}";
-#pragma warning restore S1075 // URIs should not be hardcoded
 
-#pragma warning disable IDISP008 // Don't assign member with injected and created disposables - ownership tracked by _ownsHttpClient flag
         private readonly HttpClient _httpClient;
-#pragma warning restore IDISP008
         private readonly bool _ownsHttpClient;
         private readonly ChatClientMetadata _metadata;
         private readonly string _apiKey;

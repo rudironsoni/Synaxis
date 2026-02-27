@@ -69,7 +69,10 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     context.Response.StatusCode = (int)HttpStatusCode.TooManyRequests;
                     context.Response.Headers.Append("X-RateLimit-Limit", this._requestsPerMinute.ToString(CultureInfo.InvariantCulture));
                     context.Response.Headers.Append("X-RateLimit-Remaining", "0");
-                    context.Response.Headers.Append("X-RateLimit-Reset", requestTimestamps[0].Add(this._windowSize).ToString("R", CultureInfo.InvariantCulture));
+                    if (requestTimestamps.Count > 0)
+                    {
+                        context.Response.Headers.Append("X-RateLimit-Reset", requestTimestamps[0].Add(this._windowSize).ToString("R", CultureInfo.InvariantCulture));
+                    }
 
                     return;
                 }
@@ -84,7 +87,10 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     var remaining = this._requestsPerMinute - requestTimestamps.Count;
                     context.Response.Headers.Append("X-RateLimit-Limit", this._requestsPerMinute.ToString(CultureInfo.InvariantCulture));
                     context.Response.Headers.Append("X-RateLimit-Remaining", remaining.ToString(CultureInfo.InvariantCulture));
-                    context.Response.Headers.Append("X-RateLimit-Reset", requestTimestamps[0].Add(this._windowSize).ToString("R", CultureInfo.InvariantCulture));
+                    if (requestTimestamps.Count > 0)
+                    {
+                        context.Response.Headers.Append("X-RateLimit-Reset", requestTimestamps[0].Add(this._windowSize).ToString("R", CultureInfo.InvariantCulture));
+                    }
                 }
 
                 return Task.CompletedTask;

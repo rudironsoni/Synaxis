@@ -23,9 +23,7 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
         /// <param name="allowEmptyModel">Whether to allow empty model field.</param>
         /// <param name="allowEmptyMessages">Whether to allow empty messages field.</param>
         /// <returns>The parsed OpenAI request, or null if parsing failed.</returns>
-#pragma warning disable MA0051 // Method is too long
         public static async Task<OpenAIRequest?> ParseAsync(HttpContext? context, CancellationToken cancellationToken = default, bool allowEmptyModel = false, bool allowEmptyMessages = false)
-#pragma warning restore MA0051
         {
             if (context == null)
             {

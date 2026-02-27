@@ -66,9 +66,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
             TaskCompletionSource? testCallbackTcs = null)
         {
             var interval = Math.Max(1, intervalSeconds);
-#pragma warning disable S1075 // URIs should not be hardcoded - OAuth endpoint
             var url = "https://github.com/login/oauth/access_token";
-#pragma warning restore S1075 // URIs should not be hardcoded
 
             while (!ct.IsCancellationRequested)
             {

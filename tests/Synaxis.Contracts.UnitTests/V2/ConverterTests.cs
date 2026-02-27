@@ -240,9 +240,7 @@ public class ConverterTests
     {
         var converter = new UserConverter();
 
-#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         Action act = () => converter.Convert(null);
-#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
 
         act.Should().Throw<ArgumentNullException>();
     }
@@ -252,9 +250,7 @@ public class ConverterTests
     {
         var converter = new AgentConverter();
 
-#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         Action act = () => converter.Convert(null);
-#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
 
         act.Should().Throw<ArgumentNullException>();
     }

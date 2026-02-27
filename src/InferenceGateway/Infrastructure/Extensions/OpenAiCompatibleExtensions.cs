@@ -36,9 +36,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
             services.AddKeyedSingleton<IChatClient>(key, (sp, obj) =>
             {
                 var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
-#pragma warning disable IDISP001 // HttpClient created by IHttpClientFactory - lifetime managed by factory
                 var httpClient = httpClientFactory.CreateClient(key);
-#pragma warning restore IDISP001
                 var headers = customHeaders != null
                     ? new Dictionary<string, string>(customHeaders.Select(kvp => new KeyValuePair<string, string>(kvp.Key, kvp.Value)))
                     : null;

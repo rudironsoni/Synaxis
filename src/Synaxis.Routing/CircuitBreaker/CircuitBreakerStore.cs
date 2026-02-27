@@ -249,11 +249,12 @@ public sealed class CircuitBreakerStore : IDisposable
 
     private static CircuitBreakerState ExtractCircuitBreakerState(CircuitBreaker breaker)
     {
-#pragma warning disable S3011 // Reflection is used for serialization/persistence - this is intentional and safe
+#pragma warning disable S3011 // Reflection accessibility bypass - intentional for state persistence
         // Use reflection to access private fields
         var lastFailureTimeField = breaker.GetType().GetField("_lastFailureTime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         var openedAtField = breaker.GetType().GetField("_openedAt", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         var consecutiveSuccessesField = breaker.GetType().GetField("_consecutiveSuccessesInHalfOpen", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+#pragma warning restore S3011
 
         return new CircuitBreakerState
         {
@@ -269,7 +270,7 @@ public sealed class CircuitBreakerStore : IDisposable
 
     private static void RestoreCircuitBreakerState(CircuitBreaker breaker, CircuitBreakerState state)
     {
-#pragma warning disable S3011 // Reflection is used for serialization/persistence - this is intentional and safe
+#pragma warning disable S3011 // Reflection accessibility bypass - intentional for state persistence
         // Use reflection to set private fields
         var failureCountField = breaker.GetType().GetField("_failureCount", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         var successCountField = breaker.GetType().GetField("_successCount", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -277,6 +278,7 @@ public sealed class CircuitBreakerStore : IDisposable
         var lastFailureTimeField = breaker.GetType().GetField("_lastFailureTime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         var openedAtField = breaker.GetType().GetField("_openedAt", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         var consecutiveSuccessesField = breaker.GetType().GetField("_consecutiveSuccessesInHalfOpen", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+#pragma warning restore S3011
 
         failureCountField?.SetValue(breaker, state.FailureCount);
         successCountField?.SetValue(breaker, state.SuccessCount);

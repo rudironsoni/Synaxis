@@ -1598,13 +1598,11 @@ public sealed class SmartRoutingChatClientTests : TestBase, IDisposable
         }
     }
 
-#pragma warning disable CS0162
     private static async IAsyncEnumerable<ChatResponseUpdate> ThrowingStream(Exception ex)
     {
         throw ex;
         yield break;
     }
-#pragma warning restore CS0162
 
     public void Dispose()
     {

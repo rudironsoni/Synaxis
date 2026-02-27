@@ -94,10 +94,8 @@ public class ActivityRetryWorker : IJob
     private static async Task<List<Guid>> GetFailedActivitiesAsync(IEventStore eventStore, CancellationToken cancellationToken)
     {
         // Query for failed activities that haven't exceeded retry limit
-#pragma warning disable S1172
         _ = eventStore;
         _ = cancellationToken;
-#pragma warning restore S1172
         await Task.CompletedTask.ConfigureAwait(false);
         return new List<Guid>();
     }

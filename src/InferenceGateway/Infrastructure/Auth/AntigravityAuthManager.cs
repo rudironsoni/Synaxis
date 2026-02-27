@@ -25,12 +25,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
     /// </summary>
     public class AntigravityAuthManager : IAntigravityAuthManager
     {
-#pragma warning disable S1075 // URIs should not be hardcoded - OAuth and API endpoints
         private const string AuthorizationEndpoint = "https://accounts.google.com/o/oauth2/v2/auth";
         private const string TokenEndpoint = "https://oauth2.googleapis.com/token";
         private const string UserInfoEndpoint = "https://www.googleapis.com/oauth2/v1/userinfo?alt=json";
         private const string DefaultProjectId = "rising-fact-p41fc";
-#pragma warning restore S1075 // URIs should not be hardcoded
 
         private static readonly string[] Scopes =
         {
@@ -300,9 +298,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
         // Legacy Interactive Login (kept for CLI convenience)
         private async Task InteractiveLoginAsync(CancellationToken cancellationToken)
         {
-#pragma warning disable S1075 // URIs should not be hardcoded - OAuth redirect URI
             var redirectUri = "http://localhost:51121/oauth/antigravity/callback";
-#pragma warning restore S1075 // URIs should not be hardcoded
             var url = await this.StartAuthFlowAsync(redirectUri).ConfigureAwait(false);
 
             Console.WriteLine("----------------------------------------------------------------");

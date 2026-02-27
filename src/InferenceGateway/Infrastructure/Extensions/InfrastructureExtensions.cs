@@ -260,66 +260,54 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
 
         private static void RegisterOpenAiClient(IServiceCollection services, string name, ProviderConfig config, string defaultModel)
         {
-#pragma warning disable S1075 // URIs should not be hardcoded - Default API endpoint
             var headers = config.CustomHeaders != null
                 ? new List<KeyValuePair<string, string>>(config.CustomHeaders.Select(kvp => new KeyValuePair<string, string>(kvp.Key, kvp.Value)))
                 : null;
             services.AddOpenAiCompatibleClient(name, config.Endpoint ?? "https://api.openai.com/v1", config.Key ?? string.Empty, defaultModel, headers);
-#pragma warning restore S1075 // URIs should not be hardcoded
         }
 
         private static void RegisterGroqClient(IServiceCollection services, string name, ProviderConfig config, string defaultModel)
         {
-#pragma warning disable S1075 // URIs should not be hardcoded - Default API endpoint
             var headers = config.CustomHeaders != null
                 ? new List<KeyValuePair<string, string>>(config.CustomHeaders.Select(kvp => new KeyValuePair<string, string>(kvp.Key, kvp.Value)))
                 : null;
             services.AddOpenAiCompatibleClient(name, "https://api.groq.com/openai/v1", config.Key ?? string.Empty, defaultModel, headers);
-#pragma warning restore S1075 // URIs should not be hardcoded
         }
 
         private static void RegisterCohereClient(IServiceCollection services, string name, ProviderConfig config, string defaultModel)
         {
-#pragma warning disable IDISP001 // Dispose created - HttpClient from factory is managed by DI container
             services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>
             {
                 var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
                 return new CohereChatClient(httpClient, defaultModel, config.Key ?? string.Empty);
             });
-#pragma warning restore IDISP001 // Dispose created
         }
 
         private static void RegisterCloudflareClient(IServiceCollection services, string name, ProviderConfig config, string defaultModel)
         {
-#pragma warning disable IDISP001 // Dispose created - HttpClient from factory is managed by DI container
             services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>
             {
                 var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
                 return new CloudflareChatClient(httpClient, config.AccountId ?? string.Empty, defaultModel, config.Key ?? string.Empty);
             });
-#pragma warning restore IDISP001 // Dispose created
         }
 
         private static void RegisterGeminiClient(IServiceCollection services, string name, ProviderConfig config, string defaultModel)
         {
-#pragma warning disable IDISP001 // Dispose created - HttpClient from factory is managed by DI container
             services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>
             {
                 var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient("Google");
                 return new Synaxis.InferenceGateway.Infrastructure.External.Google.GoogleChatClient(config.Key ?? string.Empty, defaultModel, httpClient);
             });
-#pragma warning restore IDISP001 // Dispose created
         }
 
         private static void RegisterPollinationsClient(IServiceCollection services, string name, string defaultModel)
         {
-#pragma warning disable IDISP001 // Dispose created - HttpClient from factory is managed by DI container
             services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>
             {
                 var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
                 return new PollinationsChatClient(httpClient, defaultModel);
             });
-#pragma warning restore IDISP001 // Dispose created
         }
 
         private static void RegisterDefaultClient(IServiceCollection services, string name, ProviderConfig config, string defaultModel)
@@ -335,19 +323,16 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
 
         private static void RegisterAntigravityClient(IServiceCollection services, string name, ProviderConfig config, string defaultModel)
         {
-#pragma warning disable IDISP001 // Dispose created - HttpClient from factory is managed by DI container
             services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>
             {
                 var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient("Antigravity");
                 var authManager = sp.GetRequiredService<IAntigravityAuthManager>();
                 return new AntigravityChatClient(httpClient, defaultModel, config.ProjectId ?? string.Empty, authManager);
             });
-#pragma warning restore IDISP001 // Dispose created
         }
 
         private static void RegisterGitHubCopilotClient(IServiceCollection services, string name, string defaultModel)
         {
-#pragma warning disable IDISP001 // Dispose created - HttpClient from factory is managed by DI container
             services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>
             {
                 var adapter = sp.GetService<ICopilotSdkAdapter>();
@@ -359,49 +344,40 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
                 var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
                 return new Synaxis.InferenceGateway.Infrastructure.External.DuckDuckGo.DuckDuckGoChatClient(httpClient, defaultModel);
             });
-#pragma warning restore IDISP001 // Dispose created
         }
 
         private static void RegisterDuckDuckGoClient(IServiceCollection services, string name, string defaultModel)
         {
-#pragma warning disable IDISP001 // Dispose created - HttpClient from factory is managed by DI container
             services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>
             {
                 var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
                 return new Synaxis.InferenceGateway.Infrastructure.External.DuckDuckGo.DuckDuckGoChatClient(httpClient, defaultModel);
             });
-#pragma warning restore IDISP001 // Dispose created
         }
 
         private static void RegisterAiHordeClient(IServiceCollection services, string name, ProviderConfig config)
         {
-#pragma warning disable IDISP001 // Dispose created - HttpClient from factory is managed by DI container
             services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>
             {
                 var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
                 return new Synaxis.InferenceGateway.Infrastructure.External.AiHorde.AiHordeChatClient(httpClient, config.Key ?? "0000000000");
             });
-#pragma warning restore IDISP001 // Dispose created
         }
 
         private static void RegisterKiloCodeClient(IServiceCollection services, string name, ProviderConfig config, string defaultModel)
         {
-#pragma warning disable IDISP001 // Dispose created - HttpClient from factory is managed by DI container
             services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>
             {
                 var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
                 return new Synaxis.InferenceGateway.Infrastructure.External.KiloCode.KiloCodeChatClient(config.Key ?? string.Empty, defaultModel, httpClient);
             });
-#pragma warning restore IDISP001 // Dispose created
         }
 
         private static IServiceCollection AddAntigravityHttpClient(this IServiceCollection services)
         {
             services.AddHttpClient("Antigravity", client =>
             {
-#pragma warning disable S1075 // URIs should not be hardcoded - Default API endpoint
                 client.BaseAddress = new Uri("https://cloudcode-pa.googleapis.com");
-#pragma warning restore S1075 // URIs should not be hardcoded
             })
             .AddPolicyHandler(GetRetryPolicy());
 
@@ -410,7 +386,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
 
         private static IServiceCollection AddSmartRouter(this IServiceCollection services)
         {
-#pragma warning disable IDISP001 // Dispose created - ChatClientBuilder manages disposal
             services.AddScoped<IChatClient>(sp =>
             {
                 var innerClient = ActivatorUtilities.CreateInstance<SmartRoutingChatClient>(sp);
@@ -421,7 +396,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
 
                 return builder.Build(sp);
             });
-#pragma warning restore IDISP001 // Dispose created
 
             return services;
         }
@@ -434,12 +408,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
             services.AddSingleton<IChatClientStrategy, CloudflareStrategy>();
 
             // Register Models.dev client
-#pragma warning disable S1075 // URIs should not be hardcoded - Default API endpoint
             services.AddHttpClient<IModelsDevClient, ModelsDevClient>(client =>
             {
                 client.BaseAddress = new Uri("https://models.dev");
             });
-#pragma warning restore S1075 // URIs should not be hardcoded
 
             // Register OpenAI model discovery client
             services.AddHttpClient<IOpenAiModelDiscoveryClient, OpenAiModelDiscoveryClient>();

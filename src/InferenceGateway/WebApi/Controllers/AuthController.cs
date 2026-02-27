@@ -24,9 +24,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         private readonly IPasswordHasher passwordHasher;
         private readonly SynaxisDbContext dbContext;
 
-#pragma warning disable S4487 // Unused field kept for future use
         private readonly ILogger<AuthController> logger;
-#pragma warning restore S4487
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AuthController"/> class.

@@ -137,10 +137,8 @@ public class WorkflowTimeoutMonitor : IJob
     {
         // Query event store for workflows with Running status
         // This is a simplified implementation - in production, use projections/read models
-#pragma warning disable S1172
         _ = eventStore;
         _ = cancellationToken;
-#pragma warning restore S1172
 
         // Return empty for now - implement based on actual event store query capabilities
         await Task.CompletedTask.ConfigureAwait(false);

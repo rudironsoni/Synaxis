@@ -2,7 +2,7 @@
 description = "Semantic code analysis and editing toolkit"
 type = "stdio"
 command = "uvx"
-args = [ "--from", "git+https://github.com/oraios/serena@v0.1.4", "serena", "start-mcp-server", "--context", "ide-assistant", "--enable-web-dashboard", "false", "--project", "." ]
+args = [ "--from", "git+https://github.com/oraios/serena", "serena", "start-mcp-server", "--context", "ide", "--project", "." ]
 
 [mcp_servers.serena.env]
 [mcp_servers.context7]

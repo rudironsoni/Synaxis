@@ -19,8 +19,6 @@ using Synaxis.Abstractions.Cloud;
 /// <summary>
 /// PostgreSQL-based implementation of IEventStore for on-premise deployments.
 /// </summary>
-#pragma warning disable SA1101 // Prefix local calls with this - Fields are prefixed with underscore, not this
-#pragma warning disable MA0004 // Use Task.ConfigureAwait(false) - await using statements don't support ConfigureAwait
 public class PostgreSqlEventStore : IEventStore
 {
     private readonly string _connectionString;
@@ -208,5 +206,3 @@ public class PostgreSqlEventStore : IEventStore
         return result != null ? Convert.ToInt32(result, CultureInfo.InvariantCulture) : 0;
     }
 }
-#pragma warning restore MA0004 // Use Task.ConfigureAwait(false)
-#pragma warning restore SA1101 // Prefix local calls with this

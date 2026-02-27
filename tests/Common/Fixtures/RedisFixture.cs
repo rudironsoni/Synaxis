@@ -10,7 +10,6 @@ using StackExchange.Redis;
 using Testcontainers.Redis;
 using Xunit;
 
-#pragma warning disable IDISP003 // False positive: fields are only assigned once in InitializeAsync
 
 /// <summary>
 /// Shared Redis fixture for integration tests.

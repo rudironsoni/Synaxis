@@ -4,6 +4,7 @@
 
 namespace Synaxis.Agents.Api.Controllers;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Synaxis.Agents.Application.DTOs;
@@ -13,6 +14,7 @@ using IAgentExecutionService = Synaxis.Agents.Application.Services.IAgentExecuti
 /// Controller for managing agent executions.
 /// </summary>
 [ApiController]
+[Authorize]
 [Route("api/agents/executions")]
 public class AgentExecutionsController : ControllerBase
 {

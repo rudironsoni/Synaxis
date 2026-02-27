@@ -22,7 +22,6 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
         /// Maps model endpoints to the application.
         /// </summary>
         /// <param name="app">The endpoint route builder.</param>
-#pragma warning disable MA0051 // Method too long
         public static void MapModels(this IEndpointRouteBuilder app)
         {
             app.MapGet("/v1/models", (IOptions<SynaxisConfiguration> config) =>
@@ -142,7 +141,6 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
             .WithDescription("Returns detailed information about a specific model including its capabilities");
         }
     }
-#pragma warning restore MA0051 // Method too long
 
     /// <summary>
     /// DTO for model information.

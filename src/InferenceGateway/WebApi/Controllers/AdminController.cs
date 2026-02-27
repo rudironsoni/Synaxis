@@ -4,6 +4,7 @@
 
 namespace Synaxis.InferenceGateway.WebApi.Controllers
 {
+    using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Synaxis.InferenceGateway.Application.ControlPlane;
     using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
@@ -12,6 +13,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
     /// Admin controller for provider management.
     /// </summary>
     [ApiController]
+    [Authorize(Roles = "Admin")]
     [Route("api/admin")]
     public class AdminController : ControllerBase
     {
