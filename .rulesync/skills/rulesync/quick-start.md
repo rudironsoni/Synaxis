@@ -2,7 +2,8 @@
 
 ## New Project
 
-```bash
+````bash
+
 # Install rulesync globally
 npm install -g rulesync
 
@@ -13,13 +14,15 @@ rulesync init
 rulesync fetch dyoshikawa/rulesync --features skills
 
 # Or add skill sources to rulesync.jsonc and run 'rulesync install' (see "Declarative Skill Sources")
-```
+
+```json
 
 ## Existing AI Tool Configurations
 
 If you already have AI tool configurations:
 
 ```bash
+
 # Import existing files (to .rulesync/**/*)
 rulesync import --targets claudecode    # From CLAUDE.md
 rulesync import --targets cursor        # From .cursorrules
@@ -30,11 +33,13 @@ rulesync import --targets claudecode --features rules,mcp,commands,subagents
 
 # Generate unified configurations with all features
 rulesync generate --targets "*" --features "*"
-```
+
+```text
 
 ## Quick Commands
 
 ```bash
+
 # Initialize new project (recommended: organized rules structure)
 rulesync init
 
@@ -88,4 +93,6 @@ rulesync update --check
 
 # Force update even if already at latest version
 rulesync update --force
-```
+
+```text
+````

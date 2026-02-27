@@ -6,7 +6,7 @@
       "command": "uvx",
       "args": [
         "--from",
-        "git+https://github.com/oraios/serena",
+        "git+https://github.com/oraios/serena@v0.1.4",
         "serena",
         "start-mcp-server",
         "--context",
@@ -22,7 +22,7 @@
       "description": "Library documentation search server",
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp@latest"],
+      "args": ["-y", "@upstash/context7-mcp@2.1.2"],
       "env": {}
     },
     "microsoftdocs-mcp": {
@@ -34,11 +34,7 @@
       "description": "WinDbg crash and dump analysis MCP",
       "type": "stdio",
       "command": "uvx",
-      "args": [
-        "--from",
-        "git+https://github.com/svnscha/mcp-windbg",
-        "mcp-windbg"
-      ],
+      "args": ["--from", "git+https://github.com/svnscha/mcp-windbg@v0.12.2", "mcp-windbg"],
       "env": {}
     }
   }

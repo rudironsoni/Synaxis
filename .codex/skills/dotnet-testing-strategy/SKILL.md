@@ -8,7 +8,9 @@ metadata:
 ---
 # dotnet-testing-strategy
 
-Decision framework for choosing the right test type, organizing test projects, and selecting test doubles in .NET applications. Covers unit vs integration vs E2E trade-offs with concrete criteria, naming conventions, and when to use mocks vs fakes vs stubs.
+Decision framework for choosing the right test type, organizing test projects, and selecting test doubles in .NET
+applications. Covers unit vs integration vs E2E trade-offs with concrete criteria, naming conventions, and when to use
+mocks vs fakes vs stubs.
 
 ## Scope
 
@@ -23,17 +25,22 @@ Decision framework for choosing the right test type, organizing test projects, a
 - Code coverage tooling and mutation testing -- see [skill:dotnet-test-quality]
 - CI test reporting and pipeline integration -- see [skill:dotnet-gha-build-test] and [skill:dotnet-ado-build-test]
 
-**Prerequisites:** Run [skill:dotnet-project-analysis] to understand the solution structure before designing a test strategy.
+**Prerequisites:** Run [skill:dotnet-project-analysis] to understand the solution structure before designing a test
+strategy.
 
-Cross-references: [skill:dotnet-xunit] for xUnit v3 testing framework features, [skill:dotnet-integration-testing] for WebApplicationFactory and Testcontainers patterns, [skill:dotnet-snapshot-testing] for Verify-based approval testing, [skill:dotnet-test-quality] for coverage and mutation testing, [skill:dotnet-add-testing] for test project scaffolding.
+Cross-references: [skill:dotnet-xunit] for xUnit v3 testing framework features, [skill:dotnet-integration-testing] for
+WebApplicationFactory and Testcontainers patterns, [skill:dotnet-snapshot-testing] for Verify-based approval testing,
+[skill:dotnet-test-quality] for coverage and mutation testing, [skill:dotnet-add-testing] for test project scaffolding.
 
 ---
 
 ## Test Type Decision Tree
 
-Use this decision tree to determine which test type fits a given scenario. Start at the top and follow the first matching criterion.
+Use this decision tree to determine which test type fits a given scenario. Start at the top and follow the first
+matching criterion.
 
-```
+````text
+
 Does the code under test depend on external infrastructure?
   (database, HTTP service, file system, message broker)
 |
@@ -56,7 +63,8 @@ Does the code under test depend on external infrastructure?
             |
             +-- NO  --> Unit Test with test doubles
                         (mock collaborator interfaces)
-```
+
+```text
 
 ### Concrete Criteria by Test Type
 
@@ -81,7 +89,8 @@ Does the code under test depend on external infrastructure?
 
 Mirror the `src/` project structure under `tests/` with a suffix indicating test type:
 
-```
+```text
+
 MyApp/
   src/
     MyApp.Domain/
@@ -94,7 +103,8 @@ MyApp/
     MyApp.Api.IntegrationTests/
     MyApp.Api.FunctionalTests/
     MyApp.Infrastructure.IntegrationTests/
-```
+
+```text
 
 - `*.UnitTests` -- isolated tests, no external dependencies
 - `*.IntegrationTests` -- real infrastructure (database, HTTP, file system)
@@ -107,6 +117,7 @@ See [skill:dotnet-add-testing] for creating these projects with proper package r
 One test class per production class. Place test files in a namespace that mirrors the production namespace:
 
 ```csharp
+
 // Production: src/MyApp.Domain/Orders/OrderService.cs
 // Test:       tests/MyApp.Domain.UnitTests/Orders/OrderServiceTests.cs
 namespace MyApp.Domain.UnitTests.Orders;
@@ -115,15 +126,18 @@ public class OrderServiceTests
 {
     // Group by method, then by scenario
 }
-```
+
+```text
 
 For large production classes, split test classes by method:
 
 ```csharp
+
 // OrderService_CreateTests.cs
 // OrderService_CancelTests.cs
 // OrderService_RefundTests.cs
-```
+
+```csharp
 
 ---
 
@@ -132,6 +146,7 @@ For large production classes, split test classes by method:
 Use the `Method_Scenario_ExpectedBehavior` pattern. This reads naturally in test explorer output and makes failures self-documenting:
 
 ```csharp
+
 public class OrderServiceTests
 {
     [Fact]
@@ -152,7 +167,8 @@ public class OrderServiceTests
         // ...
     }
 }
-```
+
+```text
 
 Alternative naming styles (choose one per project and stay consistent):
 
@@ -169,6 +185,7 @@ Alternative naming styles (choose one per project and stay consistent):
 Every test follows the AAA structure. Keep each section clearly separated:
 
 ```csharp
+
 [Fact]
 public async Task CreateOrder_WithValidItems_PersistsAndReturnsOrder()
 {
@@ -190,7 +207,8 @@ public async Task CreateOrder_WithValidItems_PersistsAndReturnsOrder()
     Assert.Single(result.Items);
     Assert.True(repository.SavedOrders.ContainsKey(result.Id));
 }
-```
+
+```text
 
 **Guideline:** If you cannot clearly label the three sections, the test may be doing too much. Split into multiple tests.
 
@@ -209,7 +227,8 @@ public async Task CreateOrder_WithValidItems_PersistsAndReturnsOrder()
 
 ### Decision Guidance
 
-```
+```text
+
 Do you need to verify HOW a dependency was called?
 |
 +-- YES --> Do you need a working implementation too?
@@ -221,11 +240,13 @@ Do you need to verify HOW a dependency was called?
             |
             +-- YES --> Fake (in-memory implementation)
             +-- NO  --> Stub (return canned values)
-```
+
+```text
 
 ### Example: Stub vs Mock vs Fake
 
 ```csharp
+
 // STUB: Returns canned data -- verifying the code under test's logic
 var priceService = Substitute.For<IPriceService>();
 priceService.GetPriceAsync("SKU-001").Returns(29.99m);  // canned return
@@ -257,7 +278,8 @@ public class FakeOrderRepository : IOrderRepository
         return Task.CompletedTask;
     }
 }
-```
+
+```text
 
 ### When to Prefer Fakes Over Mocks
 
@@ -272,6 +294,7 @@ public class FakeOrderRepository : IOrderRepository
 ### 1. Testing Implementation Details
 
 ```csharp
+
 // BAD: Breaks when refactoring internals
 repository.Received(1).GetByIdAsync(Arg.Is<Guid>(id => id == orderId));
 repository.Received(1).SaveAsync(Arg.Any<Order>());
@@ -280,11 +303,13 @@ repository.Received(1).SaveAsync(Arg.Any<Order>());
 // GOOD: Test the observable outcome
 var result = await service.ProcessAsync(orderId);
 Assert.Equal(OrderStatus.Completed, result.Status);
-```
+
+```text
 
 ### 2. Excessive Mock Setup
 
 ```csharp
+
 // BAD: Mock setup is longer than the actual test
 var repo = Substitute.For<IOrderRepository>();
 var pricing = Substitute.For<IPricingService>();
@@ -299,13 +324,15 @@ var fixture = new OrderServiceFixture()
     .WithOrder(testOrder)
     .WithPrice("SKU-001", 29.99m);
 var result = await fixture.Service.ProcessAsync(testOrder.Id);
-```
+
+```text
 
 ### 3. Non-Deterministic Tests
 
 Tests must not depend on system clock, random values, or external network. Inject abstractions:
 
 ```csharp
+
 // BAD: Uses DateTime.UtcNow directly
 public bool IsExpired() => ExpiresAt < DateTime.UtcNow;
 
@@ -315,7 +342,8 @@ public bool IsExpired(TimeProvider time) => ExpiresAt < time.GetUtcNow();
 // In test
 var fakeTime = new FakeTimeProvider(new DateTimeOffset(2025, 6, 15, 0, 0, 0, TimeSpan.Zero));
 Assert.True(order.IsExpired(fakeTime));
-```
+
+```text
 
 ---
 
@@ -347,3 +375,4 @@ Assert.True(order.IsExpired(fakeTime));
 - [Integration tests in ASP.NET Core](https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests)
 - [NSubstitute documentation](https://nsubstitute.github.io/help/getting-started/)
 - [TimeProvider in .NET 8](https://learn.microsoft.com/en-us/dotnet/api/system.timeprovider)
+````

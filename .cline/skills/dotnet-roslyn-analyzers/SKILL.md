@@ -6,9 +6,13 @@ description: >-
 ---
 # dotnet-roslyn-analyzers
 
-Guidance for **authoring** custom Roslyn analyzers, code fix providers, code refactoring providers, and diagnostic suppressors. Covers project setup, DiagnosticDescriptor conventions, analysis context registration, code fix actions, code refactoring actions, multi-Roslyn-version targeting (3.8 through 4.14), testing with Microsoft.CodeAnalysis.Testing, NuGet packaging, and performance best practices.
+Guidance for **authoring** custom Roslyn analyzers, code fix providers, code refactoring providers, and diagnostic
+suppressors. Covers project setup, DiagnosticDescriptor conventions, analysis context registration, code fix actions,
+code refactoring actions, multi-Roslyn-version targeting (3.8 through 4.14), testing with
+Microsoft.CodeAnalysis.Testing, NuGet packaging, and performance best practices.
 
-For extended code examples (CodeRefactoringProvider implementation, multi-version project structure, test matrix configuration), see `details.md` in this skill directory.
+For extended code examples (CodeRefactoringProvider implementation, multi-version project structure, test matrix
+configuration), see `details.md` in this skill directory.
 
 ## Scope
 
@@ -24,15 +28,21 @@ For extended code examples (CodeRefactoringProvider implementation, multi-versio
 - Authoring source generators (IIncrementalGenerator) -- see [skill:dotnet-csharp-source-generators]
 - Naming conventions -- see [skill:dotnet-csharp-coding-standards]
 
-Cross-references: [skill:dotnet-csharp-source-generators] for shared Roslyn packaging concepts and IIncrementalGenerator patterns, [skill:dotnet-add-analyzers] for consuming and configuring analyzers, [skill:dotnet-testing-strategy] for general test organization and framework selection, [skill:dotnet-csharp-coding-standards] for naming conventions applied to analyzer code.
+Cross-references: [skill:dotnet-csharp-source-generators] for shared Roslyn packaging concepts and IIncrementalGenerator
+patterns, [skill:dotnet-add-analyzers] for consuming and configuring analyzers, [skill:dotnet-testing-strategy] for
+general test organization and framework selection, [skill:dotnet-csharp-coding-standards] for naming conventions applied
+to analyzer code.
 
 ---
 
 ## Project Setup
 
-Analyzer projects **must** target `netstandard2.0`. The compiler loads analyzers into various host processes (Visual Studio on .NET Framework/Mono, MSBuild on .NET Core, `dotnet build` CLI) -- targeting `net8.0+` breaks compatibility with hosts that do not run on that runtime.
+Analyzer projects **must** target `netstandard2.0`. The compiler loads analyzers into various host processes (Visual
+Studio on .NET Framework/Mono, MSBuild on .NET Core, `dotnet build` CLI) -- targeting `net8.0+` breaks compatibility
+with hosts that do not run on that runtime.
 
-```xml
+````xml
+
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -46,7 +56,8 @@ Analyzer projects **must** target `netstandard2.0`. The compiler loads analyzers
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0" PrivateAssets="all" />
   </ItemGroup>
 </Project>
-```
+
+```csharp
 
 - `EnforceExtendedAnalyzerRules` enables RS-series meta-diagnostics that catch common analyzer authoring mistakes.
 - `IsRoslynComponent` enables IDE tooling support for the project.
@@ -60,6 +71,7 @@ Analyzer projects **must** target `netstandard2.0`. The compiler loads analyzers
 Every analyzer inherits from `DiagnosticAnalyzer` and must be decorated with `[DiagnosticAnalyzer(LanguageNames.CSharp)]`.
 
 ```csharp
+
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class NoPublicFieldsAnalyzer : DiagnosticAnalyzer
 {
@@ -94,7 +106,8 @@ public sealed class NoPublicFieldsAnalyzer : DiagnosticAnalyzer
         }
     }
 }
-```
+
+```text
 
 ### Analysis Context Registration
 
@@ -180,6 +193,7 @@ Use conditional compilation constants (`ROSLYN_X_Y_OR_GREATER`) and version-spec
 Use `Microsoft.CodeAnalysis.Testing` for ergonomic analyzer testing:
 
 ```csharp
+
 using Verify = Microsoft.CodeAnalysis.CSharp.Testing.CSharpAnalyzerVerifier<
     NoPublicFieldsAnalyzer,
     Microsoft.CodeAnalysis.Testing.DefaultVerifier>;
@@ -198,7 +212,8 @@ public class NoPublicFieldsAnalyzerTests
         await Verify.VerifyAnalyzerAsync(test);
     }
 }
-```
+
+```text
 
 ### Diagnostic Markup Syntax
 
@@ -214,6 +229,7 @@ public class NoPublicFieldsAnalyzerTests
 Analyzers ship as NuGet packages with assemblies in `analyzers/dotnet/cs/`, not `lib/`.
 
 ```xml
+
 <PropertyGroup>
   <IncludeBuildOutput>false</IncludeBuildOutput>
   <DevelopmentDependency>true</DevelopmentDependency>
@@ -225,7 +241,8 @@ Analyzers ship as NuGet packages with assemblies in `analyzers/dotnet/cs/`, not 
         Pack="true"
         PackagePath="analyzers/dotnet/cs" />
 </ItemGroup>
-```
+
+```text
 
 ---
 
@@ -263,3 +280,4 @@ Analyzers ship as NuGet packages with assemblies in `analyzers/dotnet/cs/`, not 
 - [Analyzer NuGet packaging conventions](https://learn.microsoft.com/en-us/nuget/guides/analyzers-conventions)
 - [dotnet/roslyn-analyzers (RS diagnostic source)](https://github.com/dotnet/roslyn-analyzers)
 - [Meziantou.Analyzer (exemplar project)](https://github.com/meziantou/Meziantou.Analyzer)
+````

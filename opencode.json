@@ -6,7 +6,7 @@
       "command": [
         "uvx",
         "--from",
-        "git+https://github.com/oraios/serena",
+        "git+https://github.com/oraios/serena@v0.1.4",
         "serena",
         "start-mcp-server",
         "--context",
@@ -24,7 +24,7 @@
       "command": [
         "npx",
         "-y",
-        "@upstash/context7-mcp@latest"
+        "@upstash/context7-mcp@2.1.2"
       ],
       "enabled": true,
       "environment": {}
@@ -39,7 +39,7 @@
       "command": [
         "uvx",
         "--from",
-        "git+https://github.com/svnscha/mcp-windbg",
+        "git+https://github.com/svnscha/mcp-windbg@v0.12.2",
         "mcp-windbg"
       ],
       "enabled": true,

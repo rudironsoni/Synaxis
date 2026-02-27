@@ -10,7 +10,8 @@ metadata:
 
 Slopwatch: LLM Anti-Cheat Quality Gate for .NET
 
-Run the `Slopwatch.Cmd` dotnet tool as an automated quality gate after code modifications to detect "slop" -- shortcuts that make builds/tests pass without fixing real problems.
+Run the `Slopwatch.Cmd` dotnet tool as an automated quality gate after code modifications to detect "slop" -- shortcuts
+that make builds/tests pass without fixing real problems.
 
 ## Scope
 
@@ -38,7 +39,8 @@ Cross-references: [skill:dotnet-tool-management] for general dotnet tool install
 
 Add to `.config/dotnet-tools.json`:
 
-```json
+````json
+
 {
   "version": 1,
   "isRoot": true,
@@ -50,19 +52,24 @@ Add to `.config/dotnet-tools.json`:
     }
   }
 }
-```
+
+```text
 
 Then restore:
 
 ```bash
+
 dotnet tool restore
-```
+
+```bash
 
 ### Global Tool
 
 ```bash
+
 dotnet tool install --global Slopwatch.Cmd
-```
+
+```bash
 
 See [skill:dotnet-tool-management] for tool manifest conventions and restore patterns.
 
@@ -73,6 +80,7 @@ See [skill:dotnet-tool-management] for tool manifest conventions and restore pat
 ### Basic Analysis
 
 ```bash
+
 # Analyze current directory for slop
 slopwatch analyze
 
@@ -87,25 +95,30 @@ slopwatch analyze --output json
 
 # Show performance stats
 slopwatch analyze --stats
-```
+
+```json
 
 ### First-Time Setup: Establish a Baseline
 
 For existing projects with pre-existing issues, create a baseline so slopwatch only catches **new** slop. The `init` command scans all files and records current findings as the accepted baseline:
 
 ```bash
+
 slopwatch init
 git add .slopwatch/baseline.json
 git commit -m "Add slopwatch baseline"
-```
+
+```bash
 
 ### Updating the Baseline (Rare)
 
 Only update when slop is **truly justified** and documented:
 
 ```bash
+
 slopwatch analyze --update-baseline
-```
+
+```bash
 
 Valid reasons: third-party library forces a pattern, intentional rate-limiting delay (not test flakiness), generated code that cannot be modified. Always add a code comment explaining the justification.
 
@@ -116,6 +129,7 @@ Valid reasons: third-party library forces a pattern, intentional rate-limiting d
 Create `.slopwatch/slopwatch.json` to customize rules and exclusions:
 
 ```json
+
 {
   "minSeverity": "warning",
   "rules": {
@@ -132,13 +146,15 @@ Create `.slopwatch/slopwatch.json` to customize rules and exclusions:
     "**/bin/**"
   ]
 }
-```
+
+```text
 
 ### Strict Mode (Recommended for LLM Sessions)
 
 Elevate all rules to errors during LLM coding sessions:
 
 ```json
+
 {
   "minSeverity": "warning",
   "rules": {
@@ -150,7 +166,8 @@ Elevate all rules to errors during LLM coding sessions:
     "SW006": { "enabled": true, "severity": "error" }
   }
 }
-```
+
+```text
 
 ---
 
@@ -171,12 +188,14 @@ Elevate all rules to errors during LLM coding sessions:
 2. **Request a proper fix** -- be specific about what's wrong
 3. **Verify the fix** doesn't introduce different slop
 
-```
+```text
+
 # Example output
 ❌ SW001 [Error]: Disabled test detected
    File: tests/MyApp.Tests/OrderTests.cs:45
    Pattern: [Fact(Skip="Test is flaky")]
-```
+
+```csharp
 
 **Never disable tests to achieve a green build.** Fix the underlying issue.
 
@@ -187,6 +206,7 @@ Elevate all rules to errors during LLM coding sessions:
 Add slopwatch as a `PostToolUse` hook to automatically validate every edit. Create or update `.claude/settings.json`:
 
 ```json
+
 {
   "hooks": {
     "PostToolUse": [
@@ -203,7 +223,8 @@ Add slopwatch as a `PostToolUse` hook to automatically validate every edit. Crea
     ]
   }
 }
-```
+
+```text
 
 The `--hook` flag:
 - Only analyzes **git dirty files** (fast, even on large repos)
@@ -220,6 +241,7 @@ This is the pattern used by projects like BrighterCommand/Brighter.
 ### GitHub Actions
 
 ```yaml
+
 jobs:
   slopwatch:
     runs-on: ubuntu-latest
@@ -236,11 +258,13 @@ jobs:
 
       - name: Run Slopwatch
         run: slopwatch analyze -d . --fail-on warning
-```
+
+```text
 
 ### Azure Pipelines
 
 ```yaml
+
 - task: DotNetCoreCLI@2
   displayName: 'Install Slopwatch'
   inputs:
@@ -250,7 +274,8 @@ jobs:
 
 - script: slopwatch analyze -d . --fail-on warning
   displayName: 'Slopwatch Analysis'
-```
+
+```text
 
 ---
 
@@ -267,6 +292,7 @@ jobs:
 ## Quick Reference
 
 ```bash
+
 # First time setup
 slopwatch init
 git add .slopwatch/baseline.json
@@ -285,7 +311,8 @@ slopwatch analyze --output json
 
 # Update baseline (rare, document why)
 slopwatch analyze --update-baseline
-```
+
+```json
 
 ---
 
@@ -295,3 +322,4 @@ slopwatch analyze --update-baseline
 - [skill:dotnet-tool-management] -- dotnet tool installation and manifest conventions
 - [skill:dotnet-agent-gotchas] -- manual slop pattern recognition (visual detection counterpart)
 - [skill:dotnet-test-quality] -- test coverage and quality measurement
+````

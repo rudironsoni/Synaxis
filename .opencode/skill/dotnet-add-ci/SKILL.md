@@ -3,10 +3,18 @@ name: dotnet-add-ci
 description: >-
   Adds CI/CD to a .NET project. GitHub Actions vs Azure DevOps detection,
   workflow templates.
+allowed-tools:
+  - Read
+  - Grep
+  - Glob
+  - Bash
+  - Write
+  - Edit
 ---
 # dotnet-add-ci
 
-Add starter CI/CD workflows to an existing .NET project. Detects the hosting platform (GitHub Actions or Azure DevOps) and generates an appropriate starter workflow for build, test, and pack.
+Add starter CI/CD workflows to an existing .NET project. Detects the hosting platform (GitHub Actions or Azure DevOps)
+and generates an appropriate starter workflow for build, test, and pack.
 
 ## Scope
 
@@ -16,11 +24,14 @@ Add starter CI/CD workflows to an existing .NET project. Detects the hosting pla
 
 ## Out of scope
 
-- Advanced CI/CD patterns (reusable workflows, matrix builds, deployment) -- see [skill:dotnet-gha-patterns] and [skill:dotnet-ado-patterns]
+- Advanced CI/CD patterns (reusable workflows, matrix builds, deployment) -- see [skill:dotnet-gha-patterns] and
+  [skill:dotnet-ado-patterns]
 
-**Prerequisites:** Run [skill:dotnet-version-detection] first to determine SDK version for the workflow. Run [skill:dotnet-project-analysis] to understand solution structure.
+**Prerequisites:** Run [skill:dotnet-version-detection] first to determine SDK version for the workflow. Run
+[skill:dotnet-project-analysis] to understand solution structure.
 
-Cross-references: [skill:dotnet-project-structure] for build props layout, [skill:dotnet-scaffold-project] which generates the project structure these workflows build.
+Cross-references: [skill:dotnet-project-structure] for build props layout, [skill:dotnet-scaffold-project] which
+generates the project structure these workflows build.
 
 ---
 
@@ -28,12 +39,12 @@ Cross-references: [skill:dotnet-project-structure] for build props layout, [skil
 
 Detect the CI platform from existing repo indicators:
 
-| Indicator | Platform |
-|-----------|----------|
-| `.github/` directory exists | GitHub Actions |
-| `azure-pipelines.yml` exists | Azure DevOps |
-| `.github/workflows/` has YAML files | GitHub Actions (already configured) |
-| Neither | Ask the user which platform to target |
+| Indicator                           | Platform                              |
+| ----------------------------------- | ------------------------------------- |
+| `.github/` directory exists         | GitHub Actions                        |
+| `azure-pipelines.yml` exists        | Azure DevOps                          |
+| `.github/workflows/` has YAML files | GitHub Actions (already configured)   |
+| Neither                             | Ask the user which platform to target |
 
 ---
 
@@ -41,7 +52,8 @@ Detect the CI platform from existing repo indicators:
 
 Create `.github/workflows/build.yml`:
 
-```yaml
+````yaml
+
 name: Build and Test
 
 on:
@@ -85,12 +97,15 @@ jobs:
         with:
           name: test-results
           path: TestResults/**/*.trx
-```
+
+```text
 
 ### Key Decisions Explained
 
-- **`global-json-file`** — uses the repo's `global.json` to install the exact SDK version. If the project has no `global.json`, replace with `dotnet-version: '10.0.x'` (or the appropriate version)
-- **`--locked-mode`** — ensures `packages.lock.json` files are respected; fails if they're out of date. If the project doesn't use lock files, replace with plain `dotnet restore`
+- **`global-json-file`** — uses the repo's `global.json` to install the exact SDK version. If the project has no
+  `global.json`, replace with `dotnet-version: '10.0.x'` (or the appropriate version)
+- **`--locked-mode`** — ensures `packages.lock.json` files are respected; fails if they're out of date. If the project
+  doesn't use lock files, replace with plain `dotnet restore`
 - **`-c Release`** — builds in Release mode so `ContinuousIntegrationBuild` takes effect
 - **`permissions: contents: read`** — principle of least privilege
 - **Environment variables** — suppress .NET CLI noise in logs
@@ -100,15 +115,17 @@ jobs:
 For projects that publish to NuGet, add a pack step:
 
 ```yaml
-      - name: Pack
-        run: dotnet pack --no-build -c Release -o artifacts
 
-      - name: Upload packages
-        uses: actions/upload-artifact@v4
-        with:
-          name: nuget-packages
-          path: artifacts/*.nupkg
-```
+- name: Pack
+  run: dotnet pack --no-build -c Release -o artifacts
+
+- name: Upload packages
+  uses: actions/upload-artifact@v4
+  with:
+    name: nuget-packages
+    path: artifacts/*.nupkg
+
+```text
 
 ---
 
@@ -117,6 +134,7 @@ For projects that publish to NuGet, add a pack step:
 Create `azure-pipelines.yml` at the repo root:
 
 ```yaml
+
 trigger:
   branches:
     include:
@@ -154,20 +172,23 @@ steps:
       command: 'test'
       arguments: '--no-build -c $(buildConfiguration) --logger trx'
       publishTestResults: true
-```
+
+```bash
 
 ### Adding NuGet Pack (Libraries)
 
 ```yaml
-  - script: dotnet pack --no-build -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)
-    displayName: 'Pack'
 
-  - task: PublishBuildArtifacts@1
-    displayName: 'Publish NuGet packages'
-    inputs:
-      pathToPublish: '$(Build.ArtifactStagingDirectory)'
-      artifactName: 'nuget-packages'
-```
+- script: dotnet pack --no-build -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)
+  displayName: 'Pack'
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish NuGet packages'
+  inputs:
+    pathToPublish: '$(Build.ArtifactStagingDirectory)'
+    artifactName: 'nuget-packages'
+
+```text
 
 ---
 
@@ -175,29 +196,34 @@ steps:
 
 ### Multi-TFM Projects
 
-If the project multi-targets, the default workflow works without changes — `dotnet build` and `dotnet test` handle all TFMs automatically. No matrix is needed for the starter.
+If the project multi-targets, the default workflow works without changes — `dotnet build` and `dotnet test` handle all
+TFMs automatically. No matrix is needed for the starter.
 
 ### Windows-Only Projects (MAUI, WPF, WinForms)
 
 Change the runner:
 
 ```yaml
+
 # GitHub Actions
 runs-on: windows-latest
 
 # Azure DevOps
 pool:
   vmImage: 'windows-latest'
-```
+
+```text
 
 ### Solution Filter
 
 If the repo has multiple solutions or uses solution filters:
 
 ```yaml
-      - name: Build
-        run: dotnet build MyApp.slnf --no-restore -c Release
-```
+
+- name: Build
+  run: dotnet build MyApp.slnf --no-restore -c Release
+
+```yaml
 
 ---
 
@@ -206,6 +232,7 @@ If the repo has multiple solutions or uses solution filters:
 After adding the workflow, verify locally:
 
 ```bash
+
 # GitHub Actions — validate YAML syntax
 # Install: gh extension install moritztomasi/gh-workflow-validator
 gh workflow-validator .github/workflows/build.yml
@@ -214,7 +241,8 @@ gh workflow-validator .github/workflows/build.yml
 dotnet restore --locked-mode
 dotnet build --no-restore -c Release
 dotnet test --no-build -c Release
-```
+
+```text
 
 Push a branch and open a PR to trigger the workflow.
 
@@ -223,6 +251,7 @@ Push a branch and open a PR to trigger the workflow.
 ## What's Next
 
 This starter covers build-test-pack. For advanced scenarios, see the CI/CD depth skills:
+
 - Reusable composite actions and workflow templates
 - Matrix builds across OS/TFM combinations
 - Deployment pipelines with environment gates
@@ -238,3 +267,4 @@ This starter covers build-test-pack. For advanced scenarios, see the CI/CD depth
 - [Azure Pipelines for .NET](https://learn.microsoft.com/en-us/azure/devops/pipelines/ecosystems/dotnet-core)
 - [setup-dotnet Action](https://github.com/actions/setup-dotnet)
 - [UseDotNet Task](https://learn.microsoft.com/en-us/azure/devops/pipelines/tasks/reference/use-dotnet-v2)
+````

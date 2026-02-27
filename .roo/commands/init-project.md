@@ -1,7 +1,7 @@
 ---
-description: Initialize dotnet-harness-toolkit context for this repository
+description: Initialize dotnet-agent-harness context for this repository
 ---
-Initialize dotnet-harness-toolkit context for this repository.
+Initialize dotnet-agent-harness context for this repository.
 
 1. Invoke [skill:dotnet-advisor].
 2. Invoke [skill:dotnet-version-detection].

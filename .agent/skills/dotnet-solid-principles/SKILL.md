@@ -6,7 +6,9 @@ description: >-
 ---
 # dotnet-solid-principles
 
-Foundational design principles for .NET applications. Covers each SOLID principle with concrete C# anti-patterns and fixes, plus DRY guidance with nuance on when duplication is acceptable. These principles guide class design, interface contracts, and dependency management across all .NET project types.
+Foundational design principles for .NET applications. Covers each SOLID principle with concrete C# anti-patterns and
+fixes, plus DRY guidance with nuance on when duplication is acceptable. These principles guide class design, interface
+contracts, and dependency management across all .NET project types.
 
 ## Scope
 
@@ -21,17 +23,22 @@ Foundational design principles for .NET applications. Covers each SOLID principl
 - DI container mechanics (registration, lifetimes, keyed services) -- see [skill:dotnet-csharp-dependency-injection]
 - Code smells and anti-pattern detection -- see [skill:dotnet-csharp-code-smells]
 
-Cross-references: [skill:dotnet-architecture-patterns] for clean architecture and vertical slices, [skill:dotnet-csharp-dependency-injection] for DI registration patterns and lifetime management, [skill:dotnet-csharp-code-smells] for anti-pattern detection, [skill:dotnet-csharp-coding-standards] for naming and style conventions.
+Cross-references: [skill:dotnet-architecture-patterns] for clean architecture and vertical slices,
+[skill:dotnet-csharp-dependency-injection] for DI registration patterns and lifetime management,
+[skill:dotnet-csharp-code-smells] for anti-pattern detection, [skill:dotnet-csharp-coding-standards] for naming and
+style conventions.
 
 ---
 
 ## Single Responsibility Principle (SRP)
 
-A class should have only one reason to change. Apply the "describe in one sentence" test: if you cannot describe what a class does in one sentence without using "and" or "or", it likely violates SRP.
+A class should have only one reason to change. Apply the "describe in one sentence" test: if you cannot describe what a
+class does in one sentence without using "and" or "or", it likely violates SRP.
 
 ### Anti-Pattern: God Class
 
-```csharp
+````csharp
+
 // WRONG -- OrderService handles validation, persistence, email, and PDF generation
 public class OrderService
 {
@@ -68,11 +75,13 @@ public class OrderService
 
     private void GenerateInvoicePdf(Order order) { /* ... */ }
 }
-```
+
+```text
 
 ### Fix: Separate Responsibilities
 
 ```csharp
+
 // Each class has one reason to change
 public sealed class OrderCreator(
     IOrderValidator validator,
@@ -112,11 +121,13 @@ public sealed class OrderRepository(AppDbContext db) : IOrderRepository
         return order;
     }
 }
-```
+
+```text
 
 ### Anti-Pattern: Fat Controller
 
 ```csharp
+
 // WRONG -- controller contains business logic, mapping, and persistence
 app.MapPost("/api/orders", async (
     CreateOrderRequest request,
@@ -152,11 +163,13 @@ app.MapPost("/api/orders", async (
     logger.LogInformation("Order {OrderId} created", order.Id);
     return Results.Created($"/api/orders/{order.Id}", order);
 });
-```
+
+```text
 
 Move business logic to a handler; keep the endpoint thin:
 
 ```csharp
+
 app.MapPost("/api/orders", async (
     CreateOrderRequest request,
     IOrderHandler handler,
@@ -170,7 +183,8 @@ app.MapPost("/api/orders", async (
         _ => Results.ValidationProblem(result.Errors)
     };
 });
-```
+
+```text
 
 ---
 
@@ -181,6 +195,7 @@ Classes should be open for extension but closed for modification. Add new behavi
 ### Anti-Pattern: Switch on Type
 
 ```csharp
+
 // WRONG -- adding a new discount type requires modifying this method
 public decimal CalculateDiscount(Order order)
 {
@@ -198,11 +213,13 @@ public decimal CalculateDiscount(Order order)
             return 0;
     }
 }
-```
+
+```text
 
 ### Fix: Strategy Pattern
 
 ```csharp
+
 public interface IDiscountStrategy
 {
     decimal Calculate(Order order);
@@ -236,13 +253,15 @@ public sealed class OrderPricing(
     public decimal ApplyBestDiscount(Order order) =>
         strategies.Max(s => s.Calculate(order));
 }
-```
+
+```text
 
 ### Extension via Abstract Classes
 
 When strategies share significant behavior, use an abstract base class:
 
 ```csharp
+
 public abstract class NotificationSender
 {
     public async Task SendAsync(Notification notification, CancellationToken ct)
@@ -267,7 +286,8 @@ public sealed class EmailNotificationSender(IEmailClient client)
             notification.Body, ct);
     }
 }
-```
+
+```text
 
 ---
 
@@ -278,6 +298,7 @@ Subtypes must be substitutable for their base types without altering program cor
 ### Anti-Pattern: Throwing in Override
 
 ```csharp
+
 public class FileStorage : IStorage
 {
     public virtual Stream OpenRead(string path) =>
@@ -298,22 +319,26 @@ public class ReadOnlyFileStorage : FileStorage
 
     // Surprise: callers expecting FileStorage behavior get exceptions
 }
-```
+
+```text
 
 ### Anti-Pattern: Collection Covariance Pitfall
 
 ```csharp
+
 // WRONG -- List<T> is not covariant; this compiles but causes runtime issues
 IList<Animal> animals = new List<Dog>(); // Compile error (correctly)
 
 // However, arrays ARE covariant in C# -- this compiles but throws at runtime:
 Animal[] animals = new Dog[10];
 animals[0] = new Cat(); // ArrayTypeMismatchException at runtime!
-```
+
+```csharp
 
 ### Fix: Use Covariant Interfaces
 
 ```csharp
+
 // IEnumerable<out T> and IReadOnlyList<out T> are covariant
 IEnumerable<Animal> animals = new List<Dog>(); // Safe -- read-only
 IReadOnlyList<Animal> readOnlyAnimals = new List<Dog>(); // Safe
@@ -327,7 +352,8 @@ void ProcessAnimals(IReadOnlyList<Animal> animals)
     foreach (var animal in animals)
         animal.Speak();
 }
-```
+
+```text
 
 ### LSP Compliance Checklist
 
@@ -345,6 +371,7 @@ Clients should not be forced to depend on methods they do not use. Prefer narrow
 ### Anti-Pattern: Header Interface
 
 ```csharp
+
 // WRONG -- IWorker forces all implementations to support every capability
 public interface IWorker
 {
@@ -368,11 +395,13 @@ public class ContractWorker : IWorker
     public Task SubmitExpenseAsync(Expense expense) =>
         throw new NotSupportedException(); // ISP violation
 }
-```
+
+```text
 
 ### Fix: Role Interfaces
 
 ```csharp
+
 public interface IWorkPerformer
 {
     Task DoWorkAsync(CancellationToken ct);
@@ -411,7 +440,8 @@ public sealed class ContractWorker : IWorkPerformer, IPayable
     public Task DoWorkAsync(CancellationToken ct) => /* ... */;
     public Task<decimal> CalculatePayAsync() => /* ... */;
 }
-```
+
+```text
 
 ### Practical .NET ISP
 
@@ -426,6 +456,7 @@ The .NET BCL demonstrates ISP well:
 Accept the narrowest interface your method actually needs:
 
 ```csharp
+
 // WRONG -- requires IList<T> but only reads
 public decimal CalculateTotal(IList<OrderLine> lines) =>
     lines.Sum(l => l.Price * l.Quantity);
@@ -437,7 +468,8 @@ public decimal CalculateTotal(IReadOnlyList<OrderLine> lines) =>
 // BEST for iteration only -- accepts IEnumerable<T>
 public decimal CalculateTotal(IEnumerable<OrderLine> lines) =>
     lines.Sum(l => l.Price * l.Quantity);
-```
+
+```text
 
 ---
 
@@ -448,6 +480,7 @@ High-level modules should not depend on low-level modules. Both should depend on
 ### Anti-Pattern: Direct Dependency
 
 ```csharp
+
 // WRONG -- high-level OrderProcessor depends directly on low-level SqlOrderRepository
 public sealed class OrderProcessor
 {
@@ -461,11 +494,13 @@ public sealed class OrderProcessor
             "Order processed", $"Order {order.Id}");
     }
 }
-```
+
+```text
 
 ### Fix: Depend on Abstractions
 
 ```csharp
+
 public interface IOrderRepository
 {
     Task SaveAsync(Order order, CancellationToken ct = default);
@@ -499,17 +534,20 @@ public sealed class SqlOrderRepository(AppDbContext db) : IOrderRepository
     public async Task<Order?> GetByIdAsync(string id, CancellationToken ct) =>
         await db.Orders.FindAsync([id], ct);
 }
-```
+
+```text
 
 ### DI Registration
 
 Register abstractions with Microsoft.Extensions.DependencyInjection. See [skill:dotnet-csharp-dependency-injection] for lifetime management, keyed services, and decoration patterns.
 
 ```csharp
+
 builder.Services.AddScoped<IOrderRepository, SqlOrderRepository>();
 builder.Services.AddScoped<INotificationService, SmtpNotificationService>();
 builder.Services.AddScoped<OrderProcessor>();
-```
+
+```csharp
 
 ### DIP Boundaries
 
@@ -531,6 +569,7 @@ Every piece of knowledge should have a single, authoritative representation. But
 Apply DRY when two pieces of code represent the **same concept** and must change together:
 
 ```csharp
+
 // WRONG -- tax rate duplicated across two services
 public sealed class InvoiceService
 {
@@ -547,7 +586,8 @@ public static class TaxRates
 {
     public const decimal StandardRate = 0.08m;
 }
-```
+
+```text
 
 ### Rule of Three
 
@@ -562,6 +602,7 @@ Do not abstract prematurely. Wait until you see the same pattern three times bef
 Not all code similarity represents knowledge duplication:
 
 ```csharp
+
 // These look similar but represent DIFFERENT business concepts
 // They will evolve independently -- DO NOT merge them
 
@@ -578,7 +619,8 @@ public sealed class SupplierValidator
         !string.IsNullOrEmpty(supplier.Name) &&
         !string.IsNullOrEmpty(supplier.ContactEmail);
 }
-```
+
+```text
 
 **Acceptable duplication scenarios:**
 - Test setup code that looks similar across test classes (coupling tests to shared helpers makes them fragile)
@@ -591,6 +633,7 @@ public sealed class SupplierValidator
 When you do extract, prefer composition over inheritance:
 
 ```csharp
+
 // Prefer: composition via a shared utility
 public static class StringValidation
 {
@@ -600,7 +643,8 @@ public static class StringValidation
 
 // Over: inheritance via a base class
 // (couples validators to a shared base, harder to test independently)
-```
+
+```text
 
 ---
 
@@ -659,3 +703,4 @@ SOLID and DRY guidance in this skill is grounded in publicly available content f
 ## Attribution
 
 Adapted from [Aaronontheweb/dotnet-skills](https://github.com/Aaronontheweb/dotnet-skills) (MIT license).
+````

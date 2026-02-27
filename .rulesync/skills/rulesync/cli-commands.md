@@ -2,7 +2,8 @@
 
 ## Quick Commands
 
-```bash
+````bash
+
 # Initialize new project (recommended: organized rules structure)
 rulesync init
 
@@ -56,7 +57,8 @@ rulesync update --check
 
 # Force update even if already at latest version
 rulesync update --force
-```
+
+```text
 
 ## Fetch Command
 
@@ -70,6 +72,7 @@ The `fetch` command allows you to fetch configuration files directly from a Git 
 ### Source Formats
 
 ```bash
+
 # Full URL format
 rulesync fetch https://github.com/owner/repo
 rulesync fetch https://github.com/owner/repo/tree/branch
@@ -85,7 +88,8 @@ rulesync fetch owner/repo
 rulesync fetch owner/repo@ref        # Specify branch/tag/commit
 rulesync fetch owner/repo:path       # Specify subdirectory
 rulesync fetch owner/repo@ref:path   # Both ref and path
-```
+
+```text
 
 ### Options
 
@@ -102,6 +106,7 @@ rulesync fetch owner/repo@ref:path   # Both ref and path
 ### Examples
 
 ```bash
+
 # Fetch skills from external repositories
 rulesync fetch vercel-labs/agent-skills --features skills
 rulesync fetch anthropics/skills --features skills
@@ -124,4 +129,6 @@ rulesync fetch owner/repo --conflict skip
 
 # Fetch from a monorepo subdirectory
 rulesync fetch owner/repo:packages/my-package
-```
+
+```text
+````

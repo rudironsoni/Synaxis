@@ -8,7 +8,9 @@ metadata:
 ---
 # dotnet-windbg-debugging
 
-Windows user-mode debugging using WinDbg MCP tools. Applicable to any Windows application -- native, managed (.NET/CLR), or mixed-mode. Guides investigation of crash dumps, application hangs, high CPU, and memory pressure through structured command packs and report templates.
+Windows user-mode debugging using WinDbg MCP tools. Applicable to any Windows application -- native, managed (.NET/CLR),
+or mixed-mode. Guides investigation of crash dumps, application hangs, high CPU, and memory pressure through structured
+command packs and report templates.
 
 **Platform:** Windows only.
 
@@ -68,9 +70,11 @@ Use these `mcp-windbg` operations:
 - Do not call it a deadlock unless lock/wait evidence supports it
 - Preserve user privacy: do not include secrets from environment blocks in reports
 
-Cross-references: [skill:dotnet-profiling] for .NET SDK diagnostic tools, [skill:dotnet-gc-memory] for managed GC and memory tuning.
+Cross-references: [skill:dotnet-profiling] for .NET SDK diagnostic tools, [skill:dotnet-gc-memory] for managed GC and
+memory tuning.
 
 ## References
 
 - [WinDbg MCP](https://github.com/anthropics/windbg-mcp) -- MCP server for WinDbg integration
-- [WinDbg Documentation](https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/) -- Microsoft debugger documentation
+- [WinDbg Documentation](https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/) -- Microsoft debugger
+  documentation

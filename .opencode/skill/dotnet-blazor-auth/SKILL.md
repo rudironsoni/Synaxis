@@ -3,10 +3,19 @@ name: dotnet-blazor-auth
 description: >-
   Implements Blazor auth flows -- login/logout, AuthorizeView, Identity UI,
   OIDC.
+allowed-tools:
+  - Read
+  - Grep
+  - Glob
+  - Bash
+  - Write
+  - Edit
 ---
 # dotnet-blazor-auth
 
-Authentication and authorization across all Blazor hosting models. Covers AuthorizeView, CascadingAuthenticationState, Identity UI scaffolding, role/policy-based authorization, per-hosting-model auth flow differences (cookie vs token), and external identity providers.
+Authentication and authorization across all Blazor hosting models. Covers AuthorizeView, CascadingAuthenticationState,
+Identity UI scaffolding, role/policy-based authorization, per-hosting-model auth flow differences (cookie vs token), and
+external identity providers.
 
 ## Scope
 
@@ -22,14 +31,19 @@ Authentication and authorization across all Blazor hosting models. Covers Author
 - JWT token generation and validation -- see [skill:dotnet-api-security]
 - OWASP security principles -- see [skill:dotnet-security-owasp]
 - CSRF/XSS/CSP/rate-limiting hardening without auth-flow work -- see [skill:dotnet-security-owasp]
-- Hardening-only reviews of existing login pages without auth-flow implementation changes -- see [skill:dotnet-security-owasp]
+- Hardening-only reviews of existing login pages without auth-flow implementation changes -- see
+  [skill:dotnet-security-owasp]
 - bUnit testing of auth components -- see [skill:dotnet-blazor-testing]
 - E2E auth testing -- see [skill:dotnet-playwright]
 - UI framework selection -- see [skill:dotnet-ui-chooser]
 
-Cross-references: [skill:dotnet-api-security] for API-level auth, [skill:dotnet-security-owasp] for OWASP principles, [skill:dotnet-blazor-patterns] for hosting models, [skill:dotnet-blazor-components] for component architecture, [skill:dotnet-blazor-testing] for bUnit testing, [skill:dotnet-playwright] for E2E testing, [skill:dotnet-ui-chooser] for framework selection.
+Cross-references: [skill:dotnet-api-security] for API-level auth, [skill:dotnet-security-owasp] for OWASP principles,
+[skill:dotnet-blazor-patterns] for hosting models, [skill:dotnet-blazor-components] for component architecture,
+[skill:dotnet-blazor-testing] for bUnit testing, [skill:dotnet-playwright] for E2E testing, [skill:dotnet-ui-chooser]
+for framework selection.
 
-Routing note: do not load this skill for OWASP hardening reviews unless the task explicitly includes Blazor auth flow/UI implementation.
+Routing note: do not load this skill for OWASP hardening reviews unless the task explicitly includes Blazor auth flow/UI
+implementation.
 
 ---
 
@@ -37,18 +51,20 @@ Routing note: do not load this skill for OWASP hardening reviews unless the task
 
 Authentication patterns differ significantly across Blazor hosting models:
 
-| Concern | InteractiveServer | InteractiveWebAssembly | InteractiveAuto | Static SSR | Hybrid |
-|---|---|---|---|---|---|
-| Auth mechanism | Cookie-based (server-side) | Token-based (JWT/OIDC) | Cookie (Server phase), Token (WASM phase) | Cookie-based (standard ASP.NET Core) | Platform-native or cookie |
-| User state access | Direct `HttpContext` access | `AuthenticationStateProvider` | Varies by phase | `HttpContext` | Platform auth APIs |
-| Token storage | Not needed (cookie) | `localStorage` or `sessionStorage` | Transition from cookie to token | Not needed (cookie) | Secure storage (Keychain, etc.) |
-| Refresh handling | Circuit reconnection | Token refresh via interceptor | Automatic | Standard cookie renewal | Platform-specific |
+| Concern           | InteractiveServer           | InteractiveWebAssembly             | InteractiveAuto                           | Static SSR                           | Hybrid                          |
+| ----------------- | --------------------------- | ---------------------------------- | ----------------------------------------- | ------------------------------------ | ------------------------------- |
+| Auth mechanism    | Cookie-based (server-side)  | Token-based (JWT/OIDC)             | Cookie (Server phase), Token (WASM phase) | Cookie-based (standard ASP.NET Core) | Platform-native or cookie       |
+| User state access | Direct `HttpContext` access | `AuthenticationStateProvider`      | Varies by phase                           | `HttpContext`                        | Platform auth APIs              |
+| Token storage     | Not needed (cookie)         | `localStorage` or `sessionStorage` | Transition from cookie to token           | Not needed (cookie)                  | Secure storage (Keychain, etc.) |
+| Refresh handling  | Circuit reconnection        | Token refresh via interceptor      | Automatic                                 | Standard cookie renewal              | Platform-specific               |
 
 ### InteractiveServer Auth
 
-Server-side Blazor uses cookie authentication. The user authenticates via a standard ASP.NET Core login flow, and the cookie is sent with the initial HTTP request that establishes the SignalR circuit.
+Server-side Blazor uses cookie authentication. The user authenticates via a standard ASP.NET Core login flow, and the
+cookie is sent with the initial HTTP request that establishes the SignalR circuit.
 
-```csharp
+````csharp
+
 // Program.cs
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -59,15 +75,20 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddAuthorization();
-```
 
-**Gotcha:** `HttpContext` is available during the initial HTTP request but is `null` inside interactive components after the SignalR circuit is established. Do not access `HttpContext` in interactive component lifecycle methods. Use `AuthenticationStateProvider` instead.
+```text
+
+**Gotcha:** `HttpContext` is available during the initial HTTP request but is `null` inside interactive components after
+the SignalR circuit is established. Do not access `HttpContext` in interactive component lifecycle methods. Use
+`AuthenticationStateProvider` instead.
 
 ### InteractiveWebAssembly Auth
 
-WASM runs in the browser. Cookie auth works for same-origin APIs (and Backend-for-Frontend / BFF patterns), but token-based auth (OIDC/JWT) is the standard approach for cross-origin APIs and delegated access scenarios:
+WASM runs in the browser. Cookie auth works for same-origin APIs (and Backend-for-Frontend / BFF patterns), but
+token-based auth (OIDC/JWT) is the standard approach for cross-origin APIs and delegated access scenarios:
 
 ```csharp
+
 // Client Program.cs (WASM)
 builder.Services.AddOidcAuthentication(options =>
 {
@@ -76,9 +97,11 @@ builder.Services.AddOidcAuthentication(options =>
     options.ProviderOptions.ResponseType = "code";
     options.ProviderOptions.DefaultScopes.Add("api");
 });
-```
+
+```text
 
 ```csharp
+
 // Attach tokens to API calls using BaseAddressAuthorizationMessageHandler
 // (auto-attaches tokens for requests to the app's base address)
 builder.Services.AddHttpClient("API", client =>
@@ -91,24 +114,28 @@ builder.Services.AddHttpClient("API", client =>
 
 builder.Services.AddScoped(sp =>
     sp.GetRequiredService<IHttpClientFactory>().CreateClient("API"));
-```
+
+```text
 
 ### InteractiveAuto Auth
 
 Auto mode starts as InteractiveServer (cookie auth), then transitions to WASM (token auth). Handle both:
 
 ```csharp
+
 // Server Program.cs
 builder.Services.AddAuthentication()
     .AddCookie()
     .AddJwtBearer(); // For WASM API calls after transition
 
 builder.Services.AddCascadingAuthenticationState();
-```
+
+```text
 
 ### Hybrid (MAUI) Auth
 
 ```csharp
+
 // Register platform-specific auth
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<AuthenticationStateProvider, MauiAuthStateProvider>();
@@ -129,7 +156,8 @@ public class MauiAuthStateProvider : AuthenticationStateProvider
         return new AuthenticationState(new ClaimsPrincipal(identity));
     }
 }
-```
+
+```text
 
 ---
 
@@ -140,6 +168,7 @@ public class MauiAuthStateProvider : AuthenticationStateProvider
 ### Basic Usage
 
 ```razor
+
 <AuthorizeView>
     <Authorized>
         <p>Welcome, @context.User.Identity?.Name!</p>
@@ -152,11 +181,13 @@ public class MauiAuthStateProvider : AuthenticationStateProvider
         <p>Checking authentication...</p>
     </Authorizing>
 </AuthorizeView>
-```
+
+```text
 
 ### Role-Based
 
 ```razor
+
 <AuthorizeView Roles="Admin,Manager">
     <Authorized>
         <AdminDashboard />
@@ -165,43 +196,53 @@ public class MauiAuthStateProvider : AuthenticationStateProvider
         <p>You do not have access to the admin dashboard.</p>
     </NotAuthorized>
 </AuthorizeView>
-```
+
+```text
 
 ### Policy-Based
 
 ```razor
+
 <AuthorizeView Policy="CanEditProducts">
     <Authorized>
         <button @onclick="EditProduct">Edit</button>
     </Authorized>
 </AuthorizeView>
-```
+
+```text
 
 ```csharp
+
 // Register policy in Program.cs
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy("CanEditProducts", policy =>
         policy.RequireClaim("permission", "products.edit"));
-```
+
+```csharp
 
 ---
 
 ## CascadingAuthenticationState
 
-`CascadingAuthenticationState` provides the current `AuthenticationState` as a cascading parameter to all descendant components.
+`CascadingAuthenticationState` provides the current `AuthenticationState` as a cascading parameter to all descendant
+components.
 
 ### Setup
 
 ```csharp
+
 // Program.cs -- register cascading auth state
 builder.Services.AddCascadingAuthenticationState();
-```
 
-This replaces wrapping the entire app in `<CascadingAuthenticationState>` (the older pattern). The service-based registration (.NET 8+) is preferred.
+```csharp
+
+This replaces wrapping the entire app in `<CascadingAuthenticationState>` (the older pattern). The service-based
+registration (.NET 8+) is preferred.
 
 ### Consuming Auth State in Components
 
 ```razor
+
 @code {
     [CascadingParameter]
     private Task<AuthenticationState>? AuthState { get; set; }
@@ -217,11 +258,13 @@ This replaces wrapping the entire app in `<CascadingAuthenticationState>` (the o
         }
     }
 }
-```
+
+```text
 
 ### Accessing Claims
 
 ```csharp
+
 var state = await AuthState;
 var user = state.User;
 
@@ -232,23 +275,28 @@ if (user.Identity?.IsAuthenticated == true)
     var roles = user.FindAll(ClaimTypes.Role).Select(c => c.Value);
     var isAdmin = user.IsInRole("Admin");
 }
-```
+
+```text
 
 ---
 
 ## Identity UI Scaffolding
 
-ASP.NET Core Identity provides a complete authentication system with registration, login, email confirmation, password reset, and two-factor authentication.
+ASP.NET Core Identity provides a complete authentication system with registration, login, email confirmation, password
+reset, and two-factor authentication.
 
 ### Adding Identity to a Blazor Web App
 
 ```bash
+
 # Add Identity scaffolding
 dotnet add package Microsoft.AspNetCore.Identity.EntityFrameworkCore
 dotnet add package Microsoft.AspNetCore.Identity.UI
-```
+
+```bash
 
 ```csharp
+
 // Program.cs
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
@@ -262,20 +310,24 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
-```
+
+```text
 
 ### Scaffolding Identity Pages
 
 ```bash
+
 # Scaffold individual Identity pages for customization
 dotnet aspnet-codegenerator identity -dc ApplicationDbContext --files "Account.Login;Account.Register;Account.Logout"
-```
+
+```bash
 
 ### Custom Identity UI with Blazor Components
 
 For a fully Blazor-native auth experience, create Blazor components that call Identity APIs:
 
 ```razor
+
 @page "/Account/Login"
 @inject SignInManager<ApplicationUser> SignInManager
 @inject NavigationManager Navigation
@@ -332,9 +384,12 @@ For a fully Blazor-native auth experience, create Blazor components that call Id
         }
     }
 }
-```
 
-**Gotcha:** `SignInManager` uses `HttpContext` to set cookies. In Interactive render modes, `HttpContext` is not available after the circuit is established. Login/logout pages must use Static SSR (no `@rendermode`) so they have access to `HttpContext` for cookie operations.
+```text
+
+**Gotcha:** `SignInManager` uses `HttpContext` to set cookies. In Interactive render modes, `HttpContext` is not
+available after the circuit is established. Login/logout pages must use Static SSR (no `@rendermode`) so they have
+access to `HttpContext` for cookie operations.
 
 ---
 
@@ -343,22 +398,27 @@ For a fully Blazor-native auth experience, create Blazor components that call Id
 ### Page-Level Authorization
 
 ```razor
+
 @page "/admin"
 @attribute [Authorize(Roles = "Admin")]
 
 <h1>Admin Panel</h1>
-```
+
+```text
 
 ```razor
+
 @page "/products/manage"
 @attribute [Authorize(Policy = "ProductManager")]
 
 <h1>Manage Products</h1>
-```
+
+```text
 
 ### Defining Policies
 
 ```csharp
+
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy("ProductManager", policy =>
         policy.RequireRole("Admin", "ProductManager"))
@@ -367,11 +427,13 @@ builder.Services.AddAuthorizationBuilder()
               .RequireAuthenticatedUser())
     .AddPolicy("MinimumAge", policy =>
         policy.AddRequirements(new MinimumAgeRequirement(18)));
-```
+
+```text
 
 ### Custom Authorization Handler
 
 ```csharp
+
 public sealed class MinimumAgeRequirement(int minimumAge) : IAuthorizationRequirement
 {
     public int MinimumAge { get; } = minimumAge;
@@ -399,11 +461,13 @@ public sealed class MinimumAgeHandler : AuthorizationHandler<MinimumAgeRequireme
 
 // Register
 builder.Services.AddSingleton<IAuthorizationHandler, MinimumAgeHandler>();
-```
+
+```text
 
 ### Procedural Authorization in Components
 
 ```razor
+
 @inject IAuthorizationService AuthorizationService
 
 @code {
@@ -423,7 +487,8 @@ builder.Services.AddSingleton<IAuthorizationHandler, MinimumAgeHandler>();
         }
     }
 }
-```
+
+```text
 
 ---
 
@@ -432,6 +497,7 @@ builder.Services.AddSingleton<IAuthorizationHandler, MinimumAgeHandler>();
 ### Adding External Providers
 
 ```csharp
+
 builder.Services.AddAuthentication()
     .AddMicrosoftAccount(options =>
     {
@@ -443,19 +509,21 @@ builder.Services.AddAuthentication()
         options.ClientId = builder.Configuration["Auth:Google:ClientId"]!;
         options.ClientSecret = builder.Configuration["Auth:Google:ClientSecret"]!;
     });
-```
+
+```text
 
 ### External Login Flow per Hosting Model
 
-| Hosting Model | Flow | Notes |
-|---|---|---|
-| InteractiveServer / Static SSR | Standard OAuth redirect (server-side) | Cookie stored after callback |
-| InteractiveWebAssembly | OIDC with PKCE (client-side) | Token stored in browser |
-| Hybrid (MAUI) | `WebAuthenticator` or MSAL | Platform-specific secure storage |
+| Hosting Model                  | Flow                                  | Notes                            |
+| ------------------------------ | ------------------------------------- | -------------------------------- |
+| InteractiveServer / Static SSR | Standard OAuth redirect (server-side) | Cookie stored after callback     |
+| InteractiveWebAssembly         | OIDC with PKCE (client-side)          | Token stored in browser          |
+| Hybrid (MAUI)                  | `WebAuthenticator` or MSAL            | Platform-specific secure storage |
 
 For WASM, configure the OIDC provider in the client project:
 
 ```csharp
+
 // Client Program.cs
 builder.Services.AddOidcAuthentication(options =>
 {
@@ -463,27 +531,39 @@ builder.Services.AddOidcAuthentication(options =>
     options.ProviderOptions.ClientId = "{client-id}";
     options.ProviderOptions.ResponseType = "code";
 });
-```
+
+```text
 
 For MAUI Hybrid:
 
 ```csharp
+
 var result = await WebAuthenticator.Default.AuthenticateAsync(
     new Uri("https://login.example.com/authorize"),
     new Uri("myapp://callback"));
 var token = result.AccessToken;
-```
+
+```text
 
 ---
 
 ## Agent Gotchas
 
-1. **Do not access `HttpContext` in interactive components.** `HttpContext` is only available during the initial HTTP request. After the SignalR circuit is established (InteractiveServer) or the WASM runtime loads, it is `null`. Use `AuthenticationStateProvider` or `CascadingAuthenticationState` instead.
-2. **Do not rely on cookies for cross-origin or delegated API access in WASM.** Use OIDC/JWT with `AuthorizationMessageHandler` for cross-origin APIs. Same-origin and Backend-for-Frontend (BFF) cookie auth remains valid for WASM apps.
-3. **Do not render login/logout pages in Interactive mode.** `SignInManager` requires `HttpContext` to set/clear cookies. Login and logout pages must use Static SSR render mode.
-4. **Do not store tokens in `localStorage` without considering XSS.** If the app is vulnerable to XSS, tokens in `localStorage` can be stolen. Use `sessionStorage` (cleared on tab close) or the OIDC library's built-in storage mechanisms with PKCE.
-5. **Do not forget `AddCascadingAuthenticationState()`.** Without it, `[CascadingParameter] Task<AuthenticationState>` is always `null` in components, silently breaking auth checks.
-6. **Do not use `AddIdentity` and `AddDefaultIdentity` together.** `AddDefaultIdentity` includes UI scaffolding; `AddIdentity` does not. Choose one based on whether you want the default Identity UI pages.
+1. **Do not access `HttpContext` in interactive components.** `HttpContext` is only available during the initial HTTP
+   request. After the SignalR circuit is established (InteractiveServer) or the WASM runtime loads, it is `null`. Use
+   `AuthenticationStateProvider` or `CascadingAuthenticationState` instead.
+2. **Do not rely on cookies for cross-origin or delegated API access in WASM.** Use OIDC/JWT with
+   `AuthorizationMessageHandler` for cross-origin APIs. Same-origin and Backend-for-Frontend (BFF) cookie auth remains
+   valid for WASM apps.
+3. **Do not render login/logout pages in Interactive mode.** `SignInManager` requires `HttpContext` to set/clear
+   cookies. Login and logout pages must use Static SSR render mode.
+4. **Do not store tokens in `localStorage` without considering XSS.** If the app is vulnerable to XSS, tokens in
+   `localStorage` can be stolen. Use `sessionStorage` (cleared on tab close) or the OIDC library's built-in storage
+   mechanisms with PKCE.
+5. **Do not forget `AddCascadingAuthenticationState()`.** Without it, `[CascadingParameter] Task<AuthenticationState>`
+   is always `null` in components, silently breaking auth checks.
+6. **Do not use `AddIdentity` and `AddDefaultIdentity` together.** `AddDefaultIdentity` includes UI scaffolding;
+   `AddIdentity` does not. Choose one based on whether you want the default Identity UI pages.
 
 ---
 
@@ -505,3 +585,4 @@ var token = result.AccessToken;
 - [ASP.NET Core Identity](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity?view=aspnetcore-10.0)
 - [External Login Providers](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/social/?view=aspnetcore-10.0)
 - [Role/Policy-Based Authorization](https://learn.microsoft.com/en-us/aspnet/core/security/authorization/roles?view=aspnetcore-10.0)
+````

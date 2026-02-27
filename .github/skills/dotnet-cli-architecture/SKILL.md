@@ -6,9 +6,13 @@ description: >-
 ---
 # dotnet-cli-architecture
 
-Layered CLI application architecture for .NET: command/handler/service separation following clig.dev principles, configuration precedence (appsettings → environment variables → CLI arguments), structured logging in CLI context, exit code conventions, stdin/stdout/stderr patterns, and testing CLI applications via in-process invocation with output capture.
+Layered CLI application architecture for .NET: command/handler/service separation following clig.dev principles,
+configuration precedence (appsettings → environment variables → CLI arguments), structured logging in CLI context, exit
+code conventions, stdin/stdout/stderr patterns, and testing CLI applications via in-process invocation with output
+capture.
 
-**Version assumptions:** .NET 8.0+ baseline. Patterns apply to CLI tools built with System.CommandLine 2.0 and generic host.
+**Version assumptions:** .NET 8.0+ baseline. Patterns apply to CLI tools built with System.CommandLine 2.0 and generic
+host.
 
 ## Scope
 
@@ -28,30 +32,34 @@ Layered CLI application architecture for .NET: command/handler/service separatio
 - DI container internals -- see [skill:dotnet-csharp-dependency-injection]
 - General testing strategies -- see [skill:dotnet-testing-strategy]
 
-Cross-references: [skill:dotnet-system-commandline] for System.CommandLine 2.0 API, [skill:dotnet-native-aot] for AOT publishing CLI tools, [skill:dotnet-csharp-dependency-injection] for DI patterns, [skill:dotnet-csharp-configuration] for configuration integration, [skill:dotnet-testing-strategy] for general testing patterns.
+Cross-references: [skill:dotnet-system-commandline] for System.CommandLine 2.0 API, [skill:dotnet-native-aot] for AOT
+publishing CLI tools, [skill:dotnet-csharp-dependency-injection] for DI patterns, [skill:dotnet-csharp-configuration]
+for configuration integration, [skill:dotnet-testing-strategy] for general testing patterns.
 
 ---
 
 ## clig.dev Principles for .NET CLI Tools
 
-The [Command Line Interface Guidelines](https://clig.dev/) provide language-agnostic principles for well-behaved CLI tools. These translate directly to .NET patterns.
+The [Command Line Interface Guidelines](https://clig.dev/) provide language-agnostic principles for well-behaved CLI
+tools. These translate directly to .NET patterns.
 
 ### Core Principles
 
-| Principle | Implementation |
-|-----------|---------------|
-| Human-first output by default | Use `Console.Out` for data, `Console.Error` for diagnostics |
-| Machine-readable output with `--json` | Add a `--json` global option that switches output format |
-| Stderr for status/diagnostics | Logging, progress bars, and prompts go to stderr |
-| Stdout for data only | Piped output (`mycli list \| jq .`) must not contain log noise |
-| Non-zero exit on failure | Return specific exit codes (see conventions below) |
-| Fail early, fail loudly | Validate inputs before doing work |
-| Respect `NO_COLOR` | Check `Environment.GetEnvironmentVariable("NO_COLOR")` |
-| Support `--verbose` and `--quiet` | Global options controlling output verbosity |
+| Principle                             | Implementation                                                 |
+| ------------------------------------- | -------------------------------------------------------------- |
+| Human-first output by default         | Use `Console.Out` for data, `Console.Error` for diagnostics    |
+| Machine-readable output with `--json` | Add a `--json` global option that switches output format       |
+| Stderr for status/diagnostics         | Logging, progress bars, and prompts go to stderr               |
+| Stdout for data only                  | Piped output (`mycli list \| jq .`) must not contain log noise |
+| Non-zero exit on failure              | Return specific exit codes (see conventions below)             |
+| Fail early, fail loudly               | Validate inputs before doing work                              |
+| Respect `NO_COLOR`                    | Check `Environment.GetEnvironmentVariable("NO_COLOR")`         |
+| Support `--verbose` and `--quiet`     | Global options controlling output verbosity                    |
 
 ### Stdout vs Stderr in .NET
 
-```csharp
+````csharp
+
 // Data output -- goes to stdout (can be piped)
 Console.Out.WriteLine(JsonSerializer.Serialize(result, jsonContext.Options));
 
@@ -61,7 +69,8 @@ Console.Error.WriteLine("Processing 42 files...");
 // With ILogger (when using hosting)
 // ILogger writes to stderr via console provider by default
 logger.LogInformation("Connected to {Endpoint}", endpoint);
-```
+
+```text
 
 ---
 
@@ -69,7 +78,8 @@ logger.LogInformation("Connected to {Endpoint}", endpoint);
 
 Separate CLI concerns into three layers:
 
-```
+```bash
+
 ┌─────────────────────────────────────┐
 │  Commands (System.CommandLine)      │  Parse args, wire options
 │  ─ RootCommand, Command, Option<T>  │
@@ -80,7 +90,8 @@ Separate CLI concerns into three layers:
 │  Services (business logic)          │  Pure logic, no CLI concerns
 │  ─ Interfaces + implementations     │
 └─────────────────────────────────────┘
-```
+
+```text
 
 ### Why Three Layers
 
@@ -90,7 +101,8 @@ Separate CLI concerns into three layers:
 
 ### Example Structure
 
-```
+```text
+
 src/
   MyCli/
     MyCli.csproj
@@ -104,11 +116,13 @@ src/
       SyncService.cs              # Implementation (no CLI awareness)
     Output/
       ConsoleFormatter.cs         # Table/JSON output formatting
-```
+
+```csharp
 
 ### Command Definition Layer
 
 ```csharp
+
 // Commands/SyncCommandDefinition.cs
 public static class SyncCommandDefinition
 {
@@ -126,11 +140,13 @@ public static class SyncCommandDefinition
         return command;
     }
 }
-```
+
+```bash
 
 ### Handler Layer
 
 ```csharp
+
 // Handlers/SyncHandler.cs
 public class SyncHandler : ICommandHandler
 {
@@ -168,11 +184,13 @@ public class SyncHandler : ICommandHandler
         return ExitCodes.Success;
     }
 }
-```
+
+```text
 
 ### Service Layer
 
 ```csharp
+
 // Services/ISyncService.cs -- no CLI dependency
 public interface ISyncService
 {
@@ -198,7 +216,8 @@ public class SyncService : ISyncService
         return new SyncResult(ItemCount: data.Items.Length);
     }
 }
-```
+
+```text
 
 ---
 
@@ -215,6 +234,7 @@ CLI tools use a specific configuration precedence (lowest to highest priority):
 ### Implementation with Generic Host
 
 ```csharp
+
 var builder = new CommandLineBuilder(rootCommand)
     .UseHost(_ => Host.CreateDefaultBuilder(args), host =>
     {
@@ -238,17 +258,19 @@ var builder = new CommandLineBuilder(rootCommand)
     })
     .UseDefaults()
     .Build();
-```
+
+```bash
 
 ### User-Level Configuration
 
-Many CLI tools support user-level config (e.g., `~/.mycli/config.json`, `~/.config/mycli/config.yaml`). Follow platform conventions:
+Many CLI tools support user-level config (e.g., `~/.mycli/config.json`, `~/.config/mycli/config.yaml`). Follow platform
+conventions:
 
-| Platform | Location |
-|----------|----------|
-| Linux/macOS | `~/.config/mycli/` or `~/.mycli/` |
-| Windows | `%APPDATA%\mycli\` |
-| XDG-compliant | `$XDG_CONFIG_HOME/mycli/` |
+| Platform      | Location                          |
+| ------------- | --------------------------------- |
+| Linux/macOS   | `~/.config/mycli/` or `~/.mycli/` |
+| Windows       | `%APPDATA%\mycli\`                |
+| XDG-compliant | `$XDG_CONFIG_HOME/mycli/`         |
 
 ---
 
@@ -259,6 +281,7 @@ Many CLI tools support user-level config (e.g., `~/.mycli/config.json`, `~/.conf
 CLI tools need different logging than web apps: logs go to stderr, and verbosity is controlled by flags.
 
 ```csharp
+
 host.ConfigureLogging((ctx, logging) =>
 {
     logging.ClearProviders();
@@ -268,13 +291,15 @@ host.ConfigureLogging((ctx, logging) =>
         options.LogToStandardErrorThreshold = LogLevel.Trace;
     });
 });
-```
+
+```text
 
 ### Verbosity Mapping
 
 Map `--verbose`/`--quiet` flags to log levels:
 
 ```csharp
+
 public static class VerbosityMapping
 {
     public static LogLevel ToLogLevel(bool verbose, bool quiet) => (verbose, quiet) switch
@@ -291,7 +316,8 @@ host.ConfigureLogging((ctx, logging) =>
     var level = VerbosityMapping.ToLogLevel(verbose, quiet);
     logging.SetMinimumLevel(level);
 });
-```
+
+```text
 
 ---
 
@@ -300,6 +326,7 @@ host.ConfigureLogging((ctx, logging) =>
 ### Standard Exit Codes
 
 ```csharp
+
 public static class ExitCodes
 {
     public const int Success = 0;
@@ -313,7 +340,8 @@ public static class ExitCodes
     public const int SyncFailed = 10;
     public const int ValidationFailed = 11;
 }
-```
+
+```text
 
 ### Guidelines
 
@@ -327,6 +355,7 @@ public static class ExitCodes
 ### Propagating Exit Codes
 
 ```csharp
+
 public async Task<int> InvokeAsync(InvocationContext context)
 {
     try
@@ -346,7 +375,8 @@ public async Task<int> InvokeAsync(InvocationContext context)
         return ExitCodes.IoError;
     }
 }
-```
+
+```text
 
 ---
 
@@ -357,6 +387,7 @@ public async Task<int> InvokeAsync(InvocationContext context)
 Support piped input as an alternative to file arguments:
 
 ```csharp
+
 public async Task<int> InvokeAsync(InvocationContext context)
 {
     string input;
@@ -380,11 +411,13 @@ public async Task<int> InvokeAsync(InvocationContext context)
     context.Console.Out.Write(JsonSerializer.Serialize(result));
     return ExitCodes.Success;
 }
-```
+
+```json
 
 ### Machine-Readable Output
 
 ```csharp
+
 // Global --json option for machine-readable output
 var jsonOption = new Option<bool>("--json", "Output as JSON");
 rootCommand.AddGlobalOption(jsonOption);
@@ -399,11 +432,13 @@ else
     // Human-friendly table format
     ConsoleFormatter.WriteTable(result, context.Console);
 }
-```
+
+```text
 
 ### Progress to Stderr
 
 ```csharp
+
 // Progress reporting goes to stderr (does not pollute piped stdout)
 await foreach (var item in _service.StreamAsync(ct))
 {
@@ -411,7 +446,8 @@ await foreach (var item in _service.StreamAsync(ct))
     Console.Out.WriteLine(item.ToJson());
 }
 Console.Error.WriteLine();  // Clear progress line
-```
+
+```json
 
 ---
 
@@ -422,6 +458,7 @@ Console.Error.WriteLine();  // Clear progress line
 Test the full CLI pipeline without spawning a child process:
 
 ```csharp
+
 public class CliTestHarness
 {
     private readonly RootCommand _rootCommand;
@@ -454,11 +491,13 @@ public class CliTestHarness
         return (exitCode, console.Out.ToString()!, console.Error.ToString()!);
     }
 }
-```
+
+```text
 
 ### Testing with Service Mocks
 
 ```csharp
+
 [Fact]
 public async Task Sync_WithValidSource_ReturnsZero()
 {
@@ -487,11 +526,13 @@ public async Task Sync_WithMissingSource_ReturnsNonZero()
     Assert.NotEqual(0, exitCode);
     Assert.Contains("--source", stderr);  // Parse error mentions missing option
 }
-```
+
+```text
 
 ### Exit Code Assertion
 
 ```csharp
+
 [Theory]
 [InlineData("sync --source https://valid.example.com", 0)]
 [InlineData("sync", 2)]  // Missing required option
@@ -502,11 +543,13 @@ public async Task ExitCode_MatchesExpected(string args, int expectedExitCode)
     var (exitCode, _, _) = await harness.InvokeAsync(args);
     Assert.Equal(expectedExitCode, exitCode);
 }
-```
+
+```text
 
 ### Testing Output Format
 
 ```csharp
+
 [Fact]
 public async Task List_WithJsonFlag_OutputsValidJson()
 {
@@ -538,18 +581,25 @@ public async Task List_StderrContainsLogs_StdoutContainsDataOnly()
     // Stderr contains diagnostic output
     Assert.Contains("Connected to", stderr);
 }
-```
+
+```text
 
 ---
 
 ## Agent Gotchas
 
-1. **Do not write diagnostic output to stdout.** Logs, progress, and errors go to stderr. Stdout is reserved for data output that can be piped. A CLI tool that mixes logs into stdout breaks shell pipelines.
-2. **Do not hardcode exit code 1 for all errors.** Use distinct exit codes for different failure categories (I/O, network, auth, validation). Callers and scripts rely on exit codes to determine what went wrong.
-3. **Do not put business logic in command handlers.** Handlers should orchestrate calls to injected services and format output. Business logic in handlers cannot be reused or unit-tested independently.
-4. **Do not test CLI tools only via process spawning.** Use in-process invocation with `CommandLineBuilder` and `TestConsole` for fast, reliable tests. Reserve process-level tests for smoke testing the published binary.
-5. **Do not ignore `Console.IsInputRedirected` when accepting stdin.** Without checking, the tool may hang waiting for input when invoked without piped data.
-6. **Do not use exit codes above 125.** Codes 126-255 have special meanings in Unix shells (126 = not executable, 127 = not found, 128+N = killed by signal N). Tool-specific codes should be in the 1-125 range.
+1. **Do not write diagnostic output to stdout.** Logs, progress, and errors go to stderr. Stdout is reserved for data
+   output that can be piped. A CLI tool that mixes logs into stdout breaks shell pipelines.
+2. **Do not hardcode exit code 1 for all errors.** Use distinct exit codes for different failure categories (I/O,
+   network, auth, validation). Callers and scripts rely on exit codes to determine what went wrong.
+3. **Do not put business logic in command handlers.** Handlers should orchestrate calls to injected services and format
+   output. Business logic in handlers cannot be reused or unit-tested independently.
+4. **Do not test CLI tools only via process spawning.** Use in-process invocation with `CommandLineBuilder` and
+   `TestConsole` for fast, reliable tests. Reserve process-level tests for smoke testing the published binary.
+5. **Do not ignore `Console.IsInputRedirected` when accepting stdin.** Without checking, the tool may hang waiting for
+   input when invoked without piped data.
+6. **Do not use exit codes above 125.** Codes 126-255 have special meanings in Unix shells (126 = not executable, 127 =
+   not found, 128+N = killed by signal N). Tool-specific codes should be in the 1-125 range.
 
 ---
 
@@ -560,3 +610,4 @@ public async Task List_StderrContainsLogs_StdoutContainsDataOnly()
 - [12 Factor CLI Apps](https://medium.com/@jdxcode/12-factor-cli-apps-dd3c227a0e46)
 - [Generic Host in .NET](https://learn.microsoft.com/en-us/dotnet/core/extensions/generic-host)
 - [Console logging in .NET](https://learn.microsoft.com/en-us/dotnet/core/extensions/console-log-formatter)
+````

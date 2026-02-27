@@ -8,9 +8,13 @@ metadata:
 ---
 # dotnet-test-quality
 
-Test quality analysis for .NET projects. Covers code coverage collection with coverlet, human-readable coverage reports with ReportGenerator, CRAP (Change Risk Anti-Patterns) score analysis to identify undertested complex code, mutation testing with Stryker.NET to evaluate test suite effectiveness, and strategies for detecting and managing flaky tests.
+Test quality analysis for .NET projects. Covers code coverage collection with coverlet, human-readable coverage reports
+with ReportGenerator, CRAP (Change Risk Anti-Patterns) score analysis to identify undertested complex code, mutation
+testing with Stryker.NET to evaluate test suite effectiveness, and strategies for detecting and managing flaky tests.
 
-**Version assumptions:** Coverlet 6.x+, ReportGenerator 5.x+, Stryker.NET 4.x+ (.NET 8.0+ baseline). Coverlet supports both the MSBuild integration (`coverlet.msbuild`) and the `coverlet.collector` data collector; examples use `coverlet.collector` as the recommended approach.
+**Version assumptions:** Coverlet 6.x+, ReportGenerator 5.x+, Stryker.NET 4.x+ (.NET 8.0+ baseline). Coverlet supports
+both the MSBuild integration (`coverlet.msbuild`) and the `coverlet.collector` data collector; examples use
+`coverlet.collector` as the recommended approach.
 
 ## Scope
 
@@ -26,29 +30,35 @@ Test quality analysis for .NET projects. Covers code coverage collection with co
 - Testing strategy and test type decisions -- see [skill:dotnet-testing-strategy]
 - CI test reporting and pipeline integration -- see [skill:dotnet-gha-build-test] and [skill:dotnet-ado-build-test]
 
-**Prerequisites:** Test project already scaffolded via [skill:dotnet-add-testing] with coverlet packages referenced. .NET 8.0+ baseline required.
+**Prerequisites:** Test project already scaffolded via [skill:dotnet-add-testing] with coverlet packages referenced.
+.NET 8.0+ baseline required.
 
-Cross-references: [skill:dotnet-testing-strategy] for deciding what to test and coverage target guidance, [skill:dotnet-xunit] for xUnit test framework features and configuration.
+Cross-references: [skill:dotnet-testing-strategy] for deciding what to test and coverage target guidance,
+[skill:dotnet-xunit] for xUnit test framework features and configuration.
 
 ---
 
 ## Code Coverage with Coverlet
 
-Coverlet is the standard open-source code coverage library for .NET. It instruments assemblies at build time or via a data collector and produces coverage reports in multiple formats.
+Coverlet is the standard open-source code coverage library for .NET. It instruments assemblies at build time or via a
+data collector and produces coverage reports in multiple formats.
 
 ### Packages
 
-```xml
+````xml
+
 <!-- Data collector approach (recommended) -->
 <PackageReference Include="coverlet.collector" Version="8.0.0">
   <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
   <PrivateAssets>all</PrivateAssets>
 </PackageReference>
-```
+
+```text
 
 ### Collecting Coverage
 
 ```bash
+
 # Collect coverage with Cobertura output (default for ReportGenerator)
 dotnet test --collect:"XPlat Code Coverage"
 
@@ -59,7 +69,8 @@ dotnet test --collect:"XPlat Code Coverage" \
 # Multiple formats
 dotnet test --collect:"XPlat Code Coverage" \
   -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura,opencover
-```
+
+```text
 
 Coverage results are written to `TestResults/<guid>/coverage.cobertura.xml` under each test project's output directory.
 
@@ -68,14 +79,17 @@ Coverage results are written to `TestResults/<guid>/coverage.cobertura.xml` unde
 Exclude generated code, test projects, or specific namespaces:
 
 ```bash
+
 dotnet test --collect:"XPlat Code Coverage" \
   -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Exclude="[*.Tests]*,[*.IntegrationTests]*" \
   DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ExcludeByAttribute="GeneratedCodeAttribute,ObsoleteAttribute,ExcludeFromCodeCoverageAttribute"
-```
+
+```bash
 
 Or configure via a `runsettings` file for repeatability:
 
 ```xml
+
 <!-- coverlet.runsettings -->
 <?xml version="1.0" encoding="utf-8"?>
 <RunSettings>
@@ -95,22 +109,27 @@ Or configure via a `runsettings` file for repeatability:
     </DataCollectors>
   </DataCollectionRunSettings>
 </RunSettings>
-```
+
+```text
 
 ```bash
+
 dotnet test --settings coverlet.runsettings
-```
+
+```bash
 
 ### Merge Coverage from Multiple Test Projects
 
 When a solution has multiple test projects, merge their coverage into a single report:
 
 ```bash
+
 # Run all tests, collecting coverage per project
 dotnet test --collect:"XPlat Code Coverage"
 
 # Find all coverage files and merge via ReportGenerator (see next section)
-```
+
+```text
 
 ---
 
@@ -121,16 +140,19 @@ ReportGenerator converts raw coverage data (Cobertura, OpenCover) into human-rea
 ### Installation
 
 ```bash
+
 # Install as a global tool
 dotnet tool install -g dotnet-reportgenerator-globaltool
 
 # Or as a local tool
 dotnet tool install dotnet-reportgenerator-globaltool
-```
+
+```text
 
 ### Generating Reports
 
 ```bash
+
 # Single coverage file
 reportgenerator \
   -reports:"tests/MyApp.Tests/TestResults/*/coverage.cobertura.xml" \
@@ -142,7 +164,8 @@ reportgenerator \
   -reports:"**/TestResults/*/coverage.cobertura.xml" \
   -targetdir:"coverage-report" \
   -reporttypes:"Html;Cobertura;TextSummary"
-```
+
+```xml
 
 ### Report Types
 
@@ -158,6 +181,7 @@ reportgenerator \
 ### Example: Full Coverage Pipeline
 
 ```bash
+
 #!/bin/bash
 # clean previous results
 rm -rf coverage-report TestResults
@@ -173,13 +197,15 @@ reportgenerator \
 
 # display summary
 cat coverage-report/Summary.txt
-```
+
+```text
 
 ### Setting Coverage Thresholds
 
 Enforce minimum coverage in CI by parsing the text summary or using a threshold parameter:
 
 ```bash
+
 # ReportGenerator does not enforce thresholds directly.
 # Parse the summary or use dotnet-coverage (Microsoft) for threshold enforcement.
 
@@ -188,7 +214,8 @@ dotnet test /p:CollectCoverage=true \
   /p:Threshold=80 \
   /p:ThresholdType=line \
   /p:ThresholdStat=total
-```
+
+```text
 
 **Note:** The `/p:Threshold` parameter requires the `coverlet.msbuild` package (not `coverlet.collector`). For `coverlet.collector` workflows, enforce thresholds by parsing the ReportGenerator text summary in your CI script.
 
@@ -200,9 +227,11 @@ CRAP (Change Risk Anti-Patterns) scores identify methods that are both complex a
 
 ### Formula
 
-```
+```text
+
 CRAP(m) = complexity(m)^2 * (1 - coverage(m)/100)^3 + complexity(m)
-```
+
+```text
 
 Where:
 - `complexity(m)` = cyclomatic complexity of method m
@@ -222,6 +251,7 @@ Where:
 ReportGenerator includes CRAP analysis when using OpenCover format as input:
 
 ```bash
+
 # Step 1: Collect coverage in OpenCover format
 dotnet test --collect:"XPlat Code Coverage" \
   -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
@@ -231,7 +261,8 @@ reportgenerator \
   -reports:"**/TestResults/*/coverage.opencover.xml" \
   -targetdir:"coverage-report" \
   -reporttypes:"Html;RiskHotspots"
-```
+
+```xml
 
 The Risk Hotspots report highlights methods sorted by CRAP score, showing:
 - Method name and containing class
@@ -242,6 +273,7 @@ The Risk Hotspots report highlights methods sorted by CRAP score, showing:
 ### Using CRAP Scores Effectively
 
 ```csharp
+
 // Example: a method with high complexity and low coverage
 // Cyclomatic complexity: 12, Coverage: 20%
 // CRAP = 12^2 * (1 - 0.20)^3 + 12 = 144 * 0.512 + 12 = 85.7 (Critical)
@@ -266,7 +298,8 @@ public decimal CalculateShipping(Order order)
 
     return Math.Round(baseRate, 2);
 }
-```
+
+```text
 
 Address high CRAP scores by:
 1. **Adding targeted tests** for uncovered branches to reduce the score via higher coverage
@@ -282,16 +315,19 @@ Mutation testing evaluates test suite quality by introducing small changes (muta
 ### Installation
 
 ```bash
+
 # Install as a global tool
 dotnet tool install -g dotnet-stryker
 
 # Or as a local tool (recommended for team consistency)
 dotnet tool install dotnet-stryker
-```
+
+```text
 
 ### Running Stryker.NET
 
 ```bash
+
 # From the test project directory
 cd tests/MyApp.Tests
 dotnet stryker
@@ -301,13 +337,15 @@ dotnet stryker --project MyApp.csproj
 
 # Target specific files
 dotnet stryker --mutate "src/Services/**/*.cs"
-```
+
+```csharp
 
 ### Configuration File
 
 Create `stryker-config.json` in the test project directory:
 
 ```json
+
 {
   "$schema": "https://raw.githubusercontent.com/stryker-mutator/stryker-net/master/src/Stryker.Core/Stryker.Core/stryker-config.schema.json",
   "stryker-config": {
@@ -329,7 +367,8 @@ Create `stryker-config.json` in the test project directory:
     ]
   }
 }
-```
+
+```text
 
 ### Understanding Mutation Results
 
@@ -344,9 +383,11 @@ Stryker reports mutations in four categories:
 
 ### Mutation Score
 
-```
+```text
+
 Mutation Score = Killed / (Killed + Survived + NoCoverage) * 100
-```
+
+```text
 
 A mutation score of 80%+ indicates a strong test suite. Below 60% suggests significant gaps.
 
@@ -355,6 +396,7 @@ A mutation score of 80%+ indicates a strong test suite. Below 60% suggests signi
 Given this production code:
 
 ```csharp
+
 public class PricingService
 {
     public decimal CalculateDiscount(decimal price, CustomerTier tier) =>
@@ -367,7 +409,8 @@ public class PricingService
             _ => 0m
         };
 }
-```
+
+```text
 
 If tests only verify `Gold` tier, Stryker generates mutations like:
 - Replace `0.05m` with `0.06m` (survived -- no Bronze test)
@@ -381,6 +424,7 @@ The HTML report highlights each surviving mutation with the exact code change, g
 ### Stryker Thresholds
 
 ```json
+
 {
   "thresholds": {
     "high": 80,   // Green: mutation score >= 80%
@@ -388,7 +432,8 @@ The HTML report highlights each surviving mutation with the exact code change, g
     "break": 50   // Red: mutation score < 50% -> exit code 1
   }
 }
-```
+
+```text
 
 The `break` threshold causes Stryker to return a non-zero exit code, useful for CI gates.
 
@@ -414,17 +459,20 @@ Flaky tests pass and fail intermittently without code changes. They erode trust 
 #### Repeated Runs
 
 ```bash
+
 # Run tests multiple times to surface flakiness
 for i in $(seq 1 10); do
   dotnet test --logger "trx;LogFileName=run-$i.trx" || echo "Run $i failed"
 done
-```
+
+```text
 
 #### xUnit Conditional Skip
 
 **xUnit v3** has built-in conditional skip via `Skip` on `[Fact]`:
 
 ```csharp
+
 // xUnit v3 — built-in conditional skip
 [Fact(Skip = "Requires external service")]
 public async Task ExternalApi_ReturnsData()
@@ -443,13 +491,15 @@ public async Task ExternalApi_ReturnsData()
     var result = await _client.GetDataAsync();
     Assert.NotEmpty(result);
 }
-```
+
+```text
 
 ### Time-Dependent Tests
 
 Replace `DateTime.Now`/`DateTime.UtcNow` with .NET 8's `TimeProvider`:
 
 ```csharp
+
 // Production code
 public class SubscriptionService(TimeProvider timeProvider)
 {
@@ -490,7 +540,8 @@ public void IsExpired_FutureExpiry_ReturnsFalse()
 
     Assert.False(service.IsExpired(sub));
 }
-```
+
+```text
 
 **Note:** `FakeTimeProvider` is available in `Microsoft.Extensions.TimeProvider.Testing` (NuGet).
 
@@ -499,13 +550,15 @@ public void IsExpired_FutureExpiry_ReturnsFalse()
 When a flaky test cannot be fixed immediately:
 
 ```csharp
+
 // Mark as skipped with a tracking issue
 [Fact(Skip = "Flaky: tracking in #1234 -- race condition in event handler")]
 public async Task EventHandler_ConcurrentEvents_ProcessesAll()
 {
     // ...
 }
-```
+
+```text
 
 Do not delete flaky tests. Skip them with an issue reference and fix them systematically.
 
@@ -543,3 +596,4 @@ Do not delete flaky tests. Skip them with an issue reference and fix them system
 - [TimeProvider in .NET 8](https://learn.microsoft.com/en-us/dotnet/api/system.timeprovider)
 - [Microsoft.Extensions.TimeProvider.Testing](https://www.nuget.org/packages/Microsoft.Extensions.TimeProvider.Testing)
 - [CRAP metric explanation](https://testing.googleblog.com/2011/02/this-code-is-crap.html)
+````

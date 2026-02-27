@@ -3,12 +3,24 @@ name: dotnet-msix
 description: >-
   Packages MSIX apps. Creation, signing, Store submission, App Installer
   sideload, auto-update.
+allowed-tools:
+  - Read
+  - Grep
+  - Glob
+  - Bash
+  - Write
+  - Edit
 ---
 # dotnet-msix
 
-MSIX packaging pipeline for .NET desktop applications: package creation from csproj (`WindowsPackageType`) and WAP projects, certificate signing (self-signed for development, trusted CA for production, Microsoft Store signing), distribution channels (Microsoft Store submission, App Installer sideloading, enterprise deployment via SCCM/Intune), auto-update configuration (App Installer XML, version checking, differential updates), MSIX bundle format for multi-architecture (`.msixbundle`), and CI/CD MSIX build steps.
+MSIX packaging pipeline for .NET desktop applications: package creation from csproj (`WindowsPackageType`) and WAP
+projects, certificate signing (self-signed for development, trusted CA for production, Microsoft Store signing),
+distribution channels (Microsoft Store submission, App Installer sideloading, enterprise deployment via SCCM/Intune),
+auto-update configuration (App Installer XML, version checking, differential updates), MSIX bundle format for
+multi-architecture (`.msixbundle`), and CI/CD MSIX build steps.
 
-**Version assumptions:** Windows App SDK 1.6+ (current stable). Windows 10 build 19041+ minimum for MSIX with Windows App SDK. Windows 10 build 1709+ for App Installer auto-update protocol. .NET 8.0+ baseline.
+**Version assumptions:** Windows App SDK 1.6+ (current stable). Windows 10 build 19041+ minimum for MSIX with Windows
+App SDK. Windows 10 build 1709+ for App Installer auto-update protocol. .NET 8.0+ baseline.
 
 ## Scope
 
@@ -27,7 +39,9 @@ MSIX packaging pipeline for .NET desktop applications: package creation from csp
 - General NuGet packaging -- see [skill:dotnet-nuget-authoring]
 - Container-based deployment -- see [skill:dotnet-containers]
 
-Cross-references: [skill:dotnet-winui] for WinUI project setup and packaging mode comparison, [skill:dotnet-native-aot] for AOT + MSIX scenarios, [skill:dotnet-gha-patterns] for CI pipeline structure, [skill:dotnet-ado-patterns] for ADO pipeline structure, [skill:dotnet-nuget-authoring] for NuGet packaging.
+Cross-references: [skill:dotnet-winui] for WinUI project setup and packaging mode comparison, [skill:dotnet-native-aot]
+for AOT + MSIX scenarios, [skill:dotnet-gha-patterns] for CI pipeline structure, [skill:dotnet-ado-patterns] for ADO
+pipeline structure, [skill:dotnet-nuget-authoring] for NuGet packaging.
 
 ---
 
@@ -35,9 +49,11 @@ Cross-references: [skill:dotnet-winui] for WinUI project setup and packaging mod
 
 ### From csproj (Single-Project Packaging)
 
-Modern WinUI 3 and Windows App SDK apps can produce MSIX packages directly from the application `.csproj` without a separate Windows Application Packaging (WAP) project.
+Modern WinUI 3 and Windows App SDK apps can produce MSIX packages directly from the application `.csproj` without a
+separate Windows Application Packaging (WAP) project.
 
-```xml
+````xml
+
 <!-- MyApp.csproj -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
@@ -53,18 +69,21 @@ Modern WinUI 3 and Windows App SDK apps can produce MSIX packages directly from 
     <GenerateAppxPackageOnBuild>false</GenerateAppxPackageOnBuild>
   </PropertyGroup>
 </Project>
-```
+
+```text
 
 Build the MSIX package:
 
 ```bash
+
 # Build MSIX package
 dotnet publish --configuration Release --runtime win-x64 \
   /p:GenerateAppxPackageOnBuild=true \
   /p:AppxPackageSigningEnabled=false
 
 # Output: AppPackages\MyApp_1.0.0.0_x64.msix
-```
+
+```text
 
 ### WAP Project (Desktop Bridge)
 
@@ -73,6 +92,7 @@ For non-WinUI desktop apps (WPF, WinForms), use a Windows Application Packaging 
 The key configuration is referencing the desktop app project:
 
 ```xml
+
 <!-- MyApp.Package.wapproj (created via VS template) -->
 <!-- Key elements in the generated .wapproj file: -->
 <ItemGroup>
@@ -87,13 +107,15 @@ The key configuration is referencing the desktop app project:
   <DefaultLanguage>en-US</DefaultLanguage>
   <AppxPackageDir>$(SolutionDir)AppPackages\</AppxPackageDir>
 </PropertyGroup>
-```
+
+```text
 
 ### Package.appxmanifest
 
 The manifest defines identity, capabilities, and visual assets:
 
 ```xml
+
 <?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
          xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
@@ -140,7 +162,8 @@ The manifest defines identity, capabilities, and visual assets:
     <rescap:Capability Name="runFullTrust" />
   </Capabilities>
 </Package>
-```
+
+```text
 
 ---
 
@@ -151,6 +174,7 @@ All MSIX packages must be signed to install on Windows. The signing certificate'
 ### Self-Signed Certificate (Development)
 
 ```powershell
+
 # Create a self-signed certificate for development
 $cert = New-SelfSignedCertificate `
   -Type Custom `
@@ -176,7 +200,8 @@ $signtool = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin\*\x64\sign
 & $signtool sign /fd SHA256 /a /f "MyApp_DevSigning.pfx" `
   /p "$env:CERT_PASSWORD" `
   "AppPackages\MyApp_1.0.0.0_x64.msix"
-```
+
+```text
 
 ### Trusted CA Certificate (Production)
 
@@ -187,6 +212,7 @@ For production distribution outside the Microsoft Store:
 3. **Timestamp the signature** for long-term validity
 
 ```powershell
+
 # Sign with a trusted CA certificate (from certificate store)
 & signtool.exe sign /fd SHA256 /sha1 "THUMBPRINT_HERE" `
   /tr http://timestamp.digicert.com /td SHA256 `
@@ -197,19 +223,22 @@ For production distribution outside the Microsoft Store:
   /p "$env:CERT_PASSWORD" `
   /tr http://timestamp.digicert.com /td SHA256 `
   "AppPackages\MyApp_1.0.0.0_x64.msix"
-```
+
+```text
 
 ### Microsoft Store Signing
 
 Apps submitted to the Microsoft Store are re-signed by Microsoft during ingestion. The development signing certificate is replaced with a Microsoft-issued certificate. No production signing certificate is needed for Store-only distribution.
 
 ```xml
+
 <!-- For Store submission, use a test certificate during development -->
 <PropertyGroup>
   <AppxPackageSigningEnabled>true</AppxPackageSigningEnabled>
   <PackageCertificateThumbprint>AUTO_GENERATED_BY_VS</PackageCertificateThumbprint>
 </PropertyGroup>
-```
+
+```text
 
 ### Certificate Requirements Summary
 
@@ -231,21 +260,24 @@ Apps submitted to the Microsoft Store are re-signed by Microsoft during ingestio
 3. **Build the MSIX package** with Store association:
 
 ```bash
+
 # Build for Store submission (creates .msixupload)
 dotnet publish --configuration Release --runtime win-x64 \
   /p:GenerateAppxPackageOnBuild=true \
   /p:UapAppxPackageBuildMode=StoreUpload \
   /p:AppxBundle=Auto
-```
 
-4. **Submit the `.msixupload` file** through Partner Center
-5. Microsoft validates, signs, and publishes the app
+```text
+
+1. **Submit the `.msixupload` file** through Partner Center
+2. Microsoft validates, signs, and publishes the app
 
 ### App Installer Sideloading
 
 App Installer (`.appinstaller`) enables direct distribution with auto-update support. Host the files on a web server, network share, or CDN.
 
 ```xml
+
 <!-- MyApp.appinstaller -->
 <?xml version="1.0" encoding="utf-8"?>
 <AppInstaller Uri="https://mycompany.com/apps/MyApp.appinstaller"
@@ -266,13 +298,16 @@ App Installer (`.appinstaller`) enables direct distribution with auto-update sup
     <ForceUpdateFromAnyVersion>false</ForceUpdateFromAnyVersion>
   </UpdateSettings>
 </AppInstaller>
-```
+
+```text
 
 Users install via:
 
-```
+```text
+
 ms-appinstaller:?source=https://mycompany.com/apps/MyApp.appinstaller
-```
+
+```text
 
 ### Enterprise Deployment
 
@@ -286,6 +321,7 @@ For managed enterprise environments:
 | PowerShell | `Add-AppxPackage` | Script-based deployment |
 
 ```powershell
+
 # Enterprise deployment via PowerShell
 Add-AppxPackage -Path "\\fileserver\apps\MyApp_1.0.0.0_x64.msix"
 
@@ -293,7 +329,8 @@ Add-AppxPackage -Path "\\fileserver\apps\MyApp_1.0.0.0_x64.msix"
 Add-AppxProvisionedPackage -Online `
   -PackagePath "MyApp_1.0.0.0_x64.msix" `
   -SkipLicense
-```
+
+```text
 
 ---
 
@@ -304,6 +341,7 @@ Add-AppxProvisionedPackage -Online `
 The App Installer XML file controls automatic update behavior:
 
 ```xml
+
 <UpdateSettings>
   <!-- Check for updates on app launch -->
   <OnLaunch HoursBetweenUpdateChecks="12"
@@ -316,7 +354,8 @@ The App Installer XML file controls automatic update behavior:
   <!-- Allow downgrade (useful for rollback scenarios) -->
   <ForceUpdateFromAnyVersion>false</ForceUpdateFromAnyVersion>
 </UpdateSettings>
-```
+
+```text
 
 | Setting | Description |
 |---------|-------------|
@@ -331,6 +370,7 @@ The App Installer XML file controls automatic update behavior:
 For apps that need custom update UI or logic, use `Package.Current.CheckUpdateAvailabilityAsync()`:
 
 ```csharp
+
 using Windows.ApplicationModel;
 
 public class AppUpdateService
@@ -342,7 +382,8 @@ public class AppUpdateService
             || result.Availability == PackageUpdateAvailability.Required;
     }
 }
-```
+
+```text
 
 ### Differential Updates
 
@@ -362,6 +403,7 @@ MSIX bundles (`.msixbundle`) package multiple architecture-specific MSIX package
 ### Creating a Bundle
 
 ```powershell
+
 # Build for multiple architectures
 dotnet publish -c Release -r win-x64 /p:GenerateAppxPackageOnBuild=true
 dotnet publish -c Release -r win-arm64 /p:GenerateAppxPackageOnBuild=true
@@ -373,25 +415,30 @@ $makeappx = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin\*\x64\Make
 
 # Create bundle
 & $makeappx bundle /d "AppPackages" /p "MyApp_1.0.0.0.msixbundle"
-```
+
+```text
 
 ### MSBuild Bundle Generation
 
 ```xml
+
 <PropertyGroup>
   <!-- Auto-generate bundle during build -->
   <AppxBundle>Always</AppxBundle>
   <AppxBundlePlatforms>x64|arm64</AppxBundlePlatforms>
 </PropertyGroup>
-```
+
+```text
 
 ### Bundle Layout
 
-```
+```text
+
 MyApp_1.0.0.0.msixbundle
   MyApp_1.0.0.0_x64.msix
   MyApp_1.0.0.0_arm64.msix
-```
+
+```text
 
 ---
 
@@ -400,6 +447,7 @@ MyApp_1.0.0.0.msixbundle
 ### GitHub Actions MSIX Build
 
 ```yaml
+
 # MSIX-specific build steps (embed in your CI workflow)
 # For pipeline structure, see [skill:dotnet-gha-patterns]
 jobs:
@@ -438,11 +486,13 @@ jobs:
         if: always()
         run: Remove-Item -Path "signing-cert.pfx" -ErrorAction SilentlyContinue
         shell: pwsh
-```
+
+```bash
 
 ### Azure DevOps MSIX Build
 
 ```yaml
+
 # MSIX-specific build steps (embed in your ADO pipeline)
 # For pipeline structure, see [skill:dotnet-ado-patterns]
 steps:
@@ -474,18 +524,21 @@ steps:
     inputs:
       pathToPublish: 'AppPackages'
       artifactName: 'msix-package'
-```
+
+```text
 
 ### AOT + MSIX
 
 MSIX packages can contain AOT-compiled binaries for faster startup and smaller runtime footprint. Combine `PublishAot` with MSIX packaging:
 
 ```xml
+
 <PropertyGroup>
   <PublishAot>true</PublishAot>
   <WindowsPackageType>MSIX</WindowsPackageType>
 </PropertyGroup>
-```
+
+```text
 
 For AOT MSBuild configuration details (ILLink descriptors, trimming options, platform considerations), see [skill:dotnet-native-aot].
 
@@ -509,6 +562,7 @@ For AOT MSBuild configuration details (ILLink descriptors, trimming options, pla
 ### Target Platform Version Configuration
 
 ```xml
+
 <PropertyGroup>
   <!-- Minimum supported version (features below this are unavailable) -->
   <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
@@ -516,7 +570,8 @@ For AOT MSBuild configuration details (ILLink descriptors, trimming options, pla
   <!-- Maximum tested version (for adaptive version checks) -->
   <TargetPlatformVersion>10.0.22621.0</TargetPlatformVersion>
 </PropertyGroup>
-```
+
+```text
 
 ---
 
@@ -524,16 +579,17 @@ For AOT MSBuild configuration details (ILLink descriptors, trimming options, pla
 
 1. **The manifest `Publisher` must exactly match the signing certificate Subject** -- mismatches cause `SignTool Error: SignerSign() failed` at build or sign time.
 
-2. **Self-signed certificates require manual trust installation** -- users must install the certificate to `Trusted People` or `Trusted Root Certification Authorities` before the MSIX will install.
+1. **Self-signed certificates require manual trust installation** -- users must install the certificate to `Trusted People` or `Trusted Root Certification Authorities` before the MSIX will install.
 
-3. **Never commit PFX files or certificate passwords to source control** -- store certificates as CI secrets (GitHub Secrets, Azure DevOps Secure Files) and decode them during the build pipeline.
+1. **Never commit PFX files or certificate passwords to source control** -- store certificates as CI secrets (GitHub Secrets, Azure DevOps Secure Files) and decode them during the build pipeline.
 
-4. **`AppxBundle=Auto` produces a bundle only when multiple architectures are built** -- for single-architecture builds, it produces a flat `.msix` file, not a bundle.
+1. **`AppxBundle=Auto` produces a bundle only when multiple architectures are built** -- for single-architecture builds, it produces a flat `.msix` file, not a bundle.
 
-5. **MSIX apps run in a container-like sandbox** -- file system access is virtualized. Apps writing to `AppData` get redirected to the package-specific location. Use `ApplicationData.Current` APIs, not hardcoded paths.
+1. **MSIX apps run in a container-like sandbox** -- file system access is virtualized. Apps writing to `AppData` get redirected to the package-specific location. Use `ApplicationData.Current` APIs, not hardcoded paths.
 
-6. **Store submission uses `.msixupload` not `.msix`** -- set `/p:UapAppxPackageBuildMode=StoreUpload` to generate the correct upload format.
+1. **Store submission uses `.msixupload` not `.msix`** -- set `/p:UapAppxPackageBuildMode=StoreUpload` to generate the correct upload format.
 
-7. **CI builds on `windows-latest` include the Windows SDK** -- no separate SDK installation step is needed for `signtool.exe` and `MakeAppx.exe`.
+1. **CI builds on `windows-latest` include the Windows SDK** -- no separate SDK installation step is needed for `signtool.exe` and `MakeAppx.exe`.
 
-8. **Do not hardcode TFM paths in CI examples** -- use variable references (e.g., `${{ github.workspace }}`) so examples work across .NET versions.
+1. **Do not hardcode TFM paths in CI examples** -- use variable references (e.g., `${{ github.workspace }}`) so examples work across .NET versions.
+````

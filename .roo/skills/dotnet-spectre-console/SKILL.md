@@ -6,9 +6,12 @@ description: >-
 ---
 # dotnet-spectre-console
 
-Spectre.Console for building rich console output (tables, trees, progress bars, prompts, markup, live displays) and Spectre.Console.Cli for structured command-line application parsing. Cross-platform across Windows, macOS, and Linux terminals.
+Spectre.Console for building rich console output (tables, trees, progress bars, prompts, markup, live displays) and
+Spectre.Console.Cli for structured command-line application parsing. Cross-platform across Windows, macOS, and Linux
+terminals.
 
-**Version assumptions:** .NET 8.0+ baseline. Spectre.Console 0.54.0 (latest stable). Spectre.Console.Cli 0.53.1 (latest stable). Both packages target net8.0+ and netstandard2.0.
+**Version assumptions:** .NET 8.0+ baseline. Spectre.Console 0.54.0 (latest stable). Spectre.Console.Cli 0.53.1 (latest
+stable). Both packages target net8.0+ and netstandard2.0.
 
 ## Scope
 
@@ -19,15 +22,20 @@ Spectre.Console for building rich console output (tables, trees, progress bars, 
 
 - Full TUI applications (windows, menus, dialogs, views) -- see [skill:dotnet-terminal-gui]
 - System.CommandLine parsing -- see [skill:dotnet-system-commandline]
-- CLI application architecture and distribution -- see [skill:dotnet-cli-architecture] and [skill:dotnet-cli-distribution]
+- CLI application architecture and distribution -- see [skill:dotnet-cli-architecture] and
+  [skill:dotnet-cli-distribution]
 
-Cross-references: [skill:dotnet-terminal-gui] for full TUI alternative, [skill:dotnet-system-commandline] for System.CommandLine scope boundary, [skill:dotnet-cli-architecture] for CLI structure, [skill:dotnet-csharp-async-patterns] for async patterns, [skill:dotnet-csharp-dependency-injection] for DI with Spectre.Console.Cli, [skill:dotnet-accessibility] for TUI accessibility limitations and screen reader considerations.
+Cross-references: [skill:dotnet-terminal-gui] for full TUI alternative, [skill:dotnet-system-commandline] for
+System.CommandLine scope boundary, [skill:dotnet-cli-architecture] for CLI structure,
+[skill:dotnet-csharp-async-patterns] for async patterns, [skill:dotnet-csharp-dependency-injection] for DI with
+Spectre.Console.Cli, [skill:dotnet-accessibility] for TUI accessibility limitations and screen reader considerations.
 
 ---
 
 ## Package References
 
-```xml
+````xml
+
 <ItemGroup>
   <!-- Rich console output: markup, tables, trees, progress, prompts, live displays -->
   <PackageReference Include="Spectre.Console" Version="0.54.0" />
@@ -35,7 +43,8 @@ Cross-references: [skill:dotnet-terminal-gui] for full TUI alternative, [skill:d
   <!-- CLI command framework (adds command parsing, settings, DI support) -->
   <PackageReference Include="Spectre.Console.Cli" Version="0.53.1" />
 </ItemGroup>
-```
+
+```bash
 
 Spectre.Console.Cli has a dependency on Spectre.Console -- install both only when you need the CLI framework. For rich output only, Spectre.Console alone is sufficient.
 
@@ -48,6 +57,7 @@ Spectre.Console uses a BBCode-inspired markup syntax for styled console output.
 ### Basic Markup
 
 ```csharp
+
 using Spectre.Console;
 
 // Styled text with markup tags
@@ -61,20 +71,24 @@ AnsiConsole.MarkupLine("[bold [red on white]Warning:[/] check config[/]");
 
 // Escape brackets with double brackets
 AnsiConsole.MarkupLine("Use [[bold]] for bold text.");
-```
+
+```text
 
 ### Figlet Text
 
 ```csharp
+
 AnsiConsole.Write(
     new FigletText("Hello!")
         .Color(Color.Green)
         .Centered());
-```
+
+```text
 
 ### Rule (Horizontal Line)
 
 ```csharp
+
 // Simple rule
 AnsiConsole.Write(new Rule());
 
@@ -83,13 +97,15 @@ AnsiConsole.Write(new Rule("[yellow]Section Title[/]"));
 
 // Aligned rule
 AnsiConsole.Write(new Rule("[blue]Left Aligned[/]").LeftJustified());
-```
+
+```text
 
 ---
 
 ## Tables
 
 ```csharp
+
 var table = new Table();
 
 // Add columns
@@ -113,11 +129,13 @@ table.Columns[0].PadLeft(2);
 table.Columns[0].NoWrap();
 
 AnsiConsole.Write(table);
-```
+
+```text
 
 ### Nested Tables
 
 ```csharp
+
 var innerTable = new Table()
     .AddColumn("Detail")
     .AddColumn("Value")
@@ -130,13 +148,15 @@ var outerTable = new Table()
     .AddRow("Alice", innerTable);
 
 AnsiConsole.Write(outerTable);
-```
+
+```text
 
 ---
 
 ## Trees
 
 ```csharp
+
 var tree = new Tree("Solution");
 
 // Add nodes
@@ -155,13 +175,15 @@ testNode.AddNode("Api.Tests/");
 tree.Style = Style.Parse("dim");
 
 AnsiConsole.Write(tree);
-```
+
+```text
 
 ---
 
 ## Panels
 
 ```csharp
+
 var panel = new Panel("This is [green]important[/] content.")
     .Header("[bold]Notice[/]")
     .Border(BoxBorder.Rounded)
@@ -170,15 +192,18 @@ var panel = new Panel("This is [green]important[/] content.")
     .Expand();         // fill available width
 
 AnsiConsole.Write(panel);
-```
+
+```text
 
 ### Composing Renderables with Columns
 
 ```csharp
+
 AnsiConsole.Write(new Columns(
     new Panel("Left panel").Expand(),
     new Panel("Right panel").Expand()));
-```
+
+```csharp
 
 ---
 
@@ -187,6 +212,7 @@ AnsiConsole.Write(new Columns(
 ### Progress Bars
 
 ```csharp
+
 await AnsiConsole.Progress()
     .AutoClear(false)       // keep completed tasks visible
     .HideCompleted(false)
@@ -212,11 +238,13 @@ await AnsiConsole.Progress()
             }
         }
     });
-```
+
+```text
 
 ### Status Spinners
 
 ```csharp
+
 await AnsiConsole.Status()
     .Spinner(Spinner.Known.Dots)
     .SpinnerStyle(Style.Parse("green bold"))
@@ -229,7 +257,8 @@ await AnsiConsole.Status()
         ctx.Status("Publishing...");
         await Task.Delay(1000);
     });
-```
+
+```text
 
 ---
 
@@ -238,6 +267,7 @@ await AnsiConsole.Status()
 ### Text Prompt
 
 ```csharp
+
 // Simple typed input
 var name = AnsiConsole.Ask<string>("What's your [green]name[/]?");
 var age = AnsiConsole.Ask<int>("What's your [green]age[/]?");
@@ -265,17 +295,21 @@ var email = AnsiConsole.Prompt(
 var nickname = AnsiConsole.Prompt(
     new TextPrompt<string>("Enter [green]nickname[/] (optional):")
         .AllowEmpty());
-```
+
+```text
 
 ### Confirmation Prompt
 
 ```csharp
+
 bool proceed = AnsiConsole.Confirm("Continue with deployment?");
-```
+
+```csharp
 
 ### Selection Prompt
 
 ```csharp
+
 var fruit = AnsiConsole.Prompt(
     new SelectionPrompt<string>()
         .Title("Pick a [green]fruit[/]:")
@@ -290,11 +324,13 @@ var country = AnsiConsole.Prompt(
         .Title("Select [green]destination[/]:")
         .AddChoiceGroup("Europe", "France", "Italy", "Spain")
         .AddChoiceGroup("Asia", "Japan", "Thailand", "Vietnam"));
-```
+
+```text
 
 ### Multi-Selection Prompt
 
 ```csharp
+
 var toppings = AnsiConsole.Prompt(
     new MultiSelectionPrompt<string>()
         .Title("Choose [green]toppings[/]:")
@@ -302,7 +338,8 @@ var toppings = AnsiConsole.Prompt(
         .Required()
         .InstructionsText("[grey](Press [blue]<space>[/] to toggle, [green]<enter>[/] to accept)[/]")
         .AddChoices("Cheese", "Pepperoni", "Mushrooms", "Olives", "Onions"));
-```
+
+```text
 
 ---
 
@@ -311,6 +348,7 @@ var toppings = AnsiConsole.Prompt(
 Live displays update in-place for dynamic content that changes over time.
 
 ```csharp
+
 var table = new Table()
     .AddColumn("Time")
     .AddColumn("Status");
@@ -332,11 +370,13 @@ await AnsiConsole.Live(table)
         table.AddRow(DateTime.Now.ToString("T"), "[blue]Complete![/]");
         ctx.Refresh();
     });
-```
+
+```text
 
 ### Replacing the Target
 
 ```csharp
+
 await AnsiConsole.Live(new Markup("[yellow]Initializing...[/]"))
     .StartAsync(async ctx =>
     {
@@ -348,7 +388,8 @@ await AnsiConsole.Live(new Markup("[yellow]Initializing...[/]"))
                 .Header("Done")
                 .Border(BoxBorder.Rounded));
     });
-```
+
+```text
 
 ---
 
@@ -359,6 +400,7 @@ Spectre.Console.Cli provides a structured command-line parsing framework with co
 ### Basic Command App
 
 ```csharp
+
 using Spectre.Console.Cli;
 
 var app = new CommandApp<GreetCommand>();
@@ -395,11 +437,13 @@ public sealed class GreetCommand : Command<GreetSettings>
         return 0;  // exit code
     }
 }
-```
+
+```text
 
 ### Command Hierarchy with Branches
 
 ```csharp
+
 var app = new CommandApp();
 app.Configure(config =>
 {
@@ -447,11 +491,13 @@ public sealed class RemoteAddCommand : Command<RemoteAddSettings>
         return 0;
     }
 }
-```
+
+```text
 
 ### Settings Validation
 
 ```csharp
+
 public sealed class DeploySettings : CommandSettings
 {
     [CommandArgument(0, "<environment>")]
@@ -478,11 +524,13 @@ public sealed class DeploySettings : CommandSettings
         return ValidationResult.Success();
     }
 }
-```
+
+```text
 
 ### Async Commands
 
 ```csharp
+
 public sealed class FetchCommand : AsyncCommand<FetchSettings>
 {
     public override async Task<int> ExecuteAsync(
@@ -498,11 +546,13 @@ public sealed class FetchCommand : AsyncCommand<FetchSettings>
         return 0;
     }
 }
-```
+
+```text
 
 ### Dependency Injection with ITypeRegistrar
 
 ```csharp
+
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 
@@ -546,7 +596,8 @@ public sealed class GreetCommand(IGreetingService greetingService) : Command<Gre
         return 0;
     }
 }
-```
+
+```text
 
 ---
 
@@ -555,6 +606,7 @@ public sealed class GreetCommand(IGreetingService greetingService) : Command<Gre
 Spectre.Console provides `IAnsiConsole` for testable output instead of writing directly to the real console.
 
 ```csharp
+
 // Production: use AnsiConsole.Console (the real console)
 IAnsiConsole console = AnsiConsole.Console;
 
@@ -567,7 +619,8 @@ var console = AnsiConsole.Create(new AnsiConsoleSettings
 // Use the abstraction instead of static AnsiConsole methods
 console.MarkupLine("[green]Testable output[/]");
 console.Write(new Table().AddColumn("Col").AddRow("Val"));
-```
+
+```text
 
 ---
 
@@ -600,3 +653,4 @@ console.Write(new Table().AddColumn("Col").AddRow("Val"));
 - [Spectre.Console NuGet](https://www.nuget.org/packages/Spectre.Console) -- package downloads and version history
 - [Spectre.Console.Cli NuGet](https://www.nuget.org/packages/Spectre.Console.Cli) -- CLI framework package
 - [Spectre.Console Examples](https://github.com/spectreconsole/spectre.console/tree/main/examples) -- official example projects
+````

@@ -3,12 +3,21 @@ name: dotnet-playwright
 description: >-
   Automates browser tests in .NET. Playwright E2E, CI browser caching, trace
   viewer, codegen.
+allowed-tools:
+  - Read
+  - Grep
+  - Glob
+  - Bash
+  - Write
+  - Edit
 ---
 # dotnet-playwright
 
-Playwright for .NET: browser automation and end-to-end testing. Covers browser lifecycle management, page interactions, assertions, CI caching of browser binaries, trace viewer for debugging failures, and codegen for rapid test scaffolding.
+Playwright for .NET: browser automation and end-to-end testing. Covers browser lifecycle management, page interactions,
+assertions, CI caching of browser binaries, trace viewer for debugging failures, and codegen for rapid test scaffolding.
 
-**Version assumptions:** Playwright 1.40+ for .NET, .NET 8.0+ baseline. Playwright supports Chromium, Firefox, and WebKit browsers.
+**Version assumptions:** Playwright 1.40+ for .NET, .NET 8.0+ baseline. Playwright supports Chromium, Firefox, and
+WebKit browsers.
 
 ## Scope
 
@@ -24,27 +33,32 @@ Playwright for .NET: browser automation and end-to-end testing. Covers browser l
 - Testing strategy (when E2E vs unit vs integration) -- see [skill:dotnet-testing-strategy]
 - Test project scaffolding -- see [skill:dotnet-add-testing]
 
-**Prerequisites:** Test project scaffolded via [skill:dotnet-add-testing] with Playwright packages referenced. Browsers installed via `pwsh bin/Debug/net8.0/playwright.ps1 install` or `dotnet tool run playwright install`.
+**Prerequisites:** Test project scaffolded via [skill:dotnet-add-testing] with Playwright packages referenced. Browsers
+installed via `pwsh bin/Debug/net8.0/playwright.ps1 install` or `dotnet tool run playwright install`.
 
-Cross-references: [skill:dotnet-ui-testing-core] for page object model and selector strategies, [skill:dotnet-testing-strategy] for deciding when E2E tests are appropriate.
+Cross-references: [skill:dotnet-ui-testing-core] for page object model and selector strategies,
+[skill:dotnet-testing-strategy] for deciding when E2E tests are appropriate.
 
 ---
 
 ## Package Setup
 
-```xml
+````xml
+
 <PackageReference Include="Microsoft.Playwright" Version="1.*" />
 <!-- For xUnit integration: -->
 <PackageReference Include="Microsoft.Playwright.Xunit" Version="1.*" />
 <!-- For NUnit integration: -->
 <!-- <PackageReference Include="Microsoft.Playwright.NUnit" Version="1.*" /> -->
-```
+
+```text
 
 ### Installing Browsers
 
 Playwright requires downloading browser binaries before tests can run:
 
 ```bash
+
 # After building the test project:
 pwsh bin/Debug/net8.0/playwright.ps1 install
 
@@ -55,7 +69,8 @@ pwsh bin/Debug/net8.0/playwright.ps1 install firefox
 # Using dotnet tool:
 dotnet tool install --global Microsoft.Playwright.CLI
 playwright install
-```
+
+```text
 
 ---
 
@@ -64,6 +79,7 @@ playwright install
 ### With Playwright xUnit Base Class
 
 ```csharp
+
 using Microsoft.Playwright;
 using Microsoft.Playwright.Xunit;
 
@@ -90,11 +106,13 @@ public class HomePageTests : PageTest
             .ToBeVisibleAsync();
     }
 }
-```
+
+```text
 
 ### Manual Setup (Without Base Class)
 
 ```csharp
+
 public class ManualSetupTests : IAsyncLifetime
 {
     private IPlaywright _playwright = null!;
@@ -137,7 +155,8 @@ public class ManualSetupTests : IAsyncLifetime
         await Expect(_page).ToHaveURLAsync(new Regex("/dashboard"));
     }
 }
-```
+
+```text
 
 ---
 
@@ -146,6 +165,7 @@ public class ManualSetupTests : IAsyncLifetime
 ### Recommended Locator Strategies
 
 ```csharp
+
 // BEST: Role-based (accessible and semantic)
 var submitBtn = Page.GetByRole(AriaRole.Button, new() { Name = "Submit Order" });
 
@@ -163,11 +183,13 @@ var card = Page.Locator(".card-primary");
 
 // AVOID: XPath (brittle, hard to read)
 var cell = Page.Locator("//table/tbody/tr[1]/td[2]");
-```
+
+```text
 
 ### Common Interactions
 
 ```csharp
+
 // Text input
 await Page.FillAsync("[data-testid='name']", "Alice Johnson");
 
@@ -189,13 +211,15 @@ await Page.Keyboard.TypeAsync("search query");
 
 // Hover (for dropdowns, tooltips)
 await Page.HoverAsync("[data-testid='user-menu']");
-```
+
+```text
 
 ### Assertions (Expect API)
 
 Playwright assertions auto-retry until the condition is met or the timeout expires:
 
 ```csharp
+
 // Element visibility
 await Expect(Page.Locator("[data-testid='success']")).ToBeVisibleAsync();
 await Expect(Page.Locator("[data-testid='spinner']")).ToBeHiddenAsync();
@@ -214,7 +238,8 @@ await Expect(Page).ToHaveTitleAsync("Order Details - My App");
 
 // Count
 await Expect(Page.Locator("[data-testid='order-row']")).ToHaveCountAsync(5);
-```
+
+```text
 
 ---
 
@@ -223,6 +248,7 @@ await Expect(Page.Locator("[data-testid='order-row']")).ToHaveCountAsync(5);
 ### Mocking API Responses
 
 ```csharp
+
 [Fact]
 public async Task OrderList_WithMockedApi_DisplaysOrders()
 {
@@ -246,11 +272,13 @@ public async Task OrderList_WithMockedApi_DisplaysOrders()
 
     await Expect(Page.Locator("[data-testid='order-row']")).ToHaveCountAsync(2);
 }
-```
+
+```text
 
 ### Waiting for Network Requests
 
 ```csharp
+
 [Fact]
 public async Task CreateOrder_SubmitForm_WaitsForApiResponse()
 {
@@ -268,7 +296,8 @@ public async Task CreateOrder_SubmitForm_WaitsForApiResponse()
     var response = await responseTask;
     Assert.Equal(201, response.Status);
 }
-```
+
+```text
 
 ---
 
@@ -279,6 +308,7 @@ Downloading browser binaries on every CI run is slow (500MB+). Cache them to spe
 ### GitHub Actions Caching
 
 ```yaml
+
 # .github/workflows/e2e-tests.yml
 jobs:
   e2e:
@@ -311,11 +341,13 @@ jobs:
 
       - name: Run E2E tests
         run: dotnet test tests/MyApp.E2E/
-```
+
+```powershell
 
 ### Azure DevOps Caching
 
 ```yaml
+
 # azure-pipelines.yml
 steps:
   - task: Cache@2
@@ -337,7 +369,8 @@ steps:
 
   - script: dotnet test tests/MyApp.E2E/
     displayName: Run E2E tests
-```
+
+```text
 
 ### Cache Key Strategy
 
@@ -355,6 +388,7 @@ Playwright's trace viewer captures a full recording of test execution for debugg
 ### Enabling Traces
 
 ```csharp
+
 public class TracedTests : IAsyncLifetime
 {
     private IPlaywright _playwright = null!;
@@ -395,23 +429,27 @@ public class TracedTests : IAsyncLifetime
         _playwright.Dispose();
     }
 }
-```
+
+```text
 
 ### Viewing Traces
 
 ```bash
+
 # Open trace file in browser
 pwsh bin/Debug/net8.0/playwright.ps1 show-trace test-results/traces/trace-20260101-120000.zip
 
 # Or use the online trace viewer
 # Upload the .zip to https://trace.playwright.dev/
-```
+
+```powershell
 
 ### Trace on Failure Only
 
 Save traces only when tests fail to reduce storage:
 
 ```csharp
+
 // In a custom test class or middleware
 public async Task RunWithTrace(Func<IPage, Task> testAction, string testName)
 {
@@ -438,7 +476,8 @@ public async Task RunWithTrace(Func<IPage, Task> testAction, string testName)
         throw;
     }
 }
-```
+
+```text
 
 ---
 
@@ -449,6 +488,7 @@ Playwright's code generator records browser interactions and generates test code
 ### Running Codegen
 
 ```bash
+
 # Open codegen with your app URL
 pwsh bin/Debug/net8.0/playwright.ps1 codegen https://localhost:5001
 
@@ -460,7 +500,8 @@ pwsh bin/Debug/net8.0/playwright.ps1 codegen --device "iPhone 15" https://localh
 
 # With saved authentication state
 pwsh bin/Debug/net8.0/playwright.ps1 codegen --save-storage auth.json https://localhost:5001
-```
+
+```json
 
 ### Codegen Best Practices
 
@@ -472,6 +513,7 @@ pwsh bin/Debug/net8.0/playwright.ps1 codegen --save-storage auth.json https://lo
 ### Before and After Codegen Refinement
 
 ```csharp
+
 // GENERATED by codegen (fragile, no assertions):
 await page.GotoAsync("https://localhost:5001/orders");
 await page.Locator("#root > div > main > div:nth-child(2) > button").ClickAsync();
@@ -489,7 +531,8 @@ await Page.ClickAsync("[data-testid='submit-order']");
 await Expect(Page.Locator("[data-testid='success-toast']"))
     .ToBeVisibleAsync();
 await Expect(Page).ToHaveURLAsync(new Regex("/orders/\\d+"));
-```
+
+```text
 
 ---
 
@@ -498,6 +541,7 @@ await Expect(Page).ToHaveURLAsync(new Regex("/orders/\\d+"));
 ### Running Tests Across Browsers
 
 ```csharp
+
 // Using Playwright xUnit base class with environment variable
 // Set BROWSER=chromium|firefox|webkit via CLI or CI config
 public class CrossBrowserTests : PageTest
@@ -513,18 +557,22 @@ public class CrossBrowserTests : PageTest
         await Expect(Page.Locator("[data-testid='success']")).ToBeVisibleAsync();
     }
 }
-```
+
+```text
 
 ```bash
+
 # Run tests in each browser
 BROWSER=chromium dotnet test
 BROWSER=firefox dotnet test
 BROWSER=webkit dotnet test
-```
+
+```text
 
 ### CI Matrix Strategy
 
 ```yaml
+
 # GitHub Actions matrix for multi-browser
 strategy:
   matrix:
@@ -534,7 +582,8 @@ steps:
     run: dotnet test tests/MyApp.E2E/
     env:
       BROWSER: ${{ matrix.browser }}
-```
+
+```text
 
 ---
 
@@ -568,3 +617,4 @@ steps:
 - [Playwright Codegen](https://playwright.dev/dotnet/docs/codegen)
 - [Playwright CI Configuration](https://playwright.dev/dotnet/docs/ci)
 - [Playwright Browser Downloads](https://playwright.dev/dotnet/docs/browsers)
+````

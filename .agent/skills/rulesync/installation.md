@@ -2,7 +2,8 @@
 
 ## Package Managers
 
-```bash
+````bash
+
 npm install -g rulesync
 # or
 brew install rulesync
@@ -10,7 +11,8 @@ brew install rulesync
 # And then
 rulesync --version
 rulesync --help
-```
+
+```text
 
 ## Single Binary (Experimental)
 
@@ -19,8 +21,10 @@ Download pre-built binaries from the [latest release](https://github.com/dyoshik
 **Quick Install (Linux/macOS - No sudo required):**
 
 ```bash
+
 curl -fsSL https://github.com/dyoshikawa/rulesync/releases/latest/download/install.sh | bash
-```
+
+```bash
 
 Options:
 
@@ -32,52 +36,65 @@ Options:
 ### Linux (x64)
 
 ```bash
+
 curl -L https://github.com/dyoshikawa/rulesync/releases/latest/download/rulesync-linux-x64 -o rulesync && \
   chmod +x rulesync && \
   sudo mv rulesync /usr/local/bin/
-```
+
+```bash
 
 ### Linux (ARM64)
 
 ```bash
+
 curl -L https://github.com/dyoshikawa/rulesync/releases/latest/download/rulesync-linux-arm64 -o rulesync && \
   chmod +x rulesync && \
   sudo mv rulesync /usr/local/bin/
-```
+
+```bash
 
 ### macOS (Apple Silicon)
 
 ```bash
+
 curl -L https://github.com/dyoshikawa/rulesync/releases/latest/download/rulesync-darwin-arm64 -o rulesync && \
   chmod +x rulesync && \
   sudo mv rulesync /usr/local/bin/
-```
+
+```bash
 
 ### macOS (Intel)
 
 ```bash
+
 curl -L https://github.com/dyoshikawa/rulesync/releases/latest/download/rulesync-darwin-x64 -o rulesync && \
   chmod +x rulesync && \
   sudo mv rulesync /usr/local/bin/
-```
+
+```bash
 
 ### Windows (x64)
 
 ```powershell
+
 Invoke-WebRequest -Uri "https://github.com/dyoshikawa/rulesync/releases/latest/download/rulesync-windows-x64.exe" -OutFile "rulesync.exe"; `
   Move-Item rulesync.exe C:\Windows\System32\
-```
+
+```bash
 
 Or using curl (if available):
 
 ```bash
+
 curl -L https://github.com/dyoshikawa/rulesync/releases/latest/download/rulesync-windows-x64.exe -o rulesync.exe && \
   mv rulesync.exe /path/to/your/bin/
-```
+
+```bash
 
 ### Verify checksums
 
 ```bash
+
 curl -L https://github.com/dyoshikawa/rulesync/releases/latest/download/SHA256SUMS -o SHA256SUMS
 
 # Linux/macOS
@@ -90,4 +107,6 @@ Get-FileHash rulesync.exe -Algorithm SHA256 | ForEach-Object {
   $expected = (Get-Content SHA256SUMS | Select-String "rulesync-windows-x64.exe").ToString().Split()[0]
   if ($actual -eq $expected) { "✓ Checksum verified" } else { "✗ Checksum mismatch" }
 }
-```
+
+```text
+````

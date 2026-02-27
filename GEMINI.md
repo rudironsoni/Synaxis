@@ -2,7 +2,7 @@ Please also reference the following rules as needed. The list below is provided 
 
 rules[2]:
   - path: @.gemini/memories/10-conventions.md
-    description: "dotnet-harness-toolkit authoring conventions for skills, subagents, commands, and hooks"
+    description: "dotnet-agent-harness authoring conventions for skills, subagents, commands, and hooks"
     applyTo[1]: .rulesync/**/*
   - path: @.gemini/memories/20-workflow.md
     description: Workflow for RuleSync-based multi-agent generation
@@ -12,7 +12,7 @@ rules[2]:
 
 As this project's AI coding tool, you must follow the additional conventions below, in addition to the built-in functions.
 
-# dotnet-harness-toolkit
+# dotnet-agent-harness
 
 Comprehensive .NET development guidance for modern C#, ASP.NET Core, MAUI, Blazor, and cloud-native apps.
 
@@ -30,24 +30,28 @@ Compatible targets include Claude Code, GitHub Copilot CLI, OpenCode, Codex CLI,
 
 For full toolkit installation in a project:
 
-```bash
-rulesync fetch rudironsoni/dotnet-harness-toolkit
+````bash
+
+rulesync fetch rudironsoni/dotnet-agent-harness:.rulesync
 rulesync generate --targets "*" --features "*"
-```
+
+```bash
 
 If you use declarative sources:
 
 ```jsonc
+
 {
-  "sources": [
-    { "source": "rudironsoni/dotnet-harness-toolkit" }
-  ]
+  "sources": [{ "source": "rudironsoni/dotnet-agent-harness", "path": ".rulesync" }],
 }
-```
+
+```json
 
 ```bash
+
 rulesync install && rulesync generate --targets "*" --features "*"
-```
+
+```bash
 
 ## OpenCode behavior
 
@@ -57,7 +61,8 @@ rulesync install && rulesync generate --targets "*" --features "*"
 
 ## Troubleshooting
 
-If RuleSync reports `Multiple root rulesync rules found`, ensure only one root overview rule exists in `.rulesync/rules/`.
+If RuleSync reports `Multiple root rulesync rules found`, ensure only one root overview rule exists in
+`.rulesync/rules/`.
 
 ## Contributing
 
@@ -66,3 +71,4 @@ Edit source files in `.rulesync/` and validate with `npm run ci:rulesync`.
 ## License
 
 MIT License. See `LICENSE`.
+````

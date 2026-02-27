@@ -6,7 +6,9 @@ description: >-
 ---
 # dotnet-security-owasp
 
-OWASP Top 10 (2021) security guidance for .NET applications. Each category includes the vulnerability description, .NET-specific risk, mitigation code examples, and common pitfalls. This skill is the canonical owner of deprecated security pattern warnings (CAS, APTCA, .NET Remoting, DCOM, BinaryFormatter).
+OWASP Top 10 (2021) security guidance for .NET applications. Each category includes the vulnerability description,
+.NET-specific risk, mitigation code examples, and common pitfalls. This skill is the canonical owner of deprecated
+security pattern warnings (CAS, APTCA, .NET Remoting, DCOM, BinaryFormatter).
 
 ## Scope
 
@@ -25,19 +27,24 @@ OWASP Top 10 (2021) security guidance for .NET applications. Each category inclu
 - Configuration binding and Options pattern -- see [skill:dotnet-csharp-configuration]
 - Secrets storage and management -- see [skill:dotnet-secrets-management]
 
-Cross-references: [skill:dotnet-secrets-management] for secrets handling, [skill:dotnet-cryptography] for cryptographic best practices, [skill:dotnet-csharp-coding-standards] for secure coding conventions.
+Cross-references: [skill:dotnet-secrets-management] for secrets handling, [skill:dotnet-cryptography] for cryptographic
+best practices, [skill:dotnet-csharp-coding-standards] for secure coding conventions.
 
 ---
 
 ## A01: Broken Access Control
 
-**Vulnerability:** Users act outside their intended permissions -- accessing other users' data, elevating privileges, or bypassing access checks.
+**Vulnerability:** Users act outside their intended permissions -- accessing other users' data, elevating privileges, or
+bypassing access checks.
 
-**Risk in .NET:** Missing `[Authorize]` attributes on controllers/endpoints, insecure direct object references (IDOR) where user IDs are taken from route parameters without ownership validation, and CORS misconfiguration allowing unintended origins.
+**Risk in .NET:** Missing `[Authorize]` attributes on controllers/endpoints, insecure direct object references (IDOR)
+where user IDs are taken from route parameters without ownership validation, and CORS misconfiguration allowing
+unintended origins.
 
 ### Mitigation
 
-```csharp
+````csharp
+
 // 1. Apply authorization globally, then opt out explicitly
 builder.Services.AddAuthorizationBuilder()
     .SetFallbackPolicy(new AuthorizationPolicyBuilder()
@@ -82,9 +89,11 @@ app.MapPut("/documents/{id}", async (
     await db.SaveChangesAsync();
     return Results.NoContent();
 });
-```
+
+```text
 
 ```csharp
+
 // 3. Restrict CORS to known origins
 builder.Services.AddCors(options =>
 {
@@ -95,7 +104,8 @@ builder.Services.AddCors(options =>
               .WithHeaders("Content-Type", "Authorization");
     });
 });
-```
+
+```text
 
 **Gotcha:** `AllowAnyOrigin()` combined with `AllowCredentials()` is rejected at runtime by ASP.NET Core, but `SetIsOriginAllowed(_ => true)` with `AllowCredentials()` silently allows all origins -- never use this pattern.
 
@@ -110,6 +120,7 @@ builder.Services.AddCors(options =>
 ### Mitigation
 
 ```csharp
+
 // Enforce HTTPS and HSTS
 builder.Services.AddHttpsRedirection(options =>
 {
@@ -122,9 +133,11 @@ app.UseHttpsRedirection();
 
 // Never store secrets in appsettings.json -- use user secrets or env vars
 // See [skill:dotnet-secrets-management] for proper secrets handling
-```
+
+```json
 
 ```csharp
+
 // Use Data Protection API for symmetric encryption of application data
 public sealed class TokenProtector(IDataProtectionProvider provider)
 {
@@ -135,7 +148,8 @@ public sealed class TokenProtector(IDataProtectionProvider provider)
 
     public string Unprotect(string ciphertext) => _protector.Unprotect(ciphertext);
 }
-```
+
+```text
 
 See [skill:dotnet-cryptography] for algorithm selection (AES-GCM, RSA, ECDSA) and key derivation.
 
@@ -150,6 +164,7 @@ See [skill:dotnet-cryptography] for algorithm selection (AES-GCM, RSA, ECDSA) an
 ### Mitigation
 
 ```csharp
+
 // SQL injection prevention: always use parameterized queries
 // EF Core is parameterized by default via LINQ
 var orders = await db.Orders
@@ -163,9 +178,11 @@ var results = await db.Orders
 
 // NEVER concatenate user input into SQL:
 // var bad = db.Orders.FromSqlRaw("SELECT * FROM Orders WHERE Status = '" + status + "'");
-```
+
+```text
 
 ```csharp
+
 // XSS prevention: Razor encodes output by default.
 // Use @Html.Raw() ONLY for trusted, pre-sanitized HTML.
 // In Minimal APIs, return typed results -- not raw strings:
@@ -177,7 +194,8 @@ app.MapGet("/greeting", (string name) =>
 // If unavoidable, validate against an allowlist:
 public static bool IsAllowedTool(string toolName) =>
     toolName is "dotnet" or "git" or "nuget";
-```
+
+```bash
 
 **Gotcha:** `FromSqlRaw` with string concatenation bypasses parameterization. Always use `FromSqlInterpolated` or pass `SqlParameter` objects to `FromSqlRaw`.
 
@@ -192,6 +210,7 @@ public static bool IsAllowedTool(string toolName) =>
 ### Mitigation
 
 ```csharp
+
 // Rate limiting with built-in middleware (.NET 7+)
 builder.Services.AddRateLimiter(options =>
 {
@@ -209,9 +228,11 @@ app.UseRateLimiter();
 
 app.MapGet("/api/data", () => Results.Ok("data"))
     .RequireRateLimiting("api");
-```
+
+```text
 
 ```csharp
+
 // Anti-forgery for Minimal APIs (.NET 8+)
 builder.Services.AddAntiforgery();
 
@@ -235,7 +256,8 @@ app.MapPost("/api/orders", async (CreateOrderDto dto, AppDbContext db) =>
     await db.SaveChangesAsync();
     return Results.Created($"/api/orders/{order.Id}", order);
 }).RequireAntiforgery();
-```
+
+```text
 
 **Gotcha:** `UseRateLimiter()` must be called after `UseRouting()` and before `MapControllers()`/`MapGet()` to apply correctly.
 
@@ -250,6 +272,7 @@ app.MapPost("/api/orders", async (CreateOrderDto dto, AppDbContext db) =>
 ### Mitigation
 
 ```csharp
+
 // Remove server identity headers (configure BEFORE Build)
 builder.WebHost.ConfigureKestrel(options =>
 {
@@ -280,9 +303,11 @@ app.Use(async (context, next) =>
         "default-src 'self'; script-src 'self'; style-src 'self'");
     await next();
 });
-```
+
+```text
 
 ```csharp
+
 // Constrain request body size to prevent resource exhaustion (configure BEFORE Build)
 builder.WebHost.ConfigureKestrel(options =>
 {
@@ -292,7 +317,8 @@ builder.WebHost.ConfigureKestrel(options =>
 });
 
 // Then: var app = builder.Build();
-```
+
+```text
 
 **Gotcha:** `UseDeveloperExceptionPage()` leaks source code paths and stack traces. Ensure it is gated behind `IsDevelopment()` and never enabled in production or staging.
 
@@ -307,15 +333,18 @@ builder.WebHost.ConfigureKestrel(options =>
 ### Mitigation
 
 ```xml
+
 <!-- Enable NuGet audit in Directory.Build.props or csproj -->
 <PropertyGroup>
   <NuGetAudit>true</NuGetAudit>
   <NuGetAuditLevel>low</NuGetAuditLevel>
   <NuGetAuditMode>all</NuGetAuditMode> <!-- Audit direct + transitive -->
 </PropertyGroup>
-```
+
+```text
 
 ```bash
+
 # Audit NuGet packages for known vulnerabilities
 dotnet list package --vulnerable --include-transitive
 
@@ -324,7 +353,8 @@ dotnet outdated  # requires dotnet-outdated-tool
 
 # Check .NET SDK/runtime support status
 dotnet --info
-```
+
+```text
 
 **Gotcha:** `NuGetAuditMode` defaults to `direct` -- transitive vulnerabilities are hidden unless you set `all`. Always use `all` in CI to catch deep dependency issues.
 
@@ -339,6 +369,7 @@ dotnet --info
 ### Mitigation
 
 ```csharp
+
 // Configure strong Identity password and lockout policies
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
@@ -359,9 +390,11 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 })
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
-```
+
+```text
 
 ```csharp
+
 // Secure cookie configuration
 builder.Services.ConfigureApplicationCookie(options =>
 {
@@ -371,7 +404,8 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.ExpireTimeSpan = TimeSpan.FromHours(2);
     options.SlidingExpiration = true;
 });
-```
+
+```text
 
 **Gotcha:** `CookieSecurePolicy.SameAsRequest` allows cookies over HTTP in development, which is fine. But in production behind a reverse proxy terminating TLS, the app sees HTTP -- so cookies are sent insecurely. Always use `CookieSecurePolicy.Always` in production and configure forwarded headers.
 
@@ -386,6 +420,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 ### Mitigation
 
 ```xml
+
 <!-- NuGet package source mapping in nuget.config -->
 <!-- Only allow packages from trusted sources -->
 <configuration>
@@ -402,9 +437,11 @@ builder.Services.ConfigureApplicationCookie(options =>
     </packageSource>
   </packageSourceMapping>
 </configuration>
-```
+
+```text
 
 ```csharp
+
 // NEVER use BinaryFormatter -- it is a critical deserialization vulnerability.
 // BinaryFormatter is obsolete as error (SYSLIB0011) in .NET 8+ and removed in .NET 9+.
 // Use System.Text.Json instead:
@@ -414,7 +451,8 @@ var data = JsonSerializer.Deserialize<OrderDto>(jsonString);
 // <PackageReference Include="MessagePack" Version="3.*" />
 var bytes = MessagePackSerializer.Serialize(order);
 var restored = MessagePackSerializer.Deserialize<Order>(bytes);
-```
+
+```text
 
 **Gotcha:** Package source mapping uses most-specific-pattern-wins: `MyCompany.*` beats the `*` wildcard. Always define specific patterns for internal packages to prevent dependency confusion attacks.
 
@@ -429,6 +467,7 @@ var restored = MessagePackSerializer.Deserialize<Order>(bytes);
 ### Mitigation
 
 ```csharp
+
 // Log security events with structured logging
 public sealed class AuditMiddleware(RequestDelegate next, ILogger<AuditMiddleware> logger)
 {
@@ -460,9 +499,11 @@ public sealed class AuditMiddleware(RequestDelegate next, ILogger<AuditMiddlewar
         }
     }
 }
-```
+
+```text
 
 ```csharp
+
 // NEVER log sensitive data -- redact credentials and PII
 // Configure log filtering to exclude sensitive paths
 builder.Logging.AddFilter("Microsoft.AspNetCore.Authentication", LogLevel.Warning);
@@ -476,7 +517,8 @@ builder.Services.AddHttpLogging(options =>
         | HttpLoggingFields.Duration;
     // Explicitly exclude request/response bodies and auth headers
 });
-```
+
+```text
 
 **Gotcha:** Structured logging with `{Placeholder}` syntax is safe, but string interpolation (`$"User {userId}"`) in log calls bypasses structured logging and may leak PII into log sinks that do not support redaction.
 
@@ -491,6 +533,7 @@ builder.Services.AddHttpLogging(options =>
 ### Mitigation
 
 ```csharp
+
 // Validate and restrict outbound URLs
 public static class UrlValidator
 {
@@ -545,9 +588,11 @@ app.MapPost("/fetch", async (FetchRequest request, IHttpClientFactory factory) =
     var response = await client.GetStringAsync(request.Url);
     return Results.Ok(response);
 });
-```
+
+```text
 
 ```csharp
+
 // Configure HttpClient to disable automatic redirect following
 builder.Services.AddHttpClient("external", client =>
 {
@@ -557,7 +602,8 @@ builder.Services.AddHttpClient("external", client =>
 {
     AllowAutoRedirect = false // Prevent redirect-based SSRF
 });
-```
+
+```text
 
 **Gotcha:** DNS rebinding can bypass IP allowlists -- an attacker's domain resolves to a public IP during validation but to an internal IP during the actual request. Pin DNS resolution or re-validate after connection.
 
@@ -627,3 +673,4 @@ Do **not** set `System.Runtime.Serialization.EnableUnsafeBinaryFormatterSerializ
 - [Rate Limiting Middleware](https://learn.microsoft.com/en-us/aspnet/core/performance/rate-limit?view=aspnetcore-10.0)
 - [NuGet Package Source Mapping](https://learn.microsoft.com/en-us/nuget/consume-packages/package-source-mapping)
 - [BinaryFormatter Migration Guide](https://learn.microsoft.com/en-us/dotnet/standard/serialization/binaryformatter-migration-guide/)
+````

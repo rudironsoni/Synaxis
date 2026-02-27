@@ -1,8 +1,10 @@
 # Programmatic API
 
-Rulesync can be used as a library in your Node.js/TypeScript projects. The `generate` and `importFromTool` functions are available as named exports.
+Rulesync can be used as a library in your Node.js/TypeScript projects. The `generate` and `importFromTool` functions are
+available as named exports.
 
-```typescript
+````typescript
+
 import { generate, importFromTool } from "rulesync";
 
 // Generate configurations
@@ -18,7 +20,8 @@ const importResult = await importFromTool({
   features: ["rules", "commands"],
 });
 console.log(`Imported ${importResult.rulesCount} rules`);
-```
+
+```bash
 
 ## `generate(options?)`
 
@@ -52,3 +55,4 @@ Imports existing tool configurations into `.rulesync/` directory.
 | `verbose`    | `boolean`    | `false`          | Enable verbose logging                    |
 | `silent`     | `boolean`    | `true`           | Suppress all output                       |
 | `global`     | `boolean`    | `false`          | Import global (user scope) configurations |
+````

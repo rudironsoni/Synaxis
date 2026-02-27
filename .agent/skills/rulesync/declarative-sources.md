@@ -1,12 +1,16 @@
 # Declarative Skill Sources
 
-Rulesync can fetch skills from external GitHub repositories using the `install` command. Instead of manually running `fetch` for each skill source, declare them in your `rulesync.jsonc` and run `rulesync install` to resolve and fetch them. Then `rulesync generate` picks them up as local curated skills. Typical workflow: `rulesync install && rulesync generate`.
+Rulesync can fetch skills from external GitHub repositories using the `install` command. Instead of manually running
+`fetch` for each skill source, declare them in your `rulesync.jsonc` and run `rulesync install` to resolve and fetch
+them. Then `rulesync generate` picks them up as local curated skills. Typical workflow:
+`rulesync install && rulesync generate`.
 
 ## Configuration
 
 Add a `sources` array to your `rulesync.jsonc`:
 
-```jsonc
+````jsonc
+
 {
   "$schema": "https://raw.githubusercontent.com/dyoshikawa/rulesync/refs/heads/main/config-schema.json",
   "targets": ["copilot", "claudecode"],
@@ -22,7 +26,8 @@ Add a `sources` array to your `rulesync.jsonc`:
     { "source": "owner/repo@v1.0.0:path/to/skills" },
   ],
 }
-```
+
+```bash
 
 Each entry in `sources` accepts:
 
@@ -54,6 +59,7 @@ The `install` command accepts these flags:
 | `--token <token>` | GitHub token for private repositories.                                                                                                                       |
 
 ```bash
+
 # Install skills using locked refs
 rulesync install
 
@@ -68,13 +74,15 @@ rulesync install && rulesync generate
 
 # Skip source installation — just don't run install
 rulesync generate
-```
+
+```text
 
 ## Lockfile
 
 The lockfile at `rulesync.lock` (at the project root) records the resolved commit SHA and per-skill integrity hashes for each source so that builds are reproducible. It is safe to commit this file. An example:
 
 ```json
+
 {
   "lockfileVersion": 1,
   "sources": {
@@ -89,7 +97,8 @@ The lockfile at `rulesync.lock` (at the project root) records the resolved commi
     }
   }
 }
-```
+
+```text
 
 To update locked refs, run `rulesync install --update`.
 
@@ -98,13 +107,15 @@ To update locked refs, run `rulesync install --update`.
 Source fetching uses the `GITHUB_TOKEN` or `GH_TOKEN` environment variable for authentication. This is required for private repositories and recommended for better rate limits.
 
 ```bash
+
 # Using environment variable
 export GITHUB_TOKEN=ghp_xxxx
 npx rulesync install
 
 # Or using GitHub CLI
 GITHUB_TOKEN=$(gh auth token) npx rulesync install
-```
+
+```text
 
 > [!TIP]
 > The `install` command also accepts a `--token` flag for explicit authentication: `rulesync install --token ghp_xxxx`.
@@ -117,3 +128,4 @@ GITHUB_TOKEN=$(gh auth token) npx rulesync install
 | `.rulesync/skills/.curated/<name>/` | Curated | Lower      | No (gitignored)  |
 
 When both a local and a curated skill share the same name, the local skill is used and the remote one is not fetched.
+````

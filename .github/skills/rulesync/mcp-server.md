@@ -1,17 +1,20 @@
 # Rulesync MCP Server
 
-Rulesync provides an MCP (Model Context Protocol) server that enables AI agents to manage your Rulesync files. This allows AI agents to discover, read, create, update, and delete files dynamically.
+Rulesync provides an MCP (Model Context Protocol) server that enables AI agents to manage your Rulesync files. This
+allows AI agents to discover, read, create, update, and delete files dynamically.
 
-> [!NOTE]
-> The MCP server exposes the only one tool to minimize your agent's token usage. Approximately less than 1k tokens for the tool definition.
+> [!NOTE] The MCP server exposes the only one tool to minimize your agent's token usage. Approximately less than 1k
+> tokens for the tool definition.
 
 ## Usage
 
 ### Starting the MCP Server
 
-```bash
+````bash
+
 rulesync mcp
-```
+
+```bash
 
 This starts an MCP server using stdio transport that AI agents can communicate with.
 
@@ -20,6 +23,7 @@ This starts an MCP server using stdio transport that AI agents can communicate w
 Add the Rulesync MCP server to your `.rulesync/mcp.json`:
 
 ```json
+
 {
   "mcpServers": {
     "rulesync-mcp": {
@@ -30,4 +34,6 @@ Add the Rulesync MCP server to your `.rulesync/mcp.json`:
     }
   }
 }
-```
+
+```text
+````

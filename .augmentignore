@@ -29,5 +29,7 @@ temp/
 *.key
 *.pem
 *.pfx
+*.snk
 appsettings.*.json
+launchSettings.json
 .env

@@ -8,7 +8,9 @@ metadata:
 ---
 # dotnet-minimal-apis
 
-Minimal APIs are Microsoft's recommended approach for new ASP.NET Core HTTP API projects. They provide a lightweight, lambda-based programming model with first-class OpenAPI support, endpoint filters for cross-cutting concerns, and route groups for organization at scale.
+Minimal APIs are Microsoft's recommended approach for new ASP.NET Core HTTP API projects. They provide a lightweight,
+lambda-based programming model with first-class OpenAPI support, endpoint filters for cross-cutting concerns, and route
+groups for organization at scale.
 
 ## Scope
 
@@ -28,15 +30,19 @@ Minimal APIs are Microsoft's recommended approach for new ASP.NET Core HTTP API 
 - OpenAPI document generation -- see [skill:dotnet-openapi]
 - gRPC and real-time communication -- see [skill:dotnet-grpc] and [skill:dotnet-realtime-communication]
 
-Cross-references: [skill:dotnet-architecture-patterns] for organizing large APIs, [skill:dotnet-input-validation] for request validation, [skill:dotnet-api-versioning] for versioning strategies, [skill:dotnet-openapi] for OpenAPI customization.
+Cross-references: [skill:dotnet-architecture-patterns] for organizing large APIs, [skill:dotnet-input-validation] for
+request validation, [skill:dotnet-api-versioning] for versioning strategies, [skill:dotnet-openapi] for OpenAPI
+customization.
 
 ---
 
 ## Route Groups
 
-Route groups organize related endpoints under a shared prefix, applying common configuration (filters, metadata, authorization) once. They replace repetitive chaining of `MapGet`/`MapPost` with shared prefixes.
+Route groups organize related endpoints under a shared prefix, applying common configuration (filters, metadata,
+authorization) once. They replace repetitive chaining of `MapGet`/`MapPost` with shared prefixes.
 
-```csharp
+````csharp
+
 var app = builder.Build();
 
 // Group endpoints under /api/products with shared configuration
@@ -69,13 +75,15 @@ products.MapDelete("/{id:int}", async (int id, AppDbContext db) =>
     await db.SaveChangesAsync();
     return TypedResults.NoContent();
 });
-```
+
+```text
 
 ### Nested Groups
 
 Groups can be nested to compose prefixes and filters:
 
 ```csharp
+
 var api = app.MapGroup("/api")
     .AddEndpointFilter<RequestLoggingFilter>();
 
@@ -87,17 +95,20 @@ var orders = v1.MapGroup("/orders").WithTags("Orders");
 products.MapGet("/", GetProducts);
 // Registers as: POST /api/v1/orders
 orders.MapPost("/", CreateOrder);
-```
+
+```text
 
 ---
 
 ## Endpoint Filters
 
-Endpoint filters provide a pipeline for cross-cutting concerns (logging, validation, authorization enrichment) similar to MVC action filters but specific to Minimal APIs.
+Endpoint filters provide a pipeline for cross-cutting concerns (logging, validation, authorization enrichment) similar
+to MVC action filters but specific to Minimal APIs.
 
 ### IEndpointFilter Interface
 
 ```csharp
+
 public sealed class ValidationFilter<T>(IValidator<T> validator) : IEndpointFilter
     where T : class
 {
@@ -123,11 +134,13 @@ public sealed class ValidationFilter<T>(IValidator<T> validator) : IEndpointFilt
         return await next(context);
     }
 }
-```
+
+```text
 
 ### Applying Filters
 
 ```csharp
+
 // Apply to a single endpoint
 products.MapPost("/", CreateProduct)
     .AddEndpointFilter<ValidationFilter<CreateProductDto>>();
@@ -146,24 +159,30 @@ products.MapGet("/{id:int}", GetProductById)
 
         return await next(context);
     });
-```
+
+```text
 
 ### Filter Execution Order
 
 Filters execute in registration order (first registered = outermost). The endpoint handler runs after all filters pass:
 
-```
+```text
+
 Request -> Filter1 -> Filter2 -> Filter3 -> Handler
 Response <- Filter1 <- Filter2 <- Filter3 <-
-```
+
+```text
 
 ---
 
 ## TypedResults
 
-Always use `TypedResults` (static factory) instead of `Results` (interface factory) for Minimal API return values. `TypedResults` returns concrete types that the OpenAPI metadata generator can inspect at build time, producing accurate response schemas automatically.
+Always use `TypedResults` (static factory) instead of `Results` (interface factory) for Minimal API return values.
+`TypedResults` returns concrete types that the OpenAPI metadata generator can inspect at build time, producing accurate
+response schemas automatically.
 
 ```csharp
+
 // PREFERRED: TypedResults -- concrete return types, auto-generates OpenAPI metadata
 products.MapGet("/{id:int}", async Task<Results<Ok<Product>, NotFound>> (
     int id, AppDbContext db) =>
@@ -176,13 +195,16 @@ products.MapGet("/{id:int}", async (int id, AppDbContext db) =>
     await db.Products.FindAsync(id) is Product product
         ? Results.Ok(product)
         : Results.NotFound());
-```
+
+```text
 
 ### Union Return Types
 
-Use `Results<T1, T2, ...>` to declare all possible response types for a single endpoint. This enables accurate OpenAPI documentation with multiple response codes:
+Use `Results<T1, T2, ...>` to declare all possible response types for a single endpoint. This enables accurate OpenAPI
+documentation with multiple response codes:
 
 ```csharp
+
 products.MapPost("/", async Task<Results<Created<Product>, ValidationProblem, Conflict>> (
     CreateProductDto dto, AppDbContext db) =>
 {
@@ -194,15 +216,18 @@ products.MapPost("/", async Task<Results<Created<Product>, ValidationProblem, Co
     await db.SaveChangesAsync();
     return TypedResults.Created($"/api/products/{product.Id}", product);
 });
-```
+
+```text
 
 ---
 
 ## OpenAPI 3.1 Integration
 
-.NET 10 adds built-in OpenAPI 3.1 support via `Microsoft.AspNetCore.OpenApi`. Minimal APIs generate OpenAPI metadata from `TypedResults`, parameter bindings, and attributes automatically.
+.NET 10 adds built-in OpenAPI 3.1 support via `Microsoft.AspNetCore.OpenApi`. Minimal APIs generate OpenAPI metadata
+from `TypedResults`, parameter bindings, and attributes automatically.
 
 ```csharp
+
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
@@ -211,20 +236,24 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi(); // Serves /openapi/v1.json
 }
-```
+
+```json
 
 ### Enriching Metadata
 
 ```csharp
+
 products.MapGet("/{id:int}", GetProductById)
     .WithName("GetProductById")
     .WithSummary("Get a product by its ID")
     .WithDescription("Returns the product details for the specified ID, or 404 if not found.")
     .Produces<Product>(StatusCodes.Status200OK)
     .ProducesProblem(StatusCodes.Status404NotFound);
-```
 
-For advanced OpenAPI customization (document transformers, operation transformers, schema customization), see [skill:dotnet-openapi].
+```text
+
+For advanced OpenAPI customization (document transformers, operation transformers, schema customization), see
+[skill:dotnet-openapi].
 
 ---
 
@@ -235,6 +264,7 @@ As an API grows beyond a handful of endpoints, organize endpoints into separate 
 ### Extension Method Pattern
 
 ```csharp
+
 // ProductEndpoints.cs
 public static class ProductEndpoints
 {
@@ -298,13 +328,15 @@ public static class ProductEndpoints
 app.MapProductEndpoints();
 app.MapOrderEndpoints();
 app.MapCustomerEndpoints();
-```
+
+```csharp
 
 ### Carter Library
 
 For projects that prefer auto-discovery of endpoint modules, the Carter library provides an `ICarterModule` interface:
 
 ```csharp
+
 // <PackageReference Include="Carter" Version="8.*" />
 public sealed class ProductModule : ICarterModule
 {
@@ -326,13 +358,16 @@ public sealed class ProductModule : ICarterModule
 builder.Services.AddCarter();
 var app = builder.Build();
 app.MapCarter(); // Auto-discovers and registers all ICarterModule implementations
-```
+
+```csharp
 
 ### Vertical Slice Organization
 
-For projects using vertical slice architecture (see [skill:dotnet-architecture-patterns]), each feature owns its endpoints, handlers, and models in a single directory:
+For projects using vertical slice architecture (see [skill:dotnet-architecture-patterns]), each feature owns its
+endpoints, handlers, and models in a single directory:
 
-```
+```text
+
 Features/
   Products/
     GetProducts.cs       # Endpoint + handler + response DTO
@@ -340,7 +375,8 @@ Features/
     UpdateProduct.cs
     DeleteProduct.cs
     ProductEndpoints.cs  # Route group registration
-```
+
+```csharp
 
 ---
 
@@ -349,6 +385,7 @@ Features/
 Minimal APIs use `System.Text.Json` by default. Configure JSON options globally for all Minimal API endpoints:
 
 ```csharp
+
 // ConfigureHttpJsonOptions applies to Minimal APIs ONLY, not MVC controllers
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
@@ -356,17 +393,22 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
-```
 
-**Gotcha:** `ConfigureHttpJsonOptions` configures JSON serialization for Minimal APIs only. MVC controllers use a separate pipeline -- configure via `builder.Services.AddControllers().AddJsonOptions(...)`. Mixing them up has no effect.
+```json
+
+**Gotcha:** `ConfigureHttpJsonOptions` configures JSON serialization for Minimal APIs only. MVC controllers use a
+separate pipeline -- configure via `builder.Services.AddControllers().AddJsonOptions(...)`. Mixing them up has no
+effect.
 
 ---
 
 ## Parameter Binding
 
-Minimal APIs bind parameters from route, query, headers, body, and DI automatically based on type and attribute annotations.
+Minimal APIs bind parameters from route, query, headers, body, and DI automatically based on type and attribute
+annotations.
 
 ```csharp
+
 // Route parameter (from URL segment)
 app.MapGet("/products/{id:int}", (int id) => ...);
 
@@ -389,17 +431,23 @@ public record ProductQuery(
     [FromQuery] int Page = 1,
     [FromQuery] int PageSize = 20,
     [FromQuery] string? SortBy = null);
-```
+
+```text
 
 ---
 
 ## Agent Gotchas
 
-1. **Do not use `Results` when `TypedResults` is available** -- `Results.Ok(value)` returns `IResult` and the OpenAPI generator cannot infer response schemas. Use `TypedResults.Ok(value)` to enable automatic schema generation.
-2. **Do not forget `ConfigureHttpJsonOptions` only applies to Minimal APIs** -- MVC controllers need `.AddControllers().AddJsonOptions()` separately.
-3. **Do not apply validation logic inline in every endpoint** -- use endpoint filters or cross-reference [skill:dotnet-input-validation] for centralized validation patterns.
-4. **Do not register filters in the wrong order** -- first-registered filter is outermost. Put broad filters (logging) first, specific filters (validation) closer to the handler.
-5. **Do not put all endpoints in `Program.cs`** -- organize into extension method classes or Carter modules once you have more than a handful of endpoints.
+1. **Do not use `Results` when `TypedResults` is available** -- `Results.Ok(value)` returns `IResult` and the OpenAPI
+   generator cannot infer response schemas. Use `TypedResults.Ok(value)` to enable automatic schema generation.
+2. **Do not forget `ConfigureHttpJsonOptions` only applies to Minimal APIs** -- MVC controllers need
+   `.AddControllers().AddJsonOptions()` separately.
+3. **Do not apply validation logic inline in every endpoint** -- use endpoint filters or cross-reference
+   [skill:dotnet-input-validation] for centralized validation patterns.
+4. **Do not register filters in the wrong order** -- first-registered filter is outermost. Put broad filters (logging)
+   first, specific filters (validation) closer to the handler.
+5. **Do not put all endpoints in `Program.cs`** -- organize into extension method classes or Carter modules once you
+   have more than a handful of endpoints.
 
 ---
 
@@ -416,9 +464,12 @@ public record ProductQuery(
 
 Minimal API patterns in this skill are grounded in guidance from:
 
-- **David Fowler** -- AspNetCoreDiagnosticScenarios ([github.com/davidfowl/AspNetCoreDiagnosticScenarios](https://github.com/davidfowl/AspNetCoreDiagnosticScenarios)). Authoritative source on ASP.NET Core request pipeline design, middleware best practices, and diagnostic anti-patterns.
+- **David Fowler** -- AspNetCoreDiagnosticScenarios
+  ([github.com/davidfowl/AspNetCoreDiagnosticScenarios](https://github.com/davidfowl/AspNetCoreDiagnosticScenarios)).
+  Authoritative source on ASP.NET Core request pipeline design, middleware best practices, and diagnostic anti-patterns.
 
-> These sources inform the patterns and rationale presented above. This skill does not claim to represent or speak for any individual.
+> These sources inform the patterns and rationale presented above. This skill does not claim to represent or speak for
+> any individual.
 
 ---
 
@@ -429,3 +480,4 @@ Minimal API patterns in this skill are grounded in guidance from:
 - [Endpoint Filters](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/minimal-apis/min-api-filters?view=aspnetcore-10.0)
 - [OpenAPI in ASP.NET Core](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/openapi/overview?view=aspnetcore-10.0)
 - [Carter Library](https://github.com/CarterCommunity/Carter)
+````

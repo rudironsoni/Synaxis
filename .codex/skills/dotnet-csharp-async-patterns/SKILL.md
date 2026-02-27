@@ -8,7 +8,8 @@ metadata:
 ---
 # dotnet-csharp-async-patterns
 
-Async/await best practices for .NET applications. Covers correct task usage, cancellation propagation, and the most common mistakes AI agents make when generating async code.
+Async/await best practices for .NET applications. Covers correct task usage, cancellation propagation, and the most
+common mistakes AI agents make when generating async code.
 
 ## Scope
 
@@ -23,7 +24,9 @@ Async/await best practices for .NET applications. Covers correct task usage, can
 - Channel<T> producer/consumer patterns -- see [skill:dotnet-channels]
 - BackgroundService registration and lifecycle -- see [skill:dotnet-background-services]
 
-Cross-references: [skill:dotnet-csharp-dependency-injection] for `IHostedService`/`BackgroundService` registration, [skill:dotnet-csharp-coding-standards] for `Async` suffix naming, [skill:dotnet-csharp-modern-patterns] for language-level features.
+Cross-references: [skill:dotnet-csharp-dependency-injection] for `IHostedService`/`BackgroundService` registration,
+[skill:dotnet-csharp-coding-standards] for `Async` suffix naming, [skill:dotnet-csharp-modern-patterns] for
+language-level features.
 
 ---
 
@@ -31,9 +34,11 @@ Cross-references: [skill:dotnet-csharp-dependency-injection] for `IHostedService
 
 ### Always Async All the Way
 
-Every method in the async call chain must be `async` and `await`ed. Mixing sync and async causes deadlocks or thread pool starvation.
+Every method in the async call chain must be `async` and `await`ed. Mixing sync and async causes deadlocks or thread
+pool starvation.
 
-```csharp
+````csharp
+
 // Correct: async all the way
 public async Task<Order> GetOrderAsync(int id, CancellationToken ct = default)
 {
@@ -46,13 +51,16 @@ public Order GetOrder(int id)
 {
     return _repo.GetByIdAsync(id).Result; // DEADLOCK RISK
 }
-```
+
+```text
 
 ### Prefer `Task` and `ValueTask`
 
-Return `Task` or `Task<T>` by default. Use `ValueTask<T>` when the method frequently completes synchronously (cache hits, buffered I/O) to avoid `Task` allocation.
+Return `Task` or `Task<T>` by default. Use `ValueTask<T>` when the method frequently completes synchronously (cache
+hits, buffered I/O) to avoid `Task` allocation.
 
 ```csharp
+
 // ValueTask: frequently synchronous completion
 public ValueTask<User?> GetCachedUserAsync(int id, CancellationToken ct = default)
 {
@@ -74,9 +82,11 @@ private async ValueTask<User?> LoadUserAsync(int id, CancellationToken ct)
 
     return user;
 }
-```
+
+```text
 
 **ValueTask rules:**
+
 - Never `await` a `ValueTask` more than once
 - Never use `.Result` or `.GetAwaiter().GetResult()` on an incomplete `ValueTask`
 - If you need to await multiple times or pass it around, convert with `.AsTask()`
@@ -90,6 +100,7 @@ These are the most common async mistakes AI agents make when generating C# code.
 ### 1. Blocking on Async (`.Result`, `.Wait()`, `.GetAwaiter().GetResult()`)
 
 ```csharp
+
 // WRONG -- all of these can deadlock
 var result = GetDataAsync().Result;
 GetDataAsync().Wait();
@@ -97,15 +108,18 @@ var result = GetDataAsync().GetAwaiter().GetResult();
 
 // CORRECT
 var result = await GetDataAsync();
-```
 
-The only safe place for `.GetAwaiter().GetResult()` is in `Main()` pre-C# 7.1 or in rare infrastructure code where async is impossible (static constructors, `Dispose()`).
+```text
+
+The only safe place for `.GetAwaiter().GetResult()` is in `Main()` pre-C# 7.1 or in rare infrastructure code where async
+is impossible (static constructors, `Dispose()`).
 
 ### 2. `async void`
 
 `async void` methods cannot be awaited, and unhandled exceptions in them crash the process.
 
 ```csharp
+
 // WRONG -- fire-and-forget, unobserved exceptions
 async void ProcessOrder(Order order)
 {
@@ -117,15 +131,19 @@ async Task ProcessOrderAsync(Order order)
 {
     await _repo.SaveAsync(order);
 }
-```
 
-The **only** valid use of `async void` is event handlers (WinForms, WPF, Blazor `@onclick`), where the framework requires a `void` return type.
+```text
+
+The **only** valid use of `async void` is event handlers (WinForms, WPF, Blazor `@onclick`), where the framework
+requires a `void` return type.
 
 ### 3. Missing `ConfigureAwait`
 
-In **library code**, use `ConfigureAwait(false)` to avoid capturing the synchronization context. In **application code** (ASP.NET Core, console apps), it is not needed because there is no synchronization context.
+In **library code**, use `ConfigureAwait(false)` to avoid capturing the synchronization context. In **application code**
+(ASP.NET Core, console apps), it is not needed because there is no synchronization context.
 
 ```csharp
+
 // Library code
 public async Task<byte[]> ReadFileAsync(string path, CancellationToken ct = default)
 {
@@ -139,21 +157,25 @@ public async Task<IActionResult> GetOrder(int id, CancellationToken ct)
     var order = await _service.GetOrderAsync(id, ct);
     return Ok(order);
 }
-```
+
+```text
 
 ### 4. Fire-and-Forget Without Error Handling
 
 ```csharp
+
 // WRONG -- exception is silently swallowed
 _ = SendEmailAsync(order);
 
 // CORRECT -- use IHostedService or a background channel
 await _backgroundQueue.EnqueueAsync(ct => SendEmailAsync(order, ct));
-```
+
+```text
 
 If fire-and-forget is truly necessary, at minimum log the exception:
 
 ```csharp
+
 _ = Task.Run(async () =>
 {
     try
@@ -165,13 +187,15 @@ _ = Task.Run(async () =>
         _logger.LogError(ex, "Failed to send email for order {OrderId}", order.Id);
     }
 });
-```
+
+```text
 
 ### 5. Forgetting `CancellationToken`
 
 Always accept and forward `CancellationToken`. Never silently drop it.
 
 ```csharp
+
 // WRONG -- token not forwarded
 public async Task<List<Order>> GetAllAsync(CancellationToken ct = default)
 {
@@ -183,7 +207,8 @@ public async Task<List<Order>> GetAllAsync(CancellationToken ct = default)
 {
     return await _dbContext.Orders.ToListAsync(ct);
 }
-```
+
+```text
 
 ---
 
@@ -194,6 +219,7 @@ public async Task<List<Order>> GetAllAsync(CancellationToken ct = default)
 Combine external cancellation with a timeout:
 
 ```csharp
+
 public async Task<Result> ProcessWithTimeoutAsync(CancellationToken ct = default)
 {
     using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
@@ -201,11 +227,13 @@ public async Task<Result> ProcessWithTimeoutAsync(CancellationToken ct = default
 
     return await DoWorkAsync(cts.Token);
 }
-```
+
+```text
 
 ### Responding to Cancellation
 
 ```csharp
+
 public async Task ProcessBatchAsync(IEnumerable<Item> items, CancellationToken ct = default)
 {
     foreach (var item in items)
@@ -214,7 +242,8 @@ public async Task ProcessBatchAsync(IEnumerable<Item> items, CancellationToken c
         await ProcessItemAsync(item, ct);
     }
 }
-```
+
+```text
 
 ---
 
@@ -223,6 +252,7 @@ public async Task ProcessBatchAsync(IEnumerable<Item> items, CancellationToken c
 ### `Task.WhenAll` for Independent Operations
 
 ```csharp
+
 public async Task<Dashboard> LoadDashboardAsync(int userId, CancellationToken ct = default)
 {
     var ordersTask = _orderService.GetRecentAsync(userId, ct);
@@ -233,11 +263,13 @@ public async Task<Dashboard> LoadDashboardAsync(int userId, CancellationToken ct
 
     return new Dashboard(ordersTask.Result, profileTask.Result, statsTask.Result);
 }
-```
+
+```text
 
 ### `Parallel.ForEachAsync` (.NET 6+) for Bounded Parallelism
 
 ```csharp
+
 await Parallel.ForEachAsync(items, new ParallelOptions
 {
     MaxDegreeOfParallelism = 4,
@@ -246,7 +278,8 @@ await Parallel.ForEachAsync(items, new ParallelOptions
 {
     await ProcessItemAsync(item, token);
 });
-```
+
+```text
 
 ---
 
@@ -255,6 +288,7 @@ await Parallel.ForEachAsync(items, new ParallelOptions
 Use `IAsyncEnumerable<T>` for streaming results instead of buffering entire collections:
 
 ```csharp
+
 public async IAsyncEnumerable<Order> GetOrdersStreamAsync(
     [EnumeratorCancellation] CancellationToken ct = default)
 {
@@ -263,15 +297,18 @@ public async IAsyncEnumerable<Order> GetOrdersStreamAsync(
         yield return order;
     }
 }
-```
+
+```text
 
 ---
 
 ## Background Work
 
-For background processing, use `BackgroundService` (or `IHostedService`) instead of `Task.Run` or fire-and-forget patterns. See [skill:dotnet-csharp-dependency-injection] for registration patterns.
+For background processing, use `BackgroundService` (or `IHostedService`) instead of `Task.Run` or fire-and-forget
+patterns. See [skill:dotnet-csharp-dependency-injection] for registration patterns.
 
 ```csharp
+
 public sealed class OrderProcessorWorker(
     IServiceScopeFactory scopeFactory,
     ILogger<OrderProcessorWorker> logger) : BackgroundService
@@ -288,13 +325,15 @@ public sealed class OrderProcessorWorker(
         }
     }
 }
-```
+
+```text
 
 ---
 
 ## Testing Async Code
 
 ```csharp
+
 [Fact]
 public async Task GetOrderAsync_WhenFound_ReturnsOrder()
 {
@@ -321,7 +360,8 @@ public async Task ProcessAsync_WhenCancelled_ThrowsOperationCanceled()
     await Assert.ThrowsAsync<OperationCanceledException>(
         () => _service.ProcessAsync(cts.Token));
 }
-```
+
+```text
 
 ---
 
@@ -329,9 +369,14 @@ public async Task ProcessAsync_WhenCancelled_ThrowsOperationCanceled()
 
 Async patterns in this skill are grounded in publicly available content from:
 
-- **Stephen Cleary's "Concurrency in C#" and Blog** -- Definitive async best practices for .NET. Key guidance applied in this skill: "async all the way" (never block on async), "there is no thread" (async I/O does not consume a thread while waiting), correct CancellationToken propagation, async disposal via IAsyncDisposable, and BackgroundService patterns for long-running work. Source: https://blog.stephencleary.com/
-- **David Fowler's Async Guidance** -- Practical async anti-patterns and diagnostic scenarios for ASP.NET Core. Source: https://github.com/davidfowl/AspNetCoreDiagnosticScenarios/blob/master/AsyncGuidance.md
-- **Stephen Toub's ConfigureAwait FAQ** -- Canonical reference for ConfigureAwait behavior across application types. Source: https://devblogs.microsoft.com/dotnet/configureawait-faq/
+- **Stephen Cleary's "Concurrency in C#" and Blog** -- Definitive async best practices for .NET. Key guidance applied in
+  this skill: "async all the way" (never block on async), "there is no thread" (async I/O does not consume a thread
+  while waiting), correct CancellationToken propagation, async disposal via IAsyncDisposable, and BackgroundService
+  patterns for long-running work. Source: https://blog.stephencleary.com/
+- **David Fowler's Async Guidance** -- Practical async anti-patterns and diagnostic scenarios for ASP.NET Core. Source:
+  https://github.com/davidfowl/AspNetCoreDiagnosticScenarios/blob/master/AsyncGuidance.md
+- **Stephen Toub's ConfigureAwait FAQ** -- Canonical reference for ConfigureAwait behavior across application types.
+  Source: https://devblogs.microsoft.com/dotnet/configureawait-faq/
 
 > **Note:** This skill applies publicly documented guidance. It does not represent or speak for the named sources.
 
@@ -343,3 +388,4 @@ Async patterns in this skill are grounded in publicly available content from:
 - [Task-based asynchronous pattern (TAP)](https://learn.microsoft.com/en-us/dotnet/standard/asynchronous-programming-patterns/task-based-asynchronous-pattern-tap)
 - [ConfigureAwait FAQ](https://devblogs.microsoft.com/dotnet/configureawait-faq/)
 - [Framework Design Guidelines](https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/)
+````

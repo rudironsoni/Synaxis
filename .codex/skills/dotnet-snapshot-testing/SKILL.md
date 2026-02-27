@@ -8,9 +8,14 @@ metadata:
 ---
 # dotnet-snapshot-testing
 
-Snapshot (approval) testing with the Verify library for .NET. Covers verifying API responses, serialized objects, rendered emails, and other complex outputs by comparing them against approved baseline files. Includes scrubbing and filtering patterns to handle non-deterministic values (dates, GUIDs, timestamps), custom converters for domain-specific types, and strategies for organizing and reviewing snapshot files.
+Snapshot (approval) testing with the Verify library for .NET. Covers verifying API responses, serialized objects,
+rendered emails, and other complex outputs by comparing them against approved baseline files. Includes scrubbing and
+filtering patterns to handle non-deterministic values (dates, GUIDs, timestamps), custom converters for domain-specific
+types, and strategies for organizing and reviewing snapshot files.
 
-**Version assumptions:** Verify 20.x+ (.NET 8.0+ baseline). Examples use the `Verify.Xunit` integration package; equivalent packages exist for NUnit (`Verify.NUnit`) and MSTest (`Verify.MSTest`). Verify auto-discovers the test framework from the referenced package.
+**Version assumptions:** Verify 20.x+ (.NET 8.0+ baseline). Examples use the `Verify.Xunit` integration package;
+equivalent packages exist for NUnit (`Verify.NUnit`) and MSTest (`Verify.MSTest`). Verify auto-discovers the test
+framework from the referenced package.
 
 ## Scope
 
@@ -26,9 +31,11 @@ Snapshot (approval) testing with the Verify library for .NET. Covers verifying A
 - Testing strategy and test type decisions -- see [skill:dotnet-testing-strategy]
 - Integration test infrastructure (WebApplicationFactory, Testcontainers) -- see [skill:dotnet-integration-testing]
 
-**Prerequisites:** Test project already scaffolded via [skill:dotnet-add-testing] with Verify packages referenced. .NET 8.0+ baseline required.
+**Prerequisites:** Test project already scaffolded via [skill:dotnet-add-testing] with Verify packages referenced. .NET
+8.0+ baseline required.
 
-Cross-references: [skill:dotnet-testing-strategy] for deciding when snapshot tests are appropriate, [skill:dotnet-integration-testing] for combining Verify with WebApplicationFactory and Testcontainers.
+Cross-references: [skill:dotnet-testing-strategy] for deciding when snapshot tests are appropriate,
+[skill:dotnet-integration-testing] for combining Verify with WebApplicationFactory and Testcontainers.
 
 ---
 
@@ -36,17 +43,20 @@ Cross-references: [skill:dotnet-testing-strategy] for deciding when snapshot tes
 
 ### Packages
 
-```xml
+````xml
+
 <PackageReference Include="Verify.Xunit" Version="20.*" />
 <!-- For HTTP response verification -->
 <PackageReference Include="Verify.Http" Version="6.*" />
-```
+
+```xml
 
 ### Module Initializer
 
 Verify requires a one-time initialization per test assembly. Place this in a file at the root of your test project:
 
 ```csharp
+
 // ModuleInitializer.cs
 using System.Runtime.CompilerServices;
 
@@ -56,24 +66,29 @@ public static class ModuleInitializer
     public static void Init() =>
         VerifySourceGenerators.Initialize();
 }
-```
+
+```text
 
 ### Source Control
 
 Add to `.gitignore`:
 
 ```gitignore
+
 # Verify received files (test failures)
 *.received.*
-```
+
+```text
 
 Add to `.gitattributes` so verified files diff cleanly:
 
 ```gitattributes
+
 *.verified.txt text eol=lf
 *.verified.xml text eol=lf
 *.verified.json text eol=lf
-```
+
+```json
 
 ---
 
@@ -84,6 +99,7 @@ Add to `.gitattributes` so verified files diff cleanly:
 Verify serializes the object to JSON and compares against a `.verified.txt` file:
 
 ```csharp
+
 [UsesVerify]
 public class OrderSerializationTests
 {
@@ -106,11 +122,13 @@ public class OrderSerializationTests
         return Verify(order);
     }
 }
-```
+
+```text
 
 First run creates `OrderSerializationTests.Serialize_CompletedOrder_MatchesSnapshot.verified.txt`:
 
 ```txt
+
 {
   Id: 1,
   CustomerId: cust-123,
@@ -129,11 +147,13 @@ First run creates `OrderSerializationTests.Serialize_CompletedOrder_MatchesSnaps
   ],
   Total: 109.97
 }
-```
+
+```text
 
 ### Verifying Strings and Streams
 
 ```csharp
+
 [Fact]
 public Task RenderInvoice_MatchesExpectedHtml()
 {
@@ -147,7 +167,8 @@ public Task ExportReport_MatchesExpectedXml()
     var stream = reportExporter.Export(report);
     return Verify(stream, extension: "xml");
 }
-```
+
+```xml
 
 ---
 
@@ -160,6 +181,7 @@ Non-deterministic values (dates, GUIDs, auto-incremented IDs) change between tes
 Verify includes scrubbers for common non-deterministic types that are active by default:
 
 ```csharp
+
 [Fact]
 public Task CreateOrder_ScrubsNonDeterministicValues()
 {
@@ -172,23 +194,27 @@ public Task CreateOrder_ScrubsNonDeterministicValues()
 
     return Verify(order);
 }
-```
+
+```text
 
 Produces stable output:
 
 ```txt
+
 {
   Id: Guid_1,
   CreatedAt: DateTime_1,
   TrackingNumber: Guid_2
 }
-```
+
+```text
 
 ### Custom Scrubbers
 
 When built-in scrubbing is not sufficient, add custom scrubbers:
 
 ```csharp
+
 [Fact]
 public Task AuditLog_ScrubsTimestampsAndMachineNames()
 {
@@ -199,13 +225,15 @@ public Task AuditLog_ScrubsTimestampsAndMachineNames()
             Regex.Replace(line, @"Machine:\s+\w+", "Machine: Scrubbed"))
         .ScrubLinesContaining("CorrelationId:");
 }
-```
+
+```text
 
 ### Ignoring Members
 
 Exclude specific properties from verification:
 
 ```csharp
+
 [Fact]
 public Task OrderSnapshot_IgnoresVolatileFields()
 {
@@ -216,11 +244,13 @@ public Task OrderSnapshot_IgnoresVolatileFields()
         .IgnoreMember("UpdatedAt")
         .IgnoreMember("ETag");
 }
-```
+
+```text
 
 Or ignore by type across all verifications:
 
 ```csharp
+
 // In ModuleInitializer
 [ModuleInitializer]
 public static void Init()
@@ -228,13 +258,15 @@ public static void Init()
     VerifierSettings.IgnoreMembersWithType<DateTime>();
     VerifierSettings.IgnoreMembersWithType<DateTimeOffset>();
 }
-```
+
+```text
 
 ### Scrubbing Inline Values
 
 Replace specific patterns in the serialized output:
 
 ```csharp
+
 [Fact]
 public Task ApiResponse_ScrubsTokens()
 {
@@ -244,7 +276,8 @@ public Task ApiResponse_ScrubsTokens()
         .ScrubLinesWithReplace(line =>
             Regex.Replace(line, @"Bearer [A-Za-z0-9\-._~+/]+=*", "Bearer {scrubbed}"));
 }
-```
+
+```text
 
 ---
 
@@ -255,12 +288,15 @@ Verify HTTP responses from WebApplicationFactory integration tests to lock down 
 ### Setup
 
 ```xml
+
 <PackageReference Include="Verify.Http" Version="6.*" />
-```
+
+```xml
 
 ### Verifying Full HTTP Responses
 
 ```csharp
+
 [UsesVerify]
 public class OrdersApiSnapshotTests : IClassFixture<WebApplicationFactory<Program>>
 {
@@ -279,11 +315,13 @@ public class OrdersApiSnapshotTests : IClassFixture<WebApplicationFactory<Progra
         await Verify(response);
     }
 }
-```
+
+```text
 
 The verified file captures status code, headers, and body:
 
 ```txt
+
 {
   Status: 200 OK,
   Headers: {
@@ -298,11 +336,13 @@ The verified file captures status code, headers, and body:
     }
   ]
 }
-```
+
+```text
 
 ### Verifying Specific Response Parts
 
 ```csharp
+
 [Fact]
 public async Task CreateOrder_VerifyResponseBody()
 {
@@ -313,7 +353,8 @@ public async Task CreateOrder_VerifyResponseBody()
         .IgnoreMember("Id")
         .IgnoreMember("CreatedAt");
 }
-```
+
+```text
 
 ---
 
@@ -322,6 +363,7 @@ public async Task CreateOrder_VerifyResponseBody()
 Snapshot-test email templates by verifying the rendered HTML output:
 
 ```csharp
+
 [UsesVerify]
 public class EmailTemplateTests
 {
@@ -363,7 +405,8 @@ public class EmailTemplateTests
                 Regex.Replace(line, @"token=[^""&]+", "token={scrubbed}"));
     }
 }
-```
+
+```text
 
 ---
 
@@ -374,6 +417,7 @@ Custom converters control how specific types are serialized for verification. Us
 ### Writing a Custom Converter
 
 ```csharp
+
 public class MoneyConverter : WriteOnlyJsonConverter<Money>
 {
     public override void Write(VerifyJsonWriter writer, Money value)
@@ -384,22 +428,26 @@ public class MoneyConverter : WriteOnlyJsonConverter<Money>
         writer.WriteEndObject();
     }
 }
-```
+
+```text
 
 Register in the module initializer:
 
 ```csharp
+
 [ModuleInitializer]
 public static void Init()
 {
     VerifierSettings.AddExtraSettings(settings =>
         settings.Converters.Add(new MoneyConverter()));
 }
-```
+
+```text
 
 ### Converter for Complex Domain Types
 
 ```csharp
+
 public class AddressConverter : WriteOnlyJsonConverter<Address>
 {
     public override void Write(VerifyJsonWriter writer, Address value)
@@ -420,11 +468,13 @@ public class DateRangeConverter : WriteOnlyJsonConverter<DateRange>
         writer.WriteEndObject();
     }
 }
-```
+
+```text
 
 Usage in tests:
 
 ```csharp
+
 [Fact]
 public Task Customer_WithAddress_MatchesSnapshot()
 {
@@ -439,11 +489,13 @@ public Task Customer_WithAddress_MatchesSnapshot()
 
     return Verify(customer);
 }
-```
+
+```text
 
 Produces:
 
 ```txt
+
 {
   Name: Alice Johnson,
   Address: 123 Main St, Springfield, IL 62701,
@@ -453,7 +505,8 @@ Produces:
     DurationDays: 1827
   }
 }
-```
+
+```text
 
 ---
 
@@ -463,9 +516,11 @@ Produces:
 
 Verify names snapshot files based on the test class and method:
 
-```
+```text
+
 TestClassName.MethodName.verified.txt
-```
+
+```text
 
 Files are placed next to the test source file by default.
 
@@ -474,6 +529,7 @@ Files are placed next to the test source file by default.
 Move verified files into a dedicated directory to reduce clutter:
 
 ```csharp
+
 // ModuleInitializer.cs
 [ModuleInitializer]
 public static void Init()
@@ -485,13 +541,15 @@ public static void Init()
                 typeName: type.Name,
                 methodName: method.Name));
 }
-```
+
+```text
 
 ### Parameterized Tests
 
 For `[Theory]` tests, Verify appends parameter values to the file name:
 
 ```csharp
+
 [Theory]
 [InlineData("en-US")]
 [InlineData("de-DE")]
@@ -502,15 +560,18 @@ public Task FormatCurrency_ByLocale_MatchesSnapshot(string locale)
     return Verify(formatted)
         .UseParameters(locale);
 }
-```
+
+```text
 
 Creates separate files:
 
-```
+```text
+
 FormatCurrencyTests.FormatCurrency_ByLocale_MatchesSnapshot_locale=en-US.verified.txt
 FormatCurrencyTests.FormatCurrency_ByLocale_MatchesSnapshot_locale=de-DE.verified.txt
 FormatCurrencyTests.FormatCurrency_ByLocale_MatchesSnapshot_locale=ja-JP.verified.txt
-```
+
+```text
 
 ---
 
@@ -523,6 +584,7 @@ When a snapshot test fails, Verify creates a `.received.txt` file alongside the 
 Verify launches a diff tool automatically when a test fails. Configure the preferred tool:
 
 ```csharp
+
 [ModuleInitializer]
 public static void Init()
 {
@@ -530,13 +592,15 @@ public static void Init()
     // Override if needed:
     DiffTools.UseOrder(DiffTool.VisualStudioCode, DiffTool.Rider);
 }
-```
+
+```text
 
 ### CLI Acceptance
 
 Install the Verify CLI tool (one-time setup), then accept pending changes after review:
 
 ```bash
+
 # Install the Verify CLI tool (one-time)
 dotnet tool install -g verify.tool
 
@@ -545,20 +609,24 @@ verify accept
 
 # Accept for a specific test project
 verify accept --project tests/MyApp.Tests
-```
+
+```text
 
 ### CI Behavior
 
 In CI, Verify should fail tests without launching a diff tool. Set the environment variable:
 
 ```yaml
+
 env:
   DiffEngine_Disabled: true
-```
+
+```yaml
 
 Or in the module initializer:
 
 ```csharp
+
 [ModuleInitializer]
 public static void Init()
 {
@@ -567,7 +635,8 @@ public static void Init()
         DiffRunner.Disabled = true;
     }
 }
-```
+
+```text
 
 ---
 
@@ -601,3 +670,4 @@ public static void Init()
 - [Scrubbing and filtering](https://github.com/VerifyTests/Verify/blob/main/docs/scrubbers.md)
 - [Custom converters](https://github.com/VerifyTests/Verify/blob/main/docs/converters.md)
 - [DiffEngine (diff tool integration)](https://github.com/VerifyTests/DiffEngine)
+````
