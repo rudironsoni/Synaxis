@@ -296,5 +296,4 @@ test-*.txt
 # AI tool generated files
 .config/
 .factory/
-.gemini/antigravity/
 .serena/logs/
