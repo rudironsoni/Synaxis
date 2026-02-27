@@ -175,6 +175,53 @@ These commands ensure:
 - Zero warnings and errors in the build
 - All tests pass
 
+## AI-Assisted Development with Serena MCP
+
+Synaxis leverages [Serena](https://github.com/oraios/serena) - a Model Context Protocol (MCP) server that provides AI agents with deep code understanding capabilities through Language Server Protocol (LSP) integration.
+
+### Why Serena?
+
+We chose Serena for AI-assisted development because it provides:
+
+- **Deep Code Understanding**: Unlike simple file-reading agents, Serena uses Roslyn LSP to understand symbols, references, and relationships across the entire codebase
+- **Accurate Navigation**: Find symbols, references, and definitions with compiler-accurate results
+- **Safe Refactoring**: AI agents can perform symbol-aware edits that respect C# syntax and project structure
+- **Multi-Language Support**: Works with C# today and can extend to other languages (TypeScript, Python, etc.)
+- **IDE Integration**: Seamless integration with VS Code, Cursor, and other MCP-compatible editors
+- **Context Awareness**: Maintains project state and symbol cache for fast, accurate responses
+
+### Setting Up Serena
+
+Serena is configured in `.vscode/mcp.json` and can be started automatically by your IDE.
+
+**Manual Start:**
+```bash
+# Using uv (recommended)
+uvx --from git+https://github.com/oraios/serena serena start-mcp-server \
+  --context ide-assistant \
+  --project . \
+  --enable-web-dashboard false
+
+# Or using the CLI directly
+serena start-mcp-server --context ide-assistant --project .
+```
+
+**VS Code/Cursor Setup:**
+1. Install the MCP server from `.vscode/mcp.json` (automatic on IDE startup)
+2. The server will index all 85 projects (1567 files) on first run
+3. AI agents can now use Serena tools for code navigation and editing
+
+### Serena Capabilities
+
+Once running, AI agents have access to 27+ tools including:
+
+- **Navigation**: `find_symbol`, `find_referencing_symbols`, `get_symbols_overview`
+- **Reading**: `read_file`, `search_for_pattern`
+- **Editing**: `replace_symbol_body`, `insert_after_symbol`, `rename_symbol`
+- **Analysis**: Symbol caching, reference tracking, LSP-powered intelligence
+
+For more details, see the [Serena documentation](https://github.com/oraios/serena).
+
 ## Roadmap
 
 - [x] Core SDK architecture
