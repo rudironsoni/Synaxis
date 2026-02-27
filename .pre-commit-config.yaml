@@ -1,0 +1,47 @@
+# Pre-commit hooks configuration
+# Install: pip install pre-commit && pre-commit install
+# Run manually: pre-commit run --all-files
+
+exclude: >
+  (?x)^(
+    \.serena/|
+    \.rulesync/|
+    \.ruff_cache/|
+    node_modules/|
+    \.opencode/|
+    \.beads/|
+    \.vscode/|
+    \.claude/|
+    bin/|
+    obj/|
+    \.git/
+  )
+
+repos:
+  # Built-in hooks from pre-commit framework
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: '\.(cs|csproj|sln)$'
+      - id: end-of-file-fixer
+        exclude: '\.(cs|csproj|sln)$'
+      - id: check-yaml
+      - id: check-json
+      - id: check-added-large-files
+        args: ['--maxkb=500']
+      - id: check-merge-conflict
+      - id: check-symlinks
+      - id: detect-private-key
+
+  # Custom local hook for path separator enforcement
+  - repo: local
+    hooks:
+      - id: fix-path-separators
+        name: Fix path separators in MSBuild files
+        entry: ./scripts/fix-path-separators.sh
+        language: script
+        files: 
+          '\.(csproj|props|targets|sln)$'
+        pass_filenames: false
+        require_serial: true

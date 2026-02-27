@@ -210,6 +210,16 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
+      - name: Check path separators
+        run: |
+          echo "Checking for backslashes in MSBuild files..."
+          if grep -r '\\' --include="*.csproj" --include="*.props" \
+             --include="*.targets" --include="*.sln" . 2>/dev/null | grep -v node_modules | grep -v ".git/"; then
+            echo "::error::Backslashes found in MSBuild files. Run './scripts/fix-path-separators.sh' locally to fix."
+            exit 1
+          fi
+          echo "✓ All MSBuild files use forward slashes"
+
       - name: Restore dependencies
         run: dotnet restore
 

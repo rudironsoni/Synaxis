@@ -1,0 +1,57 @@
+<Project>
+  <!--
+    Directory.Build.targets
+    Shared MSBuild targets for all projects in the solution
+  -->
+
+  <!-- 
+    Validate Path Separators
+    Ensures all MSBuild files use forward slashes for cross-platform compatibility
+  -->
+  <Target Name="ValidatePathSeparators" BeforeTargets="BeforeBuild">
+    <PropertyGroup>
+      <_PathSeparatorErrorMessage>MSBuild file contains backslash in path. Use forward slashes for cross-platform compatibility.</_PathSeparatorErrorMessage>
+    </PropertyGroup>
+
+    <!-- Check ProjectReference paths -->
+    <ItemGroup>
+      <_InvalidProjectReferences Include="@(ProjectReference)" 
+        Condition="$([System.String]::new('%(Identity)').Contains('\'))" />
+    </ItemGroup>
+    
+    <Error 
+      Text="$(_PathSeparatorErrorMessage) Path: %(_InvalidProjectReferences.Identity)"
+      Condition="'@(_InvalidProjectReferences)' != ''" />
+
+    <!-- Check Protobuf Include paths -->
+    <ItemGroup>
+      <_InvalidProtobufPaths Include="@(Protobuf)" 
+        Condition="$([System.String]::new('%(Identity)').Contains('\'))" />
+    </ItemGroup>
+    
+    <Error 
+      Text="$(_PathSeparatorErrorMessage) Path: %(_InvalidProtobufPaths.Identity)"
+      Condition="'@(_InvalidProtobufPaths)' != ''" />
+
+    <!-- Check None Update paths -->
+    <ItemGroup>
+      <_InvalidNonePaths Include="@(None)" 
+        Condition="$([System.String]::new('%(Identity)').Contains('\'))" />
+    </ItemGroup>
+    
+    <Error 
+      Text="$(_PathSeparatorErrorMessage) Path: %(_InvalidNonePaths.Identity)"
+      Condition="'@(_InvalidNonePaths)' != ''" />
+
+    <!-- Check Content paths -->
+    <ItemGroup>
+      <_InvalidContentPaths Include="@(Content)" 
+        Condition="$([System.String]::new('%(Identity)').Contains('\'))" />
+    </ItemGroup>
+    
+    <Error 
+      Text="$(_PathSeparatorErrorMessage) Path: %(_InvalidContentPaths.Identity)"
+      Condition="'@(_InvalidContentPaths)' != ''" />
+  </Target>
+
+</Project>

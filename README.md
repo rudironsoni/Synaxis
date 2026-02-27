@@ -222,6 +222,34 @@ Once running, AI agents have access to 27+ tools including:
 
 For more details, see the [Serena documentation](https://github.com/oraios/serena).
 
+## Development Standards
+
+### Pre-commit Hooks
+
+This project uses pre-commit hooks to enforce code quality and consistency automatically.
+
+**Setup:**
+```bash
+# Install pre-commit
+pip install pre-commit
+
+# Install hooks
+pre-commit install
+
+# Run manually on all files
+pre-commit run --all-files
+```
+
+**Included Hooks:**
+- **Path Separator Fixer**: Automatically replaces backslashes with forward slashes in `.csproj`, `.props`, `.targets`, and `.sln` files
+- **Trailing Whitespace**: Removes trailing whitespace
+- **End of File Fixer**: Ensures files end with a newline
+- **Large Files Check**: Prevents committing files >500KB
+- **Merge Conflict**: Detects merge conflict markers
+
+**CI/CD Enforcement:**
+Path separator validation runs in GitHub Actions and will fail the build if backslashes are found in MSBuild files.
+
 ## Roadmap
 
 - [x] Core SDK architecture
