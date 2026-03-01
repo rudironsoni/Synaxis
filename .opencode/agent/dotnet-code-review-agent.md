@@ -2,8 +2,8 @@
 mode: subagent
 tools:
   bash: true
-  edit: false
-  write: false
+  edit: true
+  write: true
 description: >-
   Reviews .NET code for correctness, performance, security, and architecture
   concerns. Triages findings and routes to specialist agents for deep analysis.

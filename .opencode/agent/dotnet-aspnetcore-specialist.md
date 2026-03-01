@@ -2,8 +2,8 @@
 mode: subagent
 tools:
   bash: true
-  edit: false
-  write: false
+  edit: true
+  write: true
 description: >-
   Analyzes ASP.NET Core middleware, request pipelines, minimal API design, DI
   lifetime selection, and diagnostic scenarios. Routes Blazor to

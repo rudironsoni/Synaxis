@@ -34,6 +34,8 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Console" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
     <PackageReference Include="StackExchange.Redis" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+    <PackageReference Include="MediatR" />
   </ItemGroup>
 
   <ItemGroup>
@@ -43,6 +45,7 @@
     <ProjectReference Include="../../src/Synaxis.Infrastructure.Encryption/Synaxis.Infrastructure.Encryption.csproj" />
     <ProjectReference Include="../../src/Infrastructure/Synaxis.Infrastructure.Messaging/Synaxis.Infrastructure.Messaging.csproj" />
     <ProjectReference Include="../../src/Synaxis.Providers.Azure/Synaxis.Providers.Azure.csproj" />
+    <ProjectReference Include="../../src/Synaxis.Infrastructure/Synaxis.Infrastructure.csproj" />
     <ProjectReference Include="../Common/Synaxis.Common.Tests.csproj" />
   </ItemGroup>
 

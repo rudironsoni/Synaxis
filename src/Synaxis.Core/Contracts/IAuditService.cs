@@ -22,6 +22,14 @@ namespace Synaxis.Core.Contracts
         Task<AuditLog> LogEventAsync(AuditEvent auditEvent);
 
         /// <summary>
+        /// Log a batch of audit events (immutable).
+        /// </summary>
+        /// <param name="auditEvents">The audit events to log.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        Task LogEventBatchAsync(IEnumerable<AuditEvent> auditEvents, CancellationToken cancellationToken = default);
+
+        /// <summary>
         /// Query audit logs for an organization.
         /// </summary>
         /// <param name="query">The query parameters for filtering audit logs.</param>

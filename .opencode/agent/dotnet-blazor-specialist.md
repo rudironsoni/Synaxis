@@ -2,8 +2,8 @@
 mode: subagent
 tools:
   bash: true
-  edit: false
-  write: false
+  edit: true
+  write: true
 description: >-
   Guides Blazor development across all hosting models (Server, WASM, Hybrid,
   Auto). Component design, state management, authentication, and render mode

@@ -2,7 +2,7 @@ Please also reference the following rules as needed. The list below is provided 
 
 rules[2]:
   - path: @.gemini/memories/10-conventions.md
-    description: "dotnet-agent-harness authoring conventions for skills, subagents, commands, and hooks"
+    description: "dotnet-harness authoring conventions for skills, subagents, commands, and hooks"
     applyTo[1]: .rulesync/**/*
   - path: @.gemini/memories/20-workflow.md
     description: Workflow for RuleSync-based multi-agent generation
@@ -12,7 +12,7 @@ rules[2]:
 
 As this project's AI coding tool, you must follow the additional conventions below, in addition to the built-in functions.
 
-# dotnet-agent-harness
+# dotnet-harness
 
 Comprehensive .NET development guidance for modern C#, ASP.NET Core, MAUI, Blazor, and cloud-native apps.
 
@@ -32,7 +32,7 @@ For full toolkit installation in a project:
 
 ````bash
 
-rulesync fetch rudironsoni/dotnet-agent-harness:.rulesync
+rulesync fetch rudironsoni/dotnet-harness:.rulesync
 rulesync generate --targets "*" --features "*"
 
 ```bash
@@ -42,7 +42,7 @@ If you use declarative sources:
 ```jsonc
 
 {
-  "sources": [{ "source": "rudironsoni/dotnet-agent-harness", "path": ".rulesync" }],
+  "sources": [{ "source": "rudironsoni/dotnet-harness", "path": ".rulesync" }],
 }
 
 ```json

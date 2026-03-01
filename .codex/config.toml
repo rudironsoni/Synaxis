@@ -6,12 +6,12 @@ args = [ "--from", "git+https://github.com/oraios/serena", "serena", "start-mcp-
 
 [mcp_servers.serena.env]
 [mcp_servers.context7]
-description = "Library documentation search server"
-type = "stdio"
-command = "npx"
-args = [ "-y", "@upstash/context7-mcp@2.1.2" ]
+type = "http"
+url = "https://mcp.context7.com/mcp"
 
-[mcp_servers.context7.env]
+[mcp_servers.context7.headers]
+CONTEXT7_API_KEY = "YOUR_API_KEY"
+
 [mcp_servers.microsoftdocs-mcp]
 description = "Microsoft Learn documentation MCP"
 type = "http"
@@ -24,3 +24,12 @@ command = "uvx"
 args = [ "--from", "git+https://github.com/svnscha/mcp-windbg@v0.12.2", "mcp-windbg" ]
 
 [mcp_servers.mcp-windbg.env]
+[mcp_servers.deepwiki]
+description = "DeepWiki MCP for documentation access"
+type = "http"
+url = "https://mcp.deepwiki.com/mcp"
+
+[mcp_servers.github]
+description = "GitHub MCP for repository operations, PRs, and issues"
+type = "http"
+url = "https://api.githubcopilot.com/mcp/"

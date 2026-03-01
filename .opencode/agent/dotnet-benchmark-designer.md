@@ -2,8 +2,8 @@
 mode: subagent
 tools:
   bash: true
-  edit: false
-  write: false
+  edit: true
+  write: true
 description: >-
   Designs .NET benchmarks, reviews benchmark methodology, and validates
   measurement correctness. Avoids dead code elimination, measurement bias, and

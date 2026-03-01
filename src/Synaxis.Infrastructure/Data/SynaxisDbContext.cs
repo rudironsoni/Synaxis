@@ -621,13 +621,33 @@ namespace Synaxis.Infrastructure.Data
                     .HasForeignKey(e => e.UserId)
                     .OnDelete(DeleteBehavior.SetNull);
 
-                entity.HasIndex(e => e.OrganizationId);
-                entity.HasIndex(e => e.UserId);
-                entity.HasIndex(e => e.EventType);
-                entity.HasIndex(e => e.EventCategory);
-                entity.HasIndex(e => e.Timestamp);
-                entity.HasIndex(e => new { e.OrganizationId, e.Timestamp });
+                ConfigureAuditLogSearchAndIndexes(entity);
             });
+        }
+
+        private static void ConfigureAuditLogSearchAndIndexes(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<AuditLog> entity)
+        {
+            // Add SearchVector computed column for full-text search
+            entity.Property(e => e.SearchVector)
+                .HasColumnName("search_vector")
+                .HasComputedColumnSql(
+                    "to_tsvector('english', coalesce(event_type, '') || ' ' || coalesce(action, '') || ' ' || coalesce(resource_type, '') || ' ' || coalesce(resource_id, ''))",
+                    stored: true);
+
+            // Standard indexes
+            entity.HasIndex(e => e.OrganizationId);
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.EventType);
+            entity.HasIndex(e => e.EventCategory);
+            entity.HasIndex(e => e.Timestamp);
+
+            // Composite index for common queries
+            entity.HasIndex(e => new { e.OrganizationId, e.Timestamp })
+                .HasMethod("btree");
+
+            // GIN index for full-text search
+            entity.HasIndex(e => e.SearchVector)
+                .HasMethod("gin");
         }
 
         private static void ConfigureSpendLog(ModelBuilder modelBuilder)

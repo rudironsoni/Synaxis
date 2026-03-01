@@ -2,8 +2,8 @@
 mode: subagent
 tools:
   bash: true
-  edit: false
-  write: false
+  edit: true
+  write: true
 description: >-
   Builds .NET MAUI apps. Platform-specific development, Xamarin migration,
   Native AOT on iOS/Catalyst, .NET 11 improvements. Triggers on: maui, maui app,

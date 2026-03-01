@@ -2,8 +2,8 @@
 mode: subagent
 tools:
   bash: true
-  edit: false
-  write: false
+  edit: true
+  write: true
 description: >-
   Designs test architecture, chooses test types (unit/integration/E2E), manages
   test data, tests microservices, and structures test projects. Routes

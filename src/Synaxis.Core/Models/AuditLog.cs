@@ -106,6 +106,12 @@ namespace Synaxis.Core.Models
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 
         /// <summary>
+        /// Gets or sets the full-text search vector (PostgreSQL tsvector).
+        /// This is a computed column for efficient full-text search.
+        /// </summary>
+        public string? SearchVector { get; set; }
+
+        /// <summary>
         /// Gets or sets the organization navigation property.
         /// </summary>
         public virtual Organization? Organization { get; set; }

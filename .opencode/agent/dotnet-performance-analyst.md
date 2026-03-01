@@ -1,9 +1,9 @@
 ---
 mode: subagent
 tools:
-  bash: false
-  edit: false
-  write: false
+  bash: true
+  edit: true
+  write: true
 description: >-
   Analyzes .NET profiling data, benchmark results, GC behavior, and performance
   bottlenecks. Interprets flame graphs, heap dumps, and benchmark comparisons.

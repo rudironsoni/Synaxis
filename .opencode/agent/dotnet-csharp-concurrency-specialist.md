@@ -1,9 +1,9 @@
 ---
 mode: subagent
 tools:
-  bash: false
-  edit: false
-  write: false
+  bash: true
+  edit: true
+  write: true
 description: >-
   Debugs race conditions, deadlocks, thread safety issues, concurrent access
   bugs, lock contention, async races, parallel execution problems, and

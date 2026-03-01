@@ -1,5 +1,6 @@
 ---
 mode: subagent
+hidden: false
 tools:
   bash: true
   edit: false

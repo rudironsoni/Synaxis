@@ -2,8 +2,8 @@
 mode: subagent
 tools:
   bash: true
-  edit: false
-  write: false
+  edit: true
+  write: true
 description: >-
   Plans cloud deployment, .NET Aspire orchestration, AKS configuration,
   multi-stage CI/CD pipelines, distributed tracing, and infrastructure-as-code

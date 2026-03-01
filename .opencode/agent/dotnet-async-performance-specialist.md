@@ -2,8 +2,8 @@
 mode: subagent
 tools:
   bash: true
-  edit: false
-  write: false
+  edit: true
+  write: true
 description: >-
   Analyzes async/await performance, ValueTask correctness, ConfigureAwait
   decisions, IO.Pipelines, ThreadPool tuning, and Channel selection in .NET

@@ -9,6 +9,7 @@ using Synaxis.Core.Contracts;
 using Synaxis.Infrastructure.Configuration;
 using Synaxis.Infrastructure.Data;
 using Synaxis.Infrastructure.MultiRegion;
+using Synaxis.Infrastructure.Repositories;
 using Synaxis.Infrastructure.Services;
 using Synaxis.Infrastructure.Services.SuperAdmin;
 using Synaxis.Providers;
@@ -58,7 +59,23 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ISystemHealthService, SystemHealthService>();
         services.AddScoped<IOrganizationLimitService, OrganizationLimitService>();
         services.AddScoped<ISuperAdminAccessValidator, SuperAdminAccessValidator>();
+
+        // Audit infrastructure
+        services.AddScoped<IAuditLogRepository, AuditLogRepository>();
         services.AddScoped<IAuditService, AuditService>();
+        services.AddScoped<IAuditArchivalService, AuditArchivalService>();
+
+        // Audit query and export services
+        services.AddScoped<Synaxis.Infrastructure.Services.Audit.IAuditQueryService, Synaxis.Infrastructure.Services.Audit.AuditQueryService>();
+        services.AddScoped<Synaxis.Infrastructure.Services.Audit.IAuditExportService, Synaxis.Infrastructure.Services.Audit.AuditExportService>();
+
+        // Audit alert services
+        services.AddScoped<Synaxis.Infrastructure.EventHandlers.Audit.IAuditAlertService, Synaxis.Infrastructure.EventHandlers.Audit.AuditAlertService>();
+
+        // Audit event handlers
+        services.AddScoped<Synaxis.Infrastructure.EventHandlers.Audit.AuditAlertHandler>();
+        services.AddScoped<Synaxis.Infrastructure.EventHandlers.Audit.SuspiciousActivityDetectedHandler>();
+
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IAuthenticationService, AuthenticationService>();
         services.AddScoped<IEmailService, EmailService>();

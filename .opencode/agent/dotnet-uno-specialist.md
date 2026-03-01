@@ -2,8 +2,8 @@
 mode: subagent
 tools:
   bash: true
-  edit: false
-  write: false
+  edit: true
+  write: true
 description: >-
   Builds cross-platform Uno Platform apps. Project setup, target configuration,
   Extensions ecosystem, MVUX patterns, Toolkit controls, theming, MCP
