@@ -186,7 +186,7 @@ public class AgentExecutionRepositoryTests
     public async Task SaveAsync_NullExecution_ThrowsArgumentNullException()
     {
         // Arrange
-        AgentExecution? execution = null;
+        AgentExecution execution = null!;
 
         // Act
         Func<Task> act = async () => await _repository.SaveAsync(execution!);

@@ -127,7 +127,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
         }
 
         /// <inheritdoc />
-
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropIndex(

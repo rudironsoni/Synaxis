@@ -9,6 +9,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using Microsoft.Extensions.Logging;
     using Synaxis.InferenceGateway.Infrastructure.Contracts;
     using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
     using Synaxis.Infrastructure.Data;
@@ -28,9 +29,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
         /// </summary>
         /// <param name="auditDbContext">The audit database context.</param>
         /// <param name="controlPlaneDbContext">The control plane database context.</param>
+        /// <param name="loggerFactory">The logger factory.</param>
         public ComplianceProviderFactory(
             Synaxis.Infrastructure.Data.SynaxisDbContext auditDbContext,
-            ControlPlaneSynaxisDbContext controlPlaneDbContext)
+            ControlPlaneSynaxisDbContext controlPlaneDbContext,
+            ILoggerFactory loggerFactory)
         {
             if (auditDbContext == null)
             {
@@ -42,9 +45,17 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                 throw new ArgumentNullException(nameof(controlPlaneDbContext));
             }
 
+            ArgumentNullException.ThrowIfNull(loggerFactory);
+
             // Initialize providers
-            var gdprProvider = new GdprComplianceProvider(controlPlaneDbContext, auditDbContext);
-            var lgpdProvider = new LgpdComplianceProvider(auditDbContext, controlPlaneDbContext);
+            var gdprProvider = new GdprComplianceProvider(
+                controlPlaneDbContext,
+                auditDbContext,
+                loggerFactory.CreateLogger<GdprComplianceProvider>());
+            var lgpdProvider = new LgpdComplianceProvider(
+                auditDbContext,
+                controlPlaneDbContext,
+                loggerFactory.CreateLogger<LgpdComplianceProvider>());
 
             this._providers = new Dictionary<string, IComplianceProvider>(StringComparer.OrdinalIgnoreCase)
             {

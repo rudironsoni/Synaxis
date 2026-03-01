@@ -1,4 +1,3 @@
-using System.Text.Json;
 using FluentAssertions;
 using Synaxis.Contracts.V1.Commands;
 using Synaxis.Contracts.V1.Common;
@@ -24,7 +23,7 @@ public class SerializationTests
             AggregateId = Guid.NewGuid(),
             Email = "test@example.com",
             DisplayName = "Test User",
-            Status = UserStatus.Active,
+            Status = Synaxis.Contracts.V1.Common.UserStatus.Active,
             Roles = new[] { "user", "admin" },
             CreatedAt = DateTimeOffset.UtcNow,
             Version = 1
@@ -89,7 +88,7 @@ public class SerializationTests
             Id = Guid.NewGuid(),
             Email = "user@example.com",
             DisplayName = "Test User",
-            Status = UserStatus.Active,
+            Status = Synaxis.Contracts.V1.Common.UserStatus.Active,
             Roles = new[] { "user" },
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow,
@@ -168,7 +167,7 @@ public class SerializationTests
                 Id = Guid.NewGuid(),
                 Email = "user1@example.com",
                 DisplayName = "User 1",
-                Status = UserStatus.Active,
+                Status = Synaxis.Contracts.V1.Common.UserStatus.Active,
                 CreatedAt = DateTimeOffset.UtcNow
             },
             new()
@@ -176,7 +175,7 @@ public class SerializationTests
                 Id = Guid.NewGuid(),
                 Email = "user2@example.com",
                 DisplayName = "User 2",
-                Status = UserStatus.Active,
+                Status = Synaxis.Contracts.V1.Common.UserStatus.Active,
                 CreatedAt = DateTimeOffset.UtcNow
             }
         };
@@ -228,28 +227,28 @@ public class SerializationTests
     }
 
     [Theory]
-    [InlineData(UserStatus.Pending)]
-    [InlineData(UserStatus.Active)]
-    [InlineData(UserStatus.Suspended)]
-    [InlineData(UserStatus.Deactivated)]
-    public void UserStatus_ShouldSerializeCorrectly(UserStatus status)
+    [InlineData(Synaxis.Contracts.V1.Common.UserStatus.Pending)]
+    [InlineData(Synaxis.Contracts.V1.Common.UserStatus.Active)]
+    [InlineData(Synaxis.Contracts.V1.Common.UserStatus.Suspended)]
+    [InlineData(Synaxis.Contracts.V1.Common.UserStatus.Deactivated)]
+    public void UserStatus_ShouldSerializeCorrectly(Synaxis.Contracts.V1.Common.UserStatus status)
     {
         var json = JsonSerializer.Serialize(status, _options);
-        var deserialized = JsonSerializer.Deserialize<UserStatus>(json, _options);
+        var deserialized = JsonSerializer.Deserialize<Synaxis.Contracts.V1.Common.UserStatus>(json, _options);
 
         deserialized.Should().Be(status);
     }
 
     [Theory]
-    [InlineData(AgentStatus.Creating)]
-    [InlineData(AgentStatus.Idle)]
-    [InlineData(AgentStatus.Executing)]
-    [InlineData(AgentStatus.Error)]
-    [InlineData(AgentStatus.Disabled)]
-    public void AgentStatus_ShouldSerializeCorrectly(AgentStatus status)
+    [InlineData(Synaxis.Contracts.V1.Common.AgentStatus.Creating)]
+    [InlineData(Synaxis.Contracts.V1.Common.AgentStatus.Idle)]
+    [InlineData(Synaxis.Contracts.V1.Common.AgentStatus.Executing)]
+    [InlineData(Synaxis.Contracts.V1.Common.AgentStatus.Error)]
+    [InlineData(Synaxis.Contracts.V1.Common.AgentStatus.Disabled)]
+    public void AgentStatus_ShouldSerializeCorrectly(Synaxis.Contracts.V1.Common.AgentStatus status)
     {
         var json = JsonSerializer.Serialize(status, _options);
-        var deserialized = JsonSerializer.Deserialize<AgentStatus>(json, _options);
+        var deserialized = JsonSerializer.Deserialize<Synaxis.Contracts.V1.Common.AgentStatus>(json, _options);
 
         deserialized.Should().Be(status);
     }

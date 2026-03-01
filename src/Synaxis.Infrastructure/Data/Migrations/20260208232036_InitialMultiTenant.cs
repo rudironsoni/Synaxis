@@ -2,7 +2,6 @@
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-
 using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
@@ -15,6 +14,23 @@ namespace Synaxis.Infrastructure.Data.Migrations
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            CreateOrganizationsTable(migrationBuilder);
+            CreateSubscriptionPlansTable(migrationBuilder);
+            CreateCreditTransactionsTable(migrationBuilder);
+            CreateInvoicesTable(migrationBuilder);
+            CreateOrganizationBackupConfigTable(migrationBuilder);
+            CreateTeamsTable(migrationBuilder);
+            CreateUsersTable(migrationBuilder);
+            CreateAuditLogsTable(migrationBuilder);
+            CreateTeamMembershipsTable(migrationBuilder);
+            CreateVirtualKeysTable(migrationBuilder);
+            CreateRequestsTable(migrationBuilder);
+            CreateSpendLogsTable(migrationBuilder);
+            CreateInitialMultiTenantIndexes(migrationBuilder);
+        }
+
+        private static void CreateOrganizationsTable(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
                 name: "organizations",
@@ -56,7 +72,10 @@ namespace Synaxis.Infrastructure.Data.Migrations
                 {
                     table.PrimaryKey("PK_organizations", x => x.id);
                 });
+        }
 
+        private static void CreateSubscriptionPlansTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "subscription_plans",
                 columns: table => new
@@ -77,7 +96,10 @@ namespace Synaxis.Infrastructure.Data.Migrations
                 {
                     table.PrimaryKey("PK_subscription_plans", x => x.id);
                 });
+        }
 
+        private static void CreateCreditTransactionsTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "credit_transactions",
                 columns: table => new
@@ -103,7 +125,10 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
+        }
 
+        private static void CreateInvoicesTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "invoices",
                 columns: table => new
@@ -133,7 +158,10 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
+        }
 
+        private static void CreateOrganizationBackupConfigTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "organization_backup_config",
                 columns: table => new
@@ -166,7 +194,10 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
+        }
 
+        private static void CreateTeamsTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "teams",
                 columns: table => new
@@ -194,7 +225,10 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
+        }
 
+        private static void CreateUsersTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "users",
                 columns: table => new
@@ -235,7 +269,10 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
+        }
 
+        private static void CreateAuditLogsTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "audit_logs",
                 columns: table => new
@@ -272,7 +309,10 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.SetNull);
                 });
+        }
 
+        private static void CreateTeamMembershipsTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "team_memberships",
                 columns: table => new
@@ -313,7 +353,10 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
+        }
 
+        private static void CreateVirtualKeysTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "virtual_keys",
                 columns: table => new
@@ -370,7 +413,16 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
                 });
+        }
 
+        private static void CreateRequestsTable(MigrationBuilder migrationBuilder)
+        {
+            CreateRequestsTableCore(migrationBuilder);
+            CreateRequestsTableConstraints(migrationBuilder);
+        }
+
+        private static void CreateRequestsTableCore(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "requests",
                 columns: table => new
@@ -407,32 +459,46 @@ namespace Synaxis.Infrastructure.Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_requests", x => x.id);
-                    table.ForeignKey(
-                        name: "FK_requests_organizations_organization_id",
-                        column: x => x.organization_id,
-                        principalTable: "organizations",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_requests_teams_team_id",
-                        column: x => x.team_id,
-                        principalTable: "teams",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.SetNull);
-                    table.ForeignKey(
-                        name: "FK_requests_users_user_id",
-                        column: x => x.user_id,
-                        principalTable: "users",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.SetNull);
-                    table.ForeignKey(
-                        name: "FK_requests_virtual_keys_virtual_key_id",
-                        column: x => x.virtual_key_id,
-                        principalTable: "virtual_keys",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.SetNull);
                 });
+        }
 
+        private static void CreateRequestsTableConstraints(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.AddForeignKey(
+                name: "FK_requests_organizations_organization_id",
+                table: "requests",
+                column: "organization_id",
+                principalTable: "organizations",
+                principalColumn: "id",
+                onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_requests_teams_team_id",
+                table: "requests",
+                column: "team_id",
+                principalTable: "teams",
+                principalColumn: "id",
+                onDelete: ReferentialAction.SetNull);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_requests_users_user_id",
+                table: "requests",
+                column: "user_id",
+                principalTable: "users",
+                principalColumn: "id",
+                onDelete: ReferentialAction.SetNull);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_requests_virtual_keys_virtual_key_id",
+                table: "requests",
+                column: "virtual_key_id",
+                principalTable: "virtual_keys",
+                principalColumn: "id",
+                onDelete: ReferentialAction.SetNull);
+        }
+
+        private static void CreateSpendLogsTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "spend_logs",
                 columns: table => new
@@ -469,7 +535,25 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         principalTable: "virtual_keys",
                         principalColumn: "id");
                 });
+        }
 
+        private static void CreateInitialMultiTenantIndexes(MigrationBuilder migrationBuilder)
+        {
+            CreateAuditLogIndexes(migrationBuilder);
+            CreateCreditTransactionIndexes(migrationBuilder);
+            CreateInvoiceIndexes(migrationBuilder);
+            CreateOrganizationIndexes(migrationBuilder);
+            CreateRequestIndexes(migrationBuilder);
+            CreateSpendLogIndexes(migrationBuilder);
+            CreateSubscriptionPlanIndexes(migrationBuilder);
+            CreateTeamMembershipIndexes(migrationBuilder);
+            CreateTeamIndexes(migrationBuilder);
+            CreateUserIndexes(migrationBuilder);
+            CreateVirtualKeyIndexes(migrationBuilder);
+        }
+
+        private static void CreateAuditLogIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_audit_logs_event_category",
                 table: "audit_logs",
@@ -499,7 +583,10 @@ namespace Synaxis.Infrastructure.Data.Migrations
                 name: "IX_audit_logs_user_id",
                 table: "audit_logs",
                 column: "user_id");
+        }
 
+        private static void CreateCreditTransactionIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_credit_transactions_created_at",
                 table: "credit_transactions",
@@ -519,7 +606,10 @@ namespace Synaxis.Infrastructure.Data.Migrations
                 name: "IX_credit_transactions_transaction_type",
                 table: "credit_transactions",
                 column: "transaction_type");
+        }
 
+        private static void CreateInvoiceIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_invoices_invoice_number",
                 table: "invoices",
@@ -540,7 +630,10 @@ namespace Synaxis.Infrastructure.Data.Migrations
                 name: "IX_invoices_status",
                 table: "invoices",
                 column: "status");
+        }
 
+        private static void CreateOrganizationIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_organization_backup_config_organization_id",
                 table: "organization_backup_config",
@@ -566,7 +659,10 @@ namespace Synaxis.Infrastructure.Data.Migrations
                 name: "IX_organizations_tier",
                 table: "organizations",
                 column: "tier");
+        }
 
+        private static void CreateRequestIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_requests_created_at",
                 table: "requests",
@@ -607,7 +703,10 @@ namespace Synaxis.Infrastructure.Data.Migrations
                 name: "IX_requests_virtual_key_id",
                 table: "requests",
                 column: "virtual_key_id");
+        }
 
+        private static void CreateSpendLogIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_spend_logs_created_at",
                 table: "spend_logs",
@@ -632,7 +731,10 @@ namespace Synaxis.Infrastructure.Data.Migrations
                 name: "IX_spend_logs_virtual_key_id",
                 table: "spend_logs",
                 column: "virtual_key_id");
+        }
 
+        private static void CreateSubscriptionPlanIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_subscription_plans_is_active",
                 table: "subscription_plans",
@@ -643,7 +745,10 @@ namespace Synaxis.Infrastructure.Data.Migrations
                 table: "subscription_plans",
                 column: "slug",
                 unique: true);
+        }
 
+        private static void CreateTeamMembershipIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_team_memberships_InviterId",
                 table: "team_memberships",
@@ -664,13 +769,19 @@ namespace Synaxis.Infrastructure.Data.Migrations
                 table: "team_memberships",
                 columns: new[] { "user_id", "team_id" },
                 unique: true);
+        }
 
+        private static void CreateTeamIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_teams_organization_id_slug",
                 table: "teams",
                 columns: new[] { "organization_id", "slug" },
                 unique: true);
+        }
 
+        private static void CreateUserIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_users_data_residency_region",
                 table: "users",
@@ -686,7 +797,10 @@ namespace Synaxis.Infrastructure.Data.Migrations
                 name: "IX_users_organization_id",
                 table: "users",
                 column: "organization_id");
+        }
 
+        private static void CreateVirtualKeyIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_virtual_keys_created_by",
                 table: "virtual_keys",

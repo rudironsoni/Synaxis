@@ -1,3 +1,7 @@
+// <copyright file="DeleteAgentCommand.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.Contracts.V2.Commands;
 
 /// <summary>
@@ -8,25 +12,25 @@ namespace Synaxis.Contracts.V2.Commands;
 public record DeleteAgentCommand : CommandBase
 {
     /// <summary>
-    /// Identifier of the agent to delete.
+    /// Gets the identifier of the agent to delete.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("agentId")]
     public required Guid TargetAgentId { get; init; }
 
     /// <summary>
-    /// Reason for deletion.
+    /// Gets the reason for deletion.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("reason")]
     public string? Reason { get; init; }
 
     /// <summary>
-    /// Whether to force deletion even if agent has execution history.
+    /// Gets a value indicating whether to force deletion even if the agent has execution history.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("force")]
     public bool Force { get; init; }
 
     /// <summary>
-    /// Whether to cascade delete executions.
+    /// Gets a value indicating whether to cascade delete executions.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("cascade")]
     public bool Cascade { get; init; }

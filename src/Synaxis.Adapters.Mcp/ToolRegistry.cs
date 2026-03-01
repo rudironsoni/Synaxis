@@ -13,7 +13,7 @@ namespace Synaxis.Adapters.Mcp
     /// </summary>
     public sealed class ToolRegistry : IToolRegistry
     {
-        private readonly Dictionary<string, IMcpTool> _tools = new (StringComparer.Ordinal);
+        private readonly Dictionary<string, IMcpTool> _tools = new(StringComparer.Ordinal);
 
         /// <inheritdoc/>
         public void Register(IMcpTool tool)

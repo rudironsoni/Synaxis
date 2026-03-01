@@ -8,9 +8,11 @@ namespace Synaxis.Abstractions.Commands
     /// Marker interface for requests that produce streaming responses.
     /// </summary>
     /// <typeparam name="TResponse">The type of response produced by the stream.</typeparam>
-#pragma warning disable S2326 // Unused type parameter - intentional marker interface
     public interface IStreamRequest<out TResponse>
     {
+        /// <summary>
+        /// Gets the response payload for the stream.
+        /// </summary>
+        TResponse Response => default!;
     }
-#pragma warning restore S2326
 }

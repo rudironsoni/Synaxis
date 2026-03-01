@@ -1,3 +1,7 @@
+// <copyright file="ExecutionStatus.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.Contracts.V1.Common;
 
 /// <summary>
@@ -28,5 +32,5 @@ public enum ExecutionStatus
     /// <summary>
     /// Execution was cancelled before completion.
     /// </summary>
-    Cancelled = 4
+    Cancelled = 4,
 }

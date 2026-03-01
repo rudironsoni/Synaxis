@@ -26,6 +26,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.DuckDuckGo
         private readonly ChatClientMetadata _metadata;
         private string? _vqdToken;
 
+        private static readonly Uri DuckDuckGoBaseUri = new("https://duckduckgo.com/");
+        private static readonly Uri ChatEndpointUri = new("https://duckduckgo.com/duckchat/v1/chat");
+        private static readonly Uri StatusEndpointUri = new("https://duckduckgo.com/duckchat/v1/status");
         private static readonly string[] SupportedModels = new[] { "gpt-4o-mini", "claude-3-haiku", "llama-3.1-70b", "o3-mini" };
 
         /// <summary>
@@ -37,7 +40,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.DuckDuckGo
         {
             this._httpClient = httpClient;
             this._modelId = modelId;
-            this._metadata = new ChatClientMetadata("DuckDuckGo", new Uri("https://duckduckgo.com/"), modelId);
+            this._metadata = new ChatClientMetadata("DuckDuckGo", DuckDuckGoBaseUri, modelId);
         }
 
         /// <summary>
@@ -71,7 +74,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.DuckDuckGo
 
         private HttpRequestMessage CreateHttpRequest(object requestObj)
         {
-            var httpRequest = new HttpRequestMessage(HttpMethod.Post, "https://duckduckgo.com/duckchat/v1/chat")
+            var httpRequest = new HttpRequestMessage(HttpMethod.Post, ChatEndpointUri)
             {
                 Content = JsonContent.Create(requestObj, options: new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }),
             };
@@ -173,7 +176,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.DuckDuckGo
                 return;
             }
 
-            using var response = await this._httpClient.GetAsync("https://duckduckgo.com/duckchat/v1/status", cancellationToken).ConfigureAwait(false);
+            using var response = await this._httpClient.GetAsync(StatusEndpointUri, cancellationToken).ConfigureAwait(false);
             if (response.Headers.TryGetValues("x-vqd-4", out var vals))
             {
                 this._vqdToken = vals.FirstOrDefault();

@@ -6,7 +6,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
 {
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Logging;
-    using Npgsql;
     using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 
     /// <summary>
@@ -41,8 +40,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
             {
                 // Query from Operations schema
                 var health = await this._db.Database.SqlQuery<ProviderHealthDto>(
-                    $"SELECT \"IsHealthy\", \"HealthScore\", \"ConsecutiveFailures\", \"IsInCooldown\", \"CooldownUntil\" FROM operations.\"ProviderHealthStatus\" WHERE \"OrganizationProviderId\" = ${{providerId}} ORDER BY \"LastCheckedAt\" DESC LIMIT 1",
-                    new[] { new Npgsql.NpgsqlParameter("providerId", providerId) }).FirstOrDefaultAsync(ct).ConfigureAwait(false);
+                        $"SELECT \"IsHealthy\", \"HealthScore\", \"ConsecutiveFailures\", \"IsInCooldown\", \"CooldownUntil\" FROM operations.\"ProviderHealthStatus\" WHERE \"OrganizationProviderId\" = {providerId} ORDER BY \"LastCheckedAt\" DESC LIMIT 1")
+                    .FirstOrDefaultAsync(ct)
+                    .ConfigureAwait(false);
 
                 if (health == null)
                 {
@@ -81,16 +81,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
                 var cooldownUntil = DateTime.UtcNow.AddMinutes(cooldownMinutes);
 
                 await this._db.Database.ExecuteSqlAsync(
-                    $"UPDATE operations.\"ProviderHealthStatus\" SET \"IsHealthy\" = false, \"ConsecutiveFailures\" = ${{consecutiveFailures}}, \"LastErrorMessage\" = ${{reason}}, \"IsInCooldown\" = true, \"CooldownUntil\" = ${{cooldownUntil}}, \"LastCheckedAt\" = ${{lastCheckedAt}} WHERE \"OrganizationProviderId\" = ${{providerId}}",
-                    new[]
-                    {
-                        new Npgsql.NpgsqlParameter("consecutiveFailures", consecutiveFailures),
-                        new Npgsql.NpgsqlParameter("reason", reason ?? (object)DBNull.Value),
-                        new Npgsql.NpgsqlParameter("cooldownUntil", cooldownUntil),
-                        new Npgsql.NpgsqlParameter("lastCheckedAt", DateTime.UtcNow),
-                        new Npgsql.NpgsqlParameter("providerId", providerId),
-                    },
-                    ct).ConfigureAwait(false);
+                        $"UPDATE operations.\"ProviderHealthStatus\" SET \"IsHealthy\" = false, \"ConsecutiveFailures\" = {consecutiveFailures}, \"LastErrorMessage\" = {reason ?? (object)DBNull.Value}, \"IsInCooldown\" = true, \"CooldownUntil\" = {cooldownUntil}, \"LastCheckedAt\" = {DateTime.UtcNow} WHERE \"OrganizationProviderId\" = {providerId}",
+                        ct)
+                    .ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -111,13 +104,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
             {
                 var lastCheckedAt = DateTime.UtcNow;
                 await this._db.Database.ExecuteSqlAsync(
-                    $"UPDATE operations.\"ProviderHealthStatus\" SET \"IsHealthy\" = true, \"ConsecutiveFailures\" = 0, \"IsInCooldown\" = false, \"CooldownUntil\" = NULL, \"LastSuccessAt\" = ${{lastCheckedAt}}, \"LastCheckedAt\" = ${{lastCheckedAt}} WHERE \"OrganizationProviderId\" = ${{providerId}}",
-                    new[]
-                    {
-                        new Npgsql.NpgsqlParameter("lastCheckedAt", lastCheckedAt),
-                        new Npgsql.NpgsqlParameter("providerId", providerId),
-                    },
-                    ct).ConfigureAwait(false);
+                        $"UPDATE operations.\"ProviderHealthStatus\" SET \"IsHealthy\" = true, \"ConsecutiveFailures\" = 0, \"IsInCooldown\" = false, \"CooldownUntil\" = NULL, \"LastSuccessAt\" = {lastCheckedAt}, \"LastCheckedAt\" = {lastCheckedAt} WHERE \"OrganizationProviderId\" = {providerId}",
+                        ct)
+                    .ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -138,13 +127,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
             {
                 var lastCheckedAt = DateTime.UtcNow;
                 await this._db.Database.ExecuteSqlAsync(
-                    $"UPDATE operations.\"ProviderHealthStatus\" SET \"IsHealthy\" = true, \"HealthScore\" = 1.0, \"ConsecutiveFailures\" = 0, \"IsInCooldown\" = false, \"CooldownUntil\" = NULL, \"LastCheckedAt\" = ${{lastCheckedAt}} WHERE \"OrganizationProviderId\" = ${{providerId}}",
-                    new[]
-                    {
-                        new Npgsql.NpgsqlParameter("lastCheckedAt", lastCheckedAt),
-                        new Npgsql.NpgsqlParameter("providerId", providerId),
-                    },
-                    ct).ConfigureAwait(false);
+                        $"UPDATE operations.\"ProviderHealthStatus\" SET \"IsHealthy\" = true, \"HealthScore\" = 1.0, \"ConsecutiveFailures\" = 0, \"IsInCooldown\" = false, \"CooldownUntil\" = NULL, \"LastCheckedAt\" = {lastCheckedAt} WHERE \"OrganizationProviderId\" = {providerId}",
+                        ct)
+                    .ConfigureAwait(false);
             }
             catch (Exception ex)
             {

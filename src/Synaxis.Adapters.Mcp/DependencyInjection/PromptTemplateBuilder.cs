@@ -13,7 +13,7 @@ namespace Synaxis.Adapters.Mcp.DependencyInjection
     /// </summary>
     public sealed class PromptTemplateBuilder
     {
-        private readonly List<PromptTemplate> _templates = new ();
+        private readonly List<PromptTemplate> _templates = new();
 
         /// <summary>
         /// Adds a prompt template.

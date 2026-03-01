@@ -44,7 +44,12 @@ namespace Synaxis.Webhooks.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Configure Webhooks
+            ConfigureWebhookEntity(modelBuilder);
+            ConfigureWebhookDeliveryLogEntity(modelBuilder);
+        }
+
+        private static void ConfigureWebhookEntity(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<Webhook>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -61,7 +66,6 @@ namespace Synaxis.Webhooks.Data
                 entity.Property(e => e.LastSuccessfulDeliveryAt).HasColumnName("last_successful_delivery_at");
                 entity.Property(e => e.FailedDeliveryAttempts).HasColumnName("failed_delivery_attempts");
 
-                // Configure Events as JSON column
                 entity.Property(e => e.Events)
                     .HasColumnName("events")
                     .HasConversion(
@@ -76,8 +80,10 @@ namespace Synaxis.Webhooks.Data
                 entity.HasIndex(e => e.OrganizationId);
                 entity.HasIndex(e => new { e.OrganizationId, e.IsActive });
             });
+        }
 
-            // Configure WebhookDeliveryLogs
+        private static void ConfigureWebhookDeliveryLogEntity(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<WebhookDeliveryLog>(entity =>
             {
                 entity.HasKey(e => e.Id);

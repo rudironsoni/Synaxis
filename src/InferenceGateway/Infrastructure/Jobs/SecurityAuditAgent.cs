@@ -132,7 +132,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
         private async Task CheckMissingRateLimitsAsync(ControlPlaneDbContext db, List<SecurityIssue> issues, CancellationToken ct)
         {
             var providersWithoutLimits = await db.Database.SqlQuery<ProviderDto>(
-                $"SELECT \"Id\" FROM operations.\"OrganizationProvider\" WHERE \"IsEnabled\" = true AND (\"RateLimitRpm\" IS NULL OR \"RateLimitTpm\" IS NULL)").CountAsync(ct).ConfigureAwait(false);
+                    $"SELECT \"Id\" FROM operations.\"OrganizationProvider\" WHERE \"IsEnabled\" = true AND (\"RateLimitRpm\" IS NULL OR \"RateLimitTpm\" IS NULL)")
+                .CountAsync(ct)
+                .ConfigureAwait(false);
 
             if (providersWithoutLimits > 0)
             {

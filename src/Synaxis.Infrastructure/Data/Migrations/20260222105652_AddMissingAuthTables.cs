@@ -2,7 +2,6 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-
 using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
@@ -15,6 +14,17 @@ namespace Synaxis.Infrastructure.Data.Migrations
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            CreateCollectionsTable(migrationBuilder);
+            CreateEmailVerificationTokensTable(migrationBuilder);
+            CreatePasswordResetTokensTable(migrationBuilder);
+            CreateOrganizationApiKeysTable(migrationBuilder);
+            CreateCollectionMembershipsTable(migrationBuilder);
+            CreateJwtBlacklistsTable(migrationBuilder);
+            CreateMissingAuthIndexes(migrationBuilder);
+        }
+
+        private static void CreateCollectionsTable(MigrationBuilder migrationBuilder)
         {
             // Create collections table first (required by collection_memberships FK)
             migrationBuilder.CreateTable(
@@ -57,7 +67,10 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
+        }
 
+        private static void CreateEmailVerificationTokensTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "EmailVerificationTokens",
                 columns: table => new
@@ -79,7 +92,10 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
+        }
 
+        private static void CreatePasswordResetTokensTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "PasswordResetTokens",
                 columns: table => new
@@ -101,7 +117,10 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
+        }
 
+        private static void CreateOrganizationApiKeysTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "organization_api_keys",
                 columns: table => new
@@ -139,7 +158,10 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
                 });
+        }
 
+        private static void CreateCollectionMembershipsTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "collection_memberships",
                 columns: table => new
@@ -179,7 +201,10 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
+        }
 
+        private static void CreateJwtBlacklistsTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "jwt_blacklists",
                 columns: table => new
@@ -200,7 +225,10 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
+        }
 
+        private static void CreateMissingAuthIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_collections_created_by",
                 table: "collections",
@@ -303,5 +331,4 @@ namespace Synaxis.Infrastructure.Data.Migrations
                 name: "collections");
         }
     }
-
 }

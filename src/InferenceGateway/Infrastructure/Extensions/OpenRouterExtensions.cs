@@ -12,6 +12,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
     /// </summary>
     public static class OpenRouterExtensions
     {
+        private static readonly Uri OpenRouterBaseUri = new("https://openrouter.ai/api/v1/");
+
         /// <summary>
         /// Adds an OpenRouter chat client to the service collection.
         /// </summary>
@@ -37,7 +39,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
 
             services.AddKeyedSingleton<IChatClient>(serviceKey, (_, _) => new GenericOpenAiChatClient(
                 apiKey,
-                new Uri("https://openrouter.ai/api/v1/"),
+                OpenRouterBaseUri,
                 modelId,
                 headers));
 

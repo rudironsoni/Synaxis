@@ -1,3 +1,7 @@
+// <copyright file="ErrorResponse.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.Contracts.V2.DTOs;
 
 /// <summary>
@@ -7,63 +11,63 @@ namespace Synaxis.Contracts.V2.DTOs;
 /// V2 Breaking Changes:
 /// - Added RequestId for correlation
 /// - Added Path for the request path
-/// - ValidationErrors is now a dictionary for easier access
+/// - ValidationErrors is now a dictionary for easier access.
 /// </remarks>
 [System.Text.Json.Serialization.JsonPolymorphic(TypeDiscriminatorPropertyName = "type")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ErrorResponse), "error")]
 public record ErrorResponse
 {
     /// <summary>
-    /// HTTP status code.
+    /// Gets the HTTP status code.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("statusCode")]
     public required int StatusCode { get; init; }
 
     /// <summary>
-    /// Error code for programmatic handling.
+    /// Gets the error code for programmatic handling.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("code")]
     public required string Code { get; init; }
 
     /// <summary>
-    /// Human-readable error message.
+    /// Gets the human-readable error message.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("message")]
     public required string Message { get; init; }
 
     /// <summary>
-    /// Detailed error description.
+    /// Gets the detailed error description.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("details")]
     public string? Details { get; init; }
 
     /// <summary>
-    /// Request identifier for correlation.
+    /// Gets the request identifier for correlation.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("requestId")]
     public string? RequestId { get; init; }
 
     /// <summary>
-    /// Trace identifier for debugging.
+    /// Gets the trace identifier for debugging.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("traceId")]
     public string? TraceId { get; init; }
 
     /// <summary>
-    /// Request path that caused the error.
+    /// Gets the request path that caused the error.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("path")]
     public string? Path { get; init; }
 
     /// <summary>
-    /// Timestamp when the error occurred.
+    /// Gets the timestamp when the error occurred.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("timestamp")]
     public DateTimeOffset Timestamp { get; init; } = DateTimeOffset.UtcNow;
 
     /// <summary>
-    /// Additional error details for validation errors.
+    /// Gets the additional error details for validation errors.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("validationErrors")]
-    public Dictionary<string, IReadOnlyList<string>>? ValidationErrors { get; init; }
+    public IReadOnlyDictionary<string, IReadOnlyList<string>>? ValidationErrors { get; init; }
 }

@@ -66,11 +66,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
             TaskCompletionSource? testCallbackTcs = null)
         {
             var interval = Math.Max(1, intervalSeconds);
-            var url = "https://github.com/login/oauth/access_token";
+            var url = GitHubAuthStrategy.AccessTokenUri;
 
             while (!ct.IsCancellationRequested)
             {
-                var (shouldContinue, newInterval, _) = await this.PollOnceAsync(url, deviceCode, onSuccess, interval, ct, testCallbackTcs).ConfigureAwait(false);
+                var (shouldContinue, newInterval, _) = await this.PollOnceAsync(url.ToString(), deviceCode, onSuccess, interval, ct, testCallbackTcs).ConfigureAwait(false);
                 interval = newInterval;
                 if (!shouldContinue)
                 {

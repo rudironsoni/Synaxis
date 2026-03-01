@@ -2,7 +2,6 @@
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-
 using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
@@ -16,12 +15,30 @@ namespace Synaxis.Infrastructure.Data.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            AddMfaBackupCodesColumn(migrationBuilder);
+            CreateCollectionAndJwtTables(migrationBuilder);
+            CreateCollectionIndexes(migrationBuilder);
+            CreateJwtBlacklistIndexes(migrationBuilder);
+        }
+
+        private static void AddMfaBackupCodesColumn(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.AddColumn<string>(
                 name: "MfaBackupCodes",
                 table: "users",
                 type: "text",
                 nullable: true);
+        }
 
+        private static void CreateCollectionAndJwtTables(MigrationBuilder migrationBuilder)
+        {
+            CreateCollectionsTable(migrationBuilder);
+            CreateJwtBlacklistsTable(migrationBuilder);
+            CreateCollectionMembershipsTable(migrationBuilder);
+        }
+
+        private static void CreateCollectionsTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "Collections",
                 columns: table => new
@@ -65,7 +82,10 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
                 });
+        }
 
+        private static void CreateJwtBlacklistsTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "JwtBlacklists",
                 columns: table => new
@@ -86,7 +106,10 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
+        }
 
+        private static void CreateCollectionMembershipsTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "CollectionMemberships",
                 columns: table => new
@@ -128,7 +151,10 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
+        }
 
+        private static void CreateCollectionIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_CollectionMemberships_added_by",
                 table: "CollectionMemberships",
@@ -185,7 +211,10 @@ namespace Synaxis.Infrastructure.Data.Migrations
                 name: "IX_Collections_visibility",
                 table: "Collections",
                 column: "visibility");
+        }
 
+        private static void CreateJwtBlacklistIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_JwtBlacklists_expires_at",
                 table: "JwtBlacklists",

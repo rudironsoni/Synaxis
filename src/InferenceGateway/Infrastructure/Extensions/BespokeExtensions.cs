@@ -5,7 +5,6 @@
 namespace Synaxis.InferenceGateway.Infrastructure.Extensions
 {
     using System;
-    using System.Net.Http;
     using Microsoft.Extensions.AI;
     using Microsoft.Extensions.DependencyInjection;
 
@@ -24,11 +23,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
         /// <returns>The service collection for chaining.</returns>
         public static IServiceCollection AddCohereClient(this IServiceCollection services, string key, string apiKey, string modelId)
         {
+            ArgumentNullException.ThrowIfNull(services);
+
+            services.AddHttpClient();
             services.AddKeyedSingleton<IChatClient>(key, (sp, obj) =>
-            {
-                var httpClient = new HttpClient();
-                return new CohereChatClient(httpClient, modelId, apiKey);
-            });
+                ActivatorUtilities.CreateInstance<CohereChatClient>(sp, modelId, apiKey));
             return services;
         }
 
@@ -41,11 +40,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
         /// <returns>The service collection for chaining.</returns>
         public static IServiceCollection AddPollinationsClient(this IServiceCollection services, string key, string modelId)
         {
+            ArgumentNullException.ThrowIfNull(services);
+
+            services.AddHttpClient();
             services.AddKeyedSingleton<IChatClient>(key, (sp, obj) =>
-            {
-                var httpClient = new HttpClient();
-                return new PollinationsChatClient(httpClient, modelId);
-            });
+                modelId == null
+                    ? ActivatorUtilities.CreateInstance<PollinationsChatClient>(sp)
+                    : ActivatorUtilities.CreateInstance<PollinationsChatClient>(sp, modelId));
             return services;
         }
     }

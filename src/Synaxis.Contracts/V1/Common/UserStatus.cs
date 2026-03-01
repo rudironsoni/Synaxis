@@ -1,3 +1,7 @@
+// <copyright file="UserStatus.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.Contracts.V1.Common;
 
 /// <summary>
@@ -23,5 +27,5 @@ public enum UserStatus
     /// <summary>
     /// User account has been deactivated.
     /// </summary>
-    Deactivated = 3
+    Deactivated = 3,
 }

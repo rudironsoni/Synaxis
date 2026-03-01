@@ -1,5 +1,12 @@
+// <copyright file="StreamExecutorTests.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
+#nullable enable
+
 namespace Synaxis.Abstractions.Tests.Execution;
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -114,11 +121,13 @@ public class StreamExecutorTests
 
     private sealed class TestStreamRequest : IStreamRequest<int>
     {
+        public int Response => 0;
         public int Count { get; init; }
     }
 
     private sealed class ComplexStreamRequest : IStreamRequest<ComplexResult>
     {
+        public ComplexResult Response => new();
         public string Query { get; init; } = string.Empty;
     }
 

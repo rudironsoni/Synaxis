@@ -24,6 +24,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
     /// </summary>
     public sealed class CohereChatClient : IChatClient
     {
+        private static readonly Uri CohereChatUri = new("https://api.cohere.com/v2/chat");
         private readonly HttpClient _httpClient;
         private readonly string _modelId;
         private readonly ChatClientMetadata _metadata;
@@ -45,7 +46,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
             this._modelId = modelId;
             this._httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
             this._httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Synaxis/1.0");
-            this._metadata = new ChatClientMetadata("Cohere", new Uri("https://api.cohere.com/v2/chat"), modelId);
+            this._metadata = new ChatClientMetadata("Cohere", CohereChatUri, modelId);
         }
 
         /// <summary>
@@ -57,7 +58,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
         public async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default)
         {
             var requestObj = this.CreateRequest(messages, options, stream: false);
-            var request = new HttpRequestMessage(HttpMethod.Post, "https://api.cohere.com/v2/chat")
+            using var request = new HttpRequestMessage(HttpMethod.Post, CohereChatUri)
             {
                 Content = JsonContent.Create(requestObj),
             };
@@ -86,7 +87,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
         public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             var requestObj = this.CreateRequest(messages, options, stream: true);
-            var request = this.CreateStreamRequest(requestObj);
+            using var request = this.CreateStreamRequest(requestObj);
 
             using var response = await this._httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
@@ -106,7 +107,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
 
         private HttpRequestMessage CreateStreamRequest(object requestObj)
         {
-            var request = new HttpRequestMessage(HttpMethod.Post, "https://api.cohere.com/v2/chat")
+            var request = new HttpRequestMessage(HttpMethod.Post, CohereChatUri)
             {
                 Content = JsonContent.Create(requestObj),
             };

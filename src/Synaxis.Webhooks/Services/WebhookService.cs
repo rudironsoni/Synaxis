@@ -102,120 +102,39 @@ namespace Synaxis.Webhooks.Services
         /// <param name="payload">The event payload.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        public async Task DeliverToWebhookAsync(Webhook webhook, string eventType, string payload, CancellationToken cancellationToken = default)
+        public async Task DeliverToWebhookAsync(
+            Webhook webhook,
+            string eventType,
+            string payload,
+            CancellationToken cancellationToken = default)
         {
             var startTime = DateTime.UtcNow;
-            var deliveryLog = new WebhookDeliveryLog
-            {
-                Id = Guid.NewGuid(),
-                WebhookId = webhook.Id,
-                EventType = eventType,
-                Payload = payload,
-                DeliveredAt = startTime,
-                RetryAttempt = 0,
-            };
+            var deliveryLog = this.CreateDeliveryLog(webhook, eventType, payload, startTime);
+            var signature = WebhookSignature.GenerateSignature(payload, webhook.Secret);
 
             try
             {
-                var signature = WebhookSignature.GenerateSignature(payload, webhook.Secret);
-
-                using var request = new HttpRequestMessage(HttpMethod.Post, webhook.Url)
-                {
-                    Content = new StringContent(payload, Encoding.UTF8, "application/json"),
-                };
-
-                request.Headers.Add(WebhookSignature.GetSignatureHeader(), signature);
-                request.Headers.Add("X-Webhook-Event-Type", eventType);
-                request.Headers.Add("X-Webhook-Delivery-Id", deliveryLog.Id.ToString());
-
-                this._logger.LogInformation(
-                    "Delivering webhook {WebhookId} to {Url} for event {EventType}",
-                    webhook.Id,
-                    webhook.Url,
-                    eventType);
-
-                var response = await this._retryPolicy.ExecuteAsync(async () =>
-                {
-                    using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                    cts.CancelAfter(TimeSpan.FromSeconds(this._options.DeliveryTimeoutSeconds));
-
-                    return await this._httpClient.SendAsync(request, cts.Token).ConfigureAwait(false);
-                }).ConfigureAwait(false);
-
-                var duration = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
-                deliveryLog.DurationMs = duration;
-                deliveryLog.StatusCode = (int)response.StatusCode;
-                deliveryLog.IsSuccess = response.IsSuccessStatusCode;
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var responseBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-                    deliveryLog.ResponseBody = responseBody;
-
-                    webhook.LastSuccessfulDeliveryAt = DateTime.UtcNow;
-                    webhook.FailedDeliveryAttempts = 0;
-                    webhook.UpdatedAt = DateTime.UtcNow;
-
-                    this._logger.LogInformation(
-                        "Webhook {WebhookId} delivered successfully in {Duration}ms",
-                        webhook.Id,
-                        duration);
-                }
-                else
-                {
-                    var responseBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-                    deliveryLog.ResponseBody = responseBody;
-                    deliveryLog.ErrorMessage = $"HTTP {(int)response.StatusCode}: {response.ReasonPhrase}";
-
-                    webhook.FailedDeliveryAttempts++;
-                    webhook.UpdatedAt = DateTime.UtcNow;
-
-                    this._logger.LogWarning(
-                        "Webhook {WebhookId} delivery failed with status {StatusCode}: {Reason}",
-                        webhook.Id,
-                        (int)response.StatusCode,
-                        response.ReasonPhrase);
-
-                    // Move to dead letter queue after max retries
-                    if (webhook.FailedDeliveryAttempts >= this._options.MaxRetryAttempts)
-                    {
-                        await this.MoveToDeadLetterQueueAsync(webhook).ConfigureAwait(false);
-                    }
-                }
+                using var response = await this.SendWebhookAsync(
+                    webhook,
+                    deliveryLog.Id,
+                    eventType,
+                    signature,
+                    payload,
+                    cancellationToken).ConfigureAwait(false);
+                await this.HandleDeliveryResponseAsync(webhook, response, deliveryLog, startTime, cancellationToken)
+                    .ConfigureAwait(false);
             }
             catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
             {
-                var duration = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
-                deliveryLog.DurationMs = duration;
-                deliveryLog.IsSuccess = false;
-                deliveryLog.ErrorMessage = $"Timeout after {duration}ms";
-
-                webhook.FailedDeliveryAttempts++;
-                webhook.UpdatedAt = DateTime.UtcNow;
-
+                RecordFailure(webhook, deliveryLog, startTime, $"Timeout after {GetDurationMs(startTime)}ms");
                 this._logger.LogError(ex, "Webhook {WebhookId} delivery timed out", webhook.Id);
-
-                if (webhook.FailedDeliveryAttempts >= this._options.MaxRetryAttempts)
-                {
-                    await this.MoveToDeadLetterQueueAsync(webhook).ConfigureAwait(false);
-                }
+                await this.MoveToDeadLetterQueueIfNeededAsync(webhook).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                var duration = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
-                deliveryLog.DurationMs = duration;
-                deliveryLog.IsSuccess = false;
-                deliveryLog.ErrorMessage = ex.Message;
-
-                webhook.FailedDeliveryAttempts++;
-                webhook.UpdatedAt = DateTime.UtcNow;
-
+                RecordFailure(webhook, deliveryLog, startTime, ex.Message);
                 this._logger.LogError(ex, "Webhook {WebhookId} delivery failed", webhook.Id);
-
-                if (webhook.FailedDeliveryAttempts >= this._options.MaxRetryAttempts)
-                {
-                    await this.MoveToDeadLetterQueueAsync(webhook).ConfigureAwait(false);
-                }
+                await this.MoveToDeadLetterQueueIfNeededAsync(webhook).ConfigureAwait(false);
             }
             finally
             {
@@ -257,6 +176,114 @@ namespace Synaxis.Webhooks.Services
             // 2. Store the failed delivery in a separate dead letter table
             // 3. Provide a mechanism to retry failed deliveries manually
             return this._dbContext.SaveChangesAsync();
+        }
+
+        private WebhookDeliveryLog CreateDeliveryLog(Webhook webhook, string eventType, string payload, DateTime startTime)
+        {
+            return new WebhookDeliveryLog
+            {
+                Id = Guid.NewGuid(),
+                WebhookId = webhook.Id,
+                EventType = eventType,
+                Payload = payload,
+                DeliveredAt = startTime,
+                RetryAttempt = 0,
+            };
+        }
+
+        private Task<HttpResponseMessage> SendWebhookAsync(
+            Webhook webhook,
+            Guid deliveryId,
+            string eventType,
+            string signature,
+            string payload,
+            CancellationToken cancellationToken)
+        {
+            return this._retryPolicy.ExecuteAsync(async () =>
+            {
+                using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                cts.CancelAfter(TimeSpan.FromSeconds(this._options.DeliveryTimeoutSeconds));
+
+                using var request = new HttpRequestMessage(HttpMethod.Post, webhook.Url)
+                {
+                    Content = new StringContent(payload, Encoding.UTF8, "application/json"),
+                };
+
+                request.Headers.Add(WebhookSignature.GetSignatureHeader(), signature);
+                request.Headers.Add("X-Webhook-Event-Type", eventType);
+                request.Headers.Add("X-Webhook-Delivery-Id", deliveryId.ToString());
+
+                this._logger.LogInformation(
+                    "Delivering webhook {WebhookId} to {Url} for event {EventType}",
+                    webhook.Id,
+                    webhook.Url,
+                    eventType);
+
+                return await this._httpClient.SendAsync(request, cts.Token).ConfigureAwait(false);
+            });
+        }
+
+        private async Task HandleDeliveryResponseAsync(
+            Webhook webhook,
+            HttpResponseMessage response,
+            WebhookDeliveryLog deliveryLog,
+            DateTime startTime,
+            CancellationToken cancellationToken)
+        {
+            var duration = GetDurationMs(startTime);
+            deliveryLog.DurationMs = duration;
+            deliveryLog.StatusCode = (int)response.StatusCode;
+            deliveryLog.IsSuccess = response.IsSuccessStatusCode;
+
+            var responseBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            deliveryLog.ResponseBody = responseBody;
+
+            if (response.IsSuccessStatusCode)
+            {
+                webhook.LastSuccessfulDeliveryAt = DateTime.UtcNow;
+                webhook.FailedDeliveryAttempts = 0;
+                webhook.UpdatedAt = DateTime.UtcNow;
+
+                this._logger.LogInformation(
+                    "Webhook {WebhookId} delivered successfully in {Duration}ms",
+                    webhook.Id,
+                    duration);
+                return;
+            }
+
+            deliveryLog.ErrorMessage = $"HTTP {(int)response.StatusCode}: {response.ReasonPhrase}";
+            webhook.FailedDeliveryAttempts++;
+            webhook.UpdatedAt = DateTime.UtcNow;
+
+            this._logger.LogWarning(
+                "Webhook {WebhookId} delivery failed with status {StatusCode}: {Reason}",
+                webhook.Id,
+                (int)response.StatusCode,
+                response.ReasonPhrase);
+
+            await this.MoveToDeadLetterQueueIfNeededAsync(webhook).ConfigureAwait(false);
+        }
+
+        private static void RecordFailure(Webhook webhook, WebhookDeliveryLog deliveryLog, DateTime startTime, string errorMessage)
+        {
+            deliveryLog.DurationMs = GetDurationMs(startTime);
+            deliveryLog.IsSuccess = false;
+            deliveryLog.ErrorMessage = errorMessage;
+
+            webhook.FailedDeliveryAttempts++;
+            webhook.UpdatedAt = DateTime.UtcNow;
+        }
+
+        private Task MoveToDeadLetterQueueIfNeededAsync(Webhook webhook)
+        {
+            return webhook.FailedDeliveryAttempts >= this._options.MaxRetryAttempts
+                ? this.MoveToDeadLetterQueueAsync(webhook)
+                : Task.CompletedTask;
+        }
+
+        private static long GetDurationMs(DateTime startTime)
+        {
+            return (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
         }
 
         /// <summary>

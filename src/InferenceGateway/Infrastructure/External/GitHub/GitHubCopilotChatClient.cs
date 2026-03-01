@@ -21,7 +21,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.GitHub
     {
         private readonly ICopilotClient _copilotClient;
         private readonly ILogger<GitHubCopilotChatClient>? _logger;
-        private readonly ChatClientMetadata _metadata = new ChatClientMetadata("GitHubCopilot", new Uri("https://copilot.github.com/"), "copilot");
+        private static readonly Uri CopilotBaseUri = new("https://copilot.github.com/");
+        private readonly ChatClientMetadata _metadata = new ChatClientMetadata("GitHubCopilot", CopilotBaseUri, "copilot");
         private readonly string _modelId = "copilot";
 
         /// <summary>

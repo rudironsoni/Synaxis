@@ -188,8 +188,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 -- Keeping backup table for safety. Manual verification recommended before dropping.
             ");
         }
-
-
         /// <summary>
         /// Reverts the migration by dropping partitioned table and restoring from backup.
         /// Removes partition management functions.

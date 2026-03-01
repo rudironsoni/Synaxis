@@ -1,9 +1,13 @@
+// <copyright file="SchemaGenerator.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
+namespace Synaxis.Contracts;
+
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Schema;
 using System.Text.Json.Serialization.Metadata;
-
-namespace Synaxis.Contracts;
 
 /// <summary>
 /// Generates JSON schemas for Synaxis contracts.
@@ -17,11 +21,11 @@ public class SchemaGenerator
     /// </summary>
     public SchemaGenerator()
     {
-        _options = new JsonSerializerOptions
+        this._options = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             WriteIndented = true,
-            TypeInfoResolver = new DefaultJsonTypeInfoResolver()
+            TypeInfoResolver = new DefaultJsonTypeInfoResolver(),
         };
     }
 
@@ -32,7 +36,7 @@ public class SchemaGenerator
     /// <returns>The JSON schema as a string.</returns>
     public string GenerateSchema<T>()
     {
-        var schema = JsonSchemaExporter.GetJsonSchemaAsNode(_options, typeof(T));
+        var schema = JsonSchemaExporter.GetJsonSchemaAsNode(this._options, typeof(T));
         return schema.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
     }
 
@@ -45,7 +49,7 @@ public class SchemaGenerator
     {
         ArgumentNullException.ThrowIfNull(type);
 
-        var schema = JsonSchemaExporter.GetJsonSchemaAsNode(_options, type);
+        var schema = JsonSchemaExporter.GetJsonSchemaAsNode(this._options, type);
         return schema.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
     }
 
@@ -54,20 +58,20 @@ public class SchemaGenerator
     /// </summary>
     /// <param name="outputDirectory">The directory to save the schemas to.</param>
     /// <returns>A dictionary of type names to schema file paths.</returns>
-    public Dictionary<string, string> GenerateV1Schemas(string outputDirectory)
+    public IReadOnlyDictionary<string, string> GenerateV1Schemas(string outputDirectory)
     {
         ArgumentException.ThrowIfNullOrEmpty(outputDirectory);
 
         Directory.CreateDirectory(outputDirectory);
 
-        var schemas = new Dictionary<string, string>();
+        var schemas = new Dictionary<string, string>(StringComparer.Ordinal);
 
         // Generate schemas for V1 contracts
         var v1Types = GetV1Types();
 
         foreach (var type in v1Types)
         {
-            var schema = GenerateSchema(type);
+            var schema = this.GenerateSchema(type);
             var fileName = $"{type.Name.ToLowerInvariant()}.schema.json";
             var filePath = Path.Combine(outputDirectory, fileName);
 
@@ -83,20 +87,20 @@ public class SchemaGenerator
     /// </summary>
     /// <param name="outputDirectory">The directory to save the schemas to.</param>
     /// <returns>A dictionary of type names to schema file paths.</returns>
-    public Dictionary<string, string> GenerateV2Schemas(string outputDirectory)
+    public IReadOnlyDictionary<string, string> GenerateV2Schemas(string outputDirectory)
     {
         ArgumentException.ThrowIfNullOrEmpty(outputDirectory);
 
         Directory.CreateDirectory(outputDirectory);
 
-        var schemas = new Dictionary<string, string>();
+        var schemas = new Dictionary<string, string>(StringComparer.Ordinal);
 
         // Generate schemas for V2 contracts
         var v2Types = GetV2Types();
 
         foreach (var type in v2Types)
         {
-            var schema = GenerateSchema(type);
+            var schema = this.GenerateSchema(type);
             var fileName = $"{type.Name.ToLowerInvariant()}.schema.json";
             var filePath = Path.Combine(outputDirectory, fileName);
 

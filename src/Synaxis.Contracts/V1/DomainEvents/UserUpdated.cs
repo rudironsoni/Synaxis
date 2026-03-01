@@ -1,6 +1,10 @@
-using Synaxis.Contracts.V1.Common;
+// <copyright file="UserUpdated.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
 namespace Synaxis.Contracts.V1.DomainEvents;
+
+using Synaxis.Contracts.V1.Common;
 
 /// <summary>
 /// Event raised when a user is updated.
@@ -10,31 +14,31 @@ namespace Synaxis.Contracts.V1.DomainEvents;
 public record UserUpdated : DomainEventBase
 {
     /// <summary>
-    /// Updated email address (null if unchanged).
+    /// Gets the updated email address (null if unchanged).
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("email")]
     public string? Email { get; init; }
 
     /// <summary>
-    /// Updated display name (null if unchanged).
+    /// Gets the updated display name (null if unchanged).
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("displayName")]
     public string? DisplayName { get; init; }
 
     /// <summary>
-    /// Updated status (null if unchanged).
+    /// Gets the updated status (null if unchanged).
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("status")]
     public UserStatus? Status { get; init; }
 
     /// <summary>
-    /// Updated roles (null if unchanged).
+    /// Gets the updated roles (null if unchanged).
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("roles")]
     public IReadOnlyList<string>? Roles { get; init; }
 
     /// <summary>
-    /// Timestamp when the user was last updated.
+    /// Gets the timestamp when the user was last updated.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("updatedAt")]
     public DateTimeOffset UpdatedAt { get; init; }

@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 /// </summary>
 public class CircuitBreakerPolicy
 {
-    private readonly CircuitBreaker _circuitBreaker;
+    private readonly CircuitBreakerEngine _circuitBreaker;
     private readonly CircuitBreakerMetrics _metrics;
     private readonly Func<Exception, bool> _exceptionPredicate;
     private readonly Func<CancellationToken, Task>? _fallback;
@@ -21,7 +21,7 @@ public class CircuitBreakerPolicy
     /// <summary>
     /// Gets the circuit breaker associated with this policy.
     /// </summary>
-    public CircuitBreaker CircuitBreaker => this._circuitBreaker;
+    public CircuitBreakerEngine CircuitBreaker => this._circuitBreaker;
 
     /// <summary>
     /// Gets the metrics for this policy.
@@ -35,7 +35,7 @@ public class CircuitBreakerPolicy
     /// <param name="exceptionPredicate">A predicate to determine which exceptions should be treated as failures.</param>
     /// <param name="fallback">An optional fallback function to execute when the circuit is open or an exception occurs.</param>
     public CircuitBreakerPolicy(
-        CircuitBreaker circuitBreaker,
+        CircuitBreakerEngine circuitBreaker,
         Func<Exception, bool>? exceptionPredicate = null,
         Func<CancellationToken, Task>? fallback = null)
     {

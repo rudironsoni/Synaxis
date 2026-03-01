@@ -1,3 +1,7 @@
+// <copyright file="QueryBase.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.Contracts.V2.Queries;
 
 /// <summary>
@@ -7,42 +11,42 @@ namespace Synaxis.Contracts.V2.Queries;
 /// V2 Breaking Changes:
 /// - QueryId renamed to Id
 /// - Added TenantId for multi-tenancy
-/// - Added Source property
+/// - Added Source property.
 /// </remarks>
 public abstract record QueryBase
 {
     /// <summary>
-    /// Unique identifier for the query.
+    /// Gets the unique identifier for the query.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("id")]
     public Guid Id { get; init; }
 
     /// <summary>
-    /// Correlation identifier for tracing requests across services.
+    /// Gets the correlation identifier for tracing requests across services.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("correlationId")]
     public Guid CorrelationId { get; init; }
 
     /// <summary>
-    /// Identifier of the tenant (for multi-tenancy).
+    /// Gets the identifier of the tenant (for multi-tenancy).
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("tenantId")]
     public string? TenantId { get; init; }
 
     /// <summary>
-    /// Timestamp when the query was created.
+    /// Gets the timestamp when the query was created.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("timestamp")]
     public DateTimeOffset Timestamp { get; init; }
 
     /// <summary>
-    /// Identifier of the user issuing the query.
+    /// Gets the identifier of the user issuing the query.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("userId")]
     public required string UserId { get; init; }
 
     /// <summary>
-    /// Source system or service that issued the query.
+    /// Gets the source system or service that issued the query.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("source")]
     public string Source { get; init; } = "api";
@@ -52,8 +56,8 @@ public abstract record QueryBase
     /// </summary>
     protected QueryBase()
     {
-        Id = Guid.NewGuid();
-        CorrelationId = Guid.NewGuid();
-        Timestamp = DateTimeOffset.UtcNow;
+        this.Id = Guid.NewGuid();
+        this.CorrelationId = Guid.NewGuid();
+        this.Timestamp = DateTimeOffset.UtcNow;
     }
 }

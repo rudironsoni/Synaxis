@@ -17,7 +17,7 @@ using StackExchange.Redis;
 /// </summary>
 public sealed class CircuitBreakerStore : IDisposable
 {
-    private readonly ConcurrentDictionary<string, CircuitBreaker> _inMemoryStore;
+    private readonly ConcurrentDictionary<string, CircuitBreakerEngine> _inMemoryStore;
     private readonly CircuitBreakerStoreOptions _options;
     private readonly IConnectionMultiplexer? _redisConnection;
     private readonly IDatabase? _redisDatabase;
@@ -30,7 +30,7 @@ public sealed class CircuitBreakerStore : IDisposable
     public CircuitBreakerStore(CircuitBreakerStoreOptions? options = null)
     {
         this._options = options ?? new CircuitBreakerStoreOptions();
-        this._inMemoryStore = new ConcurrentDictionary<string, CircuitBreaker>(StringComparer.Ordinal);
+        this._inMemoryStore = new ConcurrentDictionary<string, CircuitBreakerEngine>(StringComparer.Ordinal);
         this._jsonSerializerOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -58,7 +58,7 @@ public sealed class CircuitBreakerStore : IDisposable
     /// <param name="providerName">The name of the provider.</param>
     /// <param name="options">The circuit breaker options. If null, default options will be used.</param>
     /// <returns>The circuit breaker instance.</returns>
-    public async Task<CircuitBreaker> GetOrCreateAsync(string providerName, CircuitBreakerOptions? options = null)
+    public async Task<CircuitBreakerEngine> GetOrCreateAsync(string providerName, CircuitBreakerOptions? options = null)
     {
         if (string.IsNullOrEmpty(providerName))
         {
@@ -109,7 +109,7 @@ public sealed class CircuitBreakerStore : IDisposable
     /// </summary>
     /// <param name="providerName">The name of the provider.</param>
     /// <returns>The circuit breaker instance, or null if it doesn't exist.</returns>
-    public CircuitBreaker? Get(string providerName)
+    public CircuitBreakerEngine? Get(string providerName)
     {
         if (string.IsNullOrEmpty(providerName))
         {
@@ -124,7 +124,7 @@ public sealed class CircuitBreakerStore : IDisposable
     /// Gets all circuit breakers in the store.
     /// </summary>
     /// <returns>A dictionary of provider names to circuit breakers.</returns>
-    public IReadOnlyDictionary<string, CircuitBreaker> GetAll()
+    public IReadOnlyDictionary<string, CircuitBreakerEngine> GetAll()
     {
         return this._inMemoryStore.ToDictionary(kvp => kvp.Key, kvp => kvp.Value, StringComparer.Ordinal);
     }
@@ -135,7 +135,7 @@ public sealed class CircuitBreakerStore : IDisposable
     /// <param name="providerName">The name of the provider.</param>
     /// <param name="breaker">The circuit breaker to save.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    public async Task SaveAsync(string providerName, CircuitBreaker breaker)
+    public async Task SaveAsync(string providerName, CircuitBreakerEngine breaker)
     {
         if (string.IsNullOrEmpty(providerName))
         {
@@ -242,50 +242,19 @@ public sealed class CircuitBreakerStore : IDisposable
         return $"{this._options.RedisKeyPrefix}{providerName}";
     }
 
-    private static CircuitBreaker CreateCircuitBreaker(string name, CircuitBreakerOptions options)
+    private static CircuitBreakerEngine CreateCircuitBreaker(string name, CircuitBreakerOptions options)
     {
-        return new CircuitBreaker(name, options);
+        return new CircuitBreakerEngine(name, options);
     }
 
-    private static CircuitBreakerState ExtractCircuitBreakerState(CircuitBreaker breaker)
+    private static CircuitBreakerState ExtractCircuitBreakerState(CircuitBreakerEngine breaker)
     {
-#pragma warning disable S3011 // Reflection accessibility bypass - intentional for state persistence
-        // Use reflection to access private fields
-        var lastFailureTimeField = breaker.GetType().GetField("_lastFailureTime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        var openedAtField = breaker.GetType().GetField("_openedAt", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        var consecutiveSuccessesField = breaker.GetType().GetField("_consecutiveSuccessesInHalfOpen", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-#pragma warning restore S3011
-
-        return new CircuitBreakerState
-        {
-            State = breaker.State,
-            FailureCount = breaker.FailureCount,
-            SuccessCount = breaker.SuccessCount,
-            TotalRequests = breaker.TotalRequests,
-            LastFailureTime = lastFailureTimeField?.GetValue(breaker) as DateTime?,
-            OpenedAt = openedAtField?.GetValue(breaker) as DateTime?,
-            ConsecutiveSuccessesInHalfOpen = consecutiveSuccessesField?.GetValue(breaker) as int? ?? 0,
-        };
+        return breaker.CreateStateSnapshot();
     }
 
-    private static void RestoreCircuitBreakerState(CircuitBreaker breaker, CircuitBreakerState state)
+    private static void RestoreCircuitBreakerState(CircuitBreakerEngine breaker, CircuitBreakerState state)
     {
-#pragma warning disable S3011 // Reflection accessibility bypass - intentional for state persistence
-        // Use reflection to set private fields
-        var failureCountField = breaker.GetType().GetField("_failureCount", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        var successCountField = breaker.GetType().GetField("_successCount", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        var totalRequestsField = breaker.GetType().GetField("_totalRequests", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        var lastFailureTimeField = breaker.GetType().GetField("_lastFailureTime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        var openedAtField = breaker.GetType().GetField("_openedAt", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        var consecutiveSuccessesField = breaker.GetType().GetField("_consecutiveSuccessesInHalfOpen", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-#pragma warning restore S3011
-
-        failureCountField?.SetValue(breaker, state.FailureCount);
-        successCountField?.SetValue(breaker, state.SuccessCount);
-        totalRequestsField?.SetValue(breaker, state.TotalRequests);
-        lastFailureTimeField?.SetValue(breaker, state.LastFailureTime ?? default(DateTime));
-        openedAtField?.SetValue(breaker, state.OpenedAt ?? default(DateTime));
-        consecutiveSuccessesField?.SetValue(breaker, state.ConsecutiveSuccessesInHalfOpen);
+        breaker.RestoreState(state);
     }
 
     /// <summary>

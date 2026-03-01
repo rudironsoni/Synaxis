@@ -21,6 +21,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
     /// </summary>
     public sealed class PollinationsChatClient : IChatClient
     {
+        private static readonly Uri PollinationsBaseUri = new("https://text.pollinations.ai/");
         private readonly HttpClient _httpClient;
         private readonly string _modelId;
         private readonly ChatClientMetadata _metadata;
@@ -34,7 +35,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
         {
             this._httpClient = httpClient;
             this._modelId = modelId ?? "openai";
-            this._metadata = new ChatClientMetadata("Pollinations", new Uri("https://text.pollinations.ai/"), this._modelId);
+            this._metadata = new ChatClientMetadata("Pollinations", PollinationsBaseUri, this._modelId);
         }
 
         /// <summary>
@@ -46,7 +47,9 @@ namespace Synaxis.InferenceGateway.Infrastructure
         public async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default)
         {
             var request = this.CreateRequest(messages, options, stream: false);
-            var response = await this._httpClient.PostAsJsonAsync("https://text.pollinations.ai/", request, cancellationToken).ConfigureAwait(false);
+            using var response = await this._httpClient
+                .PostAsJsonAsync(PollinationsBaseUri, request, cancellationToken)
+                .ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
@@ -64,7 +67,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
         {
             var request = this.CreateRequest(messages, options, stream: true);
 
-            var httpRequest = new HttpRequestMessage(HttpMethod.Post, "https://text.pollinations.ai/")
+            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, PollinationsBaseUri)
             {
                 Content = JsonContent.Create(request),
             };
@@ -131,7 +134,9 @@ namespace Synaxis.InferenceGateway.Infrastructure
         /// <summary>
         /// Disposes the resources used by this client.
         /// </summary>
-        public void Dispose() => this._httpClient.Dispose();
+        public void Dispose()
+        {
+        }
 
         /// <summary>
         /// Gets a service of the specified type.

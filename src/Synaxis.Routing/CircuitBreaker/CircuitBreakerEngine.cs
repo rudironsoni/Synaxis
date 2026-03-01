@@ -1,8 +1,6 @@
-// <copyright file="CircuitBreaker.cs" company="PlaceholderCompany">
+// <copyright file="CircuitBreakerEngine.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
-
-#pragma warning disable MA0049 // Type name matches namespace - false positive, type has unique name
 
 namespace Synaxis.Routing.CircuitBreaker;
 
@@ -12,7 +10,7 @@ using System.Threading;
 /// <summary>
 /// Implements the Circuit Breaker pattern to prevent cascading failures.
 /// </summary>
-public sealed class CircuitBreaker
+public sealed class CircuitBreakerEngine
 {
     private readonly CircuitBreakerOptions _options;
     private readonly Lock _lock = new();
@@ -111,11 +109,11 @@ public sealed class CircuitBreaker
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="CircuitBreaker"/> class.
+    /// Initializes a new instance of the <see cref="CircuitBreakerEngine"/> class.
     /// </summary>
     /// <param name="name">The name of the circuit breaker.</param>
     /// <param name="options">The configuration options.</param>
-    public CircuitBreaker(string name, CircuitBreakerOptions options)
+    public CircuitBreakerEngine(string name, CircuitBreakerOptions options)
     {
         ArgumentNullException.ThrowIfNull(name);
         ArgumentNullException.ThrowIfNull(options);
@@ -263,6 +261,46 @@ public sealed class CircuitBreaker
         }
     }
 
+    /// <summary>
+    /// Creates an immutable snapshot of the circuit breaker state.
+    /// </summary>
+    /// <returns>The current circuit breaker state snapshot.</returns>
+    internal CircuitBreakerState CreateStateSnapshot()
+    {
+        lock (this._lock)
+        {
+            return new CircuitBreakerState
+            {
+                State = this._state,
+                FailureCount = this._failureCount,
+                SuccessCount = this._successCount,
+                TotalRequests = this._totalRequests,
+                LastFailureTime = this._lastFailureTime,
+                OpenedAt = this._openedAt,
+                ConsecutiveSuccessesInHalfOpen = this._consecutiveSuccessesInHalfOpen,
+            };
+        }
+    }
+
+    /// <summary>
+    /// Restores the circuit breaker state from a snapshot.
+    /// </summary>
+    /// <param name="state">The state snapshot to restore.</param>
+    internal void RestoreState(CircuitBreakerState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        lock (this._lock)
+        {
+            this._state = state.State;
+            this._failureCount = state.FailureCount;
+            this._successCount = state.SuccessCount;
+            this._totalRequests = state.TotalRequests;
+            this._lastFailureTime = state.LastFailureTime;
+            this._openedAt = state.OpenedAt;
+            this._consecutiveSuccessesInHalfOpen = state.ConsecutiveSuccessesInHalfOpen;
+        }
+    }
+
     private void TransitionToOpen()
     {
         this._state = CircuitState.Open;
@@ -288,5 +326,3 @@ public sealed class CircuitBreaker
         this._consecutiveSuccessesInHalfOpen = 0;
     }
 }
-
-#pragma warning restore MA0049

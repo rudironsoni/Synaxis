@@ -33,12 +33,12 @@ public class AuditAlertHandler : INotificationHandler<AuditAlertEvent>
 
         // Log the alert based on severity
         this.LogAlert(notification);
-
-        // In a production system, you would:
-        // 1. Send email notifications to security team
-        // 2. Send webhook notifications to SIEM systems
-        // 3. Store alerts in a dedicated alerts table
-        // 4. Trigger automated incident response
+        /* In a production system, you would:
+         * 1. Send email notifications to security team
+         * 2. Send webhook notifications to SIEM systems
+         * 3. Store alerts in a dedicated alerts table
+         * 4. Trigger automated incident response
+         */
 
         return Task.CompletedTask;
     }

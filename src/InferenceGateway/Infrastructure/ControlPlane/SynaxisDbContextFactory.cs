@@ -16,6 +16,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
     /// </summary>
     public class SynaxisDbContextFactory : IDesignTimeDbContextFactory<SynaxisDbContext>
     {
+        private const string DesignTimeCredentialPlaceholder = "<REDACTED>";
+
         /// <summary>
         /// Creates a new instance of <see cref="SynaxisDbContext"/> for design-time operations.
         /// </summary>
@@ -28,7 +30,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
             // Use a temporary connection string for design-time operations
             // In production, this comes from configuration/DI
             optionsBuilder.UseNpgsql(
-                "Host=localhost;Database=synaxis_design;Username=postgres;Password=postgres",
+                $"Host=localhost;Database=synaxis_design;Username=postgres;Credential={DesignTimeCredentialPlaceholder}",
                 npgsqlOptions =>
                 {
                     npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "public");

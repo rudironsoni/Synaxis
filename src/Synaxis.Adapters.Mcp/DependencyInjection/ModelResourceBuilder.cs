@@ -13,7 +13,7 @@ namespace Synaxis.Adapters.Mcp.DependencyInjection
     /// </summary>
     public sealed class ModelResourceBuilder
     {
-        private readonly List<ModelResource> _models = new ();
+        private readonly List<ModelResource> _models = new();
 
         /// <summary>
         /// Adds a model resource.

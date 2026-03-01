@@ -17,7 +17,6 @@ using Synaxis.Abstractions.Cloud;
 /// </summary>
 public class RedisKeyVault : IKeyVault
 {
-    private readonly IConnectionMultiplexer _redis;
     private readonly ILogger<RedisKeyVault> _logger;
     private readonly IDatabase _database;
 
@@ -30,10 +29,9 @@ public class RedisKeyVault : IKeyVault
         string connectionString,
         ILogger<RedisKeyVault> logger)
     {
-        _redis = ConnectionMultiplexer.Connect(connectionString);
         ArgumentNullException.ThrowIfNull(logger);
-        _logger = logger;
-        _database = _redis.GetDatabase();
+        this._logger = logger;
+        this._database = ConnectionMultiplexer.Connect(connectionString).GetDatabase();
     }
 
     /// <inheritdoc />
@@ -43,8 +41,8 @@ public class RedisKeyVault : IKeyVault
         CancellationToken cancellationToken = default)
     {
         var key = GetSecretKey(secretName);
-        await _database.StringSetAsync(key, secretValue).ConfigureAwait(false);
-        _logger.LogInformation("Secret {SecretName} stored successfully", secretName);
+        await this._database.StringSetAsync(key, secretValue).ConfigureAwait(false);
+        this._logger.LogInformation("Secret {SecretName} stored successfully", secretName);
     }
 
     /// <inheritdoc />
@@ -53,15 +51,15 @@ public class RedisKeyVault : IKeyVault
         CancellationToken cancellationToken = default)
     {
         var key = GetSecretKey(secretName);
-        var value = await _database.StringGetAsync(key).ConfigureAwait(false);
+        var value = await this._database.StringGetAsync(key).ConfigureAwait(false);
 
         if (value.IsNull)
         {
-            _logger.LogWarning("Secret {SecretName} not found", secretName);
+            this._logger.LogWarning("Secret {SecretName} not found", secretName);
             return null;
         }
 
-        _logger.LogInformation("Secret {SecretName} retrieved successfully", secretName);
+        this._logger.LogInformation("Secret {SecretName} retrieved successfully", secretName);
         return value;
     }
 
@@ -71,8 +69,8 @@ public class RedisKeyVault : IKeyVault
         CancellationToken cancellationToken = default)
     {
         var key = GetSecretKey(secretName);
-        await _database.KeyDeleteAsync(key).ConfigureAwait(false);
-        _logger.LogInformation("Secret {SecretName} deleted successfully", secretName);
+        await this._database.KeyDeleteAsync(key).ConfigureAwait(false);
+        this._logger.LogInformation("Secret {SecretName} deleted successfully", secretName);
     }
 
     /// <inheritdoc />
@@ -83,7 +81,7 @@ public class RedisKeyVault : IKeyVault
     {
         // Simple implementation: store as-is (in production, use proper encryption)
         // This is a stub that demonstrates the interface
-        _logger.LogWarning("Encryption is not implemented in RedisKeyVault. Data stored as-is.");
+        this._logger.LogWarning("Encryption is not implemented in RedisKeyVault. Data stored as-is.");
         return Task.FromResult(plaintext);
     }
 
@@ -95,7 +93,7 @@ public class RedisKeyVault : IKeyVault
     {
         // Simple implementation: return as-is (in production, use proper decryption)
         // This is a stub that demonstrates the interface
-        _logger.LogWarning("Decryption is not implemented in RedisKeyVault. Data returned as-is.");
+        this._logger.LogWarning("Decryption is not implemented in RedisKeyVault. Data returned as-is.");
         return Task.FromResult(ciphertext);
     }
 

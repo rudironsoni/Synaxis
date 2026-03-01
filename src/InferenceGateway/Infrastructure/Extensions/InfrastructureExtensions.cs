@@ -263,7 +263,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
             var headers = config.CustomHeaders != null
                 ? new List<KeyValuePair<string, string>>(config.CustomHeaders.Select(kvp => new KeyValuePair<string, string>(kvp.Key, kvp.Value)))
                 : null;
-            services.AddOpenAiCompatibleClient(name, config.Endpoint ?? "https://api.openai.com/v1", config.Key ?? string.Empty, defaultModel, headers);
+            services.AddOpenAiCompatibleClient(name, config.Endpoint ?? GetOpenAiBaseUrl(), config.Key ?? string.Empty, defaultModel, headers);
         }
 
         private static void RegisterGroqClient(IServiceCollection services, string name, ProviderConfig config, string defaultModel)
@@ -271,15 +271,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
             var headers = config.CustomHeaders != null
                 ? new List<KeyValuePair<string, string>>(config.CustomHeaders.Select(kvp => new KeyValuePair<string, string>(kvp.Key, kvp.Value)))
                 : null;
-            services.AddOpenAiCompatibleClient(name, "https://api.groq.com/openai/v1", config.Key ?? string.Empty, defaultModel, headers);
+            services.AddOpenAiCompatibleClient(name, GetGroqBaseUrl(), config.Key ?? string.Empty, defaultModel, headers);
         }
 
         private static void RegisterCohereClient(IServiceCollection services, string name, ProviderConfig config, string defaultModel)
         {
             services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>
             {
-                var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
-                return new CohereChatClient(httpClient, defaultModel, config.Key ?? string.Empty);
+                return ActivatorUtilities.CreateInstance<CohereChatClient>(sp, defaultModel, config.Key ?? string.Empty);
             });
         }
 
@@ -287,8 +286,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
         {
             services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>
             {
-                var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
-                return new CloudflareChatClient(httpClient, config.AccountId ?? string.Empty, defaultModel, config.Key ?? string.Empty);
+                return ActivatorUtilities.CreateInstance<CloudflareChatClient>(sp, config.AccountId ?? string.Empty, defaultModel, config.Key ?? string.Empty);
             });
         }
 
@@ -297,17 +295,19 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
             services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>
             {
                 var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient("Google");
-                return new Synaxis.InferenceGateway.Infrastructure.External.Google.GoogleChatClient(config.Key ?? string.Empty, defaultModel, httpClient);
+                return ActivatorUtilities.CreateInstance<Synaxis.InferenceGateway.Infrastructure.External.Google.GoogleChatClient>(
+                    sp,
+                    config.Key ?? string.Empty,
+                    defaultModel,
+                    httpClient,
+                    sp.GetRequiredService<ILogger<Synaxis.InferenceGateway.Infrastructure.External.Google.GoogleChatClient>>());
             });
         }
 
         private static void RegisterPollinationsClient(IServiceCollection services, string name, string defaultModel)
         {
             services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>
-            {
-                var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
-                return new PollinationsChatClient(httpClient, defaultModel);
-            });
+                ActivatorUtilities.CreateInstance<PollinationsChatClient>(sp, defaultModel));
         }
 
         private static void RegisterDefaultClient(IServiceCollection services, string name, ProviderConfig config, string defaultModel)
@@ -327,7 +327,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
             {
                 var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient("Antigravity");
                 var authManager = sp.GetRequiredService<IAntigravityAuthManager>();
-                return new AntigravityChatClient(httpClient, defaultModel, config.ProjectId ?? string.Empty, authManager);
+                return ActivatorUtilities.CreateInstance<AntigravityChatClient>(sp, httpClient, defaultModel, config.ProjectId ?? string.Empty, authManager);
             });
         }
 
@@ -341,8 +341,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
                     return new CopilotSdkClient(adapter);
                 }
 
-                var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
-                return new Synaxis.InferenceGateway.Infrastructure.External.DuckDuckGo.DuckDuckGoChatClient(httpClient, defaultModel);
+                return ActivatorUtilities.CreateInstance<Synaxis.InferenceGateway.Infrastructure.External.DuckDuckGo.DuckDuckGoChatClient>(sp, defaultModel);
             });
         }
 
@@ -350,8 +349,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
         {
             services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>
             {
-                var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
-                return new Synaxis.InferenceGateway.Infrastructure.External.DuckDuckGo.DuckDuckGoChatClient(httpClient, defaultModel);
+                return ActivatorUtilities.CreateInstance<Synaxis.InferenceGateway.Infrastructure.External.DuckDuckGo.DuckDuckGoChatClient>(sp, defaultModel);
             });
         }
 
@@ -359,8 +357,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
         {
             services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>
             {
-                var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
-                return new Synaxis.InferenceGateway.Infrastructure.External.AiHorde.AiHordeChatClient(httpClient, config.Key ?? "0000000000");
+                return ActivatorUtilities.CreateInstance<Synaxis.InferenceGateway.Infrastructure.External.AiHorde.AiHordeChatClient>(sp, config.Key ?? "0000000000");
             });
         }
 
@@ -369,7 +366,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
             services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>
             {
                 var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
-                return new Synaxis.InferenceGateway.Infrastructure.External.KiloCode.KiloCodeChatClient(config.Key ?? string.Empty, defaultModel, httpClient);
+                return ActivatorUtilities.CreateInstance<Synaxis.InferenceGateway.Infrastructure.External.KiloCode.KiloCodeChatClient>(
+                    sp,
+                    config.Key ?? string.Empty,
+                    defaultModel,
+                    httpClient);
             });
         }
 
@@ -377,7 +378,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
         {
             services.AddHttpClient("Antigravity", client =>
             {
-                client.BaseAddress = new Uri("https://cloudcode-pa.googleapis.com");
+                client.BaseAddress = GetAntigravityBaseUri();
             })
             .AddPolicyHandler(GetRetryPolicy());
 
@@ -410,13 +411,26 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
             // Register Models.dev client
             services.AddHttpClient<IModelsDevClient, ModelsDevClient>(client =>
             {
-                client.BaseAddress = new Uri("https://models.dev");
+                client.BaseAddress = GetModelsDevBaseUri();
             });
 
             // Register OpenAI model discovery client
             services.AddHttpClient<IOpenAiModelDiscoveryClient, OpenAiModelDiscoveryClient>();
             return services;
         }
+
+        private static readonly Uri OpenAiBaseUri = new("https://api.openai.com/v1");
+        private static readonly Uri GroqBaseUri = new("https://api.groq.com/openai/v1");
+        private static readonly Uri AntigravityBaseUri = new("https://cloudcode-pa.googleapis.com");
+        private static readonly Uri ModelsDevBaseUri = new("https://models.dev");
+
+        private static string GetOpenAiBaseUrl() => OpenAiBaseUri.ToString();
+
+        private static string GetGroqBaseUrl() => GroqBaseUri.ToString();
+
+        private static Uri GetAntigravityBaseUri() => AntigravityBaseUri;
+
+        private static Uri GetModelsDevBaseUri() => ModelsDevBaseUri;
 
         private static IAsyncPolicy<HttpResponseMessage> GetRetryPolicy()
         {

@@ -69,76 +69,12 @@ namespace Synaxis.Providers.Adapters
         }
 
         /// <inheritdoc/>
-        public async IAsyncEnumerable<StreamingResponse> StreamChatAsync(ChatRequest request, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public IAsyncEnumerable<StreamingResponse> StreamChatAsync(
+            ChatRequest request,
+            CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(request);
-
-            var openAIRequest = this.BuildChatRequest(request);
-            openAIRequest.Stream = true;
-
-            var requestMessage = new HttpRequestMessage(HttpMethod.Post, "chat/completions")
-            {
-                Content = new StringContent(JsonSerializer.Serialize(openAIRequest), Encoding.UTF8, "application/json"),
-            };
-
-            using var response = await this._httpClient.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
-            response.EnsureSuccessStatusCode();
-
-            using var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
-            using var reader = new System.IO.StreamReader(stream);
-
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                var line = await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false);
-                if (string.IsNullOrWhiteSpace(line) || !line.StartsWith("data: ", StringComparison.Ordinal))
-                {
-                    continue;
-                }
-
-                var data = line.Substring(6);
-                if (string.Equals(data, "[DONE]", StringComparison.Ordinal))
-                {
-                    break;
-                }
-
-                OpenAIChatStreamChunk? chunk = null;
-                try
-                {
-                    chunk = JsonSerializer.Deserialize<OpenAIChatStreamChunk>(data);
-                }
-                catch (JsonException ex)
-                {
-                    this._logger.LogWarning(ex, "Failed to parse streaming chunk: {Data}", data);
-                    continue;
-                }
-
-                if (chunk is null)
-                {
-                    continue;
-                }
-
-                var isFinished = chunk.Choices.FirstOrDefault()?.FinishReason is not null;
-                var streamingResponse = new StreamingResponse
-                {
-                    Id = chunk.Id,
-                    Object = chunk.Object,
-                    Created = chunk.Created,
-                    Model = chunk.Model,
-                    Choices = chunk.Choices.Select(c => new ChatChoice
-                    {
-                        Index = c.Index,
-                        Message = new ChatMessage
-                        {
-                            Role = c.Delta?.Role ?? "assistant",
-                            Content = c.Delta?.Content ?? string.Empty,
-                        },
-                        FinishReason = c.FinishReason,
-                    }).ToArray(),
-                    IsFinished = isFinished,
-                };
-
-                yield return streamingResponse;
-            }
+            return this.StreamChatInternalAsync(request, cancellationToken);
         }
 
         /// <inheritdoc/>
@@ -193,9 +129,119 @@ namespace Synaxis.Providers.Adapters
             };
         }
 
-        private async Task<TResponse> PostWithRetryAsync<TRequest, TResponse>(
+        private Task<TResponse> PostWithRetryAsync<TRequest, TResponse>(
             string endpoint,
             TRequest request,
+            CancellationToken cancellationToken)
+        {
+            return this.ExecuteWithRetryAsync(
+                () => this.ExecutePostAsync<TRequest, TResponse>(endpoint, request, cancellationToken),
+                "OpenAI.MaxRetriesExceeded",
+                cancellationToken);
+        }
+
+        private OpenAIChatRequest CreateStreamingChatRequest(ChatRequest request)
+        {
+            var openAIRequest = this.BuildChatRequest(request);
+            openAIRequest.Stream = true;
+            return openAIRequest;
+        }
+
+        private async IAsyncEnumerable<StreamingResponse> StreamChatInternalAsync(
+            ChatRequest request,
+            [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            var openAIRequest = this.CreateStreamingChatRequest(request);
+            using var requestMessage = new HttpRequestMessage(HttpMethod.Post, "chat/completions")
+            {
+                Content = new StringContent(JsonSerializer.Serialize(openAIRequest), Encoding.UTF8, "application/json"),
+            };
+
+            using var response = await this._httpClient
+                .SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
+                .ConfigureAwait(false);
+            response.EnsureSuccessStatusCode();
+
+            using var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+            using var reader = new System.IO.StreamReader(stream);
+
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var line = await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false);
+                if (!IsStreamingDataLine(line))
+                {
+                    continue;
+                }
+
+                var data = line![6..];
+                if (string.Equals(data, "[DONE]", StringComparison.Ordinal))
+                {
+                    break;
+                }
+
+                if (!this.TryDeserializeChunk(data, out var chunk))
+                {
+                    continue;
+                }
+
+                yield return this.MapToStreamingResponse(chunk);
+            }
+        }
+
+        private static bool IsStreamingDataLine(string? line)
+        {
+            return !string.IsNullOrWhiteSpace(line)
+                && line.StartsWith("data: ", StringComparison.Ordinal);
+        }
+
+        private bool TryDeserializeChunk(string data, out OpenAIChatStreamChunk chunk)
+        {
+            try
+            {
+                var parsed = JsonSerializer.Deserialize<OpenAIChatStreamChunk>(data);
+                if (parsed is null)
+                {
+                    chunk = default!;
+                    return false;
+                }
+
+                chunk = parsed;
+                return true;
+            }
+            catch (JsonException ex)
+            {
+                this._logger.LogWarning(ex, "Failed to parse streaming chunk: {Data}", data);
+                chunk = default!;
+                return false;
+            }
+        }
+
+        private StreamingResponse MapToStreamingResponse(OpenAIChatStreamChunk chunk)
+        {
+            var isFinished = chunk.Choices.FirstOrDefault()?.FinishReason is not null;
+            return new StreamingResponse
+            {
+                Id = chunk.Id,
+                Object = chunk.Object,
+                Created = chunk.Created,
+                Model = chunk.Model,
+                Choices = chunk.Choices.Select(c => new ChatChoice
+                {
+                    Index = c.Index,
+                    Message = new ChatMessage
+                    {
+                        Role = c.Delta?.Role ?? "assistant",
+                        Content = c.Delta?.Content ?? string.Empty,
+                    },
+                    FinishReason = c.FinishReason,
+                }).ToArray(),
+                IsFinished = isFinished,
+            };
+        }
+
+        private async Task<TResponse> ExecuteWithRetryAsync<TResponse>(
+            Func<Task<TResponse>> executeAsync,
+            string maxRetryErrorCode,
             CancellationToken cancellationToken)
         {
             var attempt = 0;
@@ -207,7 +253,7 @@ namespace Synaxis.Providers.Adapters
 
                 try
                 {
-                    return await this.ExecutePostAsync<TRequest, TResponse>(endpoint, request, cancellationToken).ConfigureAwait(false);
+                    return await executeAsync().ConfigureAwait(false);
                 }
                 catch (ProviderException ex) when (ex.Error.Category is ErrorCategory.RateLimit or ErrorCategory.Provider)
                 {
@@ -218,7 +264,6 @@ namespace Synaxis.Providers.Adapters
                     {
                         var delay = OpenAIAdapter.GetRetryDelay(attempt);
                         await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
-                        continue;
                     }
                 }
             }
@@ -226,7 +271,7 @@ namespace Synaxis.Providers.Adapters
             throw new ProviderException(
                 new SynaxisError
                 {
-                    Code = "OpenAI.MaxRetriesExceeded",
+                    Code = maxRetryErrorCode,
                     Message = $"Maximum retry attempts ({this._options.MaxRetries}) exceeded",
                     Severity = ErrorSeverity.Error,
                     Category = ErrorCategory.Provider,
@@ -241,7 +286,11 @@ namespace Synaxis.Providers.Adapters
         {
             var json = JsonSerializer.Serialize(request);
             using var content = new StringContent(json, Encoding.UTF8, "application/json");
-            using var response = await this._httpClient.PostAsync(endpoint, content, cancellationToken).ConfigureAwait(false);
+            using var requestMessage = new HttpRequestMessage(HttpMethod.Post, endpoint)
+            {
+                Content = content,
+            };
+            using var response = await this._httpClient.SendAsync(requestMessage, cancellationToken).ConfigureAwait(false);
             var responseContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
 
             if (response.IsSuccessStatusCode)

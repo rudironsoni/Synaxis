@@ -1,3 +1,7 @@
+// <copyright file="EventType.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.Contracts.V1.Common;
 
 /// <summary>
@@ -23,5 +27,5 @@ public enum EventType
     /// <summary>
     /// Execution-related event.
     /// </summary>
-    Execution = 3
+    Execution = 3,
 }

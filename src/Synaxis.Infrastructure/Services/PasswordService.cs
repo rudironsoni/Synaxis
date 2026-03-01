@@ -358,7 +358,7 @@ namespace Synaxis.Infrastructure.Services
             };
         }
 
-        private async Task ResetPasswordInternalAsync(User user, string newPassword, PasswordPolicy policy)
+        private Task ResetPasswordInternalAsync(User user, string newPassword, PasswordPolicy policy)
         {
             var historyEntry = new PasswordHistory
             {
@@ -383,7 +383,7 @@ namespace Synaxis.Infrastructure.Services
             }
 
             user.UpdatedAt = DateTime.UtcNow;
-            await this._context.SaveChangesAsync().ConfigureAwait(false);
+            return this._context.SaveChangesAsync();
         }
 
         /// <inheritdoc/>

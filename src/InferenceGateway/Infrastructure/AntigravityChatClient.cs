@@ -32,6 +32,8 @@ namespace Synaxis.InferenceGateway.Infrastructure
         private const string EndpointRelative = "/v1/chat/completions";
         private const string StreamEndpointRelative = "/v1/chat/completions?alt=sse";
 
+        private static readonly Uri DefaultBaseUri = AntigravityDefaults.BaseUri;
+
         private readonly HttpClient _httpClient;
         private readonly string _modelId;
         private readonly string _projectId;
@@ -57,7 +59,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
             this._tokenProvider = tokenProvider;
 
             // Prefer the configured BaseAddress on the provided HttpClient when available
-            this._metadata = new ChatClientMetadata("Antigravity", this._httpClient.BaseAddress ?? new Uri("https://cloudcode-pa.googleapis.com"), modelId);
+            this._metadata = new ChatClientMetadata("Antigravity", this._httpClient.BaseAddress ?? DefaultBaseUri, modelId);
         }
 
         /// <summary>
@@ -502,6 +504,17 @@ namespace Synaxis.InferenceGateway.Infrastructure
         /// </summary>
         [JsonPropertyName("finishReason")]
         public string? FinishReason { get; set; }
+    }
+
+    /// <summary>
+    /// Defaults for the Antigravity client.
+    /// </summary>
+    internal static class AntigravityDefaults
+    {
+        /// <summary>
+        /// Gets the default base URI for the Antigravity API.
+        /// </summary>
+        public static readonly Uri BaseUri = new("https://cloudcode-pa.googleapis.com");
     }
 
     /// <summary>

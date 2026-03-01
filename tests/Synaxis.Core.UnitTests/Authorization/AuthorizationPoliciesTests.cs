@@ -1,7 +1,7 @@
+namespace Synaxis.Core.Authorization.Tests;
+
 using FluentAssertions;
 using Xunit;
-
-namespace Synaxis.Core.Authorization.Tests;
 
 public class AuthorizationPoliciesTests
 {
@@ -9,28 +9,28 @@ public class AuthorizationPoliciesTests
     public void OrgAdminConstant_ShouldHaveCorrectValue()
     {
         // Assert
-        AuthorizationPolicies.OrgAdmin.Should().Be("OrgAdmin");
+        AuthorizationPolicies.OrgAdminPolicy.Should().Be("OrgAdmin");
     }
 
     [Fact]
     public void TeamAdminConstant_ShouldHaveCorrectValue()
     {
         // Assert
-        AuthorizationPolicies.TeamAdmin.Should().Be("TeamAdmin");
+        AuthorizationPolicies.TeamAdminPolicy.Should().Be("TeamAdmin");
     }
 
     [Fact]
     public void MemberConstant_ShouldHaveCorrectValue()
     {
         // Assert
-        AuthorizationPolicies.Member.Should().Be("Member");
+        AuthorizationPolicies.MemberPolicy.Should().Be("Member");
     }
 
     [Fact]
     public void ViewerConstant_ShouldHaveCorrectValue()
     {
         // Assert
-        AuthorizationPolicies.Viewer.Should().Be("Viewer");
+        AuthorizationPolicies.ViewerPolicy.Should().Be("Viewer");
     }
 
     [Fact]
@@ -72,16 +72,16 @@ public class AuthorizationPoliciesTests
         switch (roleName)
         {
             case "OrgAdmin":
-                AuthorizationPolicies.OrgAdmin.Should().Be(AuthorizationPolicies.Roles.OrgAdmin);
+                AuthorizationPolicies.OrgAdminPolicy.Should().Be(AuthorizationPolicies.Roles.OrgAdmin);
                 break;
             case "TeamAdmin":
-                AuthorizationPolicies.TeamAdmin.Should().Be(AuthorizationPolicies.Roles.TeamAdmin);
+                AuthorizationPolicies.TeamAdminPolicy.Should().Be(AuthorizationPolicies.Roles.TeamAdmin);
                 break;
             case "Member":
-                AuthorizationPolicies.Member.Should().Be(AuthorizationPolicies.Roles.Member);
+                AuthorizationPolicies.MemberPolicy.Should().Be(AuthorizationPolicies.Roles.Member);
                 break;
             case "Viewer":
-                AuthorizationPolicies.Viewer.Should().Be(AuthorizationPolicies.Roles.Viewer);
+                AuthorizationPolicies.ViewerPolicy.Should().Be(AuthorizationPolicies.Roles.Viewer);
                 break;
         }
     }

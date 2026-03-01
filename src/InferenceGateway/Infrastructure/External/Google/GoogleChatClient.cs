@@ -22,7 +22,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.Google
     /// </summary>
     public sealed class GoogleChatClient : IChatClient
     {
-        private const string Endpoint = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
+        private static readonly Uri EndpointUri = new("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions");
 
         private readonly HttpClient _httpClient;
         private readonly string _modelId;
@@ -54,7 +54,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.Google
             }
 
             this._httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Synaxis/1.0");
-            this._metadata = new ChatClientMetadata("Google.Gemini", new Uri(Endpoint), this._modelId);
+            this._metadata = new ChatClientMetadata("Google.Gemini", EndpointUri, this._modelId);
         }
 
         /// <summary>
@@ -87,11 +87,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.Google
 
                 if (this._logger != null)
                 {
-                    this._logger.LogInformation("GoogleChatClient sending request. Endpoint: {Endpoint} Model: {Model} Payload: {Payload}", Endpoint, payloadModel, requestJson);
+                    this._logger.LogInformation("GoogleChatClient sending request. Endpoint: {Endpoint} Model: {Model} Payload: {Payload}", EndpointUri, payloadModel, requestJson);
                 }
                 else
                 {
-                    Console.WriteLine($"GoogleChatClient sending request. Endpoint: {Endpoint} Model: {payloadModel} Payload: {requestJson}");
+                    Console.WriteLine($"GoogleChatClient sending request. Endpoint: {EndpointUri} Model: {payloadModel} Payload: {requestJson}");
                 }
             }
             catch (Exception ex)
@@ -100,7 +100,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.Google
                 Console.WriteLine($"GoogleChatClient debug logging failed: {ex}");
             }
 
-            var response = await this._httpClient.PostAsJsonAsync(Endpoint, requestObj, cancellationToken).ConfigureAwait(false);
+            using var response = await this._httpClient.PostAsJsonAsync(EndpointUri, requestObj, cancellationToken).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
             {
                 var err = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);

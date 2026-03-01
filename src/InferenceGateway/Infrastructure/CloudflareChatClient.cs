@@ -22,6 +22,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
     /// </summary>
     public sealed class CloudflareChatClient : IChatClient
     {
+        private static readonly Uri CloudflareApiBaseUri = new("https://api.cloudflare.com/client/v4/accounts/");
         private readonly HttpClient _httpClient;
         private readonly string _accountId;
         private readonly string _modelId;
@@ -45,7 +46,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
             this._httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
 
             // Store the raw model id; Cloudflare expects path-like model ids (e.g. @cf/meta/...) as raw segments.
-            this._metadata = new ChatClientMetadata("Cloudflare", new Uri($"https://api.cloudflare.com/client/v4/accounts/{accountId}/ai/run/{modelId}"), modelId);
+            this._metadata = new ChatClientMetadata("Cloudflare", BuildModelUri(accountId, modelId), modelId);
         }
 
         /// <summary>
@@ -57,7 +58,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
         public async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default)
         {
             var request = this.CreateRequest(messages, stream: false);
-            var url = $"https://api.cloudflare.com/client/v4/accounts/{this._accountId}/ai/run/{this._modelId}";
+            var url = BuildModelUri(this._accountId, this._modelId);
 
             // Debug: print the full request URL and model id to help diagnose 404s
             var requestUrl = url;
@@ -70,7 +71,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
                 Console.WriteLine($"CloudflareChatClient sending request. Url: {requestUrl} ModelId: {this._modelId}");
             }
 
-            var response = await this._httpClient.PostAsJsonAsync(url, request, cancellationToken).ConfigureAwait(false);
+            using var response = await this._httpClient.PostAsJsonAsync(url, request, cancellationToken).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
             var cloudflareResponse = await response.Content.ReadFromJsonAsync<CloudflareResponse>(cancellationToken: cancellationToken).ConfigureAwait(false);
@@ -91,9 +92,9 @@ namespace Synaxis.InferenceGateway.Infrastructure
         public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             var request = this.CreateRequest(messages, stream: true);
-            var url = $"https://api.cloudflare.com/client/v4/accounts/{this._accountId}/ai/run/{this._modelId}";
+            var url = BuildModelUri(this._accountId, this._modelId);
 
-            var httpRequest = new HttpRequestMessage(HttpMethod.Post, url)
+            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, url)
             {
                 Content = JsonContent.Create(request),
             };
@@ -163,6 +164,13 @@ namespace Synaxis.InferenceGateway.Infrastructure
                 messages = messages,
                 stream = stream,
             };
+        }
+
+        private static Uri BuildModelUri(string accountId, string modelId)
+        {
+            var accountSegment = Uri.EscapeDataString(accountId ?? string.Empty);
+            var modelSegment = Uri.EscapeDataString(modelId ?? string.Empty);
+            return new Uri(CloudflareApiBaseUri, $"{accountSegment}/ai/run/{modelSegment}");
         }
 
         /// <summary>

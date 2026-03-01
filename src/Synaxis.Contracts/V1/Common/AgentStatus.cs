@@ -1,3 +1,7 @@
+// <copyright file="AgentStatus.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.Contracts.V1.Common;
 
 /// <summary>
@@ -28,5 +32,5 @@ public enum AgentStatus
     /// <summary>
     /// Agent has been disabled by an administrator.
     /// </summary>
-    Disabled = 4
+    Disabled = 4,
 }

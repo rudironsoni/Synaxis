@@ -4,6 +4,8 @@
 
 namespace Synaxis.Core.Authorization.Tests;
 
+using System;
+using System.Threading.Tasks;
 using System.Security.Claims;
 using FluentAssertions;
 using Microsoft.AspNetCore.Authorization;

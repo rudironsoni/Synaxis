@@ -46,7 +46,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
                     {
                         try
                         {
-                            await this.AddOrUpdateAccountAsync(eventArgs.Account).ConfigureAwait(false);
+                            _ = this.AddOrUpdateAccountAsync(eventArgs.Account);
                         }
                         catch (Exception ex)
                         {
@@ -92,7 +92,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
             this._timer = new Timer(
                 _ =>
                 {
-                    _ = Task.Run(async () =>
+                    Task.Run(async () =>
                     {
                         try
                         {
@@ -102,7 +102,11 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
                         {
                             this._logger.LogError(ex, "Error in refresh loop");
                         }
-                    });
+                    }).ContinueWith(
+                        task => this._logger.LogError(task.Exception, "Error in refresh loop"),
+                        CancellationToken.None,
+                        TaskContinuationOptions.OnlyOnFaulted,
+                        TaskScheduler.Default);
                 },
                 null,
                 TimeSpan.FromMinutes(1),

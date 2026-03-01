@@ -1,3 +1,7 @@
+// <copyright file="UserStatus.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.Contracts.V2.Common;
 
 /// <summary>
@@ -7,7 +11,7 @@ namespace Synaxis.Contracts.V2.Common;
 /// V2 Breaking Changes:
 /// - Renamed 'Deactivated' to 'Inactive' for clarity
 /// - Removed 'Pending' status (users are now immediately Active or require explicit approval)
-/// - Added 'PendingVerification' for email verification flow
+/// - Added 'PendingVerification' for email verification flow.
 /// </remarks>
 public enum UserStatus
 {
@@ -29,5 +33,5 @@ public enum UserStatus
     /// <summary>
     /// User account has been marked as inactive.
     /// </summary>
-    Inactive = 3
+    Inactive = 3,
 }

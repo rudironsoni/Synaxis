@@ -152,10 +152,9 @@ public sealed class StampLifecycleService
     /// <summary>
     /// Handles the Active phase.
     /// </summary>
-#pragma warning disable S1172 // CancellationToken required by delegate signature
     private Task<StampPhase> HandleActivePhaseAsync(StampConfigMap stamp, CancellationToken cancellationToken)
     {
-#pragma warning restore S1172
+        _ = cancellationToken;
         this._logger.LogInformation("Stamp {Id} is active", stamp.Id);
 
         // Check if TTL has expired

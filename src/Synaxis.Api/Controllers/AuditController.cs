@@ -4,6 +4,8 @@
 
 namespace Synaxis.Api.Controllers;
 
+#nullable enable
+
 using System;
 using System.Security.Claims;
 using System.Threading;
@@ -45,10 +47,10 @@ public class AuditController : ControllerBase
         ArgumentNullException.ThrowIfNull(exportService);
         ArgumentNullException.ThrowIfNull(auditService);
         ArgumentNullException.ThrowIfNull(logger);
-        _queryService = queryService;
-        _exportService = exportService;
-        _auditService = auditService;
-        _logger = logger;
+        this._queryService = queryService;
+        this._exportService = exportService;
+        this._auditService = auditService;
+        this._logger = logger;
     }
 
     /// <summary>
@@ -82,7 +84,7 @@ public class AuditController : ControllerBase
         [FromQuery] int pageSize = 50,
         CancellationToken cancellationToken = default)
     {
-        var authorizationResult = await AuthorizeAccessAsync(organizationId);
+        var authorizationResult = await this.AuthorizeAccessAsync(organizationId);
         if (authorizationResult != null)
         {
             return authorizationResult;
@@ -90,7 +92,7 @@ public class AuditController : ControllerBase
 
         if (organizationId == Guid.Empty)
         {
-            return BadRequest(new { message = "OrganizationId is required" });
+            return this.BadRequest(new { message = "OrganizationId is required" });
         }
 
         var request = new AuditQueryRequest(
@@ -106,11 +108,11 @@ public class AuditController : ControllerBase
 
         if (!request.IsValid())
         {
-            return BadRequest(new { message = "Invalid query parameters" });
+            return this.BadRequest(new { message = "Invalid query parameters" });
         }
 
-        var result = await _queryService.QueryLogsAsync(request, cancellationToken).ConfigureAwait(false);
-        return Ok(result);
+        var result = await this._queryService.QueryLogsAsync(request, cancellationToken).ConfigureAwait(false);
+        return this.Ok(result);
     }
 
     /// <summary>
@@ -126,20 +128,20 @@ public class AuditController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetLog(Guid id, CancellationToken cancellationToken = default)
     {
-        var log = await _queryService.GetLogByIdAsync(id, cancellationToken).ConfigureAwait(false);
+        var log = await this._queryService.GetLogByIdAsync(id, cancellationToken).ConfigureAwait(false);
 
         if (log is null)
         {
-            return NotFound(new { message = $"Audit log {id} not found" });
+            return this.NotFound(new { message = $"Audit log {id} not found" });
         }
 
-        var authorizationResult = await AuthorizeAccessAsync(log.OrganizationId);
+        var authorizationResult = await this.AuthorizeAccessAsync(log.OrganizationId);
         if (authorizationResult != null)
         {
             return authorizationResult;
         }
 
-        return Ok(log);
+        return this.Ok(log);
     }
 
     /// <summary>
@@ -161,7 +163,7 @@ public class AuditController : ControllerBase
         [FromQuery] DateTime? to = null,
         CancellationToken cancellationToken = default)
     {
-        var authorizationResult = await AuthorizeAccessAsync(organizationId);
+        var authorizationResult = await this.AuthorizeAccessAsync(organizationId);
         if (authorizationResult != null)
         {
             return authorizationResult;
@@ -169,11 +171,11 @@ public class AuditController : ControllerBase
 
         if (organizationId == Guid.Empty)
         {
-            return BadRequest(new { message = "OrganizationId is required" });
+            return this.BadRequest(new { message = "OrganizationId is required" });
         }
 
-        var statistics = await _queryService.GetStatisticsAsync(organizationId, from, to, cancellationToken).ConfigureAwait(false);
-        return Ok(statistics);
+        var statistics = await this._queryService.GetStatisticsAsync(organizationId, from, to, cancellationToken).ConfigureAwait(false);
+        return this.Ok(statistics);
     }
 
     /// <summary>
@@ -189,7 +191,7 @@ public class AuditController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> ExportToJson([FromBody] AuditExportRequest request, CancellationToken cancellationToken = default)
     {
-        var authorizationResult = await AuthorizeAccessAsync(request.OrganizationId);
+        var authorizationResult = await this.AuthorizeAccessAsync(request.OrganizationId);
         if (authorizationResult != null)
         {
             return authorizationResult;
@@ -197,17 +199,17 @@ public class AuditController : ControllerBase
 
         if (!request.IsValid())
         {
-            return BadRequest(new { message = "Invalid export request parameters" });
+            return this.BadRequest(new { message = "Invalid export request parameters" });
         }
 
-        var result = await _exportService.ExportToJsonAsync(request, cancellationToken).ConfigureAwait(false);
+        var result = await this._exportService.ExportToJsonAsync(request, cancellationToken).ConfigureAwait(false);
 
-        _logger.LogInformation(
+        this._logger.LogInformation(
             "Exported {RecordCount} audit logs to JSON for organization {OrganizationId}",
             result.RecordCount,
             request.OrganizationId);
 
-        return Ok(result);
+        return this.Ok(result);
     }
 
     /// <summary>
@@ -223,7 +225,7 @@ public class AuditController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> ExportToCsv([FromBody] AuditExportRequest request, CancellationToken cancellationToken = default)
     {
-        var authorizationResult = await AuthorizeAccessAsync(request.OrganizationId);
+        var authorizationResult = await this.AuthorizeAccessAsync(request.OrganizationId);
         if (authorizationResult != null)
         {
             return authorizationResult;
@@ -231,17 +233,17 @@ public class AuditController : ControllerBase
 
         if (!request.IsValid())
         {
-            return BadRequest(new { message = "Invalid export request parameters" });
+            return this.BadRequest(new { message = "Invalid export request parameters" });
         }
 
-        var result = await _exportService.ExportToCsvAsync(request, cancellationToken).ConfigureAwait(false);
+        var result = await this._exportService.ExportToCsvAsync(request, cancellationToken).ConfigureAwait(false);
 
-        _logger.LogInformation(
+        this._logger.LogInformation(
             "Exported {RecordCount} audit logs to CSV for organization {OrganizationId}",
             result.RecordCount,
             request.OrganizationId);
 
-        return Ok(result);
+        return this.Ok(result);
     }
 
     /// <summary>
@@ -257,20 +259,20 @@ public class AuditController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> VerifyIntegrity(Guid id, CancellationToken cancellationToken = default)
     {
-        var log = await _queryService.GetLogByIdAsync(id, cancellationToken).ConfigureAwait(false);
+        var log = await this._queryService.GetLogByIdAsync(id, cancellationToken).ConfigureAwait(false);
 
         if (log is null)
         {
-            return NotFound(new { message = $"Audit log {id} not found" });
+            return this.NotFound(new { message = $"Audit log {id} not found" });
         }
 
-        var authorizationResult = await AuthorizeAccessAsync(log.OrganizationId);
+        var authorizationResult = await this.AuthorizeAccessAsync(log.OrganizationId);
         if (authorizationResult != null)
         {
             return authorizationResult;
         }
 
-        var isValid = await _auditService.VerifyIntegrityAsync(id).ConfigureAwait(false);
+        var isValid = await this._auditService.VerifyIntegrityAsync(id).ConfigureAwait(false);
 
         var result = new IntegrityVerificationResult(
             LogId: id,
@@ -280,10 +282,10 @@ public class AuditController : ControllerBase
 
         if (!isValid)
         {
-            _logger.LogWarning("Integrity verification failed for audit log {LogId}", id);
+            this._logger.LogWarning("Integrity verification failed for audit log {LogId}", id);
         }
 
-        return Ok(result);
+        return this.Ok(result);
     }
 
     /// <summary>
@@ -294,52 +296,39 @@ public class AuditController : ControllerBase
     private Task<IActionResult?> AuthorizeAccessAsync(Guid organizationId)
     {
         // Check if user is authenticated
-        if (User.Identity?.IsAuthenticated != true)
+        if (this.User.Identity?.IsAuthenticated != true)
         {
-            return Task.FromResult<IActionResult?>(Unauthorized(new { message = "Authentication required" }));
+            return Task.FromResult<IActionResult?>(this.Unauthorized(new { message = "Authentication required" }));
         }
 
         // Check for Admin or Auditor role
-        var isAdmin = User.IsInRole("admin") || User.IsInRole("Admin");
-        var isAuditor = User.IsInRole("auditor") || User.IsInRole("Auditor");
+        var isAdmin = this.User.IsInRole("admin") || this.User.IsInRole("Admin");
+        var isAuditor = this.User.IsInRole("auditor") || this.User.IsInRole("Auditor");
 
         if (!isAdmin && !isAuditor)
         {
-            return Task.FromResult<IActionResult?>(Forbid());
+            return Task.FromResult<IActionResult?>(this.Forbid());
         }
 
         // If not admin, check organization access
         if (!isAdmin)
         {
-            var userOrgClaim = User.FindFirst("organization_id")?.Value;
+            var userOrgClaim = this.User.FindFirst("organization_id")?.Value;
             if (string.IsNullOrEmpty(userOrgClaim) || !Guid.TryParse(userOrgClaim, out var userOrgId))
             {
-                return Task.FromResult<IActionResult?>(Forbid());
+                return Task.FromResult<IActionResult?>(this.Forbid());
             }
 
             if (userOrgId != organizationId)
             {
-                _logger.LogWarning(
+                this._logger.LogWarning(
                     "User attempted to access organization {RequestedOrgId} but belongs to {UserOrgId}",
                     organizationId,
                     userOrgId);
-                return Task.FromResult<IActionResult?>(Forbid());
+                return Task.FromResult<IActionResult?>(this.Forbid());
             }
         }
 
         return Task.FromResult<IActionResult?>(null);
     }
 }
-
-/// <summary>
-/// Result of an integrity verification operation.
-/// </summary>
-/// <param name="LogId">The audit log identifier.</param>
-/// <param name="IsValid">Whether the audit log integrity is valid.</param>
-/// <param name="VerifiedAt">When the verification was performed.</param>
-/// <param name="Message">A descriptive message about the verification result.</param>
-public record IntegrityVerificationResult(
-    Guid LogId,
-    bool IsValid,
-    DateTime VerifiedAt,
-    string Message);

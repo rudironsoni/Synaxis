@@ -2,7 +2,6 @@
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable

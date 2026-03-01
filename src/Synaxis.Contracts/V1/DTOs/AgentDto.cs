@@ -1,6 +1,10 @@
-using Synaxis.Contracts.V1.Common;
+// <copyright file="AgentDto.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
 namespace Synaxis.Contracts.V1.DTOs;
+
+using Synaxis.Contracts.V1.Common;
 
 /// <summary>
 /// Data transfer object for an agent.
@@ -10,67 +14,67 @@ namespace Synaxis.Contracts.V1.DTOs;
 public record AgentDto
 {
     /// <summary>
-    /// Unique identifier of the agent.
+    /// Gets the unique identifier of the agent.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("id")]
     public required Guid Id { get; init; }
 
     /// <summary>
-    /// Name of the agent.
+    /// Gets the name of the agent.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("name")]
     public required string Name { get; init; }
 
     /// <summary>
-    /// Description of the agent.
+    /// Gets the description of the agent.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("description")]
     public string? Description { get; init; }
 
     /// <summary>
-    /// Type of the agent.
+    /// Gets the type of the agent.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("agentType")]
     public required string AgentType { get; init; }
 
     /// <summary>
-    /// Current status of the agent.
+    /// Gets the current status of the agent.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("status")]
     public required AgentStatus Status { get; init; }
 
     /// <summary>
-    /// Configuration settings for the agent.
+    /// Gets the configuration settings for the agent.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("configuration")]
-    public Dictionary<string, object>? Configuration { get; init; }
+    public IReadOnlyDictionary<string, object>? Configuration { get; init; }
 
     /// <summary>
-    /// Tags for categorizing the agent.
+    /// Gets the tags for categorizing the agent.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("tags")]
     public IReadOnlyList<string> Tags { get; init; } = Array.Empty<string>();
 
     /// <summary>
-    /// Identifier of the user who created the agent.
+    /// Gets the identifier of the user who created the agent.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("createdByUserId")]
     public required string CreatedByUserId { get; init; }
 
     /// <summary>
-    /// Timestamp when the agent was created.
+    /// Gets the timestamp when the agent was created.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("createdAt")]
     public required DateTimeOffset CreatedAt { get; init; }
 
     /// <summary>
-    /// Timestamp when the agent was last updated.
+    /// Gets the timestamp when the agent was last updated.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("updatedAt")]
     public DateTimeOffset? UpdatedAt { get; init; }
 
     /// <summary>
-    /// Total number of executions for this agent.
+    /// Gets the total number of executions for this agent.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("executionCount")]
     public int ExecutionCount { get; init; }

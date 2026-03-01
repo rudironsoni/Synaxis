@@ -1,5 +1,4 @@
 using FluentAssertions;
-using Synaxis.Contracts.V1.Common;
 using Synaxis.Contracts.V1.Commands;
 using Synaxis.Contracts.V1.DomainEvents;
 using Synaxis.Contracts.V1.DTOs;
@@ -22,7 +21,7 @@ public class RecordEqualityTests
             Timestamp = timestamp,
             Email = "test@example.com",
             DisplayName = "Test User",
-            Status = UserStatus.Active,
+            Status = Synaxis.Contracts.V1.Common.UserStatus.Active,
             Version = 1
         };
 
@@ -33,7 +32,7 @@ public class RecordEqualityTests
             Timestamp = timestamp,
             Email = "test@example.com",
             DisplayName = "Test User",
-            Status = UserStatus.Active,
+            Status = Synaxis.Contracts.V1.Common.UserStatus.Active,
             Version = 1
         };
 
@@ -49,7 +48,7 @@ public class RecordEqualityTests
             AggregateId = Guid.NewGuid(),
             Email = "test1@example.com",
             DisplayName = "Test User 1",
-            Status = UserStatus.Active
+            Status = Synaxis.Contracts.V1.Common.UserStatus.Active
         };
 
         var event2 = new UserCreated
@@ -57,7 +56,7 @@ public class RecordEqualityTests
             AggregateId = Guid.NewGuid(),
             Email = "test2@example.com",
             DisplayName = "Test User 2",
-            Status = UserStatus.Active
+            Status = Synaxis.Contracts.V1.Common.UserStatus.Active
         };
 
         event1.Should().NotBe(event2);
@@ -75,7 +74,7 @@ public class RecordEqualityTests
             Id = id,
             Email = "user@example.com",
             DisplayName = "User",
-            Status = UserStatus.Active,
+            Status = Synaxis.Contracts.V1.Common.UserStatus.Active,
             CreatedAt = now
         };
 
@@ -84,7 +83,7 @@ public class RecordEqualityTests
             Id = id,
             Email = "user@example.com",
             DisplayName = "User",
-            Status = UserStatus.Active,
+            Status = Synaxis.Contracts.V1.Common.UserStatus.Active,
             CreatedAt = now
         };
 
@@ -133,7 +132,7 @@ public class RecordEqualityTests
                 Id = Guid.NewGuid(),
                 Email = "user@example.com",
                 DisplayName = "User",
-                Status = UserStatus.Active,
+                Status = Synaxis.Contracts.V1.Common.UserStatus.Active,
                 CreatedAt = DateTimeOffset.UtcNow
             }
         };
@@ -254,7 +253,7 @@ public class RecordEqualityTests
             Id = Guid.NewGuid(),
             Email = "original@example.com",
             DisplayName = "Original",
-            Status = UserStatus.Active,
+            Status = Synaxis.Contracts.V1.Common.UserStatus.Active,
             CreatedAt = DateTimeOffset.UtcNow
         };
 

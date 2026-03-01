@@ -28,19 +28,19 @@ public class SuspiciousActivityDetectedHandler : INotificationHandler<AuditLogCr
     {
         ArgumentNullException.ThrowIfNull(alertService);
         ArgumentNullException.ThrowIfNull(logger);
-        _alertService = alertService;
-        _logger = logger;
+        this._alertService = alertService;
+        this._logger = logger;
     }
 
     /// <inheritdoc/>
-    public async Task Handle(AuditLogCreated notification, CancellationToken cancellationToken)
+    public Task Handle(AuditLogCreated notification, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(notification);
 
-        _logger.LogDebug(
+        this._logger.LogDebug(
             "Evaluating audit log {LogId} for suspicious activity",
             notification.AuditLog.Id);
 
-        await _alertService.EvaluateForAlertsAsync(notification.AuditLog, cancellationToken).ConfigureAwait(false);
+        return this._alertService.EvaluateForAlertsAsync(notification.AuditLog, cancellationToken);
     }
 }

@@ -47,8 +47,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.OpenAi
                 throw new ArgumentNullException(nameof(apiKey));
             }
 
-            var trimmed = baseUrl.TrimEnd('/');
-            var url = trimmed + "/v1/models";
+            var baseUri = BuildBaseUri(baseUrl);
+            var url = new Uri(baseUri, "/v1/models");
 
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
@@ -62,7 +62,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.OpenAi
                     return new List<string>();
                 }
 
-                var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
+                using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
                 var dto = await JsonSerializer.DeserializeAsync<OpenAiModelsResponse>(stream, cancellationToken: ct).ConfigureAwait(false);
                 if (dto == null || dto.Data == null)
                 {
@@ -76,6 +76,16 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.OpenAi
                 this._logger.LogError(ex, "Error discovering models from {Url}", url);
                 return new List<string>();
             }
+        }
+
+        private static Uri BuildBaseUri(string baseUrl)
+        {
+            if (Uri.TryCreate(baseUrl, UriKind.Absolute, out var uri))
+            {
+                return uri;
+            }
+
+            throw new ArgumentException("Base URL must be an absolute URI.", nameof(baseUrl));
         }
     }
 }

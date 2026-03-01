@@ -12,6 +12,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
     /// </summary>
     public static class NvidiaExtensions
     {
+        private static readonly Uri NvidiaBaseUri = new("https://integrate.api.nvidia.com/v1");
+
         /// <summary>
         /// Adds an NVIDIA chat client to the service collection.
         /// </summary>
@@ -24,7 +26,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
         {
             services.AddKeyedSingleton<IChatClient>(serviceKey, (_, _) => new GenericOpenAiChatClient(
                 apiKey,
-                new Uri("https://integrate.api.nvidia.com/v1"),
+                NvidiaBaseUri,
                 modelId));
 
             return services;

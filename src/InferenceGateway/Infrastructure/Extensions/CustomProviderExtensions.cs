@@ -26,11 +26,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
         /// <returns>The service collection for chaining.</returns>
         public static IServiceCollection AddCohere(this IServiceCollection services, string apiKey, string modelId)
         {
+            ArgumentNullException.ThrowIfNull(services);
+
+            services.AddHttpClient();
+            services.AddHttpClient<CohereChatClient>();
             services.AddChatClient(sp =>
-            {
-                var httpClient = new HttpClient();
-                return new CohereChatClient(httpClient, modelId, apiKey);
-            });
+                ActivatorUtilities.CreateInstance<CohereChatClient>(sp, modelId, apiKey));
             return services;
         }
 
@@ -42,11 +43,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
         /// <returns>The service collection for chaining.</returns>
         public static IServiceCollection AddPollinations(this IServiceCollection services, string? modelId = null)
         {
+            ArgumentNullException.ThrowIfNull(services);
+
+            services.AddHttpClient();
+            services.AddHttpClient<PollinationsChatClient>();
             services.AddChatClient(sp =>
-            {
-                var httpClient = new HttpClient();
-                return new PollinationsChatClient(httpClient, modelId);
-            });
+                modelId == null
+                    ? ActivatorUtilities.CreateInstance<PollinationsChatClient>(sp)
+                    : ActivatorUtilities.CreateInstance<PollinationsChatClient>(sp, modelId));
             return services;
         }
 
@@ -60,11 +64,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
         /// <returns>The service collection for chaining.</returns>
         public static IServiceCollection AddCloudflare(this IServiceCollection services, string apiKey, string accountId, string modelId)
         {
+            ArgumentNullException.ThrowIfNull(services);
+
+            services.AddHttpClient();
+            services.AddHttpClient<CloudflareChatClient>();
             services.AddChatClient(sp =>
-            {
-                var httpClient = new HttpClient();
-                return new CloudflareChatClient(httpClient, accountId, modelId, apiKey);
-            });
+                ActivatorUtilities.CreateInstance<CloudflareChatClient>(sp, accountId, modelId, apiKey));
             return services;
         }
 
@@ -76,6 +81,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
         /// <returns>The service collection for chaining.</returns>
         public static IServiceCollection AddGitHubCopilotSdk(this IServiceCollection services, string name = "GitHubCopilot")
         {
+            ArgumentNullException.ThrowIfNull(services);
+
             // Register underlying CopilotClient via adapter reflection as singleton
             services.AddSingleton<ICopilotSdkAdapter, CopilotSdkAdapter>();
 
@@ -113,11 +120,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
         /// <returns>The service collection for chaining.</returns>
         public static IServiceCollection AddDuckDuckGo(this IServiceCollection services, string name, string modelId)
         {
+            ArgumentNullException.ThrowIfNull(services);
+
             services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>
-            {
-                var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
-                return new Synaxis.InferenceGateway.Infrastructure.External.DuckDuckGo.DuckDuckGoChatClient(httpClient, modelId);
-            });
+                ActivatorUtilities.CreateInstance<Synaxis.InferenceGateway.Infrastructure.External.DuckDuckGo.DuckDuckGoChatClient>(sp, modelId));
             return services;
         }
 
@@ -130,11 +136,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
         /// <returns>The service collection for chaining.</returns>
         public static IServiceCollection AddAiHorde(this IServiceCollection services, string name, string apiKey)
         {
+            ArgumentNullException.ThrowIfNull(services);
+
             services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>
-            {
-                var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
-                return new Synaxis.InferenceGateway.Infrastructure.External.AiHorde.AiHordeChatClient(httpClient, apiKey);
-            });
+                ActivatorUtilities.CreateInstance<Synaxis.InferenceGateway.Infrastructure.External.AiHorde.AiHordeChatClient>(sp, apiKey));
             return services;
         }
     }

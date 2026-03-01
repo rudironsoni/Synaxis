@@ -361,15 +361,8 @@ namespace Synaxis.Api.Controllers
 
         private static string GetClientIpAddress(Microsoft.AspNetCore.Http.HttpContext context)
         {
-            // Try X-Forwarded-For first (for proxied requests)
-            var forwardedFor = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
-            if (!string.IsNullOrEmpty(forwardedFor))
-            {
-                var ips = forwardedFor.Split(',');
-                return ips[0].Trim();
-            }
+            ArgumentNullException.ThrowIfNull(context);
 
-            // Fall back to direct connection IP
             return context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
         }
     }

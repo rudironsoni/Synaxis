@@ -4,7 +4,12 @@
 
 namespace Synaxis.Agents.IntegrationTests;
 
+using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,7 +24,6 @@ using Synaxis.Infrastructure.EventSourcing;
 public class TestEventStore : EventStore
 {
     private readonly ConcurrentDictionary<string, List<IDomainEvent>> Streams = new(StringComparer.Ordinal);
-    private readonly ConcurrentDictionary<string, int> StreamVersions = new(StringComparer.Ordinal);
 
     public override Task AppendAsync(
         string streamId,
@@ -37,11 +41,7 @@ public class TestEventStore : EventStore
         }
 
         // Optimistic concurrency check
-        var currentVersion = StreamVersions.GetOrAdd(streamId, 0);
-        if (currentVersion != expectedVersion)
-        {
-            throw new ConcurrencyException(streamId, expectedVersion, currentVersion);
-        }
+        this.ValidateConcurrency(streamId, expectedVersion);
 
         var stream = Streams.GetOrAdd(streamId, _ => new List<IDomainEvent>());
 
@@ -51,7 +51,7 @@ public class TestEventStore : EventStore
         }
 
         // Update version
-        StreamVersions.AddOrUpdate(streamId, eventList.Count, (_, v) => v + eventList.Count);
+        this.UpdateStreamVersion(streamId, eventList.Count);
 
         return Task.CompletedTask;
     }
@@ -95,14 +95,13 @@ public class TestEventStore : EventStore
     public override Task DeleteAsync(string streamId, CancellationToken cancellationToken = default)
     {
         Streams.TryRemove(streamId, out _);
-        StreamVersions.TryRemove(streamId, out _);
+        this.ResetStreamVersion(streamId);
         return Task.CompletedTask;
     }
 
     public void Clear()
     {
         Streams.Clear();
-        StreamVersions.Clear();
     }
 }
 

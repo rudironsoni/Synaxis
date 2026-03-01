@@ -1,3 +1,7 @@
+// <copyright file="GetUserByIdQuery.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.Contracts.V1.Queries;
 
 /// <summary>
@@ -8,13 +12,13 @@ namespace Synaxis.Contracts.V1.Queries;
 public record GetUserByIdQuery : QueryBase
 {
     /// <summary>
-    /// Identifier of the user to retrieve.
+    /// Gets the identifier of the user to retrieve.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("targetUserId")]
     public required Guid TargetUserId { get; init; }
 
     /// <summary>
-    /// Whether to include soft-deleted users.
+    /// Gets a value indicating whether to include soft-deleted users.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("includeDeleted")]
     public bool IncludeDeleted { get; init; }

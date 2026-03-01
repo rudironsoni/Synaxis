@@ -178,7 +178,7 @@ public class AgentConfigurationRepositoryTests
     public async Task SaveAsync_NullAgent_ThrowsArgumentNullException()
     {
         // Arrange
-        AgentConfiguration? agent = null;
+        AgentConfiguration agent = null!;
 
         // Act
         Func<Task> act = async () => await _repository.SaveAsync(agent!);

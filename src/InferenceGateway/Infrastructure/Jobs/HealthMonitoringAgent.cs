@@ -96,7 +96,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
         private static Task<List<OrgProviderDto>> GetEnabledProvidersAsync(ControlPlaneDbContext db, CancellationToken ct)
         {
             return db.Database.SqlQuery<OrgProviderDto>(
-                $"SELECT \"Id\", \"OrganizationId\", \"IsEnabled\", \"HealthCheckEnabled\" FROM operations.\"OrganizationProviders\" WHERE \"IsEnabled\" = true AND \"HealthCheckEnabled\" = true").ToListAsync(ct);
+                    $"SELECT \"Id\", \"OrganizationId\", \"IsEnabled\", \"HealthCheckEnabled\" FROM operations.\"OrganizationProviders\" WHERE \"IsEnabled\" = true AND \"HealthCheckEnabled\" = true")
+                .ToListAsync(ct);
         }
 
         private async Task<CheckResult> CheckProviderHealthAsync(

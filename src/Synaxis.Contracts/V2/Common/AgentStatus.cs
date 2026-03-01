@@ -1,3 +1,7 @@
+// <copyright file="AgentStatus.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.Contracts.V2.Common;
 
 /// <summary>
@@ -7,7 +11,7 @@ namespace Synaxis.Contracts.V2.Common;
 /// V2 Breaking Changes:
 /// - Renamed 'Creating' to 'Provisioning' to better reflect cloud-native terminology
 /// - Split 'Executing' into 'Running' and 'Processing' for finer granularity
-/// - Added 'Draining' status for graceful shutdown
+/// - Added 'Draining' status for graceful shutdown.
 /// </remarks>
 public enum AgentStatus
 {
@@ -44,5 +48,5 @@ public enum AgentStatus
     /// <summary>
     /// Agent has been disabled by an administrator.
     /// </summary>
-    Disabled = 6
+    Disabled = 6,
 }

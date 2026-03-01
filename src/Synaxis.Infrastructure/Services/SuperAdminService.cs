@@ -91,7 +91,7 @@ namespace Synaxis.Infrastructure.Services
 
             await this.ValidateUserExistsAsync(request.UserId, request.OrganizationId).ConfigureAwait(false);
             var tokenData = this.CreateTokenData(request);
-            var token = GenerateSecureToken(tokenData);
+            var token = this.GenerateSecureToken(tokenData);
 
             await this.LogImpersonationEventAsync(request, tokenData).ConfigureAwait(false);
 

@@ -39,10 +39,10 @@ public sealed class RabbitMqMessageBus : IMessageBus, IAsyncDisposable
         string connectionString,
         ILogger<RabbitMqMessageBus> logger)
     {
-        _connectionString = connectionString;
+        this._connectionString = connectionString;
         ArgumentNullException.ThrowIfNull(logger);
-        _logger = logger;
-        _consumers = new ConcurrentDictionary<string, object>(StringComparer.Ordinal);
+        this._logger = logger;
+        this._consumers = new ConcurrentDictionary<string, object>(StringComparer.Ordinal);
     }
 
     /// <summary>
@@ -69,27 +69,27 @@ public sealed class RabbitMqMessageBus : IMessageBus, IAsyncDisposable
     /// <returns>A task representing the asynchronous operation.</returns>
     private async Task InitializeAsync(CancellationToken cancellationToken)
     {
-        if (_initialized)
+        if (this._initialized)
         {
             return;
         }
 
-        var factory = new ConnectionFactory { Uri = new Uri(_connectionString) };
+        var factory = new ConnectionFactory { Uri = new Uri(this._connectionString) };
 
         // Dispose any existing connection/channel before creating new ones
-        if (_channel != null)
+        if (this._channel != null)
         {
-            await _channel.DisposeAsync().ConfigureAwait(false);
+            await this._channel.DisposeAsync().ConfigureAwait(false);
         }
 
-        if (_connection != null)
+        if (this._connection != null)
         {
-            await _connection.DisposeAsync().ConfigureAwait(false);
+            await this._connection.DisposeAsync().ConfigureAwait(false);
         }
 
-        _connection = await factory.CreateConnectionAsync(cancellationToken).ConfigureAwait(false);
-        _channel = await _connection.CreateChannelAsync(new CreateChannelOptions(false, false), cancellationToken).ConfigureAwait(false);
-        _initialized = true;
+        this._connection = await factory.CreateConnectionAsync(cancellationToken).ConfigureAwait(false);
+        this._channel = await this._connection.CreateChannelAsync(new CreateChannelOptions(false, false), cancellationToken).ConfigureAwait(false);
+        this._initialized = true;
     }
 
     /// <inheritdoc />
@@ -99,7 +99,7 @@ public sealed class RabbitMqMessageBus : IMessageBus, IAsyncDisposable
         where TMessage : class
     {
         var topic = typeof(TMessage).Name;
-        return PublishAsync(topic, message, cancellationToken);
+        return this.PublishAsync(topic, message, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -109,20 +109,20 @@ public sealed class RabbitMqMessageBus : IMessageBus, IAsyncDisposable
         CancellationToken cancellationToken = default)
         where TMessage : class
     {
-        if (_channel == null)
+        if (this._channel == null)
         {
             throw new InvalidOperationException("RabbitMQ channel is not initialized.");
         }
 
-        await _channel.ExchangeDeclareAsync(topic, ExchangeType.Topic, durable: true, cancellationToken: cancellationToken).ConfigureAwait(false);
+        await this._channel.ExchangeDeclareAsync(topic, ExchangeType.Topic, durable: true, cancellationToken: cancellationToken).ConfigureAwait(false);
 
         var messageJson = JsonConvert.SerializeObject(message);
         var body = Encoding.UTF8.GetBytes(messageJson);
 
         var properties = new BasicProperties();
-        await _channel.BasicPublishAsync(topic, topic, false, properties, body, cancellationToken: cancellationToken).ConfigureAwait(false);
+        await this._channel.BasicPublishAsync(topic, topic, false, properties, body, cancellationToken: cancellationToken).ConfigureAwait(false);
 
-        _logger.LogInformation("Published message of type {MessageType} to topic {Topic}", typeof(TMessage).Name, topic);
+        this._logger.LogInformation("Published message of type {MessageType} to topic {Topic}", typeof(TMessage).Name, topic);
     }
 
     /// <inheritdoc />
@@ -132,7 +132,7 @@ public sealed class RabbitMqMessageBus : IMessageBus, IAsyncDisposable
         where TMessage : class
     {
         var topic = typeof(TMessage).Name;
-        return SubscribeAsync(topic, handler, cancellationToken);
+        return this.SubscribeAsync(topic, handler, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -142,18 +142,18 @@ public sealed class RabbitMqMessageBus : IMessageBus, IAsyncDisposable
         CancellationToken cancellationToken = default)
         where TMessage : class
     {
-        if (_channel == null)
+        if (this._channel == null)
         {
             throw new InvalidOperationException("RabbitMQ channel is not initialized.");
         }
 
-        await _channel.ExchangeDeclareAsync(topic, ExchangeType.Topic, durable: true, cancellationToken: cancellationToken).ConfigureAwait(false);
+        await this._channel.ExchangeDeclareAsync(topic, ExchangeType.Topic, durable: true, cancellationToken: cancellationToken).ConfigureAwait(false);
 
         var queueName = $"{topic}.{Guid.NewGuid():N}";
-        await _channel.QueueDeclareAsync(queueName, durable: true, exclusive: false, autoDelete: false, cancellationToken: cancellationToken).ConfigureAwait(false);
-        await _channel.QueueBindAsync(queueName, topic, topic, cancellationToken: cancellationToken).ConfigureAwait(false);
+        await this._channel.QueueDeclareAsync(queueName, durable: true, exclusive: false, autoDelete: false, cancellationToken: cancellationToken).ConfigureAwait(false);
+        await this._channel.QueueBindAsync(queueName, topic, topic, cancellationToken: cancellationToken).ConfigureAwait(false);
 
-        var consumer = new AsyncEventingBasicConsumer(_channel);
+        var consumer = new AsyncEventingBasicConsumer(this._channel);
         consumer.ReceivedAsync += async (model, ea) =>
         {
             try
@@ -165,20 +165,20 @@ public sealed class RabbitMqMessageBus : IMessageBus, IAsyncDisposable
                 if (message != null)
                 {
                     await handler(message).ConfigureAwait(false);
-                    await _channel.BasicAckAsync(ea.DeliveryTag, multiple: false, cancellationToken: cancellationToken).ConfigureAwait(false);
+                    await this._channel.BasicAckAsync(ea.DeliveryTag, multiple: false, cancellationToken: cancellationToken).ConfigureAwait(false);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing message from topic {Topic}", topic);
-                await _channel.BasicNackAsync(ea.DeliveryTag, multiple: false, requeue: true, cancellationToken: cancellationToken).ConfigureAwait(false);
+                this._logger.LogError(ex, "Error processing message from topic {Topic}", topic);
+                await this._channel.BasicNackAsync(ea.DeliveryTag, multiple: false, requeue: true, cancellationToken: cancellationToken).ConfigureAwait(false);
             }
         };
 
-        _ = await _channel.BasicConsumeAsync(queueName, autoAck: false, consumer: consumer, cancellationToken: cancellationToken).ConfigureAwait(false);
-        _consumers.TryAdd(queueName, consumer);
+        _ = await this._channel.BasicConsumeAsync(queueName, autoAck: false, consumer: consumer, cancellationToken: cancellationToken).ConfigureAwait(false);
+        this._consumers.TryAdd(queueName, consumer);
 
-        _logger.LogInformation("Subscribed to topic {Topic} on queue {Queue}", topic, queueName);
+        this._logger.LogInformation("Subscribed to topic {Topic} on queue {Queue}", topic, queueName);
     }
 
     /// <summary>
@@ -187,21 +187,21 @@ public sealed class RabbitMqMessageBus : IMessageBus, IAsyncDisposable
     /// <returns>A <see cref="ValueTask"/> representing the asynchronous operation.</returns>
     public async ValueTask DisposeAsync()
     {
-        if (_disposed)
+        if (this._disposed)
         {
             return;
         }
 
-        if (_channel != null)
+        if (this._channel != null)
         {
-            await _channel.DisposeAsync().ConfigureAwait(false);
+            await this._channel.DisposeAsync().ConfigureAwait(false);
         }
 
-        if (_connection != null)
+        if (this._connection != null)
         {
-            await _connection.DisposeAsync().ConfigureAwait(false);
+            await this._connection.DisposeAsync().ConfigureAwait(false);
         }
 
-        _disposed = true;
+        this._disposed = true;
     }
 }

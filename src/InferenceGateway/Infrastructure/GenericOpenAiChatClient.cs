@@ -17,7 +17,7 @@ namespace Synaxis.InferenceGateway.Infrastructure
     /// <summary>
     /// A generic OpenAI chat client that wraps the OpenAI SDK and supports custom endpoints and headers.
     /// </summary>
-    public class GenericOpenAiChatClient : IChatClient
+    public sealed class GenericOpenAiChatClient : IChatClient
     {
         private readonly IChatClient _innerClient;
 

@@ -1,3 +1,7 @@
+// <copyright file="GetAgentByIdQuery.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.Contracts.V2.Queries;
 
 /// <summary>
@@ -8,25 +12,25 @@ namespace Synaxis.Contracts.V2.Queries;
 public record GetAgentByIdQuery : QueryBase
 {
     /// <summary>
-    /// Identifier of the agent to retrieve.
+    /// Gets the identifier of the agent to retrieve.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("agentId")]
     public required Guid TargetAgentId { get; init; }
 
     /// <summary>
-    /// Whether to include configuration details.
+    /// Gets a value indicating whether to include configuration details.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("includeConfiguration")]
     public bool IncludeConfiguration { get; init; } = true;
 
     /// <summary>
-    /// Whether to include resource requirements.
+    /// Gets a value indicating whether to include resource requirements.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("includeResources")]
     public bool IncludeResources { get; init; } = true;
 
     /// <summary>
-    /// Whether to include execution statistics.
+    /// Gets a value indicating whether to include execution statistics.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("includeStats")]
     public bool IncludeStats { get; init; }

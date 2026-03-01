@@ -25,10 +25,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
     /// </summary>
     public class AntigravityAuthManager : IAntigravityAuthManager
     {
-        private const string AuthorizationEndpoint = "https://accounts.google.com/o/oauth2/v2/auth";
-        private const string TokenEndpoint = "https://oauth2.googleapis.com/token";
-        private const string UserInfoEndpoint = "https://www.googleapis.com/oauth2/v1/userinfo?alt=json";
         private const string DefaultProjectId = "rising-fact-p41fc";
+        private const string DefaultRedirectUrl = "http://localhost:51121/oauth/antigravity/callback";
+
+        private static readonly Uri AuthorizationEndpoint = new("https://accounts.google.com/o/oauth2/v2/auth");
+        private static readonly Uri TokenEndpoint = new("https://oauth2.googleapis.com/token");
+        private static readonly Uri UserInfoEndpoint = new("https://www.googleapis.com/oauth2/v1/userinfo?alt=json");
 
         private static readonly string[] Scopes =
         {
@@ -39,18 +41,18 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
             "https://www.googleapis.com/auth/experimentsandconfigs",
         };
 
-        private static readonly string[] LoadEndpoints =
+        private static readonly Uri[] LoadEndpoints =
         {
-            "https://cloudcode-pa.googleapis.com",
-            "https://daily-cloudcode-pa.sandbox.googleapis.com",
-            "https://autopush-cloudcode-pa.sandbox.googleapis.com",
+            GetCloudCodeBaseUri(),
+            GetDailyCloudCodeBaseUri(),
+            GetAutopushCloudCodeBaseUri(),
         };
 
-        private static readonly string[] FallbackEndpoints =
+        private static readonly Uri[] FallbackEndpoints =
         {
-            "https://daily-cloudcode-pa.sandbox.googleapis.com",
-            "https://autopush-cloudcode-pa.sandbox.googleapis.com",
-            "https://cloudcode-pa.googleapis.com",
+            GetDailyCloudCodeBaseUri(),
+            GetAutopushCloudCodeBaseUri(),
+            GetCloudCodeBaseUri(),
         };
 
         private readonly ILogger<AntigravityAuthManager> _logger;
@@ -298,7 +300,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
         // Legacy Interactive Login (kept for CLI convenience)
         private async Task InteractiveLoginAsync(CancellationToken cancellationToken)
         {
-            var redirectUri = "http://localhost:51121/oauth/antigravity/callback";
+            var redirectUri = DefaultRedirectUrl;
             var url = await this.StartAuthFlowAsync(redirectUri).ConfigureAwait(false);
 
             Console.WriteLine("----------------------------------------------------------------");
@@ -343,13 +345,19 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
                 ["prompt"] = "consent",
             };
 
-            return $"{AuthorizationEndpoint}?{BuildQueryString(parameters)}";
+            return new UriBuilder(AuthorizationEndpoint) { Query = BuildQueryString(parameters) }.Uri.ToString();
         }
 
         private static string BuildQueryString(IDictionary<string, string> parameters)
         {
             return string.Join("&", parameters.Select(kvp => $"{Uri.EscapeDataString(kvp.Key)}={Uri.EscapeDataString(kvp.Value)}"));
         }
+
+        private static Uri GetCloudCodeBaseUri() => new("https://cloudcode-pa.googleapis.com");
+
+        private static Uri GetDailyCloudCodeBaseUri() => new("https://daily-cloudcode-pa.sandbox.googleapis.com");
+
+        private static Uri GetAutopushCloudCodeBaseUri() => new("https://autopush-cloudcode-pa.sandbox.googleapis.com");
 
         private static string GenerateCodeVerifier()
         {

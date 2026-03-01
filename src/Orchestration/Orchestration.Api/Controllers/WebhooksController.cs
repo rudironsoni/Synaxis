@@ -1,8 +1,12 @@
+// <copyright file="WebhooksController.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
+namespace Orchestration.Api.Controllers;
+
 using Microsoft.AspNetCore.Mvc;
 using Orchestration.Application.DTOs;
 using Orchestration.Application.Interfaces;
-
-namespace Orchestration.Api.Controllers;
 
 /// <summary>
 /// API controller for managing webhooks.
@@ -19,7 +23,7 @@ public class WebhooksController : ControllerBase
     /// <param name="webhookService">The webhook service.</param>
     public WebhooksController(IWebhookService webhookService)
     {
-        _webhookService = webhookService ?? throw new ArgumentNullException(nameof(webhookService));
+        this._webhookService = webhookService ?? throw new ArgumentNullException(nameof(webhookService));
     }
 
     /// <summary>
@@ -34,8 +38,8 @@ public class WebhooksController : ControllerBase
         [FromQuery] WebhookQueryRequest request,
         CancellationToken cancellationToken)
     {
-        var webhooks = await _webhookService.GetWebhooksAsync(request, cancellationToken);
-        return Ok(webhooks);
+        var webhooks = await this._webhookService.GetWebhooksAsync(request, cancellationToken);
+        return this.Ok(webhooks);
     }
 
     /// <summary>
@@ -49,10 +53,13 @@ public class WebhooksController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetWebhook(Guid id, CancellationToken cancellationToken)
     {
-        var webhook = await _webhookService.GetWebhookByIdAsync(id, cancellationToken);
+        var webhook = await this._webhookService.GetWebhookByIdAsync(id, cancellationToken);
         if (webhook == null)
-            return NotFound();
-        return Ok(webhook);
+        {
+            return this.NotFound();
+        }
+
+        return this.Ok(webhook);
     }
 
     /// <summary>
@@ -68,8 +75,8 @@ public class WebhooksController : ControllerBase
         [FromBody] CreateWebhookRequest request,
         CancellationToken cancellationToken)
     {
-        var webhook = await _webhookService.CreateWebhookAsync(request, cancellationToken);
-        return CreatedAtAction(nameof(GetWebhook), new { id = webhook.Id }, webhook);
+        var webhook = await this._webhookService.CreateWebhookAsync(request, cancellationToken).ConfigureAwait(false);
+        return this.CreatedAtAction(nameof(this.GetWebhook), new { id = webhook.Id }, webhook);
     }
 
     /// <summary>
@@ -88,10 +95,13 @@ public class WebhooksController : ControllerBase
         [FromBody] UpdateWebhookRequest request,
         CancellationToken cancellationToken)
     {
-        var result = await _webhookService.UpdateWebhookAsync(id, request, cancellationToken);
+        var result = await this._webhookService.UpdateWebhookAsync(id, request, cancellationToken);
         if (!result)
-            return NotFound();
-        return NoContent();
+        {
+            return this.NotFound();
+        }
+
+        return this.NoContent();
     }
 
     /// <summary>
@@ -105,10 +115,13 @@ public class WebhooksController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteWebhook(Guid id, CancellationToken cancellationToken)
     {
-        var result = await _webhookService.DeleteWebhookAsync(id, cancellationToken);
+        var result = await this._webhookService.DeleteWebhookAsync(id, cancellationToken);
         if (!result)
-            return NotFound();
-        return NoContent();
+        {
+            return this.NotFound();
+        }
+
+        return this.NoContent();
     }
 
     /// <summary>
@@ -122,9 +135,12 @@ public class WebhooksController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> TestWebhook(Guid id, CancellationToken cancellationToken)
     {
-        var result = await _webhookService.TestWebhookAsync(id, cancellationToken);
+        var result = await this._webhookService.TestWebhookAsync(id, cancellationToken);
         if (result == null)
-            return NotFound();
-        return Ok(result);
+        {
+            return this.NotFound();
+        }
+
+        return this.Ok(result);
     }
 }

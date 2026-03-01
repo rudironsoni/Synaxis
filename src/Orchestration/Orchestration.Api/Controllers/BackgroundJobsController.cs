@@ -1,8 +1,12 @@
+// <copyright file="BackgroundJobsController.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
+namespace Orchestration.Api.Controllers;
+
 using Microsoft.AspNetCore.Mvc;
 using Orchestration.Application.DTOs;
 using Orchestration.Application.Interfaces;
-
-namespace Orchestration.Api.Controllers;
 
 /// <summary>
 /// API controller for managing background jobs.
@@ -19,7 +23,7 @@ public class BackgroundJobsController : ControllerBase
     /// <param name="jobService">The background job service.</param>
     public BackgroundJobsController(IBackgroundJobService jobService)
     {
-        _jobService = jobService ?? throw new ArgumentNullException(nameof(jobService));
+        this._jobService = jobService ?? throw new ArgumentNullException(nameof(jobService));
     }
 
     /// <summary>
@@ -34,8 +38,8 @@ public class BackgroundJobsController : ControllerBase
         [FromQuery] JobQueryRequest request,
         CancellationToken cancellationToken)
     {
-        var jobs = await _jobService.GetJobsAsync(request, cancellationToken);
-        return Ok(jobs);
+        var jobs = await this._jobService.GetJobsAsync(request, cancellationToken);
+        return this.Ok(jobs);
     }
 
     /// <summary>
@@ -49,10 +53,13 @@ public class BackgroundJobsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetJob(Guid id, CancellationToken cancellationToken)
     {
-        var job = await _jobService.GetJobByIdAsync(id, cancellationToken);
+        var job = await this._jobService.GetJobByIdAsync(id, cancellationToken);
         if (job == null)
-            return NotFound();
-        return Ok(job);
+        {
+            return this.NotFound();
+        }
+
+        return this.Ok(job);
     }
 
     /// <summary>
@@ -68,8 +75,8 @@ public class BackgroundJobsController : ControllerBase
         [FromBody] CreateJobRequest request,
         CancellationToken cancellationToken)
     {
-        var job = await _jobService.CreateJobAsync(request, cancellationToken);
-        return CreatedAtAction(nameof(GetJob), new { id = job.Id }, job);
+        var job = await this._jobService.CreateJobAsync(request, cancellationToken).ConfigureAwait(false);
+        return this.CreatedAtAction(nameof(this.GetJob), new { id = job.Id }, job);
     }
 
     /// <summary>
@@ -84,10 +91,13 @@ public class BackgroundJobsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> CancelJob(Guid id, CancellationToken cancellationToken)
     {
-        var result = await _jobService.CancelJobAsync(id, cancellationToken);
+        var result = await this._jobService.CancelJobAsync(id, cancellationToken);
         if (!result)
-            return NotFound();
-        return NoContent();
+        {
+            return this.NotFound();
+        }
+
+        return this.NoContent();
     }
 
     /// <summary>
@@ -101,9 +111,12 @@ public class BackgroundJobsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetJobStatus(Guid id, CancellationToken cancellationToken)
     {
-        var status = await _jobService.GetJobStatusAsync(id, cancellationToken);
+        var status = await this._jobService.GetJobStatusAsync(id, cancellationToken);
         if (status == null)
-            return NotFound();
-        return Ok(status);
+        {
+            return this.NotFound();
+        }
+
+        return this.Ok(status);
     }
 }

@@ -1,3 +1,7 @@
+// <copyright file="EventType.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.Contracts.V2.Common;
 
 /// <summary>
@@ -6,7 +10,7 @@ namespace Synaxis.Contracts.V2.Common;
 /// <remarks>
 /// V2 Breaking Changes:
 /// - Values are now explicit for forward compatibility
-/// - Added 'System' event type for platform-level events
+/// - Added 'System' event type for platform-level events.
 /// </remarks>
 public enum EventType
 {
@@ -33,5 +37,5 @@ public enum EventType
     /// <summary>
     /// System/platform-level event.
     /// </summary>
-    System = 500
+    System = 500,
 }

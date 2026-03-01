@@ -34,9 +34,9 @@ public class PostgreSqlEventStore : IEventStore
         ILogger<PostgreSqlEventStore> logger)
     {
         ArgumentNullException.ThrowIfNull(connectionString);
-        _connectionString = connectionString;
+        this._connectionString = connectionString;
         ArgumentNullException.ThrowIfNull(logger);
-        _logger = logger;
+        this._logger = logger;
     }
 
     /// <inheritdoc />
@@ -46,10 +46,10 @@ public class PostgreSqlEventStore : IEventStore
         int expectedVersion,
         CancellationToken cancellationToken = default)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = new NpgsqlConnection(this._connectionString);
         await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
-        await using var transaction = await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+        using var transaction = await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
 
         try
         {
@@ -67,7 +67,7 @@ public class PostgreSqlEventStore : IEventStore
                 var eventData = JsonConvert.SerializeObject(domainEvent);
                 var eventType = domainEvent.GetType().AssemblyQualifiedName;
 
-                await using var command = connection.CreateCommand();
+                using var command = connection.CreateCommand();
                 command.Transaction = transaction;
                 command.CommandText = @"
                     INSERT INTO events (stream_id, version, event_type, event_data, occurred_on)
@@ -84,7 +84,7 @@ public class PostgreSqlEventStore : IEventStore
             }
 
             await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
-            _logger.LogInformation("Appended {Count} events to stream {StreamId}", events, streamId);
+            this._logger.LogInformation("Appended {Count} events to stream {StreamId}", events, streamId);
         }
         catch
         {
@@ -100,10 +100,10 @@ public class PostgreSqlEventStore : IEventStore
         int toVersion,
         CancellationToken cancellationToken = default)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = new NpgsqlConnection(this._connectionString);
         await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
-        await using var command = connection.CreateCommand();
+        using var command = connection.CreateCommand();
         command.CommandText = @"
             SELECT event_type, event_data, occurred_on
             FROM events
@@ -115,7 +115,7 @@ public class PostgreSqlEventStore : IEventStore
         command.Parameters.AddWithValue("toVersion", toVersion);
 
         var events = new List<IDomainEvent>();
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
 
         while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
         {
@@ -133,7 +133,7 @@ public class PostgreSqlEventStore : IEventStore
             }
         }
 
-        _logger.LogInformation("Read {Count} events from stream {StreamId} (v{From}-v{To})", events.Count, streamId, fromVersion, toVersion);
+        this._logger.LogInformation("Read {Count} events from stream {StreamId} (v{From}-v{To})", events.Count, streamId, fromVersion, toVersion);
         return events.AsReadOnly();
     }
 
@@ -142,10 +142,10 @@ public class PostgreSqlEventStore : IEventStore
         string streamId,
         CancellationToken cancellationToken = default)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = new NpgsqlConnection(this._connectionString);
         await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
-        await using var command = connection.CreateCommand();
+        using var command = connection.CreateCommand();
         command.CommandText = @"
             SELECT event_type, event_data, occurred_on
             FROM events
@@ -155,7 +155,7 @@ public class PostgreSqlEventStore : IEventStore
         command.Parameters.AddWithValue("streamId", streamId);
 
         var events = new List<IDomainEvent>();
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
 
         while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
         {
@@ -173,7 +173,7 @@ public class PostgreSqlEventStore : IEventStore
             }
         }
 
-        _logger.LogInformation("Read {Count} events from stream {StreamId}", events.Count, streamId);
+        this._logger.LogInformation("Read {Count} events from stream {StreamId}", events.Count, streamId);
         return events.AsReadOnly();
     }
 
@@ -182,15 +182,15 @@ public class PostgreSqlEventStore : IEventStore
         string streamId,
         CancellationToken cancellationToken = default)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = new NpgsqlConnection(this._connectionString);
         await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
-        await using var command = connection.CreateCommand();
+        using var command = connection.CreateCommand();
         command.CommandText = "DELETE FROM events WHERE stream_id = @streamId";
         command.Parameters.AddWithValue("streamId", streamId);
 
         var rowsAffected = await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
-        _logger.LogInformation("Deleted {Count} events from stream {StreamId}", rowsAffected, streamId);
+        this._logger.LogInformation("Deleted {Count} events from stream {StreamId}", rowsAffected, streamId);
     }
 
     private static async Task<int> GetCurrentVersionAsync(
@@ -198,7 +198,7 @@ public class PostgreSqlEventStore : IEventStore
         string streamId,
         CancellationToken cancellationToken)
     {
-        await using var command = connection.CreateCommand();
+        using var command = connection.CreateCommand();
         command.CommandText = "SELECT COALESCE(MAX(version), 0) FROM events WHERE stream_id = @streamId";
         command.Parameters.AddWithValue("streamId", streamId);
 

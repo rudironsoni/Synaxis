@@ -789,6 +789,16 @@
             Gets or sets the finish reason.
             </summary>
         </member>
+        <member name="T:Synaxis.InferenceGateway.Infrastructure.AntigravityDefaults">
+            <summary>
+            Defaults for the Antigravity client.
+            </summary>
+        </member>
+        <member name="F:Synaxis.InferenceGateway.Infrastructure.AntigravityDefaults.BaseUri">
+            <summary>
+            Gets the default base URI for the Antigravity API.
+            </summary>
+        </member>
         <member name="T:Synaxis.InferenceGateway.Infrastructure.AntigravityJsonContext">
             <summary>
             JSON serialization context for Antigravity.
@@ -1314,12 +1324,13 @@
             Supports GDPR (EU) and LGPD (Brazil) with fallback strategy.
             </summary>
         </member>
-        <member name="M:Synaxis.InferenceGateway.Infrastructure.Compliance.ComplianceProviderFactory.#ctor(Synaxis.Infrastructure.Data.SynaxisDbContext,Synaxis.InferenceGateway.Infrastructure.ControlPlane.SynaxisDbContext)">
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Compliance.ComplianceProviderFactory.#ctor(Synaxis.Infrastructure.Data.SynaxisDbContext,Synaxis.InferenceGateway.Infrastructure.ControlPlane.SynaxisDbContext,Microsoft.Extensions.Logging.ILoggerFactory)">
             <summary>
             Initializes a new instance of the <see cref="T:Synaxis.InferenceGateway.Infrastructure.Compliance.ComplianceProviderFactory"/> class.
             </summary>
             <param name="auditDbContext">The audit database context.</param>
             <param name="controlPlaneDbContext">The control plane database context.</param>
+            <param name="loggerFactory">The logger factory.</param>
         </member>
         <member name="M:Synaxis.InferenceGateway.Infrastructure.Compliance.ComplianceProviderFactory.GetProvider(System.String)">
             <summary>
@@ -1362,12 +1373,13 @@
             Enforces 72-hour breach notification, data residency in EU, and user rights (export, erasure).
             </summary>
         </member>
-        <member name="M:Synaxis.InferenceGateway.Infrastructure.Compliance.GdprComplianceProvider.#ctor(Synaxis.InferenceGateway.Infrastructure.ControlPlane.SynaxisDbContext,Synaxis.Infrastructure.Data.SynaxisDbContext)">
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Compliance.GdprComplianceProvider.#ctor(Synaxis.InferenceGateway.Infrastructure.ControlPlane.SynaxisDbContext,Synaxis.Infrastructure.Data.SynaxisDbContext,Microsoft.Extensions.Logging.ILogger{Synaxis.InferenceGateway.Infrastructure.Compliance.GdprComplianceProvider})">
             <summary>
             Initializes a new instance of the <see cref="T:Synaxis.InferenceGateway.Infrastructure.Compliance.GdprComplianceProvider"/> class.
             </summary>
             <param name="controlPlaneDbContext">The control plane database context.</param>
             <param name="auditDbContext">The audit database context.</param>
+            <param name="logger">The logger.</param>
         </member>
         <member name="P:Synaxis.InferenceGateway.Infrastructure.Compliance.GdprComplianceProvider.RegulationCode">
             <inheritdoc/>
@@ -1402,12 +1414,13 @@
             Enforces ANPD notification, 10 legal bases validation, and Brazilian data protection rules.
             </summary>
         </member>
-        <member name="M:Synaxis.InferenceGateway.Infrastructure.Compliance.LgpdComplianceProvider.#ctor(Synaxis.Infrastructure.Data.SynaxisDbContext,Synaxis.InferenceGateway.Infrastructure.ControlPlane.SynaxisDbContext)">
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.Compliance.LgpdComplianceProvider.#ctor(Synaxis.Infrastructure.Data.SynaxisDbContext,Synaxis.InferenceGateway.Infrastructure.ControlPlane.SynaxisDbContext,Microsoft.Extensions.Logging.ILogger{Synaxis.InferenceGateway.Infrastructure.Compliance.LgpdComplianceProvider})">
             <summary>
             Initializes a new instance of the <see cref="T:Synaxis.InferenceGateway.Infrastructure.Compliance.LgpdComplianceProvider"/> class.
             </summary>
             <param name="auditDbContext">The audit database context.</param>
             <param name="controlPlaneDbContext">The control plane database context.</param>
+            <param name="logger">The logger.</param>
         </member>
         <member name="P:Synaxis.InferenceGateway.Infrastructure.Compliance.LgpdComplianceProvider.RegulationCode">
             <inheritdoc/>
@@ -3700,7 +3713,7 @@
             <summary>
             Initializes a new instance of the <see cref="T:Synaxis.InferenceGateway.Infrastructure.External.AiHorde.AiHordeChatClient"/> class.
             </summary>
-            <param name="httpClient">Optional HTTP client instance.</param>
+            <param name="httpClient">The HTTP client instance.</param>
             <param name="apiKey">The API key for authentication.</param>
         </member>
         <member name="P:Synaxis.InferenceGateway.Infrastructure.External.AiHorde.AiHordeChatClient.Metadata">
@@ -4047,6 +4060,21 @@
             <param name="apiKey">The API key for authentication.</param>
             <param name="modelId">The model identifier to use.</param>
             <param name="httpClient">Optional HTTP client instance.</param>
+        </member>
+        <member name="P:Synaxis.InferenceGateway.Infrastructure.External.KiloCode.KiloCodeChatClient.Metadata">
+            <inheritdoc/>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.External.KiloCode.KiloCodeChatClient.GetResponseAsync(System.Collections.Generic.IEnumerable{Microsoft.Extensions.AI.ChatMessage},Microsoft.Extensions.AI.ChatOptions,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.External.KiloCode.KiloCodeChatClient.GetStreamingResponseAsync(System.Collections.Generic.IEnumerable{Microsoft.Extensions.AI.ChatMessage},Microsoft.Extensions.AI.ChatOptions,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.External.KiloCode.KiloCodeChatClient.GetService(System.Type,System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Synaxis.InferenceGateway.Infrastructure.External.KiloCode.KiloCodeChatClient.Dispose">
+            <inheritdoc/>
         </member>
         <member name="T:Synaxis.InferenceGateway.Infrastructure.External.ModelsDev.Dto.ModelDto">
             <summary>
@@ -4589,14 +4617,24 @@
             GitHubAuthStrategy class.
             </summary>
         </member>
-        <member name="E:Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub.GitHubAuthStrategy.AccountAuthenticated">
-            <summary>
-            Occurs when an account is successfully authenticated.
-            </summary>
-        </member>
         <member name="F:Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub.GitHubAuthStrategy.ClientId">
             <summary>
             The GitHub OAuth application client ID.
+            </summary>
+        </member>
+        <member name="F:Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub.GitHubAuthStrategy.DeviceCodeUri">
+            <summary>
+            The GitHub OAuth device code endpoint.
+            </summary>
+        </member>
+        <member name="F:Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub.GitHubAuthStrategy.AccessTokenUri">
+            <summary>
+            The GitHub OAuth access token endpoint.
+            </summary>
+        </member>
+        <member name="E:Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub.GitHubAuthStrategy.AccountAuthenticated">
+            <summary>
+            Occurs when an account is successfully authenticated.
             </summary>
         </member>
         <member name="M:Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub.GitHubAuthStrategy.#ctor(System.Net.Http.HttpClient,Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub.DeviceFlowService,Microsoft.Extensions.Logging.ILogger{Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub.GitHubAuthStrategy})">

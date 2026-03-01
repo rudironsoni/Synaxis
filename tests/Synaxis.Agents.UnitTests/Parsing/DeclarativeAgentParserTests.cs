@@ -96,7 +96,7 @@ public class DeclarativeAgentParserTests
     public void ParseYaml_NullYaml_ThrowsArgumentNullException()
     {
         // Arrange
-        string? yaml = null;
+        string yaml = null!;
 
         // Act
         Action act = () => _parser.Parse(yaml!);

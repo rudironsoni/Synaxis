@@ -1,5 +1,12 @@
+// <copyright file="ChatProviderTests.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
+#nullable enable
+
 namespace Synaxis.Abstractions.Tests.Providers;
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;

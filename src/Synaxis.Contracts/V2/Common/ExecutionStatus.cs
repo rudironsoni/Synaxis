@@ -1,3 +1,7 @@
+// <copyright file="ExecutionStatus.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.Contracts.V2.Common;
 
 /// <summary>
@@ -7,7 +11,7 @@ namespace Synaxis.Contracts.V2.Common;
 /// V2 Breaking Changes:
 /// - Renamed 'InProgress' to 'Running' for consistency with agent status
 /// - Added 'Paused' status for suspending execution
-/// - Added 'Timeout' status for explicit timeout handling
+/// - Added 'Timeout' status for explicit timeout handling.
 /// </remarks>
 public enum ExecutionStatus
 {
@@ -44,5 +48,5 @@ public enum ExecutionStatus
     /// <summary>
     /// Execution timed out.
     /// </summary>
-    Timeout = 6
+    Timeout = 6,
 }

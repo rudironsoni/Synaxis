@@ -1,8 +1,12 @@
+// <copyright file="OutboxController.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
+namespace Orchestration.Api.Controllers;
+
 using Microsoft.AspNetCore.Mvc;
 using Orchestration.Application.DTOs;
 using Orchestration.Application.Interfaces;
-
-namespace Orchestration.Api.Controllers;
 
 /// <summary>
 /// API controller for managing outbox messages.
@@ -19,7 +23,7 @@ public class OutboxController : ControllerBase
     /// <param name="outboxService">The outbox service.</param>
     public OutboxController(IOutboxService outboxService)
     {
-        _outboxService = outboxService ?? throw new ArgumentNullException(nameof(outboxService));
+        this._outboxService = outboxService ?? throw new ArgumentNullException(nameof(outboxService));
     }
 
     /// <summary>
@@ -34,8 +38,8 @@ public class OutboxController : ControllerBase
         [FromQuery] OutboxQueryRequest request,
         CancellationToken cancellationToken)
     {
-        var messages = await _outboxService.GetMessagesAsync(request, cancellationToken);
-        return Ok(messages);
+        var messages = await this._outboxService.GetMessagesAsync(request, cancellationToken);
+        return this.Ok(messages);
     }
 
     /// <summary>
@@ -52,8 +56,8 @@ public class OutboxController : ControllerBase
         [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default)
     {
-        var messages = await _outboxService.GetPendingMessagesAsync(page, pageSize, cancellationToken);
-        return Ok(messages);
+        var messages = await this._outboxService.GetPendingMessagesAsync(page, pageSize, cancellationToken);
+        return this.Ok(messages);
     }
 
     /// <summary>
@@ -70,8 +74,8 @@ public class OutboxController : ControllerBase
         [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default)
     {
-        var messages = await _outboxService.GetFailedMessagesAsync(page, pageSize, cancellationToken);
-        return Ok(messages);
+        var messages = await this._outboxService.GetFailedMessagesAsync(page, pageSize, cancellationToken);
+        return this.Ok(messages);
     }
 
     /// <summary>
@@ -85,9 +89,12 @@ public class OutboxController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> RetryMessage(Guid id, CancellationToken cancellationToken)
     {
-        var result = await _outboxService.RetryMessageAsync(id, cancellationToken);
+        var result = await this._outboxService.RetryMessageAsync(id, cancellationToken);
         if (!result)
-            return NotFound();
-        return NoContent();
+        {
+            return this.NotFound();
+        }
+
+        return this.NoContent();
     }
 }

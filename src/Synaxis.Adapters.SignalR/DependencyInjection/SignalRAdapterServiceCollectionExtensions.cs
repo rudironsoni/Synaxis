@@ -28,6 +28,7 @@ namespace Synaxis.Adapters.SignalR.DependencyInjection
             Action<SignalRAdapterOptions>? configure = null)
         {
             ArgumentNullException.ThrowIfNull(services);
+
             // Register options
             var options = new SignalRAdapterOptions();
             configure?.Invoke(options);

@@ -56,12 +56,12 @@ public class AzureSqlEventStore : IEventStore
         int expectedVersion,
         CancellationToken cancellationToken = default)
     {
-        return this._retryPolicy.ExecuteAsync(async () =>
+        return this.ExecuteWithPolicyAsync(async () =>
         {
-            await using var connection = new SqlConnection(this._connectionString);
+            using var connection = new SqlConnection(this._connectionString);
             await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
-            await using var transaction = (SqlTransaction)await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+            using var transaction = (SqlTransaction)await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
 
             try
             {
@@ -115,9 +115,9 @@ public class AzureSqlEventStore : IEventStore
         int toVersion,
         CancellationToken cancellationToken = default)
     {
-        return await this._retryPolicy.ExecuteAsync(async () =>
+        return await this.ExecuteWithPolicyAsync(async () =>
         {
-            await using var connection = new SqlConnection(this._connectionString);
+            using var connection = new SqlConnection(this._connectionString);
             await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
             using var command = new SqlCommand(
@@ -132,7 +132,7 @@ public class AzureSqlEventStore : IEventStore
             command.Parameters.AddWithValue("@ToVersion", toVersion);
 
             var events = new List<IDomainEvent>();
-            await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+            using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
 
             while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
             {
@@ -167,9 +167,9 @@ public class AzureSqlEventStore : IEventStore
         string streamId,
         CancellationToken cancellationToken = default)
     {
-        return this._retryPolicy.ExecuteAsync(async () =>
+        return this.ExecuteWithPolicyAsync(async () =>
         {
-            await using var connection = new SqlConnection(this._connectionString);
+            using var connection = new SqlConnection(this._connectionString);
             await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
             using var command = new SqlCommand(
@@ -195,9 +195,9 @@ public class AzureSqlEventStore : IEventStore
         string streamId,
         CancellationToken cancellationToken = default)
     {
-        return this._retryPolicy.ExecuteAsync(async () =>
+        return this.ExecuteWithPolicyAsync(async () =>
         {
-            await using var connection = new SqlConnection(this._connectionString);
+            using var connection = new SqlConnection(this._connectionString);
             await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
             using var command = new SqlCommand(
@@ -208,6 +208,22 @@ public class AzureSqlEventStore : IEventStore
 
             var rowsAffected = await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
             this._logger.LogInformation("Deleted stream {StreamId} ({Count} events)", streamId, rowsAffected);
+        });
+    }
+
+    private Task ExecuteWithPolicyAsync(Func<Task> action)
+    {
+        return this._retryPolicy.ExecuteAsync(async () =>
+        {
+            await action().ConfigureAwait(false);
+        });
+    }
+
+    private Task<T> ExecuteWithPolicyAsync<T>(Func<Task<T>> action)
+    {
+        return this._retryPolicy.ExecuteAsync(async () =>
+        {
+            return await action().ConfigureAwait(false);
         });
     }
 

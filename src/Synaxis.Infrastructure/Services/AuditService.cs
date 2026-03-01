@@ -96,7 +96,8 @@ namespace Synaxis.Infrastructure.Services
             AuditLog? previousLog = null;
             foreach (var log in logs)
             {
-                log.ComputeIntegrityHash(previousLog);
+                log.PreviousHash = previousLog?.IntegrityHash ?? string.Empty;
+                log.IntegrityHash = ComputeIntegrityHash(log);
                 previousLog = log;
             }
 

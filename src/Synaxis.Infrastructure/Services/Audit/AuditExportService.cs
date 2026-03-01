@@ -88,7 +88,7 @@ public class AuditExportService : IAuditExportService
         var fileName = $"audit-export-{request.OrganizationId}-{DateTime.UtcNow:yyyyMMddHHmmss}.csv";
         var filePath = Path.Combine(this._exportDirectory, fileName);
 
-        var csvContent = this.BuildCsvContent(logs);
+        var csvContent = BuildCsvContent(logs);
         var bytes = Encoding.UTF8.GetBytes(csvContent);
 
         await File.WriteAllBytesAsync(filePath, bytes, cancellationToken).ConfigureAwait(false);
@@ -139,7 +139,7 @@ public class AuditExportService : IAuditExportService
     /// </summary>
     /// <param name="logs">The audit logs.</param>
     /// <returns>CSV formatted string.</returns>
-    private string BuildCsvContent(IReadOnlyList<AuditLog> logs)
+    private static string BuildCsvContent(IReadOnlyList<AuditLog> logs)
     {
         var sb = new StringBuilder();
 

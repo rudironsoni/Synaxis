@@ -21,18 +21,17 @@ using Synaxis.Core.Models;
 /// </summary>
 public class AuditAlertService : IAuditAlertService
 {
-    private readonly IAuditLogRepository _repository;
-    private readonly IMediator _mediator;
-    private readonly ILogger<AuditAlertService> _logger;
-
-    // In-memory storage for active alerts (in production, use distributed cache/database)
-    private readonly ConcurrentDictionary<Guid, List<AuditAlertEvent>> _activeAlerts = new();
-
     // Alert rule configuration
     private const int FailedLoginThreshold = 5;
     private const int FailedLoginWindowMinutes = 15;
     private const int UnusualAccessThreshold = 10;
     private const int UnusualAccessWindowMinutes = 5;
+
+    // In-memory storage for active alerts (in production, use distributed cache/database)
+    private readonly ConcurrentDictionary<Guid, List<AuditAlertEvent>> _activeAlerts = new();
+    private readonly IAuditLogRepository _repository;
+    private readonly IMediator _mediator;
+    private readonly ILogger<AuditAlertService> _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AuditAlertService"/> class.
@@ -92,7 +91,7 @@ public class AuditAlertService : IAuditAlertService
     private async Task EvaluateBruteForceLoginAsync(AuditLog auditLog, CancellationToken cancellationToken)
     {
         // Only check failed login events
-        if (!this.IsFailedLoginEvent(auditLog))
+        if (!IsFailedLoginEvent(auditLog))
         {
             return;
         }
@@ -228,7 +227,7 @@ public class AuditAlertService : IAuditAlertService
     /// <summary>
     /// Checks if the audit log represents a failed login event.
     /// </summary>
-    private bool IsFailedLoginEvent(AuditLog log)
+    private static bool IsFailedLoginEvent(AuditLog log)
     {
         return string.Equals(log.EventType, "auth.login_failed", StringComparison.OrdinalIgnoreCase) ||
                string.Equals(log.EventType, "login_failed", StringComparison.OrdinalIgnoreCase) ||

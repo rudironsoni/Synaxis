@@ -1,3 +1,7 @@
+// <copyright file="CreateAgentCommand.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.Contracts.V1.Commands;
 
 /// <summary>
@@ -8,31 +12,31 @@ namespace Synaxis.Contracts.V1.Commands;
 public record CreateAgentCommand : CommandBase
 {
     /// <summary>
-    /// Name of the agent.
+    /// Gets the name of the agent.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("name")]
     public required string Name { get; init; }
 
     /// <summary>
-    /// Description of the agent.
+    /// Gets the description of the agent.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("description")]
     public string? Description { get; init; }
 
     /// <summary>
-    /// Type of the agent (e.g., chat, embedding, etc.).
+    /// Gets the type of the agent (e.g., chat, embedding, etc.).
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("agentType")]
     public required string AgentType { get; init; }
 
     /// <summary>
-    /// Configuration settings for the agent.
+    /// Gets the configuration settings for the agent.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("configuration")]
-    public Dictionary<string, object>? Configuration { get; init; }
+    public IReadOnlyDictionary<string, object>? Configuration { get; init; }
 
     /// <summary>
-    /// Tags for categorizing the agent.
+    /// Gets the tags for categorizing the agent.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("tags")]
     public IReadOnlyList<string> Tags { get; init; } = Array.Empty<string>();

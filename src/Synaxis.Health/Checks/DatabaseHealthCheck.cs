@@ -98,11 +98,11 @@ namespace Synaxis.Health.Checks
             Dictionary<string, object> data,
             CancellationToken cancellationToken)
         {
-            await using var connection = new NpgsqlConnection(this._connectionString);
+            using var connection = new NpgsqlConnection(this._connectionString);
             await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
             // Execute simple query to verify connectivity
-            await using var command = new NpgsqlCommand("SELECT 1", connection);
+            using var command = new NpgsqlCommand("SELECT 1", connection);
             _ = await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
             stopwatch.Stop();
             var latencyMs = stopwatch.ElapsedMilliseconds;

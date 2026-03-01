@@ -20,34 +20,23 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.AiHorde
     /// </summary>
     public sealed class AiHordeChatClient : IChatClient
     {
-        private const string GenerateUrl = "https://stablehorde.net/api/v2/generate/text/async";
-        private const string StatusUrlTemplate = "https://stablehorde.net/api/v2/generate/text/status/{0}";
+        private const string StatusPathTemplate = "api/v2/generate/text/status/{0}";
+        private static readonly Uri GenerateUri = new("https://stablehorde.net/api/v2/generate/text/async");
 
         private readonly HttpClient _httpClient;
-        private readonly bool _ownsHttpClient;
         private readonly ChatClientMetadata _metadata;
         private readonly string _apiKey;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AiHordeChatClient"/> class.
         /// </summary>
-        /// <param name="httpClient">Optional HTTP client instance.</param>
+        /// <param name="httpClient">The HTTP client instance.</param>
         /// <param name="apiKey">The API key for authentication.</param>
-        public AiHordeChatClient(HttpClient? httpClient = null, string apiKey = "0000000000")
+        public AiHordeChatClient(HttpClient httpClient, string apiKey)
         {
-            if (httpClient is null)
-            {
-                this._httpClient = new HttpClient();
-                this._ownsHttpClient = true;
-            }
-            else
-            {
-                this._httpClient = httpClient;
-                this._ownsHttpClient = false;
-            }
-
-            this._apiKey = apiKey;
-            this._metadata = new ChatClientMetadata("AiHorde", new Uri(GenerateUrl), "aihorde");
+            this._httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+            this._apiKey = apiKey ?? throw new ArgumentNullException(nameof(apiKey));
+            this._metadata = new ChatClientMetadata("AiHorde", GenerateUri, "aihorde");
         }
 
         /// <summary>
@@ -62,7 +51,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.AiHorde
 
             var request = new { prompt = prompt, models = new[] { "stable" } };
 
-            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, GenerateUrl);
+            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, GenerateUri);
             httpRequest.Headers.TryAddWithoutValidation("apikey", this._apiKey);
             httpRequest.Content = JsonContent.Create(request);
 
@@ -81,7 +70,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.AiHorde
             while (!cancellationToken.IsCancellationRequested)
             {
                 await Task.Delay(200, cancellationToken).ConfigureAwait(false);
-                using var statusReq = new HttpRequestMessage(HttpMethod.Get, string.Format(StatusUrlTemplate, id));
+                using var statusReq = new HttpRequestMessage(HttpMethod.Get, BuildStatusUri(id));
                 statusReq.Headers.TryAddWithoutValidation("apikey", this._apiKey);
                 using var statusResp = await this._httpClient.SendAsync(statusReq, cancellationToken).ConfigureAwait(false);
                 statusResp.EnsureSuccessStatusCode();
@@ -111,7 +100,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.AiHorde
             var prompt = BuildPrompt(messages);
             var request = new { prompt = prompt, models = new[] { "stable" } };
 
-            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, GenerateUrl);
+            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, GenerateUri);
             httpRequest.Headers.TryAddWithoutValidation("apikey", this._apiKey);
             httpRequest.Content = JsonContent.Create(request);
 
@@ -128,7 +117,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.AiHorde
             while (!cancellationToken.IsCancellationRequested)
             {
                 await Task.Delay(200, cancellationToken).ConfigureAwait(false);
-                using var statusReq = new HttpRequestMessage(HttpMethod.Get, string.Format(StatusUrlTemplate, id));
+                using var statusReq = new HttpRequestMessage(HttpMethod.Get, BuildStatusUri(id));
                 statusReq.Headers.TryAddWithoutValidation("apikey", this._apiKey);
                 using var statusResp = await this._httpClient.SendAsync(statusReq, cancellationToken).ConfigureAwait(false);
                 statusResp.EnsureSuccessStatusCode();
@@ -163,13 +152,15 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.AiHorde
             return string.Join("\n", parts);
         }
 
+        private static Uri BuildStatusUri(string id)
+        {
+            var safeId = Uri.EscapeDataString(id ?? string.Empty);
+            return new Uri(GenerateUri, string.Format(StatusPathTemplate, safeId));
+        }
+
         /// <inheritdoc/>
         public void Dispose()
         {
-            if (this._ownsHttpClient)
-            {
-                this._httpClient.Dispose();
-            }
         }
 
         /// <inheritdoc/>

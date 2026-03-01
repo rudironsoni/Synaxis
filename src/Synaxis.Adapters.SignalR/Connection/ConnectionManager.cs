@@ -14,7 +14,7 @@ namespace Synaxis.Adapters.SignalR.Connection
     /// </summary>
     public sealed class ConnectionManager
     {
-        private readonly ConcurrentDictionary<string, ConnectionMetadata> connections = new (StringComparer.Ordinal);
+        private readonly ConcurrentDictionary<string, ConnectionMetadata> connections = new(StringComparer.Ordinal);
 
         /// <summary>
         /// Adds a new connection with metadata.

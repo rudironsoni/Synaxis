@@ -13,6 +13,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
     using System.Text.Json;
     using System.Threading.Tasks;
     using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.Logging;
     using Synaxis.Core.Models;
     using Synaxis.InferenceGateway.Infrastructure.Contracts;
     using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
@@ -26,6 +27,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
     {
         private readonly Synaxis.Infrastructure.Data.SynaxisDbContext _auditDbContext;
         private readonly Synaxis.InferenceGateway.Infrastructure.ControlPlane.SynaxisDbContext _controlPlaneDbContext;
+        private readonly ILogger<LgpdComplianceProvider> _logger;
 
         // Brazilian regions for data residency validation
         private static readonly HashSet<string> BrazilianRegions = new()
@@ -38,12 +40,15 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
         /// </summary>
         /// <param name="auditDbContext">The audit database context.</param>
         /// <param name="controlPlaneDbContext">The control plane database context.</param>
+        /// <param name="logger">The logger.</param>
         public LgpdComplianceProvider(
             Synaxis.Infrastructure.Data.SynaxisDbContext auditDbContext,
-            Synaxis.InferenceGateway.Infrastructure.ControlPlane.SynaxisDbContext controlPlaneDbContext)
+            Synaxis.InferenceGateway.Infrastructure.ControlPlane.SynaxisDbContext controlPlaneDbContext,
+            ILogger<LgpdComplianceProvider> logger)
         {
             this._auditDbContext = auditDbContext ?? throw new ArgumentNullException(nameof(auditDbContext));
             this._controlPlaneDbContext = controlPlaneDbContext ?? throw new ArgumentNullException(nameof(controlPlaneDbContext));
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         /// <inheritdoc/>
@@ -330,7 +335,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
             {
                 await transaction.RollbackAsync().ConfigureAwait(false);
                 this._logger.LogError(ex, "Failed to delete user data for user {UserId}", userId);
-                throw;
+                throw new InvalidOperationException($"Failed to delete user data for user {userId}.", ex);
             }
         }
 

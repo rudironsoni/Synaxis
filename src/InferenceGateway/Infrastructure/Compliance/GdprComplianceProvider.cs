@@ -13,6 +13,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
     using System.Text.Json;
     using System.Threading.Tasks;
     using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.Logging;
     using Synaxis.InferenceGateway.Infrastructure.Contracts;
     using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
     using Synaxis.Infrastructure.Data;
@@ -39,18 +40,22 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
 
         private readonly ControlPlane.SynaxisDbContext _controlPlaneDbContext;
         private readonly Synaxis.Infrastructure.Data.SynaxisDbContext _auditDbContext;
+        private readonly ILogger<GdprComplianceProvider> _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GdprComplianceProvider"/> class.
         /// </summary>
         /// <param name="controlPlaneDbContext">The control plane database context.</param>
         /// <param name="auditDbContext">The audit database context.</param>
+        /// <param name="logger">The logger.</param>
         public GdprComplianceProvider(
             ControlPlane.SynaxisDbContext controlPlaneDbContext,
-            Synaxis.Infrastructure.Data.SynaxisDbContext auditDbContext)
+            Synaxis.Infrastructure.Data.SynaxisDbContext auditDbContext,
+            ILogger<GdprComplianceProvider> logger)
         {
             this._controlPlaneDbContext = controlPlaneDbContext ?? throw new ArgumentNullException(nameof(controlPlaneDbContext));
             this._auditDbContext = auditDbContext ?? throw new ArgumentNullException(nameof(auditDbContext));
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         /// <inheritdoc/>
@@ -235,7 +240,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
             {
                 await transaction.RollbackAsync().ConfigureAwait(false);
                 this._logger.LogError(ex, "Failed to delete user data for user {UserId}", userId);
-                throw;
+                throw new InvalidOperationException($"Failed to delete user data for user {userId}.", ex);
             }
         }
 

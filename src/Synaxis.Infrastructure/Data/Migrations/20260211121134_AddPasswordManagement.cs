@@ -2,7 +2,6 @@
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-
 using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
@@ -15,6 +14,13 @@ namespace Synaxis.Infrastructure.Data.Migrations
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            AddPasswordManagementColumns(migrationBuilder);
+            CreatePasswordManagementTables(migrationBuilder);
+            CreatePasswordManagementIndexes(migrationBuilder);
+        }
+
+        private static void AddPasswordManagementColumns(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<int>(
                 name: "failed_password_change_attempts",
@@ -47,7 +53,10 @@ namespace Synaxis.Infrastructure.Data.Migrations
                 table: "users",
                 type: "timestamp with time zone",
                 nullable: true);
+        }
 
+        private static void CreatePasswordManagementTables(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "password_histories",
                 columns: table => new
@@ -99,7 +108,10 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
+        }
 
+        private static void CreatePasswordManagementIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_password_histories_user_id",
                 table: "password_histories",

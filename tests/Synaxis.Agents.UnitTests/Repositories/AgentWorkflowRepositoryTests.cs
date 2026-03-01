@@ -189,7 +189,7 @@ public class AgentWorkflowRepositoryTests
     public async Task SaveAsync_NullWorkflow_ThrowsArgumentNullException()
     {
         // Arrange
-        AgentWorkflow? workflow = null;
+        AgentWorkflow workflow = null!;
 
         // Act
         Func<Task> act = async () => await _repository.SaveAsync(workflow!);

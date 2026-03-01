@@ -22,12 +22,17 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
         /// <returns>The service collection for chaining.</returns>
         public static IServiceCollection AddHuggingFaceClient(this IServiceCollection services, string serviceKey, string apiKey, string modelId)
         {
-            services.AddKeyedSingleton<IChatClient>(serviceKey, (_, _) => new GenericOpenAiChatClient(
-                apiKey,
-                new Uri("https://router.huggingface.co/v1/"),
-                modelId));
+            services.AddKeyedSingleton<IChatClient>(serviceKey, (_, _) =>
+            {
+                return new GenericOpenAiChatClient(
+                    apiKey,
+                    GetHuggingFaceBaseUri(),
+                    modelId);
+            });
 
             return services;
         }
+
+        private static Uri GetHuggingFaceBaseUri() => new("https://router.huggingface.co/v1/");
     }
 }

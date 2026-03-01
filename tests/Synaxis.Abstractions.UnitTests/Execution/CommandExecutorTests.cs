@@ -1,5 +1,12 @@
+// <copyright file="CommandExecutorTests.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
+#nullable enable
+
 namespace Synaxis.Abstractions.Tests.Execution;
 
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -68,11 +75,13 @@ public class CommandExecutorTests
 
     private sealed class TestCommand : ICommand<string>
     {
+        public string Response => string.Empty;
         public int Value { get; init; }
     }
 
     private sealed class ComplexCommand : ICommand<ComplexResult>
     {
+        public ComplexResult Response => new();
         public string Name { get; init; } = string.Empty;
     }
 

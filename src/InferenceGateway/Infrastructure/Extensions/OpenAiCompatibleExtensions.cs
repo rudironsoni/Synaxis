@@ -6,6 +6,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Net.Http;
     using Microsoft.Extensions.AI;
     using Microsoft.Extensions.DependencyInjection;
@@ -15,6 +16,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
     /// </summary>
     public static class OpenAiCompatibleExtensions
     {
+        private static readonly Uri DefaultBaseUri = new("https://api.openai.com/v1");
+
         /// <summary>
         /// Adds an OpenAI-compatible chat client to the service collection.
         /// </summary>
@@ -36,14 +39,39 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
             services.AddKeyedSingleton<IChatClient>(key, (sp, obj) =>
             {
                 var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
-                var httpClient = httpClientFactory.CreateClient(key);
+                var httpClient = httpClientFactory.CreateClient();
                 var headers = customHeaders != null
                     ? new Dictionary<string, string>(customHeaders.Select(kvp => new KeyValuePair<string, string>(kvp.Key, kvp.Value)))
                     : null;
-                return new GenericOpenAiChatClient(apiKey, new Uri(baseUrl), modelId ?? "default", headers, httpClient);
+                return headers == null
+                    ? ActivatorUtilities.CreateInstance<GenericOpenAiChatClient>(
+                        sp,
+                        apiKey,
+                        BuildBaseUri(baseUrl),
+                        modelId ?? "default",
+                        httpClient)
+                    : ActivatorUtilities.CreateInstance<GenericOpenAiChatClient>(
+                        sp,
+                        apiKey,
+                        BuildBaseUri(baseUrl),
+                        modelId ?? "default",
+                        headers,
+                        httpClient);
             });
 
             return services;
+        }
+
+        private static Uri BuildBaseUri(string baseUrl)
+        {
+            if (string.IsNullOrWhiteSpace(baseUrl))
+            {
+                return DefaultBaseUri;
+            }
+
+            return Uri.TryCreate(baseUrl, UriKind.Absolute, out var uri)
+                ? uri
+                : DefaultBaseUri;
         }
     }
 }

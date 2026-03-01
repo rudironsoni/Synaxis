@@ -4,6 +4,7 @@
 
 namespace Synaxis.Agents.UnitTests;
 
+using System;
 using FluentAssertions;
 using Synaxis.Agents.Domain;
 using Xunit;

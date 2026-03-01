@@ -1,3 +1,7 @@
+// <copyright file="DomainEventBase.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.Contracts.V1.DomainEvents;
 
 /// <summary>
@@ -6,25 +10,25 @@ namespace Synaxis.Contracts.V1.DomainEvents;
 public abstract record DomainEventBase
 {
     /// <summary>
-    /// Unique identifier for the event.
+    /// Gets the unique identifier for the event.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("eventId")]
     public Guid EventId { get; init; }
 
     /// <summary>
-    /// Identifier of the aggregate that generated the event.
+    /// Gets the identifier of the aggregate that generated the event.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("aggregateId")]
     public Guid AggregateId { get; init; }
 
     /// <summary>
-    /// Timestamp when the event occurred.
+    /// Gets the timestamp when the event occurred.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("timestamp")]
     public DateTimeOffset Timestamp { get; init; }
 
     /// <summary>
-    /// Version of the event schema.
+    /// Gets the version of the event schema.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("version")]
     public int Version { get; init; }
@@ -34,7 +38,7 @@ public abstract record DomainEventBase
     /// </summary>
     protected DomainEventBase()
     {
-        EventId = Guid.NewGuid();
-        Timestamp = DateTimeOffset.UtcNow;
+        this.EventId = Guid.NewGuid();
+        this.Timestamp = DateTimeOffset.UtcNow;
     }
 }

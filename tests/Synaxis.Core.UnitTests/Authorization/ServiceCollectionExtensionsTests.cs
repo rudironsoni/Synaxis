@@ -4,6 +4,7 @@
 
 namespace Synaxis.Core.Authorization.Tests;
 
+using System.Linq;
 using FluentAssertions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;

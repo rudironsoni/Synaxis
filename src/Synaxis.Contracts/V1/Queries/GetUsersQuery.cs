@@ -1,3 +1,7 @@
+// <copyright file="GetUsersQuery.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.Contracts.V1.Queries;
 
 /// <summary>
@@ -8,43 +12,43 @@ namespace Synaxis.Contracts.V1.Queries;
 public record GetUsersQuery : QueryBase
 {
     /// <summary>
-    /// Page number (1-based).
+    /// Gets the page number (1-based).
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("page")]
     public int Page { get; init; } = 1;
 
     /// <summary>
-    /// Number of items per page.
+    /// Gets the number of items per page.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("pageSize")]
     public int PageSize { get; init; } = 20;
 
     /// <summary>
-    /// Filter by status.
+    /// Gets the filter by status.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("status")]
     public string? Status { get; init; }
 
     /// <summary>
-    /// Search term for name or email.
+    /// Gets the search term for name or email.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("search")]
     public string? Search { get; init; }
 
     /// <summary>
-    /// Sort field.
+    /// Gets the sort field.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("sortBy")]
     public string SortBy { get; init; } = "createdAt";
 
     /// <summary>
-    /// Sort direction (asc or desc).
+    /// Gets the sort direction (asc or desc).
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("sortDirection")]
     public string SortDirection { get; init; } = "desc";
 
     /// <summary>
-    /// Whether to include soft-deleted users.
+    /// Gets a value indicating whether to include soft-deleted users.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("includeDeleted")]
     public bool IncludeDeleted { get; init; }

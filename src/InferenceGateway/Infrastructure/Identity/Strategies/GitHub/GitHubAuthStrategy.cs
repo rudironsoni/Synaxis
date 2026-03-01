@@ -19,14 +19,24 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
     public class GitHubAuthStrategy : IAuthStrategy
     {
         /// <summary>
-        /// Occurs when an account is successfully authenticated.
-        /// </summary>
-        public event EventHandler<AccountAuthenticatedEventArgs>? AccountAuthenticated;
-
-        /// <summary>
         /// The GitHub OAuth application client ID.
         /// </summary>
         public const string ClientId = "178c6fc778ccc68e1d6a";
+
+        /// <summary>
+        /// The GitHub OAuth device code endpoint.
+        /// </summary>
+        public static readonly Uri DeviceCodeUri = new("https://github.com/login/device/code");
+
+        /// <summary>
+        /// The GitHub OAuth access token endpoint.
+        /// </summary>
+        public static readonly Uri AccessTokenUri = new("https://github.com/login/oauth/access_token");
+
+        /// <summary>
+        /// Occurs when an account is successfully authenticated.
+        /// </summary>
+        public event EventHandler<AccountAuthenticatedEventArgs>? AccountAuthenticated;
 
         private readonly HttpClient _http;
         private readonly DeviceFlowService _deviceFlowService;
@@ -50,8 +60,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
         /// <inheritdoc/>
         public async Task<AuthResult> InitiateFlowAsync(CancellationToken ct)
         {
-            var url = "https://github.com/login/device/code";
-            using var req = new HttpRequestMessage(HttpMethod.Post, url);
+            using var req = new HttpRequestMessage(HttpMethod.Post, DeviceCodeUri);
             req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             var body = new System.Collections.Generic.Dictionary<string, string>
             {
@@ -96,14 +105,16 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
         /// <inheritdoc/>
         public Task<AuthResult> CompleteFlowAsync(string code, string state, CancellationToken ct)
         {
-            throw new NotImplementedException();
+            _ = code;
+            _ = state;
+            _ = ct;
+            throw new NotSupportedException("GitHub device flow completion is not supported; use the device flow callback instead.");
         }
 
         /// <inheritdoc/>
         public async Task<TokenResponse> RefreshTokenAsync(IdentityAccount account, CancellationToken ct)
         {
-            var url = "https://github.com/login/oauth/access_token";
-            using var req = new HttpRequestMessage(HttpMethod.Post, url);
+            using var req = new HttpRequestMessage(HttpMethod.Post, AccessTokenUri);
             req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             var body = new System.Collections.Generic.Dictionary<string, string>
             {

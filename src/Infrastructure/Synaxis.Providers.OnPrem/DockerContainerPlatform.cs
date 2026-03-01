@@ -19,7 +19,7 @@ using Synaxis.Abstractions.Cloud;
 /// <summary>
 /// Docker-based implementation of IContainerPlatform for on-premise deployments.
 /// </summary>
-public class DockerContainerPlatform : IContainerPlatform
+public sealed class DockerContainerPlatform : IContainerPlatform, IDisposable
 {
     private readonly DockerClient _dockerClient;
     private readonly ILogger<DockerContainerPlatform> _logger;
@@ -30,9 +30,9 @@ public class DockerContainerPlatform : IContainerPlatform
     /// <param name="logger">The logger instance.</param>
     public DockerContainerPlatform(ILogger<DockerContainerPlatform> logger)
     {
-        _dockerClient = new DockerClientConfiguration().CreateClient();
+        this._dockerClient = new DockerClientConfiguration().CreateClient();
         ArgumentNullException.ThrowIfNull(logger);
-        _logger = logger;
+        this._logger = logger;
     }
 
     /// <inheritdoc />
@@ -43,7 +43,7 @@ public class DockerContainerPlatform : IContainerPlatform
         CancellationToken cancellationToken = default)
     {
         // Pull the image if not present
-        await PullImageAsync(image, cancellationToken).ConfigureAwait(false);
+        await this.PullImageAsync(image, cancellationToken).ConfigureAwait(false);
 
         // Create container
         var envVars = configuration.EnvironmentVariables
@@ -73,10 +73,10 @@ public class DockerContainerPlatform : IContainerPlatform
             },
         };
 
-        var response = await _dockerClient.Containers.CreateContainerAsync(createParameters, cancellationToken).ConfigureAwait(false);
-        await _dockerClient.Containers.StartContainerAsync(response.ID, new ContainerStartParameters(), cancellationToken).ConfigureAwait(false);
+        var response = await this._dockerClient.Containers.CreateContainerAsync(createParameters, cancellationToken).ConfigureAwait(false);
+        await this._dockerClient.Containers.StartContainerAsync(response.ID, new ContainerStartParameters(), cancellationToken).ConfigureAwait(false);
 
-        _logger.LogInformation("Deployed container {DeploymentName} with image {Image}", deploymentName, image);
+        this._logger.LogInformation("Deployed container {DeploymentName} with image {Image}", deploymentName, image);
     }
 
     /// <inheritdoc />
@@ -87,7 +87,7 @@ public class DockerContainerPlatform : IContainerPlatform
     {
         // Docker doesn't support scaling like Kubernetes
         // For simplicity, we'll log a warning
-        _logger.LogWarning(
+        this._logger.LogWarning(
             "Docker does not support scaling like Kubernetes. To scale {DeploymentName} to {ReplicaCount} replicas, use Docker Swarm or Kubernetes.",
             deploymentName,
             replicaCount);
@@ -98,7 +98,7 @@ public class DockerContainerPlatform : IContainerPlatform
         string deploymentName,
         CancellationToken cancellationToken = default)
     {
-        var containers = await _dockerClient.Containers.ListContainersAsync(
+        var containers = await this._dockerClient.Containers.ListContainersAsync(
             new ContainersListParameters { All = true },
             cancellationToken).ConfigureAwait(false);
 
@@ -133,7 +133,7 @@ public class DockerContainerPlatform : IContainerPlatform
     public async Task<IReadOnlyList<DeploymentInfo>> ListDeploymentsAsync(
         CancellationToken cancellationToken = default)
     {
-        var containers = await _dockerClient.Containers.ListContainersAsync(
+        var containers = await this._dockerClient.Containers.ListContainersAsync(
             new ContainersListParameters { All = true },
             cancellationToken).ConfigureAwait(false);
 
@@ -156,7 +156,7 @@ public class DockerContainerPlatform : IContainerPlatform
         string deploymentName,
         CancellationToken cancellationToken = default)
     {
-        var containers = await _dockerClient.Containers.ListContainersAsync(
+        var containers = await this._dockerClient.Containers.ListContainersAsync(
             new ContainersListParameters { All = true },
             cancellationToken).ConfigureAwait(false);
 
@@ -164,9 +164,9 @@ public class DockerContainerPlatform : IContainerPlatform
 
         if (container != null)
         {
-            await _dockerClient.Containers.StopContainerAsync(container.ID, new ContainerStopParameters(), cancellationToken).ConfigureAwait(false);
-            await _dockerClient.Containers.RemoveContainerAsync(container.ID, new ContainerRemoveParameters { Force = true }, cancellationToken).ConfigureAwait(false);
-            _logger.LogInformation("Deleted deployment {DeploymentName}", deploymentName);
+            await this._dockerClient.Containers.StopContainerAsync(container.ID, new ContainerStopParameters(), cancellationToken).ConfigureAwait(false);
+            await this._dockerClient.Containers.RemoveContainerAsync(container.ID, new ContainerRemoveParameters { Force = true }, cancellationToken).ConfigureAwait(false);
+            this._logger.LogInformation("Deleted deployment {DeploymentName}", deploymentName);
         }
     }
 
@@ -176,7 +176,7 @@ public class DockerContainerPlatform : IContainerPlatform
         int? tailLines = null,
         CancellationToken cancellationToken = default)
     {
-        var containers = await _dockerClient.Containers.ListContainersAsync(
+        var containers = await this._dockerClient.Containers.ListContainersAsync(
             new ContainersListParameters { All = true },
             cancellationToken).ConfigureAwait(false);
 
@@ -194,7 +194,7 @@ public class DockerContainerPlatform : IContainerPlatform
             Tail = tailLines?.ToString(CultureInfo.InvariantCulture),
         };
 
-        using var stream = await _dockerClient.Containers.GetContainerLogsAsync(container.ID, false, logsParameters, cancellationToken).ConfigureAwait(false);
+        using var stream = await this._dockerClient.Containers.GetContainerLogsAsync(container.ID, false, logsParameters, cancellationToken).ConfigureAwait(false);
         var (stdout, stderr) = await stream.ReadOutputToEndAsync(cancellationToken).ConfigureAwait(false);
         var logs = $"{stdout}{stderr}";
 
@@ -205,22 +205,28 @@ public class DockerContainerPlatform : IContainerPlatform
     {
         try
         {
-            await _dockerClient.Images.CreateImageAsync(
+            await this._dockerClient.Images.CreateImageAsync(
                 new ImagesCreateParameters { FromImage = image },
                 null,
                 new Progress<JSONMessage>(message =>
                 {
                     if (!string.IsNullOrEmpty(message.Status))
                     {
-                        _logger.LogDebug("Pulling image {Image}: {Status}", image, message.Status);
+                        this._logger.LogDebug("Pulling image {Image}: {Status}", image, message.Status);
                     }
                 }),
                 cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to pull image {Image}, assuming it exists locally", image);
+            this._logger.LogWarning(ex, "Failed to pull image {Image}, assuming it exists locally", image);
         }
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        this._dockerClient.Dispose();
     }
 
     private static DeploymentState MapContainerStateToDeploymentState(string containerState)

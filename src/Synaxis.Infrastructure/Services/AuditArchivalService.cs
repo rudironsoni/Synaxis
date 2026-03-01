@@ -187,11 +187,19 @@ namespace Synaxis.Infrastructure.Services
                 log.Timestamp,
             });
 
-#pragma warning disable MA0004 // ConfigureAwait not applicable to IAsyncDisposable
-            await using var fileStream = File.Create(archivePath);
-            await using var gzipStream = new GZipStream(fileStream, CompressionLevel.Optimal);
-            await JsonSerializer.SerializeAsync(gzipStream, exportData, jsonOptions, cancellationToken).ConfigureAwait(false);
-#pragma warning restore MA0004
+            using var fileStream = File.Create(archivePath);
+            var gzipStream = new GZipStream(fileStream, CompressionLevel.Optimal);
+
+            try
+            {
+                await JsonSerializer.SerializeAsync(gzipStream, exportData, jsonOptions, cancellationToken).ConfigureAwait(false);
+                await gzipStream.FlushAsync(cancellationToken).ConfigureAwait(false);
+                await fileStream.FlushAsync(cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                await gzipStream.DisposeAsync().ConfigureAwait(false);
+            }
         }
     }
 }

@@ -10,7 +10,7 @@ using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 using Synaxis.Routing.CircuitBreaker;
 using Synaxis.Routing.SmartRouter;
-using CircuitBreakerImpl = Synaxis.Routing.CircuitBreaker.CircuitBreaker;
+using CircuitBreakerImpl = Synaxis.Routing.CircuitBreaker.CircuitBreakerEngine;
 
 /// <summary>
 /// Health check service for monitoring AI provider health.

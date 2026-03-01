@@ -1,3 +1,7 @@
+// <copyright file="IBackgroundJobService.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Orchestration.Application.Interfaces;
 
 using Orchestration.Application.DTOs;

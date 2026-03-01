@@ -4,6 +4,7 @@
 
 namespace Synaxis.Core.Authorization.Tests;
 
+using System;
 using System.Security.Claims;
 using FluentAssertions;
 using Xunit;

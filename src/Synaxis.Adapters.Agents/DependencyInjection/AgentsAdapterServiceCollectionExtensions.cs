@@ -27,6 +27,7 @@ namespace Synaxis.Adapters.Agents.DependencyInjection
             Action<AgentsAdapterOptions>? configureOptions = null)
         {
             ArgumentNullException.ThrowIfNull(services);
+
             // Register options
             var optionsBuilder = services.AddOptions<AgentsAdapterOptions>();
             if (configureOptions != null)
@@ -66,6 +67,7 @@ namespace Synaxis.Adapters.Agents.DependencyInjection
         {
             ArgumentNullException.ThrowIfNull(services);
             ArgumentNullException.ThrowIfNull(storageFactory);
+
             // Register options
             var optionsBuilder = services.AddOptions<AgentsAdapterOptions>();
             if (configureOptions != null)

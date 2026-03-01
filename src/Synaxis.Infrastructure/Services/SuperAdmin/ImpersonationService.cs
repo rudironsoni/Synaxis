@@ -70,7 +70,7 @@ namespace Synaxis.Infrastructure.Services.SuperAdmin
             await this.ValidateUserExistsAsync(request.UserId, request.OrganizationId).ConfigureAwait(false);
 
             var tokenData = CreateTokenData(request);
-            var token = GenerateSecureToken(tokenData);
+            var token = this.GenerateSecureToken(tokenData);
 
             await this.LogImpersonationEventAsync(request, tokenData).ConfigureAwait(false);
 

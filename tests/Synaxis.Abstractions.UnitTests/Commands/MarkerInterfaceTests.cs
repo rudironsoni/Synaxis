@@ -59,10 +59,12 @@ public class MarkerInterfaceTests
 
     private sealed class TestCommand : ICommand<string>
     {
+        public string Response => string.Empty;
     }
 
     private sealed class TestStreamRequest : IStreamRequest<int>
     {
+        public int Response => 0;
     }
 
     private sealed class TestNotification : INotification
@@ -71,11 +73,13 @@ public class MarkerInterfaceTests
 
     private sealed class ComplexCommand : ICommand<ComplexResult>
     {
+        public ComplexResult Response => new();
         public string Data { get; init; } = "test";
     }
 
     private sealed class ComplexStreamRequest : IStreamRequest<ComplexResult>
     {
+        public ComplexResult Response => new();
         public string Query { get; init; } = "query";
     }
 

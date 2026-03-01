@@ -1,8 +1,6 @@
-// <copyright file="SmartRouter.cs" company="PlaceholderCompany">
+// <copyright file="SmartRouterEngine.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
-
-#pragma warning disable MA0049 // Type name matches namespace - false positive, type has unique name
 
 namespace Synaxis.Routing.SmartRouter;
 
@@ -10,12 +8,12 @@ using System.Collections.Concurrent;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 using Synaxis.Routing.CircuitBreaker;
-using CircuitBreakerImpl = Synaxis.Routing.CircuitBreaker.CircuitBreaker;
+using CircuitBreakerImpl = Synaxis.Routing.CircuitBreaker.CircuitBreakerEngine;
 
 /// <summary>
 /// SmartRouter with ML-based predictive routing for AI providers.
 /// </summary>
-public class SmartRouter : IRouter
+public class SmartRouterEngine : IRouter
 {
     private readonly SmartRouterOptions _options;
     private readonly RoutingPredictor _predictor;
@@ -23,15 +21,15 @@ public class SmartRouter : IRouter
     private readonly ConcurrentDictionary<string, Provider> _providers;
     private readonly ConcurrentDictionary<string, CircuitBreakerImpl> _circuitBreakers;
     private readonly RoutingMetrics _metrics;
-    private readonly ILogger<SmartRouter>? _logger;
+    private readonly ILogger<SmartRouterEngine>? _logger;
     private readonly Lock _lock = new();
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="SmartRouter"/> class.
+    /// Initializes a new instance of the <see cref="SmartRouterEngine"/> class.
     /// </summary>
     /// <param name="options">The router options.</param>
     /// <param name="logger">The logger.</param>
-    public SmartRouter(SmartRouterOptions? options = null, ILogger<SmartRouter>? logger = null)
+    public SmartRouterEngine(SmartRouterOptions? options = null, ILogger<SmartRouterEngine>? logger = null)
     {
         this._options = options ?? new SmartRouterOptions();
         this._logger = logger;
@@ -387,5 +385,3 @@ public class SmartRouter : IRouter
         return ((currentAverage * (totalRequests - 1)) + newLatencyMs) / totalRequests;
     }
 }
-
-#pragma warning restore MA0049

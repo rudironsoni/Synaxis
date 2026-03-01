@@ -2,7 +2,6 @@
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -14,6 +13,12 @@ namespace Synaxis.Infrastructure.Data.Migrations
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            CreateInvitationTable(migrationBuilder);
+            CreateInvitationIndexes(migrationBuilder);
+        }
+
+        private static void CreateInvitationTable(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
                 name: "invitations",
@@ -73,7 +78,10 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
+        }
 
+        private static void CreateInvitationIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_invitations_accepted_by",
                 table: "invitations",

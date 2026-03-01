@@ -2,7 +2,6 @@
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-
 using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
@@ -15,6 +14,19 @@ namespace Synaxis.Infrastructure.Data.Migrations
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            CreateTokenTables(migrationBuilder);
+            CreateTokenIndexes(migrationBuilder);
+        }
+
+        private static void CreateTokenTables(MigrationBuilder migrationBuilder)
+        {
+            CreateEmailVerificationTokensTable(migrationBuilder);
+            CreatePasswordResetTokensTable(migrationBuilder);
+            CreateRefreshTokensTable(migrationBuilder);
+        }
+
+        private static void CreateEmailVerificationTokensTable(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
                 name: "email_verification_tokens",
@@ -37,7 +49,10 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
+        }
 
+        private static void CreatePasswordResetTokensTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "password_reset_tokens",
                 columns: table => new
@@ -59,7 +74,10 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
+        }
 
+        private static void CreateRefreshTokensTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "refresh_tokens",
                 columns: table => new
@@ -83,7 +101,10 @@ namespace Synaxis.Infrastructure.Data.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
+        }
 
+        private static void CreateTokenIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_email_verification_tokens_expires_at",
                 table: "email_verification_tokens",

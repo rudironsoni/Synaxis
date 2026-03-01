@@ -29,6 +29,7 @@ namespace Synaxis.Adapters.Mcp.DependencyInjection
             Action<McpAdapterOptions>? configure = null)
         {
             ArgumentNullException.ThrowIfNull(services);
+
             // Configure options
             if (configure is not null)
             {
@@ -54,7 +55,7 @@ namespace Synaxis.Adapters.Mcp.DependencyInjection
                     McpTransportType.Stdio => ActivatorUtilities.CreateInstance<StdioTransport>(sp, server),
                     McpTransportType.Http => ActivatorUtilities.CreateInstance<HttpTransport>(sp, server, options.HttpBaseUrl),
                     McpTransportType.Sse => ActivatorUtilities.CreateInstance<SseTransport>(sp, server, options.SseEndpoint),
-                    _ => throw new InvalidOperationException($"Unknown transport type: {options.DefaultTransport}")
+                    _ => throw new InvalidOperationException($"Unknown transport type: {options.DefaultTransport}"),
                 };
             });
 

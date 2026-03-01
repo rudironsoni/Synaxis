@@ -23,8 +23,9 @@ namespace Synaxis.Infrastructure.Data
 
             // Use PostgreSQL for migrations
             // In production, this would come from configuration
+            const string connectionString = "Host=localhost;Database=synaxis;Username=postgres";
             optionsBuilder.UseNpgsql(
-                "Host=localhost;Database=synaxis;Username=postgres;Password=postgres",
+                connectionString,
                 npgsqlOptions =>
                 {
                     npgsqlOptions.MigrationsAssembly("Synaxis.Infrastructure");

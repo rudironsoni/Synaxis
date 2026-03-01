@@ -1,6 +1,10 @@
-using Synaxis.Contracts.V1.Common;
+// <copyright file="WorkflowFailed.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
 namespace Synaxis.Contracts.V1.DomainEvents;
+
+using Synaxis.Contracts.V1.Common;
 
 /// <summary>
 /// Event raised when a workflow fails.
@@ -10,55 +14,55 @@ namespace Synaxis.Contracts.V1.DomainEvents;
 public record WorkflowFailed : DomainEventBase
 {
     /// <summary>
-    /// Identifier of the failed workflow.
+    /// Gets the identifier of the failed workflow.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("workflowId")]
     public required Guid WorkflowId { get; init; }
 
     /// <summary>
-    /// Identifier of the step that failed (if applicable).
+    /// Gets the identifier of the step that failed (if applicable).
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("failedStepId")]
     public Guid? FailedStepId { get; init; }
 
     /// <summary>
-    /// Name of the step that failed (if applicable).
+    /// Gets the name of the step that failed (if applicable).
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("failedStepName")]
     public string? FailedStepName { get; init; }
 
     /// <summary>
-    /// Error message describing the failure.
+    /// Gets the error message describing the failure.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("errorMessage")]
     public required string ErrorMessage { get; init; }
 
     /// <summary>
-    /// Error code for the failure.
+    /// Gets the error code for the failure.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("errorCode")]
     public string? ErrorCode { get; init; }
 
     /// <summary>
-    /// Stack trace if available.
+    /// Gets the stack trace if available.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("stackTrace")]
     public string? StackTrace { get; init; }
 
     /// <summary>
-    /// Whether the workflow can be retried.
+    /// Gets a value indicating whether the workflow can be retried.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("retryable")]
     public bool Retryable { get; init; }
 
     /// <summary>
-    /// Number of retry attempts made.
+    /// Gets the number of retry attempts made.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("retryCount")]
     public int RetryCount { get; init; }
 
     /// <summary>
-    /// Timestamp when the workflow failed.
+    /// Gets the timestamp when the workflow failed.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("failedAt")]
     public DateTimeOffset FailedAt { get; init; }

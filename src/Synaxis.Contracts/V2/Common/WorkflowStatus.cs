@@ -1,3 +1,7 @@
+// <copyright file="WorkflowStatus.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
+
 namespace Synaxis.Contracts.V2.Common;
 
 /// <summary>
@@ -41,5 +45,5 @@ public enum WorkflowStatus
     /// <summary>
     /// Workflow is paused and can be resumed.
     /// </summary>
-    Paused = 6
+    Paused = 6,
 }

@@ -85,30 +85,37 @@ public class CommandInterfaceTests
 
     private sealed class TestChatCommand : IChatCommand<TestChatResponse>
     {
+        public TestChatResponse Response => new();
     }
 
     private sealed class TestEmbeddingCommand : IEmbeddingCommand<TestEmbeddingResponse>
     {
+        public TestEmbeddingResponse Response => new();
     }
 
     private sealed class TestImageGenerationCommand : IImageGenerationCommand<TestImageResponse>
     {
+        public TestImageResponse Response => new();
     }
 
     private sealed class TestChatStreamCommand : IChatStreamCommand<TestChatChunk>
     {
+        public TestChatChunk Response => new();
     }
 
     private sealed class TestAudioTranscriptionCommand : IAudioTranscriptionCommand<TestTranscriptionResponse>
     {
+        public TestTranscriptionResponse Response => new();
     }
 
     private sealed class TestAudioSynthesisCommand : IAudioSynthesisCommand<TestAudioResponse>
     {
+        public TestAudioResponse Response => new();
     }
 
     private sealed class TestRerankCommand : IRerankCommand<TestRerankResponse>
     {
+        public TestRerankResponse Response => new();
     }
 
     private sealed class TestChatResponse

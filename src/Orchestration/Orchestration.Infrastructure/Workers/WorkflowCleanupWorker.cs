@@ -47,10 +47,10 @@ public class WorkflowCleanupWorker : IJob
             var cutoffDate = DateTime.UtcNow.Add(-retentionPeriod);
 
             // Archive old workflows
-            var archivedCount = await this.ArchiveWorkflowsAsync(cutoffDate, correlationId, context.CancellationToken).ConfigureAwait(false);
+            var archivedCount = await this.ArchiveWorkflowsAsync(cutoffDate, correlationId).ConfigureAwait(false);
 
             // Clean up archived workflows (soft delete)
-            var cleanedCount = await this.CleanupWorkflowsAsync(cutoffDate, correlationId, context.CancellationToken).ConfigureAwait(false);
+            var cleanedCount = await this.CleanupWorkflowsAsync(cutoffDate, correlationId).ConfigureAwait(false);
 
             this._logger.LogInformation(
                 "[WorkflowCleanup][{CorrelationId}] Completed: Archived={Archived}, Cleaned={Cleaned}",
@@ -66,7 +66,7 @@ public class WorkflowCleanupWorker : IJob
         await Task.CompletedTask.ConfigureAwait(false);
     }
 
-    private async Task<int> ArchiveWorkflowsAsync(DateTime cutoffDate, string correlationId, CancellationToken cancellationToken)
+    private async Task<int> ArchiveWorkflowsAsync(DateTime cutoffDate, string correlationId)
     {
         // Archive completed workflows older than retention period
         // In production, this would move events to cold storage
@@ -79,7 +79,7 @@ public class WorkflowCleanupWorker : IJob
         return 0;
     }
 
-    private async Task<int> CleanupWorkflowsAsync(DateTime cutoffDate, string correlationId, CancellationToken cancellationToken)
+    private async Task<int> CleanupWorkflowsAsync(DateTime cutoffDate, string correlationId)
     {
         // Soft delete or hard delete archived workflows
         this._logger.LogInformation(

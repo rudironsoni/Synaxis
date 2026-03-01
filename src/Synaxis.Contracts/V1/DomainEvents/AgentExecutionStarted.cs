@@ -1,6 +1,10 @@
-using Synaxis.Contracts.V1.Common;
+// <copyright file="AgentExecutionStarted.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
 namespace Synaxis.Contracts.V1.DomainEvents;
+
+using Synaxis.Contracts.V1.Common;
 
 /// <summary>
 /// Event raised when an agent execution starts.
@@ -10,43 +14,43 @@ namespace Synaxis.Contracts.V1.DomainEvents;
 public record AgentExecutionStarted : DomainEventBase
 {
     /// <summary>
-    /// Identifier of the agent being executed.
+    /// Gets the identifier of the agent being executed.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("agentId")]
     public required Guid AgentId { get; init; }
 
     /// <summary>
-    /// Identifier of the user who initiated the execution.
+    /// Gets the identifier of the user who initiated the execution.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("initiatedByUserId")]
     public required string InitiatedByUserId { get; init; }
 
     /// <summary>
-    /// Input parameters for the execution.
+    /// Gets the input parameters for the execution.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("input")]
-    public Dictionary<string, object>? Input { get; init; }
+    public IReadOnlyDictionary<string, object>? Input { get; init; }
 
     /// <summary>
-    /// Execution priority (higher = more urgent).
+    /// Gets the execution priority (higher = more urgent).
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("priority")]
     public int Priority { get; init; } = 0;
 
     /// <summary>
-    /// Maximum allowed execution time.
+    /// Gets the maximum allowed execution time.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("timeout")]
     public TimeSpan? Timeout { get; init; }
 
     /// <summary>
-    /// Timestamp when the execution started.
+    /// Gets the timestamp when the execution started.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("startedAt")]
     public DateTimeOffset StartedAt { get; init; }
 
     /// <summary>
-    /// Initial status of the execution.
+    /// Gets the initial status of the execution.
     /// </summary>
     [System.Text.Json.Serialization.JsonPropertyName("status")]
     public ExecutionStatus Status { get; init; } = ExecutionStatus.InProgress;

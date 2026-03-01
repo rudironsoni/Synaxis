@@ -304,13 +304,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
             // Find all providers that support this model for this organization
             var alternatives = await db.ProviderModels
                 .Where(pm => pm.GlobalModelId == modelId && pm.ProviderId != currentProvider && pm.IsAvailable)
-                .Join(
-                    db.Database.SqlQuery<OrgProviderDto>(
-                        $"SELECT \"Id\", \"ProviderId\", \"IsEnabled\" FROM operations.\"OrganizationProvider\" WHERE \"OrganizationId\" = ${{organizationId}} AND \"IsEnabled\" = true",
-                        new[] { new Npgsql.NpgsqlParameter("organizationId", organizationId) }),
-                    pm => pm.ProviderId,
-                    op => op.ProviderId.ToString(),
-                    (pm, op) => new { pm.ProviderId, op.Id })
+                    .Join(
+                        db.Database.SqlQuery<OrgProviderDto>(
+                            $"SELECT \"Id\", \"ProviderId\", \"IsEnabled\" FROM operations.\"OrganizationProvider\" WHERE \"OrganizationId\" = {organizationId} AND \"IsEnabled\" = true"),
+                        pm => pm.ProviderId,
+                        op => op.ProviderId.ToString(),
+                        (pm, op) => new { pm.ProviderId, op.Id })
                 .ToListAsync(ct).ConfigureAwait(false);
 
             var result = new List<ProviderAlternative>();
@@ -324,8 +323,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
 
                 // Get health status
                 var health = await db.Database.SqlQuery<HealthDto>(
-                    $"SELECT \"IsHealthy\" FROM operations.\"ProviderHealthStatus\" WHERE \"OrganizationProviderId\" = ${{organizationProviderId}} ORDER BY \"LastCheckedAt\" DESC LIMIT 1",
-                    new[] { new Npgsql.NpgsqlParameter("organizationProviderId", alt.Id) })
+                        $"SELECT \"IsHealthy\" FROM operations.\"ProviderHealthStatus\" WHERE \"OrganizationProviderId\" = {alt.Id} ORDER BY \"LastCheckedAt\" DESC LIMIT 1")
                     .FirstOrDefaultAsync(ct).ConfigureAwait(false);
 
                 result.Add(new ProviderAlternative

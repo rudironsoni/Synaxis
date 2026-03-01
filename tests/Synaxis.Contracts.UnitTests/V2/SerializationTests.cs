@@ -1,4 +1,3 @@
-using System.Text.Json;
 using FluentAssertions;
 using Synaxis.Contracts.V2.Commands;
 using Synaxis.Contracts.V2.Common;
@@ -148,7 +147,7 @@ public class SerializationTests
             Description = "A test agent",
             AgentType = "chat",
             Configuration = new Dictionary<string, object> { ["model"] = "gpt-4" },
-            Resources = new global::Synaxis.Contracts.V2.DomainEvents.ResourceRequirements
+            Resources = new ResourceRequirements
             {
                 Cpu = "100m",
                 Memory = "512Mi"
@@ -180,7 +179,7 @@ public class SerializationTests
             WorkflowId = Guid.NewGuid(),
             Input = new Dictionary<string, object> { ["prompt"] = "Hello!" },
             Priority = 1,
-            Resources = new global::Synaxis.Contracts.V2.Commands.ResourceRequirements { Cpu = "200m" }
+            Resources = new ResourceRequirements { Cpu = "200m" }
         };
 
         var json = JsonSerializer.Serialize(original, _options);

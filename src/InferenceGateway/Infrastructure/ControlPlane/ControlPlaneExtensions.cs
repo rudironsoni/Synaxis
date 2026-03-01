@@ -38,10 +38,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
                 if (!string.IsNullOrWhiteSpace(options.ConnectionString))
                 {
                     // Mask password for logging
-                    var connStrMasked = System.Text.RegularExpressions.Regex.Replace(
-                        options.ConnectionString,
-                        @"Password=([^;]+)",
-                        "Password=***");
+                    var connStrMasked = MaskPassword(options.ConnectionString);
                     logger?.LogInformation("Using PostgreSQL with connection string: {ConnectionString}", connStrMasked);
                 }
 
@@ -78,6 +75,32 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane
             services.AddScoped<IDeviationRegistry, DeviationRegistry>();
 
             return services;
+        }
+
+        private static string MaskPassword(string connectionString)
+        {
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                return string.Empty;
+            }
+
+            var segments = connectionString.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            for (var index = 0; index < segments.Length; index++)
+            {
+                var parts = segments[index].Split('=', 2);
+                if (parts.Length != 2)
+                {
+                    continue;
+                }
+
+                if (string.Equals(parts[0], "Password", StringComparison.OrdinalIgnoreCase))
+                {
+                    segments[index] = $"{parts[0]}=***";
+                    break;
+                }
+            }
+
+            return string.Join(';', segments);
         }
     }
 }
