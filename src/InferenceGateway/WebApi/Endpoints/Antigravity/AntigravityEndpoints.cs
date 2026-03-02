@@ -10,6 +10,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Antigravity
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.AspNetCore.Routing;
+    using Synaxis.InferenceGateway.Application.Configuration;
     using Synaxis.InferenceGateway.Infrastructure.Auth;
 
     /// <summary>
@@ -22,6 +23,18 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Antigravity
         /// </summary>
         /// <param name="app">The endpoint route builder.</param>
         public static void MapAntigravityEndpoints(this IEndpointRouteBuilder app)
+        {
+            var group = app.MapGroup("/antigravity")
+                .WithTags("Antigravity")
+                .RequireCors("PublicAPI");
+
+            MapCallbackEndpoint(app);
+            MapAccountsEndpoint(group);
+            MapStartAuthEndpoint(group);
+            MapCompleteAuthEndpoint(group);
+        }
+
+        private static void MapCallbackEndpoint(IEndpointRouteBuilder app)
         {
             app.MapGet("/oauth/antigravity/callback", async (IAntigravityAuthManager authManager, HttpRequest request) =>
             {
@@ -46,21 +59,24 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Antigravity
             })
             .WithTags("Antigravity")
             .WithName("AntigravityAuthCallback");
+        }
 
-            var group = app.MapGroup("/antigravity")
-                .WithTags("Antigravity")
-                .RequireCors("PublicAPI");
-
+        private static void MapAccountsEndpoint(RouteGroupBuilder group)
+        {
             group.MapGet("/accounts", (IAntigravityAuthManager authManager) =>
             {
                 return Results.Ok(authManager.ListAccounts());
             })
             .WithName("ListAntigravityAccounts");
+        }
 
+        private static void MapStartAuthEndpoint(RouteGroupBuilder group)
+        {
             group.MapPost("/auth/start", async (IAntigravityAuthManager authManager, [FromBody] StartAuthRequest request) =>
             {
-                const string defaultRedirectUrl = "http://localhost:51121/oauth/antigravity/callback";
-                var redirectUrl = string.IsNullOrWhiteSpace(request.RedirectUrl) ? defaultRedirectUrl : request.RedirectUrl;
+                var redirectUrl = string.IsNullOrWhiteSpace(request.RedirectUrl)
+                    ? AntigravitySettings.DefaultRedirectUrl
+                    : request.RedirectUrl;
                 var url = await authManager.StartAuthFlowAsync(redirectUrl).ConfigureAwait(false);
                 return Results.Ok(new
                 {
@@ -70,7 +86,10 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Antigravity
                 });
             })
             .WithName("StartAntigravityAuth");
+        }
 
+        private static void MapCompleteAuthEndpoint(RouteGroupBuilder group)
+        {
             group.MapPost("/auth/complete", async (IAntigravityAuthManager authManager, [FromBody] CompleteAuthRequest request) =>
             {
                 try
@@ -94,7 +113,6 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Antigravity
 
         private static (string Code, string State, string RedirectUrl) ResolveAuthCompletion(CompleteAuthRequest request)
         {
-            const string defaultRedirectUrl = "http://localhost:51121/oauth/antigravity/callback";
             var code = request.Code;
             var state = request.State;
             var redirectUrl = request.RedirectUrl;
@@ -110,7 +128,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Antigravity
 
             if (string.IsNullOrWhiteSpace(redirectUrl))
             {
-                redirectUrl = defaultRedirectUrl;
+                redirectUrl = AntigravitySettings.DefaultRedirectUrl;
             }
 
             return (code ?? string.Empty, state ?? string.Empty, redirectUrl);

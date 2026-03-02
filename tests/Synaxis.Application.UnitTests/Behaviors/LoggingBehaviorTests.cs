@@ -45,9 +45,9 @@ namespace Synaxis.Tests.Behaviors
             this._logger.Received(1).Log(
                 LogLevel.Information,
                 Arg.Any<EventId>(),
-                Arg.Is<object>(o => o.ToString()!.Contains("Handling") && o.ToString()!.Contains("TestMessage")),
+                Arg.Is<object>(o => o != null && o.ToString()!.Contains("Handling") && o.ToString()!.Contains("TestMessage")),
                 Arg.Any<Exception>(),
-                Arg.Any<Func<object, Exception?, string>>());
+                Arg.Any<Func<object, Exception, string>>());
         }
 
         [Fact]
@@ -64,9 +64,9 @@ namespace Synaxis.Tests.Behaviors
             this._logger.Received(1).Log(
                 LogLevel.Information,
                 Arg.Any<EventId>(),
-                Arg.Is<object>(o => o.ToString()!.Contains("Handled") && o.ToString()!.Contains("TestMessage")),
+                Arg.Is<object>(o => o != null && o.ToString()!.Contains("Handled") && o.ToString()!.Contains("TestMessage")),
                 Arg.Any<Exception>(),
-                Arg.Any<Func<object, Exception?, string>>());
+                Arg.Any<Func<object, Exception, string>>());
         }
 
         [Fact]
@@ -108,9 +108,9 @@ namespace Synaxis.Tests.Behaviors
             this._logger.Received(1).Log(
                 LogLevel.Error,
                 Arg.Any<EventId>(),
-                Arg.Is<object>(o => o.ToString()!.Contains("Error handling") && o.ToString()!.Contains("TestMessage")),
+                Arg.Is<object>(o => o != null && o.ToString()!.Contains("Error handling") && o.ToString()!.Contains("TestMessage")),
                 Arg.Any<Exception>(),
-                Arg.Any<Func<object, Exception?, string>>());
+                Arg.Any<Func<object, Exception, string>>());
         }
 
         [Fact]
@@ -136,7 +136,7 @@ namespace Synaxis.Tests.Behaviors
             MessageHandlerDelegate<TestMessage, TestResponse> next = (msg, ct) => ValueTask.FromResult(new TestResponse());
 
             // Act
-            Func<Task> act = async () => await this._behavior.Handle(null!, next, CancellationToken.None);
+            Func<Task> act = async () => await this._behavior.Handle(default!, next, CancellationToken.None);
 
             // Assert
             await act.Should().ThrowAsync<ArgumentNullException>()
@@ -150,7 +150,7 @@ namespace Synaxis.Tests.Behaviors
             var message = new TestMessage();
 
             // Act
-            Func<Task> act = async () => await this._behavior.Handle(message, null!, CancellationToken.None);
+            Func<Task> act = async () => await this._behavior.Handle(message, default!, CancellationToken.None);
 
             // Assert
             await act.Should().ThrowAsync<ArgumentNullException>()
@@ -161,7 +161,7 @@ namespace Synaxis.Tests.Behaviors
         public void Constructor_WithNullLogger_ThrowsArgumentNullException()
         {
             // Act
-            Action act = () => new LoggingBehavior<TestMessage, TestResponse>(null!);
+            Action act = () => new LoggingBehavior<TestMessage, TestResponse>(default!);
 
             // Assert
             act.Should().Throw<ArgumentNullException>()
@@ -186,9 +186,9 @@ namespace Synaxis.Tests.Behaviors
             this._logger.Received(1).Log(
                 LogLevel.Information,
                 Arg.Any<EventId>(),
-                Arg.Is<object>(o => o.ToString()!.Contains("ms")),
+                Arg.Is<object>(o => o != null && o.ToString()!.Contains("ms")),
                 Arg.Any<Exception>(),
-                Arg.Any<Func<object, Exception?, string>>());
+                Arg.Any<Func<object, Exception, string>>());
         }
 
         [Fact]

@@ -176,15 +176,21 @@ namespace Synaxis.InferenceGateway.WebApi.Agents
         }
 
         /// <inheritdoc/>
-        public override ValueTask<AgentSession> CreateSessionAsync(CancellationToken cancellationToken = default)
+        protected override ValueTask<AgentSession> CreateSessionCoreAsync(CancellationToken cancellationToken = default)
             => new ValueTask<AgentSession>(new RoutingAgentSession());
 
         /// <inheritdoc/>
-        public override ValueTask<AgentSession> DeserializeSessionAsync(JsonElement serializedState, JsonSerializerOptions? jsonSerializerOptions = null, CancellationToken cancellationToken = default)
+        protected override ValueTask<AgentSession> DeserializeSessionCoreAsync(
+            JsonElement serializedState,
+            JsonSerializerOptions? jsonSerializerOptions = null,
+            CancellationToken cancellationToken = default)
             => new ValueTask<AgentSession>(new RoutingAgentSession());
 
         /// <inheritdoc/>
-        public override JsonElement SerializeSession(AgentSession session, JsonSerializerOptions? jsonSerializerOptions = null)
-            => JsonSerializer.SerializeToElement(new { }, jsonSerializerOptions);
+        protected override ValueTask<JsonElement> SerializeSessionCoreAsync(
+            AgentSession session,
+            JsonSerializerOptions? jsonSerializerOptions = null,
+            CancellationToken cancellationToken = default)
+            => new ValueTask<JsonElement>(JsonSerializer.SerializeToElement(new { }, jsonSerializerOptions));
     }
 }

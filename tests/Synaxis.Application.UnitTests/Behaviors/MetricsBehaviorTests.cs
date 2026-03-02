@@ -46,9 +46,9 @@ namespace Synaxis.Tests.Behaviors
             this._logger.Received(1).Log(
                 LogLevel.Debug,
                 Arg.Any<EventId>(),
-                Arg.Is<object>(o => o.ToString()!.Contains("Metrics") && o.ToString()!.Contains("TestMessage")),
+                Arg.Is<object>(o => o != null && o.ToString()!.Contains("Metrics") && o.ToString()!.Contains("TestMessage")),
                 Arg.Any<Exception>(),
-                Arg.Any<Func<object, Exception?, string>>());
+                Arg.Any<Func<object, Exception, string>>());
         }
 
         [Fact]
@@ -131,7 +131,7 @@ namespace Synaxis.Tests.Behaviors
             MessageHandlerDelegate<TestMessage, TestResponse> next = (msg, ct) => ValueTask.FromResult(new TestResponse());
 
             // Act
-            Func<Task> act = async () => await this._behavior.Handle(null!, next, CancellationToken.None);
+            Func<Task> act = async () => await this._behavior.Handle(default!, next, CancellationToken.None);
 
             // Assert
             await act.Should().ThrowAsync<ArgumentNullException>()
@@ -145,7 +145,7 @@ namespace Synaxis.Tests.Behaviors
             var message = new TestMessage();
 
             // Act
-            Func<Task> act = async () => await this._behavior.Handle(message, null!, CancellationToken.None);
+            Func<Task> act = async () => await this._behavior.Handle(message, default!, CancellationToken.None);
 
             // Assert
             await act.Should().ThrowAsync<ArgumentNullException>()
@@ -156,7 +156,7 @@ namespace Synaxis.Tests.Behaviors
         public void Constructor_WithNullLogger_ThrowsArgumentNullException()
         {
             // Act
-            Action act = () => new MetricsBehavior<TestMessage, TestResponse>(null!);
+            Action act = () => new MetricsBehavior<TestMessage, TestResponse>(default!);
 
             // Assert
             act.Should().Throw<ArgumentNullException>()
@@ -181,9 +181,9 @@ namespace Synaxis.Tests.Behaviors
             this._logger.Received(1).Log(
                 LogLevel.Debug,
                 Arg.Any<EventId>(),
-                Arg.Is<object>(o => o.ToString()!.Contains("Duration")),
+                Arg.Is<object>(o => o != null && o.ToString()!.Contains("Duration")),
                 Arg.Any<Exception>(),
-                Arg.Any<Func<object, Exception?, string>>());
+                Arg.Any<Func<object, Exception, string>>());
         }
 
         [Fact]

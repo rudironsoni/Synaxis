@@ -424,9 +424,38 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
 
         private (string IpAddress, string UserAgent) GetRequestMetadata()
         {
-            var ipAddress = this.HttpContext.Connection.RemoteIpAddress?.ToString() ?? string.Empty;
-            var userAgent = this.HttpContext.Request.Headers["User-Agent"].ToString();
-            return (ipAddress, userAgent);
+            return (this.ResolveClientIpAddress(), this.ResolveUserAgent());
+        }
+
+        /// <summary>
+        /// Gets or sets the forwarded for header for the current request.
+        /// </summary>
+        [FromHeader(Name = "X-Forwarded-For")]
+        public string? ForwardedForHeader { get; set; }
+
+        private string ResolveClientIpAddress()
+        {
+            if (!string.IsNullOrWhiteSpace(this.ForwardedForHeader))
+            {
+                var firstEntry = this.ForwardedForHeader.Split(',', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
+                if (!string.IsNullOrWhiteSpace(firstEntry))
+                {
+                    return firstEntry.Trim();
+                }
+            }
+
+            return this.HttpContext.Connection.RemoteIpAddress?.ToString() ?? string.Empty;
+        }
+
+        /// <summary>
+        /// Gets or sets the user agent header for the current request.
+        /// </summary>
+        [FromHeader(Name = "User-Agent")]
+        public string? UserAgentHeader { get; set; }
+
+        private string ResolveUserAgent()
+        {
+            return this.UserAgentHeader ?? string.Empty;
         }
 
         private sealed class DeletionStats

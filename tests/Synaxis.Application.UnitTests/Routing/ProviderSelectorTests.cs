@@ -56,16 +56,16 @@ namespace Synaxis.Tests.Routing
             this._logger.Received(1).Log(
                 LogLevel.Debug,
                 Arg.Any<EventId>(),
-                Arg.Is<object>(o => o.ToString()!.Contains("Selecting provider") && o.ToString()!.Contains("TestRequest")),
+                Arg.Is<object>(o => o != null && o.ToString()!.Contains("Selecting provider") && o.ToString()!.Contains("TestRequest")),
                 Arg.Any<Exception>(),
-                Arg.Any<Func<object, Exception?, string>>());
+                Arg.Any<Func<object, Exception, string>>());
         }
 
         [Fact]
         public async Task SelectProviderAsync_WithNullRequest_ThrowsArgumentNullException()
         {
             // Act
-            Func<Task> act = async () => await this._selector.SelectProviderAsync(null!, CancellationToken.None);
+            Func<Task> act = async () => await this._selector.SelectProviderAsync(default!, CancellationToken.None);
 
             // Assert
             await act.Should().ThrowAsync<ArgumentNullException>()
@@ -76,7 +76,7 @@ namespace Synaxis.Tests.Routing
         public void Constructor_WithNullLogger_ThrowsArgumentNullException()
         {
             // Act
-            Action act = () => new ProviderSelector(null!);
+            Action act = () => new ProviderSelector(default!);
 
             // Assert
             act.Should().Throw<ArgumentNullException>()

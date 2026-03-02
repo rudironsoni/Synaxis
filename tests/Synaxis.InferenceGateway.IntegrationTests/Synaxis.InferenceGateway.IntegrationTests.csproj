@@ -5,6 +5,7 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <RootNamespace>Synaxis.InferenceGateway.IntegrationTests</RootNamespace>
     <AssemblyName>Synaxis.InferenceGateway.IntegrationTests</AssemblyName>
+    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="DotNetEnv" />

@@ -90,4 +90,12 @@ public abstract class EventStore : IEventStore
 
         this._streamVersions.TryRemove(streamId, out _);
     }
+
+    /// <summary>
+    /// Clears all stream versions.
+    /// </summary>
+    protected void ClearStreamVersions()
+    {
+        this._streamVersions.Clear();
+    }
 }

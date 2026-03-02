@@ -1,5 +1,5 @@
-// <copyright file="20260205000000_AddAuditLogPartitioning.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
+// <copyright file="20260205000000_AddAuditLogPartitioning.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
 namespace Synaxis.InferenceGateway.Infrastructure.Migrations
@@ -10,9 +10,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
     /// Migration to convert AuditLogs table to PostgreSQL native declarative partitioning.
     /// Implements monthly range partitioning for efficient data retention management.
     /// </summary>
-    /// <summary>
-    /// AddAuditLogPartitioning class.
-    /// </summary>
     public partial class AddAuditLogPartitioning : Migration
     {
         /// <summary>
@@ -22,18 +19,46 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
         /// <param name="migrationBuilder">The migration builder instance.</param>
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Step 1: Drop existing indexes that will be recreated on parent table
+            DropExistingIndexes(migrationBuilder);
+            RenameAuditLogsTable(migrationBuilder);
+            CreatePartitionedAuditLogsTable(migrationBuilder);
+            CreatePartitionedAuditLogsIndexes(migrationBuilder);
+            CreatePartitionManagementFunction(migrationBuilder);
+            CreatePartitionCleanupFunction(migrationBuilder);
+            CreateCurrentAndNextMonthPartitions(migrationBuilder);
+            MigrateAuditLogsData(migrationBuilder);
+            CreateHistoricalPartitions(migrationBuilder);
+            KeepBackupTableForVerification(migrationBuilder);
+        }
+
+        /// <summary>
+        /// Reverts the migration by dropping partitioned table and restoring from backup.
+        /// Removes partition management functions.
+        /// </summary>
+        /// <param name="migrationBuilder">The migration builder instance.</param>
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            RestoreAuditLogsBackup(migrationBuilder);
+            DropPartitionFunctions(migrationBuilder);
+        }
+
+        private static void DropExistingIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.Sql(@"
                 DROP INDEX IF EXISTS ""IX_AuditLogs_PartitionDate"";
                 DROP INDEX IF EXISTS ""IX_AuditLogs_CreatedAt"";
             ");
+        }
 
-            // Step 2: Rename existing table to backup
+        private static void RenameAuditLogsTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.Sql(@"
                 ALTER TABLE audit.""AuditLogs"" RENAME TO ""AuditLogs_backup"";
             ");
+        }
 
-            // Step 3: Create new partitioned parent table
+        private static void CreatePartitionedAuditLogsTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.Sql(@"
                 CREATE TABLE audit.""AuditLogs"" (
                     ""Id"" UUID NOT NULL,
@@ -53,8 +78,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                     CONSTRAINT ""CK_AuditLog_Action"" CHECK (""Action"" IN ('Create', 'Update', 'Delete', 'Read', 'Login', 'Logout', 'ApiCall', 'PermissionChange', 'ConfigChange'))
                 ) PARTITION BY RANGE (""PartitionDate"");
             ");
+        }
 
-            // Step 4: Create indexes on parent table
+        private static void CreatePartitionedAuditLogsIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.Sql(@"
                 CREATE INDEX ""IX_AuditLogs_OrganizationId"" ON audit.""AuditLogs"" (""OrganizationId"");
                 CREATE INDEX ""IX_AuditLogs_UserId"" ON audit.""AuditLogs"" (""UserId"");
@@ -64,8 +91,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 CREATE INDEX ""IX_AuditLogs_PartitionDate"" ON audit.""AuditLogs"" (""PartitionDate"");
                 CREATE INDEX ""IX_AuditLogs_CorrelationId"" ON audit.""AuditLogs"" (""CorrelationId"");
             ");
+        }
 
-            // Step 5: Create partition management function
+        private static void CreatePartitionManagementFunction(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.Sql(@"
                 CREATE OR REPLACE FUNCTION audit.ensure_auditlog_partition(target_date DATE)
                 RETURNS TEXT
@@ -77,12 +106,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                     end_date DATE;
                     create_sql TEXT;
                 BEGIN
-                    -- Calculate partition boundaries
                     start_date := DATE_TRUNC('month', target_date)::DATE;
                     end_date := (start_date + INTERVAL '1 month')::DATE;
                     partition_name := format('""AuditLogs_%s""', TO_CHAR(start_date, 'YYYY_MM'));
 
-                    -- Check if partition already exists
                     IF EXISTS (
                         SELECT 1 FROM pg_tables
                         WHERE schemaname = 'audit'
@@ -91,7 +118,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                         RETURN format('Partition %s already exists', partition_name);
                     END IF;
 
-                    -- Create the partition
                     create_sql := format(
                         'CREATE TABLE audit.%I PARTITION OF audit.""AuditLogs"" FOR VALUES FROM (%L) TO (%L)',
                         partition_name, start_date, end_date
@@ -102,8 +128,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 END;
                 $$;
             ");
+        }
 
-            // Step 6: Create partition cleanup function
+        private static void CreatePartitionCleanupFunction(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.Sql(@"
                 CREATE OR REPLACE FUNCTION audit.cleanup_auditlog_partitions(retention_days INTEGER)
                 RETURNS TABLE(dropped_partition TEXT, drop_reason TEXT)
@@ -125,10 +153,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                         WHERE parent.relname = 'AuditLogs'
                         AND parent.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'audit')
                     LOOP
-                        -- Extract start date from partition bound
-                        -- Format: FOR VALUES FROM ('2024-01-01') TO ('2024-02-01')
-                        IF partition_record.partition_bound ~ 'FROM \\(''([^'']+)''\\)' THEN
-                            partition_start := (regexp_match(partition_record.partition_bound, 'FROM \\(''([^'']+)''\\)'))[1]::DATE;
+                        IF partition_record.partition_bound ~ 'FROM \\(\''([^'']+)\''\\)' THEN
+                            partition_start := (regexp_match(partition_record.partition_bound, 'FROM \\(\''([^'']+)\''\\)'))[1]::DATE;
 
                             IF partition_start < DATE_TRUNC('month', cutoff_date)::DATE THEN
                                 EXECUTE format('DROP TABLE IF EXISTS audit.%I', partition_record.partition_name);
@@ -143,14 +169,18 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 END;
                 $$;
             ");
+        }
 
-            // Step 7: Create current and next month partitions
+        private static void CreateCurrentAndNextMonthPartitions(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.Sql(@"
                 SELECT audit.ensure_auditlog_partition(CURRENT_DATE);
                 SELECT audit.ensure_auditlog_partition(CURRENT_DATE + INTERVAL '1 month');
             ");
+        }
 
-            // Step 8: Migrate existing data from backup table
+        private static void MigrateAuditLogsData(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.Sql(@"
                 INSERT INTO audit.""AuditLogs"" (
                     ""Id"", ""OrganizationId"", ""UserId"", ""Action"", ""EntityType"", ""EntityId"",
@@ -163,8 +193,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                     ""CreatedAt"", COALESCE(""PartitionDate""::DATE, ""CreatedAt""::DATE)
                 FROM audit.""AuditLogs_backup"";
             ");
+        }
 
-            // Step 9: Create partitions for historical data if backup table has older data
+        private static void CreateHistoricalPartitions(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.Sql(@"
                 DO $$
                 DECLARE
@@ -181,27 +213,26 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 END;
                 $$;
             ");
+        }
 
-            // Step 10: Drop backup table (optional - comment out if you want to keep it for verification)
+        private static void KeepBackupTableForVerification(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.Sql(@"
                 -- DROP TABLE IF EXISTS audit.""AuditLogs_backup"";
                 -- Keeping backup table for safety. Manual verification recommended before dropping.
             ");
         }
-        /// <summary>
-        /// Reverts the migration by dropping partitioned table and restoring from backup.
-        /// Removes partition management functions.
-        /// </summary>
-        /// <param name="migrationBuilder">The migration builder instance.</param>
-        protected override void Down(MigrationBuilder migrationBuilder)
+
+        private static void RestoreAuditLogsBackup(MigrationBuilder migrationBuilder)
         {
-            // Restore from backup if it exists
             migrationBuilder.Sql(@"
                 DROP TABLE IF EXISTS audit.""AuditLogs"" CASCADE;
                 ALTER TABLE IF EXISTS audit.""AuditLogs_backup"" RENAME TO ""AuditLogs"";
             ");
+        }
 
-            // Drop functions
+        private static void DropPartitionFunctions(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.Sql(@"
                 DROP FUNCTION IF EXISTS audit.ensure_auditlog_partition(DATE);
                 DROP FUNCTION IF EXISTS audit.cleanup_auditlog_partitions(INTEGER);

@@ -6,6 +6,7 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <RootNamespace>Synaxis.Identity.IntegrationTests</RootNamespace>
     <AssemblyName>Synaxis.Identity.IntegrationTests</AssemblyName>
+    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>

@@ -16,6 +16,10 @@ namespace Synaxis.InferenceGateway.WebApi.Health
     /// </summary>
     public class ProviderConnectivityHealthCheck : IHealthCheck
     {
+        private static readonly TimeSpan DnsTimeout = TimeSpan.FromMilliseconds(500);
+        private static readonly TimeSpan TcpTimeout = TimeSpan.FromMilliseconds(800);
+        private static readonly TimeSpan TlsTimeout = TimeSpan.FromMilliseconds(1200);
+        private static readonly TimeSpan HttpTimeout = TimeSpan.FromMilliseconds(500);
         private readonly SynaxisConfiguration _config;
         private readonly ILogger<ProviderConnectivityHealthCheck> _logger;
 
@@ -50,25 +54,7 @@ namespace Synaxis.InferenceGateway.WebApi.Health
                     continue;
                 }
 
-                var endpoints = new List<string>();
-                if (!string.IsNullOrWhiteSpace(provider.Endpoint))
-                {
-                    endpoints.Add(provider.Endpoint);
-                }
-
-                if (!string.IsNullOrWhiteSpace(provider.FallbackEndpoint))
-                {
-                    endpoints.Add(provider.FallbackEndpoint);
-                }
-
-                if (endpoints.Count == 0)
-                {
-                    var defaultEndpoint = GetDefaultEndpoint(provider.Type);
-                    if (!string.IsNullOrWhiteSpace(defaultEndpoint))
-                    {
-                        endpoints.Add(defaultEndpoint);
-                    }
-                }
+                var endpoints = BuildEndpoints(provider);
 
                 if (endpoints.Count == 0)
                 {
@@ -78,24 +64,7 @@ namespace Synaxis.InferenceGateway.WebApi.Health
                     continue;
                 }
 
-                Exception? lastError = null;
-                var reachable = false;
-
-                foreach (var endpoint in endpoints)
-                {
-                    try
-                    {
-                        await this.CheckConnectivityAsync(endpoint, cancellationToken).ConfigureAwait(false);
-                        reachable = true;
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-                        lastError = ex;
-                        this._logger.LogWarning(ex, "Provider {Provider} connectivity check failed.", name);
-                        this._logger.LogError(ex, "Connectivity check failed for provider {Provider} at {Endpoint}", name, endpoint);
-                    }
-                }
+                var (reachable, lastError) = await this.CheckEndpointsAsync(name, endpoints, cancellationToken).ConfigureAwait(false);
 
                 if (!reachable)
                 {
@@ -113,48 +82,39 @@ namespace Synaxis.InferenceGateway.WebApi.Health
 
         private async Task CheckConnectivityAsync(string endpoint, CancellationToken ct)
         {
-            var normalized = endpoint.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || endpoint.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
-                ? endpoint
-                : $"https://{endpoint}";
-            var uri = new Uri(normalized);
+            var uri = NormalizeEndpoint(endpoint);
             var host = uri.Host;
-            int port;
-            if (uri.Port > 0)
-            {
-                port = uri.Port;
-            }
-            else
-            {
-                port = string.Equals(uri.Scheme, "https", StringComparison.Ordinal) ? 443 : 80;
-            }
+            var port = ResolvePort(uri);
 
             // 1. DNS (500ms)
             using var dnsCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-            dnsCts.CancelAfter(TimeSpan.FromMilliseconds(500));
-            var addresses = await Dns.GetHostAddressesAsync(host, dnsCts.Token).ConfigureAwait(false);
-            var ip = addresses.First(a => a.AddressFamily == AddressFamily.InterNetwork || a.AddressFamily == AddressFamily.InterNetworkV6);
+            dnsCts.CancelAfter(DnsTimeout);
+            var ip = await ResolveHostAsync(host, dnsCts.Token).ConfigureAwait(false);
 
             // 2. TCP (800ms)
             using var tcpClient = new TcpClient();
             using var tcpCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-            tcpCts.CancelAfter(TimeSpan.FromMilliseconds(800));
+            tcpCts.CancelAfter(TcpTimeout);
             await tcpClient.ConnectAsync(ip, port, tcpCts.Token).ConfigureAwait(false);
 
             // 3. TLS (1200ms) - only if https
             if (string.Equals(uri.Scheme, "https", StringComparison.Ordinal))
             {
                 using var tlsCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-                tlsCts.CancelAfter(TimeSpan.FromMilliseconds(1200));
-                using var sslStream = new SslStream(tcpClient.GetStream(), false);
-                await sslStream.AuthenticateAsClientAsync(new SslClientAuthenticationOptions { TargetHost = host }, tlsCts.Token).ConfigureAwait(false);
+                tlsCts.CancelAfter(TlsTimeout);
+                using var networkStream = tcpClient.GetStream();
+                using var sslStream = new SslStream(networkStream, leaveInnerStreamOpen: false);
+                var authOptions = new SslClientAuthenticationOptions { TargetHost = host };
+                await sslStream.AuthenticateAsClientAsync(authOptions, tlsCts.Token).ConfigureAwait(false);
             }
 
             // 4. HTTP HEAD (500ms)
             using var httpCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-            using var httpClient = new HttpClient { Timeout = TimeSpan.FromMilliseconds(500) };
-            httpCts.CancelAfter(TimeSpan.FromMilliseconds(500));
-            var request = new HttpRequestMessage(HttpMethod.Head, uri);
-            _ = await httpClient.SendAsync(request, httpCts.Token).ConfigureAwait(false);
+            using var httpClient = new HttpClient { Timeout = HttpTimeout };
+            httpCts.CancelAfter(HttpTimeout);
+            using var request = new HttpRequestMessage(HttpMethod.Head, uri);
+            using var response = await httpClient.SendAsync(request, httpCts.Token).ConfigureAwait(false);
+            _ = response.StatusCode;
 
             // We don't strictly require 200 OK, just that the server responded.
             // Many APIs return 401/404 on HEAD without tokens, which is fine for connectivity.
@@ -174,5 +134,80 @@ namespace Synaxis.InferenceGateway.WebApi.Health
             "pollinations" => "https://pollinations.ai",
             _ => null,
         };
+
+        private static Uri NormalizeEndpoint(string endpoint)
+        {
+            var normalized = endpoint.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || endpoint.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+                ? endpoint
+                : $"https://{endpoint}";
+            return new Uri(normalized);
+        }
+
+        private static int ResolvePort(Uri uri)
+        {
+            if (uri.Port > 0)
+            {
+                return uri.Port;
+            }
+
+            return string.Equals(uri.Scheme, "https", StringComparison.Ordinal) ? 443 : 80;
+        }
+
+        private static async Task<IPAddress> ResolveHostAsync(string host, CancellationToken ct)
+        {
+            var addresses = await Dns.GetHostAddressesAsync(host, ct).ConfigureAwait(false);
+            return addresses.First(a => a.AddressFamily == AddressFamily.InterNetwork || a.AddressFamily == AddressFamily.InterNetworkV6);
+        }
+
+        private static List<string> BuildEndpoints(ProviderConfig provider)
+        {
+            var endpoints = new List<string>();
+
+            if (!string.IsNullOrWhiteSpace(provider.Endpoint))
+            {
+                endpoints.Add(provider.Endpoint);
+            }
+
+            if (!string.IsNullOrWhiteSpace(provider.FallbackEndpoint))
+            {
+                endpoints.Add(provider.FallbackEndpoint);
+            }
+
+            if (endpoints.Count == 0)
+            {
+                var defaultEndpoint = GetDefaultEndpoint(provider.Type);
+                if (!string.IsNullOrWhiteSpace(defaultEndpoint))
+                {
+                    endpoints.Add(defaultEndpoint);
+                }
+            }
+
+            return endpoints;
+        }
+
+        private async Task<(bool Reachable, Exception? LastError)> CheckEndpointsAsync(
+            string providerName,
+            IEnumerable<string> endpoints,
+            CancellationToken cancellationToken)
+        {
+            Exception? lastError = null;
+
+            foreach (var endpoint in endpoints)
+            {
+                try
+                {
+                    await this.CheckConnectivityAsync(endpoint, cancellationToken).ConfigureAwait(false);
+                    return (true, null);
+                }
+                catch (Exception ex)
+                {
+                    lastError = ex;
+                    this._logger.LogWarning(ex, "Provider {Provider} connectivity check failed.", providerName);
+                    this._logger.LogError(ex, "Connectivity check failed for provider {Provider} at {Endpoint}", providerName, endpoint);
+                }
+            }
+
+            return (false, lastError);
+        }
     }
 }

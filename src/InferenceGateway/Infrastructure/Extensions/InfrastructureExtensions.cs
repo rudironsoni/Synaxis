@@ -294,12 +294,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
         {
             services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>
             {
-                var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient("Google");
                 return ActivatorUtilities.CreateInstance<Synaxis.InferenceGateway.Infrastructure.External.Google.GoogleChatClient>(
                     sp,
                     config.Key ?? string.Empty,
                     defaultModel,
-                    httpClient,
                     sp.GetRequiredService<ILogger<Synaxis.InferenceGateway.Infrastructure.External.Google.GoogleChatClient>>());
             });
         }
@@ -325,9 +323,8 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
         {
             services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>
             {
-                var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient("Antigravity");
-                var authManager = sp.GetRequiredService<IAntigravityAuthManager>();
-                return ActivatorUtilities.CreateInstance<AntigravityChatClient>(sp, httpClient, defaultModel, config.ProjectId ?? string.Empty, authManager);
+                var tokenProvider = sp.GetRequiredService<ITokenProvider>();
+                return ActivatorUtilities.CreateInstance<AntigravityChatClient>(sp, defaultModel, config.ProjectId ?? string.Empty, tokenProvider);
             });
         }
 
@@ -365,12 +362,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
         {
             services.AddKeyedSingleton<IChatClient>(name, (sp, k) =>
             {
-                var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
                 return ActivatorUtilities.CreateInstance<Synaxis.InferenceGateway.Infrastructure.External.KiloCode.KiloCodeChatClient>(
                     sp,
                     config.Key ?? string.Empty,
-                    defaultModel,
-                    httpClient);
+                    defaultModel);
             });
         }
 
@@ -387,18 +382,26 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
 
         private static IServiceCollection AddSmartRouter(this IServiceCollection services)
         {
-            services.AddScoped<IChatClient>(sp =>
-            {
-                var innerClient = ActivatorUtilities.CreateInstance<SmartRoutingChatClient>(sp);
+            services.AddScoped<IChatClient>(sp => ChatClientBuilderExtensions.BuildWithUsageTracking(sp));
 
-                var builder = new ChatClientBuilder(innerClient);
+            return services;
+        }
+
+        private static class ChatClientBuilderExtensions
+        {
+            public static IChatClient BuildWithUsageTracking(IServiceProvider serviceProvider)
+            {
+                var builder = CreateUsageTrackingBuilder(serviceProvider);
                 builder.UseFunctionInvocation();
                 builder.Use((inner, services) => new UsageTrackingChatClient(inner, services.GetRequiredService<ILogger<UsageTrackingChatClient>>()));
 
-                return builder.Build(sp);
-            });
+                return builder.Build(serviceProvider);
+            }
 
-            return services;
+            private static ChatClientBuilder CreateUsageTrackingBuilder(IServiceProvider serviceProvider)
+            {
+                return new ChatClientBuilder(serviceProvider.GetRequiredService<SmartRoutingChatClient>());
+            }
         }
 
         // Register infrastructure-level helpers

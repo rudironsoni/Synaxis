@@ -20,6 +20,16 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Admin
     /// </summary>
     public static class AdminEndpoints
     {
+        private const string DefaultStatus = "unknown";
+        private const string StatusOnline = "online";
+        private const string StatusUnknown = "unknown";
+        private const string ApiGatewayServiceName = "API Gateway";
+        private const string PostgresServiceName = "PostgreSQL";
+        private const string RedisServiceName = "Redis";
+        private const string ServiceHealthStatus = "healthy";
+        private static readonly TimeSpan HealthLatencyRange = TimeSpan.FromMilliseconds(130);
+        private static readonly TimeSpan HealthLatencyBase = TimeSpan.FromMilliseconds(20);
+
         /// <summary>
         /// Maps admin endpoints for provider management and health monitoring.
         /// </summary>
@@ -31,36 +41,27 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Admin
                 .RequireAuthorization(policy => policy.RequireAuthenticatedUser())
                 .RequireCors("WebApp");
 
+            MapProvidersEndpoint(adminGroup);
+            MapProviderUpdateEndpoint(adminGroup);
+            MapHealthEndpoint(adminGroup);
+
+            return app;
+        }
+
+        private static void MapProvidersEndpoint(RouteGroupBuilder adminGroup)
+        {
             adminGroup.MapGet("/providers", (IOptions<SynaxisConfiguration> config) =>
             {
-                var providers = config.Value.Providers.Select(p => new ProviderAdminDto
-                {
-                    Id = p.Key,
-                    Name = p.Key,
-                    Type = p.Value.Type,
-                    Enabled = p.Value.Enabled,
-                    Tier = p.Value.Tier,
-                    Endpoint = p.Value.Endpoint,
-                    KeyConfigured = !string.IsNullOrEmpty(p.Value.Key),
-                    Models = config.Value.CanonicalModels
-                        .Where(m => string.Equals(m.Provider, p.Key, StringComparison.Ordinal))
-                        .Select(m => new ProviderModelDto
-                        {
-                            Id = m.Id,
-                            Name = m.ModelPath,
-                            Enabled = true,
-                        })
-                        .ToList(),
-                    Status = "unknown",
-                    Latency = null,
-                }).ToList();
-
+                var providers = BuildProviderAdminDtos(config.Value);
                 return Results.Ok(providers);
             })
             .WithTags("Admin")
             .WithSummary("List all providers")
             .WithDescription("Returns a list of all configured AI providers with their settings and status");
+        }
 
+        private static void MapProviderUpdateEndpoint(RouteGroupBuilder adminGroup)
+        {
             adminGroup.MapPut("/providers/{providerId}", (
                 string providerId,
                 ProviderUpdateRequest request,
@@ -98,57 +99,15 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Admin
             .WithTags("Admin")
             .WithSummary("Update provider configuration")
             .WithDescription("Update provider settings including enabled status, API key, endpoint, and tier");
+        }
 
+        private static void MapHealthEndpoint(RouteGroupBuilder adminGroup)
+        {
             adminGroup.MapGet("/health", (
                 IOptions<SynaxisConfiguration> config) =>
             {
-                var services = new List<ServiceHealthDto>();
-                var providers = new List<ProviderHealthDto>();
-
-                services.Add(new ServiceHealthDto
-                {
-                    Name = "API Gateway",
-                    Status = "healthy",
-                    LastChecked = DateTime.UtcNow.ToString("O", System.Globalization.CultureInfo.InvariantCulture),
-                });
-
-                services.Add(new ServiceHealthDto
-                {
-                    Name = "PostgreSQL",
-                    Status = "healthy",
-                    Latency = 15,
-                    LastChecked = DateTime.UtcNow.ToString("O", System.Globalization.CultureInfo.InvariantCulture),
-                });
-
-                services.Add(new ServiceHealthDto
-                {
-                    Name = "Redis",
-                    Status = "healthy",
-                    Latency = 5,
-                    LastChecked = DateTime.UtcNow.ToString("O", System.Globalization.CultureInfo.InvariantCulture),
-                });
-
-                foreach (var p in config.Value.Providers.Where(p => p.Value.Enabled))
-                {
-                    var hasKey = !string.IsNullOrEmpty(p.Value.Key);
-                    var providerHealth = new ProviderHealthDto
-                    {
-                        Id = p.Key,
-                        Name = p.Key,
-                        Status = hasKey ? "online" : "unknown",
-                        LastChecked = DateTime.UtcNow.ToString("O", System.Globalization.CultureInfo.InvariantCulture),
-                        SuccessRate = hasKey ? 98.5 : null,
-                        Latency = hasKey ? new Random().Next(20, 150) : null,
-                    };
-
-                    if (!hasKey)
-                    {
-                        providerHealth.ErrorMessage = "API key not configured";
-                    }
-
-                    providers.Add(providerHealth);
-                }
-
+                var services = BuildServiceHealthDtos();
+                var providers = BuildProviderHealthDtos(config.Value);
                 var overallStatus = DetermineOverallStatus(services, providers);
 
                 return Results.Ok(new HealthDataDto
@@ -162,8 +121,6 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Admin
             .WithTags("Admin")
             .WithSummary("Get system health status")
             .WithDescription("Returns detailed health information about services and AI providers");
-
-            return app;
         }
 
         private static string DetermineOverallStatus(List<ServiceHealthDto> services, List<ProviderHealthDto> providers)
@@ -182,6 +139,92 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Admin
             }
 
             return "healthy";
+        }
+
+        private static List<ProviderAdminDto> BuildProviderAdminDtos(SynaxisConfiguration config)
+        {
+            return config.Providers.Select(p => new ProviderAdminDto
+            {
+                Id = p.Key,
+                Name = p.Key,
+                Type = p.Value.Type,
+                Enabled = p.Value.Enabled,
+                Tier = p.Value.Tier,
+                Endpoint = p.Value.Endpoint,
+                KeyConfigured = !string.IsNullOrEmpty(p.Value.Key),
+                Models = config.CanonicalModels
+                    .Where(m => string.Equals(m.Provider, p.Key, StringComparison.Ordinal))
+                    .Select(m => new ProviderModelDto
+                    {
+                        Id = m.Id,
+                        Name = m.ModelPath,
+                        Enabled = true,
+                    })
+                    .ToList(),
+                Status = DefaultStatus,
+                Latency = null,
+            }).ToList();
+        }
+
+        private static List<ServiceHealthDto> BuildServiceHealthDtos()
+        {
+            var timestamp = DateTime.UtcNow.ToString("O", System.Globalization.CultureInfo.InvariantCulture);
+            return new List<ServiceHealthDto>
+            {
+                new ServiceHealthDto
+                {
+                    Name = ApiGatewayServiceName,
+                    Status = ServiceHealthStatus,
+                    LastChecked = timestamp,
+                },
+                new ServiceHealthDto
+                {
+                    Name = PostgresServiceName,
+                    Status = ServiceHealthStatus,
+                    Latency = 15,
+                    LastChecked = timestamp,
+                },
+                new ServiceHealthDto
+                {
+                    Name = RedisServiceName,
+                    Status = ServiceHealthStatus,
+                    Latency = 5,
+                    LastChecked = timestamp,
+                },
+            };
+        }
+
+        private static List<ProviderHealthDto> BuildProviderHealthDtos(SynaxisConfiguration config)
+        {
+            var providers = new List<ProviderHealthDto>();
+            foreach (var p in config.Providers.Where(p => p.Value.Enabled))
+            {
+                var hasKey = !string.IsNullOrEmpty(p.Value.Key);
+                var providerHealth = new ProviderHealthDto
+                {
+                    Id = p.Key,
+                    Name = p.Key,
+                    Status = hasKey ? StatusOnline : StatusUnknown,
+                    LastChecked = DateTime.UtcNow.ToString("O", System.Globalization.CultureInfo.InvariantCulture),
+                    SuccessRate = hasKey ? 98.5 : null,
+                    Latency = hasKey ? GenerateProviderLatency() : null,
+                };
+
+                if (!hasKey)
+                {
+                    providerHealth.ErrorMessage = "API key not configured";
+                }
+
+                providers.Add(providerHealth);
+            }
+
+            return providers;
+        }
+
+        private static int GenerateProviderLatency()
+        {
+            var offset = Random.Shared.Next(0, (int)HealthLatencyRange.TotalMilliseconds);
+            return (int)HealthLatencyBase.TotalMilliseconds + offset;
         }
     }
 

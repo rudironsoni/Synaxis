@@ -47,102 +47,15 @@ namespace Synaxis.InferenceGateway.Application.Routing
         }
 
         /// <inheritdoc/>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.ReadabilityRules", "MA0051:Method is too long", Justification = "Complex resolution logic requires sequential steps")]
         public async Task<ResolutionResult> ResolveAsync(string modelId, EndpointKind kind, RequiredCapabilities? required = null, Guid? tenantId = null)
         {
-            // Database-first: try to resolve a GlobalModel and its ProviderModels from the control plane DB
-            var global = await this.store.GetGlobalModelAsync(modelId).ConfigureAwait(false);
-
-            if (global != null)
+            var globalResolution = await this.TryResolveGlobalModelAsync(modelId).ConfigureAwait(false);
+            if (globalResolution != null)
             {
-                var canonicalId = CanonicalModelId.Parse(global.Id);
-
-                var providers = new List<ProviderConfig>();
-                foreach (var pm in global.ProviderModels)
-                {
-                    if (!this.config.Providers.TryGetValue(pm.ProviderId, out var provCfg))
-                    {
-                        // provider config missing in static config -> skip
-                        continue;
-                    }
-
-                    if (!provCfg.Enabled)
-                    {
-                        // provider disabled -> skip
-                        continue;
-                    }
-
-                    // Create a shallow copy so we don't mutate the configured instance accidentally
-                    var prov = new ProviderConfig
-                    {
-                        Enabled = provCfg.Enabled,
-                        Key = pm.ProviderId,
-                        AccountId = provCfg.AccountId,
-                        ProjectId = provCfg.ProjectId,
-                        AuthStoragePath = provCfg.AuthStoragePath,
-                        Tier = provCfg.Tier,
-                        Models = new List<string> { pm.ProviderSpecificId },
-                        Type = provCfg.Type,
-                        Endpoint = provCfg.Endpoint,
-                        FallbackEndpoint = provCfg.FallbackEndpoint,
-                    };
-
-                    providers.Add(prov);
-                }
-
-                return new ResolutionResult(modelId, canonicalId, providers);
+                return globalResolution;
             }
 
-            // If no GlobalModel found in DB, fall back to tenant-level aliases/combos and then to static config
-            var candidatesToTry = new List<string>();
-            bool foundInDb = false;
-
-            if (tenantId.HasValue)
-            {
-                // 1. Check Model Aliases
-                var alias = await this.store.GetAliasAsync(tenantId.Value, modelId).ConfigureAwait(false);
-                string targetModel = alias?.TargetModel ?? modelId;
-
-                // 2. Check Model Combos
-                var combo = await this.store.GetComboAsync(tenantId.Value, targetModel).ConfigureAwait(false);
-
-                if (combo != null)
-                {
-                    try
-                    {
-                        var models = JsonSerializer.Deserialize<List<string>>(combo.OrderedModelsJson);
-                        if (models != null)
-                        {
-                            candidatesToTry.AddRange(models);
-                            foundInDb = true;
-                        }
-                    }
-                    catch
-                    {
-                        /* Ignore invalid JSON */
-                    }
-                }
-
-                if (!foundInDb && alias != null)
-                {
-                    candidatesToTry.Add(targetModel);
-                    foundInDb = true;
-                }
-            }
-
-            if (!foundInDb)
-            {
-                // Fallback to Config
-                if (this.config.Aliases.TryGetValue(modelId, out var configAlias))
-                {
-                    candidatesToTry.AddRange(configAlias.Candidates);
-                }
-                else
-                {
-                    candidatesToTry.Add(modelId);
-                }
-            }
-
+            var candidatesToTry = await this.GetCandidateModelsAsync(modelId, tenantId).ConfigureAwait(false);
             return this.ResolveCandidates(modelId, candidatesToTry, required);
         }
 
@@ -161,99 +74,233 @@ namespace Synaxis.InferenceGateway.Application.Routing
             return this.ResolveCandidates(modelId, candidatesToTry, required);
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.ReadabilityRules", "MA0051:Method is too long", Justification = "Complex candidate resolution with multiple fallback paths")]
         private ResolutionResult ResolveCandidates(string originalModelId, List<string> candidates, RequiredCapabilities? required)
         {
             CanonicalModelId? firstCanonicalId = null;
 
             foreach (var candidateId in candidates)
             {
-                // Step A: Canonical Lookup
-                var modelConfig = this.config.CanonicalModels
-                    .FirstOrDefault(m => string.Equals(m.Id, candidateId, StringComparison.OrdinalIgnoreCase));
-
-                var canonicalId = modelConfig != null
-                    ? new CanonicalModelId(modelConfig.Provider, modelConfig.ModelPath)
-                    : CanonicalModelId.Parse(candidateId);
-
-                firstCanonicalId ??= canonicalId;
-
-                // Step B: Capability check (only possible when we have a canonical model config)
-                if (required != null && modelConfig != null)
+                var candidateResolution = this.ResolveCandidate(originalModelId, candidateId, required);
+                if (candidateResolution != null)
                 {
-                    bool meetsRequirements =
-                        (!required.Streaming || modelConfig.Streaming) &&
-                        (!required.Tools || modelConfig.Tools) &&
-                        (!required.Vision || modelConfig.Vision) &&
-                        (!required.StructuredOutput || modelConfig.StructuredOutput) &&
-                        (!required.LogProbs || modelConfig.LogProbs);
-
-                    if (!meetsRequirements)
-                    {
-                        continue;
-                    }
+                    return candidateResolution;
                 }
 
-                // Step C: Registry lookup
-                var candidatePairs = this.registry.GetCandidates(canonicalId.ModelPath).ToList();
-                Console.WriteLine($"[DEBUG] Registry returned {candidatePairs.Count} candidates for '{canonicalId.ModelPath}'");
-
-                // Fallback: sometimes Parse() will split provider/model incorrectly (e.g. when model id contains '/').
-                // If nothing was found and we didn't have an explicit canonical config, try the raw candidate string.
-                if (candidatePairs.Count == 0 && modelConfig == null)
-                {
-                    var fallbackMatches = this.registry.GetCandidates(candidateId).ToList();
-                    Console.WriteLine($"[DEBUG] Fallback: Registry lookup with '{candidateId}' returned {fallbackMatches.Count} candidates");
-                    if (fallbackMatches.Count > 0)
-                    {
-                        candidatePairs = fallbackMatches;
-
-                        // Reset provider portion since the original parse was likely wrong
-                        canonicalId = new CanonicalModelId("unknown", candidateId);
-                    }
-                }
-
-                // Step D: Provider resolution
-                var providers = candidatePairs
-                    .Select(p =>
-                    {
-                        if (this.config.Providers.TryGetValue(p.ServiceKey, out var prov))
-                        {
-                            // ensure the ProviderConfig knows its key
-                            prov.Key = p.ServiceKey;
-                            return prov;
-                        }
-
-                        return null;
-                    })
-                    .Where(p => p != null)
-                    .Cast<ProviderConfig>()
-                    .ToList();
-
-                // Step E: Provider filtering by canonical provider if present
-                if (!string.Equals(canonicalId.Provider, "unknown", StringComparison.OrdinalIgnoreCase))
-                {
-                    providers = providers
-                        .Where(c => string.Equals(c.Key, canonicalId.Provider, StringComparison.OrdinalIgnoreCase))
-                        .ToList();
-                }
-
-                // Step F: Success check
-                if (providers.Count > 0)
-                {
-                    if (string.Equals(canonicalId.Provider, "unknown", StringComparison.OrdinalIgnoreCase))
-                    {
-                        // Use the first provider as the canonical provider if unknown
-                        canonicalId = new CanonicalModelId(providers[0].Key!, canonicalId.ModelPath);
-                    }
-
-                    return new ResolutionResult(originalModelId, canonicalId, providers);
-                }
+                firstCanonicalId ??= this.GetCanonicalModelId(candidateId).CanonicalId;
             }
 
             // No match found
             var finalCanonicalId = firstCanonicalId ?? CanonicalModelId.Parse(originalModelId);
             return new ResolutionResult(originalModelId, finalCanonicalId, new List<ProviderConfig>());
+        }
+
+        private async Task<ResolutionResult?> TryResolveGlobalModelAsync(string modelId)
+        {
+            var global = await this.store.GetGlobalModelAsync(modelId).ConfigureAwait(false);
+            if (global == null)
+            {
+                return null;
+            }
+
+            var canonicalId = CanonicalModelId.Parse(global.Id);
+            var providers = this.BuildProviderConfigs(global.ProviderModels);
+            return new ResolutionResult(modelId, canonicalId, providers);
+        }
+
+        private async Task<List<string>> GetCandidateModelsAsync(string modelId, Guid? tenantId)
+        {
+            if (tenantId.HasValue)
+            {
+                var candidates = await this.TryGetTenantCandidatesAsync(modelId, tenantId.Value).ConfigureAwait(false);
+                if (candidates.Count > 0)
+                {
+                    return candidates;
+                }
+            }
+
+            return this.GetConfigCandidates(modelId);
+        }
+
+        private async Task<List<string>> TryGetTenantCandidatesAsync(string modelId, Guid tenantId)
+        {
+            var candidatesToTry = new List<string>();
+            var alias = await this.store.GetAliasAsync(tenantId, modelId).ConfigureAwait(false);
+            var targetModel = alias?.TargetModel ?? modelId;
+
+            var combo = await this.store.GetComboAsync(tenantId, targetModel).ConfigureAwait(false);
+            if (combo != null)
+            {
+                var orderedModels = TryDeserializeModels(combo.OrderedModelsJson);
+                if (orderedModels.Count > 0)
+                {
+                    candidatesToTry.AddRange(orderedModels);
+                }
+            }
+
+            if (candidatesToTry.Count == 0 && alias != null)
+            {
+                candidatesToTry.Add(targetModel);
+            }
+
+            return candidatesToTry;
+        }
+
+        private static List<string> TryDeserializeModels(string orderedModelsJson)
+        {
+            try
+            {
+                return JsonSerializer.Deserialize<List<string>>(orderedModelsJson) ?? new List<string>();
+            }
+            catch (JsonException)
+            {
+                return new List<string>();
+            }
+        }
+
+        private List<string> GetConfigCandidates(string modelId)
+        {
+            if (this.config.Aliases.TryGetValue(modelId, out var configAlias))
+            {
+                return new List<string>(configAlias.Candidates);
+            }
+
+            return new List<string> { modelId };
+        }
+
+        private List<ProviderConfig> BuildProviderConfigs(IEnumerable<ProviderModel> providerModels)
+        {
+            var providers = new List<ProviderConfig>();
+            foreach (var pm in providerModels)
+            {
+                if (!this.config.Providers.TryGetValue(pm.ProviderId, out var provCfg))
+                {
+                    continue;
+                }
+
+                if (!provCfg.Enabled)
+                {
+                    continue;
+                }
+
+                providers.Add(new ProviderConfig
+                {
+                    Enabled = provCfg.Enabled,
+                    Key = pm.ProviderId,
+                    AccountId = provCfg.AccountId,
+                    ProjectId = provCfg.ProjectId,
+                    AuthStoragePath = provCfg.AuthStoragePath,
+                    Tier = provCfg.Tier,
+                    Models = new List<string> { pm.ProviderSpecificId },
+                    Type = provCfg.Type,
+                    Endpoint = provCfg.Endpoint,
+                    FallbackEndpoint = provCfg.FallbackEndpoint,
+                });
+            }
+
+            return providers;
+        }
+
+        private ResolutionResult? ResolveCandidate(string originalModelId, string candidateId, RequiredCapabilities? required)
+        {
+            var (modelConfig, canonicalId) = this.GetCanonicalModelId(candidateId);
+            if (!MeetsRequiredCapabilities(modelConfig, required))
+            {
+                return null;
+            }
+
+            var candidatePairs = this.registry.GetCandidates(canonicalId.ModelPath).ToList();
+            if (candidatePairs.Count == 0 && modelConfig == null)
+            {
+                candidatePairs = this.registry.GetCandidates(candidateId).ToList();
+                if (candidatePairs.Count > 0)
+                {
+                    canonicalId = new CanonicalModelId("unknown", candidateId);
+                }
+            }
+
+            if (candidatePairs.Count == 0)
+            {
+                return null;
+            }
+
+            var providers = this.ResolveProviders(candidatePairs, canonicalId);
+            if (providers.Count == 0)
+            {
+                return null;
+            }
+
+            if (string.Equals(canonicalId.Provider, "unknown", StringComparison.OrdinalIgnoreCase))
+            {
+                canonicalId = new CanonicalModelId(providers[0].Key!, canonicalId.ModelPath);
+            }
+
+            return new ResolutionResult(originalModelId, canonicalId, providers);
+        }
+
+        private (CanonicalModelConfig? ModelConfig, CanonicalModelId CanonicalId) GetCanonicalModelId(string candidateId)
+        {
+            var modelConfig = this.config.CanonicalModels
+                .FirstOrDefault(m => string.Equals(m.Id, candidateId, StringComparison.OrdinalIgnoreCase));
+
+            var canonicalId = modelConfig != null
+                ? new CanonicalModelId(modelConfig.Provider, modelConfig.ModelPath)
+                : CanonicalModelId.Parse(candidateId);
+
+            return (modelConfig, canonicalId);
+        }
+
+        private static bool MeetsRequiredCapabilities(CanonicalModelConfig? modelConfig, RequiredCapabilities? required)
+        {
+            if (required == null || modelConfig == null)
+            {
+                return true;
+            }
+
+            return (!required.Streaming || modelConfig.Streaming)
+                   && (!required.Tools || modelConfig.Tools)
+                   && (!required.Vision || modelConfig.Vision)
+                   && (!required.StructuredOutput || modelConfig.StructuredOutput)
+                   && (!required.LogProbs || modelConfig.LogProbs);
+        }
+
+        private List<ProviderConfig> ResolveProviders(IEnumerable<(string ServiceKey, int Tier)> candidatePairs, CanonicalModelId canonicalId)
+        {
+            var providers = candidatePairs
+                .Select(p => this.TryMapProvider(p.ServiceKey))
+                .Where(p => p != null)
+                .Cast<ProviderConfig>()
+                .ToList();
+
+            if (!string.Equals(canonicalId.Provider, "unknown", StringComparison.OrdinalIgnoreCase))
+            {
+                providers = providers
+                    .Where(c => string.Equals(c.Key, canonicalId.Provider, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+            }
+
+            return providers;
+        }
+
+        private ProviderConfig? TryMapProvider(string serviceKey)
+        {
+            if (!this.config.Providers.TryGetValue(serviceKey, out var prov))
+            {
+                return null;
+            }
+
+            return new ProviderConfig
+            {
+                Enabled = prov.Enabled,
+                Key = serviceKey,
+                AccountId = prov.AccountId,
+                ProjectId = prov.ProjectId,
+                AuthStoragePath = prov.AuthStoragePath,
+                Tier = prov.Tier,
+                Models = prov.Models?.ToList() ?? new List<string>(),
+                Type = prov.Type,
+                Endpoint = prov.Endpoint,
+                FallbackEndpoint = prov.FallbackEndpoint,
+            };
         }
     }
 }

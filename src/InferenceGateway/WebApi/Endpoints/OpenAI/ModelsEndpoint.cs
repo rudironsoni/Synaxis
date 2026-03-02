@@ -18,6 +18,8 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
     /// </summary>
     public static class ModelsEndpoint
     {
+        private const string SynaxisProvider = "synaxis";
+
         /// <summary>
         /// Maps model endpoints to the application.
         /// </summary>
@@ -26,54 +28,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
         {
             app.MapGet("/v1/models", (IOptions<SynaxisConfiguration> config) =>
             {
-                var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                var models = new List<ModelDto>();
-
-                foreach (var cm in config.Value.CanonicalModels)
-                {
-                    models.Add(new ModelDto
-                    {
-                        Id = cm.Id,
-                        Object = "model",
-                        Created = now,
-                        OwnedBy = cm.Provider,
-                        Provider = cm.Provider,
-                        ModelPath = cm.ModelPath,
-                        Capabilities = new ModelCapabilitiesDto
-                        {
-                            Streaming = cm.Streaming,
-                            Tools = cm.Tools,
-                            Vision = cm.Vision,
-                            StructuredOutput = cm.StructuredOutput,
-                            LogProbs = cm.LogProbs,
-                        },
-                    });
-                }
-
-                models.AddRange(config.Value.Aliases.Select(alias => new ModelDto
-                {
-                    Id = alias.Key,
-                    Object = "model",
-                    Created = now,
-                    OwnedBy = "synaxis",
-                    Provider = "synaxis",
-                    ModelPath = alias.Key,
-                    Capabilities = new ModelCapabilitiesDto(),
-                }));
-
-                var response = new ModelsListResponseDto
-                {
-                    Object = "list",
-                    Data = models,
-                    Providers = config.Value.Providers.Select(p => new ProviderSummaryDto
-                    {
-                        Id = p.Key,
-                        Type = p.Value.Type,
-                        Enabled = p.Value.Enabled,
-                        Tier = p.Value.Tier,
-                    }).ToList(),
-                };
-
+                var response = BuildModelsListResponse(config.Value);
                 return Results.Json(response, ModelJsonContext.Options);
             })
             .WithTags("Models")
@@ -82,44 +37,10 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
 
             app.MapGet("/v1/models/{**id}", (string id, IOptions<SynaxisConfiguration> config) =>
             {
-                var cm = config.Value.CanonicalModels.FirstOrDefault(x => string.Equals(x.Id, id, StringComparison.Ordinal));
-                if (cm != null)
+                var model = TryResolveModel(id, config.Value);
+                if (model != null)
                 {
-                    return Results.Json(
-                        new ModelDto
-                        {
-                            Id = cm.Id,
-                            Object = "model",
-                            Created = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                            OwnedBy = cm.Provider,
-                            Provider = cm.Provider,
-                            ModelPath = cm.ModelPath,
-                            Capabilities = new ModelCapabilitiesDto
-                            {
-                                Streaming = cm.Streaming,
-                                Tools = cm.Tools,
-                                Vision = cm.Vision,
-                                StructuredOutput = cm.StructuredOutput,
-                                LogProbs = cm.LogProbs,
-                            },
-                        },
-                        ModelJsonContext.Options);
-                }
-
-                if (config.Value.Aliases.ContainsKey(id))
-                {
-                    return Results.Json(
-                        new ModelDto
-                        {
-                            Id = id,
-                            Object = "model",
-                            Created = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                            OwnedBy = "synaxis",
-                            Provider = "synaxis",
-                            ModelPath = id,
-                            Capabilities = new ModelCapabilitiesDto(),
-                        },
-                        ModelJsonContext.Options);
+                    return Results.Json(model, ModelJsonContext.Options);
                 }
 
                 return Results.Json(
@@ -139,6 +60,88 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
             .WithTags("Models")
             .WithSummary("Retrieve model with capabilities")
             .WithDescription("Returns detailed information about a specific model including its capabilities");
+        }
+
+        private static ModelsListResponseDto BuildModelsListResponse(SynaxisConfiguration config)
+        {
+            var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            var models = new List<ModelDto>();
+
+            foreach (var cm in config.CanonicalModels)
+            {
+                models.Add(BuildCanonicalModel(cm, now));
+            }
+
+            models.AddRange(config.Aliases.Select(alias => BuildAliasModel(alias.Key, now)));
+
+            return new ModelsListResponseDto
+            {
+                Object = "list",
+                Data = models,
+                Providers = config.Providers.Select(BuildProviderSummary).ToList(),
+            };
+        }
+
+        private static ModelDto? TryResolveModel(string id, SynaxisConfiguration config)
+        {
+            var cm = config.CanonicalModels.FirstOrDefault(x => string.Equals(x.Id, id, StringComparison.Ordinal));
+            if (cm != null)
+            {
+                return BuildCanonicalModel(cm, DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+            }
+
+            if (config.Aliases.ContainsKey(id))
+            {
+                return BuildAliasModel(id, DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+            }
+
+            return null;
+        }
+
+        private static ModelDto BuildCanonicalModel(CanonicalModelConfig config, long created)
+        {
+            return new ModelDto
+            {
+                Id = config.Id,
+                Object = "model",
+                Created = created,
+                OwnedBy = config.Provider,
+                Provider = config.Provider,
+                ModelPath = config.ModelPath,
+                Capabilities = new ModelCapabilitiesDto
+                {
+                    Streaming = config.Streaming,
+                    Tools = config.Tools,
+                    Vision = config.Vision,
+                    StructuredOutput = config.StructuredOutput,
+                    LogProbs = config.LogProbs,
+                },
+            };
+        }
+
+        private static ModelDto BuildAliasModel(string aliasId, long created)
+        {
+            return new ModelDto
+            {
+                Id = aliasId,
+                Object = "model",
+                Created = created,
+                OwnedBy = SynaxisProvider,
+                Provider = SynaxisProvider,
+                ModelPath = aliasId,
+                Capabilities = new ModelCapabilitiesDto(),
+            };
+        }
+
+        private static ProviderSummaryDto BuildProviderSummary(KeyValuePair<string, ProviderConfig> provider)
+        {
+            return new ProviderSummaryDto
+            {
+                Id = provider.Key,
+                Type = provider.Value.Type,
+                Enabled = provider.Value.Enabled,
+                Tier = provider.Value.Tier,
+            };
         }
     }
 

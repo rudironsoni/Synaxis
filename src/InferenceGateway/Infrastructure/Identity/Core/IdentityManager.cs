@@ -23,6 +23,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
         private readonly Lock _lock = new Lock();
         private readonly TaskCompletionSource<bool> _initialLoadComplete = new TaskCompletionSource<bool>();
         private readonly List<IdentityAccount> _accounts = new List<IdentityAccount>();
+        private readonly Task _initialLoadTask;
         private Timer? _timer;
 
         /// <summary>
@@ -46,7 +47,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
                     {
                         try
                         {
-                            _ = this.AddOrUpdateAccountAsync(eventArgs.Account);
+                            await this.AddOrUpdateAccountAsync(eventArgs.Account).ConfigureAwait(false);
                         }
                         catch (Exception ex)
                         {
@@ -61,54 +62,25 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
             }
 
             // Load existing accounts from store synchronously at startup
-            _ = Task.Run(async () =>
-            {
-                try
-                {
-                    var loaded = await this._store.LoadAsync().ConfigureAwait(false);
-                    lock (this._lock)
-                    {
-                        this._accounts.Clear();
-                        if (loaded != null)
-                        {
-                            this._accounts.AddRange(loaded);
-                        }
-                    }
-
-                    this._initialLoadComplete.TrySetResult(true);
-                }
-                catch (Exception ex)
-                {
-                    this._logger.LogError(ex, "Failed to load identity accounts from store");
-                    this._initialLoadComplete.TrySetException(ex);
-                }
-            });
+            this._initialLoadTask = this.LoadAccountsAsync();
         }
 
         /// <inheritdoc/>
         public Task StartAsync(CancellationToken cancellationToken)
         {
+            if (!this._initialLoadTask.IsCompleted)
+            {
+                _ = this._initialLoadTask.ContinueWith(
+                    task => this._logger.LogError(task.Exception, "Failed to load identity accounts from store"),
+                    CancellationToken.None,
+                    TaskContinuationOptions.OnlyOnFaulted,
+                    TaskScheduler.Default);
+            }
+
             // Start a timer to refresh tokens periodically
             this._timer = new Timer(
-                _ =>
-                {
-                    Task.Run(async () =>
-                    {
-                        try
-                        {
-                            await this.RefreshLoopAsync().ConfigureAwait(false);
-                        }
-                        catch (Exception ex)
-                        {
-                            this._logger.LogError(ex, "Error in refresh loop");
-                        }
-                    }).ContinueWith(
-                        task => this._logger.LogError(task.Exception, "Error in refresh loop"),
-                        CancellationToken.None,
-                        TaskContinuationOptions.OnlyOnFaulted,
-                        TaskScheduler.Default);
-                },
-                null,
+                static state => _ = ((IdentityManager)state!).RefreshLoopFireAndForget(),
+                this,
                 TimeSpan.FromMinutes(1),
                 TimeSpan.FromMinutes(1));
             return Task.CompletedTask;
@@ -148,6 +120,21 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
             {
                 this._timer?.Dispose();
             }
+        }
+
+        private async Task LoadAccountsAsync()
+        {
+            var loaded = await this._store.LoadAsync().ConfigureAwait(false);
+            lock (this._lock)
+            {
+                this._accounts.Clear();
+                if (loaded != null)
+                {
+                    this._accounts.AddRange(loaded);
+                }
+            }
+
+            this._initialLoadComplete.TrySetResult(true);
         }
 
         private async Task RefreshLoopAsync()
@@ -208,6 +195,18 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
             catch (Exception ex)
             {
                 this._logger.LogError(ex, "Failed to save accounts after refresh loop");
+            }
+        }
+
+        private async Task RefreshLoopFireAndForget()
+        {
+            try
+            {
+                await this.RefreshLoopAsync().ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                this._logger.LogError(ex, "Error in refresh loop");
             }
         }
 

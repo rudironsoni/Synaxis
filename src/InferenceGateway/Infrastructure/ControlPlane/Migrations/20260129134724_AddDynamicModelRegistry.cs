@@ -1,5 +1,5 @@
-// <copyright file="20260129134724_AddDynamicModelRegistry.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
+// <copyright file="20260129134724_AddDynamicModelRegistry.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
 using System;
@@ -15,6 +15,22 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            CreateGlobalModelsTable(migrationBuilder);
+            CreateProviderModelsTable(migrationBuilder);
+            CreateTenantModelLimitsTable(migrationBuilder);
+            CreateIndexes(migrationBuilder);
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            DropProviderModelsTable(migrationBuilder);
+            DropTenantModelLimitsTable(migrationBuilder);
+            DropGlobalModelsTable(migrationBuilder);
+        }
+
+        private static void CreateGlobalModelsTable(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
                 name: "GlobalModels",
@@ -34,13 +50,16 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations
                     SupportsReasoning = table.Column<bool>(type: "boolean", nullable: false),
                     SupportsVision = table.Column<bool>(type: "boolean", nullable: false),
                     SupportsAudio = table.Column<bool>(type: "boolean", nullable: false),
-                    SupportsStructuredOutput = table.Column<bool>(type: "boolean", nullable: false)
+                    SupportsStructuredOutput = table.Column<bool>(type: "boolean", nullable: false),
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_GlobalModels", x => x.Id);
                 });
+        }
 
+        private static void CreateProviderModelsTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "ProviderModels",
                 columns: table => new
@@ -54,7 +73,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations
                     OverrideInputPrice = table.Column<decimal>(type: "numeric(18,9)", precision: 18, scale: 9, nullable: true),
                     OverrideOutputPrice = table.Column<decimal>(type: "numeric(18,9)", precision: 18, scale: 9, nullable: true),
                     RateLimitRPM = table.Column<int>(type: "integer", nullable: true),
-                    RateLimitTPM = table.Column<int>(type: "integer", nullable: true)
+                    RateLimitTPM = table.Column<int>(type: "integer", nullable: true),
                 },
                 constraints: table =>
                 {
@@ -66,7 +85,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
+        }
 
+        private static void CreateTenantModelLimitsTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "TenantModelLimits",
                 columns: table => new
@@ -76,7 +98,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations
                     TenantId = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     GlobalModelId = table.Column<string>(type: "text", nullable: false),
                     AllowedRPM = table.Column<int>(type: "integer", nullable: true),
-                    MonthlyBudget = table.Column<decimal>(type: "numeric(18,9)", precision: 18, scale: 9, nullable: true)
+                    MonthlyBudget = table.Column<decimal>(type: "numeric(18,9)", precision: 18, scale: 9, nullable: true),
                 },
                 constraints: table =>
                 {
@@ -88,7 +110,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
+        }
 
+        private static void CreateIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_ProviderModels_GlobalModelId",
                 table: "ProviderModels",
@@ -100,16 +125,20 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations
                 column: "GlobalModelId");
         }
 
-        /// <inheritdoc />
-
-        protected override void Down(MigrationBuilder migrationBuilder)
+        private static void DropProviderModelsTable(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
                 name: "ProviderModels");
+        }
 
+        private static void DropTenantModelLimitsTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.DropTable(
                 name: "TenantModelLimits");
+        }
 
+        private static void DropGlobalModelsTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.DropTable(
                 name: "GlobalModels");
         }

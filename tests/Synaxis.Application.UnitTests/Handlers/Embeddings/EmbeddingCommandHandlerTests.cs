@@ -173,9 +173,9 @@ namespace Synaxis.Tests.Handlers.Embeddings
             this._logger.Received(1).Log(
                 LogLevel.Debug,
                 Arg.Any<EventId>(),
-                Arg.Is<object>(o => o.ToString()!.Contains("text-embedding-ada-002")),
+                Arg.Is<object>(o => o != null && o.ToString()!.Contains("text-embedding-ada-002")),
                 Arg.Any<Exception>(),
-                Arg.Any<Func<object, Exception?, string>>());
+                Arg.Any<Func<object, Exception, string>>());
         }
 
         [Fact]
@@ -194,9 +194,9 @@ namespace Synaxis.Tests.Handlers.Embeddings
             this._logger.Received(1).Log(
                 LogLevel.Information,
                 Arg.Any<EventId>(),
-                Arg.Is<object>(o => o.ToString()!.Contains("openai")),
+                Arg.Is<object>(o => o != null && o.ToString()!.Contains("openai")),
                 Arg.Any<Exception>(),
-                Arg.Any<Func<object, Exception?, string>>());
+                Arg.Any<Func<object, Exception, string>>());
         }
 
         [Fact]

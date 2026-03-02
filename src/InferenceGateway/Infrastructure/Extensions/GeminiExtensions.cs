@@ -1,5 +1,5 @@
-// <copyright file="GeminiExtensions.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
+// <copyright file="GeminiExtensions.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
 namespace Synaxis.InferenceGateway.Infrastructure.Extensions
@@ -9,7 +9,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
     using Microsoft.Extensions.DependencyInjection;
 
     /// <summary>
-    /// GeminiExtensions class.
+    /// Extensions for registering Gemini chat clients.
     /// </summary>
     public static class GeminiExtensions
     {
@@ -24,26 +24,24 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
         {
             ArgumentNullException.ThrowIfNull(services);
 
-            services.AddChatClient(_ =>
-            {
-                var client = new Google.GenAI.Client(vertexAI: false, apiKey: apiKey);
-                return new GeminiChatClient(client.AsIChatClient(modelId), client);
-            });
+            services.AddChatClient(sp =>
+                ActivatorUtilities.CreateInstance<GeminiChatClient>(sp, apiKey, modelId));
 
             return services;
         }
 
         private sealed class GeminiChatClient : IChatClient
         {
+            private readonly Google.GenAI.Client _genAiClient;
             private readonly IChatClient _innerClient;
-            private readonly IDisposable _disposableClient;
 
-            public GeminiChatClient(IChatClient innerClient, IDisposable disposableClient)
+            public GeminiChatClient(string apiKey, string modelId)
             {
-                ArgumentNullException.ThrowIfNull(innerClient);
-                ArgumentNullException.ThrowIfNull(disposableClient);
-                this._innerClient = innerClient;
-                this._disposableClient = disposableClient;
+                ArgumentException.ThrowIfNullOrWhiteSpace(apiKey);
+                ArgumentException.ThrowIfNullOrWhiteSpace(modelId);
+
+                this._genAiClient = new Google.GenAI.Client(vertexAI: false, apiKey: apiKey);
+                this._innerClient = this._genAiClient.AsIChatClient(modelId);
             }
 
             public Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default)
@@ -64,7 +62,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
             public void Dispose()
             {
                 this._innerClient.Dispose();
-                this._disposableClient.Dispose();
+                this._genAiClient.Dispose();
             }
         }
     }

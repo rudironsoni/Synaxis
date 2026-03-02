@@ -60,49 +60,29 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         {
             try
             {
-                // Extract Authorization header
-                var authHeader = context.Request.Headers.Authorization.FirstOrDefault();
-
-                if (string.IsNullOrWhiteSpace(authHeader))
+                var token = GetBearerToken(context);
+                if (token == string.Empty)
                 {
-                    // No authorization header - let subsequent middleware handle it
-                    // (some endpoints may be public or use other auth mechanisms)
+                    await WriteInvalidSchemeAsync(context).ConfigureAwait(false);
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(token))
+                {
                     await this._next(context).ConfigureAwait(false);
                     return;
                 }
 
-                // Check if it's a Bearer token
-                if (!authHeader.StartsWith(BearerPrefix, StringComparison.OrdinalIgnoreCase))
-                {
-                    this._logger.LogWarning("Authorization header does not use Bearer scheme");
-                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                    await context.Response.WriteAsJsonAsync(new
-                    {
-                        error = new
-                        {
-                            message = "Invalid authorization scheme. Use 'Bearer <token>'",
-                            type = "invalid_request_error",
-                        },
-                    }).ConfigureAwait(false);
-                    return;
-                }
-
-                var token = authHeader.Substring(BearerPrefix.Length).Trim();
-
-                // Determine if it's an API key or JWT token
                 if (token.StartsWith(ApiKeyPrefix, StringComparison.Ordinal))
                 {
-                    // API Key authentication
                     await this.HandleApiKeyAuthenticationAsync(context, token, tenantContext, apiKeyService).ConfigureAwait(false);
                 }
                 else
                 {
-                    // JWT token authentication (already validated by ASP.NET Core JWT middleware)
                     await this.HandleJwtAuthenticationAsync(context, tenantContext).ConfigureAwait(false);
                 }
 
-                // Only proceed if authentication was successful (2xx status codes)
-                if (context.Response.StatusCode < 200 || context.Response.StatusCode >= 300)
+                if (!IsSuccessfulResponse(context))
                 {
                     return;
                 }
@@ -111,16 +91,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             }
             catch (Exception ex)
             {
-                this._logger.LogError(ex, "Error occurred during tenant resolution");
-                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-                await context.Response.WriteAsJsonAsync(new
-                {
-                    error = new
-                    {
-                        message = "An error occurred during authentication",
-                        type = "internal_server_error",
-                    },
-                }).ConfigureAwait(false);
+                await this.WriteAuthenticationErrorAsync(context, ex).ConfigureAwait(false);
             }
         }
 
@@ -146,15 +117,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 if (!validationResult.IsValid)
                 {
                     this._logger.LogWarning("API key validation failed: {ErrorMessage}", validationResult.ErrorMessage);
-                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                    await context.Response.WriteAsJsonAsync(new
-                    {
-                        error = new
-                        {
-                            message = validationResult.ErrorMessage ?? "Invalid API key",
-                            type = "invalid_api_key",
-                        },
-                    }).ConfigureAwait(false);
+                    await WriteErrorAsync(context, StatusCodes.Status401Unauthorized, validationResult.ErrorMessage ?? "Invalid API key", "invalid_api_key").ConfigureAwait(false);
                     return;
                 }
 
@@ -162,15 +125,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 if (!validationResult.OrganizationId.HasValue || !validationResult.ApiKeyId.HasValue)
                 {
                     this._logger.LogError("API key validation succeeded but OrganizationId or ApiKeyId is missing");
-                    context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-                    await context.Response.WriteAsJsonAsync(new
-                    {
-                        error = new
-                        {
-                            message = "Authentication data is incomplete",
-                            type = "internal_server_error",
-                        },
-                    }).ConfigureAwait(false);
+                    await WriteErrorAsync(context, StatusCodes.Status500InternalServerError, "Authentication data is incomplete", "internal_server_error").ConfigureAwait(false);
                     return;
                 }
 
@@ -189,17 +144,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             catch (Exception ex)
             {
                 this._logger.LogError(ex, "Error occurred during API key validation");
-                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-                await context.Response.WriteAsJsonAsync(new
-                {
-                    error = new
-                    {
-                        message = "An error occurred during API key validation",
-                        type = "internal_server_error",
-                    },
-                }).ConfigureAwait(false);
-
-                // Execution stops here, preventing continuation to next middleware
+                await WriteErrorAsync(context, StatusCodes.Status500InternalServerError, "An error occurred during API key validation", "internal_server_error").ConfigureAwait(false);
             }
         }
 
@@ -218,15 +163,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             if (user?.Identity?.IsAuthenticated != true)
             {
                 this._logger.LogWarning("JWT token is not authenticated");
-                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                await context.Response.WriteAsJsonAsync(new
-                {
-                    error = new
-                    {
-                        message = "Invalid or expired JWT token",
-                        type = "invalid_token",
-                    },
-                }).ConfigureAwait(false);
+                await WriteErrorAsync(context, StatusCodes.Status401Unauthorized, "Invalid or expired JWT token", "invalid_token").ConfigureAwait(false);
                 return;
             }
 
@@ -238,45 +175,21 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             if (organizationIdClaim == null || userIdClaim == null)
             {
                 this._logger.LogWarning("JWT token is missing required claims (organization_id or user_id)");
-                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                await context.Response.WriteAsJsonAsync(new
-                {
-                    error = new
-                    {
-                        message = "JWT token is missing required claims",
-                        type = "invalid_token",
-                    },
-                }).ConfigureAwait(false);
+                await WriteErrorAsync(context, StatusCodes.Status401Unauthorized, "JWT token is missing required claims", "invalid_token").ConfigureAwait(false);
                 return;
             }
 
             if (!Guid.TryParse(organizationIdClaim.Value, out var organizationId))
             {
                 this._logger.LogWarning("Invalid organization_id claim value: {Value}", organizationIdClaim.Value);
-                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                await context.Response.WriteAsJsonAsync(new
-                {
-                    error = new
-                    {
-                        message = "Invalid organization_id in JWT token",
-                        type = "invalid_token",
-                    },
-                }).ConfigureAwait(false);
+                await WriteErrorAsync(context, StatusCodes.Status401Unauthorized, "Invalid organization_id in JWT token", "invalid_token").ConfigureAwait(false);
                 return;
             }
 
             if (!Guid.TryParse(userIdClaim.Value, out var userId))
             {
                 this._logger.LogWarning("Invalid user_id claim value: {Value}", userIdClaim.Value);
-                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                await context.Response.WriteAsJsonAsync(new
-                {
-                    error = new
-                    {
-                        message = "Invalid user_id in JWT token",
-                        type = "invalid_token",
-                    },
-                }).ConfigureAwait(false);
+                await WriteErrorAsync(context, StatusCodes.Status401Unauthorized, "Invalid user_id in JWT token", "invalid_token").ConfigureAwait(false);
                 return;
             }
 
@@ -291,6 +204,58 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 "JWT authenticated successfully for OrganizationId={OrganizationId}, UserId={UserId}",
                 organizationId,
                 userId);
+        }
+
+        private static string? GetBearerToken(HttpContext context)
+        {
+            // Extract Authorization header
+            var authHeader = context.Request.Headers.Authorization.FirstOrDefault();
+
+            if (string.IsNullOrWhiteSpace(authHeader))
+            {
+                return null;
+            }
+
+            // Check if it's a Bearer token
+            if (!authHeader.StartsWith(BearerPrefix, StringComparison.OrdinalIgnoreCase))
+            {
+                return string.Empty;
+            }
+
+            return authHeader.Substring(BearerPrefix.Length).Trim();
+        }
+
+        private static Task WriteInvalidSchemeAsync(HttpContext context)
+        {
+            return WriteErrorAsync(
+                context,
+                StatusCodes.Status401Unauthorized,
+                "Invalid authorization scheme. Use 'Bearer <token>'",
+                "invalid_request_error");
+        }
+
+        private static bool IsSuccessfulResponse(HttpContext context)
+        {
+            return context.Response.StatusCode is >= 200 and < 300;
+        }
+
+        private Task WriteAuthenticationErrorAsync(HttpContext context, Exception ex)
+        {
+            this._logger.LogError(ex, "Error occurred during tenant resolution");
+            return WriteErrorAsync(context, StatusCodes.Status500InternalServerError, "An error occurred during authentication", "internal_server_error");
+        }
+
+        private static Task WriteErrorAsync(HttpContext context, int statusCode, string message, string type)
+        {
+            context.Response.StatusCode = statusCode;
+            return context.Response.WriteAsJsonAsync(new
+            {
+                error = new
+                {
+                    message,
+                    type,
+                },
+            });
         }
     }
 }

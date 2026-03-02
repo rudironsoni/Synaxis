@@ -32,72 +32,25 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
                 .RequireCors("WebApp");
 
             // GET /api/providers - List all providers
+            MapProvidersListEndpoint(dashboardGroup);
+
+            // GET /api/providers/{id}/status - Get provider health status
+            MapProviderStatusEndpoint(dashboardGroup);
+
+            // PUT /api/providers/{id}/config - Update provider configuration
+            MapProviderConfigEndpoint(dashboardGroup);
+
+            return app;
+        }
+
+        private static void MapProvidersListEndpoint(RouteGroupBuilder dashboardGroup)
+        {
             dashboardGroup.MapGet(string.Empty, (
                 IOptions<SynaxisConfiguration> config,
                 IConnectionMultiplexer redis,
                 CancellationToken ct) =>
             {
-                var db = redis.GetDatabase();
-                var providers = new List<ProviderDto>();
-
-                foreach (var p in config.Value.Providers)
-                {
-                    var providerKey = p.Key;
-                    var providerConfig = p.Value;
-
-                    // Get usage stats from Redis (if available)
-                    var totalTokens = 0;
-                    var requests = 0;
-
-                    try
-                    {
-                        var tokensKey = $"provider:{providerKey}:tokens";
-                        var requestsKey = $"provider:{providerKey}:requests";
-
-                        var tokensValue = db.StringGet(tokensKey);
-                        var requestsValue = db.StringGet(requestsKey);
-
-                        if (tokensValue.HasValue)
-                        {
-                            int.TryParse(tokensValue.ToString(), System.Globalization.CultureInfo.InvariantCulture, out totalTokens);
-                        }
-
-                        if (requestsValue.HasValue)
-                        {
-                            int.TryParse(requestsValue.ToString(), System.Globalization.CultureInfo.InvariantCulture, out requests);
-                        }
-                    }
-                    catch
-                    {
-                        // Redis unavailable, use defaults
-                    }
-
-                    // Get models for this provider
-                    var models = config.Value.CanonicalModels
-                        .Where(m => string.Equals(m.Provider, providerKey, StringComparison.Ordinal))
-                        .Select(m => m.Id)
-                        .ToList();
-
-                    // Determine status based on configuration
-                    var status = providerConfig.Enabled && !string.IsNullOrEmpty(providerConfig.Key)
-                        ? "healthy"
-                        : "unhealthy";
-
-                    providers.Add(new ProviderDto
-                    {
-                        Id = providerKey,
-                        Name = providerKey,
-                        Status = status,
-                        Tier = providerConfig.Tier,
-                        Models = models,
-                        Usage = new ProviderStatsDto
-                        {
-                            TotalTokens = totalTokens,
-                            Requests = requests,
-                        },
-                    });
-                }
-
+                var providers = BuildProviderDtos(config.Value, redis);
                 return Results.Json(new ProvidersListResponse
                 {
                     Providers = providers,
@@ -106,8 +59,10 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
             .WithTags("Dashboard")
             .WithSummary("List all providers")
             .WithDescription("Returns a list of all configured providers with their status, tier, models, and usage statistics");
+        }
 
-            // GET /api/providers/{id}/status - Get provider health status
+        private static void MapProviderStatusEndpoint(RouteGroupBuilder dashboardGroup)
+        {
             dashboardGroup.MapGet("/{id}/status", async (
                 string id,
                 IOptions<SynaxisConfiguration> config,
@@ -119,33 +74,10 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
                     return Results.NotFound(new { error = $"Provider '{id}' not found" });
                 }
 
-                var provider = config.Value.Providers[id];
-                var status = "unhealthy";
-                var lastChecked = DateTime.UtcNow;
-
-                if (provider.Enabled && !string.IsNullOrEmpty(provider.Key))
-                {
-                    // Perform a lightweight health check
-                    try
-                    {
-                        var endpoint = GetProviderEndpoint(provider);
-                        if (!string.IsNullOrEmpty(endpoint))
-                        {
-                            var httpClient = httpClientFactory.CreateClient();
-                            httpClient.Timeout = TimeSpan.FromSeconds(5);
-
-                            var request = new HttpRequestMessage(HttpMethod.Head, endpoint);
-                            _ = await httpClient.SendAsync(request, ct).ConfigureAwait(false);
-
-                            // Accept any response (including 401, 404) as "reachable"
-                            status = "healthy";
-                        }
-                    }
-                    catch
-                    {
-                        status = "unhealthy";
-                    }
-                }
+                var (status, lastChecked) = await DetermineProviderStatusAsync(
+                    config.Value.Providers[id],
+                    httpClientFactory,
+                    ct).ConfigureAwait(false);
 
                 return Results.Json(new ProviderStatusResponse
                 {
@@ -156,8 +88,10 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
             .WithTags("Dashboard")
             .WithSummary("Get provider health status")
             .WithDescription("Returns the current health status of a specific provider");
+        }
 
-            // PUT /api/providers/{id}/config - Update provider configuration
+        private static void MapProviderConfigEndpoint(RouteGroupBuilder dashboardGroup)
+        {
             dashboardGroup.MapPut("/{id}/config", (
                 string id,
                 ProviderConfigUpdateRequest request,
@@ -188,8 +122,6 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
             .WithTags("Dashboard")
             .WithSummary("Update provider configuration")
             .WithDescription("Updates provider configuration including enabled status and tier priority");
-
-            return app;
         }
 
         private static string? GetProviderEndpoint(ProviderConfig provider)
@@ -199,18 +131,126 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.Dashboard
                 return provider.Endpoint;
             }
 
-            // Return default endpoints based on provider type
-            return provider.Type?.ToLowerInvariant() switch
+            return GetDefaultEndpoint(provider.Type);
+        }
+
+        private static List<ProviderDto> BuildProviderDtos(SynaxisConfiguration config, IConnectionMultiplexer redis)
+        {
+            var db = redis.GetDatabase();
+            var providers = new List<ProviderDto>();
+
+            foreach (var (providerKey, providerConfig) in config.Providers)
             {
-                "openai" => "https://api.openai.com/v1",
+                var (totalTokens, requests) = ReadProviderStats(db, providerKey);
+                var models = config.CanonicalModels
+                    .Where(m => string.Equals(m.Provider, providerKey, StringComparison.Ordinal))
+                    .Select(m => m.Id)
+                    .ToList();
+                var status = providerConfig.Enabled && !string.IsNullOrEmpty(providerConfig.Key)
+                    ? "healthy"
+                    : "unhealthy";
+
+                providers.Add(new ProviderDto
+                {
+                    Id = providerKey,
+                    Name = providerKey,
+                    Status = status,
+                    Tier = providerConfig.Tier,
+                    Models = models,
+                    Usage = new ProviderStatsDto
+                    {
+                        TotalTokens = totalTokens,
+                        Requests = requests,
+                    },
+                });
+            }
+
+            return providers;
+        }
+
+        private static (int TotalTokens, int Requests) ReadProviderStats(IDatabase db, string providerKey)
+        {
+            var totalTokens = 0;
+            var requests = 0;
+
+            try
+            {
+                var tokensKey = $"provider:{providerKey}:tokens";
+                var requestsKey = $"provider:{providerKey}:requests";
+
+                var tokensValue = db.StringGet(tokensKey);
+                var requestsValue = db.StringGet(requestsKey);
+
+                if (tokensValue.HasValue)
+                {
+                    int.TryParse(tokensValue.ToString(), System.Globalization.CultureInfo.InvariantCulture, out totalTokens);
+                }
+
+                if (requestsValue.HasValue)
+                {
+                    int.TryParse(requestsValue.ToString(), System.Globalization.CultureInfo.InvariantCulture, out requests);
+                }
+            }
+            catch
+            {
+                // Redis unavailable, use defaults
+            }
+
+            return (totalTokens, requests);
+        }
+
+        private static async Task<(string Status, DateTime LastChecked)> DetermineProviderStatusAsync(
+            ProviderConfig provider,
+            IHttpClientFactory httpClientFactory,
+            CancellationToken ct)
+        {
+            var status = "unhealthy";
+            var lastChecked = DateTime.UtcNow;
+
+            if (!provider.Enabled || string.IsNullOrEmpty(provider.Key))
+            {
+                return (status, lastChecked);
+            }
+
+            try
+            {
+                var endpoint = GetProviderEndpoint(provider);
+                if (!string.IsNullOrEmpty(endpoint))
+                {
+                    using var httpClient = httpClientFactory.CreateClient();
+                    httpClient.Timeout = TimeSpan.FromSeconds(5);
+
+                    using var request = new HttpRequestMessage(HttpMethod.Head, endpoint);
+                    using var response = await httpClient.SendAsync(request, ct).ConfigureAwait(false);
+                    _ = response.StatusCode;
+
+                    // Accept any response (including 401, 404) as "reachable"
+                    status = "healthy";
+                }
+            }
+            catch
+            {
+                status = "unhealthy";
+            }
+
+            return (status, lastChecked);
+        }
+
+        private static string? GetDefaultEndpoint(string? providerType)
+        {
+            var type = providerType?.Trim().ToLowerInvariant() ?? string.Empty;
+            return type switch
+            {
+                "nvidia" => "https://integrate.api.nvidia.com/v1",
+                "huggingface" => "https://router.huggingface.co",
                 "groq" => "https://api.groq.com/openai/v1",
+                "openrouter" => "https://openrouter.ai/api/v1",
+                "deepseek" => "https://api.deepseek.com/v1",
+                "openai" => "https://api.openai.com/v1",
                 "cohere" => "https://api.cohere.ai/v1",
                 "cloudflare" => "https://api.cloudflare.com/client/v4",
                 "gemini" => "https://generativelanguage.googleapis.com",
                 "antigravity" => "https://cloudcode-pa.googleapis.com",
-                "openrouter" => "https://openrouter.ai/api/v1",
-                "nvidia" => "https://integrate.api.nvidia.com/v1",
-                "huggingface" => "https://router.huggingface.co",
                 "pollinations" => "https://pollinations.ai",
                 _ => null,
             };

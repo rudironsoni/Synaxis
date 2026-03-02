@@ -36,9 +36,8 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                     return Results.BadRequest(new { error = new { message = "Cannot stream with best_of > 1", type = "invalid_request_error", param = "best_of", code = "invalid_value" } });
                 }
 
-                var caps = new RequiredCapabilities { Streaming = request.Stream };
+                var caps = BuildCapabilities(request);
                 var resolution = await resolver.ResolveAsync(request.Model, EndpointKind.LegacyCompletions, caps).ConfigureAwait(false);
-
                 ctx.Items["RoutingContext"] = new RoutingContext(request.Model, resolution.CanonicalId.ToString(), resolution.CanonicalId.Provider);
 
                 if (!TryParsePrompt(request.Prompt, out var promptText, out var parseError))
@@ -46,53 +45,12 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                     return Results.BadRequest(new { error = new { message = parseError, type = "invalid_request_error", param = "prompt", code = "invalid_value" } });
                 }
 
-                var messages = new List<ChatMessage> { new ChatMessage(ChatRole.User, promptText) };
-                var options = new ChatOptions
-                {
-                    ModelId = resolution.CanonicalId.ToString(),
-                    MaxOutputTokens = request.MaxTokens,
-                    Temperature = (float?)request.Temperature,
-                };
+                var messages = BuildPromptMessages(promptText);
+                var options = BuildChatOptions(request, resolution.CanonicalId.ToString());
 
-                if (request.Stream)
-                {
-                    ctx.Response.Headers.ContentType = "text/event-stream";
-                    await foreach (var update in chatClient.GetStreamingResponseAsync(messages, options).ConfigureAwait(false))
-                    {
-                        var chunk = new
-                        {
-                            id = "cmpl-" + Guid.NewGuid(),
-                            @object = "text_completion",
-                            created = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                            model = resolution.CanonicalId.ToString(),
-                            choices = new[]
-                            {
-                            new { text = update.Text, index = 0, finish_reason = update.FinishReason?.ToString().ToLowerInvariant() },
-                            },
-                        };
-                        await ctx.Response.WriteAsync($"data: {JsonSerializer.Serialize(chunk)}\n\n").ConfigureAwait(false);
-                        await ctx.Response.Body.FlushAsync().ConfigureAwait(false);
-                    }
-
-                    await ctx.Response.WriteAsync("data: [DONE]\n\n").ConfigureAwait(false);
-                    return Results.Empty;
-                }
-                else
-                {
-                    var response = await chatClient.GetResponseAsync(messages, options).ConfigureAwait(false);
-                    return Results.Ok(new
-                    {
-                        id = "cmpl-" + Guid.NewGuid(),
-                        @object = "text_completion",
-                        created = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                        model = resolution.CanonicalId.ToString(),
-                        choices = new[]
-                        {
-                        new { text = response.Text, index = 0, finish_reason = response.FinishReason?.ToString().ToLowerInvariant() ?? "stop" },
-                        },
-                        usage = new { prompt_tokens = response.Usage?.InputTokenCount ?? 0, completion_tokens = response.Usage?.OutputTokenCount ?? 0, total_tokens = (response.Usage?.InputTokenCount ?? 0) + (response.Usage?.OutputTokenCount ?? 0) },
-                    });
-                }
+                return request.Stream
+                    ? await StreamCompletionAsync(ctx, chatClient, resolution.CanonicalId.ToString(), messages, options).ConfigureAwait(false)
+                    : await HandleCompletionAsync(chatClient, resolution.CanonicalId.ToString(), messages, options).ConfigureAwait(false);
             })
             .WithTags("Completions")
             .WithSummary("Legacy text completion")
@@ -104,6 +62,111 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
             });
         }
 
+        private static RequiredCapabilities BuildCapabilities(CompletionRequest request)
+        {
+            return new RequiredCapabilities { Streaming = request.Stream };
+        }
+
+        private static List<ChatMessage> BuildPromptMessages(string promptText)
+        {
+            return new List<ChatMessage> { new ChatMessage(ChatRole.User, promptText) };
+        }
+
+        private static ChatOptions BuildChatOptions(CompletionRequest request, string modelId)
+        {
+            return new ChatOptions
+            {
+                ModelId = modelId,
+                MaxOutputTokens = request.MaxTokens,
+                Temperature = (float?)request.Temperature,
+            };
+        }
+
+        private static Task<IResult> StreamCompletionAsync(
+            HttpContext ctx,
+            IChatClient chatClient,
+            string modelId,
+            List<ChatMessage> messages,
+            ChatOptions options)
+        {
+            ctx.Response.Headers.ContentType = "text/event-stream";
+            return StreamCompletionInternalAsync(ctx, chatClient, modelId, messages, options);
+        }
+
+        private static async Task<IResult> StreamCompletionInternalAsync(
+            HttpContext ctx,
+            IChatClient chatClient,
+            string modelId,
+            List<ChatMessage> messages,
+            ChatOptions options)
+        {
+            await foreach (var update in chatClient.GetStreamingResponseAsync(messages, options).ConfigureAwait(false))
+            {
+                var chunk = new
+                {
+                    id = "cmpl-" + Guid.NewGuid(),
+                    @object = "text_completion",
+                    created = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                    model = modelId,
+                    choices = new[]
+                    {
+                        new { text = update.Text, index = 0, finish_reason = update.FinishReason?.ToString().ToLowerInvariant() },
+                    },
+                };
+                await ctx.Response.WriteAsync($"data: {JsonSerializer.Serialize(chunk)}\n\n").ConfigureAwait(false);
+                await ctx.Response.Body.FlushAsync().ConfigureAwait(false);
+            }
+
+            await ctx.Response.WriteAsync("data: [DONE]\n\n").ConfigureAwait(false);
+            return Results.Empty;
+        }
+
+        private static async Task<IResult> HandleCompletionAsync(
+            IChatClient chatClient,
+            string modelId,
+            List<ChatMessage> messages,
+            ChatOptions options)
+        {
+            var response = await chatClient.GetResponseAsync(messages, options).ConfigureAwait(false);
+            return Results.Ok(BuildCompletionResponse(response, modelId));
+        }
+
+        private static object BuildCompletionResponse(ChatResponse response, string modelId)
+        {
+            var usage = BuildUsage(response);
+            var choices = BuildChoices(response);
+            return new
+            {
+                id = "cmpl-" + Guid.NewGuid(),
+                @object = "text_completion",
+                created = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                model = modelId,
+                choices,
+                usage,
+            };
+        }
+
+        private static object BuildUsage(ChatResponse response)
+        {
+            var promptTokens = response.Usage?.InputTokenCount ?? 0;
+            var completionTokens = response.Usage?.OutputTokenCount ?? 0;
+            return new
+            {
+                prompt_tokens = promptTokens,
+                completion_tokens = completionTokens,
+                total_tokens = promptTokens + completionTokens,
+            };
+        }
+
+        private static object[] BuildChoices(ChatResponse response)
+        {
+            var finishReason = response.FinishReason?.ToString().ToLowerInvariant() ?? "stop";
+            return new[]
+            {
+                new { text = response.Text, index = 0, finish_reason = finishReason },
+            };
+        }
+
         private static bool TryParsePrompt(object? promptObj, out string promptText, out string? errorMessage)
         {
             promptText = string.Empty;
@@ -111,96 +174,112 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
 
             if (promptObj == null)
             {
-                // treat null as empty prompt
                 return true;
             }
 
-            // Straight string
             if (promptObj is string s)
             {
                 promptText = s;
                 return true;
             }
 
-            // JsonElement from System.Text.Json (common when model binding raw JSON)
             if (promptObj is JsonElement je)
             {
-                try
-                {
-                    switch (je.ValueKind)
-                    {
-                        case JsonValueKind.String:
-                            promptText = je.GetString() ?? string.Empty;
-                            return true;
-                        case JsonValueKind.Array:
-                            var parts = new List<string>();
-                            foreach (var el in je.EnumerateArray())
-                            {
-                                if (el.ValueKind == JsonValueKind.String)
-                                {
-                                    parts.Add(el.GetString() ?? string.Empty);
-                                }
-                                else
-                                {
-                                    errorMessage = "Prompt array must contain only strings.";
-                                    return false;
-                                }
-                            }
-
-                            promptText = string.Join("\n", parts);
-                            return true;
-                        case JsonValueKind.Null:
-                            promptText = string.Empty;
-                            return true;
-                        default:
-                            errorMessage = "Prompt must be a string or an array of strings.";
-                            return false;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    errorMessage = "Malformed prompt." + (ex.Message.Length > 0 ? " " + ex.Message : string.Empty);
-                    return false;
-                }
+                return TryParseJsonElement(je, out promptText, out errorMessage);
             }
 
-            // Enumerable types (e.g., string[] bound by some serializers)
             if (promptObj is System.Collections.IEnumerable ie)
             {
-                var parts = new List<string>();
-                foreach (var item in ie)
-                {
-                    if (item == null)
-                    {
-                        parts.Add(string.Empty);
-                        continue;
-                    }
-
-                    if (item is string si)
-                    {
-                        parts.Add(si);
-                        continue;
-                    }
-
-                    // If items are JsonElement strings
-                    if (item is JsonElement jel && jel.ValueKind == JsonValueKind.String)
-                    {
-                        parts.Add(jel.GetString() ?? string.Empty);
-                        continue;
-                    }
-
-                    errorMessage = "Prompt array must contain only strings.";
-                    return false;
-                }
-
-                promptText = string.Join("\n", parts);
-                return true;
+                return TryParseEnumerablePrompt(ie, out promptText, out errorMessage);
             }
 
-            // Fallback: unsupported type
             errorMessage = "Prompt must be a string or an array of strings.";
             return false;
         }
-    }
 
+        private static bool TryParseJsonElement(JsonElement element, out string promptText, out string? errorMessage)
+        {
+            promptText = string.Empty;
+            errorMessage = null;
+
+            try
+            {
+                switch (element.ValueKind)
+                {
+                    case JsonValueKind.String:
+                        promptText = element.GetString() ?? string.Empty;
+                        return true;
+                    case JsonValueKind.Array:
+                        return TryParseJsonArray(element, out promptText, out errorMessage);
+                    case JsonValueKind.Null:
+                        promptText = string.Empty;
+                        return true;
+                    default:
+                        errorMessage = "Prompt must be a string or an array of strings.";
+                        return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                errorMessage = "Malformed prompt." + (ex.Message.Length > 0 ? " " + ex.Message : string.Empty);
+                return false;
+            }
+        }
+
+        private static bool TryParseJsonArray(JsonElement element, out string promptText, out string? errorMessage)
+        {
+            var parts = new List<string>();
+            using var enumerator = element.EnumerateArray();
+            while (enumerator.MoveNext())
+            {
+                var item = enumerator.Current;
+                if (item.ValueKind == JsonValueKind.String)
+                {
+                    parts.Add(item.GetString() ?? string.Empty);
+                    continue;
+                }
+
+                promptText = string.Empty;
+                errorMessage = "Prompt array must contain only strings.";
+                return false;
+            }
+
+            promptText = string.Join("\n", parts);
+            errorMessage = null;
+            return true;
+        }
+
+        private static bool TryParseEnumerablePrompt(System.Collections.IEnumerable items, out string promptText, out string? errorMessage)
+        {
+            var parts = new List<string>();
+            foreach (var item in items)
+            {
+                if (item == null)
+                {
+                    parts.Add(string.Empty);
+                    continue;
+                }
+
+                if (item is string stringItem)
+                {
+                    parts.Add(stringItem);
+                    continue;
+                }
+
+                if (item is JsonElement element && element.ValueKind == JsonValueKind.String)
+                {
+                    parts.Add(element.GetString() ?? string.Empty);
+                    continue;
+                }
+
+                promptText = string.Empty;
+                errorMessage = "Prompt array must contain only strings.";
+                return false;
+            }
+
+            promptText = string.Join("\n", parts);
+            errorMessage = null;
+            return true;
+        }
+    }
 }

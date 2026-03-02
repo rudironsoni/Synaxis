@@ -82,10 +82,11 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
                     {
                         if (toolCall.Function != null)
                         {
+                            var arguments = ParseToolArguments(toolCall.Function.Arguments);
                             chatMessage.Contents.Add(new FunctionCallContent(
                                 toolCall.Id,
                                 toolCall.Function.Name,
-                                string.IsNullOrEmpty(toolCall.Function.Arguments) ? null : JsonSerializer.Deserialize<IDictionary<string, object?>>(toolCall.Function.Arguments)));
+                                arguments));
                         }
                     }
                 }
@@ -145,8 +146,10 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
                 if (element.ValueKind == JsonValueKind.Array)
                 {
                     var list = new List<string>();
-                    foreach (var item in element.EnumerateArray())
+                    using var enumerator = element.EnumerateArray();
+                    while (enumerator.MoveNext())
                     {
+                        var item = enumerator.Current;
                         if (item.ValueKind == JsonValueKind.String)
                         {
                             list.Add(item.GetString()!);
@@ -158,6 +161,28 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
             }
 
             return null;
+        }
+
+        private static IDictionary<string, object?>? ParseToolArguments(string? arguments)
+        {
+            if (string.IsNullOrWhiteSpace(arguments))
+            {
+                return null;
+            }
+
+            using var document = JsonDocument.Parse(arguments);
+            if (document.RootElement.ValueKind != JsonValueKind.Object)
+            {
+                return null;
+            }
+
+            var parsed = JsonSerializer.Deserialize<Dictionary<string, object?>>(document.RootElement.GetRawText());
+            if (parsed == null)
+            {
+                throw new InvalidOperationException("Tool arguments could not be parsed.");
+            }
+
+            return parsed;
         }
     }
 }

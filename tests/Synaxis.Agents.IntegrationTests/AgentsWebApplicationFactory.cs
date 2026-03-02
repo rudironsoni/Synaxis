@@ -102,6 +102,7 @@ public class TestEventStore : EventStore
     public void Clear()
     {
         Streams.Clear();
+        this.ClearStreamVersions();
     }
 }
 

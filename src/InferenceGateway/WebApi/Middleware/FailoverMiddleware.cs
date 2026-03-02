@@ -52,118 +52,30 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         {
             try
             {
-                // Skip failover for health checks
-                if (context.Request.Path.StartsWithSegments("/health", StringComparison.OrdinalIgnoreCase) ||
-                    context.Request.Path.StartsWithSegments("/openapi", StringComparison.OrdinalIgnoreCase))
+                if (ShouldSkip(context))
                 {
                     await this._next(context).ConfigureAwait(false);
                     return;
                 }
 
-                var currentRegion = Environment.GetEnvironmentVariable("SYNAXIS_REGION") ?? "us-east-1";
-
-                // Check if current region is healthy
+                var currentRegion = ResolveCurrentRegion();
                 var isHealthy = await healthMonitor.IsRegionHealthyAsync(currentRegion).ConfigureAwait(false);
 
                 if (!isHealthy)
                 {
-                    this._logger.LogWarning(
-                        "Current region {Region} is unhealthy. Attempting failover for OrgId: {OrgId}",
-                        currentRegion,
-                        tenantContext.OrganizationId);
-
-                    // Get user's location for nearest failover
-                    var clientIp = GetClientIpAddress(context);
-                    var geoLocation = await geoIPService.GetLocationAsync(clientIp).ConfigureAwait(false);
-
-                    // Get nearest healthy region
-                    var failoverRegion = await regionRouter.GetNearestHealthyRegionAsync(currentRegion, geoLocation).ConfigureAwait(false);
-
+                    var failoverRegion = await this.ResolveFailoverRegionAsync(tenantContext, context, geoIPService, regionRouter, currentRegion).ConfigureAwait(false);
                     if (string.IsNullOrEmpty(failoverRegion))
                     {
-                        this._logger.LogError(
-                            "No healthy regions available for failover. Current: {CurrentRegion}",
-                            currentRegion);
-
-                        context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
-                        await context.Response.WriteAsJsonAsync(new
-                        {
-                            error = new
-                            {
-                                message = "Service temporarily unavailable in all regions",
-                                type = "service_unavailable",
-                                code = "NO_HEALTHY_REGIONS",
-                            },
-                        }).ConfigureAwait(false);
+                        await this.WriteNoHealthyRegionAsync(context, currentRegion).ConfigureAwait(false);
                         return;
                     }
 
-                    this._logger.LogInformation(
-                        "Failing over from {CurrentRegion} to {FailoverRegion}",
-                        currentRegion,
-                        failoverRegion);
+                    SetFailoverContext(context, currentRegion, failoverRegion);
 
-                    // Update context with failover info
-                    context.Items["FailoverActive"] = true;
-                    context.Items["FailoverFrom"] = currentRegion;
-                    context.Items["FailoverTo"] = failoverRegion;
-
-                    // Add failover headers
-                    context.Response.OnStarting(() =>
+                    var shouldContinue = await this.HandleCrossBorderFailoverAsync(context, tenantContext, regionRouter, failoverRegion).ConfigureAwait(false);
+                    if (!shouldContinue)
                     {
-                        context.Response.Headers["X-Synaxis-Failover"] = "true";
-                        context.Response.Headers["X-Synaxis-Failover-From"] = currentRegion;
-                        context.Response.Headers["X-Synaxis-Failover-To"] = failoverRegion;
-                        return Task.CompletedTask;
-                    });
-
-                    // If user has data residency requirements, check consent for cross-border failover
-                    if (tenantContext.UserId.HasValue)
-                    {
-                        var userRegion = await regionRouter.GetUserRegionAsync(tenantContext.UserId.Value).ConfigureAwait(false);
-
-                        if (!string.Equals(userRegion, failoverRegion, StringComparison.Ordinal))
-                        {
-                            var requiresConsent = await regionRouter.RequiresCrossBorderConsentAsync(
-                                tenantContext.UserId.Value,
-                                failoverRegion).ConfigureAwait(false);
-
-                            if (requiresConsent)
-                            {
-                                this._logger.LogWarning(
-                                    "Failover to {FailoverRegion} requires consent. UserId: {UserId}, UserRegion: {UserRegion}",
-                                    failoverRegion,
-                                    tenantContext.UserId.Value,
-                                    userRegion);
-
-                                context.Response.StatusCode = StatusCodes.Status451UnavailableForLegalReasons;
-                                await context.Response.WriteAsJsonAsync(new
-                                {
-                                    error = new
-                                    {
-                                        message = "Failover requires cross-border consent",
-                                        type = "consent_required",
-                                        code = "FAILOVER_CONSENT_REQUIRED",
-                                        user_region = userRegion,
-                                        failover_region = failoverRegion,
-                                        reason = "primary_region_unavailable",
-                                    },
-                                }).ConfigureAwait(false);
-                                return;
-                            }
-
-                            // Log cross-border failover transfer
-                            await regionRouter.LogCrossBorderTransferAsync(new CrossBorderTransferContext
-                            {
-                                OrganizationId = tenantContext.OrganizationId!.Value,
-                                UserId = tenantContext.UserId,
-                                FromRegion = userRegion,
-                                ToRegion = failoverRegion,
-                                LegalBasis = "vital_interest", // Failover is for service continuity
-                                Purpose = "disaster_recovery",
-                                DataCategories = new[] { "api_request", "model_inference" },
-                            }).ConfigureAwait(false);
-                        }
+                        return;
                     }
                 }
 
@@ -174,6 +86,142 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 this._logger.LogError(ex, "Error occurred during failover handling");
                 await this._next(context).ConfigureAwait(false);
             }
+        }
+
+        private static bool ShouldSkip(HttpContext context)
+        {
+            return context.Request.Path.StartsWithSegments("/health", StringComparison.OrdinalIgnoreCase) ||
+                   context.Request.Path.StartsWithSegments("/openapi", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string ResolveCurrentRegion()
+        {
+            return Environment.GetEnvironmentVariable("SYNAXIS_REGION") ?? "us-east-1";
+        }
+
+        private async Task<string?> ResolveFailoverRegionAsync(
+            ITenantContext tenantContext,
+            HttpContext context,
+            IGeoIPService geoIPService,
+            IRegionRouter regionRouter,
+            string currentRegion)
+        {
+            this._logger.LogWarning(
+                "Current region {Region} is unhealthy. Attempting failover for OrgId: {OrgId}",
+                currentRegion,
+                tenantContext.OrganizationId);
+
+            var clientIp = GetClientIpAddress(context);
+            var geoLocation = await geoIPService.GetLocationAsync(clientIp).ConfigureAwait(false);
+            return await regionRouter.GetNearestHealthyRegionAsync(currentRegion, geoLocation).ConfigureAwait(false);
+        }
+
+        private Task WriteNoHealthyRegionAsync(HttpContext context, string currentRegion)
+        {
+            this._logger.LogError(
+                "No healthy regions available for failover. Current: {CurrentRegion}",
+                currentRegion);
+
+            context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+            return context.Response.WriteAsJsonAsync(new
+            {
+                error = new
+                {
+                    message = "Service temporarily unavailable in all regions",
+                    type = "service_unavailable",
+                    code = "NO_HEALTHY_REGIONS",
+                },
+            });
+        }
+
+        private static void SetFailoverContext(HttpContext context, string currentRegion, string failoverRegion)
+        {
+            context.Items["FailoverActive"] = true;
+            context.Items["FailoverFrom"] = currentRegion;
+            context.Items["FailoverTo"] = failoverRegion;
+
+            context.Response.OnStarting(() =>
+            {
+                context.Response.Headers["X-Synaxis-Failover"] = "true";
+                context.Response.Headers["X-Synaxis-Failover-From"] = currentRegion;
+                context.Response.Headers["X-Synaxis-Failover-To"] = failoverRegion;
+                return Task.CompletedTask;
+            });
+        }
+
+        private async Task<bool> HandleCrossBorderFailoverAsync(
+            HttpContext context,
+            ITenantContext tenantContext,
+            IRegionRouter regionRouter,
+            string failoverRegion)
+        {
+            if (!tenantContext.UserId.HasValue)
+            {
+                return true;
+            }
+
+            var userRegion = await regionRouter.GetUserRegionAsync(tenantContext.UserId.Value).ConfigureAwait(false);
+
+            if (string.Equals(userRegion, failoverRegion, StringComparison.Ordinal))
+            {
+                return true;
+            }
+
+            var requiresConsent = await regionRouter.RequiresCrossBorderConsentAsync(
+                tenantContext.UserId.Value,
+                failoverRegion).ConfigureAwait(false);
+
+            if (requiresConsent)
+            {
+                this._logger.LogWarning(
+                    "Failover to {FailoverRegion} requires consent. UserId: {UserId}, UserRegion: {UserRegion}",
+                    failoverRegion,
+                    tenantContext.UserId.Value,
+                    userRegion);
+
+                context.Response.StatusCode = StatusCodes.Status451UnavailableForLegalReasons;
+                await context.Response.WriteAsJsonAsync(new
+                {
+                    error = new
+                    {
+                        message = "Failover requires cross-border consent",
+                        type = "consent_required",
+                        code = "FAILOVER_CONSENT_REQUIRED",
+                        user_region = userRegion,
+                        failover_region = failoverRegion,
+                        reason = "primary_region_unavailable",
+                    },
+                }).ConfigureAwait(false);
+                return false;
+            }
+
+            return await this.LogCrossBorderFailoverAsync(tenantContext, regionRouter, userRegion, failoverRegion).ConfigureAwait(false);
+        }
+
+        private async Task<bool> LogCrossBorderFailoverAsync(
+            ITenantContext tenantContext,
+            IRegionRouter regionRouter,
+            string userRegion,
+            string failoverRegion)
+        {
+            var organizationId = tenantContext.OrganizationId;
+            if (!organizationId.HasValue)
+            {
+                return true;
+            }
+
+            await regionRouter.LogCrossBorderTransferAsync(new CrossBorderTransferContext
+            {
+                OrganizationId = organizationId.Value,
+                UserId = tenantContext.UserId,
+                FromRegion = userRegion,
+                ToRegion = failoverRegion,
+                LegalBasis = "vital_interest",
+                Purpose = "disaster_recovery",
+                DataCategories = new[] { "api_request", "model_inference" },
+            }).ConfigureAwait(false);
+
+            return true;
         }
 
         private static string GetClientIpAddress(HttpContext context)

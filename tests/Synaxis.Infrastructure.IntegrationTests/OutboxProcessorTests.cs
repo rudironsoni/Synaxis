@@ -37,8 +37,9 @@ public sealed class OutboxProcessorTests : IAsyncLifetime
 
         var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
         var logger = loggerFactory.CreateLogger<SqlOutbox>();
+        var timeProvider = new Synaxis.Common.Tests.Time.TestTimeProvider();
 
-        _outbox = new SqlOutbox(_context, logger);
+        _outbox = new SqlOutbox(_context, logger, timeProvider);
     }
 
     /// <summary>

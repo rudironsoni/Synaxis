@@ -16,6 +16,7 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
     using Microsoft.AspNetCore.Routing;
     using Microsoft.Extensions.AI;
     using Microsoft.Extensions.DependencyInjection;
+    using Synaxis.InferenceGateway.Application.Translation;
     using Synaxis.InferenceGateway.WebApi.Agents;
     using Synaxis.InferenceGateway.WebApi.DTOs.OpenAi;
     using Synaxis.InferenceGateway.WebApi.Features.Chat.Commands;
@@ -36,11 +37,13 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
             var group = endpoints.MapGroup("/openai")
                 .RequireCors("PublicAPI");
             var apiPrefix = typeof(OpenAIEndpointsExtensions).Assembly.GetName().Name!.Split('.')[0];
-            MapOpenAIRoutes(group, apiPrefix);
+            MapChatCompletionsEndpoint(group, apiPrefix);
+            MapResponsesEndpoint(group);
+            MapLegacyAndModels(group);
             return group;
         }
 
-        private static void MapOpenAIRoutes(IEndpointRouteBuilder group, string apiPrefix)
+        private static void MapChatCompletionsEndpoint(IEndpointRouteBuilder group, string apiPrefix)
         {
             // Chat Completions
             group.MapPost("/v1/chat/completions", async (HttpContext context, IMediator mediator, CancellationToken ct) =>
@@ -56,105 +59,9 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                 var messages = OpenAIRequestMapper.ToChatMessages(request);
 
                 // 3. Handle Streaming
-                if (request.Stream)
-                {
-                    context.Response.Headers.ContentType = "text/event-stream";
-                    context.Response.Headers.CacheControl = "no-cache";
-                    context.Response.Headers.Connection = "keep-alive";
-
-                    var id = "chatcmpl-" + Guid.NewGuid().ToString("N");
-                    var created = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-
-                    var stream = mediator.CreateStream(new ChatStreamCommand(request, messages), ct);
-
-                    await foreach (var update in stream.ConfigureAwait(false))
-                    {
-                        var content = update.Text;
-
-                        if (string.IsNullOrEmpty(content))
-                        {
-                            continue;
-                        }
-
-                        var chunk = new ChatCompletionChunk
-                        {
-                            Id = id,
-                            Object = "chat.completion.chunk",
-                            Created = created,
-                            Model = request.Model ?? "default",
-                            Choices = new List<ChatCompletionChunkChoice>
-                            {
-                                new ChatCompletionChunkChoice
-                                {
-                                    Index = 0,
-                                    Delta = new ChatCompletionChunkDelta { Content = content },
-                                    FinishReason = null,
-                                },
-                            },
-                        };
-                        await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(chunk)}\n\n", ct).ConfigureAwait(false);
-                        await context.Response.Body.FlushAsync(ct).ConfigureAwait(false);
-                    }
-
-                    var finalChunk = new ChatCompletionChunk
-                    {
-                        Id = id,
-                        Object = "chat.completion.chunk",
-                        Created = created,
-                        Model = request.Model ?? "default",
-                        Choices = new List<ChatCompletionChunkChoice>
-                        {
-                            new ChatCompletionChunkChoice
-                            {
-                                Index = 0,
-                                Delta = new ChatCompletionChunkDelta(),
-                                FinishReason = "stop",
-                            },
-                        },
-                    };
-                    await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(finalChunk)}\n\n", ct).ConfigureAwait(false);
-                    await context.Response.WriteAsync("data: [DONE]\n\n", ct).ConfigureAwait(false);
-
-                    return Results.Empty;
-                }
-                else
-                {
-                    // 4. Handle Non-Streaming
-                    var response = await mediator.Send(new ChatCommand(request, messages), ct).ConfigureAwait(false);
-
-                    var message = response.Messages.FirstOrDefault();
-                    var content = message?.Text ?? string.Empty;
-                    var role = message?.Role.Value ?? "assistant";
-
-                    var openAIResponse = new ChatCompletionResponse
-                    {
-                        Id = "chatcmpl-" + Guid.NewGuid().ToString("N"),
-                        Object = "chat.completion",
-                        Created = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                        Model = request.Model ?? "default",
-                        Choices = new List<ChatCompletionChoice>
-                        {
-                            new ChatCompletionChoice
-                            {
-                                Index = 0,
-                                Message = new ChatCompletionMessageDto
-                                {
-                                    Role = role,
-                                    Content = content,
-                                },
-                                FinishReason = "stop",
-                            },
-                        },
-                        Usage = new ChatCompletionUsage
-                        {
-                            PromptTokens = 0,
-                            CompletionTokens = 0,
-                            TotalTokens = 0,
-                        },
-                    };
-
-                    return Results.Json(openAIResponse);
-                }
+                return request.Stream
+                    ? await StreamChatCompletionsAsync(context, mediator, request, messages, ct).ConfigureAwait(false)
+                    : await HandleChatCompletionsAsync(mediator, request, messages, ct).ConfigureAwait(false);
             })
             .WithTags("Chat")
             .AddOpenApiOperationTransformer((operation, context, ct) =>
@@ -165,7 +72,10 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                 return Task.CompletedTask;
             })
             .WithName("ChatCompletions");
+        }
 
+        private static void MapResponsesEndpoint(IEndpointRouteBuilder group)
+        {
             // Responses
             group.MapPost("/v1/responses", async (HttpContext context, IMediator mediator, CancellationToken ct) =>
             {
@@ -179,94 +89,220 @@ namespace Synaxis.InferenceGateway.WebApi.Endpoints.OpenAI
                 // Store the parsed request in HTTP context so RoutingAgent doesn't re-parse
                 context.Items["ParsedOpenAIRequest"] = request;
 
-                var messages = OpenAIRequestMapper.ToChatMessages(request);
+                var messages = OpenAIRequestMapper.ToChatMessages(request) ?? Enumerable.Empty<ChatMessage>();
 
-                if (request.Stream)
-                {
-                    context.Response.Headers.ContentType = "text/event-stream";
-                    context.Response.Headers.CacheControl = "no-cache";
-                    context.Response.Headers.Connection = "keep-alive";
-
-                    var id = "resp_" + Guid.NewGuid().ToString("N");
-                    var created = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-
-                    var stream = mediator.CreateStream(new ChatStreamCommand(request, messages ?? Enumerable.Empty<ChatMessage>()), ct);
-
-                    await foreach (var update in stream.ConfigureAwait(false))
-                    {
-                        var content = update.Text;
-
-                        if (string.IsNullOrEmpty(content))
-                        {
-                            continue;
-                        }
-
-                        var chunk = new ResponseStreamChunk
-                        {
-                            Id = id,
-                            Object = "response.output_item.delta",
-                            Created = created,
-                            Model = request.Model ?? "default",
-                            Delta = new ResponseDelta { Content = content },
-                        };
-                        await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(chunk, ModelJsonContext.Options)}\n\n", ct).ConfigureAwait(false);
-                        await context.Response.Body.FlushAsync(ct).ConfigureAwait(false);
-                    }
-
-                    var finalChunk = new ResponseStreamChunk
-                    {
-                        Id = id,
-                        Object = "response.completed",
-                        Created = created,
-                        Model = request.Model ?? "default",
-                        Delta = new ResponseDelta(),
-                    };
-                    await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(finalChunk, ModelJsonContext.Options)}\n\n", ct).ConfigureAwait(false);
-                    await context.Response.WriteAsync("data: [DONE]\n\n", ct).ConfigureAwait(false);
-
-                    return Results.Empty;
-                }
-                else
-                {
-                    var response = await mediator.Send(new ChatCommand(request, messages ?? Enumerable.Empty<ChatMessage>()), ct).ConfigureAwait(false);
-
-                    var message = response.Messages.FirstOrDefault();
-                    var content = message?.Text ?? string.Empty;
-
-                    var openAIResponse = new ResponseCompletion
-                    {
-                        Id = "resp_" + Guid.NewGuid().ToString("N"),
-                        Object = "response",
-                        Created = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                        Model = request.Model ?? "default",
-                        Output = new List<ResponseOutput>
-                        {
-                            new ResponseOutput
-                            {
-                                Type = "message",
-                                Role = "assistant",
-                                Content = new List<ResponseContent>
-                                {
-                                    new ResponseContent
-                                    {
-                                        Type = "output_text",
-                                        Text = content,
-                                    },
-                                },
-                            },
-                        },
-                    };
-
-                    return Results.Json(openAIResponse, ModelJsonContext.Options);
-                }
+                return request.Stream
+                    ? await StreamResponsesAsync(context, mediator, request, messages, ct).ConfigureAwait(false)
+                    : await HandleResponsesAsync(mediator, request, messages, ct).ConfigureAwait(false);
             })
             .WithTags("Responses")
             .WithSummary("Create response")
             .WithDescription("OpenAI-compatible responses endpoint supporting both streaming and non-streaming modes");
+        }
 
-            // Legacy & Models
+        private static void MapLegacyAndModels(IEndpointRouteBuilder group)
+        {
             group.MapLegacyCompletions();
             group.MapModels();
+        }
+
+        private static async Task<IResult> StreamChatCompletionsAsync(
+            HttpContext context,
+            IMediator mediator,
+            OpenAIRequest request,
+            IEnumerable<ChatMessage> messages,
+            CancellationToken ct)
+        {
+            context.Response.Headers.ContentType = "text/event-stream";
+            context.Response.Headers.CacheControl = "no-cache";
+            context.Response.Headers.Connection = "keep-alive";
+
+            var id = "chatcmpl-" + Guid.NewGuid().ToString("N");
+            var created = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
+            var stream = mediator.CreateStream(new ChatStreamCommand(request, messages), ct);
+
+            await foreach (var update in stream.ConfigureAwait(false))
+            {
+                var content = update.Text;
+
+                if (string.IsNullOrEmpty(content))
+                {
+                    continue;
+                }
+
+                var chunk = new ChatCompletionChunk
+                {
+                    Id = id,
+                    Object = "chat.completion.chunk",
+                    Created = created,
+                    Model = request.Model ?? "default",
+                    Choices = new List<ChatCompletionChunkChoice>
+                    {
+                        new ChatCompletionChunkChoice
+                        {
+                            Index = 0,
+                            Delta = new ChatCompletionChunkDelta { Content = content },
+                            FinishReason = null,
+                        },
+                    },
+                };
+                await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(chunk)}\n\n", ct).ConfigureAwait(false);
+                await context.Response.Body.FlushAsync(ct).ConfigureAwait(false);
+            }
+
+            var finalChunk = new ChatCompletionChunk
+            {
+                Id = id,
+                Object = "chat.completion.chunk",
+                Created = created,
+                Model = request.Model ?? "default",
+                Choices = new List<ChatCompletionChunkChoice>
+                {
+                    new ChatCompletionChunkChoice
+                    {
+                        Index = 0,
+                        Delta = new ChatCompletionChunkDelta(),
+                        FinishReason = "stop",
+                    },
+                },
+            };
+            await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(finalChunk)}\n\n", ct).ConfigureAwait(false);
+            await context.Response.WriteAsync("data: [DONE]\n\n", ct).ConfigureAwait(false);
+
+            return Results.Empty;
+        }
+
+        private static async Task<IResult> HandleChatCompletionsAsync(
+            IMediator mediator,
+            OpenAIRequest request,
+            IEnumerable<ChatMessage> messages,
+            CancellationToken ct)
+        {
+            // 4. Handle Non-Streaming
+            var response = await mediator.Send(new ChatCommand(request, messages), ct).ConfigureAwait(false);
+
+            var message = response.Messages.FirstOrDefault();
+            var content = message?.Text ?? string.Empty;
+            var role = message?.Role.Value ?? "assistant";
+
+            var openAIResponse = new ChatCompletionResponse
+            {
+                Id = "chatcmpl-" + Guid.NewGuid().ToString("N"),
+                Object = "chat.completion",
+                Created = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                Model = request.Model ?? "default",
+                Choices = new List<ChatCompletionChoice>
+                {
+                    new ChatCompletionChoice
+                    {
+                        Index = 0,
+                        Message = new ChatCompletionMessageDto
+                        {
+                            Role = role,
+                            Content = content,
+                        },
+                        FinishReason = "stop",
+                    },
+                },
+                Usage = new ChatCompletionUsage
+                {
+                    PromptTokens = 0,
+                    CompletionTokens = 0,
+                    TotalTokens = 0,
+                },
+            };
+
+            return Results.Json(openAIResponse);
+        }
+
+        private static async Task<IResult> StreamResponsesAsync(
+            HttpContext context,
+            IMediator mediator,
+            OpenAIRequest request,
+            IEnumerable<ChatMessage> messages,
+            CancellationToken ct)
+        {
+            context.Response.Headers.ContentType = "text/event-stream";
+            context.Response.Headers.CacheControl = "no-cache";
+            context.Response.Headers.Connection = "keep-alive";
+
+            var id = "resp_" + Guid.NewGuid().ToString("N");
+            var created = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
+            var stream = mediator.CreateStream(new ChatStreamCommand(request, messages), ct);
+
+            await foreach (var update in stream.ConfigureAwait(false))
+            {
+                var content = update.Text;
+
+                if (string.IsNullOrEmpty(content))
+                {
+                    continue;
+                }
+
+                var chunk = new ResponseStreamChunk
+                {
+                    Id = id,
+                    Object = "response.output_item.delta",
+                    Created = created,
+                    Model = request.Model ?? "default",
+                    Delta = new ResponseDelta { Content = content },
+                };
+                await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(chunk, ModelJsonContext.Options)}\n\n", ct).ConfigureAwait(false);
+                await context.Response.Body.FlushAsync(ct).ConfigureAwait(false);
+            }
+
+            var finalChunk = new ResponseStreamChunk
+            {
+                Id = id,
+                Object = "response.completed",
+                Created = created,
+                Model = request.Model ?? "default",
+                Delta = new ResponseDelta(),
+            };
+            await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(finalChunk, ModelJsonContext.Options)}\n\n", ct).ConfigureAwait(false);
+            await context.Response.WriteAsync("data: [DONE]\n\n", ct).ConfigureAwait(false);
+
+            return Results.Empty;
+        }
+
+        private static async Task<IResult> HandleResponsesAsync(
+            IMediator mediator,
+            OpenAIRequest request,
+            IEnumerable<ChatMessage> messages,
+            CancellationToken ct)
+        {
+            var response = await mediator.Send(new ChatCommand(request, messages), ct).ConfigureAwait(false);
+
+            var message = response.Messages.FirstOrDefault();
+            var content = message?.Text ?? string.Empty;
+
+            var openAIResponse = new ResponseCompletion
+            {
+                Id = "resp_" + Guid.NewGuid().ToString("N"),
+                Object = "response",
+                Created = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                Model = request.Model ?? "default",
+                Output = new List<ResponseOutput>
+                {
+                    new ResponseOutput
+                    {
+                        Type = "message",
+                        Role = "assistant",
+                        Content = new List<ResponseContent>
+                        {
+                            new ResponseContent
+                            {
+                                Type = "output_text",
+                                Text = content,
+                            },
+                        },
+                    },
+                },
+            };
+
+            return Results.Json(openAIResponse, ModelJsonContext.Options);
         }
     }
 

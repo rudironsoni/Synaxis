@@ -229,6 +229,16 @@ namespace Synaxis.Infrastructure.Data.Migrations
 
         private static void CreateMissingAuthIndexes(MigrationBuilder migrationBuilder)
         {
+            CreateCollectionsIndexes(migrationBuilder);
+            CreateEmailVerificationTokenIndexes(migrationBuilder);
+            CreateJwtBlacklistIndexes(migrationBuilder);
+            CreateCollectionMembershipIndexes(migrationBuilder);
+            CreateOrganizationApiKeyIndexes(migrationBuilder);
+            CreatePasswordResetTokenIndexes(migrationBuilder);
+        }
+
+        private static void CreateCollectionsIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_collections_created_by",
                 table: "collections",
@@ -244,17 +254,37 @@ namespace Synaxis.Infrastructure.Data.Migrations
                 table: "collections",
                 columns: new[] { "organization_id", "slug" },
                 unique: true);
+        }
 
+        private static void CreateEmailVerificationTokenIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_EmailVerificationTokens_UserId",
                 table: "EmailVerificationTokens",
                 column: "UserId");
+        }
 
+        private static void CreateJwtBlacklistIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_jwt_blacklists_expires_at",
                 table: "jwt_blacklists",
                 column: "expires_at");
 
+            migrationBuilder.CreateIndex(
+                name: "IX_jwt_blacklists_token_id",
+                table: "jwt_blacklists",
+                column: "token_id",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_jwt_blacklists_user_id",
+                table: "jwt_blacklists",
+                column: "user_id");
+        }
+
+        private static void CreateCollectionMembershipIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_collection_memberships_added_by",
                 table: "collection_memberships",
@@ -275,7 +305,10 @@ namespace Synaxis.Infrastructure.Data.Migrations
                 table: "collection_memberships",
                 columns: new[] { "user_id", "collection_id" },
                 unique: true);
+        }
 
+        private static void CreateOrganizationApiKeyIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_organization_api_keys_created_by",
                 table: "organization_api_keys",
@@ -291,18 +324,10 @@ namespace Synaxis.Infrastructure.Data.Migrations
                 name: "IX_organization_api_keys_organization_id",
                 table: "organization_api_keys",
                 column: "organization_id");
+        }
 
-            migrationBuilder.CreateIndex(
-                name: "IX_jwt_blacklists_token_id",
-                table: "jwt_blacklists",
-                column: "token_id",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_jwt_blacklists_user_id",
-                table: "jwt_blacklists",
-                column: "user_id");
-
+        private static void CreatePasswordResetTokenIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_PasswordResetTokens_UserId",
                 table: "PasswordResetTokens",

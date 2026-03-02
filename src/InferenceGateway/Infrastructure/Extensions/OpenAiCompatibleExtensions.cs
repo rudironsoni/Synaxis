@@ -38,8 +38,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
         {
             services.AddKeyedSingleton<IChatClient>(key, (sp, obj) =>
             {
-                var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
-                var httpClient = httpClientFactory.CreateClient();
                 var headers = customHeaders != null
                     ? new Dictionary<string, string>(customHeaders.Select(kvp => new KeyValuePair<string, string>(kvp.Key, kvp.Value)))
                     : null;
@@ -48,15 +46,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
                         sp,
                         apiKey,
                         BuildBaseUri(baseUrl),
-                        modelId ?? "default",
-                        httpClient)
+                        modelId ?? "default")
                     : ActivatorUtilities.CreateInstance<GenericOpenAiChatClient>(
                         sp,
                         apiKey,
                         BuildBaseUri(baseUrl),
                         modelId ?? "default",
-                        headers,
-                        httpClient);
+                        headers);
             });
 
             return services;

@@ -1,5 +1,5 @@
-// <copyright file="20260205072543_AddUserOrganizationMembershipSoftDelete.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
+// <copyright file="20260205072543_AddUserOrganizationMembershipSoftDelete.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
 using System;
@@ -15,6 +15,23 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            DropGroupParentReference(migrationBuilder);
+            AddSoftDeleteColumns(migrationBuilder);
+            UpdateOrganizationSettingDefaults(migrationBuilder);
+            CreateSoftDeleteIndex(migrationBuilder);
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            DropSoftDeleteIndex(migrationBuilder);
+            RemoveSoftDeleteColumns(migrationBuilder);
+            RestoreOrganizationSettingDefaults(migrationBuilder);
+            RestoreGroupParentReference(migrationBuilder);
+        }
+
+        private static void DropGroupParentReference(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.DropForeignKey(
                 name: "FK_Groups_Groups_ParentGroupId",
                 schema: "identity",
@@ -29,7 +46,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 name: "ParentGroupId",
                 schema: "identity",
                 table: "Groups");
+        }
 
+        private static void AddSoftDeleteColumns(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.AddColumn<DateTime>(
                 name: "DeletedAt",
                 schema: "identity",
@@ -43,7 +63,62 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 table: "UserOrganizationMemberships",
                 type: "uuid",
                 nullable: true);
+        }
 
+        private static void UpdateOrganizationSettingDefaults(MigrationBuilder migrationBuilder)
+        {
+            SetUpdatedByDefault(migrationBuilder);
+            SetUpdatedAtDefault(migrationBuilder);
+            SetMaxUsersDefault(migrationBuilder);
+            SetMaxRequestBodySizeDefault(migrationBuilder);
+            SetMaxGroupsDefault(migrationBuilder);
+            SetDefaultRateLimitTpmDefault(migrationBuilder);
+            SetDefaultRateLimitRpmDefault(migrationBuilder);
+        }
+
+        private static void CreateSoftDeleteIndex(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.CreateIndex(
+                name: "IX_UserOrganizationMemberships_DeletedAt",
+                schema: "identity",
+                table: "UserOrganizationMemberships",
+                column: "DeletedAt");
+        }
+
+        private static void DropSoftDeleteIndex(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropIndex(
+                name: "IX_UserOrganizationMemberships_DeletedAt",
+                schema: "identity",
+                table: "UserOrganizationMemberships");
+        }
+
+        private static void RemoveSoftDeleteColumns(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropColumn(
+                name: "DeletedAt",
+                schema: "identity",
+                table: "UserOrganizationMemberships");
+
+            migrationBuilder.DropColumn(
+                name: "DeletedBy",
+                schema: "identity",
+                table: "UserOrganizationMemberships");
+        }
+
+        private static void RestoreOrganizationSettingDefaults(MigrationBuilder migrationBuilder)
+        {
+            RestoreUpdatedByDefault(migrationBuilder);
+            RestoreUpdatedAtDefault(migrationBuilder);
+            RestoreMaxUsersDefault(migrationBuilder);
+            RestoreMaxRequestBodySizeDefault(migrationBuilder);
+            RestoreMaxGroupsDefault(migrationBuilder);
+            RestoreDefaultRateLimitTpmDefault(migrationBuilder);
+            RestoreDefaultRateLimitRpmDefault(migrationBuilder);
+        }
+
+        private static void SetUpdatedByDefault(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.AlterColumn<Guid>(
                 name: "UpdatedBy",
                 schema: "identity",
@@ -54,7 +129,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 oldClrType: typeof(Guid),
                 oldType: "uuid",
                 oldNullable: true);
+        }
 
+        private static void SetUpdatedAtDefault(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.AlterColumn<DateTime>(
                 name: "UpdatedAt",
                 schema: "identity",
@@ -65,7 +143,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 oldClrType: typeof(DateTime),
                 oldType: "timestamp with time zone",
                 oldNullable: true);
+        }
 
+        private static void SetMaxUsersDefault(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.AlterColumn<int>(
                 name: "MaxUsers",
                 schema: "identity",
@@ -76,7 +157,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 oldClrType: typeof(int),
                 oldType: "integer",
                 oldNullable: true);
+        }
 
+        private static void SetMaxRequestBodySizeDefault(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.AlterColumn<int>(
                 name: "MaxRequestBodySizeBytes",
                 schema: "identity",
@@ -85,7 +169,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 nullable: false,
                 oldClrType: typeof(long),
                 oldType: "bigint");
+        }
 
+        private static void SetMaxGroupsDefault(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.AlterColumn<int>(
                 name: "MaxGroups",
                 schema: "identity",
@@ -96,7 +183,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 oldClrType: typeof(int),
                 oldType: "integer",
                 oldNullable: true);
+        }
 
+        private static void SetDefaultRateLimitTpmDefault(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.AlterColumn<int>(
                 name: "DefaultRateLimitTpm",
                 schema: "identity",
@@ -107,7 +197,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 oldClrType: typeof(int),
                 oldType: "integer",
                 oldNullable: true);
+        }
 
+        private static void SetDefaultRateLimitRpmDefault(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.AlterColumn<int>(
                 name: "DefaultRateLimitRpm",
                 schema: "identity",
@@ -118,32 +211,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 oldClrType: typeof(int),
                 oldType: "integer",
                 oldNullable: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_UserOrganizationMemberships_DeletedAt",
-                schema: "identity",
-                table: "UserOrganizationMemberships",
-                column: "DeletedAt");
         }
 
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
+        private static void RestoreUpdatedByDefault(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropIndex(
-                name: "IX_UserOrganizationMemberships_DeletedAt",
-                schema: "identity",
-                table: "UserOrganizationMemberships");
-
-            migrationBuilder.DropColumn(
-                name: "DeletedAt",
-                schema: "identity",
-                table: "UserOrganizationMemberships");
-
-            migrationBuilder.DropColumn(
-                name: "DeletedBy",
-                schema: "identity",
-                table: "UserOrganizationMemberships");
-
             migrationBuilder.AlterColumn<Guid>(
                 name: "UpdatedBy",
                 schema: "identity",
@@ -152,7 +223,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 nullable: true,
                 oldClrType: typeof(Guid),
                 oldType: "uuid");
+        }
 
+        private static void RestoreUpdatedAtDefault(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.AlterColumn<DateTime>(
                 name: "UpdatedAt",
                 schema: "identity",
@@ -161,7 +235,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 nullable: true,
                 oldClrType: typeof(DateTime),
                 oldType: "timestamp with time zone");
+        }
 
+        private static void RestoreMaxUsersDefault(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.AlterColumn<int>(
                 name: "MaxUsers",
                 schema: "identity",
@@ -170,7 +247,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 nullable: true,
                 oldClrType: typeof(int),
                 oldType: "integer");
+        }
 
+        private static void RestoreMaxRequestBodySizeDefault(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.AlterColumn<long>(
                 name: "MaxRequestBodySizeBytes",
                 schema: "identity",
@@ -179,7 +259,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 nullable: false,
                 oldClrType: typeof(int),
                 oldType: "integer");
+        }
 
+        private static void RestoreMaxGroupsDefault(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.AlterColumn<int>(
                 name: "MaxGroups",
                 schema: "identity",
@@ -188,7 +271,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 nullable: true,
                 oldClrType: typeof(int),
                 oldType: "integer");
+        }
 
+        private static void RestoreDefaultRateLimitTpmDefault(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.AlterColumn<int>(
                 name: "DefaultRateLimitTpm",
                 schema: "identity",
@@ -197,7 +283,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 nullable: true,
                 oldClrType: typeof(int),
                 oldType: "integer");
+        }
 
+        private static void RestoreDefaultRateLimitRpmDefault(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.AlterColumn<int>(
                 name: "DefaultRateLimitRpm",
                 schema: "identity",
@@ -206,7 +295,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 nullable: true,
                 oldClrType: typeof(int),
                 oldType: "integer");
+        }
 
+        private static void RestoreGroupParentReference(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.AddColumn<Guid>(
                 name: "ParentGroupId",
                 schema: "identity",

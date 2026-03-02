@@ -26,7 +26,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
     public class AntigravityAuthManager : IAntigravityAuthManager
     {
         private const string DefaultProjectId = "rising-fact-p41fc";
-        private const string DefaultRedirectUrl = "http://localhost:51121/oauth/antigravity/callback";
+        private static readonly string DefaultRedirectUrl = AntigravitySettings.DefaultRedirectUrl;
 
         private static readonly Uri AuthorizationEndpoint = new("https://accounts.google.com/o/oauth2/v2/auth");
         private static readonly Uri TokenEndpoint = new("https://oauth2.googleapis.com/token");

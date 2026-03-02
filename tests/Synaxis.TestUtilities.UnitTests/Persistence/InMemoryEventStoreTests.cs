@@ -28,17 +28,17 @@ public class InMemoryEventStoreTests
     /// Tests that AppendAsync throws ArgumentException when streamId is null or empty.
     /// </summary>
     [Theory]
-    [InlineData(null)]
     [InlineData("")]
-    public async Task AppendAsync_WithInvalidStreamId_ThrowsArgumentException(string? streamId)
+    public async Task AppendAsync_WithInvalidStreamId_ThrowsArgumentException(string streamId)
     {
-        // Arrange
+        await AssertAppendAsyncThrowsArgumentException(streamId);
+    }
+
+    [Fact]
+    public async Task AppendAsync_WithNullStreamId_ThrowsArgumentException()
+    {
         var events = new[] { new TestDomainEvent(Guid.NewGuid().ToString()) };
-
-        // Act
-        var act = async () => await _store.AppendAsync(streamId!, events, 0);
-
-        // Assert
+        var act = async () => await _store.AppendAsync(null!, events, 0);
         await act.Should().ThrowAsync<ArgumentException>();
     }
 
@@ -147,14 +147,16 @@ public class InMemoryEventStoreTests
     /// Tests that ReadStreamAsync throws ArgumentException for null streamId.
     /// </summary>
     [Theory]
-    [InlineData(null)]
     [InlineData("")]
-    public async Task ReadStreamAsync_WithInvalidStreamId_ThrowsArgumentException(string? streamId)
+    public async Task ReadStreamAsync_WithInvalidStreamId_ThrowsArgumentException(string streamId)
     {
-        // Act
-        var act = async () => await _store.ReadStreamAsync(streamId!);
+        await AssertReadStreamAsyncThrowsArgumentException(streamId);
+    }
 
-        // Assert
+    [Fact]
+    public async Task ReadStreamAsync_WithNullStreamId_ThrowsArgumentException()
+    {
+        var act = async () => await _store.ReadStreamAsync(null!);
         await act.Should().ThrowAsync<ArgumentException>();
     }
 
@@ -202,14 +204,16 @@ public class InMemoryEventStoreTests
     /// Tests that DeleteAsync throws ArgumentException for null streamId.
     /// </summary>
     [Theory]
-    [InlineData(null)]
     [InlineData("")]
-    public async Task DeleteAsync_WithInvalidStreamId_ThrowsArgumentException(string? streamId)
+    public async Task DeleteAsync_WithInvalidStreamId_ThrowsArgumentException(string streamId)
     {
-        // Act
-        var act = async () => await _store.DeleteAsync(streamId!);
+        await AssertDeleteAsyncThrowsArgumentException(streamId);
+    }
 
-        // Assert
+    [Fact]
+    public async Task DeleteAsync_WithNullStreamId_ThrowsArgumentException()
+    {
+        var act = async () => await _store.DeleteAsync(null!);
         await act.Should().ThrowAsync<ArgumentException>();
     }
 
@@ -394,5 +398,24 @@ public class InMemoryEventStoreTests
         }
 
         public override string AggregateId { get; }
+    }
+
+    private async Task AssertAppendAsyncThrowsArgumentException(string streamId)
+    {
+        var events = new[] { new TestDomainEvent(Guid.NewGuid().ToString()) };
+        var act = async () => await _store.AppendAsync(streamId, events, 0);
+        await act.Should().ThrowAsync<ArgumentException>();
+    }
+
+    private async Task AssertReadStreamAsyncThrowsArgumentException(string streamId)
+    {
+        var act = async () => await _store.ReadStreamAsync(streamId);
+        await act.Should().ThrowAsync<ArgumentException>();
+    }
+
+    private async Task AssertDeleteAsyncThrowsArgumentException(string streamId)
+    {
+        var act = async () => await _store.DeleteAsync(streamId);
+        await act.Should().ThrowAsync<ArgumentException>();
     }
 }

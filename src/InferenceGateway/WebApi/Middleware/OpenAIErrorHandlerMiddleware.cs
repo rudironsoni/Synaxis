@@ -19,6 +19,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
     /// </summary>
     public class OpenAIErrorHandlerMiddleware
     {
+        private const int ClientSummaryLimit = 100;
         private readonly RequestDelegate _next;
         private readonly ILogger<OpenAIErrorHandlerMiddleware> _logger;
 
@@ -51,207 +52,18 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     throw;
                 }
 
-                var requestId = context.Request.Headers["X-Request-ID"].FirstOrDefault()
-                             ?? context.Request.Headers["x-request-id"].FirstOrDefault()
-                             ?? context.TraceIdentifier;
-
+                var requestId = ResolveRequestId(context);
                 var isStreamingRequest = IsStreamingRequest(context);
 
-                // Client errors (4xx) are logged at Information level per Microsoft guidance.
-                // These indicate client problems, not server issues requiring investigation.
-                // Only server errors (5xx) should be logged as Error.
-                bool isClientError = ex is BadHttpRequestException ||
-                                     (ex.InnerException is JsonException);
+                this.LogUnhandledException(context, ex, requestId, isStreamingRequest);
 
-                if (isClientError)
-                {
-                    this._logger.LogInformation(
-                        "Client request validation failed. RequestId: {RequestId}, Path: {Path}, Method: {Method}, Error: {ErrorMessage}",
-                        requestId,
-                        context.Request.Path,
-                        context.Request.Method,
-                        ex.Message);
-                }
-                else
-                {
-                    this._logger.LogError(
-                        ex,
-                        "Unhandled exception caught. RequestId: {RequestId}, Path: {Path}, Method: {Method}, IsStreaming: {IsStreaming}",
-                        requestId,
-                        context.Request.Path,
-                        context.Request.Method,
-                        isStreamingRequest);
-                }
-
-                // Special handling for AggregateException produced by the router
                 if (ex is AggregateException agg)
                 {
-                    var flat = agg.Flatten();
-                    var details = new List<object>();
-                    var summaries = new List<string>();
-                    var statusCodes = new List<int>();
-
-                    this._logger.LogError(
-                        ex,
-                        "AggregateException caught. RequestId: {RequestId}, Path: {Path}, Inner exceptions: {InnerExceptionCount}",
-                        requestId,
-                        context.Request.Path,
-                        flat.InnerExceptions.Count);
-
-                    foreach (var inner in flat.InnerExceptions)
-                    {
-                        // Provider name: determine from Data, Source, or exception type
-                        string provider;
-                        if (inner.Data.Contains("ProviderName") && inner.Data["ProviderName"] is string p && !string.IsNullOrEmpty(p))
-                        {
-                            provider = p;
-                        }
-                        else if (!string.IsNullOrEmpty(inner.Source))
-                        {
-                            provider = inner.Source;
-                        }
-                        else
-                        {
-                            provider = inner.GetType().Name;
-                        }
-
-                        // Try to extract a status code from common exception types or reflection as fallback
-                        int status = 500;
-                        if (inner is HttpRequestException hre && hre.StatusCode.HasValue)
-                        {
-                            status = (int)hre.StatusCode.Value;
-                        }
-                        else
-                        {
-                            // Use robust reflection to avoid AmbiguousMatchException when multiple
-                            // properties with the same name are present (explicit interface impls, etc).
-                            var statusProp = inner.GetType().GetProperties()
-                                .FirstOrDefault(p => string.Equals(p.Name, "StatusCode", StringComparison.OrdinalIgnoreCase)
-                                                     && (p.PropertyType == typeof(int)
-                                                         || p.PropertyType == typeof(HttpStatusCode)
-                                                         || p.PropertyType == typeof(System.Net.HttpStatusCode)));
-                            if (statusProp != null)
-                            {
-                                try
-                                {
-                                    var val = statusProp.GetValue(inner);
-                                    if (val is int i)
-                                    {
-                                        status = i;
-                                    }
-                                    else if (val is HttpStatusCode hc)
-                                    {
-                                        status = (int)hc;
-                                    }
-                                    else if (val is System.Net.HttpStatusCode hcc)
-                                    {
-                                        status = (int)hcc;
-                                    }
-                                }
-                                catch
-                                {
-                                    // ignore reflection failures and keep default
-                                }
-                            }
-                        }
-
-                        statusCodes.Add(status);
-
-                        // Clean up message: remove newlines for summary
-                        var cleanMsg = inner.Message?.Replace("\r", string.Empty)?.Replace("\n", " ") ?? "Unknown error";
-                        if (cleanMsg.Length > 100)
-                        {
-                            cleanMsg = cleanMsg.Substring(0, 97) + "...";
-                        }
-
-                        summaries.Add($"[{provider}: {status} - {cleanMsg}]");
-
-                        details.Add(new
-                        {
-                            provider,
-                            message = inner.Message,
-                            status = status,
-                        });
-                    }
-
-                    // Determine overall status code
-                    int overallStatus;
-                    bool anyRetriable = statusCodes.Any(sc => sc == 429 || (sc >= 500 && sc < 600));
-                    bool allClientErrors400or404 = statusCodes.Count > 0 && statusCodes.All(sc => sc == 400 || sc == 404);
-
-                    if (anyRetriable)
-                    {
-                        overallStatus = (int)HttpStatusCode.BadGateway; // 502
-                    }
-                    else if (allClientErrors400or404)
-                    {
-                        overallStatus = (int)HttpStatusCode.BadRequest; // 400
-                    }
-                    else
-                    {
-                        overallStatus = (int)HttpStatusCode.InternalServerError; // fallback
-                    }
-
-                    var message = $"Routing failed. Details: {string.Join(", ", summaries)}";
-
-                    context.Response.StatusCode = overallStatus;
-
-                    if (isStreamingRequest)
-                    {
-                        context.Response.ContentType = "text/event-stream";
-
-                        var errorEvent = new
-                        {
-                            error = new
-                            {
-                                message = message,
-                                code = "upstream_routing_failure",
-                                details = details,
-                                request_id = requestId,
-                            },
-                        };
-
-                        await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(errorEvent)}\n\n").ConfigureAwait(false);
-                        await context.Response.WriteAsync("data: [DONE]\n\n").ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        context.Response.ContentType = "application/json";
-
-                        var error = new
-                        {
-                            error = new
-                            {
-                                message = message,
-                                code = "upstream_routing_failure",
-                                details = details,
-                                request_id = requestId,
-                            },
-                        };
-
-                        await context.Response.WriteAsync(JsonSerializer.Serialize(error)).ConfigureAwait(false);
-                    }
-
+                    await this.HandleAggregateExceptionAsync(context, agg, requestId, isStreamingRequest).ConfigureAwait(false);
                     return;
                 }
 
-                // Non-aggregate exceptions: use error code catalog
-                string errorCode;
-                string errorType;
-                int statusCode;
-
-                if (ex is ArgumentException or BadHttpRequestException)
-                {
-                    errorCode = ErrorCodes.InvalidValue;
-                    errorType = ErrorCodeMappings.GetErrorType(errorCode);
-                    statusCode = (int)ErrorCodeMappings.GetStatusCode(errorCode);
-                }
-                else
-                {
-                    errorCode = ErrorCodes.InternalError;
-                    errorType = ErrorCodeMappings.GetErrorType(errorCode);
-                    statusCode = (int)ErrorCodeMappings.GetStatusCode(errorCode);
-                }
+                var (errorCode, errorType, statusCode) = ResolveErrorCode(ex);
 
                 this._logger.LogError(
                     ex,
@@ -264,44 +76,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                     ex.Message);
 
                 context.Response.StatusCode = statusCode;
-
-                if (isStreamingRequest)
-                {
-                    context.Response.ContentType = "text/event-stream";
-
-                    var errorEvent = new
-                    {
-                        error = new
-                        {
-                            message = ex.Message,
-                            type = errorType,
-                            param = (string?)null,
-                            code = errorCode,
-                            request_id = requestId,
-                        },
-                    };
-
-                    await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(errorEvent)}\n\n").ConfigureAwait(false);
-                    await context.Response.WriteAsync("data: [DONE]\n\n").ConfigureAwait(false);
-                }
-                else
-                {
-                    context.Response.ContentType = "application/json";
-
-                    var singleError = new
-                    {
-                        error = new
-                        {
-                            message = ex.Message,
-                            type = errorType,
-                            param = (string?)null,
-                            code = errorCode,
-                            request_id = requestId,
-                        },
-                    };
-
-                    await context.Response.WriteAsync(JsonSerializer.Serialize(singleError)).ConfigureAwait(false);
-                }
+                await WriteSingleErrorAsync(context, isStreamingRequest, requestId, errorType, errorCode, ex.Message).ConfigureAwait(false);
             }
         }
 
@@ -309,6 +84,291 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         {
             return context.Request.Headers["Accept"].ToString().Contains("text/event-stream")
                    || context.Request.Query.ContainsKey("stream");
+        }
+
+        private static bool IsClientErrorException(Exception ex)
+        {
+            return ex is BadHttpRequestException || ex.InnerException is JsonException;
+        }
+
+        private async Task HandleAggregateExceptionAsync(
+            HttpContext context,
+            AggregateException agg,
+            string requestId,
+            bool isStreamingRequest)
+        {
+            var flat = agg.Flatten();
+            var (details, summaries, statusCodes) = BuildAggregateDetails(flat.InnerExceptions);
+
+            this._logger.LogError(
+                agg,
+                "AggregateException caught. RequestId: {RequestId}, Path: {Path}, Inner exceptions: {InnerExceptionCount}",
+                requestId,
+                context.Request.Path,
+                flat.InnerExceptions.Count);
+
+            var overallStatus = DetermineAggregateStatus(statusCodes);
+            var message = $"Routing failed. Details: {string.Join(", ", summaries)}";
+
+            context.Response.StatusCode = overallStatus;
+
+            if (isStreamingRequest)
+            {
+                context.Response.ContentType = "text/event-stream";
+                var errorEvent = new
+                {
+                    error = new
+                    {
+                        message,
+                        code = "upstream_routing_failure",
+                        details,
+                        request_id = requestId,
+                    },
+                };
+
+                await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(errorEvent)}\n\n").ConfigureAwait(false);
+                await context.Response.WriteAsync("data: [DONE]\n\n").ConfigureAwait(false);
+                return;
+            }
+
+            context.Response.ContentType = "application/json";
+            var error = new
+            {
+                error = new
+                {
+                    message,
+                    code = "upstream_routing_failure",
+                    details,
+                    request_id = requestId,
+                },
+            };
+
+            await context.Response.WriteAsync(JsonSerializer.Serialize(error)).ConfigureAwait(false);
+        }
+
+        private static (List<object> Details, List<string> Summaries, List<int> StatusCodes) BuildAggregateDetails(
+            IReadOnlyCollection<Exception> exceptions)
+        {
+            var details = new List<object>(exceptions.Count);
+            var summaries = new List<string>(exceptions.Count);
+            var statusCodes = new List<int>(exceptions.Count);
+
+            foreach (var inner in exceptions)
+            {
+                var (provider, status, summary) = DescribeAggregateFailure(inner);
+                statusCodes.Add(status);
+                summaries.Add(summary);
+                details.Add(new
+                {
+                    provider,
+                    message = inner.Message,
+                    status,
+                });
+            }
+
+            return (details, summaries, statusCodes);
+        }
+
+        private static string ResolveRequestId(HttpContext context)
+        {
+            return context.Request.Headers["X-Request-ID"].FirstOrDefault()
+                ?? context.Request.Headers["x-request-id"].FirstOrDefault()
+                ?? context.TraceIdentifier;
+        }
+
+        private void LogUnhandledException(HttpContext context, Exception ex, string requestId, bool isStreamingRequest)
+        {
+            var isClientError = IsClientErrorException(ex);
+
+            if (isClientError)
+            {
+                this._logger.LogInformation(
+                    "Client request validation failed. RequestId: {RequestId}, Path: {Path}, Method: {Method}, Error: {ErrorMessage}",
+                    requestId,
+                    context.Request.Path,
+                    context.Request.Method,
+                    ex.Message);
+                return;
+            }
+
+            this._logger.LogError(
+                ex,
+                "Unhandled exception caught. RequestId: {RequestId}, Path: {Path}, Method: {Method}, IsStreaming: {IsStreaming}",
+                requestId,
+                context.Request.Path,
+                context.Request.Method,
+                isStreamingRequest);
+        }
+
+        private static (string ErrorCode, string ErrorType, int StatusCode) ResolveErrorCode(Exception ex)
+        {
+            if (ex is ArgumentException or BadHttpRequestException)
+            {
+                var errorCode = ErrorCodes.InvalidValue;
+                return (errorCode, ErrorCodeMappings.GetErrorType(errorCode), (int)ErrorCodeMappings.GetStatusCode(errorCode));
+            }
+
+            var fallbackCode = ErrorCodes.InternalError;
+            return (fallbackCode, ErrorCodeMappings.GetErrorType(fallbackCode), (int)ErrorCodeMappings.GetStatusCode(fallbackCode));
+        }
+
+        private static Task WriteSingleErrorAsync(
+            HttpContext context,
+            bool isStreamingRequest,
+            string requestId,
+            string errorType,
+            string errorCode,
+            string message)
+        {
+            if (isStreamingRequest)
+            {
+                return WriteStreamingErrorAsync(context, requestId, errorType, errorCode, message);
+            }
+
+            return WriteJsonErrorAsync(context, requestId, errorType, errorCode, message);
+        }
+
+        private static async Task WriteStreamingErrorAsync(
+            HttpContext context,
+            string requestId,
+            string errorType,
+            string errorCode,
+            string message)
+        {
+            context.Response.ContentType = "text/event-stream";
+
+            var errorEvent = new
+            {
+                error = new
+                {
+                    message,
+                    type = errorType,
+                    param = (string?)null,
+                    code = errorCode,
+                    request_id = requestId,
+                },
+            };
+
+            await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(errorEvent)}\n\n").ConfigureAwait(false);
+            await context.Response.WriteAsync("data: [DONE]\n\n").ConfigureAwait(false);
+        }
+
+        private static Task WriteJsonErrorAsync(
+            HttpContext context,
+            string requestId,
+            string errorType,
+            string errorCode,
+            string message)
+        {
+            context.Response.ContentType = "application/json";
+
+            var singleError = new
+            {
+                error = new
+                {
+                    message,
+                    type = errorType,
+                    param = (string?)null,
+                    code = errorCode,
+                    request_id = requestId,
+                },
+            };
+
+            return context.Response.WriteAsJsonAsync(singleError);
+        }
+
+        private static (string Provider, int Status, string Summary) DescribeAggregateFailure(Exception inner)
+        {
+            var provider = ResolveProviderName(inner);
+            var status = ResolveStatusCode(inner);
+            var summary = BuildSummary(provider, status, inner.Message);
+            return (provider, status, summary);
+        }
+
+        private static string ResolveProviderName(Exception inner)
+        {
+            if (inner.Data.Contains("ProviderName") && inner.Data["ProviderName"] is string p && !string.IsNullOrEmpty(p))
+            {
+                return p;
+            }
+
+            if (!string.IsNullOrEmpty(inner.Source))
+            {
+                return inner.Source;
+            }
+
+            return inner.GetType().Name;
+        }
+
+        private static int ResolveStatusCode(Exception inner)
+        {
+            if (inner is HttpRequestException hre && hre.StatusCode.HasValue)
+            {
+                return (int)hre.StatusCode.Value;
+            }
+
+            var statusProp = inner.GetType().GetProperties()
+                .FirstOrDefault(p => string.Equals(p.Name, "StatusCode", StringComparison.OrdinalIgnoreCase)
+                                     && (p.PropertyType == typeof(int)
+                                         || p.PropertyType == typeof(HttpStatusCode)
+                                         || p.PropertyType == typeof(System.Net.HttpStatusCode)));
+            if (statusProp != null)
+            {
+                try
+                {
+                    var val = statusProp.GetValue(inner);
+                    if (val is int i)
+                    {
+                        return i;
+                    }
+
+                    if (val is HttpStatusCode hc)
+                    {
+                        return (int)hc;
+                    }
+
+                    if (val is System.Net.HttpStatusCode hcc)
+                    {
+                        return (int)hcc;
+                    }
+                }
+                catch
+                {
+                    // ignore reflection failures and keep default
+                }
+            }
+
+            return 500;
+        }
+
+        private static string BuildSummary(string provider, int status, string message)
+        {
+            var cleanMsg = message?.Replace("\r", string.Empty)?.Replace("\n", " ") ?? "Unknown error";
+            if (cleanMsg.Length > ClientSummaryLimit)
+            {
+                cleanMsg = cleanMsg.Substring(0, ClientSummaryLimit - 3) + "...";
+            }
+
+            return $"[{provider}: {status} - {cleanMsg}]";
+        }
+
+        private static int DetermineAggregateStatus(IEnumerable<int> statusCodes)
+        {
+            var statusList = statusCodes.ToList();
+            var anyRetriable = statusList.Any(sc => sc == 429 || (sc >= 500 && sc < 600));
+            var allClientErrors = statusList.Count > 0 && statusList.All(sc => sc == 400 || sc == 404);
+
+            if (anyRetriable)
+            {
+                return (int)HttpStatusCode.BadGateway; // 502
+            }
+
+            if (allClientErrors)
+            {
+                return (int)HttpStatusCode.BadRequest; // 400
+            }
+
+            return (int)HttpStatusCode.InternalServerError;
         }
     }
 }

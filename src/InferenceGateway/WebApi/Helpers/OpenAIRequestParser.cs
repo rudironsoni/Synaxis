@@ -15,6 +15,11 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
     /// </summary>
     public static class OpenAIRequestParser
     {
+        private static readonly JsonSerializerOptions RequestSerializerOptions = new()
+        {
+            PropertyNameCaseInsensitive = true,
+        };
+
         /// <summary>
         /// Parses an OpenAI request from the HTTP context.
         /// </summary>
@@ -30,11 +35,24 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
                 return null;
             }
 
-            // Resolve configured max request body size from DI. Fall back to 10 MB if not available.
-            long maxBodySize = 10L * 1024 * 1024; // 10 MB default
+            var maxBodySize = ResolveMaxBodySize(context);
+            var body = await ReadRequestBodyAsync(context, maxBodySize, cancellationToken).ConfigureAwait(false);
+
+            if (string.IsNullOrWhiteSpace(body))
+            {
+                return null;
+            }
+
+            return DeserializeAndValidate(body, allowEmptyModel, allowEmptyMessages);
+        }
+
+        private static long ResolveMaxBodySize(HttpContext context)
+        {
+            long maxBodySize = Synaxis.InferenceGateway.Application.Configuration.SynaxisConfiguration.DefaultMaxRequestBodySize;
             try
             {
-                var opts = context.RequestServices.GetService(typeof(Microsoft.Extensions.Options.IOptions<Synaxis.InferenceGateway.Application.Configuration.SynaxisConfiguration>)) as Microsoft.Extensions.Options.IOptions<Synaxis.InferenceGateway.Application.Configuration.SynaxisConfiguration>;
+                var opts = context.RequestServices.GetService(typeof(Microsoft.Extensions.Options.IOptions<Synaxis.InferenceGateway.Application.Configuration.SynaxisConfiguration>))
+                    as Microsoft.Extensions.Options.IOptions<Synaxis.InferenceGateway.Application.Configuration.SynaxisConfiguration>;
                 if (opts?.Value != null)
                 {
                     maxBodySize = opts.Value.MaxRequestBodySize;
@@ -45,71 +63,67 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
                 // swallow - use default
             }
 
-            // If the client provided a Content-Length header, enforce it immediately.
+            return maxBodySize;
+        }
+
+        private static async Task<string> ReadRequestBodyAsync(HttpContext context, long maxBodySize, CancellationToken cancellationToken)
+        {
             var contentLength = context.Request.ContentLength;
             if (contentLength.HasValue && contentLength.Value > maxBodySize)
             {
                 throw new BadHttpRequestException($"Request body too large. Limit is {maxBodySize} bytes.");
             }
 
-            // Enable buffering so we can read and then rewind for downstream middleware.
             context.Request.EnableBuffering();
-            context.Request.Body.Position = 0; // Rewind just in case
-
-            string body;
-
-            if (contentLength.HasValue)
-            {
-                // Content-Length is known and already checked against the limit above.
-                using var reader = new StreamReader(context.Request.Body, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, leaveOpen: true);
-                body = await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
-            }
-            else
-            {
-                // Content-Length is unknown. Read the stream in bounded chunks to avoid OOM/DoS.
-                using var ms = new MemoryStream();
-                var buffer = new byte[8192];
-                int bytesRead;
-                long totalRead = 0;
-
-                while ((bytesRead = await context.Request.Body.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken).ConfigureAwait(false)) > 0)
-                {
-                    totalRead += bytesRead;
-                    if (totalRead > maxBodySize)
-                    {
-                        // Reset position for downstream just in case, then reject.
-                        context.Request.Body.Position = 0;
-                        throw new BadHttpRequestException($"Request body too large. Limit is {maxBodySize} bytes.");
-                    }
-
-                    await ms.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken).ConfigureAwait(false);
-                }
-
-                ms.Position = 0;
-                using var reader = new StreamReader(ms, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
-                body = await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
-            }
-
-            // Reset the request body position so subsequent middleware can read it.
             context.Request.Body.Position = 0;
 
-            if (string.IsNullOrWhiteSpace(body))
+            var body = contentLength.HasValue
+                ? await ReadKnownLengthBodyAsync(context, cancellationToken).ConfigureAwait(false)
+                : await ReadUnknownLengthBodyAsync(context, maxBodySize, cancellationToken).ConfigureAwait(false);
+
+            context.Request.Body.Position = 0;
+            return body;
+        }
+
+        private static async Task<string> ReadKnownLengthBodyAsync(HttpContext context, CancellationToken cancellationToken)
+        {
+            using var reader = new StreamReader(context.Request.Body, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, leaveOpen: true);
+            return await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        private static async Task<string> ReadUnknownLengthBodyAsync(HttpContext context, long maxBodySize, CancellationToken cancellationToken)
+        {
+            using var ms = new MemoryStream();
+            var buffer = new byte[8192];
+            int bytesRead;
+            long totalRead = 0;
+
+            while ((bytesRead = await context.Request.Body.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken).ConfigureAwait(false)) > 0)
             {
-                return null;
+                totalRead += bytesRead;
+                if (totalRead > maxBodySize)
+                {
+                    context.Request.Body.Position = 0;
+                    throw new BadHttpRequestException($"Request body too large. Limit is {maxBodySize} bytes.");
+                }
+
+                await ms.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken).ConfigureAwait(false);
             }
 
+            ms.Position = 0;
+            using var reader = new StreamReader(ms, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+            return await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        private static OpenAIRequest? DeserializeAndValidate(string body, bool allowEmptyModel, bool allowEmptyMessages)
+        {
             try
             {
-                var request = JsonSerializer.Deserialize<OpenAIRequest>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                var request = JsonSerializer.Deserialize<OpenAIRequest>(body, RequestSerializerOptions);
 
                 if (request != null && !string.Equals(body.Trim(), "{}", StringComparison.Ordinal))
                 {
-                    // Handle special cases based on endpoint requirements
-                    bool isEmptyModel = string.IsNullOrEmpty(request.Model);
-                    bool isMissingMessages = request.Messages == null || request.Messages.Count == 0;
-
-                    bool shouldSkipValidation = (isEmptyModel && allowEmptyModel) || (isMissingMessages && allowEmptyMessages);
-
+                    var shouldSkipValidation = ShouldSkipValidation(request, allowEmptyModel, allowEmptyMessages);
                     if (!shouldSkipValidation)
                     {
                         var validationErrors = ValidateRequest(request);
@@ -125,10 +139,16 @@ namespace Synaxis.InferenceGateway.WebApi.Helpers
             }
             catch (JsonException ex)
             {
-                // If the body is invalid JSON for an OpenAI request, throw a BadHttpRequestException
-                // so middleware can convert it to a 400. Do not swallow other exceptions (OOM, etc.).
                 throw new BadHttpRequestException("Invalid JSON body", ex);
             }
+        }
+
+        private static bool ShouldSkipValidation(OpenAIRequest request, bool allowEmptyModel, bool allowEmptyMessages)
+        {
+            var isEmptyModel = string.IsNullOrEmpty(request.Model);
+            var isMissingMessages = request.Messages == null || request.Messages.Count == 0;
+
+            return (isEmptyModel && allowEmptyModel) || (isMissingMessages && allowEmptyMessages);
         }
 
         private static List<string> ValidateRequest(OpenAIRequest request)

@@ -4,6 +4,7 @@
 
 namespace Synaxis.Infrastructure.Data
 {
+    using System;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Design;
 
@@ -12,6 +13,10 @@ namespace Synaxis.Infrastructure.Data
     /// </summary>
     public class SynaxisDbContextFactory : IDesignTimeDbContextFactory<SynaxisDbContext>
     {
+        private const string DefaultHost = "localhost";
+        private const string DefaultDatabase = "synaxis";
+        private const string DefaultUsername = "postgres";
+
         /// <summary>
         /// Creates a new instance of SynaxisDbContext for design-time tools.
         /// </summary>
@@ -21,11 +26,8 @@ namespace Synaxis.Infrastructure.Data
         {
             var optionsBuilder = new DbContextOptionsBuilder<SynaxisDbContext>();
 
-            // Use PostgreSQL for migrations
-            // In production, this would come from configuration
-            const string connectionString = "Host=localhost;Database=synaxis;Username=postgres";
             optionsBuilder.UseNpgsql(
-                connectionString,
+                BuildConnectionString(),
                 npgsqlOptions =>
                 {
                     npgsqlOptions.MigrationsAssembly("Synaxis.Infrastructure");
@@ -33,6 +35,26 @@ namespace Synaxis.Infrastructure.Data
                 });
 
             return new SynaxisDbContext(optionsBuilder.Options);
+        }
+
+        private static string BuildConnectionString()
+        {
+            var host = GetSetting("SYNAXIS_DB_HOST", DefaultHost);
+            var database = GetSetting("SYNAXIS_DB_NAME", DefaultDatabase);
+            var username = GetSetting("SYNAXIS_DB_USER", DefaultUsername);
+
+            return new Npgsql.NpgsqlConnectionStringBuilder
+            {
+                Host = host,
+                Database = database,
+                Username = username,
+            }.ToString();
+        }
+
+        private static string GetSetting(string environmentVariable, string fallback)
+        {
+            var value = Environment.GetEnvironmentVariable(environmentVariable);
+            return string.IsNullOrWhiteSpace(value) ? fallback : value;
         }
     }
 }

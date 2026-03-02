@@ -15,6 +15,20 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            CreateInvitationsTable(migrationBuilder);
+            CreateInvitationIndexes(migrationBuilder);
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropTable(
+                name: "Invitations",
+                schema: "identity");
+        }
+
+        private static void CreateInvitationsTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "Invitations",
                 schema: "identity",
@@ -62,7 +76,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
+        }
 
+        private static void CreateInvitationIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_Invitations_InvitedBy",
                 schema: "identity",
@@ -99,14 +116,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.ControlPlane.Migrations
                 table: "Invitations",
                 column: "Token",
                 unique: true);
-        }
-
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.DropTable(
-                name: "Invitations",
-                schema: "identity");
         }
     }
 }

@@ -53,7 +53,7 @@ public class AiHordeChatClientTests
             });
 
         var client = new HttpClient(handler.Object);
-        var ai = new AiHordeChatClient(client);
+        var ai = new AiHordeChatClient(client, "test-api-key");
 
         var resp = await ai.GetResponseAsync(new[] { new ChatMessage(ChatRole.User, "Hi") });
 
@@ -81,7 +81,7 @@ public class AiHordeChatClientTests
             });
 
         var client = new HttpClient(handler.Object);
-        var ai = new AiHordeChatClient(client);
+        var ai = new AiHordeChatClient(client, "test-api-key");
 
         var stream = ai.GetStreamingResponseAsync(new[] { new ChatMessage(ChatRole.User, "Hi") });
         var enumerator = stream.GetAsyncEnumerator();

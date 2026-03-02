@@ -15,6 +15,17 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            AddDeletedByColumn(migrationBuilder);
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            RemoveDeletedByColumn(migrationBuilder);
+        }
+
+        private static void AddDeletedByColumn(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.AddColumn<Guid>(
                 name: "DeletedBy",
                 schema: "identity",
@@ -23,8 +34,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 nullable: true);
         }
 
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
+        private static void RemoveDeletedByColumn(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
                 name: "DeletedBy",

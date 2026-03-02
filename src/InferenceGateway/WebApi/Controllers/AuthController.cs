@@ -169,7 +169,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
                     Id = Guid.NewGuid(),
                     OrganizationId = organization.Id,
                     Email = request.Email,
-                    PasswordHash = "N/A",
+                    PasswordHash = this.passwordHasher.HashPassword(Guid.NewGuid().ToString("N")),
                     Role = "owner",
                     DataResidencyRegion = "us-east-1",
                     CreatedInRegion = "us-east-1",

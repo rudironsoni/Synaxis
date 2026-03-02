@@ -16,6 +16,26 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            EnsureSchemas(migrationBuilder);
+            CreateOperationsTables(migrationBuilder);
+            CreateAuditTables(migrationBuilder);
+            CreatePlatformTables(migrationBuilder);
+            CreateIdentityCoreTables(migrationBuilder);
+            CreateIdentityMembershipTables(migrationBuilder);
+            CreateIndexes(migrationBuilder);
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            DropOperationsTables(migrationBuilder);
+            DropAuditTables(migrationBuilder);
+            DropPlatformTables(migrationBuilder);
+            DropIdentityTables(migrationBuilder);
+        }
+
+        private static void EnsureSchemas(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.EnsureSchema(
                 name: "operations");
 
@@ -27,7 +47,19 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
 
             migrationBuilder.EnsureSchema(
                 name: "platform");
+        }
 
+        private static void CreateOperationsTables(MigrationBuilder migrationBuilder)
+        {
+            CreateApiKeysTable(migrationBuilder);
+            CreateOrganizationModelsTable(migrationBuilder);
+            CreateOrganizationProvidersTable(migrationBuilder);
+            CreateRoutingStrategiesTable(migrationBuilder);
+            CreateProviderHealthStatusesTable(migrationBuilder);
+        }
+
+        private static void CreateApiKeysTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "ApiKeys",
                 schema: "operations",
@@ -54,32 +86,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_ApiKeys", x => x.Id);
                 });
+        }
 
-            migrationBuilder.CreateTable(
-                name: "AuditLogs",
-                schema: "audit",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    OrganizationId = table.Column<Guid>(type: "uuid", nullable: true),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: true),
-                    Action = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    EntityType = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    EntityId = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    PreviousValues = table.Column<string>(type: "jsonb", nullable: true),
-                    NewValues = table.Column<string>(type: "jsonb", nullable: true),
-                    IpAddress = table.Column<string>(type: "character varying(45)", maxLength: 45, nullable: true),
-                    UserAgent = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    CorrelationId = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    PartitionDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_AuditLogs", x => x.Id);
-                    table.CheckConstraint("CK_AuditLog_Action", "\"Action\" IN ('Create', 'Update', 'Delete', 'Read', 'Login', 'Logout', 'ApiCall', 'PermissionChange', 'ConfigChange')");
-                });
-
+        private static void CreateOrganizationModelsTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "OrganizationModels",
                 schema: "operations",
@@ -98,7 +108,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_OrganizationModels", x => x.Id);
                 });
+        }
 
+        private static void CreateOrganizationProvidersTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "OrganizationProviders",
                 schema: "operations",
@@ -124,7 +137,170 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_OrganizationProviders", x => x.Id);
                 });
+        }
 
+        private static void CreateRoutingStrategiesTable(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.CreateTable(
+                name: "RoutingStrategies",
+                schema: "operations",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    OrganizationId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    StrategyType = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    PrioritizeFreeProviders = table.Column<bool>(type: "boolean", nullable: false),
+                    MaxCostPer1MTokens = table.Column<decimal>(type: "numeric(18,6)", precision: 18, scale: 6, nullable: true),
+                    FallbackToPaid = table.Column<bool>(type: "boolean", nullable: false),
+                    MaxLatencyMs = table.Column<int>(type: "integer", nullable: true),
+                    RequireStreaming = table.Column<bool>(type: "boolean", nullable: false),
+                    MinHealthScore = table.Column<decimal>(type: "numeric(5,4)", precision: 5, scale: 4, nullable: true),
+                    IsDefault = table.Column<bool>(type: "boolean", nullable: false),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RoutingStrategies", x => x.Id);
+                    table.CheckConstraint("CK_RoutingStrategy_StrategyType", "\"StrategyType\" IN ('CostOptimized', 'Performance', 'Reliability', 'Custom')");
+                });
+        }
+
+        private static void CreateProviderHealthStatusesTable(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.CreateTable(
+                name: "ProviderHealthStatuses",
+                schema: "operations",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    OrganizationId = table.Column<Guid>(type: "uuid", nullable: false),
+                    OrganizationProviderId = table.Column<Guid>(type: "uuid", nullable: false),
+                    IsHealthy = table.Column<bool>(type: "boolean", nullable: false),
+                    HealthScore = table.Column<decimal>(type: "numeric(5,4)", precision: 5, scale: 4, nullable: false),
+                    LastCheckedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    LastSuccessAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    LastFailureAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    ConsecutiveFailures = table.Column<int>(type: "integer", nullable: false),
+                    LastErrorMessage = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
+                    LastErrorCode = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    AverageLatencyMs = table.Column<int>(type: "integer", nullable: true),
+                    SuccessRate = table.Column<decimal>(type: "numeric(5,4)", precision: 5, scale: 4, nullable: true),
+                    IsInCooldown = table.Column<bool>(type: "boolean", nullable: false),
+                    CooldownUntil = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProviderHealthStatuses", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ProviderHealthStatuses_OrganizationProviders_OrganizationPr~",
+                        column: x => x.OrganizationProviderId,
+                        principalSchema: "operations",
+                        principalTable: "OrganizationProviders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+        }
+
+        private static void CreateAuditTables(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.CreateTable(
+                name: "AuditLogs",
+                schema: "audit",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    OrganizationId = table.Column<Guid>(type: "uuid", nullable: true),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: true),
+                    Action = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    EntityType = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    EntityId = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    PreviousValues = table.Column<string>(type: "jsonb", nullable: true),
+                    NewValues = table.Column<string>(type: "jsonb", nullable: true),
+                    IpAddress = table.Column<string>(type: "character varying(45)", maxLength: 45, nullable: true),
+                    UserAgent = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    CorrelationId = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    PartitionDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AuditLogs", x => x.Id);
+                    table.CheckConstraint("CK_AuditLog_Action", "\"Action\" IN ('Create', 'Update', 'Delete', 'Read', 'Login', 'Logout', 'ApiCall', 'PermissionChange', 'ConfigChange')");
+                });
+        }
+
+        private static void CreatePlatformTables(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.CreateTable(
+                name: "Providers",
+                schema: "platform",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Key = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    DisplayName = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    ProviderType = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    BaseEndpoint = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    DefaultApiKeyEnvironmentVariable = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    SupportsStreaming = table.Column<bool>(type: "boolean", nullable: false),
+                    SupportsTools = table.Column<bool>(type: "boolean", nullable: false),
+                    SupportsVision = table.Column<bool>(type: "boolean", nullable: false),
+                    DefaultInputCostPer1MTokens = table.Column<decimal>(type: "numeric(18,6)", precision: 18, scale: 6, nullable: true),
+                    DefaultOutputCostPer1MTokens = table.Column<decimal>(type: "numeric(18,6)", precision: 18, scale: 6, nullable: true),
+                    IsFreeTier = table.Column<bool>(type: "boolean", nullable: false),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false),
+                    IsPublic = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Providers", x => x.Id);
+                    table.CheckConstraint("CK_Provider_ProviderType", "\"ProviderType\" IN ('OpenAI', 'Anthropic', 'Google', 'Cohere', 'Azure', 'AWS', 'Cloudflare', 'Generic')");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Models",
+                schema: "platform",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ProviderId = table.Column<Guid>(type: "uuid", nullable: false),
+                    CanonicalId = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    DisplayName = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    ContextWindowTokens = table.Column<int>(type: "integer", nullable: true),
+                    MaxOutputTokens = table.Column<int>(type: "integer", nullable: true),
+                    SupportsStreaming = table.Column<bool>(type: "boolean", nullable: false),
+                    SupportsTools = table.Column<bool>(type: "boolean", nullable: false),
+                    SupportsVision = table.Column<bool>(type: "boolean", nullable: false),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false),
+                    IsPublic = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Models", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Models_Providers_ProviderId",
+                        column: x => x.ProviderId,
+                        principalSchema: "platform",
+                        principalTable: "Providers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+        }
+
+        private static void CreateIdentityCoreTables(MigrationBuilder migrationBuilder)
+        {
+            CreateOrganizationsTable(migrationBuilder);
+            CreateUsersTable(migrationBuilder);
+            CreateGroupsTable(migrationBuilder);
+            CreateOrganizationSettingsTable(migrationBuilder);
+            CreateRolesTable(migrationBuilder);
+        }
+
+        private static void CreateOrganizationsTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "Organizations",
                 schema: "identity",
@@ -161,58 +337,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                     table.CheckConstraint("CK_Organization_PlanTier", "\"PlanTier\" IN ('Free', 'Starter', 'Professional', 'Enterprise', 'Custom')");
                     table.CheckConstraint("CK_Organization_Status", "\"Status\" IN ('Active', 'Suspended', 'PendingActivation', 'Deactivated')");
                 });
+        }
 
-            migrationBuilder.CreateTable(
-                name: "Providers",
-                schema: "platform",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Key = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    DisplayName = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    ProviderType = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    BaseEndpoint = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    DefaultApiKeyEnvironmentVariable = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    SupportsStreaming = table.Column<bool>(type: "boolean", nullable: false),
-                    SupportsTools = table.Column<bool>(type: "boolean", nullable: false),
-                    SupportsVision = table.Column<bool>(type: "boolean", nullable: false),
-                    DefaultInputCostPer1MTokens = table.Column<decimal>(type: "numeric(18,6)", precision: 18, scale: 6, nullable: true),
-                    DefaultOutputCostPer1MTokens = table.Column<decimal>(type: "numeric(18,6)", precision: 18, scale: 6, nullable: true),
-                    IsFreeTier = table.Column<bool>(type: "boolean", nullable: false),
-                    IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    IsPublic = table.Column<bool>(type: "boolean", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Providers", x => x.Id);
-                    table.CheckConstraint("CK_Provider_ProviderType", "\"ProviderType\" IN ('OpenAI', 'Anthropic', 'Google', 'Cohere', 'Azure', 'AWS', 'Cloudflare', 'Generic')");
-                });
-
-            migrationBuilder.CreateTable(
-                name: "RoutingStrategies",
-                schema: "operations",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    OrganizationId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
-                    StrategyType = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    PrioritizeFreeProviders = table.Column<bool>(type: "boolean", nullable: false),
-                    MaxCostPer1MTokens = table.Column<decimal>(type: "numeric(18,6)", precision: 18, scale: 6, nullable: true),
-                    FallbackToPaid = table.Column<bool>(type: "boolean", nullable: false),
-                    MaxLatencyMs = table.Column<int>(type: "integer", nullable: true),
-                    RequireStreaming = table.Column<bool>(type: "boolean", nullable: false),
-                    MinHealthScore = table.Column<decimal>(type: "numeric(5,4)", precision: 5, scale: 4, nullable: true),
-                    IsDefault = table.Column<bool>(type: "boolean", nullable: false),
-                    IsActive = table.Column<bool>(type: "boolean", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_RoutingStrategies", x => x.Id);
-                    table.CheckConstraint("CK_RoutingStrategy_StrategyType", "\"StrategyType\" IN ('CostOptimized', 'Performance', 'Reliability', 'Custom')");
-                });
-
+        private static void CreateUsersTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "Users",
                 schema: "identity",
@@ -243,40 +371,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                     table.PrimaryKey("PK_Users", x => x.Id);
                     table.CheckConstraint("CK_User_Status", "\"Status\" IN ('Active', 'Suspended', 'PendingVerification', 'Deactivated')");
                 });
+        }
 
-            migrationBuilder.CreateTable(
-                name: "ProviderHealthStatuses",
-                schema: "operations",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    OrganizationId = table.Column<Guid>(type: "uuid", nullable: false),
-                    OrganizationProviderId = table.Column<Guid>(type: "uuid", nullable: false),
-                    IsHealthy = table.Column<bool>(type: "boolean", nullable: false),
-                    HealthScore = table.Column<decimal>(type: "numeric(5,4)", precision: 5, scale: 4, nullable: false),
-                    LastCheckedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    LastSuccessAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    LastFailureAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    ConsecutiveFailures = table.Column<int>(type: "integer", nullable: false),
-                    LastErrorMessage = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
-                    LastErrorCode = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    AverageLatencyMs = table.Column<int>(type: "integer", nullable: true),
-                    SuccessRate = table.Column<decimal>(type: "numeric(5,4)", precision: 5, scale: 4, nullable: true),
-                    IsInCooldown = table.Column<bool>(type: "boolean", nullable: false),
-                    CooldownUntil = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ProviderHealthStatuses", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_ProviderHealthStatuses_OrganizationProviders_OrganizationPr~",
-                        column: x => x.OrganizationProviderId,
-                        principalSchema: "operations",
-                        principalTable: "OrganizationProviders",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
+        private static void CreateGroupsTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "Groups",
                 schema: "identity",
@@ -318,7 +416,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
+        }
 
+        private static void CreateOrganizationSettingsTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "OrganizationSettings",
                 schema: "identity",
@@ -350,7 +451,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
+        }
 
+        private static void CreateRolesTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "Roles",
                 schema: "identity",
@@ -375,37 +479,22 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
+        }
 
-            migrationBuilder.CreateTable(
-                name: "Models",
-                schema: "platform",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    ProviderId = table.Column<Guid>(type: "uuid", nullable: false),
-                    CanonicalId = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    DisplayName = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
-                    ContextWindowTokens = table.Column<int>(type: "integer", nullable: true),
-                    MaxOutputTokens = table.Column<int>(type: "integer", nullable: true),
-                    SupportsStreaming = table.Column<bool>(type: "boolean", nullable: false),
-                    SupportsTools = table.Column<bool>(type: "boolean", nullable: false),
-                    SupportsVision = table.Column<bool>(type: "boolean", nullable: false),
-                    IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    IsPublic = table.Column<bool>(type: "boolean", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Models", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Models_Providers_ProviderId",
-                        column: x => x.ProviderId,
-                        principalSchema: "platform",
-                        principalTable: "Providers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+        private static void CreateIdentityMembershipTables(MigrationBuilder migrationBuilder)
+        {
+            CreateUserClaimsTable(migrationBuilder);
+            CreateUserLoginsTable(migrationBuilder);
+            CreateUserTokensTable(migrationBuilder);
+            CreateUserGroupMembershipsTable(migrationBuilder);
+            CreateUserOrganizationMembershipsTable(migrationBuilder);
+            CreateRoleClaimsTable(migrationBuilder);
+            CreateUserRoleAssignmentsTable(migrationBuilder);
+            CreateUserRolesTable(migrationBuilder);
+        }
 
+        private static void CreateUserClaimsTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "UserClaims",
                 schema: "identity",
@@ -428,7 +517,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
+        }
 
+        private static void CreateUserLoginsTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "UserLogins",
                 schema: "identity",
@@ -450,7 +542,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
+        }
 
+        private static void CreateUserTokensTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "UserTokens",
                 schema: "identity",
@@ -472,7 +567,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
+        }
 
+        private static void CreateUserGroupMembershipsTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "UserGroupMemberships",
                 schema: "identity",
@@ -504,7 +602,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
+        }
 
+        private static void CreateUserOrganizationMembershipsTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "UserOrganizationMemberships",
                 schema: "identity",
@@ -547,7 +648,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
+        }
 
+        private static void CreateRoleClaimsTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "RoleClaims",
                 schema: "identity",
@@ -570,7 +674,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
+        }
 
+        private static void CreateUserRoleAssignmentsTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "UserRoleAssignments",
                 schema: "identity",
@@ -605,7 +712,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
+        }
 
+        private static void CreateUserRolesTable(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateTable(
                 name: "UserRoles",
                 schema: "identity",
@@ -632,7 +742,25 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
+        }
 
+        private static void CreateIndexes(MigrationBuilder migrationBuilder)
+        {
+            CreateApiKeyIndexes(migrationBuilder);
+            CreateAuditLogIndexes(migrationBuilder);
+            CreateGroupIndexes(migrationBuilder);
+            CreateModelIndexes(migrationBuilder);
+            CreateOrganizationIndexes(migrationBuilder);
+            CreateProviderHealthIndexes(migrationBuilder);
+            CreateProviderIndexes(migrationBuilder);
+            CreateRoleIndexes(migrationBuilder);
+            CreateRoutingStrategyIndexes(migrationBuilder);
+            CreateUserIndexes(migrationBuilder);
+            CreateMembershipIndexes(migrationBuilder);
+        }
+
+        private static void CreateApiKeyIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_ApiKeys_ExpiresAt",
                 schema: "operations",
@@ -657,7 +785,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 schema: "operations",
                 table: "ApiKeys",
                 column: "OrganizationId");
+        }
 
+        private static void CreateAuditLogIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_AuditLogs_Action",
                 schema: "audit",
@@ -699,7 +830,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 schema: "audit",
                 table: "AuditLogs",
                 column: "UserId");
+        }
 
+        private static void CreateGroupIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_Groups_DeletedAt",
                 schema: "identity",
@@ -724,7 +858,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 schema: "identity",
                 table: "Groups",
                 column: "Status");
+        }
 
+        private static void CreateModelIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_Models_IsActive",
                 schema: "platform",
@@ -737,7 +874,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 table: "Models",
                 columns: new[] { "ProviderId", "CanonicalId" },
                 unique: true);
+        }
 
+        private static void CreateOrganizationIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_OrganizationModels_IsEnabled",
                 schema: "operations",
@@ -782,7 +922,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 schema: "identity",
                 table: "Organizations",
                 column: "Status");
+        }
 
+        private static void CreateProviderHealthIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_ProviderHealthStatuses_IsHealthy",
                 schema: "operations",
@@ -801,7 +944,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 table: "ProviderHealthStatuses",
                 column: "OrganizationProviderId",
                 unique: true);
+        }
 
+        private static void CreateProviderIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_Providers_IsActive",
                 schema: "platform",
@@ -814,7 +960,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 table: "Providers",
                 column: "Key",
                 unique: true);
+        }
 
+        private static void CreateRoleIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_RoleClaims_RoleId",
                 schema: "identity",
@@ -834,7 +983,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 table: "Roles",
                 column: "NormalizedName",
                 unique: true);
+        }
 
+        private static void CreateRoutingStrategyIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_RoutingStrategies_IsActive",
                 schema: "operations",
@@ -847,13 +999,29 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 table: "RoutingStrategies",
                 columns: new[] { "OrganizationId", "Name" },
                 unique: true);
+        }
 
+        private static void CreateMembershipIndexes(MigrationBuilder migrationBuilder)
+        {
+            CreateUserClaimIndexes(migrationBuilder);
+            CreateUserGroupMembershipIndexes(migrationBuilder);
+            CreateUserLoginIndexes(migrationBuilder);
+            CreateUserOrganizationMembershipIndexes(migrationBuilder);
+            CreateUserRoleAssignmentIndexes(migrationBuilder);
+            CreateUserRoleIndexes(migrationBuilder);
+        }
+
+        private static void CreateUserClaimIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_UserClaims_UserId",
                 schema: "identity",
                 table: "UserClaims",
                 column: "UserId");
+        }
 
+        private static void CreateUserGroupMembershipIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_UserGroupMemberships_GroupId",
                 schema: "identity",
@@ -872,13 +1040,19 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 table: "UserGroupMemberships",
                 columns: new[] { "UserId", "GroupId" },
                 unique: true);
+        }
 
+        private static void CreateUserLoginIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_UserLogins_UserId",
                 schema: "identity",
                 table: "UserLogins",
                 column: "UserId");
+        }
 
+        private static void CreateUserOrganizationMembershipIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_UserOrganizationMemberships_OrganizationId",
                 schema: "identity",
@@ -903,7 +1077,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 table: "UserOrganizationMemberships",
                 columns: new[] { "UserId", "OrganizationId" },
                 unique: true);
+        }
 
+        private static void CreateUserRoleAssignmentIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_UserRoleAssignments_OrganizationId",
                 schema: "identity",
@@ -915,13 +1092,19 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 schema: "identity",
                 table: "UserRoleAssignments",
                 column: "RoleId");
+        }
 
+        private static void CreateUserRoleIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "IX_UserRoles_RoleId",
                 schema: "identity",
                 table: "UserRoles",
                 column: "RoleId");
+        }
 
+        private static void CreateUserIndexes(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.CreateIndex(
                 name: "EmailIndex",
                 schema: "identity",
@@ -948,40 +1131,56 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
                 unique: true);
         }
 
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
+        private static void DropOperationsTables(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
                 name: "ApiKeys",
                 schema: "operations");
 
             migrationBuilder.DropTable(
-                name: "AuditLogs",
-                schema: "audit");
-
-            migrationBuilder.DropTable(
-                name: "Models",
-                schema: "platform");
-
-            migrationBuilder.DropTable(
                 name: "OrganizationModels",
                 schema: "operations");
-
-            migrationBuilder.DropTable(
-                name: "OrganizationSettings",
-                schema: "identity");
 
             migrationBuilder.DropTable(
                 name: "ProviderHealthStatuses",
                 schema: "operations");
 
             migrationBuilder.DropTable(
-                name: "RoleClaims",
+                name: "RoutingStrategies",
+                schema: "operations");
+
+            migrationBuilder.DropTable(
+                name: "OrganizationProviders",
+                schema: "operations");
+        }
+
+        private static void DropAuditTables(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropTable(
+                name: "AuditLogs",
+                schema: "audit");
+        }
+
+        private static void DropPlatformTables(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropTable(
+                name: "Models",
+                schema: "platform");
+
+            migrationBuilder.DropTable(
+                name: "Providers",
+                schema: "platform");
+        }
+
+        private static void DropIdentityTables(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropTable(
+                name: "OrganizationSettings",
                 schema: "identity");
 
             migrationBuilder.DropTable(
-                name: "RoutingStrategies",
-                schema: "operations");
+                name: "RoleClaims",
+                schema: "identity");
 
             migrationBuilder.DropTable(
                 name: "UserClaims",
@@ -1010,14 +1209,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.Migrations
             migrationBuilder.DropTable(
                 name: "UserTokens",
                 schema: "identity");
-
-            migrationBuilder.DropTable(
-                name: "Providers",
-                schema: "platform");
-
-            migrationBuilder.DropTable(
-                name: "OrganizationProviders",
-                schema: "operations");
 
             migrationBuilder.DropTable(
                 name: "Groups",

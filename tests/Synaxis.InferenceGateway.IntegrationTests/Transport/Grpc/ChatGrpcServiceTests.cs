@@ -6,6 +6,7 @@ namespace Synaxis.InferenceGateway.IntegrationTests.Transport.Grpc;
 
 using System;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Linq;
 using System.Threading.Tasks;
 using global::Grpc.Core;
@@ -335,7 +336,6 @@ internal class DisposableChatServiceClient(ChatServiceClient client, GrpcChannel
     public ChatServiceClient Client => this._client;
 
     /// <inheritdoc/>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("IDisposableAnalyzers", "IDISP007:Don't dispose injected", Justification = "Channel is created locally, not injected")]
     public void Dispose()
     {
         this._channel?.Dispose();
@@ -375,7 +375,6 @@ internal class ChatServiceClient(GrpcChannel channel)
     /// <param name="request">The chat request.</param>
     /// <param name="metadata">Optional metadata for the call.</param>
     /// <returns>A <see cref="Task{Synaxis.Transport.Grpc.V1.ChatResponse}"/> representing the asynchronous operation.</returns>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("IDisposableAnalyzers", "IDISP005:Return type should indicate that the value should be disposed", Justification = "Task is awaited by caller")]
     public async Task<Synaxis.Transport.Grpc.V1.ChatResponse> CreateCompletionAsync(ChatRequest request, Metadata? metadata = null)
     {
         var callInvoker = this._channel.CreateCallInvoker();
@@ -394,7 +393,6 @@ internal class ChatServiceClient(GrpcChannel channel)
     /// <param name="request">The chat request.</param>
     /// <param name="metadata">Optional metadata for the call.</param>
     /// <returns>A <see cref="AsyncServerStreamingCall{ChatStreamChunk}"/> for reading the stream.</returns>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("IDisposableAnalyzers", "IDISP005:Return type should indicate that the value should be disposed", Justification = "Caller is responsible for disposing the AsyncServerStreamingCall")]
     public AsyncServerStreamingCall<ChatStreamChunk> StreamCompletion(ChatRequest request, Metadata? metadata = null)
     {
         var callInvoker = this._channel.CreateCallInvoker();

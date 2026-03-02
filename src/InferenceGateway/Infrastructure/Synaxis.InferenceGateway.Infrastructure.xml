@@ -3608,7 +3608,7 @@
         </member>
         <member name="T:Synaxis.InferenceGateway.Infrastructure.Extensions.GeminiExtensions">
             <summary>
-            GeminiExtensions class.
+            Extensions for registering Gemini chat clients.
             </summary>
         </member>
         <member name="M:Synaxis.InferenceGateway.Infrastructure.Extensions.GeminiExtensions.AddGeminiClient(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.String,System.String)">
@@ -4050,7 +4050,7 @@
         </member>
         <member name="T:Synaxis.InferenceGateway.Infrastructure.External.KiloCode.KiloCodeChatClient">
             <summary>
-            KiloCodeChatClient class.
+            Chat client wrapper for the KiloCode API.
             </summary>
         </member>
         <member name="M:Synaxis.InferenceGateway.Infrastructure.External.KiloCode.KiloCodeChatClient.#ctor(System.String,System.String,System.Net.Http.HttpClient)">
@@ -4062,19 +4062,21 @@
             <param name="httpClient">Optional HTTP client instance.</param>
         </member>
         <member name="P:Synaxis.InferenceGateway.Infrastructure.External.KiloCode.KiloCodeChatClient.Metadata">
-            <inheritdoc/>
+            <summary>
+            Gets the metadata for this chat client.
+            </summary>
         </member>
         <member name="M:Synaxis.InferenceGateway.Infrastructure.External.KiloCode.KiloCodeChatClient.GetResponseAsync(System.Collections.Generic.IEnumerable{Microsoft.Extensions.AI.ChatMessage},Microsoft.Extensions.AI.ChatOptions,System.Threading.CancellationToken)">
-            <inheritdoc/>
+            <inheritdoc />
         </member>
         <member name="M:Synaxis.InferenceGateway.Infrastructure.External.KiloCode.KiloCodeChatClient.GetStreamingResponseAsync(System.Collections.Generic.IEnumerable{Microsoft.Extensions.AI.ChatMessage},Microsoft.Extensions.AI.ChatOptions,System.Threading.CancellationToken)">
-            <inheritdoc/>
+            <inheritdoc />
         </member>
         <member name="M:Synaxis.InferenceGateway.Infrastructure.External.KiloCode.KiloCodeChatClient.GetService(System.Type,System.Object)">
-            <inheritdoc/>
+            <inheritdoc />
         </member>
         <member name="M:Synaxis.InferenceGateway.Infrastructure.External.KiloCode.KiloCodeChatClient.Dispose">
-            <inheritdoc/>
+            <inheritdoc />
         </member>
         <member name="T:Synaxis.InferenceGateway.Infrastructure.External.ModelsDev.Dto.ModelDto">
             <summary>
@@ -5155,9 +5157,6 @@
             <summary>
             Migration to convert AuditLogs table to PostgreSQL native declarative partitioning.
             Implements monthly range partitioning for efficient data retention management.
-            </summary>
-            <summary>
-            AddAuditLogPartitioning class.
             </summary>
         </member>
         <member name="M:Synaxis.InferenceGateway.Infrastructure.Migrations.AddAuditLogPartitioning.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">

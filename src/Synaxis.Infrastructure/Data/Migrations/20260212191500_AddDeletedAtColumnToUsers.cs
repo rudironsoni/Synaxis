@@ -1,21 +1,28 @@
-// <copyright file="20260212191500_AddDeletedAtColumnToUsers.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
+// <copyright file="20260212191500_AddDeletedAtColumnToUsers.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
-#nullable disable
-
 namespace Synaxis.Infrastructure.Data.Migrations
 {
     /// <inheritdoc />
-    [DbContext(typeof(SynaxisDbContext))]
-    [Migration("20260212191500_AddDeletedAtColumnToUsers")]
     public partial class AddDeletedAtColumnToUsers : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            AddDeletedAtColumn(migrationBuilder);
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            DropDeletedAtColumn(migrationBuilder);
+        }
+
+        private static void AddDeletedAtColumn(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<DateTime>(
                 name: "deleted_at",
@@ -24,8 +31,7 @@ namespace Synaxis.Infrastructure.Data.Migrations
                 nullable: true);
         }
 
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
+        private static void DropDeletedAtColumn(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
                 name: "deleted_at",

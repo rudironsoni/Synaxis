@@ -174,7 +174,7 @@ public sealed class MockContainerPlatform : IContainerPlatform
             throw new InvalidOperationException($"Deployment '{deploymentName}' not found.");
         }
 
-        var logs = tailLines.HasValue
+        var logs = tailLines.HasValue && tailLines.Value > 0
             ? deploymentLogs.GetLastLines(tailLines.Value)
             : deploymentLogs.GetAllLines();
 

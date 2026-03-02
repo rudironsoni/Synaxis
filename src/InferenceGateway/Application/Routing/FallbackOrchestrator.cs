@@ -51,7 +51,6 @@ namespace Synaxis.InferenceGateway.Application.Routing
         /// <param name="userId">Optional user ID for routing configuration.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>The result of the operation.</returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.ReadabilityRules", "MA0051:Method is too long", Justification = "Multi-tier fallback orchestration requires sequential logic")]
         public async Task<T> ExecuteWithFallbackAsync<T>(
             string modelId,
             bool streaming,
@@ -61,99 +60,115 @@ namespace Synaxis.InferenceGateway.Application.Routing
             string? userId = null,
             CancellationToken cancellationToken = default)
         {
-            // Tier 1: User preferred provider
+            var candidates = await this.smartRouter.GetCandidatesAsync(modelId, streaming, cancellationToken).ConfigureAwait(false);
+            var candidateList = candidates.ToList();
+
             if (!string.IsNullOrEmpty(preferredProviderKey))
             {
-                this.logger.LogInformation("Attempting Tier 1 fallback: User preferred provider '{ProviderKey}'", preferredProviderKey);
+                var preferredResult = await this.TryPreferredProviderAsync(candidateList, preferredProviderKey, operation, cancellationToken).ConfigureAwait(false);
+                if (preferredResult is not null)
+                {
+                    return preferredResult;
+                }
+            }
+
+            var freeResult = await this.TryTierAsync(candidateList, provider => provider.IsFree, "free tier", operation, cancellationToken).ConfigureAwait(false);
+            if (freeResult is not null)
+            {
+                return freeResult;
+            }
+
+            var paidResult = await this.TryTierAsync(candidateList, provider => !provider.IsFree, "paid", operation, cancellationToken).ConfigureAwait(false);
+            if (paidResult is not null)
+            {
+                return paidResult;
+            }
+
+            var emergencyResult = await this.TryEmergencyFallbackAsync(candidateList, operation, cancellationToken).ConfigureAwait(false);
+            if (emergencyResult is not null)
+            {
+                return emergencyResult;
+            }
+
+            throw new InvalidOperationException($"All fallback tiers failed for model '{modelId}'. No healthy providers available.");
+        }
+
+        private async Task<T?> TryPreferredProviderAsync<T>(
+            IReadOnlyCollection<EnrichedCandidate> candidates,
+            string preferredProviderKey,
+            Func<EnrichedCandidate, Task<T>> operation,
+            CancellationToken cancellationToken)
+        {
+            this.logger.LogInformation("Attempting Tier 1 fallback: User preferred provider '{ProviderKey}'", preferredProviderKey);
+            try
+            {
+                var preferred = candidates.FirstOrDefault(c => string.Equals(c.Key, preferredProviderKey, StringComparison.Ordinal));
+                if (preferred == null)
+                {
+                    return default;
+                }
+
+                if (!await this.CanUseProviderAsync(preferred, checkQuota: true, cancellationToken).ConfigureAwait(false))
+                {
+                    return default;
+                }
+
+                this.logger.LogInformation("Using user preferred provider '{ProviderKey}'", preferred.Key);
+                return await operation(preferred).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogWarning(ex, "User preferred provider '{ProviderKey}' failed", preferredProviderKey);
+                return default;
+            }
+        }
+
+        private async Task<T?> TryTierAsync<T>(
+            IReadOnlyCollection<EnrichedCandidate> candidates,
+            Func<EnrichedCandidate, bool> tierFilter,
+            string tierLabel,
+            Func<EnrichedCandidate, Task<T>> operation,
+            CancellationToken cancellationToken)
+        {
+            this.logger.LogInformation("Attempting Tier fallback: {Tier} providers", tierLabel);
+            foreach (var provider in candidates.Where(tierFilter))
+            {
                 try
                 {
-                    var candidates = await this.smartRouter.GetCandidatesAsync(modelId, streaming, cancellationToken).ConfigureAwait(false);
-                    var preferred = candidates.FirstOrDefault(c => string.Equals(c.Key, preferredProviderKey, StringComparison.Ordinal));
-
-                    if (preferred != null &&
-                        await this.healthStore.IsHealthyAsync(preferred.Key!, cancellationToken).ConfigureAwait(false) &&
-                        await this.quotaTracker.CheckQuotaAsync(preferred.Key!, cancellationToken).ConfigureAwait(false))
+                    if (!await this.CanUseProviderAsync(provider, checkQuota: true, cancellationToken).ConfigureAwait(false))
                     {
-                        this.logger.LogInformation("Using user preferred provider '{ProviderKey}'", preferred.Key);
-                        return await operation(preferred).ConfigureAwait(false);
+                        continue;
                     }
+
+                    this.logger.LogInformation("Using {Tier} provider '{ProviderKey}'", tierLabel, provider.Key);
+                    return await operation(provider).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
-                    this.logger.LogWarning(ex, "User preferred provider '{ProviderKey}' failed", preferredProviderKey);
+                    this.logger.LogWarning(ex, "{Tier} provider '{ProviderKey}' failed", tierLabel, provider.Key);
                 }
             }
 
-            // Tier 2: Free tier providers
-            this.logger.LogInformation("Attempting Tier 2 fallback: Free tier providers");
-            try
-            {
-                var candidates = await this.smartRouter.GetCandidatesAsync(modelId, streaming, cancellationToken).ConfigureAwait(false);
-                var freeProviders = candidates.Where(c => c.IsFree).ToList();
+            return default;
+        }
 
-                foreach (var provider in freeProviders)
-                {
-                    try
-                    {
-                        if (await this.healthStore.IsHealthyAsync(provider.Key!, cancellationToken).ConfigureAwait(false) &&
-                            await this.quotaTracker.CheckQuotaAsync(provider.Key!, cancellationToken).ConfigureAwait(false))
-                        {
-                            this.logger.LogInformation("Using free tier provider '{ProviderKey}'", provider.Key);
-                            return await operation(provider).ConfigureAwait(false);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        this.logger.LogWarning(ex, "Free tier provider '{ProviderKey}' failed", provider.Key);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                this.logger.LogWarning(ex, "Free tier fallback failed");
-            }
-
-            // Tier 3: Paid providers
-            this.logger.LogInformation("Attempting Tier 3 fallback: Paid providers");
-            try
-            {
-                var candidates = await this.smartRouter.GetCandidatesAsync(modelId, streaming, cancellationToken).ConfigureAwait(false);
-                var paidProviders = candidates.Where(c => !c.IsFree).ToList();
-
-                foreach (var provider in paidProviders)
-                {
-                    try
-                    {
-                        if (await this.healthStore.IsHealthyAsync(provider.Key!, cancellationToken).ConfigureAwait(false) &&
-                            await this.quotaTracker.CheckQuotaAsync(provider.Key!, cancellationToken).ConfigureAwait(false))
-                        {
-                            this.logger.LogInformation("Using paid provider '{ProviderKey}'", provider.Key);
-                            return await operation(provider).ConfigureAwait(false);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        this.logger.LogWarning(ex, "Paid provider '{ProviderKey}' failed", provider.Key);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                this.logger.LogWarning(ex, "Paid provider fallback failed");
-            }
-
-            // Tier 4: Emergency fallback - any healthy provider
+        private async Task<T?> TryEmergencyFallbackAsync<T>(
+            IReadOnlyCollection<EnrichedCandidate> candidates,
+            Func<EnrichedCandidate, Task<T>> operation,
+            CancellationToken cancellationToken)
+        {
             this.logger.LogInformation("Attempting Tier 4 fallback: Emergency fallback");
-            var allCandidates = await this.smartRouter.GetCandidatesAsync(modelId, streaming, cancellationToken).ConfigureAwait(false);
-            foreach (var provider in allCandidates)
+            foreach (var provider in candidates)
             {
                 try
                 {
-                    if (await this.healthStore.IsHealthyAsync(provider.Key!, cancellationToken).ConfigureAwait(false))
+                    if (!await this.CanUseProviderAsync(provider, checkQuota: false, cancellationToken).ConfigureAwait(false))
                     {
-                        this.logger.LogWarning("Emergency fallback using provider '{ProviderKey}'", provider.Key);
-                        return await operation(provider).ConfigureAwait(false);
+                        continue;
                     }
+
+                    this.logger.LogWarning("Emergency fallback using provider '{ProviderKey}'", provider.Key);
+                    return await operation(provider).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
@@ -161,7 +176,22 @@ namespace Synaxis.InferenceGateway.Application.Routing
                 }
             }
 
-            throw new InvalidOperationException($"All fallback tiers failed for model '{modelId}'. No healthy providers available.");
+            return default;
+        }
+
+        private async Task<bool> CanUseProviderAsync(EnrichedCandidate provider, bool checkQuota, CancellationToken cancellationToken)
+        {
+            if (!await this.healthStore.IsHealthyAsync(provider.Key!, cancellationToken).ConfigureAwait(false))
+            {
+                return false;
+            }
+
+            if (!checkQuota)
+            {
+                return true;
+            }
+
+            return await this.quotaTracker.CheckQuotaAsync(provider.Key!, cancellationToken).ConfigureAwait(false);
         }
     }
 }

@@ -44,104 +44,176 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
             HttpContext context,
             ITenantContext tenantContext)
         {
-            // Skip audit logging for health checks and static resources
-            if (context.Request.Path.StartsWithSegments("/health", StringComparison.Ordinal) ||
-                context.Request.Path.StartsWithSegments("/openapi", StringComparison.Ordinal) ||
-                context.Request.Path.Value?.Contains("swagger", StringComparison.OrdinalIgnoreCase) == true)
+            if (AuditMiddleware.ShouldSkipAudit(context))
             {
                 await this._next(context).ConfigureAwait(false);
                 return;
             }
 
-            var stopwatch = Stopwatch.StartNew();
-            var requestId = context.Items["RequestId"]?.ToString() ?? Guid.NewGuid().ToString();
+            var auditContext = CreateAuditContext(context);
+            this.LogRequestStart(auditContext);
 
-            // Capture request details
-            var requestMethod = context.Request.Method;
-            var requestPath = context.Request.Path;
-            var requestQuery = context.Request.QueryString.ToString();
-            var clientIp = GetClientIpAddress(context);
-
-            // Log request start
-            this._logger.LogInformation(
-                "API Request Started: {RequestId} {Method} {Path}{Query} from {ClientIp}",
-                requestId,
-                requestMethod,
-                requestPath,
-                requestQuery,
-                clientIp);
-
-            // Capture original response body stream
             var originalBodyStream = context.Response.Body;
 
             try
             {
-                using var responseBodyStream = new MemoryStream();
-                context.Response.Body = responseBodyStream;
-
-                // Process the request
-                await this._next(context).ConfigureAwait(false);
-
-                stopwatch.Stop();
-
-                // Get response details
-                var statusCode = context.Response.StatusCode;
-                var responseSize = responseBodyStream.Length;
-
-                // Log request completion
-                LogLevel logLevel;
-                if (statusCode >= 500)
-                {
-                    logLevel = LogLevel.Error;
-                }
-                else if (statusCode >= 400)
-                {
-                    logLevel = LogLevel.Warning;
-                }
-                else
-                {
-                    logLevel = LogLevel.Information;
-                }
-
-                this._logger.Log(
-                    logLevel,
-                    "API Request Completed: {RequestId} {Method} {Path} -> {StatusCode} in {Duration}ms | OrgId: {OrgId} | UserId: {UserId} | ApiKeyId: {ApiKeyId} | Region: {UserRegion} | CrossBorder: {CrossBorder} | Size: {ResponseSize} bytes",
-                    requestId,
-                    requestMethod,
-                    requestPath,
-                    statusCode,
-                    stopwatch.ElapsedMilliseconds,
-                    tenantContext.OrganizationId,
-                    tenantContext.UserId,
-                    tenantContext.ApiKeyId,
-                    context.Items["UserRegion"],
-                    context.Items["IsCrossBorder"],
-                    responseSize);
-
-                // Copy response body back to original stream
-                responseBodyStream.Seek(0, SeekOrigin.Begin);
-                await responseBodyStream.CopyToAsync(originalBodyStream).ConfigureAwait(false);
+                await this.ProcessRequestAsync(
+                    context,
+                    tenantContext,
+                    auditContext,
+                    originalBodyStream).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                stopwatch.Stop();
+                auditContext.Stopwatch.Stop();
 
                 this._logger.LogError(
                     ex,
                     "API Request Failed: {RequestId} {Method} {Path} after {Duration}ms | OrgId: {OrgId}",
-                    requestId,
-                    requestMethod,
-                    requestPath,
-                    stopwatch.ElapsedMilliseconds,
+                    auditContext.RequestId,
+                    auditContext.RequestMethod,
+                    auditContext.RequestPath,
+                    auditContext.Stopwatch.ElapsedMilliseconds,
                     tenantContext.OrganizationId);
 
                 // Re-throw with contextual information
-                throw new InvalidOperationException($"API request {requestId} failed after {stopwatch.ElapsedMilliseconds}ms", ex);
+                throw new InvalidOperationException($"API request {auditContext.RequestId} failed after {auditContext.Stopwatch.ElapsedMilliseconds}ms", ex);
             }
             finally
             {
                 context.Response.Body = originalBodyStream;
             }
+        }
+
+        private async Task ProcessRequestAsync(
+            HttpContext context,
+            ITenantContext tenantContext,
+            AuditRequestContext auditContext,
+            Stream originalBodyStream)
+        {
+            using var responseBodyStream = new MemoryStream();
+            context.Response.Body = responseBodyStream;
+
+            await this._next(context).ConfigureAwait(false);
+
+            await this.LogResponseAsync(
+                context,
+                tenantContext,
+                responseBodyStream,
+                originalBodyStream,
+                auditContext).ConfigureAwait(false);
+        }
+
+        private Task LogResponseAsync(
+            HttpContext context,
+            ITenantContext tenantContext,
+            MemoryStream responseBodyStream,
+            Stream originalBodyStream,
+            AuditRequestContext auditContext)
+        {
+            auditContext.Stopwatch.Stop();
+
+            var statusCode = context.Response.StatusCode;
+            var responseSize = responseBodyStream.Length;
+            var logLevel = AuditMiddleware.ResolveLogLevel(statusCode);
+
+            this.LogResponseCompletion(
+                context,
+                tenantContext,
+                auditContext.RequestId,
+                auditContext.RequestMethod,
+                auditContext.RequestPath,
+                auditContext.Stopwatch,
+                statusCode,
+                responseSize,
+                logLevel);
+
+            responseBodyStream.Seek(0, SeekOrigin.Begin);
+            return responseBodyStream.CopyToAsync(originalBodyStream);
+        }
+
+        private static AuditRequestContext CreateAuditContext(HttpContext context)
+        {
+            return new AuditRequestContext(
+                AuditMiddleware.ResolveRequestId(context),
+                context.Request.Method,
+                context.Request.Path,
+                context.Request.QueryString.ToString(),
+                AuditMiddleware.GetClientIpAddress(context),
+                Stopwatch.StartNew());
+        }
+
+        private void LogRequestStart(AuditRequestContext auditContext)
+        {
+            this._logger.LogInformation(
+                "API Request Started: {RequestId} {Method} {Path}{Query} from {ClientIp}",
+                auditContext.RequestId,
+                auditContext.RequestMethod,
+                auditContext.RequestPath,
+                auditContext.RequestQuery,
+                auditContext.ClientIp);
+        }
+
+        private static bool ShouldSkipAudit(HttpContext context)
+        {
+            return context.Request.Path.StartsWithSegments("/health", StringComparison.Ordinal)
+                   || context.Request.Path.StartsWithSegments("/openapi", StringComparison.Ordinal)
+                   || context.Request.Path.Value?.Contains("swagger", StringComparison.OrdinalIgnoreCase) == true;
+        }
+
+        private void LogResponseCompletion(
+            HttpContext context,
+            ITenantContext tenantContext,
+            string requestId,
+            string requestMethod,
+            PathString requestPath,
+            Stopwatch stopwatch,
+            int statusCode,
+            long responseSize,
+            LogLevel logLevel)
+        {
+            this._logger.Log(
+                logLevel,
+                "API Request Completed: {RequestId} {Method} {Path} -> {StatusCode} in {Duration}ms | OrgId: {OrgId} | UserId: {UserId} | ApiKeyId: {ApiKeyId} | Region: {UserRegion} | CrossBorder: {CrossBorder} | Size: {ResponseSize} bytes",
+                requestId,
+                requestMethod,
+                requestPath,
+                statusCode,
+                stopwatch.ElapsedMilliseconds,
+                tenantContext.OrganizationId,
+                tenantContext.UserId,
+                tenantContext.ApiKeyId,
+                context.Items["UserRegion"],
+                context.Items["IsCrossBorder"],
+                responseSize);
+        }
+
+        private sealed record AuditRequestContext(
+            string RequestId,
+            string RequestMethod,
+            PathString RequestPath,
+            string RequestQuery,
+            string ClientIp,
+            Stopwatch Stopwatch);
+
+        private static string ResolveRequestId(HttpContext context)
+        {
+            return context.Items["RequestId"]?.ToString() ?? Guid.NewGuid().ToString();
+        }
+
+        private static LogLevel ResolveLogLevel(int statusCode)
+        {
+            if (statusCode >= 500)
+            {
+                return LogLevel.Error;
+            }
+
+            if (statusCode >= 400)
+            {
+                return LogLevel.Warning;
+            }
+
+            return LogLevel.Information;
         }
 
         private static string GetClientIpAddress(HttpContext context)

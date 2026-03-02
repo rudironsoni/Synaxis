@@ -12,6 +12,11 @@ namespace Synaxis.InferenceGateway.Application.Configuration
     public class SynaxisConfiguration
     {
         /// <summary>
+        /// Default max request body size (bytes).
+        /// </summary>
+        public const long DefaultMaxRequestBodySize = 31457280;
+
+        /// <summary>
         /// Gets or sets the providers configuration.
         /// </summary>
         public IDictionary<string, ProviderConfig> Providers { get; set; } = new Dictionary<string, ProviderConfig>(StringComparer.Ordinal);
@@ -55,6 +60,6 @@ namespace Synaxis.InferenceGateway.Application.Configuration
         /// Gets or sets the maximum allowed request body size (bytes) for parsing incoming OpenAI-compatible requests.
         /// Default set to 30 MB (31457280 bytes).
         /// </summary>
-        public long MaxRequestBodySize { get; set; } = 31457280;
+        public long MaxRequestBodySize { get; set; } = DefaultMaxRequestBodySize;
     }
 }

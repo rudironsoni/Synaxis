@@ -46,113 +46,34 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         {
             try
             {
-                // Skip compliance checks for health and public endpoints
-                if (context.Request.Path.StartsWithSegments("/health", StringComparison.Ordinal) ||
-                    context.Request.Path.StartsWithSegments("/openapi", StringComparison.Ordinal))
+                if (ShouldSkipCompliance(context, tenantContext))
                 {
                     await this._next(context).ConfigureAwait(false);
                     return;
                 }
 
-                // Only validate if tenant context is established
-                if (tenantContext.OrganizationId == null)
+                var transferContext = BuildTransferContext(context, tenantContext);
+                if (transferContext != null)
                 {
-                    await this._next(context).ConfigureAwait(false);
-                    return;
-                }
-
-                // Get user region from context (set by RegionRoutingMiddleware)
-                var userRegion = context.Items["UserRegion"] as string;
-                var currentRegion = context.Items["CurrentRegion"] as string;
-                var isCrossBorder = (bool)(context.Items["IsCrossBorder"] ?? false);
-
-                // Validate cross-border transfer if applicable
-                if (isCrossBorder && !string.IsNullOrEmpty(userRegion) && !string.IsNullOrEmpty(currentRegion))
-                {
-                    var transferContext = new TransferContext
+                    var shouldContinue = await this.ValidateTransferAsync(context, complianceProvider, transferContext).ConfigureAwait(false);
+                    if (!shouldContinue)
                     {
-                        OrganizationId = tenantContext.OrganizationId.Value,
-                        UserId = tenantContext.UserId,
-                        FromRegion = userRegion,
-                        ToRegion = currentRegion,
-                        LegalBasis = "SCC",
-                        Purpose = "inference_request",
-                        DataCategories = new[] { "api_request", "model_inference" },
-                        EncryptionUsed = context.Request.IsHttps,
-                        UserConsentObtained = tenantContext.UserId.HasValue,
-                    };
-
-                    var isAllowed = await complianceProvider.ValidateTransferAsync(transferContext).ConfigureAwait(false);
-
-                    if (!isAllowed)
-                    {
-                        this._logger.LogWarning(
-                            "Compliance validation failed for cross-border transfer. OrgId: {OrgId}, From: {From}, To: {To}",
-                            tenantContext.OrganizationId,
-                            userRegion,
-                            currentRegion);
-
-                        context.Response.StatusCode = StatusCodes.Status451UnavailableForLegalReasons;
-                        await context.Response.WriteAsJsonAsync(new
-                        {
-                            error = new
-                            {
-                                message = "Request violates data protection regulations",
-                                type = "compliance_error",
-                                code = "DATA_PROTECTION_VIOLATION",
-                                regulation = complianceProvider.RegulationCode,
-                            },
-                        }).ConfigureAwait(false);
                         return;
                     }
-
-                    // Log the transfer for audit trail
-                    await complianceProvider.LogTransferAsync(transferContext).ConfigureAwait(false);
                 }
 
-                // Validate processing is allowed
                 if (tenantContext.UserId.HasValue)
                 {
-                    var processingContext = new ProcessingContext
-                    {
-                        OrganizationId = tenantContext.OrganizationId.Value,
-                        UserId = tenantContext.UserId,
-                        ProcessingPurpose = "inference_request",
-                        LegalBasis = "contract",
-                        DataCategories = new[] { "api_request", "model_inference" },
-                    };
-
+                    var processingContext = BuildProcessingContext(tenantContext);
                     var isProcessingAllowed = await complianceProvider.IsProcessingAllowedAsync(processingContext).ConfigureAwait(false);
-
                     if (!isProcessingAllowed)
                     {
-                        this._logger.LogWarning(
-                            "Processing not allowed by compliance provider. UserId: {UserId}, OrgId: {OrgId}",
-                            tenantContext.UserId,
-                            tenantContext.OrganizationId);
-
-                        context.Response.StatusCode = StatusCodes.Status403Forbidden;
-                        await context.Response.WriteAsJsonAsync(new
-                        {
-                            error = new
-                            {
-                                message = "Data processing not permitted under applicable regulations",
-                                type = "compliance_error",
-                                code = "PROCESSING_NOT_PERMITTED",
-                            },
-                        }).ConfigureAwait(false);
+                        await this.WriteProcessingNotPermittedAsync(context, tenantContext).ConfigureAwait(false);
                         return;
                     }
                 }
 
-                // Add compliance headers
-                context.Response.OnStarting(() =>
-                {
-                    context.Response.Headers["X-Compliance-Framework"] = complianceProvider.RegulationCode;
-                    context.Response.Headers["X-Data-Region"] = complianceProvider.Region;
-                    return Task.CompletedTask;
-                });
-
+                AddComplianceHeaders(context, complianceProvider);
                 await this._next(context).ConfigureAwait(false);
             }
             catch (Exception ex)
@@ -160,6 +81,122 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
                 this._logger.LogError(ex, "Error occurred during compliance validation");
                 await this._next(context).ConfigureAwait(false);
             }
+        }
+
+        private static bool ShouldSkipCompliance(HttpContext context, ITenantContext tenantContext)
+        {
+            if (context.Request.Path.StartsWithSegments("/health", StringComparison.Ordinal) ||
+                context.Request.Path.StartsWithSegments("/openapi", StringComparison.Ordinal))
+            {
+                return true;
+            }
+
+            return tenantContext.OrganizationId == null;
+        }
+
+        private static TransferContext? BuildTransferContext(HttpContext context, ITenantContext tenantContext)
+        {
+            var userRegion = context.Items["UserRegion"] as string;
+            var currentRegion = context.Items["CurrentRegion"] as string;
+            var isCrossBorder = (bool)(context.Items["IsCrossBorder"] ?? false);
+
+            if (!isCrossBorder || string.IsNullOrEmpty(userRegion) || string.IsNullOrEmpty(currentRegion))
+            {
+                return null;
+            }
+
+            var organizationId = tenantContext.OrganizationId;
+            if (!organizationId.HasValue)
+            {
+                return null;
+            }
+
+            return new TransferContext
+            {
+                OrganizationId = organizationId.Value,
+                UserId = tenantContext.UserId,
+                FromRegion = userRegion,
+                ToRegion = currentRegion,
+                LegalBasis = "SCC",
+                Purpose = "inference_request",
+                DataCategories = new[] { "api_request", "model_inference" },
+                EncryptionUsed = context.Request.IsHttps,
+                UserConsentObtained = tenantContext.UserId.HasValue,
+            };
+        }
+
+        private async Task<bool> ValidateTransferAsync(
+            HttpContext context,
+            IComplianceProvider complianceProvider,
+            TransferContext transferContext)
+        {
+            var isAllowed = await complianceProvider.ValidateTransferAsync(transferContext).ConfigureAwait(false);
+
+            if (isAllowed)
+            {
+                await complianceProvider.LogTransferAsync(transferContext).ConfigureAwait(false);
+                return true;
+            }
+
+            this._logger.LogWarning(
+                "Compliance validation failed for cross-border transfer. OrgId: {OrgId}, From: {From}, To: {To}",
+                transferContext.OrganizationId,
+                transferContext.FromRegion,
+                transferContext.ToRegion);
+
+            context.Response.StatusCode = StatusCodes.Status451UnavailableForLegalReasons;
+            await context.Response.WriteAsJsonAsync(new
+            {
+                error = new
+                {
+                    message = "Request violates data protection regulations",
+                    type = "compliance_error",
+                    code = "DATA_PROTECTION_VIOLATION",
+                    regulation = complianceProvider.RegulationCode,
+                },
+            }).ConfigureAwait(false);
+            return false;
+        }
+
+        private static ProcessingContext BuildProcessingContext(ITenantContext tenantContext)
+        {
+            return new ProcessingContext
+            {
+                OrganizationId = tenantContext.OrganizationId!.Value,
+                UserId = tenantContext.UserId,
+                ProcessingPurpose = "inference_request",
+                LegalBasis = "contract",
+                DataCategories = new[] { "api_request", "model_inference" },
+            };
+        }
+
+        private Task WriteProcessingNotPermittedAsync(HttpContext context, ITenantContext tenantContext)
+        {
+            this._logger.LogWarning(
+                "Processing not allowed by compliance provider. UserId: {UserId}, OrgId: {OrgId}",
+                tenantContext.UserId,
+                tenantContext.OrganizationId);
+
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            return context.Response.WriteAsJsonAsync(new
+            {
+                error = new
+                {
+                    message = "Data processing not permitted under applicable regulations",
+                    type = "compliance_error",
+                    code = "PROCESSING_NOT_PERMITTED",
+                },
+            });
+        }
+
+        private static void AddComplianceHeaders(HttpContext context, IComplianceProvider complianceProvider)
+        {
+            context.Response.OnStarting(() =>
+            {
+                context.Response.Headers["X-Compliance-Framework"] = complianceProvider.RegulationCode;
+                context.Response.Headers["X-Data-Region"] = complianceProvider.Region;
+                return Task.CompletedTask;
+            });
         }
     }
 }
