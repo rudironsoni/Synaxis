@@ -4,6 +4,8 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security;
 
+using System;
+using System.Collections.Generic;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;

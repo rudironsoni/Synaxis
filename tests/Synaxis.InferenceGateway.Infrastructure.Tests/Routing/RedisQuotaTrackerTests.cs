@@ -4,6 +4,9 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Routing;
 
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;

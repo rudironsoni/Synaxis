@@ -4,6 +4,7 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.ControlPlane;
 
+using System;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane;

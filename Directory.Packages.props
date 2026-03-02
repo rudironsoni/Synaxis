@@ -74,6 +74,7 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.3" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.3" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.3" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Cosmos" Version="10.0.3" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.3" />
     <PackageVersion Include="Microsoft.Extensions.AI" Version="10.3.0" />
     <PackageVersion Include="Microsoft.Extensions.AI.Abstractions" Version="10.3.0" />

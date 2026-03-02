@@ -4,6 +4,8 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Identity;
 
+using System;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane;

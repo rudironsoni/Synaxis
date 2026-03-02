@@ -4,7 +4,11 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security;
 
+using System;
+using System.Linq;
 using System.Security.Claims;
+using System.Threading;
+using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;

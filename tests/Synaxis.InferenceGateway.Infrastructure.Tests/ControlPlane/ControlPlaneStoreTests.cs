@@ -4,7 +4,13 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.ControlPlane;
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Xunit;
 using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 

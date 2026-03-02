@@ -5,6 +5,9 @@
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Optimization.Caching;
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Moq;

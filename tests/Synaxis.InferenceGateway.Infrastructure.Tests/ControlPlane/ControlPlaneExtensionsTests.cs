@@ -4,10 +4,13 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.ControlPlane;
 
+using System;
+using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Xunit;
 using Synaxis.InferenceGateway.Application.ControlPlane;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 

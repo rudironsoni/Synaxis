@@ -109,6 +109,11 @@ dotnet_diagnostic.SA1633.severity = none
 dotnet_diagnostic.SA1402.severity = none
 dotnet_diagnostic.MA0048.severity = none
 
+# Inference.Application - suppress SA1402 for Commands directory with multiple DTOs/records
+[src/Inference/Inference.Application/Commands/*.cs]
+dotnet_diagnostic.SA1402.severity = none
+dotnet_diagnostic.MA0048.severity = none
+
 # MA0002: IEqualityComparer<string> or IComparer<string> is missing
 # Suppress for Contracts directory where Dictionary initialization is straightforward
 dotnet_diagnostic.MA0002.severity = suggestion

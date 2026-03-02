@@ -4,7 +4,10 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.ControlPlane;
 
+using System;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Xunit;
 using Synaxis.InferenceGateway.Application.ControlPlane.Entities;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
 

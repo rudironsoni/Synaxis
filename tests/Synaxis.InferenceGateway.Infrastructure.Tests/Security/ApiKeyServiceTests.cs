@@ -4,6 +4,7 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security;
 
+using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Moq;
