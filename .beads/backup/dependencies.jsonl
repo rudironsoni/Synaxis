@@ -6,6 +6,7 @@
 {"created_at":"2026-02-15T20:37:57Z","created_by":"import","depends_on_id":"Synaxis-czq","issue_id":"Synaxis-10r","type":"blocks"}
 {"created_at":"2026-02-15T21:19:29Z","created_by":"Rudimar Ronsoni","depends_on_id":"Synaxis-33bb","issue_id":"Synaxis-1bbm","type":"blocks"}
 {"created_at":"2026-02-23T13:53:46Z","created_by":"Rudimar Ronsoni","depends_on_id":"Synaxis-t82w","issue_id":"Synaxis-1g1b","type":"blocks"}
+{"created_at":"2026-03-02T13:07:56Z","created_by":"Rudimar Ronsoni","depends_on_id":"Synaxis-tdp6","issue_id":"Synaxis-1hwh","type":"blocks"}
 {"created_at":"2026-02-15T20:37:57Z","created_by":"import","depends_on_id":"Synaxis-cts","issue_id":"Synaxis-1j1","type":"blocks"}
 {"created_at":"2026-02-15T20:37:57Z","created_by":"import","depends_on_id":"Synaxis-6r7","issue_id":"Synaxis-1mf","type":"blocks"}
 {"created_at":"2026-02-15T21:20:21Z","created_by":"Rudimar Ronsoni","depends_on_id":"Synaxis-4uyf","issue_id":"Synaxis-1mka","type":"blocks"}
@@ -81,6 +82,7 @@
 {"created_at":"2026-02-15T20:37:57Z","created_by":"import","depends_on_id":"Synaxis-4gd","issue_id":"Synaxis-6rr","type":"blocks"}
 {"created_at":"2026-02-15T20:37:57Z","created_by":"import","depends_on_id":"Synaxis-a1r","issue_id":"Synaxis-6rr","type":"blocks"}
 {"created_at":"2026-02-15T20:37:57Z","created_by":"import","depends_on_id":"Synaxis-yeo","issue_id":"Synaxis-6rr","type":"blocks"}
+{"created_at":"2026-03-02T13:08:04Z","created_by":"Rudimar Ronsoni","depends_on_id":"Synaxis-yk5b","issue_id":"Synaxis-6vm1","type":"blocks"}
 {"created_at":"2026-02-15T21:17:58Z","created_by":"Rudimar Ronsoni","depends_on_id":"Synaxis-9s9j","issue_id":"Synaxis-6ysv","type":"blocks"}
 {"created_at":"2026-02-16T15:26:45Z","created_by":"Rudimar Ronsoni","depends_on_id":"Synaxis-72y9","issue_id":"Synaxis-72y9.1","type":"parent-child"}
 {"created_at":"2026-02-16T15:26:45Z","created_by":"Rudimar Ronsoni","depends_on_id":"Synaxis-72y9","issue_id":"Synaxis-72y9.2","type":"parent-child"}
@@ -309,6 +311,7 @@
 {"created_at":"2026-02-15T21:10:50Z","created_by":"Rudimar Ronsoni","depends_on_id":"Synaxis-ff2i","issue_id":"Synaxis-klnc","type":"blocks"}
 {"created_at":"2026-02-15T20:37:57Z","created_by":"import","depends_on_id":"Synaxis-ds7l","issue_id":"Synaxis-koc1","type":"discovered-from"}
 {"created_at":"2026-02-15T21:10:49Z","created_by":"Rudimar Ronsoni","depends_on_id":"Synaxis-lp8d","issue_id":"Synaxis-l0dh","type":"blocks"}
+{"created_at":"2026-03-02T13:07:52Z","created_by":"Rudimar Ronsoni","depends_on_id":"Synaxis-q7hj","issue_id":"Synaxis-l4ci","type":"blocks"}
 {"created_at":"2026-02-22T19:38:57Z","created_by":"Rudimar Ronsoni","depends_on_id":"Synaxis-1op3","issue_id":"Synaxis-ldjg","type":"blocks"}
 {"created_at":"2026-02-15T21:20:19Z","created_by":"Rudimar Ronsoni","depends_on_id":"Synaxis-4uyf","issue_id":"Synaxis-lgz5","type":"blocks"}
 {"created_at":"2026-02-15T21:20:19Z","created_by":"Rudimar Ronsoni","depends_on_id":"Synaxis-7zk1","issue_id":"Synaxis-lgz5","type":"blocks"}
@@ -398,6 +401,7 @@
 {"created_at":"2026-02-15T20:37:57Z","created_by":"import","depends_on_id":"Synaxis-8fn0","issue_id":"Synaxis-sg5s","type":"blocks"}
 {"created_at":"2026-02-15T20:37:57Z","created_by":"import","depends_on_id":"Synaxis-2wkc","issue_id":"Synaxis-smtt","type":"discovered-from"}
 {"created_at":"2026-02-15T21:17:58Z","created_by":"Rudimar Ronsoni","depends_on_id":"Synaxis-9s9j","issue_id":"Synaxis-sn2e","type":"blocks"}
+{"created_at":"2026-03-02T13:07:54Z","created_by":"Rudimar Ronsoni","depends_on_id":"Synaxis-l4ci","issue_id":"Synaxis-tdp6","type":"blocks"}
 {"created_at":"2026-02-15T20:37:57Z","created_by":"import","depends_on_id":"Synaxis-cts","issue_id":"Synaxis-tu6","type":"blocks"}
 {"created_at":"2026-02-23T13:53:51Z","created_by":"Rudimar Ronsoni","depends_on_id":"Synaxis-c81g","issue_id":"Synaxis-u19b","type":"blocks"}
 {"created_at":"2026-02-23T14:52:18Z","created_by":"Rudimar Ronsoni","depends_on_id":"Synaxis-gbwe","issue_id":"Synaxis-u267","type":"blocks"}
@@ -429,6 +433,7 @@
 {"created_at":"2026-02-15T21:10:38Z","created_by":"Rudimar Ronsoni","depends_on_id":"Synaxis-zlqi","issue_id":"Synaxis-y3dh","type":"blocks"}
 {"created_at":"2026-02-15T21:10:49Z","created_by":"Rudimar Ronsoni","depends_on_id":"Synaxis-ff2i","issue_id":"Synaxis-y7po","type":"blocks"}
 {"created_at":"2026-02-15T21:10:51Z","created_by":"Rudimar Ronsoni","depends_on_id":"Synaxis-30kb","issue_id":"Synaxis-yaju","type":"blocks"}
+{"created_at":"2026-03-02T13:07:58Z","created_by":"Rudimar Ronsoni","depends_on_id":"Synaxis-1hwh","issue_id":"Synaxis-yk5b","type":"blocks"}
 {"created_at":"2026-02-15T20:37:57Z","created_by":"import","depends_on_id":"Synaxis-sg5s","issue_id":"Synaxis-yt6c","type":"blocks"}
 {"created_at":"2026-02-15T21:20:18Z","created_by":"Rudimar Ronsoni","depends_on_id":"Synaxis-4uyf","issue_id":"Synaxis-z1rq","type":"blocks"}
 {"created_at":"2026-02-15T21:20:19Z","created_by":"Rudimar Ronsoni","depends_on_id":"Synaxis-7zk1","issue_id":"Synaxis-z1rq","type":"blocks"}
