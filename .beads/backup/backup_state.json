@@ -1,12 +1,12 @@
 {
-  "last_dolt_commit": "shp9rbiif39lhmnlfbra0hh2slljckjl",
+  "last_dolt_commit": "ks5qtalne6lnahmsmh2dap66cvinlabb",
   "last_event_id": 0,
-  "timestamp": "2026-03-02T08:51:23.646715889Z",
+  "timestamp": "2026-03-02T10:07:15.283684725Z",
   "counts": {
-    "issues": 5,
+    "issues": 574,
     "events": 15,
     "comments": 0,
-    "dependencies": 0,
+    "dependencies": 437,
     "labels": 0,
     "config": 12
   }
