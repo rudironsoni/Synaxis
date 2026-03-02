@@ -297,3 +297,6 @@ test-*.txt
 .config/
 .factory/
 .serena/logs/
+
+# Dolt database files (added by bd init)
+.dolt/
