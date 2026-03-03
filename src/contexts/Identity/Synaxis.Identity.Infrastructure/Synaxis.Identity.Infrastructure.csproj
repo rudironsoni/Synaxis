@@ -14,8 +14,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../Identity.Application/Identity.Application.csproj" />
-    <ProjectReference Include="../../Infrastructure/Synaxis.Infrastructure.EventSourcing/Synaxis.Infrastructure.EventSourcing.csproj" />
+    <ProjectReference Include="../Synaxis.Identity.Application/Synaxis.Identity.Application.csproj" />
+    <ProjectReference Include="../../../../src/Infrastructure/Synaxis.Infrastructure.EventSourcing/Synaxis.Infrastructure.EventSourcing.csproj" />
   </ItemGroup>
 
 </Project>

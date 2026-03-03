@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../Identity.Infrastructure/Identity.Infrastructure.csproj" />
+    <ProjectReference Include="../Synaxis.Identity.Infrastructure/Synaxis.Identity.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

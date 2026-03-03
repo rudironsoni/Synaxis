@@ -14,8 +14,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../Identity.Domain/Identity.Domain.csproj" />
-    <ProjectReference Include="../../Abstractions/Synaxis.Abstractions.Cloud/Synaxis.Abstractions.Cloud.csproj" />
+    <ProjectReference Include="../Synaxis.Identity.Domain/Synaxis.Identity.Domain.csproj" />
+    <ProjectReference Include="../../../../src/Abstractions/Synaxis.Abstractions.Cloud/Synaxis.Abstractions.Cloud.csproj" />
   </ItemGroup>
 
 </Project>

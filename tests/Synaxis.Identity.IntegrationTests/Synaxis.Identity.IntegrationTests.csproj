@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../src/Identity/Identity.Api/Identity.Api.csproj" />
+    <ProjectReference Include="../../src/contexts/Identity/Synaxis.Identity.Api/Synaxis.Identity.Api.csproj" />
     <ProjectReference Include="../../tests/Common/Synaxis.Common.Tests.csproj" />
   </ItemGroup>
 
