@@ -4,6 +4,8 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Extensions
 {
+    using System;
+    using System.Collections.Generic;
     using Microsoft.Extensions.AI;
     using Microsoft.Extensions.DependencyInjection;
 
@@ -26,7 +28,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
         /// <returns>The service collection for chaining.</returns>
         public static IServiceCollection AddOpenRouterClient(this IServiceCollection services, string serviceKey, string apiKey, string modelId = "auto", string? siteUrl = null, string? siteName = null)
         {
-            var headers = new Dictionary<string, string>();
+            var headers = new Dictionary<string, string>(StringComparer.Ordinal);
             if (!string.IsNullOrEmpty(siteUrl))
             {
                 headers.Add("HTTP-Referer", siteUrl);

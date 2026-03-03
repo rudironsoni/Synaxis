@@ -45,6 +45,6 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Core
         /// <summary>
         /// Gets or sets additional properties.
         /// </summary>
-        public IDictionary<string, string> Properties { get; set; } = new Dictionary<string, string>();
+        public IDictionary<string, string> Properties { get; set; } = new Dictionary<string, string>(StringComparer.Ordinal);
     }
 }

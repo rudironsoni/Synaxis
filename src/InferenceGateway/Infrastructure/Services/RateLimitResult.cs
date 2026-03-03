@@ -4,6 +4,9 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Services
 {
+    using System;
+    using System.Collections.Generic;
+
     /// <summary>
     /// Represents the result of a rate limit check.
     /// </summary>
@@ -94,7 +97,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Services
         /// <returns>A dictionary of HTTP header names and values.</returns>
         public IDictionary<string, string> ToHeaders()
         {
-            var headers = new Dictionary<string, string>
+            var headers = new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 ["X-RateLimit-Limit"] = this.Limit.ToString(System.Globalization.CultureInfo.InvariantCulture),
                 ["X-RateLimit-Remaining"] = this.Remaining.ToString(System.Globalization.CultureInfo.InvariantCulture),

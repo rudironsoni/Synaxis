@@ -4,6 +4,7 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
 {
+    using System;
     using System.Security.Cryptography;
     using System.Text;
     using Microsoft.Extensions.Logging;
@@ -44,14 +45,14 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
         {
             try
             {
-                var metadata = new Dictionary<string, object>
-                {
-                    ["agent"] = agentName,
-                    ["action"] = action,
-                    ["details"] = details,
-                    ["correlationId"] = correlationId,
-                    ["timestamp"] = DateTime.UtcNow,
-                };
+var metadata = new Dictionary<string, object>(StringComparer.Ordinal)
+            {
+                ["agent"] = agentName,
+                ["action"] = action,
+                ["details"] = details,
+                ["correlationId"] = correlationId,
+                ["timestamp"] = DateTime.UtcNow,
+            };
 
                 var auditLog = new AuditLog
                 {
@@ -93,15 +94,15 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
         {
             try
             {
-                var metadata = new Dictionary<string, object>
-                {
-                    ["modelId"] = modelId,
-                    ["oldProvider"] = oldProvider,
-                    ["newProvider"] = newProvider,
-                    ["savingsPercent"] = savingsPercent,
-                    ["reason"] = reason,
-                    ["timestamp"] = DateTime.UtcNow,
-                };
+var metadata = new Dictionary<string, object>(StringComparer.Ordinal)
+            {
+                ["modelId"] = modelId,
+                ["oldProvider"] = oldProvider,
+                ["newProvider"] = newProvider,
+                ["savingsPercent"] = savingsPercent,
+                ["reason"] = reason,
+                ["timestamp"] = DateTime.UtcNow,
+            };
 
                 var auditLog = new AuditLog
                 {

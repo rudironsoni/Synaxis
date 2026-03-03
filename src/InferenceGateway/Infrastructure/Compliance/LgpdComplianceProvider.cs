@@ -30,10 +30,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
         private readonly ILogger<LgpdComplianceProvider> _logger;
 
         // Brazilian regions for data residency validation
-        private static readonly HashSet<string> BrazilianRegions = new()
-        {
-            "sa-east-1", "br-south-1", "sa-saopaulo-1",
-        };
+private static readonly HashSet<string> BrazilianRegions = new(StringComparer.Ordinal)
+    {
+        "sa-east-1", "br-south-1", "sa-saopaulo-1",
+    };
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LgpdComplianceProvider"/> class.
@@ -142,17 +142,17 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                 Action = "transferencia_internacional",
                 ResourceType = "transferencia_dados",
                 ResourceId = context.UserId?.ToString() ?? string.Empty,
-                Metadata = new Dictionary<string, object>
-                {
-                    { "regiao_origem", context.FromRegion },
-                    { "regiao_destino", context.ToRegion },
-                    { "base_legal", context.LegalBasis },
-                    { "finalidade", context.Purpose },
-                    { "categorias_dados", context.DataCategories },
-                    { "criptografia_utilizada", context.EncryptionUsed },
-                    { "consentimento_obtido", context.UserConsentObtained },
-                    { "regulamento", "LGPD" },
-                },
+Metadata = new Dictionary<string, object>(StringComparer.Ordinal)
+            {
+                { "regiao_origem", context.FromRegion },
+                { "regiao_destino", context.ToRegion },
+                { "base_legal", context.LegalBasis },
+                { "finalidade", context.Purpose },
+                { "categorias_dados", context.DataCategories },
+                { "criptografia_utilizada", context.EncryptionUsed },
+                { "consentimento_obtido", context.UserConsentObtained },
+                { "regulamento", "LGPD" },
+            },
                 IpAddress = string.Empty,
                 UserAgent = string.Empty,
                 Region = context.FromRegion ?? "unknown",
@@ -176,7 +176,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
 
         private async Task<Dictionary<string, object>> CollectUserDataAsync(Guid userId)
         {
-            var userData = new Dictionary<string, object>();
+            var userData = new Dictionary<string, object>(StringComparer.Ordinal);
 
             // Get user profile
             var user = await this.GetUserProfileAsync(userId).ConfigureAwait(false);
@@ -300,13 +300,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                 Format = "json",
                 Data = Encoding.UTF8.GetBytes(jsonData),
                 ExportedAt = DateTime.UtcNow,
-                Metadata = new Dictionary<string, object>
-                {
-                    ["regulamento"] = "LGPD",
-                    ["direito"] = "portabilidade_dados",
-                    ["artigo"] = "Artigo 18, V",
-                    ["idioma"] = "pt-BR",
-                    ["contagem_registros"] = new
+Metadata = new Dictionary<string, object>(StringComparer.Ordinal)
+            {
+                ["regulamento"] = "LGPD",
+                ["direito"] = "portabilidade_dados",
+                ["artigo"] = "Artigo 18, V",
+                ["idioma"] = "pt-BR",
+                ["contagem_registros"] = new
                     {
                         vinculos_organizacao = memberships?.Count ?? 0,
                         vinculos_grupo = groupMemberships?.Count ?? 0,
@@ -351,13 +351,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                 Action = "eliminacao_dados",
                 ResourceType = "usuario",
                 ResourceId = userId.ToString(),
-                Metadata = new Dictionary<string, object>
-                {
-                    { "regulamento", "LGPD" },
-                    { "direito", "direito_eliminacao" },
-                    { "artigo", "Artigo 18, VI" },
-                    { "data_hora", DateTime.UtcNow },
-                },
+Metadata = new Dictionary<string, object>(StringComparer.Ordinal)
+            {
+                { "regulamento", "LGPD" },
+                { "direito", "direito_eliminacao" },
+                { "artigo", "Artigo 18, VI" },
+                { "data_hora", DateTime.UtcNow },
+            },
                 IpAddress = string.Empty,
                 UserAgent = string.Empty,
                 Region = "unknown",

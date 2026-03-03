@@ -39,7 +39,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
             services.AddKeyedSingleton<IChatClient>(key, (sp, obj) =>
             {
                 var headers = customHeaders != null
-                    ? new Dictionary<string, string>(customHeaders.Select(kvp => new KeyValuePair<string, string>(kvp.Key, kvp.Value)))
+                    ? new Dictionary<string, string>(customHeaders.Select(kvp => new KeyValuePair<string, string>(kvp.Key, kvp.Value)), StringComparer.Ordinal)
                     : null;
                 return headers == null
                     ? ActivatorUtilities.CreateInstance<GenericOpenAiChatClient>(

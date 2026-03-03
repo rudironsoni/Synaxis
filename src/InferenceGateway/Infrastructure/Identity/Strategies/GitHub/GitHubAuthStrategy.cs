@@ -62,7 +62,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
         {
             using var req = new HttpRequestMessage(HttpMethod.Post, DeviceCodeUri);
             req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            var body = new System.Collections.Generic.Dictionary<string, string>
+            var body = new System.Collections.Generic.Dictionary<string, string>(StringComparer.Ordinal)
             {
                 ["client_id"] = ClientId,
                 ["scope"] = "repo read:org copilot",
@@ -116,7 +116,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
         {
             using var req = new HttpRequestMessage(HttpMethod.Post, AccessTokenUri);
             req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            var body = new System.Collections.Generic.Dictionary<string, string>
+            var body = new System.Collections.Generic.Dictionary<string, string>(StringComparer.Ordinal)
             {
                 ["client_id"] = ClientId,
                 ["grant_type"] = "refresh_token",

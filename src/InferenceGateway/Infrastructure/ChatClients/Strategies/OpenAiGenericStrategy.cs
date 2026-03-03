@@ -4,6 +4,7 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.ChatClients.Strategies
 {
+    using System;
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
@@ -15,10 +16,10 @@ namespace Synaxis.InferenceGateway.Infrastructure.ChatClients.Strategies
     /// </summary>
     public class OpenAiGenericStrategy : IChatClientStrategy
     {
-        private static readonly HashSet<string> SupportedTypes = new()
-        {
-            "OpenAI", "Groq", "OpenRouter", "Pollinations", "Gemini", "Nvidia", "HuggingFace", "Cohere",
-        };
+private static readonly HashSet<string> SupportedTypes = new(StringComparer.Ordinal)
+    {
+        "OpenAI", "Groq", "OpenRouter", "Pollinations", "Gemini", "Nvidia", "HuggingFace", "Cohere",
+    };
 
         /// <inheritdoc/>
         public bool CanHandle(string providerType) => SupportedTypes.Contains(providerType);

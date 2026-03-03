@@ -27,13 +27,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
         private const int BreachNotificationHoursThreshold = 72;
 
         // EU regions for data residency validation
-        private static readonly HashSet<string> EuRegions = new()
+        private static readonly HashSet<string> EuRegions = new(StringComparer.Ordinal)
         {
             "eu-west-1", "eu-central-1", "eu-north-1", "eu-south-1",
         };
 
         // Adequate countries under GDPR (simplified list)
-        private static readonly HashSet<string> AdequateCountries = new()
+        private static readonly HashSet<string> AdequateCountries = new(StringComparer.Ordinal)
         {
             "EU", "UK", "CH", "NO", "IS", "LI", "NZ", "JP", "KR", "CA",
         };
@@ -137,16 +137,16 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                 Action = "cross_border_transfer",
                 ResourceType = "data_transfer",
                 ResourceId = context.UserId?.ToString() ?? string.Empty,
-                Metadata = new Dictionary<string, object>
-                {
-                    { "fromRegion", context.FromRegion },
-                    { "toRegion", context.ToRegion },
-                    { "legalBasis", context.LegalBasis },
-                    { "purpose", context.Purpose },
-                    { "dataCategories", context.DataCategories },
-                    { "encryptionUsed", context.EncryptionUsed },
-                    { "userConsentObtained", context.UserConsentObtained },
-                },
+Metadata = new Dictionary<string, object>(StringComparer.Ordinal)
+            {
+                { "fromRegion", context.FromRegion },
+                { "toRegion", context.ToRegion },
+                { "legalBasis", context.LegalBasis },
+                { "purpose", context.Purpose },
+                { "dataCategories", context.DataCategories },
+                { "encryptionUsed", context.EncryptionUsed },
+                { "userConsentObtained", context.UserConsentObtained },
+            },
                 IpAddress = string.Empty,
                 UserAgent = string.Empty,
                 Region = context.FromRegion ?? "unknown",
@@ -163,7 +163,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
         public async Task<DataExport> ExportUserDataAsync(Guid userId)
         {
             // Collect all user data from various tables
-            var userData = new Dictionary<string, object>();
+            var userData = new Dictionary<string, object>(StringComparer.Ordinal);
 
             // Get user profile
             var user = await this.GetUserProfileAsync(userId).ConfigureAwait(false);
@@ -199,7 +199,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                 Format = "json",
                 Data = Encoding.UTF8.GetBytes(jsonData),
                 ExportedAt = DateTime.UtcNow,
-                Metadata = new Dictionary<string, object>
+                Metadata = new Dictionary<string, object>(StringComparer.Ordinal)
                 {
                     ["regulation"] = "GDPR",
                     ["right"] = "data_portability",
@@ -419,13 +419,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                 Action = "data_erasure",
                 ResourceType = "user",
                 ResourceId = userId.ToString(),
-                Metadata = new Dictionary<string, object>
-                {
-                    { "regulation", "GDPR" },
-                    { "right", "right_to_erasure" },
-                    { "article", "Article 17" },
-                    { "timestamp", DateTime.UtcNow },
-                },
+Metadata = new Dictionary<string, object>(StringComparer.Ordinal)
+            {
+                { "regulation", "GDPR" },
+                { "right", "right_to_erasure" },
+                { "article", "Article 17" },
+                { "timestamp", DateTime.UtcNow },
+            },
                 IpAddress = string.Empty,
                 UserAgent = string.Empty,
                 Region = "unknown",

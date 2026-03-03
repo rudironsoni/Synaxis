@@ -60,7 +60,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.External.KiloCode
 
         private static Dictionary<string, string> GetKiloHeaders()
         {
-            return new Dictionary<string, string>
+            return new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 { "X-KiloCode-EditorName", "Synaxis" },
                 { "X-KiloCode-Version", "1.0.0" },

@@ -82,7 +82,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
                 var challenge = GenerateCodeChallenge(verifier);
                 var state = EncodeState(new PkceState { Verifier = verifier, ProjectId = string.Empty });
 
-                var parameters = new Dictionary<string, string>
+                var parameters = new Dictionary<string, string>(StringComparer.Ordinal)
                 {
                     ["client_id"] = this._settings.ClientId,
                     ["response_type"] = "code",
@@ -144,7 +144,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
                     Email = email,
                     AccessToken = token.AccessToken,
                     RefreshToken = token.RefreshToken,
-                    Properties = new Dictionary<string, string> { ["ProjectId"] = projectId },
+                    Properties = new Dictionary<string, string>(StringComparer.Ordinal) { ["ProjectId"] = projectId },
                 };
                 if (token.ExpiresInSeconds.HasValue)
                 {
@@ -171,7 +171,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
             }
 
             using var http = this._httpClientFactory.CreateClient();
-            using var content = new FormUrlEncodedContent(new Dictionary<string, string>
+            using var content = new FormUrlEncodedContent(new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 ["client_id"] = this._settings.ClientId,
                 ["client_secret"] = this._settings.ClientSecret,
@@ -203,7 +203,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
         private async Task<TokenResponse> ExchangeCodeForTokenAsync(string code, string verifier, CancellationToken ct)
         {
             using var http = this._httpClientFactory.CreateClient();
-            using var content = new FormUrlEncodedContent(new Dictionary<string, string>
+            using var content = new FormUrlEncodedContent(new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 ["client_id"] = this._settings.ClientId,
                 ["client_secret"] = this._settings.ClientSecret,
@@ -252,7 +252,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.Google
 
         private async Task<string> FetchProjectIdAsync(string accessToken, CancellationToken ct)
         {
-            var loadHeaders = new Dictionary<string, string>
+            var loadHeaders = new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 ["Authorization"] = $"Bearer {accessToken}",
                 ["Content-Type"] = "application/json",

@@ -84,7 +84,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                 .Select(m => m.Id)
                 .ToListAsync(ct).ConfigureAwait(false);
 
-            var existingModelSet = new HashSet<string>(existingModels);
+            var existingModelSet = new HashSet<string>(existingModels, StringComparer.Ordinal);
 
             // Get all provider models
             var providerModels = await db.ProviderModels
@@ -93,6 +93,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                 .ToListAsync(ct).ConfigureAwait(false);
 
             // Find new models (in ProviderModels but not in GlobalModels)
+            #pragma warning disable MA0002
             return providerModels
                 .Where(pm => !existingModelSet.Contains(pm.GlobalModelId))
                 .GroupBy(pm => pm.GlobalModelId)
@@ -103,6 +104,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Jobs
                 })
                 .Cast<dynamic>()
                 .ToList();
+            #pragma warning restore MA0002
         }
 
         private async Task<int> AddNewModelsAsync(

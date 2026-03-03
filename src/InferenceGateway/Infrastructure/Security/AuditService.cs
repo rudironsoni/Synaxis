@@ -4,6 +4,8 @@
 
 namespace Synaxis.InferenceGateway.Infrastructure.Security
 {
+    using System;
+    using System.Collections.Generic;
     using System.Security.Cryptography;
     using System.Text;
     using System.Text.Json;
@@ -31,7 +33,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Security
         /// <inheritdoc/>
         public Task LogAsync(Guid tenantId, Guid? userId, string action, object? payload, CancellationToken cancellationToken = default)
         {
-            var metadata = new Dictionary<string, object>();
+            var metadata = new Dictionary<string, object>(StringComparer.Ordinal);
             if (payload != null)
             {
                 metadata["payload"] = payload;

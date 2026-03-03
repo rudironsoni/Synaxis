@@ -332,7 +332,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
 
         private string BuildAuthorizationUrl(string redirectUrl, string codeChallenge, string state)
         {
-            var parameters = new Dictionary<string, string>
+            var parameters = new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 ["client_id"] = this._settings.ClientId,
                 ["response_type"] = "code",
@@ -414,7 +414,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
             CancellationToken cancellationToken)
         {
             using var httpClient = this.CreateHttpClient();
-            using var content = new FormUrlEncodedContent(new Dictionary<string, string>
+            using var content = new FormUrlEncodedContent(new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 ["client_id"] = this._settings.ClientId,
                 ["client_secret"] = this._settings.ClientSecret,
@@ -454,7 +454,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
         private async Task<TokenResponse> RefreshTokenAsync(string refreshToken, CancellationToken cancellationToken)
         {
             using var httpClient = this.CreateHttpClient();
-            using var content = new FormUrlEncodedContent(new Dictionary<string, string>
+            using var content = new FormUrlEncodedContent(new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 ["client_id"] = this._settings.ClientId,
                 ["client_secret"] = this._settings.ClientSecret,
@@ -503,7 +503,7 @@ namespace Synaxis.InferenceGateway.Infrastructure.Auth
 
         private async Task<string> FetchProjectIdAsync(string accessToken, CancellationToken cancellationToken)
         {
-            var loadHeaders = new Dictionary<string, string>
+            var loadHeaders = new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 ["Authorization"] = $"Bearer {accessToken}",
                 ["Content-Type"] = "application/json",
