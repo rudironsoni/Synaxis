@@ -21,7 +21,7 @@ public static class ConfigurationExtensions
     public static IConfigurationBuilder AddInferenceGatewayEnvironmentVariables(
         this IConfigurationBuilder builder)
     {
-        var envMapping = new Dictionary<string, string?>
+        var envMapping = new Dictionary<string, string?>(StringComparer.Ordinal)
         {
             { "Synaxis:InferenceGateway:Providers:Groq:Key", Environment.GetEnvironmentVariable("GROQ_API_KEY") },
             { "Synaxis:InferenceGateway:Providers:Cohere:Key", Environment.GetEnvironmentVariable("COHERE_API_KEY") },
@@ -43,7 +43,7 @@ public static class ConfigurationExtensions
 
         var filteredMapping = envMapping
             .Where(kv => !string.IsNullOrEmpty(kv.Value))
-            .ToDictionary(kv => kv.Key, kv => kv.Value);
+            .ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.Ordinal);
 
         return builder.AddInMemoryCollection(filteredMapping!);
     }

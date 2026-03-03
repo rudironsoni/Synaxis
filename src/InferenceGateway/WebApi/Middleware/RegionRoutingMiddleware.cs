@@ -200,7 +200,7 @@ namespace Synaxis.InferenceGateway.WebApi.Middleware
         private static string MapCountryToRegion(string countryCode)
         {
             // EU countries
-            var euCountries = new HashSet<string>
+            var euCountries = new HashSet<string>(StringComparer.Ordinal)
         {
             "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE",
             "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE", "GB",

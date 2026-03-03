@@ -573,7 +573,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
                 Visibility = ValidateVisibility(request.Visibility)!,
                 IsActive = true,
                 Tags = request.Tags?.ToList() ?? new List<string>(),
-                Metadata = new Dictionary<string, object>(),
+                Metadata = new Dictionary<string, object>(StringComparer.Ordinal),
                 CreatedBy = userId,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,

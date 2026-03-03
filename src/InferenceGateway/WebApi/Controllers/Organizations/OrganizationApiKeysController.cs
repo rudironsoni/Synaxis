@@ -441,7 +441,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers.Organizations
                 Name = request.Name ?? "API Key",
                 KeyHash = keyHash,
                 KeyPrefix = keyPrefix,
-                Permissions = request.Permissions ?? new System.Collections.Generic.Dictionary<string, object>(),
+                Permissions = request.Permissions ?? new System.Collections.Generic.Dictionary<string, object>(StringComparer.Ordinal),
                 ExpiresAt = request.ExpiresAt,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow,
@@ -469,15 +469,15 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers.Organizations
                 ErrorCount = errorCount,
                 ErrorRate = errorRate,
                 LastUsedAt = apiKey.LastUsedAt,
-                RequestsByHour = new System.Collections.Generic.Dictionary<string, int>
+                RequestsByHour = new System.Collections.Generic.Dictionary<string, int>(StringComparer.Ordinal)
                 {
                     { oneHourAgo.ToString("yyyy-MM-ddTHH:00:00Z", CultureInfo.InvariantCulture), 0 },
                 },
-                RequestsByDay = new System.Collections.Generic.Dictionary<string, int>
+                RequestsByDay = new System.Collections.Generic.Dictionary<string, int>(StringComparer.Ordinal)
                 {
                     { oneDayAgo.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), 0 },
                 },
-                RequestsByWeek = new System.Collections.Generic.Dictionary<string, int>
+                RequestsByWeek = new System.Collections.Generic.Dictionary<string, int>(StringComparer.Ordinal)
                 {
                     { oneWeekAgo.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), 0 },
                 },

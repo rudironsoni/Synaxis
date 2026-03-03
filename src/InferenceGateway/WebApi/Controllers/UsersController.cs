@@ -384,7 +384,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
         {
             var (ipAddress, userAgent) = this.GetRequestMetadata();
             var timestamp = DateTime.UtcNow;
-            var metadata = new Dictionary<string, object>
+            var metadata = new Dictionary<string, object>(StringComparer.Ordinal)
             {
                 { "deleted_at", timestamp },
                 { "deleted_by", "self" },
@@ -417,7 +417,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers
 
         private static string ComputeAuditIntegrityHash(Guid userId, DateTime timestamp, IDictionary<string, object> metadata)
         {
-            var metadataPayload = string.Join(";", metadata.OrderBy(kvp => kvp.Key).Select(kvp => $"{kvp.Key}:{kvp.Value}"));
+            var metadataPayload = string.Join(";", metadata.OrderBy(kvp => kvp.Key, StringComparer.Ordinal).Select(kvp => $"{kvp.Key}:{kvp.Value}"));
             var payload = $"{userId:N}|{timestamp:O}|{metadataPayload}";
             return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(payload)));
         }

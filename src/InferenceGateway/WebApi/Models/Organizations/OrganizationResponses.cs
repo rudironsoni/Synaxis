@@ -305,7 +305,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers.Organizations
         /// <summary>
         /// Gets or sets the permissions.
         /// </summary>
-        public IDictionary<string, object> Permissions { get; set; } = new Dictionary<string, object>();
+        public IDictionary<string, object> Permissions { get; set; } = new Dictionary<string, object>(StringComparer.Ordinal);
 
         /// <summary>
         /// Gets or sets the expiration timestamp.
@@ -346,7 +346,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers.Organizations
         /// <summary>
         /// Gets or sets the permissions.
         /// </summary>
-        public IDictionary<string, object> Permissions { get; set; } = new Dictionary<string, object>();
+        public IDictionary<string, object> Permissions { get; set; } = new Dictionary<string, object>(StringComparer.Ordinal);
 
         /// <summary>
         /// Gets or sets the expiration timestamp.
@@ -438,7 +438,7 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers.Organizations
         /// <summary>
         /// Gets or sets the permissions.
         /// </summary>
-        public IDictionary<string, object> Permissions { get; set; } = new Dictionary<string, object>();
+        public IDictionary<string, object> Permissions { get; set; } = new Dictionary<string, object>(StringComparer.Ordinal);
 
         /// <summary>
         /// Gets or sets the expiration timestamp.
@@ -494,16 +494,16 @@ namespace Synaxis.InferenceGateway.WebApi.Controllers.Organizations
         /// <summary>
         /// Gets or sets the requests by hour.
         /// </summary>
-        public IDictionary<string, int> RequestsByHour { get; set; } = new Dictionary<string, int>();
+        public IDictionary<string, int> RequestsByHour { get; set; } = new Dictionary<string, int>(StringComparer.Ordinal);
 
         /// <summary>
         /// Gets or sets the requests by day.
         /// </summary>
-        public IDictionary<string, int> RequestsByDay { get; set; } = new Dictionary<string, int>();
+        public IDictionary<string, int> RequestsByDay { get; set; } = new Dictionary<string, int>(StringComparer.Ordinal);
 
         /// <summary>
         /// Gets or sets the requests by week.
         /// </summary>
-        public IDictionary<string, int> RequestsByWeek { get; set; } = new Dictionary<string, int>();
-    }
+        public IDictionary<string, int> RequestsByWeek { get; set; } = new Dictionary<string, int>(StringComparer.Ordinal);
+}
 }
