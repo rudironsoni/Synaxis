@@ -27,10 +27,10 @@
     <Using Include="Xunit" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="/home/rrj/src/github/rudironsoni/Synaxis/tests/Common/Synaxis.Common.Tests.csproj" />
-    <ProjectReference Include="/home/rrj/src/github/rudironsoni/Synaxis/src/InferenceGateway/Application/Synaxis.InferenceGateway.Application.csproj" />
-    <ProjectReference Include="/home/rrj/src/github/rudironsoni/Synaxis/src/InferenceGateway/Infrastructure/Synaxis.InferenceGateway.Infrastructure.csproj" />
-    <ProjectReference Include="/home/rrj/src/github/rudironsoni/Synaxis/src/InferenceGateway/WebApi/Synaxis.InferenceGateway.WebApi.csproj" />
-    <ProjectReference Include="/home/rrj/src/github/rudironsoni/Synaxis/src/Synaxis.Infrastructure/Synaxis.Infrastructure.csproj" />
+    <ProjectReference Include="$(SolutionDir)tests/Common/Synaxis.Common.Tests.csproj" />
+    <ProjectReference Include="$(SolutionDir)src/contexts/Inference/Synaxis.Inference.Gateway.Application/Synaxis.Inference.Gateway.Application.csproj" />
+    <ProjectReference Include="$(SolutionDir)src/contexts/Inference/Synaxis.Inference.Gateway.Infrastructure/Synaxis.Inference.Gateway.Infrastructure.csproj" />
+    <ProjectReference Include="$(SolutionDir)src/contexts/Inference/Synaxis.Inference.Gateway.Api/Synaxis.Inference.Gateway.Api.csproj" />
+    <ProjectReference Include="$(SolutionDir)src/Infrastructure/Synaxis.Infrastructure/Synaxis.Infrastructure.csproj" />
   </ItemGroup>
 </Project>

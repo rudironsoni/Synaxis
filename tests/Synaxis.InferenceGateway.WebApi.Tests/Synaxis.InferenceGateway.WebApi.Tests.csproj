@@ -22,6 +22,6 @@
     <Using Include="Xunit" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="../../src/InferenceGateway/WebApi/Synaxis.InferenceGateway.WebApi.csproj" />
+    <ProjectReference Include="$(SolutionDir)src/contexts/Inference/Synaxis.Inference.Gateway.Api/Synaxis.Inference.Gateway.Api.csproj" />
   </ItemGroup>
 </Project>

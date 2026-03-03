@@ -19,7 +19,7 @@
     <Using Include="Xunit" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="../../src/InferenceGateway/Infrastructure/Synaxis.InferenceGateway.Infrastructure.csproj" />
+    <ProjectReference Include="$(SolutionDir)src/contexts/Inference/Synaxis.Inference.Gateway.Infrastructure/Synaxis.Inference.Gateway.Infrastructure.csproj" />
     <ProjectReference Include="../Synaxis.InferenceGateway.IntegrationTests/Synaxis.InferenceGateway.IntegrationTests.csproj" />
   </ItemGroup>
 </Project>

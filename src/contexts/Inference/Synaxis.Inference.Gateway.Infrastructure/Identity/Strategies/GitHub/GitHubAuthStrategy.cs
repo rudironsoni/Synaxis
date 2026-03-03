@@ -1,0 +1,196 @@
+// <copyright file="GitHubAuthStrategy.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
+namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
+{
+    using System;
+    using System.Net.Http;
+    using System.Net.Http.Headers;
+    using System.Text.Json;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Microsoft.Extensions.Logging;
+    using Synaxis.InferenceGateway.Infrastructure.Identity.Core;
+
+    /// <summary>
+    /// GitHubAuthStrategy class.
+    /// </summary>
+    public class GitHubAuthStrategy : IAuthStrategy
+    {
+        /// <summary>
+        /// The GitHub OAuth application client ID.
+        /// </summary>
+        public const string ClientId = "178c6fc778ccc68e1d6a";
+
+        /// <summary>
+        /// The GitHub OAuth device code endpoint.
+        /// </summary>
+        public static readonly Uri DeviceCodeUri = new("https://github.com/login/device/code");
+
+        /// <summary>
+        /// The GitHub OAuth access token endpoint.
+        /// </summary>
+        public static readonly Uri AccessTokenUri = new("https://github.com/login/oauth/access_token");
+
+        /// <summary>
+        /// Occurs when an account is successfully authenticated.
+        /// </summary>
+        public event EventHandler<AccountAuthenticatedEventArgs>? AccountAuthenticated;
+
+        private readonly HttpClient _http;
+        private readonly DeviceFlowService _deviceFlowService;
+
+        // IdentityManager removed to avoid circular dependency. Will raise event when account authenticated.
+        private readonly ILogger<GitHubAuthStrategy> _logger;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="GitHubAuthStrategy"/> class.
+        /// </summary>
+        /// <param name="http">The HTTP client.</param>
+        /// <param name="deviceFlowService">The device flow service.</param>
+        /// <param name="logger">The logger.</param>
+        public GitHubAuthStrategy(HttpClient http, DeviceFlowService deviceFlowService, ILogger<GitHubAuthStrategy> logger)
+        {
+            this._http = http ?? throw new ArgumentNullException(nameof(http));
+            this._deviceFlowService = deviceFlowService ?? throw new ArgumentNullException(nameof(deviceFlowService));
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
+
+        /// <inheritdoc/>
+        public async Task<AuthResult> InitiateFlowAsync(CancellationToken ct)
+        {
+            using var req = new HttpRequestMessage(HttpMethod.Post, DeviceCodeUri);
+            req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            var body = new System.Collections.Generic.Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["client_id"] = ClientId,
+                ["scope"] = "repo read:org copilot",
+            };
+            req.Content = new FormUrlEncodedContent(body);
+
+            using var resp = await this._http.SendAsync(req, ct).ConfigureAwait(false);
+            var txt = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+
+            try
+            {
+                using var doc = JsonDocument.Parse(txt);
+                var root = doc.RootElement;
+                var userCode = root.GetProperty("user_code").GetString();
+                var verificationUri = root.GetProperty("verification_uri").GetString();
+                var deviceCode = root.GetProperty("device_code").GetString();
+                var interval = 5;
+                if (root.TryGetProperty("interval", out var iv))
+                {
+                    interval = iv.GetInt32();
+                }
+
+                // start background polling
+                _ = this._deviceFlowService.StartPollingAsync(deviceCode ?? string.Empty, interval, this.OnTokenReceived, ct);
+
+                return new AuthResult
+                {
+                    Status = "Pending",
+                    UserCode = userCode,
+                    VerificationUri = verificationUri,
+                };
+            }
+            catch (Exception ex)
+            {
+                this._logger.LogError(ex, "Failed to initiate GitHub device flow");
+                return new AuthResult { Status = "Error", Message = ex.Message };
+            }
+        }
+
+        /// <inheritdoc/>
+        public Task<AuthResult> CompleteFlowAsync(string code, string state, CancellationToken ct)
+        {
+            _ = code;
+            _ = state;
+            _ = ct;
+            throw new NotSupportedException("GitHub device flow completion is not supported; use the device flow callback instead.");
+        }
+
+        /// <inheritdoc/>
+        public async Task<TokenResponse> RefreshTokenAsync(IdentityAccount account, CancellationToken ct)
+        {
+            using var req = new HttpRequestMessage(HttpMethod.Post, AccessTokenUri);
+            req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            var body = new System.Collections.Generic.Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["client_id"] = ClientId,
+                ["grant_type"] = "refresh_token",
+                ["refresh_token"] = account.RefreshToken ?? string.Empty,
+            };
+            req.Content = new FormUrlEncodedContent(body);
+
+            using var resp = await this._http.SendAsync(req, ct).ConfigureAwait(false);
+            var txt = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+
+            try
+            {
+                using var doc = JsonDocument.Parse(txt);
+                var root = doc.RootElement;
+                var tr = new TokenResponse();
+                if (root.TryGetProperty("access_token", out var at))
+                {
+                    tr.AccessToken = at.GetString() ?? string.Empty;
+                }
+
+                if (root.TryGetProperty("refresh_token", out var rt))
+                {
+                    tr.RefreshToken = rt.GetString();
+                }
+
+                if (root.TryGetProperty("expires_in", out var ex))
+                {
+                    tr.ExpiresInSeconds = ex.GetInt32();
+                }
+
+                return tr;
+            }
+            catch (Exception ex)
+            {
+                this._logger.LogError(ex, "Failed to refresh GitHub token: {Text}", txt);
+                throw new InvalidOperationException($"Failed to refresh GitHub token: {ex.Message}", ex);
+            }
+        }
+
+        private async Task OnTokenReceived(TokenResponse token)
+        {
+            try
+            {
+                // Create a basic account; we don't currently have user id/email from device flow response
+                var acc = new IdentityAccount
+                {
+                    Provider = "github",
+                    Id = "github-user",
+                    AccessToken = token.AccessToken,
+                    RefreshToken = token.RefreshToken,
+                };
+
+                if (token.ExpiresInSeconds.HasValue)
+                {
+                    acc.ExpiresAt = DateTimeOffset.UtcNow.AddSeconds(token.ExpiresInSeconds.Value);
+                }
+
+                // Notify subscribers that an account was authenticated
+                try
+                {
+                    this.AccountAuthenticated?.Invoke(this, new AccountAuthenticatedEventArgs(acc));
+                }
+                catch (Exception ex)
+                {
+                    this._logger.LogError(ex, "Error invoking AccountAuthenticated event");
+                }
+
+                // Write to gh config
+                await GhConfigWriter.WriteTokenAsync(token.AccessToken).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                this._logger.LogError(ex, "Error handling received GitHub token");
+            }
+        }
+    }
+}

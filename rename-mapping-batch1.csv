@@ -1,0 +1,8 @@
+old_path,new_path,old_csproj,new_csproj
+src/Inference/Inference.Domain,src/contexts/Inference/Synaxis.Inference.Domain,Inference.Domain.csproj,Synaxis.Inference.Domain.csproj
+src/Inference/Inference.Application,src/contexts/Inference/Synaxis.Inference.Application,Inference.Application.csproj,Synaxis.Inference.Application.csproj
+src/Inference/Inference.Infrastructure,src/contexts/Inference/Synaxis.Inference.Infrastructure,Inference.Infrastructure.csproj,Synaxis.Inference.Infrastructure.csproj
+src/Inference/Inference.Api,src/contexts/Inference/Synaxis.Inference.Api,Inference.Api.csproj,Synaxis.Inference.Api.csproj
+src/InferenceGateway/Application,src/contexts/Inference/Synaxis.Inference.Gateway.Application,Synaxis.InferenceGateway.Application.csproj,Synaxis.Inference.Gateway.Application.csproj
+src/InferenceGateway/Infrastructure,src/contexts/Inference/Synaxis.Inference.Gateway.Infrastructure,Synaxis.InferenceGateway.Infrastructure.csproj,Synaxis.Inference.Gateway.Infrastructure.csproj
+src/InferenceGateway/WebApi,src/contexts/Inference/Synaxis.Inference.Gateway.Api,Synaxis.InferenceGateway.WebApi.csproj,Synaxis.Inference.Gateway.Api.csproj
