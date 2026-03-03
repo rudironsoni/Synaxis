@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../Gateway.Infrastructure/Gateway.Infrastructure.csproj" />
+    <ProjectReference Include="../Synaxis.Gateway.Infrastructure/Synaxis.Gateway.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

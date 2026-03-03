@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../Contracts/Synaxis.Messages.Contracts/Synaxis.Messages.Contracts.csproj" />
-    <ProjectReference Include="../../Infrastructure/Synaxis.Infrastructure.EventSourcing/Synaxis.Infrastructure.EventSourcing.csproj" />
+    <ProjectReference Include="../../../../src/Contracts/Synaxis.Messages.Contracts/Synaxis.Messages.Contracts.csproj" />
+    <ProjectReference Include="../../../../src/Infrastructure/Synaxis.Infrastructure.EventSourcing/Synaxis.Infrastructure.EventSourcing.csproj" />
   </ItemGroup>
 
 </Project>

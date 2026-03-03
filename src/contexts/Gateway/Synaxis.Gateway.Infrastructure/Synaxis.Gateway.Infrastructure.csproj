@@ -8,12 +8,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MediatR" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Http" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../Gateway.Domain/Gateway.Domain.csproj" />
+    <ProjectReference Include="../Synaxis.Gateway.Application/Synaxis.Gateway.Application.csproj" />
   </ItemGroup>
 
 </Project>
