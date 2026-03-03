@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../Orchestration.Application/Orchestration.Application.csproj" />
+    <ProjectReference Include="../Synaxis.Orchestration.Application/Synaxis.Orchestration.Application.csproj" />
   </ItemGroup>
 
 </Project>

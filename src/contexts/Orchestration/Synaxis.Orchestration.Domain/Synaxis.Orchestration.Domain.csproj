@@ -9,11 +9,11 @@
 
   <ItemGroup>
     <PackageReference Include="MediatR" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../Orchestration.Domain/Orchestration.Domain.csproj" />
+    <ProjectReference Include="../../../../src/Contracts/Synaxis.Messages.Contracts/Synaxis.Messages.Contracts.csproj" />
+    <ProjectReference Include="../../../../src/Infrastructure/Synaxis.Infrastructure.EventSourcing/Synaxis.Infrastructure.EventSourcing.csproj" />
   </ItemGroup>
 
 </Project>

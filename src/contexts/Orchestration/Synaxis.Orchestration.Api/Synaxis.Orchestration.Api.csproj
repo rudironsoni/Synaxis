@@ -1,19 +1,20 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <IsPackable>true</IsPackable>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="MediatR" />
+    <PackageReference Include="Swashbuckle.AspNetCore" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../Contracts/Synaxis.Messages.Contracts/Synaxis.Messages.Contracts.csproj" />
-    <ProjectReference Include="../../Infrastructure/Synaxis.Infrastructure.EventSourcing/Synaxis.Infrastructure.EventSourcing.csproj" />
+    <ProjectReference Include="../Synaxis.Orchestration.Infrastructure/Synaxis.Orchestration.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
