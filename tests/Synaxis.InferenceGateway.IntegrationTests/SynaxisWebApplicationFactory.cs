@@ -22,7 +22,9 @@ using Microsoft.Extensions.Logging;
 using Synaxis.Common.Tests.Fixtures;
 using Synaxis.DependencyInjection;
 using Synaxis.InferenceGateway.Application.ControlPlane;
+using Synaxis.InferenceGateway.Application.Extensions;
 using Synaxis.InferenceGateway.Infrastructure.ControlPlane;
+using Synaxis.InferenceGateway.Infrastructure.Extensions;
 using Synaxis.Infrastructure.Data;
 using Synaxis.Transport.Grpc;
 using Synaxis.Transport.Grpc.DependencyInjection;
@@ -363,6 +365,11 @@ public class SynaxisWebApplicationFactory : WebApplicationFactory<Program>, ITes
 
             // Register core Synaxis services (includes Mediator, handlers, ProviderSelector)
             services.AddSynaxis();
+
+            // Resolve configuration for Infrastructure and Application services
+            var configuration = services.BuildServiceProvider().GetRequiredService<IConfiguration>();
+            services.AddSynaxisInfrastructure(configuration);
+            services.AddSynaxisApplication(configuration);
 
             // Register AuditService required by controllers
             services.AddScoped<Synaxis.InferenceGateway.Application.Security.IAuditService, Synaxis.InferenceGateway.Infrastructure.Security.AuditService>();

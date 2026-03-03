@@ -382,6 +382,9 @@ namespace Synaxis.InferenceGateway.Infrastructure.Extensions
 
         private static IServiceCollection AddSmartRouter(this IServiceCollection services)
         {
+            // Register SmartRoutingChatClient first, as it's required by ChatClientBuilderExtensions
+            services.AddScoped<SmartRoutingChatClient>();
+
             services.AddScoped<IChatClient>(sp => ChatClientBuilderExtensions.BuildWithUsageTracking(sp));
 
             return services;
