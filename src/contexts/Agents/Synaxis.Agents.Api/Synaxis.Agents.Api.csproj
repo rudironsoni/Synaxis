@@ -7,8 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../Agents.Application/Agents.Application.csproj" />
-    <ProjectReference Include="../Agents.Infrastructure/Agents.Infrastructure.csproj" />
+    <ProjectReference Include="../Synaxis.Agents.Application/Synaxis.Agents.Application.csproj" />
+    <ProjectReference Include="../Synaxis.Agents.Infrastructure/Synaxis.Agents.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

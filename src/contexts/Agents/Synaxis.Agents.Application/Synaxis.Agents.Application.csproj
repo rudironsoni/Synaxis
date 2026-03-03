@@ -15,11 +15,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../Agents.Domain/Agents.Domain.csproj" />
-    <ProjectReference Include="../../Abstractions/Synaxis.Abstractions.Cloud/Synaxis.Abstractions.Cloud.csproj" />
-    <ProjectReference Include="../../Synaxis.Contracts/Synaxis.Contracts.csproj" />
-    <ProjectReference Include="../../Synaxis.Core/Synaxis.Core.csproj" />
-    <ProjectReference Include="../../InferenceGateway/Application/Synaxis.InferenceGateway.Application.csproj" />
+    <ProjectReference Include="../Synaxis.Agents.Domain/Synaxis.Agents.Domain.csproj" />
+    <ProjectReference Include="../../../../src/Abstractions/Synaxis.Abstractions.Cloud/Synaxis.Abstractions.Cloud.csproj" />
+    <ProjectReference Include="../../../../src/Synaxis.Contracts/Synaxis.Contracts.csproj" />
+    <ProjectReference Include="../../../../src/Synaxis.Core/Synaxis.Core.csproj" />
+    <ProjectReference Include="../../../../src/contexts/Inference/Synaxis.Inference.Gateway.Application/Synaxis.Inference.Gateway.Application.csproj" />
   </ItemGroup>
 
 </Project>

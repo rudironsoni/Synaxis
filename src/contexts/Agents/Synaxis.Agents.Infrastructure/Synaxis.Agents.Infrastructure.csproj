@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../Agents.Application/Agents.Application.csproj" />
+    <ProjectReference Include="../Synaxis.Agents.Application/Synaxis.Agents.Application.csproj" />
   </ItemGroup>
 
 </Project>
