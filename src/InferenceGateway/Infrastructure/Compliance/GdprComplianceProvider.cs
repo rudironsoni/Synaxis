@@ -137,16 +137,16 @@ namespace Synaxis.InferenceGateway.Infrastructure.Compliance
                 Action = "cross_border_transfer",
                 ResourceType = "data_transfer",
                 ResourceId = context.UserId?.ToString() ?? string.Empty,
-Metadata = new Dictionary<string, object>(StringComparer.Ordinal)
-            {
-                { "fromRegion", context.FromRegion },
-                { "toRegion", context.ToRegion },
-                { "legalBasis", context.LegalBasis },
-                { "purpose", context.Purpose },
-                { "dataCategories", context.DataCategories },
-                { "encryptionUsed", context.EncryptionUsed },
-                { "userConsentObtained", context.UserConsentObtained },
-            },
+                Metadata = new Dictionary<string, object>(StringComparer.Ordinal)
+                {
+                    { "fromRegion", context.FromRegion },
+                    { "toRegion", context.ToRegion },
+                    { "legalBasis", context.LegalBasis },
+                    { "purpose", context.Purpose },
+                    { "dataCategories", context.DataCategories },
+                    { "encryptionUsed", context.EncryptionUsed },
+                    { "userConsentObtained", context.UserConsentObtained },
+                },
                 IpAddress = string.Empty,
                 UserAgent = string.Empty,
                 Region = context.FromRegion ?? "unknown",
@@ -419,13 +419,13 @@ Metadata = new Dictionary<string, object>(StringComparer.Ordinal)
                 Action = "data_erasure",
                 ResourceType = "user",
                 ResourceId = userId.ToString(),
-Metadata = new Dictionary<string, object>(StringComparer.Ordinal)
-            {
-                { "regulation", "GDPR" },
-                { "right", "right_to_erasure" },
-                { "article", "Article 17" },
-                { "timestamp", DateTime.UtcNow },
-            },
+                Metadata = new Dictionary<string, object>(StringComparer.Ordinal)
+                {
+                    { "regulation", "GDPR" },
+                    { "right", "right_to_erasure" },
+                    { "article", "Article 17" },
+                    { "timestamp", DateTime.UtcNow },
+                },
                 IpAddress = string.Empty,
                 UserAgent = string.Empty,
                 Region = "unknown",

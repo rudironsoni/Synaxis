@@ -97,12 +97,12 @@ namespace Synaxis.InferenceGateway.Infrastructure.Identity.Strategies.GitHub
             {
                 using var req = new HttpRequestMessage(HttpMethod.Post, url);
                 req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-var body = new System.Collections.Generic.Dictionary<string, string>(StringComparer.Ordinal)
-            {
-                ["client_id"] = GitHubAuthStrategy.ClientId,
-                ["device_code"] = deviceCode,
-                ["grant_type"] = "urn:ietf:params:oauth:grant-type:device_code",
-            };
+                var body = new System.Collections.Generic.Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["client_id"] = GitHubAuthStrategy.ClientId,
+                    ["device_code"] = deviceCode,
+                    ["grant_type"] = "urn:ietf:params:oauth:grant-type:device_code",
+                };
                 req.Content = new FormUrlEncodedContent(body);
 
                 using var resp = await this._http.SendAsync(req, ct).ConfigureAwait(false);

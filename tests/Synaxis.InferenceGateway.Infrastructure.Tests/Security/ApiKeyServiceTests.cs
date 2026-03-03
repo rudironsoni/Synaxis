@@ -2,9 +2,11 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security;
-
+using System;
+using System.Linq;
 using System.Threading.Tasks;
+
+namespace Synaxis.InferenceGateway.Infrastructure.Tests.Security;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Moq;

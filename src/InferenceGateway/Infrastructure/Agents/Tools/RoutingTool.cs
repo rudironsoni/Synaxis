@@ -69,13 +69,13 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
         {
             try
             {
-// NOTE: Query RequestLog to get routing metrics
-            return Task.FromResult(new RoutingMetrics(0, new Dictionary<string, int>(StringComparer.Ordinal), 0m));
+                // NOTE: Query RequestLog to get routing metrics
+                return Task.FromResult(new RoutingMetrics(0, new Dictionary<string, int>(StringComparer.Ordinal), 0m));
             }
             catch (Exception ex)
             {
-this._logger.LogError(ex, "Failed to get routing metrics");
-            return Task.FromResult(new RoutingMetrics(0, new Dictionary<string, int>(StringComparer.Ordinal), 0m));
+                this._logger.LogError(ex, "Failed to get routing metrics");
+                return Task.FromResult(new RoutingMetrics(0, new Dictionary<string, int>(StringComparer.Ordinal), 0m));
             }
         }
     }

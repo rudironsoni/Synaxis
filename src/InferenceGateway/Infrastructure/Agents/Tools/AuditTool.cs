@@ -45,21 +45,21 @@ namespace Synaxis.InferenceGateway.Infrastructure.Agents.Tools
         {
             try
             {
-var metadata = new Dictionary<string, object>(StringComparer.Ordinal)
-            {
-                ["agent"] = agentName,
-                ["action"] = action,
-                ["details"] = details,
-                ["correlationId"] = correlationId,
-                ["timestamp"] = DateTime.UtcNow,
-            };
+                var metadata = new Dictionary<string, object>(StringComparer.Ordinal)
+                {
+                    ["agent"] = agentName,
+                    ["action"] = action,
+                    ["details"] = details,
+                    ["correlationId"] = correlationId,
+                    ["timestamp"] = DateTime.UtcNow,
+                };
 
                 var auditLog = new AuditLog
                 {
                     Id = Guid.NewGuid(),
                     OrganizationId = organizationId ?? Guid.Empty,
                     UserId = userId,
-                    EventType = $"{agentName}:{action}",
+                    EventType = agentName + ":" + action,
                     EventCategory = "agent",
                     Action = action,
                     Metadata = metadata,
@@ -94,15 +94,15 @@ var metadata = new Dictionary<string, object>(StringComparer.Ordinal)
         {
             try
             {
-var metadata = new Dictionary<string, object>(StringComparer.Ordinal)
-            {
-                ["modelId"] = modelId,
-                ["oldProvider"] = oldProvider,
-                ["newProvider"] = newProvider,
-                ["savingsPercent"] = savingsPercent,
-                ["reason"] = reason,
-                ["timestamp"] = DateTime.UtcNow,
-            };
+                var metadata = new Dictionary<string, object>(StringComparer.Ordinal)
+                {
+                    ["modelId"] = modelId,
+                    ["oldProvider"] = oldProvider,
+                    ["newProvider"] = newProvider,
+                    ["savingsPercent"] = savingsPercent,
+                    ["reason"] = reason,
+                    ["timestamp"] = DateTime.UtcNow,
+                };
 
                 var auditLog = new AuditLog
                 {
@@ -138,13 +138,14 @@ var metadata = new Dictionary<string, object>(StringComparer.Ordinal)
 
         private static string ComputeIntegrityHash(AuditLog log)
         {
-            var data = $"{log.Id}|{log.OrganizationId}|{log.UserId}|" +
-                       $"{log.EventType}|{log.EventCategory}|{log.Action}|" +
-                       $"{log.ResourceType}|{log.ResourceId}|" +
-                       $"{System.Text.Json.JsonSerializer.Serialize(log.Metadata)}|" +
-                       $"{log.IpAddress}|{log.UserAgent}|{log.Region}|" +
-                       $"{log.PreviousHash}|" +
-                       $"{log.Timestamp:O}";
+            var data = log.Id.ToString() + "|" + log.OrganizationId.ToString() + "|" +
+                       (log.UserId?.ToString() ?? string.Empty) + "|" +
+                       log.EventType + "|" + log.EventCategory + "|" + log.Action + "|" +
+                       log.ResourceType + "|" + (log.ResourceId ?? string.Empty) + "|" +
+                       System.Text.Json.JsonSerializer.Serialize(log.Metadata) + "|" +
+                       log.IpAddress + "|" + log.UserAgent + "|" + log.Region + "|" +
+                       log.PreviousHash + "|" +
+                       log.Timestamp.ToString("O");
 
             using var sha256 = SHA256.Create();
             var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(data));
