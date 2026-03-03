@@ -5,7 +5,9 @@
 namespace Orchestration.IntegrationTests.Fixtures;
 
 using Microsoft.AspNetCore.Mvc.Testing;
+using Orchestration.Api.Controllers;
 using System.Net.Http;
+using Xunit;
 
 /// <summary>
 /// Test fixture for orchestration integration tests, providing a shared
@@ -18,7 +20,7 @@ public class OrchestrationTestFixture : IDisposable
     /// </summary>
     public HttpClient Client { get; }
 
-    private readonly WebApplicationFactory<Program> _factory;
+    private readonly WebApplicationFactory<Orchestration.Api.Controllers.WebhooksController> _factory;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="OrchestrationTestFixture"/> class.
@@ -26,7 +28,7 @@ public class OrchestrationTestFixture : IDisposable
     /// </summary>
     public OrchestrationTestFixture()
     {
-        _factory = new WebApplicationFactory<Program>();
+        _factory = new WebApplicationFactory<Orchestration.Api.Controllers.WebhooksController>();
         Client = _factory.CreateClient();
     }
 
