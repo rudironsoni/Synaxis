@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+  <copyright file="Synaxis.Billing.IntegrationTests.csproj" company="Synaxis">
+  Copyright (c) Synaxis. All rights reserved.
+  </copyright>
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <RootNamespace>Synaxis.Billing.IntegrationTests</RootNamespace>
+    <AssemblyName>Synaxis.Billing.IntegrationTests</AssemblyName>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Moq" />
+    <PackageReference Include="Npgsql" />
+    <PackageReference Include="Respawn" />
+    <PackageReference Include="Testcontainers.PostgreSql" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Billing/Billing.Api/Billing.Api.csproj" />
+    <ProjectReference Include="../../src/Billing/Billing.Application/Billing.Application.csproj" />
+    <ProjectReference Include="../../src/Billing/Billing.Infrastructure/Billing.Infrastructure.csproj" />
+    <ProjectReference Include="../Common/Synaxis.Common.Tests.csproj" />
+  </ItemGroup>
+
+</Project>

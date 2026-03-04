@@ -11,6 +11,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Authorization;
 using Xunit;
 
+[Trait("Category", "Unit")]
 public class TeamAdminAuthorizationHandlerTests
 {
     private readonly TeamAdminAuthorizationHandler _handler;

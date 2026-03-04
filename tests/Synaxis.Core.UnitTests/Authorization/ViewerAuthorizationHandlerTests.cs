@@ -11,6 +11,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Authorization;
 using Xunit;
 
+[Trait("Category", "Unit")]
 public class ViewerAuthorizationHandlerTests
 {
     private readonly ViewerAuthorizationHandler _handler;

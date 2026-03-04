@@ -4,12 +4,13 @@
 
 namespace Synaxis.Inference.Domain.Events;
 
+using Mediator;
 using Synaxis.Abstractions.Cloud;
 
 /// <summary>
 /// Event raised when preferred model is updated.
 /// </summary>
-public class PreferredModelUpdated : DomainEvent
+public class PreferredModelUpdated : DomainEvent, INotification
 {
     /// <summary>
     /// Gets or sets the preferences identifier.

@@ -2,7 +2,9 @@ namespace Synaxis.Abstractions.Tests.Providers;
 
 using FluentAssertions;
 using Synaxis.Abstractions.Providers;
+using Xunit;
 
+[Trait("Category", "Unit")]
 public class ProviderClientTests
 {
     [Fact]

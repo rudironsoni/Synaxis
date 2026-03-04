@@ -7,6 +7,7 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <IsPackable>true</IsPackable>
+    <NoWarn>SA1101;SA1503;SA1413;SA1642;MA0049;MA0006</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

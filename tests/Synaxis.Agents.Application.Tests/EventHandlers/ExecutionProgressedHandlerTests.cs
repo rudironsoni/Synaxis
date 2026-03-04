@@ -18,6 +18,7 @@ using Xunit;
 /// <summary>
 /// Unit tests for <see cref="ExecutionProgressedHandler"/>.
 /// </summary>
+[Trait("Category", "Unit")]
 public class ExecutionProgressedHandlerTests
 {
     private readonly Mock<ILogger<ExecutionProgressedHandler>> _loggerMock;

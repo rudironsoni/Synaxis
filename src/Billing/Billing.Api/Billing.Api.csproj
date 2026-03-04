@@ -3,12 +3,14 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <NoWarn>CS1591;SA1101;SA1028;SA1200;SA1402;SA1413;SA1503;SA1516;SA1600;SA1611;SA1615;SA1633;MA0048;S6966;S6964</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../Billing.Application/Billing.Application.csproj" />
     <ProjectReference Include="../Billing.Infrastructure/Billing.Infrastructure.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
   </ItemGroup>
 </Project>

@@ -20,6 +20,7 @@ using Xunit;
 /// <summary>
 /// Unit tests for <see cref="AgentConfigurationService"/>.
 /// </summary>
+[Trait("Category", "Unit")]
 public class AgentConfigurationServiceTests
 {
     private readonly Mock<IAgentConfigurationRepository> _repositoryMock;

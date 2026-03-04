@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 using Moq;
 using Xunit;
 
+[Trait("Category", "Unit")]
 public class OrgAdminAuthorizationHandlerTests
 {
     private readonly OrgAdminAuthorizationHandler _handler;

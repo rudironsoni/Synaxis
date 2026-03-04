@@ -4,6 +4,8 @@
 
 namespace Synaxis.Inference.Application.Commands;
 
+using Synaxis.Inference.Domain.Entities;
+
 /// <summary>
 /// Result of failing an inference request.
 /// </summary>

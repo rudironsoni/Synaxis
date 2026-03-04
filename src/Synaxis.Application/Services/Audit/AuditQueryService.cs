@@ -66,7 +66,7 @@ public class AuditQueryService : IAuditQueryService
             FromDate: request.FromDate,
             ToDate: request.ToDate,
             Page: request.Page,
-            PageSize: request.PageSize,
+            PageSize: request.PageSize
         );
 
         // Perform the search using the repository
@@ -105,7 +105,7 @@ public class AuditQueryService : IAuditQueryService
             FromDate: from,
             ToDate: to,
             Page: 1,
-            PageSize: int.MaxValue,
+            PageSize: int.MaxValue
         ); // Get all logs for statistics
 
         var result = await this._auditLogRepository.SearchAsync(criteria, cancellationToken).ConfigureAwait(false);

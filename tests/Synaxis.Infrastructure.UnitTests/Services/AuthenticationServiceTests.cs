@@ -18,9 +18,10 @@ using Synaxis.Infrastructure.Services;
 using Xunit;
 
 /// <summary>
-/// Tests for the AuthenticationService.
-/// </summary>
-public sealed class AuthenticationServiceTests : IDisposable
+    /// Tests for the AuthenticationService.
+    /// </summary>
+    [Trait("Category", "Unit")]
+    public sealed class AuthenticationServiceTests : IDisposable
 {
     private readonly SynaxisDbContext _context;
     private readonly Mock<IUserService> _userServiceMock;

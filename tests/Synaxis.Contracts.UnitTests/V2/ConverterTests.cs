@@ -3,6 +3,7 @@ using Synaxis.Contracts.V2.Converters;
 
 namespace Synaxis.Contracts.Tests.V2;
 
+[Trait("Category", "Unit")]
 public class ConverterTests
 {
     [Fact]

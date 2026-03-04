@@ -12,9 +12,10 @@ using Synaxis.Abstractions.Cloud;
 using Xunit;
 
 /// <summary>
-/// Integration tests for Azure SQL Event Store.
-/// </summary>
-public sealed class AzureSqlEventStoreTests : IClassFixture<SqlServerFixture>
+    /// Integration tests for Azure SQL Event Store.
+    /// </summary>
+    [Trait("Category", "Integration")]
+    public sealed class AzureSqlEventStoreTests : IClassFixture<SqlServerFixture>
 {
     private readonly IEventStore _eventStore;
 

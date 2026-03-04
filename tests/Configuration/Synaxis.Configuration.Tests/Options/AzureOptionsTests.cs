@@ -13,6 +13,7 @@ using Xunit;
 /// <summary>
 /// Unit tests for <see cref="AzureOptions"/>.
 /// </summary>
+[Trait("Category", "Unit")]
 public class AzureOptionsTests
 {
     [Fact]

@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>SA1101;SA1515;MA0004;AsyncFixer01;S4487;S4144;SA1615</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

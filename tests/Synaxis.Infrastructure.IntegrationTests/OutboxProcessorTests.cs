@@ -17,9 +17,10 @@ using Synaxis.Infrastructure.Messaging;
 using Xunit;
 
 /// <summary>
-/// Integration tests for Outbox Processor.
-/// </summary>
-public sealed class OutboxProcessorTests : IAsyncLifetime
+    /// Integration tests for Outbox Processor.
+    /// </summary>
+    [Trait("Category", "Integration")]
+    public sealed class OutboxProcessorTests : IAsyncLifetime
 {
     private readonly IOutbox _outbox;
     private readonly TestDbContext _context;

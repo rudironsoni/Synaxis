@@ -5,7 +5,8 @@
 namespace Synaxis.Inference.Application.Commands;
 
 using MediatR;
-using Microsoft.Extensions.AI;
+using Synaxis.Inference.Domain.Entities;
+using Synaxis.Inference.Domain.ValueObjects;
 
 /// <summary>
 /// Command to complete an inference request.

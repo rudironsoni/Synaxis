@@ -5,6 +5,7 @@
     <IsPackable>false</IsPackable>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,13 +25,14 @@
     <PackageReference Include="Testcontainers.Redis" />
     <PackageReference Include="Testcontainers.Qdrant" />
     <PackageReference Include="Polly" />
+    <PackageReference Include="Npgsql" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="StackExchange.Redis" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../src/InferenceGateway/Application/Synaxis.InferenceGateway.Application.csproj" />
-    <ProjectReference Include="../../src/InferenceGateway/Infrastructure/Synaxis.InferenceGateway.Infrastructure.csproj" />
-    <ProjectReference Include="../../src/InferenceGateway/WebApi/Synaxis.InferenceGateway.WebApi.csproj" />
     <ProjectReference Include="../../src/Synaxis.Abstractions/Synaxis.Abstractions.csproj" />
+    <ProjectReference Include="../../src/Synaxis.Infrastructure/Synaxis.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

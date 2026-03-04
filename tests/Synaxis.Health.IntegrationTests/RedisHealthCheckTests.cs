@@ -21,6 +21,7 @@ namespace Synaxis.Health.IntegrationTests
     /// <summary>
     /// Integration tests for <see cref="RedisHealthCheck"/>.
     /// </summary>
+    [Trait("Category", "Integration")]
     public class RedisHealthCheckTests : IAsyncLifetime
     {
         private readonly RedisContainer _redis;

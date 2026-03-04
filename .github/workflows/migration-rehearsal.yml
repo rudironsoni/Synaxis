@@ -1,0 +1,299 @@
+# <copyright file="migration-rehearsal.yml" company="Synaxis">
+# Copyright (c) Synaxis. All rights reserved.
+# </copyright>
+
+name: Migration Rehearsal
+
+on:
+  # Run on schedule (weekly on Sundays at 2 AM UTC)
+  schedule:
+    - cron: '0 2 * * 0'
+
+  # Manual trigger
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      scenario:
+        description: 'Rehearsal scenario'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - happy-path
+          - failure
+          - partial
+          - performance
+      verbose:
+        description: 'Enable verbose output'
+        required: false
+        default: false
+        type: boolean
+
+  # Run on pull requests that modify migrations
+  pull_request:
+    paths:
+      - 'src/**/Data/Migrations/**'
+      - 'src/**/Migrations/**'
+      - 'scripts/rollback-migration.*'
+      - 'scripts/run-migration-rehearsal.*'
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  REHEARSAL_OUTPUT_DIR: './rehearsal-results'
+
+jobs:
+  rehearsal:
+    name: Migration Rehearsal (${{ github.event.inputs.environment || 'staging' }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: synaxis_rehearsal
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/Directory.Packages.props') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build solution
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Install EF Core tools
+        run: |
+          dotnet tool install --global dotnet-ef --version 10.0.0-preview.1
+          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+
+      - name: Run migration rehearsal
+        id: rehearsal
+        env:
+          REHEARSAL_ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }}
+          REHEARSAL_SCENARIO: ${{ github.event.inputs.scenario || 'all' }}
+          REHEARSAL_CONNECTION_STRING: "Host=localhost;Database=synaxis_rehearsal;Username=postgres;Password=postgres"
+          REHEARSAL_VERBOSE: ${{ github.event.inputs.verbose || 'false' }}
+        run: |
+          chmod +x scripts/run-migration-rehearsal.sh
+          ./scripts/run-migration-rehearsal.sh \
+            -e "$REHEARSAL_ENVIRONMENT" \
+            -s "$REHEARSAL_SCENARIO" \
+            -o "$REHEARSAL_OUTPUT_DIR" \
+            -c "$REHEARSAL_CONNECTION_STRING" \
+            $( [ "$REHEARSAL_VERBOSE" = "true" ] && echo "-v" )
+
+      - name: Upload rehearsal results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rehearsal-results-${{ github.run_id }}
+          path: ${{ env.REHEARSAL_OUTPUT_DIR }}/
+          retention-days: 30
+
+      - name: Parse rehearsal results
+        if: always()
+        id: parse-results
+        run: |
+          echo "## Rehearsal Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Scenario | Status | Duration |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|--------|----------|" >> $GITHUB_STEP_SUMMARY
+
+          for file in "$REHEARSAL_OUTPUT_DIR"/*.json; do
+            if [ -f "$file" ]; then
+              scenario=$(jq -r '.scenario' "$file")
+              status=$(jq -r '.status' "$file")
+              duration=$(jq -r '.duration' "$file")
+              echo "| $scenario | $status | ${duration}s |" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Detailed Logs" >> $GITHUB_STEP_SUMMARY
+          echo "- [Download rehearsal results](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
+
+      - name: Check rehearsal success
+        if: always()
+        run: |
+          failed=0
+          for file in "$REHEARSAL_OUTPUT_DIR"/*.json; do
+            if [ -f "$file" ]; then
+              status=$(jq -r '.status' "$file")
+              if [ "$status" = "failed" ]; then
+                failed=1
+                scenario=$(jq -r '.scenario' "$file")
+                echo "::error::Rehearsal scenario '$scenario' failed"
+              fi
+            fi
+          done
+
+          if [ $failed -eq 1 ]; then
+            echo "::error::One or more rehearsal scenarios failed. See logs for details."
+            exit 1
+          fi
+
+      - name: Notify on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueBody = `## ⚠️ Migration Rehearsal Failed
+
+            The migration rehearsal workflow failed for environment: **${process.env.REHEARSAL_ENVIRONMENT}**
+
+            ### Workflow Details
+            - **Run ID:** ${context.runId}
+            - **Commit:** ${context.sha}
+            - **Triggered by:** ${context.actor}
+            - **Scenario:** ${process.env.REHEARSAL_SCENARIO}
+
+            ### Next Steps
+            1. Review the [workflow logs](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})
+            2. Download and analyze the [rehearsal results](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}/artifacts)
+            3. Address any issues found
+            4. Re-run the rehearsal
+
+            cc: @${context.repo.owner}/dba-team @${context.repo.owner}/devops-team
+            `;
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `[Rehearsal Failed] Migration rehearsal failed for ${process.env.REHEARSAL_ENVIRONMENT}`,
+              body: issueBody,
+              labels: ['rehearsal', 'migration', 'failed']
+            });
+
+      - name: Create success report
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const summary = `## ✅ Migration Rehearsal Successful
+
+            All migration rehearsal scenarios passed for environment: **${process.env.REHEARSAL_ENVIRONMENT}**
+
+            ### Workflow Details
+            - **Run ID:** ${context.runId}
+            - **Commit:** ${context.sha}
+            - **Triggered by:** ${context.actor}
+            - **Scenario:** ${process.env.REHEARSAL_SCENARIO}
+
+            ### Results
+            - Happy Path: ✅ Passed
+            - Failure Scenarios: ✅ Passed
+            - Partial Failures: ✅ Passed
+            - Performance Baseline: ✅ Passed
+
+            ### Go/No-Go Decision
+            **GO** - All acceptance criteria met. Production deployment authorized.
+
+            ### Artifacts
+            - [Download full results](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}/artifacts)
+
+            cc: @${context.repo.owner}/eng-leads
+            `;
+
+            // Comment on PR if applicable
+            if (context.payload.pull_request) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body: summary
+              });
+            }
+
+  notify:
+    name: Notify Stakeholders
+    needs: rehearsal
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Send Slack notification
+        if: env.SLACK_WEBHOOK_URL != ''
+        uses: slackapi/slack-github-action@v1
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_REHEARSAL_WEBHOOK }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+        with:
+          payload: |
+            {
+              "text": "Migration Rehearsal Complete",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "Migration Rehearsal ${{ needs.rehearsal.result == 'success' && '✅ Passed' || '❌ Failed' }}"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Environment:*\n${{ github.event.inputs.environment || 'staging' }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Scenario:*\n${{ github.event.inputs.scenario || 'all' }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Status:*\n${{ needs.rehearsal.result }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Run ID:*\n${{ github.run_id }}"
+                    }
+                  ]
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "View Results"
+                      },
+                      "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    }
+                  ]
+                }
+              ]
+            }

@@ -18,6 +18,7 @@ namespace Synaxis.Health.IntegrationTests
     /// <summary>
     /// Integration tests for <see cref="DatabaseHealthCheck"/>.
     /// </summary>
+    [Trait("Category", "Integration")]
     public class DatabaseHealthCheckTests : IAsyncLifetime
     {
         private readonly PostgreSqlContainer _postgres;

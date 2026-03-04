@@ -4,7 +4,8 @@
 
 namespace Synaxis.Inference.Application.Commands;
 
-using Microsoft.Extensions.AI;
+using Synaxis.Inference.Domain.Entities;
+using Synaxis.Inference.Domain.ValueObjects;
 
 /// <summary>
 /// Result of executing an inference request.

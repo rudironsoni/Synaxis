@@ -4,6 +4,9 @@ using FluentAssertions;
 
 namespace Synaxis.Contracts.Tests;
 
+using Xunit;
+
+[Trait("Category", "Unit")]
 public class SchemaGeneratorTests
 {
     private readonly SchemaGenerator _generator = new();

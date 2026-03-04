@@ -4,8 +4,6 @@
 
 namespace Billing.Application.Services
 {
-    using Billing.Application.DTOs;
-
     /// <summary>
     /// Service interface for subscription operations.
     /// </summary>
@@ -49,13 +47,23 @@ namespace Billing.Application.Services
     /// <summary>
     /// Request to create a new subscription.
     /// </summary>
-    /// <param name="OrganizationId">The organization ID.</param>
-    /// <param name="PlanId">The plan ID.</param>
-    /// <param name="BillingCycle">The billing cycle (Monthly or Yearly).</param>
-    public record CreateSubscriptionRequest(
-        Guid OrganizationId,
-        string PlanId,
-        string BillingCycle = "Monthly");
+    public class CreateSubscriptionRequest
+    {
+        /// <summary>
+        /// Gets or sets the organization ID.
+        /// </summary>
+        public Guid OrganizationId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the plan ID.
+        /// </summary>
+        public string PlanId { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the billing cycle (Monthly or Yearly).
+        /// </summary>
+        public string BillingCycle { get; set; } = "Monthly";
+    }
 
     /// <summary>
     /// Data transfer object for a subscription.

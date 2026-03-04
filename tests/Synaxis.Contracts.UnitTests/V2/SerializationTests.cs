@@ -7,6 +7,7 @@ using Synaxis.Contracts.V2.Queries;
 
 namespace Synaxis.Contracts.Tests.V2;
 
+[Trait("Category", "Unit")]
 public class SerializationTests
 {
     private readonly JsonSerializerOptions _options = new()

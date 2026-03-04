@@ -8,13 +8,22 @@
 
   <ItemGroup>
     <PackageReference Include="MassTransit" />
+    <PackageReference Include="Mediator.Abstractions" />
+    <PackageReference Include="Mediator.SourceGenerator">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
     <PackageReference Include="Microsoft.Data.SqlClient" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="../Identity.Application/Identity.Application.csproj" />
+    <ProjectReference Include="../Identity.Domain/Identity.Domain.csproj" />
+    <ProjectReference Include="../../Abstractions/Synaxis.Abstractions.Cloud/Synaxis.Abstractions.Cloud.csproj" />
+    <ProjectReference Include="../../Synaxis.Core/Synaxis.Core.csproj" />
+    <ProjectReference Include="../../Synaxis.Application/Synaxis.Application.csproj" />
     <ProjectReference Include="../../Infrastructure/Synaxis.Infrastructure.EventSourcing/Synaxis.Infrastructure.EventSourcing.csproj" />
   </ItemGroup>
 

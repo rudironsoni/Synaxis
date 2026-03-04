@@ -16,6 +16,7 @@ namespace Synaxis.Tests.Routing
     /// <summary>
     /// Unit tests for <see cref="ProviderSelector"/>.
     /// </summary>
+    [Trait("Category", "Unit")]
     public class ProviderSelectorTests
     {
         private readonly ILogger<ProviderSelector> _logger;

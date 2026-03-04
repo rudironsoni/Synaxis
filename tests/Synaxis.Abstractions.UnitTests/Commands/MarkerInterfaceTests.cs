@@ -2,7 +2,9 @@ namespace Synaxis.Abstractions.Tests.Commands;
 
 using FluentAssertions;
 using Synaxis.Abstractions.Commands;
+using Xunit;
 
+[Trait("Category", "Unit")]
 public class MarkerInterfaceTests
 {
     [Fact]

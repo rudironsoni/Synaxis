@@ -26,6 +26,7 @@ using Xunit;
 /// <summary>
 /// Tests for the AuthController email verification endpoints.
 /// </summary>
+[Trait("Category", "Unit")]
 public sealed class AuthControllerEmailVerificationTests : IDisposable
 {
     private readonly SynaxisDbContext _context;

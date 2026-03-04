@@ -15,6 +15,7 @@ using Xunit;
 /// <summary>
 /// Unit tests for <see cref="ServiceCollectionExtensions"/>.
 /// </summary>
+[Trait("Category", "Unit")]
 public class ServiceCollectionExtensionsTests
 {
     [Fact]

@@ -4,8 +4,6 @@
 
 namespace Billing.Application.Services
 {
-    using Billing.Application.DTOs;
-
     /// <summary>
     /// Service interface for payment operations.
     /// </summary>

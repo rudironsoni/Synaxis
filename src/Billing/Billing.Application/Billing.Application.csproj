@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>SA1101;SA1402;SA1413;SA1503;SA1122;SA1516;SA1611;SA1615;SA1501;SA1649;MA0002;MA0004;MA0006;MA0011;MA0016;MA0048;MA0051;S6562;S1172;S3260;S4487</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

@@ -3,6 +3,7 @@ namespace Synaxis.Contracts.Tests.V1.Auth;
 using FluentAssertions;
 using Synaxis.Contracts.V1.Auth;
 
+[Trait("Category", "Unit")]
 public class ProviderCredentialsTests
 {
     [Fact]

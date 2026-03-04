@@ -1,4 +1,3 @@
-using Billing.Application.DTOs;
 using Billing.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -40,11 +39,11 @@ public class SubscriptionsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var organizationId = GetOrganizationId();
-        var subscriptionRequest = request with { OrganizationId = organizationId };
-        
+        request.OrganizationId = organizationId;
+
         try
         {
-            var subscription = await _subscriptionService.CreateSubscriptionAsync(subscriptionRequest, cancellationToken);
+            var subscription = await _subscriptionService.CreateSubscriptionAsync(request, cancellationToken);
             return CreatedAtAction(nameof(GetSubscription), subscription);
         }
         catch (InvalidOperationException ex)

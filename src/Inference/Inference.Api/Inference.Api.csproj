@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../Inference.Infrastructure/Inference.Infrastructure.csproj" />
+    <ProjectReference Include="$(SolutionDir)/src/Inference/Inference.Infrastructure/Inference.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

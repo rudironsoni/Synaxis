@@ -16,9 +16,10 @@ using Synaxis.Infrastructure.Encryption;
 using Xunit;
 
 /// <summary>
-/// Integration tests for Encryption Service.
-/// </summary>
-public sealed class EncryptionServiceTests
+    /// Integration tests for Encryption Service.
+    /// </summary>
+    [Trait("Category", "Integration")]
+    public sealed class EncryptionServiceTests
 {
     private readonly IEncryptionService _encryptionService;
     private readonly string _tenantId;

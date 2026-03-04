@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Synaxis.Abstractions.Providers;
 
+[Trait("Category", "Unit")]
 public class ImageProviderTests
 {
     [Fact]

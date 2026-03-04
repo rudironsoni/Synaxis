@@ -20,6 +20,7 @@ using Xunit;
 /// Integration tests for audit alert functionality.
 /// </summary>
 [Collection("AuditTests")]
+[Trait("Category", "Integration")]
 public class AuditAlertTests : IClassFixture<AuditTestFixture>
 {
     private readonly AuditTestFixture _fixture;

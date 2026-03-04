@@ -24,6 +24,7 @@ using Xunit;
 /// <summary>
 /// Integration tests for audit API endpoints.
 /// </summary>
+[Trait("Category", "Integration")]
 public class AuditApiTests : IClassFixture<WebApplicationFactory<Program>>
 {
     private readonly WebApplicationFactory<Program> _factory;

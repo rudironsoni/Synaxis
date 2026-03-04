@@ -14,6 +14,7 @@ using Xunit;
 /// <summary>
 /// Tests for performance indexes on tenant queries.
 /// </summary>
+[Trait("Category", "Unit")]
 public class PerformanceIndexTests
 {
     /// <summary>

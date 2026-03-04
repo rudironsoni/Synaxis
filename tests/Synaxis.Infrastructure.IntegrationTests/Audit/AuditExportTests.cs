@@ -16,6 +16,7 @@ using Xunit;
 /// Integration tests for audit export functionality.
 /// </summary>
 [Collection("AuditTests")]
+[Trait("Category", "Integration")]
 public class AuditExportTests : IClassFixture<AuditTestFixture>
 {
     private readonly AuditTestFixture _fixture;

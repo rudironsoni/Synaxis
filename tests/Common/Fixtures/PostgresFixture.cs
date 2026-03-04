@@ -4,22 +4,35 @@
 
 namespace Synaxis.Common.Tests.Fixtures;
 
-using System;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Npgsql;
+using Polly;
 using Synaxis.Infrastructure.Data;
 using Testcontainers.PostgreSql;
 using Xunit;
 
 /// <summary>
 /// Shared PostgreSQL fixture for integration tests.
-/// Manages a single PostgreSQL container for the test assembly.
+/// Manages a single PostgreSQL container for the test assembly with health checks.
 /// </summary>
 public sealed class PostgresFixture : IAsyncLifetime
 {
     private PostgreSqlContainer? _container;
+    private readonly IAsyncPolicy _retryPolicy;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PostgresFixture"/> class.
+    /// </summary>
+    public PostgresFixture()
+    {
+        _retryPolicy = Policy
+            .Handle<NpgsqlException>()
+            .WaitAndRetryAsync(
+                retryCount: 3,
+                sleepDurationProvider: retryAttempt =>
+                    TimeSpan.FromMilliseconds(100 * Math.Pow(2, retryAttempt)));
+    }
 
     /// <summary>
     /// Gets the connection string for the PostgreSQL container.
@@ -44,19 +57,63 @@ public sealed class PostgresFixture : IAsyncLifetime
     }
 
     /// <summary>
-    /// Initializes the PostgreSQL container.
+    /// Gets the retry policy for database operations.
+    /// </summary>
+    public IAsyncPolicy RetryPolicy => _retryPolicy;
+
+    /// <summary>
+    /// Initializes the PostgreSQL container with health checks.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
     public async Task InitializeAsync()
     {
-        this._container = new PostgreSqlBuilder("postgres:16-alpine")
+        _container = new PostgreSqlBuilder()
             .WithDatabase("synaxis_test")
             .WithUsername("postgres")
             .WithPassword("testpassword")
+            .WithImage("postgres:16-alpine")
             .WithCommand("-c", "max_connections=200")
             .Build();
 
-        await this._container.StartAsync().ConfigureAwait(false);
+        await _container.StartAsync();
+
+        // Wait for PostgreSQL to be ready with health check
+        await WaitForPostgresReadyAsync();
+    }
+
+    /// <summary>
+    /// Waits for PostgreSQL to be ready to accept connections.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    private async Task WaitForPostgresReadyAsync()
+    {
+        var maxRetries = 30;
+        var delay = TimeSpan.FromSeconds(1);
+
+        for (int i = 0; i < maxRetries; i++)
+        {
+            try
+            {
+                await using var connection = new NpgsqlConnection(this.ConnectionString);
+                await connection.OpenAsync();
+
+                // Test that we can execute a simple query
+                await using var command = connection.CreateCommand();
+                command.CommandText = "SELECT 1";
+                await command.ExecuteScalarAsync();
+
+                return; // Success!
+            }
+            catch (Exception)
+            {
+                if (i == maxRetries - 1)
+                {
+                    throw new TimeoutException("PostgreSQL container failed to become ready within timeout.");
+                }
+
+                await Task.Delay(delay);
+            }
+        }
     }
 
     /// <summary>
@@ -65,9 +122,16 @@ public sealed class PostgresFixture : IAsyncLifetime
     /// <returns>A task representing the asynchronous operation.</returns>
     public async Task DisposeAsync()
     {
-        if (this._container != null)
+        if (_container != null)
         {
-            await this._container.DisposeAsync().ConfigureAwait(false);
+            try
+            {
+                await _container.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromMinutes(2));
+            }
+            catch (TimeoutException)
+            {
+                // Container disposal timed out, but we continue
+            }
         }
     }
 
@@ -81,12 +145,12 @@ public sealed class PostgresFixture : IAsyncLifetime
         var databaseName = $"{namePrefix}_{Guid.NewGuid():N}";
 
         await using var admin = new NpgsqlConnection(this.AdminConnectionString);
-        await admin.OpenAsync().ConfigureAwait(false);
+        await admin.OpenAsync();
 
         await using (var create = admin.CreateCommand())
         {
             create.CommandText = $"CREATE DATABASE {QuoteIdentifier(databaseName)};";
-            await create.ExecuteNonQueryAsync().ConfigureAwait(false);
+            await create.ExecuteNonQueryAsync();
         }
 
         var builder = new NpgsqlConnectionStringBuilder(this.ConnectionString)
@@ -113,7 +177,7 @@ public sealed class PostgresFixture : IAsyncLifetime
         }
 
         await using var admin = new NpgsqlConnection(this.AdminConnectionString);
-        await admin.OpenAsync().ConfigureAwait(false);
+        await admin.OpenAsync();
 
         var escapedName = databaseName.Replace("'", "''", StringComparison.Ordinal);
 
@@ -121,13 +185,13 @@ public sealed class PostgresFixture : IAsyncLifetime
         {
             terminate.CommandText =
                 $"SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '{escapedName}' AND pid <> pg_backend_pid();";
-            await terminate.ExecuteNonQueryAsync().ConfigureAwait(false);
+            await terminate.ExecuteNonQueryAsync();
         }
 
         await using (var drop = admin.CreateCommand())
         {
             drop.CommandText = $"DROP DATABASE IF EXISTS {QuoteIdentifier(databaseName)};";
-            await drop.ExecuteNonQueryAsync().ConfigureAwait(false);
+            await drop.ExecuteNonQueryAsync();
         }
     }
 
@@ -167,7 +231,7 @@ public sealed class PostgresFixture : IAsyncLifetime
     public async Task<SynaxisDbContext> CreateMigratedContextAsync()
     {
         var context = this.CreateContext();
-        await context.Database.MigrateAsync().ConfigureAwait(false);
+        await _retryPolicy.ExecuteAsync(() => context.Database.MigrateAsync());
         return context;
     }
 
@@ -179,7 +243,7 @@ public sealed class PostgresFixture : IAsyncLifetime
     public async Task<SynaxisDbContext> CreateMigratedContextAsync(string connectionString)
     {
         var context = this.CreateContext(connectionString);
-        await context.Database.MigrateAsync().ConfigureAwait(false);
+        await _retryPolicy.ExecuteAsync(() => context.Database.MigrateAsync());
         return context;
     }
 
@@ -190,8 +254,8 @@ public sealed class PostgresFixture : IAsyncLifetime
     public async Task ResetDatabaseAsync()
     {
         await using var context = this.CreateContext();
-        await context.Database.EnsureDeletedAsync().ConfigureAwait(false);
-        await context.Database.MigrateAsync().ConfigureAwait(false);
+        await _retryPolicy.ExecuteAsync(() => context.Database.EnsureDeletedAsync());
+        await _retryPolicy.ExecuteAsync(() => context.Database.MigrateAsync());
     }
 
     private static string QuoteIdentifier(string identifier) =>

@@ -17,6 +17,7 @@ namespace Synaxis.Tests.Execution
     /// <summary>
     /// Unit tests for <see cref="MediatorCommandExecutor{TCommand, TResult}"/>.
     /// </summary>
+    [Trait("Category", "Unit")]
     public class MediatorCommandExecutorTests
     {
         private readonly IMediator _mediator;

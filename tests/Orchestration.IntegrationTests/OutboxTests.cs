@@ -13,6 +13,7 @@ using Xunit;
 /// Integration tests for the Outbox API endpoints.
 /// </summary>
 [Collection("Orchestration")]
+[Trait("Category", "Integration")]
 public class OutboxTests
 {
     private readonly OrchestrationTestFixture _fixture;

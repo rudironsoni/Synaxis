@@ -20,6 +20,7 @@ namespace Synaxis.Tests.Execution
     /// <summary>
     /// Unit tests for <see cref="MediatorStreamExecutor{TRequest, TResult}"/>.
     /// </summary>
+    [Trait("Category", "Unit")]
     public class MediatorStreamExecutorTests
     {
         private readonly IMediator _mediator;

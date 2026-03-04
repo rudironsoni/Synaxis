@@ -12,6 +12,7 @@ using Xunit;
 /// <summary>
 /// Tests for migration rollback scripts.
 /// </summary>
+[Trait("Category", "Unit")]
 public class RollbackScriptTests
 {
     private readonly string _repoRoot;

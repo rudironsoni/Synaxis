@@ -4,13 +4,14 @@
 
 namespace Synaxis.Inference.Domain.Events;
 
+using Mediator;
 using Synaxis.Abstractions.Cloud;
 using Synaxis.Inference.Domain.Aggregates;
 
 /// <summary>
 /// Event raised when a model configuration is created.
 /// </summary>
-public class ModelConfigCreated : DomainEvent
+public class ModelConfigCreated : DomainEvent, INotification
 {
     /// <summary>
     /// Gets or sets the configuration identifier.

@@ -26,6 +26,7 @@ using Xunit;
 /// <summary>
 /// Tests for the AuthController password reset endpoints.
 /// </summary>
+[Trait("Category", "Unit")]
 public sealed class AuthControllerPasswordResetTests : IDisposable
 {
     private readonly SynaxisDbContext _context;

@@ -26,6 +26,7 @@ using Xunit;
 /// <summary>
 /// Tests for the AuthController refresh endpoint.
 /// </summary>
+[Trait("Category", "Unit")]
 public sealed class AuthControllerRefreshTests : IDisposable
 {
     private readonly SynaxisDbContext _context;

@@ -19,6 +19,7 @@ namespace Synaxis.Tests.Handlers.Embeddings
     /// <summary>
     /// Unit tests for <see cref="EmbeddingCommandHandler"/>.
     /// </summary>
+    [Trait("Category", "Unit")]
     public class EmbeddingCommandHandlerTests
     {
         private readonly IProviderSelector _providerSelector;

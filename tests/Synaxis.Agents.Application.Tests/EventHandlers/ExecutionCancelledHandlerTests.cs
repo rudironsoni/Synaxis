@@ -19,6 +19,7 @@ using Xunit;
 /// <summary>
 /// Unit tests for <see cref="ExecutionCancelledHandler"/>.
 /// </summary>
+[Trait("Category", "Unit")]
 public class ExecutionCancelledHandlerTests
 {
     private readonly Mock<ILogger<ExecutionCancelledHandler>> _loggerMock;

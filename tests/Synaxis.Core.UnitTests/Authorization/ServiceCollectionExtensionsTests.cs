@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
+[Trait("Category", "Unit")]
 public class ServiceCollectionExtensionsTests
 {
     [Fact]

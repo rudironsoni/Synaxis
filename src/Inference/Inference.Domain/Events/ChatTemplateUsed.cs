@@ -4,12 +4,13 @@
 
 namespace Synaxis.Inference.Domain.Events;
 
+using Mediator;
 using Synaxis.Abstractions.Cloud;
 
 /// <summary>
 /// Event raised when a chat template is used.
 /// </summary>
-public class ChatTemplateUsed : DomainEvent
+public class ChatTemplateUsed : DomainEvent, INotification
 {
     /// <summary>
     /// Gets or sets the template identifier.

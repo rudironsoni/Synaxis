@@ -15,6 +15,7 @@ using Xunit;
 /// Integration tests for the Webhooks API endpoints.
 /// </summary>
 [Collection("Orchestration")]
+[Trait("Category", "Integration")]
 public class WebhookTests
 {
     private readonly OrchestrationTestFixture _fixture;

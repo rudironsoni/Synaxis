@@ -4,13 +4,14 @@
 
 namespace Synaxis.Inference.Domain.Events;
 
+using Mediator;
 using Synaxis.Abstractions.Cloud;
 using Synaxis.Inference.Domain.Aggregates;
 
 /// <summary>
 /// Event raised when a model configuration is updated.
 /// </summary>
-public class ModelConfigUpdated : DomainEvent
+public class ModelConfigUpdated : DomainEvent, INotification
 {
     /// <summary>
     /// Gets or sets the configuration identifier.

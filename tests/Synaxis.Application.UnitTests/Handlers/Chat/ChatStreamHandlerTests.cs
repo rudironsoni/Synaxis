@@ -20,6 +20,7 @@ namespace Synaxis.Tests.Handlers.Chat
     /// <summary>
     /// Unit tests for <see cref="ChatStreamHandler"/>.
     /// </summary>
+    [Trait("Category", "Unit")]
     public class ChatStreamHandlerTests
     {
         private readonly IProviderSelector _providerSelector;

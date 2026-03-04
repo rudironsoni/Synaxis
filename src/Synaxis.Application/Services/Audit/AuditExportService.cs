@@ -57,7 +57,7 @@ public class AuditExportService : IAuditExportService
             FromDate: request.FromDate,
             ToDate: request.ToDate,
             Page: 1,
-            PageSize: int.MaxValue,
+            PageSize: int.MaxValue
         );
 
         var result = await this._auditLogRepository.SearchAsync(criteria, cancellationToken).ConfigureAwait(false);
@@ -105,7 +105,7 @@ public class AuditExportService : IAuditExportService
             FromDate: request.FromDate,
             ToDate: request.ToDate,
             Page: 1,
-            PageSize: int.MaxValue,
+            PageSize: int.MaxValue
         );
 
         var result = await this._auditLogRepository.SearchAsync(criteria, cancellationToken).ConfigureAwait(false);
@@ -164,7 +164,7 @@ public class AuditExportService : IAuditExportService
             FromDate: request.FromDate,
             ToDate: request.ToDate,
             Page: 1,
-            PageSize: int.MaxValue,
+            PageSize: int.MaxValue
         );
 
         var result = await this._auditLogRepository.SearchAsync(criteria, cancellationToken).ConfigureAwait(false);

@@ -11,7 +11,7 @@ using Moq;
 /// Base class for token optimization tests.
 /// Provides common mock objects and setup for testing token optimization features.
 /// </summary>
-public abstract class TokenOptimizationTestBase : TestBase
+public abstract class TokenOptimizationTestBase
 {
     protected Mock<ISemanticCacheService> CacheMock { get; }
 

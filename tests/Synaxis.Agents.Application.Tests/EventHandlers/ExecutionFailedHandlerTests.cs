@@ -20,6 +20,7 @@ using Xunit;
 /// <summary>
 /// Unit tests for <see cref="ExecutionFailedHandler"/>.
 /// </summary>
+[Trait("Category", "Unit")]
 public class ExecutionFailedHandlerTests
 {
     private readonly Mock<ILogger<ExecutionFailedHandler>> _loggerMock;

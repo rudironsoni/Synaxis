@@ -17,6 +17,7 @@ namespace Synaxis.Health.IntegrationTests
     /// <summary>
     /// Unit tests for <see cref="ServiceDiscoveryHealthCheck"/>.
     /// </summary>
+    [Trait("Category", "Integration")]
     public class ServiceDiscoveryHealthCheckTests
     {
         private readonly Mock<IServiceDiscoveryClient> _discoveryClientMock;

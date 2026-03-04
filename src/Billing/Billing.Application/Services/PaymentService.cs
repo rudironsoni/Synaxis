@@ -4,7 +4,6 @@
 
 namespace Billing.Application.Services
 {
-    using Billing.Application.DTOs;
     using Billing.Domain.Entities;
     using Billing.Infrastructure.Repositories;
     using Billing.Infrastructure.Services;

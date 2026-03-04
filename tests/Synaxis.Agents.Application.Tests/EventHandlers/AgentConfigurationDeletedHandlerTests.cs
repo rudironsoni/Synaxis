@@ -17,6 +17,7 @@ using Xunit;
 /// <summary>
 /// Unit tests for <see cref="AgentConfigurationDeletedHandler"/>.
 /// </summary>
+[Trait("Category", "Unit")]
 public class AgentConfigurationDeletedHandlerTests
 {
     private readonly Mock<ILogger<AgentConfigurationDeletedHandler>> _loggerMock;

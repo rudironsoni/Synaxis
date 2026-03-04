@@ -4,6 +4,14 @@
   "parallelizeTestCollections": true,
   "maxParallelThreads": 0,
   "methodDisplay": "classAndMethod",
+  "methodDisplayOptions": "all",
   "diagnosticMessages": true,
-  "internalDiagnosticMessages": false
+  "internalDiagnosticMessages": false,
+  "showLiveOutput": true,
+  "stopOnFail": false,
+  "longRunningTestSeconds": 120,
+  "preEnumerateTheories": true,
+  "failSkips": false,
+  "failTestsWithTooManyOutputLines": false,
+  "maxTestOutputLines": 1000
 }

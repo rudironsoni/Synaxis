@@ -4,6 +4,7 @@ using FluentAssertions;
 using Synaxis.Abstractions.Commands;
 using Synaxis.Contracts.V1.Commands;
 
+[Trait("Category", "Unit")]
 public class CommandInterfaceTests
 {
     [Fact]

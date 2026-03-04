@@ -4,12 +4,13 @@
 
 namespace Synaxis.Inference.Domain.Events;
 
+using Mediator;
 using Synaxis.Abstractions.Cloud;
 
 /// <summary>
 /// Event raised when user chat preferences are created.
 /// </summary>
-public class UserChatPreferencesCreated : DomainEvent
+public class UserChatPreferencesCreated : DomainEvent, INotification
 {
     /// <summary>
     /// Gets or sets the preferences identifier.

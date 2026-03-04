@@ -14,10 +14,11 @@ namespace Synaxis.Tests.Behaviors
     using Synaxis.Behaviors;
     using Xunit;
 
-    /// <summary>
-    /// Unit tests for <see cref="ValidationBehavior{TMessage, TResponse}"/>.
-    /// </summary>
-    public class ValidationBehaviorTests
+/// <summary>
+/// Unit tests for <see cref="ValidationBehavior{TMessage, TResponse}"/>.
+/// </summary>
+[Trait("Category", "Unit")]
+public class ValidationBehaviorTests
     {
         private readonly ILogger<ValidationBehavior<TestMessage, TestResponse>> _logger;
         private readonly ValidationBehavior<TestMessage, TestResponse> _behavior;

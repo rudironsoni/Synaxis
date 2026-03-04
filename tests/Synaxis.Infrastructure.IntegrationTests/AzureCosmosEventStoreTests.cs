@@ -12,9 +12,10 @@ using Synaxis.Abstractions.Cloud;
 using Xunit;
 
 /// <summary>
-/// Integration tests for Azure Cosmos Event Store.
-/// </summary>
-public sealed class AzureCosmosEventStoreTests : IClassFixture<CosmosDbFixture>
+    /// Integration tests for Azure Cosmos Event Store.
+    /// </summary>
+    [Trait("Category", "Integration")]
+    public sealed class AzureCosmosEventStoreTests : IClassFixture<CosmosDbFixture>
 {
     private readonly IEventStore _eventStore;
 

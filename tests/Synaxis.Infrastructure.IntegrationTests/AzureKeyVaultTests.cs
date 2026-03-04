@@ -12,9 +12,10 @@ using Synaxis.Abstractions.Cloud;
 using Xunit;
 
 /// <summary>
-/// Integration tests for Azure KeyVault.
-/// </summary>
-public sealed class AzureKeyVaultTests : IClassFixture<KeyVaultFixture>
+    /// Integration tests for Azure KeyVault.
+    /// </summary>
+    [Trait("Category", "Integration")]
+    public sealed class AzureKeyVaultTests : IClassFixture<KeyVaultFixture>
 {
     private readonly IKeyVault _keyVault;
 

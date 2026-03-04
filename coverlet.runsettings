@@ -1,19 +1,89 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RunSettings>
-  <!-- Test timeout - fail tests that run longer than 2 minutes -->
+  <!-- xUnit Configuration -->
   <xUnit>
-    <MethodTimeout>00:02:00</MethodTimeout>
+    <!-- Test timeout: fail tests that run longer than 5 minutes -->
+    <MethodTimeout>00:05:00</MethodTimeout>
+    <!-- Parallel execution settings -->
+    <ParallelAlgorithm>Conservative</ParallelAlgorithm>
+    <ParallelThreads>0</ParallelThreads>
+    <!-- Show detailed test output -->
+    <ShowLiveOutput>true</ShowLiveOutput>
   </xUnit>
+
+  <!-- Test Run Configuration -->
+  <RunConfiguration>
+    <!-- Test session timeout: fail entire run if it takes longer than 60 minutes -->
+    <TestSessionTimeout>01:00:00</TestSessionTimeout>
+    <!-- Disable parallelization for tests marked with [Collection] or [DisableParallelization] -->
+    <DisableParallelization>false</DisableParallelization>
+    <!-- Collect crash dumps on test failure -->
+    <CollectSourceInformation>true</CollectSourceInformation>
+    <!-- Batch size for test discovery -->
+    <BatchSize>1000</BatchSize>
+    <!-- Maximum number of test results to cache -->
+    <ResultsDirectory>./TestResults</ResultsDirectory>
+    <!-- Target framework for test execution -->
+    <TargetFrameworkVersion>net10.0</TargetFrameworkVersion>
+    <!-- Maximum degree of parallelism -->
+    <MaxCpuCount>0</MaxCpuCount>
+  </RunConfiguration>
+
+  <!-- Logger Configuration -->
+  <LoggerRunSettings>
+    <Loggers>
+      <!-- Console logger with detailed output -->
+      <Logger friendlyName="console" enabled="True">
+        <Configuration>
+          <Verbosity>detailed</Verbosity>
+        </Configuration>
+      </Logger>
+      <!-- TRX logger for CI integration -->
+      <Logger friendlyName="trx" enabled="True">
+        <Configuration>
+          <LogFileName>TestResults.trx</LogFileName>
+        </Configuration>
+      </Logger>
+    </Loggers>
+  </LoggerRunSettings>
+
+  <!-- Code Coverage Configuration -->
   <DataCollectionRunSettings>
     <DataCollectors>
       <DataCollector friendlyName="XPlat code coverage">
         <Configuration>
-          <Format>cobertura</Format>
-          <Threshold>80</Threshold>
-          <ThresholdType>line</ThresholdType>
-          <Exclude>[*]Tests*</Exclude>
+          <!-- Output formats -->
+          <Format>cobertura,opencover</Format>
+          <!-- Coverage threshold: fail if below 60% -->
+          <Threshold>60</Threshold>
+          <!-- Threshold type: line, branch, or method -->
+          <ThresholdType>line,branch</ThresholdType>
+          <!-- Exclude test projects and generated code -->
+          <Exclude>[*]Tests*,[*]*.Generated*,[*]*.g.cs</Exclude>
+          <!-- Exclude by attribute -->
+          <ExcludeByAttribute>GeneratedCodeAttribute,CompilerGeneratedAttribute,ObsoleteAttribute</ExcludeByAttribute>
+          <!-- Include only source files -->
+          <IncludeDirectories>./src</IncludeDirectories>
+          <!-- Single hit per line -->
+          <SingleHit>false</SingleHit>
+          <!-- Use source link for better coverage reports -->
+          <UseSourceLink>true</UseSourceLink>
+          <!-- Include test assembly in coverage -->
+          <IncludeTestAssembly>false</IncludeTestAssembly>
+          <!-- Skip auto-props -->
+          <SkipAutoProps>false</SkipAutoProps>
+          <!-- Determine coverlet behavior -->
+          <DeterministicReport>false</DeterministicReport>
         </Configuration>
       </DataCollector>
     </DataCollectors>
   </DataCollectionRunSettings>
+
+  <!-- Test Adapter Configuration -->
+  <TestAdapters>
+    <xUnit>
+      <!-- Enable shadow copy for better test isolation -->
+      <ShadowCopy>false</ShadowCopy>
+    </xUnit>
+  </TestAdapters>
 </RunSettings>

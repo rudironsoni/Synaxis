@@ -13,6 +13,7 @@ using FluentAssertions;
 using Synaxis.Abstractions.Commands;
 using Synaxis.Abstractions.Execution;
 
+[Trait("Category", "Unit")]
 public class CommandExecutorTests
 {
     [Fact]

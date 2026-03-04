@@ -20,6 +20,7 @@ using Xunit;
 /// <summary>
 /// Unit tests for <see cref="ExecutionStartedHandler"/>.
 /// </summary>
+[Trait("Category", "Unit")]
 public class ExecutionStartedHandlerTests
 {
     private readonly Mock<ILogger<ExecutionStartedHandler>> _loggerMock;

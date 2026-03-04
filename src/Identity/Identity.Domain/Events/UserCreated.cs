@@ -4,25 +4,45 @@
 
 namespace Synaxis.Identity.Domain.Events;
 
+using Mediator;
 using Synaxis.Abstractions.Cloud;
 
 /// <summary>
 /// Event raised when a new user is created.
 /// </summary>
-/// <param name="EventId">The unique identifier for the event.</param>
-/// <param name="OccurredOn">The timestamp when the event occurred.</param>
-/// <param name="EventType">The type name of the event.</param>
-/// <param name="UserId">The unique identifier of the user.</param>
-/// <param name="Email">The email address of the user.</param>
-/// <param name="FirstName">The first name of the user.</param>
-/// <param name="LastName">The last name of the user.</param>
-/// <param name="TenantId">The unique identifier of the tenant.</param>
-public sealed record UserCreated(
-    string EventId,
-    DateTime OccurredOn,
-    string EventType,
-    string UserId,
-    string Email,
-    string FirstName,
-    string LastName,
-    string TenantId) : IDomainEvent;
+public sealed record UserCreated : IDomainEvent, INotification
+{
+    /// <inheritdoc/>
+    public required string EventId { get; init; }
+
+    /// <inheritdoc/>
+    public required DateTime OccurredOn { get; init; }
+
+    /// <inheritdoc/>
+    public required string EventType { get; init; }
+
+    /// <summary>
+    /// Gets the unique identifier of the user.
+    /// </summary>
+    public required string UserId { get; init; }
+
+    /// <summary>
+    /// Gets the email address of the user.
+    /// </summary>
+    public required string Email { get; init; }
+
+    /// <summary>
+    /// Gets the first name of the user.
+    /// </summary>
+    public required string FirstName { get; init; }
+
+    /// <summary>
+    /// Gets the last name of the user.
+    /// </summary>
+    public required string LastName { get; init; }
+
+    /// <summary>
+    /// Gets the unique identifier of the tenant.
+    /// </summary>
+    public required string TenantId { get; init; }
+}

@@ -15,6 +15,7 @@ using Xunit;
 /// Integration tests for the Background Jobs API endpoints.
 /// </summary>
 [Collection("Orchestration")]
+[Trait("Category", "Integration")]
 public class BackgroundJobTests
 {
     private readonly OrchestrationTestFixture _fixture;

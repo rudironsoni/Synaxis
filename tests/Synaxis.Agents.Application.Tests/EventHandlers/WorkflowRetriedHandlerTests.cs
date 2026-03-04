@@ -17,6 +17,7 @@ using Xunit;
 /// <summary>
 /// Unit tests for <see cref="WorkflowRetriedHandler"/>.
 /// </summary>
+[Trait("Category", "Unit")]
 public class WorkflowRetriedHandlerTests
 {
     private readonly Mock<ILogger<WorkflowRetriedHandler>> _loggerMock;

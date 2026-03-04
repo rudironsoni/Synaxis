@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../Inference.Domain/Inference.Domain.csproj" />
+    <ProjectReference Include="$(SolutionDir)/src/Inference/Inference.Domain/Inference.Domain.csproj" />
   </ItemGroup>
 
 </Project>

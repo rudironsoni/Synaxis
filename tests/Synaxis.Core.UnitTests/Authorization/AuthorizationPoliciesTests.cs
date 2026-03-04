@@ -3,6 +3,7 @@ namespace Synaxis.Core.Authorization.Tests;
 using FluentAssertions;
 using Xunit;
 
+[Trait("Category", "Unit")]
 public class AuthorizationPoliciesTests
 {
     [Fact]

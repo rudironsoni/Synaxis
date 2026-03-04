@@ -13,6 +13,7 @@ using Xunit;
 /// <summary>
 /// Unit tests for <see cref="CloudProviderOptions"/>.
 /// </summary>
+[Trait("Category", "Unit")]
 public class CloudProviderOptionsTests
 {
     [Fact]

@@ -4,17 +4,25 @@
 
 namespace Synaxis.Identity.Domain.Events;
 
+using Mediator;
 using Synaxis.Abstractions.Cloud;
 
 /// <summary>
 /// Event raised when a user is deleted.
 /// </summary>
-/// <param name="EventId">The unique identifier for the event.</param>
-/// <param name="OccurredOn">The timestamp when the event occurred.</param>
-/// <param name="EventType">The type name of the event.</param>
-/// <param name="UserId">The unique identifier of the user.</param>
-public sealed record UserDeleted(
-    string EventId,
-    DateTime OccurredOn,
-    string EventType,
-    string UserId) : IDomainEvent;
+public sealed record UserDeleted : IDomainEvent, INotification
+{
+    /// <inheritdoc/>
+    public required string EventId { get; init; }
+
+    /// <inheritdoc/>
+    public required DateTime OccurredOn { get; init; }
+
+    /// <inheritdoc/>
+    public required string EventType { get; init; }
+
+    /// <summary>
+    /// Gets the unique identifier of the user.
+    /// </summary>
+    public required string UserId { get; init; }
+}

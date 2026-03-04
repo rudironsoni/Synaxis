@@ -5,6 +5,7 @@ using Synaxis.Contracts.V1.DTOs;
 
 namespace Synaxis.Contracts.Tests.V1;
 
+[Trait("Category", "Unit")]
 public class RecordEqualityTests
 {
     [Fact]

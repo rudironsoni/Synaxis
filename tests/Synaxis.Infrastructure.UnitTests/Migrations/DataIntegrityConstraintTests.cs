@@ -16,6 +16,7 @@ using Xunit;
 /// <summary>
 /// Tests for data integrity constraints.
 /// </summary>
+[Trait("Category", "Unit")]
 public class DataIntegrityConstraintTests
 {
     /// <summary>

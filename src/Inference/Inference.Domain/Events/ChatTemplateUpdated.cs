@@ -4,13 +4,14 @@
 
 namespace Synaxis.Inference.Domain.Events;
 
+using Mediator;
 using Synaxis.Abstractions.Cloud;
 using Synaxis.Inference.Domain.Aggregates;
 
 /// <summary>
 /// Event raised when a chat template is updated.
 /// </summary>
-public class ChatTemplateUpdated : DomainEvent
+public class ChatTemplateUpdated : DomainEvent, INotification
 {
     /// <summary>
     /// Gets or sets the template identifier.

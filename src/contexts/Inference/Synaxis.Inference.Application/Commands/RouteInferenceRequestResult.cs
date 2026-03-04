@@ -4,15 +4,13 @@
 
 namespace Synaxis.Inference.Application.Commands;
 
+using Synaxis.Inference.Domain.ValueObjects;
+
 /// <summary>
 /// Result of routing an inference request.
 /// </summary>
 /// <param name="RequestId">The request identifier.</param>
-/// <param name="ProviderId">The selected provider identifier.</param>
-/// <param name="ModelId">The resolved model identifier.</param>
-/// <param name="RoutingDecision">The routing decision details.</param>
+/// <param name="Decision">The routing decision details.</param>
 public record RouteInferenceRequestResult(
     Guid RequestId,
-    string ProviderId,
-    string ModelId,
-    RoutingDecision RoutingDecision);
+    RoutingDecision Decision);

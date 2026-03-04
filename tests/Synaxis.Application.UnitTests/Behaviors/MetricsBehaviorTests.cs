@@ -18,6 +18,7 @@ namespace Synaxis.Tests.Behaviors
     /// <summary>
     /// Unit tests for <see cref="MetricsBehavior{TMessage, TResponse}"/>.
     /// </summary>
+    [Trait("Category", "Unit")]
     public class MetricsBehaviorTests
     {
         private readonly ILogger<MetricsBehavior<TestMessage, TestResponse>> _logger;

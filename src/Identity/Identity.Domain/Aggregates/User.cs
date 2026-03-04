@@ -125,15 +125,17 @@ public sealed class User : AggregateRoot
             TenantId = tenantId,
         };
 
-        var @event = new UserCreated(
-            Guid.NewGuid().ToString(),
-            timeProvider.UtcNow,
-            nameof(UserCreated),
-            user.Id,
-            user.Email.Value,
-            user.FirstName,
-            user.LastName,
-            user.TenantId);
+        var @event = new UserCreated
+        {
+            EventId = Guid.NewGuid().ToString(),
+            OccurredOn = timeProvider.UtcNow,
+            EventType = nameof(UserCreated),
+            UserId = user.Id,
+            Email = user.Email.Value,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            TenantId = user.TenantId,
+        };
 
         user.ApplyEvent(@event);
 
@@ -154,11 +156,13 @@ public sealed class User : AggregateRoot
         this.PasswordHash = newPasswordHash;
         this.UpdatedAt = this.TimeProvider.UtcNow;
 
-        var @event = new UserPasswordChanged(
-            Guid.NewGuid().ToString(),
-            this.TimeProvider.UtcNow,
-            nameof(UserPasswordChanged),
-            this.Id);
+        var @event = new UserPasswordChanged
+        {
+            EventId = Guid.NewGuid().ToString(),
+            OccurredOn = this.TimeProvider.UtcNow,
+            EventType = nameof(UserPasswordChanged),
+            UserId = this.Id,
+        };
 
         this.ApplyEvent(@event);
     }
@@ -203,11 +207,13 @@ public sealed class User : AggregateRoot
         this.Status = UserStatus.Suspended;
         this.UpdatedAt = this.TimeProvider.UtcNow;
 
-        var @event = new UserSuspended(
-            Guid.NewGuid().ToString(),
-            this.TimeProvider.UtcNow,
-            nameof(UserSuspended),
-            this.Id);
+        var @event = new UserSuspended
+        {
+            EventId = Guid.NewGuid().ToString(),
+            OccurredOn = this.TimeProvider.UtcNow,
+            EventType = nameof(UserSuspended),
+            UserId = this.Id,
+        };
 
         this.ApplyEvent(@event);
     }
@@ -230,11 +236,13 @@ public sealed class User : AggregateRoot
         this.Status = UserStatus.Active;
         this.UpdatedAt = this.TimeProvider.UtcNow;
 
-        var @event = new UserActivated(
-            Guid.NewGuid().ToString(),
-            this.TimeProvider.UtcNow,
-            nameof(UserActivated),
-            this.Id);
+        var @event = new UserActivated
+        {
+            EventId = Guid.NewGuid().ToString(),
+            OccurredOn = this.TimeProvider.UtcNow,
+            EventType = nameof(UserActivated),
+            UserId = this.Id,
+        };
 
         this.ApplyEvent(@event);
     }
@@ -349,11 +357,13 @@ public sealed class User : AggregateRoot
         this.Status = UserStatus.Deleted;
         this.UpdatedAt = this.TimeProvider.UtcNow;
 
-        var @event = new UserDeleted(
-            Guid.NewGuid().ToString(),
-            this.TimeProvider.UtcNow,
-            nameof(UserDeleted),
-            this.Id);
+        var @event = new UserDeleted
+        {
+            EventId = Guid.NewGuid().ToString(),
+            OccurredOn = this.TimeProvider.UtcNow,
+            EventType = nameof(UserDeleted),
+            UserId = this.Id,
+        };
 
         this.ApplyEvent(@event);
     }

@@ -4,7 +4,6 @@
 
 namespace Billing.Infrastructure
 {
-    using Billing.Application.Services;
     using Billing.Infrastructure.Data;
     using Billing.Infrastructure.Repositories;
     using Billing.Infrastructure.Services;
@@ -34,8 +33,10 @@ namespace Billing.Infrastructure
 
             services.AddScoped<IInvoiceRepository, InvoiceRepository>();
             services.AddScoped<IPaymentRepository, PaymentRepository>();
+            services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
             services.AddScoped<ICostSavingsRepository, CostSavingsRepository>();
             services.AddScoped<IUsageTrackingRepository, UsageTrackingRepository>();
+            services.AddScoped<IUsageRecordRepository, UsageRecordRepository>();
             services.AddScoped<IPaymentGateway, StripePaymentGateway>();
 
             return services;

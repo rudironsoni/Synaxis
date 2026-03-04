@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <ManagePackageVersionCentrally>true</ManagePackageVersionCentrally>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="Moq" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="/home/rrj/src/github/rudironsoni/Synaxis/src/contexts/Inference/Synaxis.Inference.Infrastructure/Synaxis.Inference.Infrastructure.csproj" />
+    <ProjectReference Include="/home/rrj/src/github/rudironsoni/Synaxis/src/Inference/Inference.Domain/Inference.Domain.csproj" />
+    <ProjectReference Include="/home/rrj/src/github/rudironsoni/Synaxis/src/Synaxis.Core/Synaxis.Core.csproj" />
+    <ProjectReference Include="/home/rrj/src/github/rudironsoni/Synaxis/src/Abstractions/Synaxis.Abstractions.Cloud/Synaxis.Abstractions.Cloud.csproj" />
+  </ItemGroup>
+
+</Project>

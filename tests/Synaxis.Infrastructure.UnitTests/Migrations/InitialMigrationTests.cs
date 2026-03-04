@@ -16,6 +16,7 @@ using Xunit;
 /// <summary>
 /// Tests for the initial multi-tenant migration using TDD approach.
 /// </summary>
+[Trait("Category", "Unit")]
 public class InitialMigrationTests
 {
     /// <summary>

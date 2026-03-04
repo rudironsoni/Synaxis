@@ -12,6 +12,7 @@ using Xunit;
 /// <summary>
 /// Unit tests for <see cref="InMemoryEventStore"/>.
 /// </summary>
+[Trait("Category", "Unit")]
 public class InMemoryEventStoreTests
 {
     private readonly InMemoryEventStore _store = new();

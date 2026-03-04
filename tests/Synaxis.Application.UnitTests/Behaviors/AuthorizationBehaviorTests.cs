@@ -17,6 +17,7 @@ namespace Synaxis.Tests.Behaviors
     /// <summary>
     /// Unit tests for <see cref="AuthorizationBehavior{TMessage, TResponse}"/>.
     /// </summary>
+    [Trait("Category", "Unit")]
     public class AuthorizationBehaviorTests
     {
         private readonly ILogger<AuthorizationBehavior<TestMessage, TestResponse>> _logger;

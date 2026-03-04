@@ -18,6 +18,7 @@ using Xunit;
 /// <summary>
 /// Unit tests for <see cref="ExecutionPausedHandler"/>.
 /// </summary>
+[Trait("Category", "Unit")]
 public class ExecutionPausedHandlerTests
 {
     private readonly Mock<ILogger<ExecutionPausedHandler>> _loggerMock;

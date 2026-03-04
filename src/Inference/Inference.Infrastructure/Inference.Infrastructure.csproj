@@ -27,8 +27,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../Inference.Application/Inference.Application.csproj" />
-    <ProjectReference Include="../../Synaxis.Infrastructure/Synaxis.Infrastructure.csproj" />
+    <ProjectReference Include="$(SolutionDir)/src/Inference/Inference.Application/Inference.Application.csproj" />
+    <ProjectReference Include="$(SolutionDir)/src/Synaxis.Infrastructure/Synaxis.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
