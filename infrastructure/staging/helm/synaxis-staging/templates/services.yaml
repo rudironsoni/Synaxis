@@ -1,0 +1,59 @@
+{{- /* Synaxis Service Template */ -}}
+{{- range $serviceName, $service := .Values.services }}
+{{- if $service.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ $.Values.namespace.name }}
+  labels:
+    app: {{ $serviceName }}
+    component: {{ $serviceName }}
+spec:
+  type: ClusterIP
+  selector:
+    app: {{ $serviceName }}
+  ports:
+  - name: http
+    port: {{ $service.service.port }}
+    targetPort: http
+    protocol: TCP
+  - name: metrics
+    port: 9090
+    targetPort: metrics
+    protocol: TCP
+  sessionAffinity: None
+{{- end }}
+{{- end }}
+---
+# Gateway Ingress Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: synaxis-gateway-ingress
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    app: synaxis-gateway
+    component: ingress
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "external"
+    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: "ip"
+    service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: {{ .Values.ingress.service.annotations."service.beta.kubernetes.io/aws-load-balancer-ssl-cert" }}
+    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "443"
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "http"
+spec:
+  type: LoadBalancer
+  selector:
+    app: gateway
+  ports:
+  - name: https
+    port: 443
+    targetPort: 8080
+    protocol: TCP
+  - name: http
+    port: 80
+    targetPort: 8080
+    protocol: TCP
+  externalTrafficPolicy: Local

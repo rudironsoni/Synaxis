@@ -1,0 +1,65 @@
+{{- /* Synaxis Staging Namespace Template */ -}}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.namespace.name }}
+  labels:
+    name: {{ .Values.namespace.name }}
+    environment: {{ .Values.global.environment }}
+    region: {{ .Values.global.region }}
+    istio-injection: enabled
+    {{- range $key, $value := .Values.namespace.labels }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+  annotations:
+    description: "Synaxis Staging Environment"
+---
+{{- if .Values.resourceQuota.enabled }}
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: {{ .Values.namespace.name }}-quota
+  namespace: {{ .Values.namespace.name }}
+spec:
+  hard:
+    {{- range $key, $value := .Values.resourceQuota.hard }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+{{- end }}
+---
+{{- if .Values.limitRange.enabled }}
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: {{ .Values.namespace.name }}-limits
+  namespace: {{ .Values.namespace.name }}
+spec:
+  limits:
+    {{- range .Values.limitRange.limits }}
+    - type: {{ .type }}
+      {{- if .max }}
+      max:
+        {{- range $key, $value := .max }}
+        {{ $key }}: {{ $value | quote }}
+        {{- end }}
+      {{- end }}
+      {{- if .min }}
+      min:
+        {{- range $key, $value := .min }}
+        {{ $key }}: {{ $value | quote }}
+        {{- end }}
+      {{- end }}
+      {{- if .default }}
+      default:
+        {{- range $key, $value := .default }}
+        {{ $key }}: {{ $value | quote }}
+        {{- end }}
+      {{- end }}
+      {{- if .defaultRequest }}
+      defaultRequest:
+        {{- range $key, $value := .defaultRequest }}
+        {{ $key }}: {{ $value | quote }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+{{- end }}

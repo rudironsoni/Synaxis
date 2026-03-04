@@ -1,0 +1,59 @@
+{{- /* Synaxis Staging ConfigMap Template */ -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: synaxis-config
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    app: synaxis-staging
+    component: config
+data:
+  ASPNETCORE_ENVIRONMENT: "Staging"
+  ASPNETCORE_URLS: "http://+:8080"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://synaxis-staging-otel-collector:4317"
+  OTEL_SERVICE_NAME: "synaxis-staging"
+  OTEL_RESOURCE_ATTRIBUTES: "deployment.environment=staging,service.namespace=synaxis"
+  
+  # Feature flags
+  FeatureFlags__EnableNewUI: "true"
+  FeatureFlags__EnableBetaFeatures: "true"
+  FeatureFlags__EnableDetailedLogging: "true"
+  
+  # Rate limiting
+  RateLimiting__PermitLimit: "1000"
+  RateLimiting__WindowSeconds: "60"
+  
+  # Cache settings
+  Cache__DefaultExpirationMinutes: "15"
+  Cache__SlidingExpirationMinutes: "5"
+  
+  # Logging
+  Logging__LogLevel__Default: "Information"
+  Logging__LogLevel__Microsoft.AspNetCore: "Warning"
+  Logging__LogLevel__Synaxis": "Debug"
+  
+  # Regions configuration
+  Regions__Default: "us-east-1"
+  Regions__EuWest1__Endpoint: "https://eu.staging.synaxis.io"
+  Regions__UsEast1__Endpoint: "https://us.staging.synaxis.io"
+  Regions__SaEast1__Endpoint: "https://sa.staging.synaxis.io"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: synaxis-health-checks
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    app: synaxis-staging
+    component: health
+data:
+  # Health check endpoints configuration
+  LivenessEndpoint: "/health/liveness"
+  ReadinessEndpoint: "/health/readiness"
+  StartupEndpoint: "/health/startup"
+  MetricsEndpoint: "/metrics"
+  
+  # Health check thresholds
+  LivenessTimeoutSeconds: "5"
+  ReadinessTimeoutSeconds: "3"
+  StartupTimeoutSeconds: "3"
