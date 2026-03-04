@@ -19,7 +19,6 @@
     <ProjectReference Include="../../Abstractions/Synaxis.Abstractions.Cloud/Synaxis.Abstractions.Cloud.csproj" />
     <ProjectReference Include="../../Synaxis.Contracts/Synaxis.Contracts.csproj" />
     <ProjectReference Include="../../Synaxis.Core/Synaxis.Core.csproj" />
-    <ProjectReference Include="../../InferenceGateway/Application/Synaxis.InferenceGateway.Application.csproj" />
   </ItemGroup>
 
 </Project>

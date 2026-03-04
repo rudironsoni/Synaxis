@@ -75,15 +75,4 @@
     <TestResultsDirectory>$(SolutionDir)TestResults</TestResultsDirectory>
   </PropertyGroup>
 
-  <!--
-    Test Runner Configuration
-    Ensures xunit.runner.json is copied to output for test projects
-  -->
-  <ItemGroup Condition="$(MSBuildProjectName.Contains('Tests')) And Exists('$(SolutionDir)tests/xunit.runner.json')">
-    <Content Include="$(SolutionDir)tests/xunit.runner.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Visible>false</Visible>
-    </Content>
-  </ItemGroup>
-
 </Project>

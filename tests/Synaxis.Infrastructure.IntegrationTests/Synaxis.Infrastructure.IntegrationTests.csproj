@@ -40,6 +40,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/Abstractions/Synaxis.Abstractions.Cloud/Synaxis.Abstractions.Cloud.csproj" />
+    <ProjectReference Include="../../src/contexts/Inference/Synaxis.Inference.Api/Synaxis.Inference.Api.csproj" />
     <ProjectReference Include="../../src/Infrastructure/Synaxis.Infrastructure.EventSourcing/Synaxis.Infrastructure.EventSourcing.csproj" />
     <ProjectReference Include="../../src/Infrastructure/Synaxis.Providers.OnPrem/Synaxis.Providers.OnPrem.csproj" />
     <ProjectReference Include="../../src/Synaxis.Infrastructure.Encryption/Synaxis.Infrastructure.Encryption.csproj" />

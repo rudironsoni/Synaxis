@@ -161,7 +161,7 @@ public sealed class PreflightCheckService : IPreflightCheckService
         return results;
     }
 
-    private async Task<PreflightCheck> RunEnvironmentCheckAsync(PreflightCheckOptions options, CancellationToken cancellationToken)
+    private async Task<PreflightCheck> RunEnvironmentCheckAsync(PreflightCheckOptions options, CancellationToken _cancellationToken)
     {
         var stopwatch = Stopwatch.StartNew();
         var validEnvironments = new[] { "production", "staging", "development" };
@@ -224,7 +224,7 @@ public sealed class PreflightCheckService : IPreflightCheckService
         };
     }
 
-    private async Task<PreflightCheck> RunConnectionStringCheckAsync(PreflightCheckOptions options, CancellationToken cancellationToken)
+    private async Task<PreflightCheck> RunConnectionStringCheckAsync(PreflightCheckOptions options, CancellationToken _cancellationToken)
     {
         var stopwatch = Stopwatch.StartNew();
 
@@ -264,7 +264,7 @@ public sealed class PreflightCheckService : IPreflightCheckService
         };
     }
 
-    private async Task<PreflightCheck> RunDatabaseConnectivityCheckAsync(PreflightCheckOptions options, CancellationToken cancellationToken)
+    private async Task<PreflightCheck> RunDatabaseConnectivityCheckAsync(PreflightCheckOptions _options, CancellationToken cancellationToken)
     {
         var stopwatch = Stopwatch.StartNew();
 
@@ -296,7 +296,7 @@ public sealed class PreflightCheckService : IPreflightCheckService
         }
     }
 
-    private async Task<PreflightCheck> RunMigrationInfrastructureCheckAsync(PreflightCheckOptions options, CancellationToken cancellationToken)
+    private async Task<PreflightCheck> RunMigrationInfrastructureCheckAsync(PreflightCheckOptions options, CancellationToken _cancellationToken)
     {
         var stopwatch = Stopwatch.StartNew();
 
@@ -373,7 +373,7 @@ public sealed class PreflightCheckService : IPreflightCheckService
         }
     }
 
-    private async Task<PreflightCheck> RunRollbackPlanCheckAsync(PreflightCheckOptions options, CancellationToken cancellationToken)
+    private async Task<PreflightCheck> RunRollbackPlanCheckAsync(PreflightCheckOptions options, CancellationToken _cancellationToken)
     {
         var stopwatch = Stopwatch.StartNew();
 
@@ -411,7 +411,7 @@ public sealed class PreflightCheckService : IPreflightCheckService
         };
     }
 
-    private async Task<PreflightCheck> RunDiskSpaceCheckAsync(PreflightCheckOptions options, CancellationToken cancellationToken)
+    private async Task<PreflightCheck> RunDiskSpaceCheckAsync(PreflightCheckOptions options, CancellationToken _cancellationToken)
     {
         var stopwatch = Stopwatch.StartNew();
 
@@ -454,7 +454,7 @@ public sealed class PreflightCheckService : IPreflightCheckService
         }
     }
 
-    private static async Task<bool> ToolExistsAsync(string tool, CancellationToken cancellationToken)
+    private static async Task<bool> ToolExistsAsync(string _tool, CancellationToken cancellationToken)
     {
         try
         {

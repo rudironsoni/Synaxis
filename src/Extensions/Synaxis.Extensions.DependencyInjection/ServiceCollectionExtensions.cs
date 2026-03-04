@@ -79,7 +79,7 @@ public static class ServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        services.TryAddSingleton<IEventStore, InMemoryEventStore>();
+        services.TryAddSingleton<Abstractions.Cloud.IEventStore, InMemoryEventStore>();
         services.TryAddSingleton<ISnapshotStrategy, NoSnapshotStrategy>();
 
         return services;

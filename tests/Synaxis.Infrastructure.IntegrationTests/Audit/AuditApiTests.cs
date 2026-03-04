@@ -19,6 +19,7 @@ using Moq;
 using Synaxis.Core.Contracts;
 using Synaxis.Core.Models;
 using Synaxis.Infrastructure.Services.Audit;
+using Synaxis.Inference.Api;
 using Xunit;
 
 /// <summary>

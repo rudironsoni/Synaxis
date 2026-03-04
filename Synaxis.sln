@@ -12,10 +12,6 @@ EndProject
 
 
 
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Benchmarks", "Benchmarks", "{1D9DCB64-1E65-5019-58F0-671C6F0E32C7}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Synaxis.Benchmarks", "src\Tests\Benchmarks\Synaxis.Benchmarks.csproj", "{4BC1EBC2-4384-4EAA-AD5B-CFAF8FE9B702}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Synaxis.Infrastructure.UnitTests", "tests\Synaxis.Infrastructure.UnitTests\Synaxis.Infrastructure.UnitTests.csproj", "{4D973029-5C37-45C6-B911-C429E8089AA7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Synaxis.Core", "src\Synaxis.Core\Synaxis.Core.csproj", "{92C18B02-DCE6-4BCC-8D84-0E6ED095FEF9}"
@@ -192,8 +188,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Synaxis.Adapters.Mcp", "src
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Synaxis.Adapters.SignalR", "src\Synaxis.Adapters.SignalR\Synaxis.Adapters.SignalR.csproj", "{C606E702-5AEA-4B85-BD82-011E33B9254E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Synaxis.Extensions.DI.Alt", "src\Synaxis.Extensions.DI\Synaxis.Extensions.DI.csproj", "{9DE52928-05F5-47D0-9104-657F5DBFCD6F}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{81A6BCD5-AC1B-6A6E-FDE7-A86C337A2C9A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Synaxis.Common.Tests", "tests\Common\Synaxis.Common.Tests.csproj", "{CA49822C-6207-4E45-8E6E-85DFD60088CE}"
@@ -232,18 +226,6 @@ Global
 		
 		
 		
-		{4BC1EBC2-4384-4EAA-AD5B-CFAF8FE9B702}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4BC1EBC2-4384-4EAA-AD5B-CFAF8FE9B702}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4BC1EBC2-4384-4EAA-AD5B-CFAF8FE9B702}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{4BC1EBC2-4384-4EAA-AD5B-CFAF8FE9B702}.Debug|x64.Build.0 = Debug|Any CPU
-		{4BC1EBC2-4384-4EAA-AD5B-CFAF8FE9B702}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{4BC1EBC2-4384-4EAA-AD5B-CFAF8FE9B702}.Debug|x86.Build.0 = Debug|Any CPU
-		{4BC1EBC2-4384-4EAA-AD5B-CFAF8FE9B702}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4BC1EBC2-4384-4EAA-AD5B-CFAF8FE9B702}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4BC1EBC2-4384-4EAA-AD5B-CFAF8FE9B702}.Release|x64.ActiveCfg = Debug|Any CPU
-		{4BC1EBC2-4384-4EAA-AD5B-CFAF8FE9B702}.Release|x64.Build.0 = Debug|Any CPU
-		{4BC1EBC2-4384-4EAA-AD5B-CFAF8FE9B702}.Release|x86.ActiveCfg = Debug|Any CPU
-		{4BC1EBC2-4384-4EAA-AD5B-CFAF8FE9B702}.Release|x86.Build.0 = Debug|Any CPU
 		{4D973029-5C37-45C6-B911-C429E8089AA7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4D973029-5C37-45C6-B911-C429E8089AA7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4D973029-5C37-45C6-B911-C429E8089AA7}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -1120,18 +1102,6 @@ Global
 		{C606E702-5AEA-4B85-BD82-011E33B9254E}.Release|x64.Build.0 = Release|Any CPU
 		{C606E702-5AEA-4B85-BD82-011E33B9254E}.Release|x86.ActiveCfg = Release|Any CPU
 		{C606E702-5AEA-4B85-BD82-011E33B9254E}.Release|x86.Build.0 = Release|Any CPU
-		{9DE52928-05F5-47D0-9104-657F5DBFCD6F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9DE52928-05F5-47D0-9104-657F5DBFCD6F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9DE52928-05F5-47D0-9104-657F5DBFCD6F}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{9DE52928-05F5-47D0-9104-657F5DBFCD6F}.Debug|x64.Build.0 = Debug|Any CPU
-		{9DE52928-05F5-47D0-9104-657F5DBFCD6F}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{9DE52928-05F5-47D0-9104-657F5DBFCD6F}.Debug|x86.Build.0 = Debug|Any CPU
-		{9DE52928-05F5-47D0-9104-657F5DBFCD6F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9DE52928-05F5-47D0-9104-657F5DBFCD6F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9DE52928-05F5-47D0-9104-657F5DBFCD6F}.Release|x64.ActiveCfg = Release|Any CPU
-		{9DE52928-05F5-47D0-9104-657F5DBFCD6F}.Release|x64.Build.0 = Release|Any CPU
-		{9DE52928-05F5-47D0-9104-657F5DBFCD6F}.Release|x86.ActiveCfg = Release|Any CPU
-		{9DE52928-05F5-47D0-9104-657F5DBFCD6F}.Release|x86.Build.0 = Release|Any CPU
 		{CA49822C-6207-4E45-8E6E-85DFD60088CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{CA49822C-6207-4E45-8E6E-85DFD60088CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CA49822C-6207-4E45-8E6E-85DFD60088CE}.Debug|x64.ActiveCfg = Debug|Any CPU

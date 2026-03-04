@@ -53,7 +53,7 @@ public class ServiceHealthCheck : IHealthCheck
 
         try
         {
-            this.CheckService<IEventStore>("EventStore", data, ref degraded);
+            this.CheckService<Abstractions.Cloud.IEventStore>("EventStore", data, ref degraded);
             this.CheckService<IEncryptionService>("EncryptionService", data, ref degraded);
             this.CheckService<IMessageBus>("MessageBus", data, ref degraded);
             this.CheckService<IOutbox>("Outbox", data, ref degraded);
