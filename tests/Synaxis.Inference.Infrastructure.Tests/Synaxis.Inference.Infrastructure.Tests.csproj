@@ -17,10 +17,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="/home/rrj/src/github/rudironsoni/Synaxis/src/contexts/Inference/Synaxis.Inference.Infrastructure/Synaxis.Inference.Infrastructure.csproj" />
-    <ProjectReference Include="/home/rrj/src/github/rudironsoni/Synaxis/src/Inference/Inference.Domain/Inference.Domain.csproj" />
-    <ProjectReference Include="/home/rrj/src/github/rudironsoni/Synaxis/src/Synaxis.Core/Synaxis.Core.csproj" />
-    <ProjectReference Include="/home/rrj/src/github/rudironsoni/Synaxis/src/Abstractions/Synaxis.Abstractions.Cloud/Synaxis.Abstractions.Cloud.csproj" />
+    <ProjectReference Include="..\..\src\contexts\Inference\Synaxis.Inference.Infrastructure\Synaxis.Inference.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Inference\Inference.Domain\Inference.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Synaxis.Core\Synaxis.Core.csproj" />
+    <ProjectReference Include="..\..\src\Abstractions\Synaxis.Abstractions.Cloud\Synaxis.Abstractions.Cloud.csproj" />
   </ItemGroup>
 
 </Project>
